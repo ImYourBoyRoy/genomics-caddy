@@ -31,7 +31,34 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
   * **Dual Mode 👥 (Default):** Stacks both views, placing the plain-English translation in a highlighted summary box above the clinical card.
 
-### 4. Private AI Consultation & Multimodal Assistance
+### 4. Local RAG Evidence Library & Search Engine
+* **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.
+* **On-the-fly Cosine Similarity:** Computes vector cosine similarity locally in memory (Rust) to keep the app portable.
+* **Dynamic Embedding Fetching:** Fetches embeddings dynamically from the configured remote Ollama instance using the user-provided `ollamaUrl` and `ollamaToken` (no hardcoded IP addresses).
+* **Evidence Library Panel:** Provides keyword and semantic searching directly within Svelte to reference CPIC and PubMed guidelines.
+
+### 5. 9 Specialty Consultation Modes
+* **Specialized System Prompts:** Tailors AI behavior to 9 specific health contexts:
+  * **🧬 General:** Broad genomic overview and prioritization guide.
+  * **💊 Pharmacogenomics (PGx):** Strict focus on drug metabolism (CYP450, DPYD) and safety warnings.
+  * **🍎 Nutrients & Methylation:** One-carbon cycle dynamics (MTHFR, COMT, PEMT) and dietary recommendations.
+  * **🏃 Metabolic Health & T2D:** Blood sugar, insulin sensitivity (APOE, FTO), and lifestyle variables.
+  * **🌙 Sleep & Circadian:** Sleep duration and timing optimization based on CLOCK/PER2 predispositions.
+  * **🧠 Brain & Mood:** Dopamine/serotonin synthesis and stress responses (COMT, DRD2).
+  * **🦴 Joints & Connective Tissue:** Collagen structure and recovery protocols (COL1A1, COL5A1).
+  * **🛡️ Thyroid & Autoimmune:** Thyroid hormone conversion (DIO1, DIO2) and immune cofactor links.
+  * **❤️ Cardiovascular Health:** Vascular integrity, blood pressure regulation, and cardiovascular habit guides.
+
+### 6. Dual-Model Safety Review Pipeline
+* **Secondary Model cross-checking:** Primary model drafts can be automatically cross-checked by a secondary safety review model (e.g., MedGemma).
+* **Clinical Correction warnings:** Highlight clinical overclaiming, dosing advice, or diagnosing assertions in an amber safety warning card.
+* **Verification transparency:** Keeps the safety review log fully transparent and embeds review logs directly into clinical handoff exports.
+
+### 7. Allele-Orientation Validation & DPYD Gate
+* **DPYD rs55886062 Correction:** Corrected the `effect_allele` for `rs55886062` to genomic plus-strand `C`.
+* **Orientation Validation Gate:** Implemented Rust backend verification to check strand orientation. If orientation is unverified or mismatch, it replaces the interpretation with a block warning and restricts severity, completely preventing false clinical claims.
+
+### 8. Private AI Consultation & Multimodal Assistance
 * Connects directly to local/remote Ollama servers with optional token/reverse-proxy authentication.
 * **Three-Panel Layout Overhaul:** Splits the interface into a left Chat History Sidebar (backed by local storage, supporting rename/delete), a center Chat Area, and a right sliding Settings Drawer. Toggling the settings drawer closed maximizes the chat viewport width.
 * **Sliding Sidebar Transition:** Integrated reactive state binding and CSS transitions (`width: 0`, `flex: 0 0 0px`, `overflow: hidden`) on the history sidebar, allowing it to slide open and closed smoothly.

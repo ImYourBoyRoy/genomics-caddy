@@ -75,6 +75,24 @@ pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
     conn.execute("CREATE INDEX IF NOT EXISTS idx_genotypes_rsid ON genotypes(rsid)", [])?;
     conn.execute("CREATE INDEX IF NOT EXISTS idx_genotypes_coords ON genotypes(chromosome, position_grch38)", [])?;
 
+    // Create evidence_library table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS evidence_library (
+            rsid TEXT NOT NULL,
+            gene TEXT NOT NULL,
+            evidence_text TEXT NOT NULL,
+            source_citation TEXT NOT NULL,
+            embedding TEXT,
+            PRIMARY KEY (rsid, source_citation)
+        )",
+        [],
+    )?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_evidence_rsid ON evidence_library(rsid)", [])?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_evidence_gene ON evidence_library(gene)", [])?;
+
+    // Seed evidence library if needed
+    let _ = seed_evidence_library(&conn);
+
     Ok(conn)
 }
 
@@ -281,5 +299,116 @@ pub fn query_region(
 /// Deletes a sample and its genotypes from the database.
 pub fn delete_sample(conn: &Connection, sample_id: i64) -> Result<()> {
     conn.execute("DELETE FROM samples WHERE id = ?", params![sample_id])?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Predefined Evidence Seeding (RAG)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, serde::Deserialize)]
+struct ManifestPack {
+    id: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Manifest {
+    packs: Vec<ManifestPack>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct PackSource {
+    name: String,
+    url: Option<String>,
+    notes: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct PackMarker {
+    rsid: String,
+    gene: String,
+    interpretation: String,
+    impact: String,
+    sources: Option<Vec<PackSource>>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Pack {
+    name: String,
+    markers: Vec<PackMarker>,
+}
+
+pub fn seed_evidence_library(conn: &Connection) -> std::result::Result<(), String> {
+    let manifest_str = include_str!("../../src/lib/marker-packs/manifest.json");
+    let manifest: Manifest = serde_json::from_str(manifest_str)
+        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+
+    for pack_info in manifest.packs {
+        let pack_str = match pack_info.id.as_str() {
+            "core" => Some(include_str!("../../src/lib/marker-packs/core.json")),
+            "pgx" => Some(include_str!("../../src/lib/marker-packs/pgx.json")),
+            "metabolic" => Some(include_str!("../../src/lib/marker-packs/metabolic.json")),
+            "nutrients" => Some(include_str!("../../src/lib/marker-packs/nutrients.json")),
+            "neuropsych" => Some(include_str!("../../src/lib/marker-packs/neuropsych.json")),
+            "sleep" => Some(include_str!("../../src/lib/marker-packs/sleep.json")),
+            "connective_tissue" => Some(include_str!("../../src/lib/marker-packs/connective_tissue.json")),
+            "thyroid_autoimmune" => Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json")),
+            "cardiovascular" => Some(include_str!("../../src/lib/marker-packs/cardiovascular.json")),
+            "cancer_confirmation_only" => Some(include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json")),
+            _ => None,
+        };
+
+        if let Some(p_str) = pack_str {
+            let pack: Pack = serde_json::from_str(p_str)
+                .map_err(|e| format!("Failed to parse pack {}: {}", pack_info.id, e))?;
+
+            for m in pack.markers {
+                let exists: bool = conn
+                    .query_row(
+                        "SELECT EXISTS(SELECT 1 FROM evidence_library WHERE rsid = ?)",
+                        params![m.rsid],
+                        |row| row.get(0),
+                    )
+                    .unwrap_or(false);
+
+                if !exists {
+                    if let Some(ref sources) = m.sources {
+                        if !sources.is_empty() {
+                            for src in sources {
+                                let citation = format!(
+                                    "{} ({})",
+                                    src.name,
+                                    src.url.as_deref().unwrap_or("No URL")
+                                );
+                                let text = format!(
+                                    "Gene: {} | Marker: {} | Impact: {} | Interpretation: {} | Source Notes: {}",
+                                    m.gene,
+                                    m.rsid,
+                                    m.impact,
+                                    m.interpretation,
+                                    src.notes.as_deref().unwrap_or("N/A")
+                                );
+                                let _ = conn.execute(
+                                    "INSERT OR IGNORE INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
+                                    params![m.rsid, m.gene, text, citation],
+                                );
+                            }
+                            continue;
+                        }
+                    }
+
+                    let citation = format!("Genomics Caddy Pack: {}", pack.name);
+                    let text = format!(
+                        "Gene: {} | Marker: {} | Impact: {} | Interpretation: {}",
+                        m.gene, m.rsid, m.impact, m.interpretation
+                    );
+                    let _ = conn.execute(
+                        "INSERT OR IGNORE INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
+                        params![m.rsid, m.gene, text, citation],
+                    );
+                }
+            }
+        }
+    }
     Ok(())
 }

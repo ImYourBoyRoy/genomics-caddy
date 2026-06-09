@@ -36,10 +36,17 @@ export interface ParsedThinking {
 // Thinking / Reasoning Parser
 // ---------------------------------------------------------------------------
 
-const GEMMA_OPEN  = "\x3Cunused94>thought";   // "<unused94>thought"
-const GEMMA_CLOSE = "\x3Cunused95>";           // "<unused95>"
-const THINK_OPEN  = "\x3Cthink>";              // "<think>"
-const THINK_CLOSE = "\x3C/think>";             // "</think>"
+// ---------------------------------------------------------------------------
+// Thinking / Reasoning Parser
+// ---------------------------------------------------------------------------
+
+const TAG_PAIRS = [
+  { open: "<think>", close: "</think>" },
+  { open: "<thought>", close: "</thought>" },
+  { open: "[think]", close: "[/think]" },
+  { open: "[thought]", close: "[/thought]" },
+  { open: "\x3Cunused94>thought", close: "\x3Cunused95>" }
+];
 
 /**
  * Parse thinking / reasoning blocks from streamed model output.
@@ -50,42 +57,47 @@ const THINK_CLOSE = "\x3C/think>";             // "</think>"
 export function parseThinking(content: string): ParsedThinking {
   if (!content) return { thought: "", response: content || "", thoughtCompleted: false };
 
-  // --- Gemma format ---
-  const gemmaIdx = content.indexOf(GEMMA_OPEN);
-  if (gemmaIdx !== -1) {
-    const afterOpen = gemmaIdx + GEMMA_OPEN.length;
-    const closeIdx  = content.indexOf(GEMMA_CLOSE, afterOpen);
-    if (closeIdx !== -1) {
+  // First try exact case matching
+  for (const pair of TAG_PAIRS) {
+    const openIdx = content.indexOf(pair.open);
+    if (openIdx !== -1) {
+      const afterOpen = openIdx + pair.open.length;
+      const closeIdx  = content.indexOf(pair.close, afterOpen);
+      if (closeIdx !== -1) {
+        return {
+          thought: content.substring(afterOpen, closeIdx).trim(),
+          response: (content.substring(0, openIdx) + content.substring(closeIdx + pair.close.length)).trim(),
+          thoughtCompleted: true,
+        };
+      }
       return {
-        thought: content.substring(afterOpen, closeIdx).trim(),
-        response: content.substring(closeIdx + GEMMA_CLOSE.length),
-        thoughtCompleted: true,
+        thought: content.substring(afterOpen).trim(),
+        response: content.substring(0, openIdx).trim(),
+        thoughtCompleted: false,
       };
     }
-    return {
-      thought: content.substring(afterOpen).trim(),
-      response: "",
-      thoughtCompleted: false,
-    };
   }
 
-  // --- DeepSeek / Qwen <think> format ---
-  const thinkIdx = content.indexOf(THINK_OPEN);
-  if (thinkIdx !== -1) {
-    const afterOpen = thinkIdx + THINK_OPEN.length;
-    const closeIdx  = content.indexOf(THINK_CLOSE, afterOpen);
-    if (closeIdx !== -1) {
+  // Fallback to case-insensitive matching
+  const lowerContent = content.toLowerCase();
+  for (const pair of TAG_PAIRS) {
+    const openIdx = lowerContent.indexOf(pair.open.toLowerCase());
+    if (openIdx !== -1) {
+      const afterOpen = openIdx + pair.open.length;
+      const closeIdx  = lowerContent.indexOf(pair.close.toLowerCase(), afterOpen);
+      if (closeIdx !== -1) {
+        return {
+          thought: content.substring(afterOpen, closeIdx).trim(),
+          response: (content.substring(0, openIdx) + content.substring(closeIdx + pair.close.length)).trim(),
+          thoughtCompleted: true,
+        };
+      }
       return {
-        thought: content.substring(afterOpen, closeIdx).trim(),
-        response: content.substring(closeIdx + THINK_CLOSE.length),
-        thoughtCompleted: true,
+        thought: content.substring(afterOpen).trim(),
+        response: content.substring(0, openIdx).trim(),
+        thoughtCompleted: false,
       };
     }
-    return {
-      thought: content.substring(afterOpen).trim(),
-      response: "",
-      thoughtCompleted: false,
-    };
   }
 
   return { thought: "", response: content, thoughtCompleted: false };
@@ -95,16 +107,9 @@ export function parseThinking(content: string): ParsedThinking {
  * Strip thinking wrapper tokens from raw content to produce clean copy-text.
  */
 export function stripThinkingTokens(text: string): string {
-  let clean = text;
-  // Gemma format
-  if (clean.includes(GEMMA_CLOSE)) {
-    clean = clean.substring(clean.indexOf(GEMMA_CLOSE) + GEMMA_CLOSE.length);
-  }
-  // DeepSeek / Qwen format
-  if (clean.includes(THINK_CLOSE)) {
-    clean = clean.substring(clean.indexOf(THINK_CLOSE) + THINK_CLOSE.length);
-  }
-  return clean.trim();
+  if (!text) return "";
+  const parsed = parseThinking(text);
+  return parsed.response.trim();
 }
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,8 @@
   import WelcomeChat from './WelcomeChat.svelte';
   import ChatMessages from './ChatMessages.svelte';
   import ChatInput from './ChatInput.svelte';
+  import { normalizeImage } from '../../utils/image';
+  import { dialogStore } from '../../utils/dialogState.svelte';
 
   interface Props {
     messages: { role: "user" | "assistant" | "system"; content: string; fullContent?: string; images?: string[] }[];
@@ -17,26 +19,16 @@
     selectedSample: any;
     showHistorySidebar: boolean;
     showSettingsDrawer: boolean;
-    userHasScrolledUp: boolean;
-    chatBox: HTMLElement | null;
-    isDragging: boolean;
-    copiedMsgId: number | null;
-    imageInput: HTMLInputElement | null;
     
     // Actions/Handlers
     sendPrompt: (customPrompt?: string) => void;
     stopGeneration: () => void;
     clearHistory: () => void;
-    copyToClipboard: (text: string, index: number) => void;
     editMessage: (index: number) => void;
     deleteMessage: (index: number) => void;
-    handleScroll: (e: Event) => void;
-    handlePaste: (e: ClipboardEvent) => void;
-    handleDragOver: (e: DragEvent) => void;
-    handleDragLeave: () => void;
-    handleDrop: (e: DragEvent) => void;
-    handleFileChange: (e: Event) => void;
-    removeAttachedImage: (index: number) => void;
+    
+    copiedMsgId: number | null;
+    copyToClipboard: (text: string, index: number) => void;
   }
 
   let {
@@ -52,26 +44,70 @@
     selectedSample,
     showHistorySidebar = $bindable(),
     showSettingsDrawer = $bindable(),
-    userHasScrolledUp,
-    chatBox = $bindable(),
-    isDragging = $bindable(),
-    copiedMsgId,
-    imageInput = $bindable(),
     
     sendPrompt,
     stopGeneration,
     clearHistory,
-    copyToClipboard,
     editMessage,
     deleteMessage,
-    handleScroll,
-    handlePaste,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleFileChange,
-    removeAttachedImage
+    copiedMsgId = $bindable(null),
+    copyToClipboard
   }: Props = $props();
+
+  // Internal local state
+  let chatBox = $state<HTMLElement | null>(null);
+  let userHasScrolledUp = $state(false);
+  let isDragging = $state(false);
+  let imageInput = $state<HTMLInputElement | null>(null);
+
+  function handleScroll(e: Event) {
+    const el = e.currentTarget as HTMLElement;
+    const threshold = 100;
+    userHasScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > threshold;
+  }
+
+  // Auto-scroll effect: only when user hasn't scrolled up
+  $effect(() => {
+    if (messages.length > 0 && chatBox && !userHasScrolledUp) {
+      requestAnimationFrame(() => {
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+  });
+
+  async function handleImageFile(file: File) {
+    if (!file.type.startsWith("image/")) { dialogStore.alert("Only image files are supported."); return; }
+    try {
+      const base64Str = await normalizeImage(file);
+      attachedImages = [...attachedImages, { name: file.name, base64: base64Str, previewUrl: URL.createObjectURL(file) }];
+    } catch (e: any) { dialogStore.alert("Failed to process image: " + e.message); }
+  }
+
+  function removeAttachedImage(index: number) {
+    const img = attachedImages[index];
+    if (img.previewUrl.startsWith("blob:")) URL.revokeObjectURL(img.previewUrl);
+    attachedImages = attachedImages.filter((_, i) => i !== index);
+  }
+
+  function handleFileChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (input.files) { for (let i = 0; i < input.files.length; i++) handleImageFile(input.files[i]); input.value = ""; }
+  }
+
+  function handlePaste(e: ClipboardEvent) {
+    if (!isVisionCapable) return;
+    const items = e.clipboardData?.items;
+    if (items) { for (let i = 0; i < items.length; i++) { if (items[i].type.startsWith("image/")) { const file = items[i].getAsFile(); if (file) { e.preventDefault(); handleImageFile(file); } } } }
+  }
+
+  function handleDragOver(e: DragEvent) { if (isVisionCapable) { e.preventDefault(); isDragging = true; } }
+  function handleDragLeave() { isDragging = false; }
+  function handleDrop(e: DragEvent) {
+    if (!isVisionCapable) return;
+    e.preventDefault(); isDragging = false;
+    const files = e.dataTransfer?.files;
+    if (files) { for (let i = 0; i < files.length; i++) handleImageFile(files[i]); }
+  }
 </script>
 
 <section class="ai-chat-area">

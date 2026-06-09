@@ -1,11 +1,16 @@
 <!-- ./src/lib/components/ai/settings/InferenceSettingsSection.svelte -->
 <script lang="ts">
+  import type { AiContextMode, ConsultationMode } from "../../../utils/aiPrompt";
+
   interface Props {
     temperature: number;
     maxTokens: number;
     extendedThinking: boolean;
     showThinkingProcess: boolean;
     autoCollapseThinking: boolean;
+    includeTraceInExport: boolean;
+    contextMode: AiContextMode;
+    consultationMode: ConsultationMode;
     sessionPromptTokens: number;
     sessionResponseTokens: number;
     sessionTotalTokens: number;
@@ -19,6 +24,9 @@
     extendedThinking = $bindable(),
     showThinkingProcess = $bindable(),
     autoCollapseThinking = $bindable(),
+    includeTraceInExport = $bindable(),
+    contextMode = $bindable(),
+    consultationMode = $bindable(),
     sessionPromptTokens,
     sessionResponseTokens,
     sessionTotalTokens,
@@ -42,6 +50,36 @@
         <span class="highlight-text font-bold">{temperature <= 0.4 ? "Factual" : "Creative"} ({temperature.toFixed(1)}):</span> More natural flow.
       {/if}
     </p>
+
+    <!-- Context Mode Selector -->
+    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08);">
+      <label for="context-mode-select" class="highlight-text font-bold" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">AI Context Mode</label>
+      <select id="context-mode-select" bind:value={contextMode} style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem; outline: none; cursor: pointer;">
+        <option value="active_findings">Active findings (All packs)</option>
+        <option value="active_context_dependent">Active + context-dependent</option>
+        <option value="selected_pack_active">Selected pack active</option>
+        <option value="full_selected">Full selected packs</option>
+        <option value="clinical_checklist">Clinical confirmation checklist</option>
+        <option value="evidence_audit">Evidence audit (RAG)</option>
+        <option value="developer_raw_json">Developer raw JSON</option>
+      </select>
+    </div>
+
+    <!-- Specialty Consultation Mode Selector -->
+    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08);">
+      <label for="consultation-mode-select" class="highlight-text font-bold" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Specialty Mode</label>
+      <select id="consultation-mode-select" bind:value={consultationMode} style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem; outline: none; cursor: pointer;">
+        <option value="general">🧬 General Consultation</option>
+        <option value="pgx">💊 Pharmacogenomics (PGx)</option>
+        <option value="nutrients">🍎 Nutrients &amp; Methylation</option>
+        <option value="metabolic">🏃 Metabolic Health &amp; T2D</option>
+        <option value="sleep">🌙 Sleep &amp; Circadian Rhythms</option>
+        <option value="brain_mood">🧠 Brain &amp; Mood (Neuropsych)</option>
+        <option value="joints">🦴 Joints &amp; Connective Tissue</option>
+        <option value="thyroid_autoimmune">🛡️ Thyroid &amp; Autoimmune Context</option>
+        <option value="cardiovascular">❤️ Cardiovascular Health</option>
+      </select>
+    </div>
 
     <div class="flex-row justify-between items-center mt-3 border-t pt-3">
       <label class="extended-thinking-toggle">
@@ -71,6 +109,10 @@
       <label class="extended-thinking-toggle">
         <input type="checkbox" bind:checked={autoCollapseThinking} />
         <span class="highlight-text">Auto-collapse thoughts on completion</span>
+      </label>
+      <label class="extended-thinking-toggle">
+        <input type="checkbox" bind:checked={includeTraceInExport} />
+        <span class="highlight-text">Include trace in copy/exports</span>
       </label>
     </div>
 

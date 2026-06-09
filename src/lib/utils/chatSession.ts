@@ -19,6 +19,7 @@ export interface ChatSession {
   selectedModel: string;
   maxTokens?: number;
   extendedThinking?: boolean;
+  consultationMode?: string;
 }
 
 /**
@@ -72,5 +73,6 @@ export function createNewSession(params: {
     selectedModel: selectedModel || (models.length > 0 ? models[0] : ""),
     maxTokens: 2048,
     extendedThinking: false,
+    consultationMode: "general",
   };
 }

@@ -3,7 +3,7 @@
   import { parseThinking, formatMarkdown } from '../../utils/chatParser';
 
   interface Props {
-    messages: { role: 'user' | 'assistant' | 'system'; content: string; fullContent?: string; images?: string[] }[];
+    messages: { role: 'user' | 'assistant' | 'system'; content: string; fullContent?: string; images?: string[]; safetyReview?: string }[];
     isChatting: boolean;
     copiedMsgId: number | null;
     showThinkingProcess: boolean;
@@ -100,7 +100,7 @@
                 }}
               >
                 <summary class="thought-summary">
-                  <span>🧠 {parsed.thoughtCompleted ? "Thought Process (Completed)" : "Thinking..."}</span>
+                  <span>🧠 {parsed.thoughtCompleted ? "Reasoning stream" : "Reasoning stream (Thinking...)"}</span>
                 </summary>
                 <div class="thought-body font-mono">
                   {parsed.thought}
@@ -115,6 +115,17 @@
               {#if !parsed.response && isChatting}
                 <span class="typing-indicator">Streaming response...</span>
               {/if}
+            </div>
+          {/if}
+
+          {#if msg.safetyReview}
+            <div class="safety-review-warning-box">
+              <div class="safety-review-header">
+                <span>🛡️ Secondary Safety Review Panel</span>
+              </div>
+              <div class="safety-review-body font-mono">
+                {@html formatMarkdown(msg.safetyReview)}
+              </div>
             </div>
           {/if}
         {/if}
@@ -394,5 +405,40 @@
     color: #e5e7eb;
     display: block;
     line-height: 1.4;
+  }
+
+  .safety-review-warning-box {
+    margin-top: 12px;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.04);
+    overflow: hidden;
+    max-width: 85%;
+    align-self: flex-start;
+    margin-left: 20px;
+    animation: fadeIn 0.25s ease-out;
+  }
+  .safety-review-header {
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .safety-review-body {
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #fbbf24;
+  }
+  :global(.safety-review-body p) {
+    margin: 0 0 6px 0;
+  }
+  :global(.safety-review-body p:last-child) {
+    margin-bottom: 0;
   }
 </style>

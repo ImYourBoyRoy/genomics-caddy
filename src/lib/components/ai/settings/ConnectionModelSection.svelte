@@ -11,6 +11,8 @@
     modelDetails: any;
     isVisionCapable: boolean;
     contextWindow: number;
+    reviewModel: string;
+    twoModelReview: boolean;
   }
 
   let {
@@ -23,7 +25,9 @@
     scanModels,
     modelDetails,
     isVisionCapable,
-    contextWindow
+    contextWindow,
+    reviewModel = $bindable(),
+    twoModelReview = $bindable()
   }: Props = $props();
 </script>
 
@@ -48,7 +52,7 @@
 
     {#if models.length > 0}
       <div class="input-row mt-2">
-        <label for="model-selector">Active LLM Model</label>
+        <label for="model-selector">Primary LLM Model</label>
         <select id="model-selector" bind:value={selectedModel} class="w-full">
           {#each models as m}
             <option value={m}>{m}</option>
@@ -63,6 +67,28 @@
               <span class="capability-badge text-badge">✍️ Text-Only</span>
             {/if}
             <span class="capability-badge context-badge">📏 {contextWindow.toLocaleString()} context</span>
+          </div>
+        {/if}
+      </div>
+
+      <!-- Two-model Review Toggle -->
+      <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; gap: 8px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem;">
+          <input type="checkbox" bind:checked={twoModelReview} style="cursor: pointer;" />
+          <span class="highlight-text font-bold" style="color: var(--text-primary);">Two-Model Safety Review</span>
+        </label>
+        
+        {#if twoModelReview}
+          <div class="input-row">
+            <label for="review-model-selector">Secondary Review Model</label>
+            <select id="review-model-selector" bind:value={reviewModel} class="w-full" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem;">
+              {#each models as m}
+                <option value={m}>{m}</option>
+              {/each}
+            </select>
+            <p style="font-size: 0.68rem; color: var(--text-secondary); line-height: 1.3; margin: 0;">
+              🤖 Automatically cross-checks primary model drafts for clinical claims, dosages, or diagnoses.
+            </p>
           </div>
         {/if}
       </div>

@@ -92,3 +92,32 @@ export async function getCurrentExe(): Promise<string> {
 export async function getMcpTools(): Promise<any[]> {
   return invoke<any[]>("get_mcp_tools");
 }
+
+export interface EvidenceRecord {
+  rsid: string;
+  gene: string;
+  evidence_text: string;
+  source_citation: string;
+  has_embedding: boolean;
+  similarity: number | null;
+}
+
+export async function listEvidenceSources(): Promise<string[]> {
+  return invoke<string[]>("list_evidence_sources");
+}
+
+export async function getEvidenceForMarker(rsid: string): Promise<EvidenceRecord[]> {
+  return invoke<EvidenceRecord[]>("get_evidence_for_marker", { rsid });
+}
+
+export async function searchEvidence(
+  query: string,
+  ollamaUrl?: string,
+  ollamaToken?: string
+): Promise<EvidenceRecord[]> {
+  return invoke<EvidenceRecord[]>("search_evidence", {
+    query,
+    ollamaUrl: ollamaUrl || undefined,
+    ollamaToken: ollamaToken || undefined,
+  });
+}

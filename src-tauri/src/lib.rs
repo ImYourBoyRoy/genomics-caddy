@@ -200,8 +200,281 @@ async fn download_chain_file(app: AppHandle) -> Result<(), String> {
     
     let content = response.bytes().await.map_err(|e| format!("Failed to read download content: {}", e))?;
     std::io::copy(&mut &*content, &mut file).map_err(|e| format!("Failed to write to file: {}", e))?;
-
     Ok(())
+}
+
+// ── Evidence Library & RAG Commands ───────────────────────────────────
+
+#[derive(Debug, serde::Serialize)]
+struct EvidenceRecord {
+    rsid: String,
+    gene: String,
+    evidence_text: String,
+    source_citation: String,
+    has_embedding: bool,
+    similarity: Option<f32>,
+}
+
+#[tauri::command]
+async fn list_evidence_sources(app: AppHandle) -> Result<Vec<String>, String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT DISTINCT source_citation FROM evidence_library ORDER BY source_citation ASC")
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|e| e.to_string())?;
+    let mut sources = Vec::new();
+    for r in rows {
+        if let Ok(s) = r {
+            sources.push(s);
+        }
+    }
+    Ok(sources)
+}
+
+#[tauri::command]
+async fn get_evidence_for_marker(app: AppHandle, rsid: String) -> Result<Vec<EvidenceRecord>, String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE rsid = ?")
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(rusqlite::params![rsid], |row| {
+            let embedding: Option<String> = row.get(4)?;
+            Ok(EvidenceRecord {
+                rsid: row.get(0)?,
+                gene: row.get(1)?,
+                evidence_text: row.get(2)?,
+                source_citation: row.get(3)?,
+                has_embedding: embedding.is_some() && !embedding.unwrap().trim().is_empty(),
+                similarity: None,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    let mut results = Vec::new();
+    for r in rows {
+        results.push(r.map_err(|e| e.to_string())?);
+    }
+    Ok(results)
+}
+
+#[tauri::command]
+async fn search_evidence(
+    app: AppHandle,
+    query: String,
+    ollama_url: Option<String>,
+    ollama_token: Option<String>,
+) -> Result<Vec<EvidenceRecord>, String> {
+    let db_path = get_db_path(&app);
+    let query_clean = query.trim().to_string();
+    if query_clean.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    // 1. Perform keyword search first (under separate scope so conn/stmt are dropped)
+    let keyword_hits = {
+        let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+        let search_pattern = format!("%{}%", query_clean.to_lowercase());
+        let mut stmt = conn.prepare(
+            "SELECT rsid, gene, evidence_text, source_citation, embedding 
+             FROM evidence_library 
+             WHERE rsid LIKE ? OR gene LIKE ? OR LOWER(evidence_text) LIKE ?"
+        ).map_err(|e| e.to_string())?;
+        
+        let rows = stmt.query_map(rusqlite::params![search_pattern, search_pattern, search_pattern], |row| {
+            let embedding: Option<String> = row.get(4)?;
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                embedding,
+            ))
+        }).map_err(|e| e.to_string())?;
+
+        let mut hits = Vec::new();
+        for r in rows {
+            hits.push(r.map_err(|e| e.to_string())?);
+        }
+        hits
+    };
+
+    // 2. If Ollama URL is provided, try Semantic Vector Search
+    if let Some(ref url) = ollama_url {
+        if !url.trim().is_empty() {
+            let clean_url = url.trim().trim_end_matches('/').to_string();
+            let token_ref = ollama_token.as_deref();
+            
+            // Try to find an embedding model on the server
+            if let Some(embed_model) = get_embedding_model(&clean_url, token_ref).await {
+                // Fetch query embedding
+                if let Ok(query_embedding) = fetch_embedding(&clean_url, token_ref, &embed_model, &query_clean).await {
+                    
+                    // Generate embeddings on-demand for the top keyword hits (up to 10) to fill the vector cache
+                    let mut new_embeddings = Vec::new();
+                    for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
+                        if embedding_opt.is_none() || embedding_opt.as_ref().unwrap().trim().is_empty() {
+                            if let Ok(emb) = fetch_embedding(&clean_url, token_ref, &embed_model, text).await {
+                                new_embeddings.push((rsid.clone(), citation.clone(), emb));
+                            }
+                        }
+                    }
+
+                    // Save new embeddings back to database
+                    if !new_embeddings.is_empty() {
+                        if let Ok(conn) = db::init_user_db(&db_path) {
+                            for (rsid, citation, emb) in new_embeddings {
+                                if let Ok(emb_json) = serde_json::to_string(&emb) {
+                                    let _ = conn.execute(
+                                        "UPDATE evidence_library SET embedding = ? WHERE rsid = ? AND source_citation = ?",
+                                        rusqlite::params![emb_json, rsid, citation],
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    // Reload all rows with cached embeddings and calculate similarity
+                    let vector_results = {
+                        if let Ok(conn) = db::init_user_db(&db_path) {
+                            if let Ok(mut stmt_all) = conn.prepare(
+                                "SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE embedding IS NOT NULL AND embedding != ''"
+                            ) {
+                                if let Ok(rows_all) = stmt_all.query_map([], |row| {
+                                    let embedding_str: String = row.get(4)?;
+                                    Ok(EvidenceRecord {
+                                        rsid: row.get(0)?,
+                                        gene: row.get(1)?,
+                                        evidence_text: row.get(2)?,
+                                        source_citation: row.get(3)?,
+                                        has_embedding: true,
+                                        similarity: serde_json::from_str::<Vec<f32>>(&embedding_str)
+                                            .ok()
+                                            .map(|v| cosine_similarity(&query_embedding, &v)),
+                                    })
+                                }) {
+                                    let mut results = Vec::new();
+                                    for r in rows_all {
+                                        if let Ok(rec) = r {
+                                            if rec.similarity.is_some() {
+                                                results.push(rec);
+                                            }
+                                        }
+                                    }
+                                    results
+                                } else {
+                                    Vec::new()
+                                }
+                            } else {
+                                Vec::new()
+                            }
+                        } else {
+                            Vec::new()
+                        }
+                    };
+
+                    let mut sorted_results = vector_results;
+                    // Sort by similarity descending
+                    sorted_results.sort_by(|a, b| {
+                        b.similarity.unwrap_or(0.0).partial_cmp(&a.similarity.unwrap_or(0.0)).unwrap()
+                    });
+
+                    // Only return results with similarity > 0.35
+                    sorted_results.retain(|r| r.similarity.unwrap_or(0.0) > 0.35);
+
+                    if !sorted_results.is_empty() {
+                        return Ok(sorted_results);
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback: convert keyword hits to EvidenceRecords
+    let fallback_results = keyword_hits.into_iter().map(|(rsid, gene, text, citation, emb_opt)| {
+        EvidenceRecord {
+            rsid,
+            gene,
+            evidence_text: text,
+            source_citation: citation,
+            has_embedding: emb_opt.is_some() && !emb_opt.unwrap().trim().is_empty(),
+            similarity: None,
+        }
+    }).collect();
+
+    Ok(fallback_results)
+}
+
+fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+    if a.len() != b.len() || a.is_empty() {
+        return 0.0;
+    }
+    let mut dot_product = 0.0;
+    let mut norm_a = 0.0;
+    let mut norm_b = 0.0;
+    for i in 0..a.len() {
+        dot_product += a[i] * b[i];
+        norm_a += a[i] * a[i];
+        norm_b += b[i] * b[i];
+    }
+    if norm_a == 0.0 || norm_b == 0.0 {
+        return 0.0;
+    }
+    dot_product / (norm_a.sqrt() * norm_b.sqrt())
+}
+
+async fn get_embedding_model(url: &str, token: Option<&str>) -> Option<String> {
+    let client = reqwest::Client::new();
+    let mut req = client.get(format!("{}/api/tags", url));
+    if let Some(t) = token {
+        if !t.trim().is_empty() {
+            req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
+        }
+    }
+    let res = req.send().await.ok()?;
+    #[derive(serde::Deserialize)]
+    struct OllamaModel { name: String }
+    #[derive(serde::Deserialize)]
+    struct OllamaTags { models: Vec<OllamaModel> }
+    let tags = res.json::<OllamaTags>().await.ok()?;
+    for m in &tags.models {
+        if m.name.contains("embed") {
+            return Some(m.name.clone());
+        }
+    }
+    tags.models.first().map(|m| m.name.clone())
+}
+
+async fn fetch_embedding(
+    url: &str,
+    token: Option<&str>,
+    model: &str,
+    prompt: &str,
+) -> Result<Vec<f32>, String> {
+    let client = reqwest::Client::new();
+    let mut req = client.post(format!("{}/api/embeddings", url));
+    if let Some(t) = token {
+        if !t.trim().is_empty() {
+            req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
+        }
+    }
+    let payload = serde_json::json!({
+        "model": model,
+        "prompt": prompt,
+    });
+    let res = req.json(&payload).send().await.map_err(|e| e.to_string())?;
+    if !res.status().is_success() {
+        return Err(format!("Ollama returned HTTP error: {}", res.status()));
+    }
+    #[derive(serde::Deserialize)]
+    struct EmbeddingResponse {
+        embedding: Vec<f32>,
+    }
+    let resp = res.json::<EmbeddingResponse>().await.map_err(|e| e.to_string())?;
+    Ok(resp.embedding)
 }
 
 #[tauri::command]
@@ -436,7 +709,10 @@ pub fn run() {
             stream_ollama_chat,
             show_ollama_model,
             get_current_exe,
-            get_mcp_tools
+            get_mcp_tools,
+            list_evidence_sources,
+            search_evidence,
+            get_evidence_for_marker
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

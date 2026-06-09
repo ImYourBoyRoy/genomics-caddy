@@ -1,6 +1,6 @@
 // ./src/lib/utils/aiExport.ts
-
 import type { GenomeSample } from "../types/genomics";
+import { parseThinking } from "./chatParser";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -8,7 +8,8 @@ import type { GenomeSample } from "../types/genomics";
 export function buildStandardMarkdown(
   messages: any[],
   selectedSample: GenomeSample | null,
-  selectedModel: string
+  selectedModel: string,
+  includeTrace: boolean = false
 ): string {
   let md = `# Genomics Caddy AI - Consultation Export\n`;
   md += `*Sample Name:* ${selectedSample ? selectedSample.name : "N/A"}\n`;
@@ -23,14 +24,14 @@ export function buildStandardMarkdown(
     } else if (msg.role === "user") {
       md += `### You:\n${msg.content}\n\n`;
     } else if (msg.role === "assistant") {
-      // Strip raw thinking tags
-      let cleanContent = msg.content;
-      if (cleanContent.includes("<unused95>")) {
-        cleanContent = cleanContent.substring(cleanContent.indexOf("<unused95>") + "<unused95>".length);
-      } else if (cleanContent.includes("</think>")) {
-        cleanContent = cleanContent.substring(cleanContent.indexOf("</think>") + "</think>".length);
+      const parsed = parseThinking(msg.content);
+      if (parsed.thought && includeTrace) {
+        md += `> **[Reasoning Stream]**\n> ${parsed.thought.replace(/\n/g, "\n> ")}\n\n`;
       }
-      md += `### Genomics Caddy AI:\n${cleanContent.trim()}\n\n`;
+      md += `### Genomics Caddy AI:\n${parsed.response.trim()}\n\n`;
+      if (msg.safetyReview) {
+        md += `> **[Safety Review Notes]**\n> ${msg.safetyReview.trim().replace(/\n/g, "\n> ")}\n\n`;
+      }
     }
     md += `---\n\n`;
   }
@@ -47,7 +48,8 @@ export function buildClinicalHandoffMarkdown(
   selectedModel: string,
   userProfile: any,
   currentSystemPrompt: string,
-  generatedReport: any
+  generatedReport: any,
+  includeTrace: boolean = false
 ): string {
   let md = `# Genomics Caddy AI - Clinical Handoff & Biohacking Summary\n`;
   md += `## Patient & Metadata\n`;
@@ -106,13 +108,14 @@ export function buildClinicalHandoffMarkdown(
     } else if (msg.role === "user") {
       md += `### User:\n${msg.content}\n\n`;
     } else if (msg.role === "assistant") {
-      let cleanContent = msg.content;
-      if (cleanContent.includes("<unused95>")) {
-        cleanContent = cleanContent.substring(cleanContent.indexOf("<unused95>") + "<unused95>".length);
-      } else if (cleanContent.includes("</think>")) {
-        cleanContent = cleanContent.substring(cleanContent.indexOf("</think>") + "</think>".length);
+      const parsed = parseThinking(msg.content);
+      if (parsed.thought && includeTrace) {
+        md += `> **[Reasoning Stream]**\n> ${parsed.thought.replace(/\n/g, "\n> ")}\n\n`;
       }
-      md += `### AI Assistant:\n${cleanContent.trim()}\n\n`;
+      md += `### AI Assistant:\n${parsed.response.trim()}\n\n`;
+      if (msg.safetyReview) {
+        md += `> **[Safety Review Notes]**\n> ${msg.safetyReview.trim().replace(/\n/g, "\n> ")}\n\n`;
+      }
     }
   }
   return md;

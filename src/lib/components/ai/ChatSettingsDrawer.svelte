@@ -5,6 +5,7 @@
   import GenomicContextSection from "./settings/GenomicContextSection.svelte";
   import SystemPromptSection from "./settings/SystemPromptSection.svelte";
   import BiohackingProfileSection from "./BiohackingProfileSection.svelte";
+  import type { AiContextMode, ConsultationMode } from "../../utils/aiPrompt";
 
   interface UserBiohackingProfile {
     goals: string;
@@ -43,6 +44,11 @@
     defaultInstructions: string;
     showThinkingProcess: boolean;
     autoCollapseThinking: boolean;
+    includeTraceInExport: boolean;
+    contextMode: AiContextMode;
+    consultationMode: ConsultationMode;
+    reviewModel: string;
+    twoModelReview: boolean;
   }
 
   let {
@@ -69,7 +75,12 @@
     systemInstructions = $bindable(),
     defaultInstructions,
     showThinkingProcess = $bindable(),
-    autoCollapseThinking = $bindable()
+    autoCollapseThinking = $bindable(),
+    includeTraceInExport = $bindable(),
+    contextMode = $bindable(),
+    consultationMode = $bindable(),
+    reviewModel = $bindable(),
+    twoModelReview = $bindable()
   }: Props = $props();
 </script>
 
@@ -88,6 +99,8 @@
       {modelDetails}
       {isVisionCapable}
       {contextWindow}
+      bind:reviewModel
+      bind:twoModelReview
     />
 
     {#if models.length > 0}
@@ -98,6 +111,9 @@
         bind:extendedThinking
         bind:showThinkingProcess
         bind:autoCollapseThinking
+        bind:includeTraceInExport
+        bind:contextMode
+        bind:consultationMode
         {sessionPromptTokens}
         {sessionResponseTokens}
         {sessionTotalTokens}

@@ -49,6 +49,13 @@ export interface MarkerDefinition {
   clinical_confirmation_required?: boolean;
   variant_type?: VariantType;
   sources?: MarkerSource[];
+  expected_plus_alleles?: string[];
+  strand?: string;
+  source_build?: string;
+  hgvs?: string;
+  allele_orientation_verified?: boolean;
+  orientation_source?: string;
+  interpretation_blocked_if_unverified?: boolean;
 }
 
 export interface SectionDefinition {
@@ -79,8 +86,14 @@ export interface EvaluatedMarker {
   clinical_confirmation_required?: boolean;
   variant_type?: VariantType;
   sources?: MarkerSource[];
-  /** Computed severity classification from Rust backend */
   severity_class: SeverityClass;
+  expected_plus_alleles?: string[];
+  strand?: string;
+  source_build?: string;
+  hgvs?: string;
+  allele_orientation_verified?: boolean;
+  orientation_source?: string;
+  interpretation_blocked_if_unverified?: boolean;
 }
 
 /** Direction-aware summary statistics for a report section. */
@@ -94,8 +107,14 @@ export interface SectionSummary {
   no_data_count: number;
   confirmation_required_count: number;
   total_markers: number;
-  /** When false, percent score should not be displayed. */
   show_percent_score: boolean;
+  active_marker_count: number;
+  active_risk_marker_count: number;
+  active_protective_marker_count: number;
+  active_trait_marker_count: number;
+  active_context_marker_count: number;
+  blocked_unverified_count: number;
+  benign_modifier_count: number;
 }
 
 export interface EvaluatedSection {

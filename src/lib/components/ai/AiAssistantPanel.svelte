@@ -5,44 +5,24 @@
   import { scanOllamaModels, streamOllamaChat, showOllamaModel, saveReportJson } from "../../api/tauri";
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
   import { LAYPERSON_MAP } from "../../utils/layperson";
-  import { normalizeImage } from "../../utils/image";
   import { buildStandardMarkdown, buildClinicalHandoffMarkdown } from "../../utils/aiExport";
   import { stripThinkingTokens } from "../../utils/chatParser";
   import { dialogStore } from "../../utils/dialogState.svelte";
-  import {
-    loadSessionsFromLocalStorage, saveSessionsToLocalStorage, createNewSession,
-    type ChatSession
-  } from "../../utils/chatSession";
+  import { type ChatSession } from "../../utils/chatSession";
+  import { ConsultationSessionStore } from "../../utils/consultationSession.svelte";
   import {
     type UserBiohackingProfile, type ContextStats, type ActiveCategories,
     DEFAULT_INSTRUCTIONS, buildSystemPrompt, calculateContextStats,
     getActiveCategories, getDynamicQuestions, isReasoningModel as checkReasoningModel,
     isModelVisionCapable, getContextWindow, filterChatModels, autoSelectModel,
+    type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
-
-  // Static Marker Packs & Manifest
   import manifest from "../../marker-packs/manifest.json";
-  import core from "../../marker-packs/core.json";
-  import pgx from "../../marker-packs/pgx.json";
-  import metabolic from "../../marker-packs/metabolic.json";
-  import nutrients from "../../marker-packs/nutrients.json";
-  import neuropsych from "../../marker-packs/neuropsych.json";
-  import sleep from "../../marker-packs/sleep.json";
-  import connectiveTissue from "../../marker-packs/connective_tissue.json";
-  import thyroidAutoimmune from "../../marker-packs/thyroid_autoimmune.json";
-  import cardiovascular from "../../marker-packs/cardiovascular.json";
-  import cancerConfirmationOnly from "../../marker-packs/cancer_confirmation_only.json";
-
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
   import ChatSettingsDrawer from "./ChatSettingsDrawer.svelte";
   import ChatModals from "./ChatModals.svelte";
-
-  const PACKS_MAP: Record<string, any> = {
-    core, pgx, metabolic, nutrients, neuropsych, sleep,
-    connective_tissue: connectiveTissue, thyroid_autoimmune: thyroidAutoimmune,
-    cardiovascular, cancer_confirmation_only: cancerConfirmationOnly,
-  };
+  import EvidenceLibraryPanel from "./EvidenceLibraryPanel.svelte";
 
   // ── Props ──────────────────────────────────────────────────────────────
   interface Props {
@@ -68,9 +48,8 @@
   }: Props = $props();
 
   // ── Core UI State ──────────────────────────────────────────────────────
-  let sessions = $state<ChatSession[]>([]);
-  let filteredSessions = $derived(sessions.filter(s => s.sampleId === (selectedSample ? selectedSample.id : null)));
-  let currentSessionId = $state<string | null>(null);
+  const sessionStore = new ConsultationSessionStore();
+  let filteredSessions = $derived(sessionStore.sessions.filter(s => s.sampleId === (selectedSample ? selectedSample.id : null)));
 
   let maxTokens = $state(2048);
   let extendedThinking = $state(false);
@@ -79,8 +58,21 @@
 
   let showThinkingProcess = $state(true);
   let autoCollapseThinking = $state(true);
+  let includeTraceInExport = $state(false);
+  let contextMode = $state<AiContextMode>("active_findings");
+  let consultationMode = $state<ConsultationMode>("general");
+  let reviewModel = $state("");
+  let twoModelReview = $state(false);
   let userCollapsedThinkingMap = $state(new Map<any, boolean>());
   let copiedMsgId = $state<number | null>(null);
+  let activeView = $state<"chat" | "evidence">("chat");
+
+  // Link contextMode and onlyActiveFindings bi-directionally
+  $effect(() => {
+    if (contextMode === "full_selected" && onlyActiveFindings) onlyActiveFindings = false;
+    else if (contextMode !== "full_selected" && !onlyActiveFindings && contextMode !== "developer_raw_json") contextMode = "full_selected";
+    else if (onlyActiveFindings && contextMode === "full_selected") contextMode = "selected_pack_active";
+  });
 
   let isScanning = $state(false);
   let isChatting = $state(false);
@@ -89,13 +81,16 @@
   let models = $state<string[]>([]);
   let showPromptInspector = $state(false);
   let showExportModal = $state(false);
-  let chatBox = $state<HTMLElement | null>(null);
-  let userHasScrolledUp = $state(false);
-  let isDragging = $state(false);
-  let imageInput = $state<HTMLInputElement | null>(null);
 
   let unlistenChunk: (() => void) | null = null;
   let unlistenDone: (() => void) | null = null;
+  let unlistenReviewChunk: (() => void) | null = null;
+  let unlistenReviewDone: (() => void) | null = null;
+
+  function stopReviewListeners() {
+    if (unlistenReviewChunk) { unlistenReviewChunk(); unlistenReviewChunk = null; }
+    if (unlistenReviewDone) { unlistenReviewDone(); unlistenReviewDone = null; }
+  }
 
   // Token tracking
   let sessionPromptTokens = $state(0);
@@ -119,72 +114,24 @@
   // Custom system instructions
   let systemInstructions = $state("");
 
-  // ── Scroll Handling ───────────────────────────────────────────────────
-  function handleScroll(e: Event) {
-    const el = e.currentTarget as HTMLElement;
-    const threshold = 100;
-    userHasScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > threshold;
-  }
-
-  // Auto-scroll effect: only when user hasn't scrolled up
-  $effect(() => {
-    if (messages.length > 0 && chatBox && !userHasScrolledUp) {
-      requestAnimationFrame(() => {
-        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-      });
-    }
-  });
-
   // ── Clipboard / Copy ──────────────────────────────────────────────────
   function copyToClipboard(text: string, index: number) {
-    const cleanText = stripThinkingTokens(text);
-    navigator.clipboard.writeText(cleanText)
+    navigator.clipboard.writeText(includeTraceInExport ? text : stripThinkingTokens(text))
       .then(() => { copiedMsgId = index; setTimeout(() => { if (copiedMsgId === index) copiedMsgId = null; }, 2000); })
       .catch(err => console.error("Failed to copy text: ", err));
   }
 
   // ── Export ────────────────────────────────────────────────────────────
   async function exportConversation(type: "standard" | "clinical") {
-    if (messages.length === 0) { dialogStore.alert("No conversation history to export."); return; }
+    if (!messages.length) { dialogStore.alert("No conversation history to export."); return; }
     const md = type === "clinical"
-      ? buildClinicalHandoffMarkdown(messages, selectedSample, selectedModel, userProfile, currentSystemPrompt, generatedReport)
-      : buildStandardMarkdown(messages, selectedSample, selectedModel);
-    const sampleNameClean = (selectedSample ? selectedSample.name : "genome").replace(/[^a-zA-Z0-9]/g, "_");
+      ? buildClinicalHandoffMarkdown(messages, selectedSample, selectedModel, userProfile, currentSystemPrompt, generatedReport, includeTraceInExport)
+      : buildStandardMarkdown(messages, selectedSample, selectedModel, includeTraceInExport);
+    const cleanName = (selectedSample ? selectedSample.name : "genome").replace(/[^a-zA-Z0-9]/g, "_");
     try {
-      const saved = await saveReportJson(md, `${sampleNameClean}_consultation_${type}_${Date.now()}.md`);
-      if (saved) dialogStore.alert("Chat conversation exported and saved successfully!");
+      if (await saveReportJson(md, `${cleanName}_consultation_${type}_${Date.now()}.md`))
+        dialogStore.alert("Chat conversation exported and saved successfully!");
     } catch (e: any) { dialogStore.alert("Failed to save chat export: " + e.message); }
-  }
-
-  // ── Image Handling ────────────────────────────────────────────────────
-  async function handleImageFile(file: File) {
-    if (!file.type.startsWith("image/")) { dialogStore.alert("Only image files are supported."); return; }
-    try {
-      const base64Str = await normalizeImage(file);
-      attachedImages = [...attachedImages, { name: file.name, base64: base64Str, previewUrl: URL.createObjectURL(file) }];
-    } catch (e: any) { dialogStore.alert("Failed to process image: " + e.message); }
-  }
-  function removeAttachedImage(index: number) {
-    const img = attachedImages[index];
-    if (img.previewUrl.startsWith("blob:")) URL.revokeObjectURL(img.previewUrl);
-    attachedImages = attachedImages.filter((_, i) => i !== index);
-  }
-  function handleFileChange(e: Event) {
-    const input = e.target as HTMLInputElement;
-    if (input.files) { for (let i = 0; i < input.files.length; i++) handleImageFile(input.files[i]); input.value = ""; }
-  }
-  function handlePaste(e: ClipboardEvent) {
-    if (!isVisionCapable) return;
-    const items = e.clipboardData?.items;
-    if (items) { for (let i = 0; i < items.length; i++) { if (items[i].type.startsWith("image/")) { const file = items[i].getAsFile(); if (file) { e.preventDefault(); handleImageFile(file); } } } }
-  }
-  function handleDragOver(e: DragEvent) { if (isVisionCapable) { e.preventDefault(); isDragging = true; } }
-  function handleDragLeave() { isDragging = false; }
-  function handleDrop(e: DragEvent) {
-    if (!isVisionCapable) return;
-    e.preventDefault(); isDragging = false;
-    const files = e.dataTransfer?.files;
-    if (files) { for (let i = 0; i < files.length; i++) handleImageFile(files[i]); }
   }
 
   // ── Model Details Loading ─────────────────────────────────────────────
@@ -195,8 +142,7 @@
       modelDetails = details;
       isVisionCapable = isModelVisionCapable(selectedModel, details);
       contextWindow = getContextWindow(details.model_info);
-    } catch (e) {
-      console.error("Failed to load model details", e);
+    } catch {
       isVisionCapable = isModelVisionCapable(selectedModel, null);
       contextWindow = 4096;
     }
@@ -209,15 +155,13 @@
     localStorage.setItem("genomics_ollama_url", ollamaUrl);
     localStorage.setItem("genomics_ollama_token", ollamaToken);
     try {
-      const rawModels = await scanOllamaModels(ollamaUrl, ollamaToken || undefined);
-      models = filterChatModels(rawModels);
+      models = filterChatModels(await scanOllamaModels(ollamaUrl, ollamaToken || undefined));
       selectedModel = autoSelectModel(models, selectedModel);
     } catch (e: any) {
-      let msg = `Failed to connect: ${e.message || e}`;
+      scanError = `Failed to connect: ${e.message || e}`;
       if (!ollamaUrl.includes("localhost") && !ollamaUrl.includes("127.0.0.1")) {
-        msg += "\n\n💡 Remote Connection Tips:\n1. Ensure Ollama is running on the remote host.\n2. Set OLLAMA_HOST=0.0.0.0 before starting Ollama.\n3. Verify port 11434 is open in the firewall.";
+        scanError += "\n\n💡 Remote Connection Tips:\n1. Ensure Ollama is running on the remote host.\n2. Set OLLAMA_HOST=0.0.0.0 before starting Ollama.\n3. Verify port 11434 is open in the firewall.";
       }
-      scanError = msg;
     } finally { isScanning = false; }
   }
 
@@ -230,7 +174,6 @@
     if (!selectedModel) { dialogStore.alert("Please configure a connection and select an LLM model."); return; }
     if (!generatedReport) { dialogStore.alert("Report calculations are still loading. Please wait a moment."); return; }
 
-    userHasScrolledUp = false;
     const userMsg: any = { role: "user", content: text };
     if (attachedImages.length > 0) userMsg.images = attachedImages.map(img => img.base64);
     messages = [...messages, userMsg];
@@ -259,47 +202,85 @@
           const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
           if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
           if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
-          stopListeners(); isChatting = false;
+          stopListeners();
         }),
       ]);
       unlistenChunk = unChunk; unlistenDone = unDone;
 
       const limit = extendedThinking ? 8192 : maxTokens;
       await streamOllamaChat(ollamaUrl, ollamaToken || undefined, selectedModel, payloadMessages, temperature, limit);
+
+      // --- Dual-Model Safety Review ---
+      if (twoModelReview && reviewModel) {
+        messages[assistantIndex].safetyReview = "Reviewing response safety...";
+        messages = [...messages];
+
+        const reviewPrompt = `You are a medical safety auditor. Review the following genomic consultation draft for any clinical overclaiming, dosing advice, or diagnosing assertions. Output your safety corrections, warnings, or notes to the patient.
+
+Draft Response to Review:
+"""
+${stripThinkingTokens(messages[assistantIndex].content)}
+"""`;
+
+        stopReviewListeners();
+
+        const [unReviewChunk, unReviewDone] = await Promise.all([
+          listen("ollama-chunk", (event) => {
+            if (messages[assistantIndex].safetyReview === "Reviewing response safety...") {
+              messages[assistantIndex].safetyReview = "";
+            }
+            messages[assistantIndex].safetyReview += event.payload as string;
+            messages = [...messages];
+          }),
+          listen("ollama-done", (event) => {
+            const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
+            if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
+            if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
+            stopReviewListeners();
+            isChatting = false;
+          }),
+        ]);
+        unlistenReviewChunk = unReviewChunk;
+        unlistenReviewDone = unReviewDone;
+
+        await streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, 2048);
+      } else {
+        isChatting = false;
+      }
     } catch (e: any) {
-      stopListeners(); isChatting = false;
-      messages[assistantIndex].content = `Error connecting to AI: ${e.message || e}`;
+      stopListeners();
+      stopReviewListeners();
+      isChatting = false;
+      if (messages[assistantIndex].content === "") {
+        messages[assistantIndex].content = `Error connecting to AI: ${e.message || e}`;
+      } else {
+        messages[assistantIndex].content += `\n\n*[Error during stream: ${e.message || e}]*`;
+      }
       messages = [...messages];
     }
   }
 
   function stopGeneration() {
-    stopListeners(); isChatting = false;
+    stopListeners();
+    stopReviewListeners();
+    isChatting = false;
     const last = messages.length - 1;
     if (last >= 0 && messages[last].role === "assistant") {
+      if (messages[last].safetyReview === "Reviewing response safety...") {
+        messages[last].safetyReview = "*[Review stopped by user]*";
+      }
       messages[last].content += "\n\n*[Consultation response stopped by user]*";
       messages = [...messages];
     }
   }
   function clearHistory() {
-    dialogStore.confirm("Are you sure you want to clear this consultation's chat history?", () => {
-      messages = []; sessionPromptTokens = 0; sessionResponseTokens = 0;
-    }, "Clear Chat History");
+    dialogStore.confirm("Are you sure you want to clear this consultation's chat history?", () => { messages = []; sessionPromptTokens = 0; sessionResponseTokens = 0; }, "Clear Chat History");
   }
   function deleteMessage(index: number) {
-    dialogStore.confirm("Delete this message? Deleting a question also removes its AI answer.", () => {
-      const msg = messages[index];
-      if (msg.role === "user" && messages[index + 1]?.role === "assistant") {
-        messages = messages.filter((_, i) => i !== index && i !== index + 1);
-      } else { messages = messages.filter((_, i) => i !== index); }
-    }, "Delete Message");
+    dialogStore.confirm("Delete this message? Deleting a question also removes its AI answer.", () => { messages = messages.filter((_, i) => messages[index].role === "user" && messages[index + 1]?.role === "assistant" ? (i !== index && i !== index + 1) : i !== index); }, "Delete Message");
   }
   function editMessage(index: number) {
-    if (messages[index]?.role !== "user") return;
-    dialogStore.confirm("Edit this question? This will branch the conversation from this point.", () => {
-      promptText = messages[index].content;
-      messages = messages.slice(0, index);
-    }, "Edit & Branch");
+    if (messages[index]?.role === "user") { dialogStore.confirm("Edit this question? This will branch the conversation from this point.", () => { promptText = messages[index].content; messages = messages.slice(0, index); }, "Edit & Branch"); }
   }
   function stopListeners() {
     if (unlistenChunk) { unlistenChunk(); unlistenChunk = null; }
@@ -307,199 +288,157 @@
   }
 
   // ── Session Management ────────────────────────────────────────────────
-  function loadSessions() {
-    sessions = loadSessionsFromLocalStorage();
-    const pid = selectedSample ? selectedSample.id : null;
-    const activeId = localStorage.getItem(`genomics_active_session_id_${pid}`);
-    const found = activeId ? sessions.find(s => s.id === activeId && s.sampleId === pid) : null;
-    if (found) loadSession(found.id);
-    else { const ps = sessions.filter(s => s.sampleId === pid); if (ps.length > 0) loadSession(ps[0].id); else startNewSession(); }
-  }
   function loadSession(id: string) {
-    const session = sessions.find(s => s.id === id);
-    if (!session) return;
-    currentSessionId = id;
+    const s = sessionStore.sessions.find(x => x.id === id);
+    if (!s) return;
+    sessionStore.currentSessionId = id;
     const pid = selectedSample ? selectedSample.id : null;
     localStorage.setItem(`genomics_active_session_id_${pid}`, id);
     localStorage.setItem("genomics_active_session_id", id);
-    messages = session.messages || [];
-    selectedPacks = { ...session.selectedPacks }; onlyActiveFindings = session.onlyActiveFindings;
-    temperature = session.temperature; selectedModel = session.selectedModel;
-    maxTokens = session.maxTokens || 2048; extendedThinking = session.extendedThinking || false;
+    messages = s.messages || [];
+    selectedPacks = { ...s.selectedPacks }; onlyActiveFindings = s.onlyActiveFindings;
+    temperature = s.temperature; selectedModel = s.selectedModel;
+    maxTokens = s.maxTokens || 2048; extendedThinking = s.extendedThinking || false;
+    consultationMode = (s.consultationMode || "general") as ConsultationMode;
     sessionPromptTokens = 0; sessionResponseTokens = 0;
   }
   function startNewSession() {
-    const name = selectedSample ? selectedSample.name : "Guest";
-    const pid = selectedSample ? selectedSample.id : null;
-    const ns = createNewSession({
-      sampleName: name,
-      sampleId: pid,
-      selectedModel,
-      models,
-      manifestPacks: manifest.packs
-    });
-    sessions = [ns, ...sessions]; currentSessionId = ns.id;
-    localStorage.setItem(`genomics_active_session_id_${pid}`, ns.id);
-    localStorage.setItem("genomics_active_session_id", ns.id);
-    messages = []; selectedPacks = ns.selectedPacks; onlyActiveFindings = true; temperature = 0.0; maxTokens = 2048; extendedThinking = false;
-    sessionPromptTokens = 0; sessionResponseTokens = 0;
-    saveSessionsToLocalStorage(sessions);
+    sessionStore.startNew(selectedSample, selectedModel, models, manifest.packs);
+    if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
   }
   function saveSessionTitle(session: any) {
-    if (session.title.trim()) { sessions = [...sessions]; saveSessionsToLocalStorage(sessions); }
+    if (session.title.trim()) sessionStore.saveTitle();
   }
   function deleteSession(id: string) {
     dialogStore.confirm("Delete this consultation history? This cannot be undone.", () => {
-      sessions = sessions.filter(s => s.id !== id);
-      saveSessionsToLocalStorage(sessions);
-      if (currentSessionId === id) { if (sessions.length > 0) loadSession(sessions[0].id); else startNewSession(); }
+      sessionStore.delete(id, selectedSample, selectedModel, models, manifest.packs);
+      if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     }, "Delete Consultation");
   }
 
   // ── Profile Watcher ───────────────────────────────────────────────────
   $effect(() => {
     if (selectedSample) {
-      const active = sessions.find(s => s.id === currentSessionId);
+      const active = sessionStore.sessions.find(s => s.id === sessionStore.currentSessionId);
       if (!active || active.sampleId !== selectedSample.id) {
-        const pid = selectedSample.id;
-        const activeId = localStorage.getItem(`genomics_active_session_id_${pid}`);
-        const found = activeId ? sessions.find(s => s.id === activeId && s.sampleId === pid) : null;
-        if (found) loadSession(found.id);
-        else { const ps = sessions.filter(s => s.sampleId === pid); if (ps.length > 0) loadSession(ps[0].id); else startNewSession(); }
+        sessionStore.load(selectedSample, selectedModel, models, manifest.packs);
+        if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
       }
     }
   });
 
   // ── Session Auto-Save ─────────────────────────────────────────────────
   $effect(() => {
-    if (!currentSessionId || sessions.length === 0) return;
-    const idx = sessions.findIndex(s => s.id === currentSessionId);
-    if (idx === -1) return;
-    let changed = false;
-    if (sessions[idx].messages !== messages) { sessions[idx].messages = messages; changed = true; }
-    if (JSON.stringify(sessions[idx].selectedPacks) !== JSON.stringify(selectedPacks)) { sessions[idx].selectedPacks = { ...selectedPacks }; changed = true; }
-    if (sessions[idx].onlyActiveFindings !== onlyActiveFindings) { sessions[idx].onlyActiveFindings = onlyActiveFindings; changed = true; }
-    if (sessions[idx].temperature !== temperature) { sessions[idx].temperature = temperature; changed = true; }
-    if (sessions[idx].selectedModel !== selectedModel) { sessions[idx].selectedModel = selectedModel; changed = true; }
-    if (sessions[idx].maxTokens !== maxTokens) { sessions[idx].maxTokens = maxTokens; changed = true; }
-    if (sessions[idx].extendedThinking !== extendedThinking) { sessions[idx].extendedThinking = extendedThinking; changed = true; }
-    if (changed) {
-      sessions[idx].timestamp = Date.now();
-      sessions.sort((a, b) => b.timestamp - a.timestamp);
-      saveSessionsToLocalStorage(sessions);
+    if (!sessionStore.currentSessionId || sessionStore.sessions.length === 0) return;
+    const s = sessionStore.sessions.find(x => x.id === sessionStore.currentSessionId);
+    if (!s) return;
+    const packsStr = JSON.stringify(selectedPacks);
+    if (s.messages !== messages || JSON.stringify(s.selectedPacks) !== packsStr || s.onlyActiveFindings !== onlyActiveFindings || s.temperature !== temperature || s.selectedModel !== selectedModel || s.maxTokens !== maxTokens || s.extendedThinking !== extendedThinking || s.consultationMode !== consultationMode) {
+      Object.assign(s, { messages, selectedPacks: { ...selectedPacks }, onlyActiveFindings, temperature, selectedModel, maxTokens, extendedThinking, consultationMode, timestamp: Date.now() });
+      sessionStore.sessions.sort((a, b) => b.timestamp - a.timestamp);
+      sessionStore.saveTitle();
     }
   });
 
-  // ── Reasoning Model Auto-Toggle ───────────────────────────────────────
-  let isReasoning = $derived(checkReasoningModel(selectedModel));
-  $effect(() => { if (isReasoning && !extendedThinking) extendedThinking = true; });
+  $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  // ── Derived: System Prompt (uses utility) ─────────────────────────────
-  let currentSystemPrompt = $derived.by(() => {
-    if (!selectedSample || !generatedReport) return "No sample or report loaded.";
-    return buildSystemPrompt({
-      selectedSample, generatedReport, selectedPacks, onlyActiveFindings,
-      userProfile, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS,
-      manifestPacks: manifest.packs, packsMap: PACKS_MAP, laypersonMap: LAYPERSON_MAP,
-    });
-  });
-
-  // ── Derived: Context Stats ────────────────────────────────────────────
-  let contextStats = $derived.by((): ContextStats => {
-    if (!generatedReport) return { included: 0, total: 0 };
-    return calculateContextStats(generatedReport, selectedPacks, onlyActiveFindings, manifest.packs, PACKS_MAP);
-  });
-
-  // ── Derived: Active Categories & Dynamic Questions ────────────────────
-  let activeCategories = $derived.by((): ActiveCategories => {
-    if (!generatedReport) return { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false };
-    return getActiveCategories(generatedReport, selectedPacks, manifest.packs, PACKS_MAP);
-  });
+  // ── Derived State Calculations ────────────────────────────────────────
+  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
+  let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
+  let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false });
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
 
   // ── Context Update Notifications ──────────────────────────────────────
   let lastContextSignature = $state("");
   $effect(() => {
-    const activePacksStr = Object.entries(selectedPacks).filter(([_, on]) => on).map(([id]) => id).sort().join(",");
-    const sig = `${activePacksStr}|${onlyActiveFindings}|${selectedSample?.id}`;
-    if (lastContextSignature === "") { lastContextSignature = sig; return; }
-    if (sig !== lastContextSignature) {
-      lastContextSignature = sig;
-      if (messages.length > 0 && selectedSample && generatedReport) {
-        const packNames = manifest.packs.filter(p => selectedPacks[p.id]).map(p => p.label).join(", ");
-        const shortMsg = `Genomic context updated. Active packs: [${packNames || "None"}]. Findings sent: ${contextStats.included} variants.`;
-        messages = [...messages, { role: "system", content: shortMsg, fullContent: shortMsg }];
-      }
+    const sig = `${Object.keys(selectedPacks).filter(k => selectedPacks[k]).sort().join(",")}|${onlyActiveFindings}|${selectedSample?.id}`;
+    if (lastContextSignature && sig !== lastContextSignature && messages.length > 0 && selectedSample && generatedReport) {
+      const names = manifest.packs.filter(p => selectedPacks[p.id]).map(p => p.label).join(", ") || "None";
+      const shortMsg = `Genomic context updated. Active packs: [${names}]. Findings sent: ${contextStats.included} variants.`;
+      messages = [...messages, { role: "system", content: shortMsg, fullContent: shortMsg }];
     }
+    lastContextSignature = sig;
   });
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
   onMount(() => {
-    const savedUrl = localStorage.getItem("genomics_ollama_url");
-    if (savedUrl && (!ollamaUrl || ollamaUrl === "http://localhost:11434")) ollamaUrl = savedUrl;
-    const savedToken = localStorage.getItem("genomics_ollama_token");
-    if (savedToken && !ollamaToken) ollamaToken = savedToken;
+    ollamaUrl = localStorage.getItem("genomics_ollama_url") || ollamaUrl;
+    ollamaToken = localStorage.getItem("genomics_ollama_token") || ollamaToken;
     if (Object.keys(selectedPacks).length === 0) {
-      const packs: Record<string, boolean> = {};
-      for (const pack of manifest.packs) packs[pack.id] = true;
-      selectedPacks = packs;
+      selectedPacks = Object.fromEntries(manifest.packs.map(p => [p.id, true]));
     }
-    const st = localStorage.getItem("genomics_show_thinking_process");
-    if (st !== null) showThinkingProcess = st === "true";
-    const ac = localStorage.getItem("genomics_auto_collapse_thinking");
-    if (ac !== null) autoCollapseThinking = ac === "true";
-    const sp = localStorage.getItem("genomics_user_biohacking_profile");
-    if (sp) { try { userProfile = { ...userProfile, ...JSON.parse(sp) }; } catch { /* ignore */ } }
-    const si = localStorage.getItem("genomics_system_instructions");
-    if (si !== null) systemInstructions = si; else systemInstructions = DEFAULT_INSTRUCTIONS;
-    loadSessions(); scanModels();
-    return () => stopListeners();
+    showThinkingProcess = localStorage.getItem("genomics_show_thinking_process") !== "false";
+    autoCollapseThinking = localStorage.getItem("genomics_auto_collapse_thinking") !== "false";
+    includeTraceInExport = localStorage.getItem("genomics_include_trace_in_export") === "true";
+    contextMode = (localStorage.getItem("genomics_context_mode") || "active_findings") as AiContextMode;
+    consultationMode = (localStorage.getItem("genomics_consultation_mode") || "general") as ConsultationMode;
+    reviewModel = localStorage.getItem("genomics_review_model") || "";
+    twoModelReview = localStorage.getItem("genomics_two_model_review") === "true";
+    try { userProfile = { ...userProfile, ...JSON.parse(localStorage.getItem("genomics_user_biohacking_profile") || "{}") }; } catch {}
+    systemInstructions = localStorage.getItem("genomics_system_instructions") || DEFAULT_INSTRUCTIONS;
+    sessionStore.load(selectedSample, selectedModel, models, manifest.packs);
+    if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
+    scanModels();
+    return () => {
+      stopListeners();
+      stopReviewListeners();
+    };
+  });
+
+  // Persist thinking settings in local storage
+  $effect(() => {
+    localStorage.setItem("genomics_show_thinking_process", String(showThinkingProcess));
+    localStorage.setItem("genomics_auto_collapse_thinking", String(autoCollapseThinking));
+    localStorage.setItem("genomics_include_trace_in_export", String(includeTraceInExport));
+    localStorage.setItem("genomics_context_mode", contextMode);
+    localStorage.setItem("genomics_consultation_mode", consultationMode);
+    localStorage.setItem("genomics_review_model", reviewModel);
+    localStorage.setItem("genomics_two_model_review", String(twoModelReview));
   });
 </script>
 
 <div class="ai-consultation-container">
   <ChatSidebar
     filteredSessions={filteredSessions}
-    bind:currentSessionId={currentSessionId}
+    bind:currentSessionId={sessionStore.currentSessionId}
     startNewSession={startNewSession}
     loadSession={loadSession}
     deleteSession={deleteSession}
     saveSessionTitle={saveSessionTitle}
     showHistorySidebar={showHistorySidebar}
+    bind:activeView={activeView}
   />
   
-  <ChatWindow
-    bind:messages={messages}
-    isChatting={isChatting}
-    isVisionCapable={isVisionCapable}
-    bind:promptText={promptText}
-    bind:attachedImages={attachedImages}
-    dynamicCuratedQuestions={dynamicCuratedQuestions}
-    showThinkingProcess={showThinkingProcess}
-    autoCollapseThinking={autoCollapseThinking}
-    userCollapsedThinkingMap={userCollapsedThinkingMap}
-    selectedSample={selectedSample}
-    bind:showHistorySidebar={showHistorySidebar}
-    bind:showSettingsDrawer={showSettingsDrawer}
-    userHasScrolledUp={userHasScrolledUp}
-    bind:chatBox={chatBox}
-    bind:isDragging={isDragging}
-    copiedMsgId={copiedMsgId}
-    bind:imageInput={imageInput}
-    sendPrompt={sendPrompt}
-    stopGeneration={stopGeneration}
-    clearHistory={clearHistory}
-    copyToClipboard={copyToClipboard}
-    editMessage={editMessage}
-    deleteMessage={deleteMessage}
-    handleScroll={handleScroll}
-    handlePaste={handlePaste}
-    handleDragOver={handleDragOver}
-    handleDragLeave={handleDragLeave}
-    handleDrop={handleDrop}
-    handleFileChange={handleFileChange}
-    removeAttachedImage={removeAttachedImage}
-  />
+  {#if activeView === "chat"}
+    <ChatWindow
+      bind:messages={messages}
+      isChatting={isChatting}
+      isVisionCapable={isVisionCapable}
+      bind:promptText={promptText}
+      bind:attachedImages={attachedImages}
+      dynamicCuratedQuestions={dynamicCuratedQuestions}
+      showThinkingProcess={showThinkingProcess}
+      autoCollapseThinking={autoCollapseThinking}
+      userCollapsedThinkingMap={userCollapsedThinkingMap}
+      selectedSample={selectedSample}
+      bind:showHistorySidebar={showHistorySidebar}
+      bind:showSettingsDrawer={showSettingsDrawer}
+      copiedMsgId={copiedMsgId}
+      sendPrompt={sendPrompt}
+      stopGeneration={stopGeneration}
+      clearHistory={clearHistory}
+      copyToClipboard={copyToClipboard}
+      editMessage={editMessage}
+      deleteMessage={deleteMessage}
+    />
+  {:else}
+    <EvidenceLibraryPanel
+      ollamaUrl={ollamaUrl}
+      ollamaToken={ollamaToken}
+      bind:showHistorySidebar={showHistorySidebar}
+      bind:showSettingsDrawer={showSettingsDrawer}
+    />
+  {/if}
 
   {#if showSettingsDrawer}
     <ChatSettingsDrawer
@@ -527,6 +466,11 @@
       defaultInstructions={DEFAULT_INSTRUCTIONS}
       bind:showThinkingProcess={showThinkingProcess}
       bind:autoCollapseThinking={autoCollapseThinking}
+      bind:includeTraceInExport={includeTraceInExport}
+      bind:contextMode={contextMode}
+      bind:consultationMode={consultationMode}
+      bind:reviewModel={reviewModel}
+      bind:twoModelReview={twoModelReview}
     />
   {/if}
 </div>

@@ -64,6 +64,13 @@ pub struct MarkerDefinition {
     pub clinical_confirmation_required: Option<bool>,
     pub sources: Option<Vec<MarkerSource>>,
     pub variant_type: Option<String>,
+    pub expected_plus_alleles: Option<Vec<String>>,
+    pub strand: Option<String>,
+    pub source_build: Option<String>,
+    pub hgvs: Option<String>,
+    pub allele_orientation_verified: Option<bool>,
+    pub orientation_source: Option<String>,
+    pub interpretation_blocked_if_unverified: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -101,10 +108,14 @@ pub struct EvaluatedMarker {
     pub clinical_confirmation_required: Option<bool>,
     pub sources: Option<Vec<MarkerSource>>,
     pub variant_type: Option<String>,
-    /// Computed severity classification for frontend card styling.
-    /// Values: "high_risk", "moderate_risk", "protective", "trait",
-    ///         "context_dependent", "confirmation_required", "no_data", "benign"
     pub severity_class: String,
+    pub expected_plus_alleles: Option<Vec<String>>,
+    pub strand: Option<String>,
+    pub source_build: Option<String>,
+    pub hgvs: Option<String>,
+    pub allele_orientation_verified: Option<bool>,
+    pub orientation_source: Option<String>,
+    pub interpretation_blocked_if_unverified: Option<bool>,
 }
 
 /// Direction-aware summary statistics for a report section.
@@ -119,9 +130,14 @@ pub struct SectionSummary {
     pub no_data_count: u16,
     pub confirmation_required_count: u16,
     pub total_markers: u16,
-    /// When false, the frontend should NOT display a percent score
-    /// (e.g. cancer sections, PGx sections where % is misleading).
     pub show_percent_score: bool,
+    pub active_marker_count: u16,
+    pub active_risk_marker_count: u16,
+    pub active_protective_marker_count: u16,
+    pub active_trait_marker_count: u16,
+    pub active_context_marker_count: u16,
+    pub blocked_unverified_count: u16,
+    pub benign_modifier_count: u16,
 }
 
 #[derive(Debug, Serialize)]
@@ -235,6 +251,14 @@ pub fn generate_report(
         let mut confirmation_required_count: u16 = 0;
         let mut all_require_confirmation = true;
 
+        let mut active_marker_count: u16 = 0;
+        let mut active_risk_marker_count: u16 = 0;
+        let mut active_protective_marker_count: u16 = 0;
+        let mut active_trait_marker_count: u16 = 0;
+        let mut active_context_marker_count: u16 = 0;
+        let mut blocked_unverified_count: u16 = 0;
+        let mut benign_modifier_count: u16 = 0;
+
         for m in &sec.markers {
             let genotype = genotype_map
                 .get(&m.rsid)
@@ -291,14 +315,60 @@ pub fn generate_report(
                 }
             }
 
+            // Verify allele orientation
+            let mut orientation_warning = false;
+            if !is_missing {
+                if let Some(ref expected) = m.expected_plus_alleles {
+                    for c in genotype.chars() {
+                        let c_str = c.to_string();
+                        if !expected.contains(&c_str) {
+                            orientation_warning = true;
+                        }
+                    }
+                }
+            }
+
             // Compute severity class
-            let severity_class = compute_severity_class(
+            let mut severity_class = compute_severity_class(
                 effect_count,
                 &m.effect_direction,
                 &m.evidence_tier,
                 m.clinical_confirmation_required,
                 is_missing,
             );
+
+            // Apply DPYD / Allele-Orientation Safety Gate
+            let mut interpretation = m.interpretation.clone();
+            let mut impact = m.impact.clone();
+            let is_blocked = m.interpretation_blocked_if_unverified == Some(true)
+                && (m.allele_orientation_verified != Some(true) || orientation_warning);
+
+            if is_blocked && !is_missing {
+                interpretation = "⚠️ Clinical interpretation blocked: Allele orientation has not been verified for this chip build/strand configuration. Confirm genotype with clinical assay.".to_string();
+                impact = "Interpretation Blocked (Unverified Strand)".to_string();
+                severity_class = "confirmation_required".to_string();
+            } else if !is_blocked && orientation_warning && !is_missing {
+                interpretation = format!("⚠️ WARNING: Orientation mismatch detected. {}", interpretation);
+            }
+
+            // Tally summary categories
+            if !is_missing {
+                active_marker_count += 1;
+                if is_blocked {
+                    blocked_unverified_count += 1;
+                } else if effect_count == 0 {
+                    benign_modifier_count += 1;
+                } else {
+                    match m.effect_direction {
+                        EffectDirection::Risk => active_risk_marker_count += 1,
+                        EffectDirection::Protective => active_protective_marker_count += 1,
+                        EffectDirection::Trait => active_trait_marker_count += 1,
+                        EffectDirection::ContextDependent | EffectDirection::Unknown => {
+                            active_context_marker_count += 1;
+                        }
+                    }
+                }
+            }
 
             evaluated_markers.push(EvaluatedMarker {
                 rsid: m.rsid.clone(),
@@ -307,9 +377,9 @@ pub fn generate_report(
                 user_genotype: genotype,
                 effect_allele: m.effect_allele.clone(),
                 effect_count,
-                impact: m.impact.clone(),
+                impact,
                 evidence_tier: m.evidence_tier.clone(),
-                interpretation: m.interpretation.clone(),
+                interpretation,
                 do_not_claim: m.do_not_claim.clone(),
                 confirm_with: m.confirm_with.clone(),
                 effect_direction: m.effect_direction.clone(),
@@ -318,6 +388,13 @@ pub fn generate_report(
                 sources: m.sources.clone(),
                 variant_type: m.variant_type.clone(),
                 severity_class,
+                expected_plus_alleles: m.expected_plus_alleles.clone(),
+                strand: m.strand.clone(),
+                source_build: m.source_build.clone(),
+                hgvs: m.hgvs.clone(),
+                allele_orientation_verified: m.allele_orientation_verified,
+                orientation_source: m.orientation_source.clone(),
+                interpretation_blocked_if_unverified: m.interpretation_blocked_if_unverified,
             });
         }
 
@@ -344,6 +421,13 @@ pub fn generate_report(
             confirmation_required_count,
             total_markers: sec.markers.len() as u16,
             show_percent_score,
+            active_marker_count,
+            active_risk_marker_count,
+            active_protective_marker_count,
+            active_trait_marker_count,
+            active_context_marker_count,
+            blocked_unverified_count,
+            benign_modifier_count,
         };
 
         evaluated_sections.push(EvaluatedSection {
@@ -425,4 +509,132 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
     }
 
     md
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    fn setup_test_db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute(
+            "CREATE TABLE samples (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                genetic_sex TEXT DEFAULT 'Unknown',
+                imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "CREATE TABLE genotypes (
+                sample_id INTEGER,
+                rsid TEXT NOT NULL,
+                chromosome TEXT NOT NULL,
+                position_grch37 INTEGER NOT NULL,
+                position_grch38 INTEGER,
+                allele1 TEXT NOT NULL,
+                allele2 TEXT NOT NULL,
+                PRIMARY KEY (sample_id, rsid)
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO samples (id, name) VALUES (1, 'Test Sample')",
+            [],
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn test_dpyd_rs55886062_safety_gate() {
+        let conn = setup_test_db();
+        let sample_id = 1;
+
+        // Insert homozygous A/A genotype (which is Ref/Ref on minus)
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                &sample_id.to_string(),
+                "rs55886062",
+                "1",
+                "97000000",
+                "97000000",
+                "A",
+                "A",
+            ],
+        )
+        .unwrap();
+
+        let marker = MarkerDefinition {
+            rsid: "rs55886062".to_string(),
+            gene: "DPYD".to_string(),
+            variant_name: Some("rs55886062 / I560S".to_string()),
+            effect_allele: "C".to_string(), // correct effect allele
+            impact: "Severe toxicity".to_string(),
+            evidence_tier: "A".to_string(),
+            interpretation: "Carriers of C allele have severe toxicity risk.".to_string(),
+            do_not_claim: vec![],
+            confirm_with: vec![],
+            effect_direction: EffectDirection::Risk,
+            raw_dna_limitation: None,
+            clinical_confirmation_required: Some(true),
+            sources: None,
+            variant_type: Some("snp".to_string()),
+            expected_plus_alleles: Some(vec!["A".to_string(), "C".to_string()]),
+            strand: Some("minus".to_string()),
+            source_build: Some("GRCh38".to_string()),
+            hgvs: Some("c.1679T>G".to_string()),
+            allele_orientation_verified: Some(true),
+            orientation_source: Some("dbSNP".to_string()),
+            interpretation_blocked_if_unverified: Some(true),
+        };
+
+        let template = ReportTemplate {
+            title: "Test".to_string(),
+            description: "Test".to_string(),
+            sections: vec![SectionDefinition {
+                name: "PGx".to_string(),
+                markers: vec![marker.clone()],
+            }],
+        };
+
+        let report = generate_report(&conn, sample_id, &template).unwrap();
+        let evaluated = &report.sections[0].markers[0];
+
+        // Genotype AA is benign because effect allele is C (0 count)
+        assert_eq!(evaluated.user_genotype, "AA");
+        assert_eq!(evaluated.effect_count, 0);
+        assert_eq!(evaluated.severity_class, "benign");
+
+        // Now test genotype GG (G is not in expected alleles [A, C])
+        conn.execute("DELETE FROM genotypes", []).unwrap();
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                &sample_id.to_string(),
+                "rs55886062",
+                "1",
+                "97000000",
+                "97000000",
+                "G",
+                "G",
+            ],
+        )
+        .unwrap();
+
+        let report2 = generate_report(&conn, sample_id, &template).unwrap();
+        let evaluated2 = &report2.sections[0].markers[0];
+
+        // Genotype GG triggers orientation warning and safety gate block
+        assert_eq!(evaluated2.user_genotype, "GG");
+        assert_eq!(evaluated2.severity_class, "confirmation_required");
+        assert!(evaluated2.interpretation.contains("blocked"));
+    }
 }

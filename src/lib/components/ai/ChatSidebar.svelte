@@ -22,6 +22,7 @@
     deleteSession: (id: string) => void;
     saveSessionTitle: (session: ChatSession) => void;
     showHistorySidebar: boolean;
+    activeView: "chat" | "evidence";
   }
 
   let {
@@ -31,7 +32,8 @@
     loadSession,
     deleteSession,
     saveSessionTitle,
-    showHistorySidebar
+    showHistorySidebar,
+    activeView = $bindable("chat")
   }: Props = $props();
 
   let editingSessionId = $state<string | null>(null);
@@ -58,62 +60,84 @@
 
 <aside class="history-sidebar" class:collapsed={!showHistorySidebar}>
   <div class="sidebar-inner">
-    <div class="sidebar-header">
-      <button class="btn btn-accent btn-new-chat w-full" onclick={startNewSession}>
-        ➕ New Consultation
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab-btn" class:active={activeView === "chat"} onclick={() => activeView = "chat"}>
+        💬 Consults
+      </button>
+      <button class="sidebar-tab-btn" class:active={activeView === "evidence"} onclick={() => activeView = "evidence"}>
+        📚 Evidence
       </button>
     </div>
-    
-    <div class="sessions-list scrollable">
-      {#if filteredSessions.length === 0}
-        <div class="empty-sessions">
-          No previous consultations.
-        </div>
-      {:else}
-        {#each filteredSessions as session}
-          <div class="session-item-wrapper" class:active={currentSessionId === session.id}>
-            {#if editingSessionId === session.id}
-              <input
-                type="text"
-                class="session-title-input"
-                bind:value={editingSessionTitle}
-                onkeydown={(e) => {
-                  if (e.key === "Enter") handleSave(session);
-                  if (e.key === "Escape") editingSessionId = null;
-                }}
-                onblur={() => handleSave(session)}
-                use:selectAllAndFocus
-              />
-            {:else}
-              <button 
-                class="session-item-btn" 
-                onclick={() => loadSession(session.id)}
-                ondblclick={() => startEditingSession(session)}
-              >
-                <span class="session-icon">💬</span>
-                <span class="session-title" title={session.title}>{session.title}</span>
-              </button>
-              <div class="session-actions">
-                <button 
-                  class="btn-session-action edit-btn" 
-                  onclick={() => startEditingSession(session)}
-                  title="Rename consultation"
-                >
-                  ✏️
-                </button>
-                <button 
-                  class="btn-session-action delete-btn" 
-                  onclick={() => deleteSession(session.id)}
-                  title="Delete consultation"
-                >
-                  🗑
-                </button>
-              </div>
-            {/if}
+
+    {#if activeView === "chat"}
+      <div class="sidebar-header">
+        <button class="btn btn-accent btn-new-chat w-full" onclick={startNewSession}>
+          ➕ New Consultation
+        </button>
+      </div>
+      
+      <div class="sessions-list scrollable">
+        {#if filteredSessions.length === 0}
+          <div class="empty-sessions">
+            No previous consultations.
           </div>
-        {/each}
-      {/if}
-    </div>
+        {:else}
+          {#each filteredSessions as session}
+            <div class="session-item-wrapper" class:active={currentSessionId === session.id}>
+              {#if editingSessionId === session.id}
+                <input
+                  type="text"
+                  class="session-title-input"
+                  bind:value={editingSessionTitle}
+                  onkeydown={(e) => {
+                    if (e.key === "Enter") handleSave(session);
+                    if (e.key === "Escape") editingSessionId = null;
+                  }}
+                  onblur={() => handleSave(session)}
+                  use:selectAllAndFocus
+                />
+              {:else}
+                <button 
+                  class="session-item-btn" 
+                  onclick={() => loadSession(session.id)}
+                  ondblclick={() => startEditingSession(session)}
+                >
+                  <span class="session-icon">💬</span>
+                  <span class="session-title" title={session.title}>{session.title}</span>
+                </button>
+                <div class="session-actions">
+                  <button 
+                    class="btn-session-action edit-btn" 
+                    onclick={() => startEditingSession(session)}
+                    title="Rename consultation"
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    class="btn-session-action delete-btn" 
+                    onclick={() => deleteSession(session.id)}
+                    title="Delete consultation"
+                  >
+                    🗑
+                  </button>
+                </div>
+              {/if}
+            </div>
+          {/each}
+        {/if}
+      </div>
+    {:else}
+      <div class="sidebar-header">
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 0;">
+          Guideline Index
+        </div>
+      </div>
+      <div class="sessions-list scrollable">
+        <div style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.4; padding: 8px 4px; font-style: italic;">
+          Use the Evidence panel to search the local guideline and literature references.
+        </div>
+      </div>
+    {/if}
   </div>
 </aside>
 
@@ -284,5 +308,39 @@
 
   .scrollable {
     overflow-y: auto;
+  }
+
+  .sidebar-tabs {
+    display: flex;
+    padding: 12px 12px 0 12px;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-tab-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    color: var(--text-secondary);
+    padding: 8px;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sidebar-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+
+  .sidebar-tab-btn.active {
+    background: rgba(88, 80, 236, 0.15);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    box-shadow: inset 0 -2px 0 var(--accent);
   }
 </style>

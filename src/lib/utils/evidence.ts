@@ -187,31 +187,55 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
 // Section Summary (plain-language)
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a human-readable summary string for a section.
- * Used when show_percent_score is false (e.g. cancer, PGx sections).
- */
 export function getSectionSummaryParts(summary: SectionSummary): string[] {
   const parts: string[] = [];
 
-  if (summary.risk_effect_count > 0) {
-    const alleleWord = summary.risk_effect_count === 1 ? "allele" : "alleles";
-    parts.push(`${summary.risk_effect_count} risk ${alleleWord} found`);
+  // Check if new detailed counts are available
+  if (summary.active_risk_marker_count !== undefined) {
+    if (summary.active_risk_marker_count > 0) {
+      const markerWord = summary.active_risk_marker_count === 1 ? "risk variant" : "risk variants";
+      parts.push(`${summary.active_risk_marker_count} ${markerWord}`);
+    }
+    if (summary.active_protective_marker_count > 0) {
+      const markerWord = summary.active_protective_marker_count === 1 ? "protective variant" : "protective variants";
+      parts.push(`${summary.active_protective_marker_count} ${markerWord}`);
+    }
+    if (summary.active_trait_marker_count > 0) {
+      const markerWord = summary.active_trait_marker_count === 1 ? "trait marker" : "trait markers";
+      parts.push(`${summary.active_trait_marker_count} ${markerWord}`);
+    }
+    if (summary.active_context_marker_count > 0) {
+      const markerWord = summary.active_context_marker_count === 1 ? "context variant" : "context variants";
+      parts.push(`${summary.active_context_marker_count} ${markerWord}`);
+    }
+    if (summary.blocked_unverified_count > 0) {
+      parts.push(`${summary.blocked_unverified_count} blocked (unverified)`);
+    }
+    if (summary.confirmation_required_count > 0) {
+      parts.push(`${summary.confirmation_required_count} require validation`);
+    }
+  } else {
+    // Fallback to legacy count mapping
+    if (summary.risk_effect_count > 0) {
+      const alleleWord = summary.risk_effect_count === 1 ? "allele" : "alleles";
+      parts.push(`${summary.risk_effect_count} risk ${alleleWord} found`);
+    }
+    if (summary.protective_effect_count > 0) {
+      const alleleWord = summary.protective_effect_count === 1 ? "allele" : "alleles";
+      parts.push(`${summary.protective_effect_count} protective ${alleleWord}`);
+    }
+    if (summary.trait_count > 0) {
+      const markerWord = summary.trait_count === 1 ? "trait marker" : "trait markers";
+      parts.push(`${summary.trait_count} ${markerWord}`);
+    }
+    if (summary.context_dependent_count > 0) {
+      parts.push(`${summary.context_dependent_count} context-dependent`);
+    }
+    if (summary.confirmation_required_count > 0) {
+      parts.push(`${summary.confirmation_required_count} need clinical confirmation`);
+    }
   }
-  if (summary.protective_effect_count > 0) {
-    const alleleWord = summary.protective_effect_count === 1 ? "allele" : "alleles";
-    parts.push(`${summary.protective_effect_count} protective ${alleleWord}`);
-  }
-  if (summary.trait_count > 0) {
-    const markerWord = summary.trait_count === 1 ? "trait marker" : "trait markers";
-    parts.push(`${summary.trait_count} ${markerWord}`);
-  }
-  if (summary.context_dependent_count > 0) {
-    parts.push(`${summary.context_dependent_count} context-dependent`);
-  }
-  if (summary.confirmation_required_count > 0) {
-    parts.push(`${summary.confirmation_required_count} need clinical confirmation`);
-  }
+
   if (summary.no_data_count > 0) {
     parts.push(`${summary.no_data_count} not tested`);
   }

@@ -15,6 +15,23 @@
  */
 
 import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/genomics";
+import manifest from "../marker-packs/manifest.json";
+import core from "../marker-packs/core.json";
+import pgx from "../marker-packs/pgx.json";
+import metabolic from "../marker-packs/metabolic.json";
+import nutrients from "../marker-packs/nutrients.json";
+import neuropsych from "../marker-packs/neuropsych.json";
+import sleep from "../marker-packs/sleep.json";
+import connectiveTissue from "../marker-packs/connective_tissue.json";
+import thyroidAutoimmune from "../marker-packs/thyroid_autoimmune.json";
+import cardiovascular from "../marker-packs/cardiovascular.json";
+import cancerConfirmationOnly from "../marker-packs/cancer_confirmation_only.json";
+
+const PACKS_MAP: Record<string, any> = {
+  core, pgx, metabolic, nutrients, neuropsych, sleep,
+  connective_tissue: connectiveTissue, thyroid_autoimmune: thyroidAutoimmune,
+  cardiovascular, cancer_confirmation_only: cancerConfirmationOnly,
+};
 
 // ---------------------------------------------------------------------------
 // Shared Interfaces (re-exported for convenience)
@@ -65,15 +82,83 @@ export const DEFAULT_INSTRUCTIONS = `\
 // System Prompt Builder
 // ---------------------------------------------------------------------------
 
+export type AiContextMode =
+  | "active_findings"
+  | "active_context_dependent"
+  | "selected_pack_active"
+  | "full_selected"
+  | "clinical_checklist"
+  | "evidence_audit"
+  | "developer_raw_json";
+
+export type ConsultationMode =
+  | "general"
+  | "pgx"
+  | "nutrients"
+  | "metabolic"
+  | "sleep"
+  | "brain_mood"
+  | "joints"
+  | "thyroid_autoimmune"
+  | "cardiovascular";
+
+export const CONSULTATION_MODES: Record<ConsultationMode, { label: string; icon: string; instructions: string }> = {
+  general: {
+    label: "General Consultation",
+    icon: "🧬",
+    instructions: "Focus on providing a broad, balanced overview of the user's genomic profile. Explain basic inheritance concepts, help the user prioritize which packs/findings they might want to discuss first with a healthcare provider, and keep all insights structured."
+  },
+  pgx: {
+    label: "Pharmacogenomics (PGx)",
+    icon: "💊",
+    instructions: "Focus strictly on drug metabolism, transport, and safety/efficacy markers (e.g., CYP450, DPYD). You MUST explain that drug responses are highly variable. Highlight any markers requiring clinical confirmation (such as DPYD rs55886062) and remind the user to never alter medications or dosages without consulting a licensed physician or pharmacist."
+  },
+  nutrients: {
+    label: "Nutrients & Methylation",
+    icon: "🍎",
+    instructions: "Focus on MTHFR, COMT, PEMT, and other nutrient/methylation markers. Explain the one-carbon cycle, how these genes influence nutrient requirements (e.g. folate, B12, choline), and suggest dietary foods (no supplement dosages) that support these pathways. Emphasize discussing supplement changes with a doctor."
+  },
+  metabolic: {
+    label: "Metabolic Health & T2D",
+    icon: "🏃",
+    instructions: "Focus on blood sugar regulation, insulin sensitivity, lipid transport (e.g. APOE, FTO, TCF7L2), and type 2 diabetes markers. Discuss how these genetic predispositions interact with diet, exercise, circadian rhythms, and stress. Do not diagnose metabolic syndrome."
+  },
+  sleep: {
+    label: "Sleep & Circadian Rhythms",
+    icon: "🌙",
+    instructions: "Focus on circadian rhythm genes (CLOCK, PER2, MTNR1B) and sleep duration/quality markers. Explain how light exposure, sleep hygiene, and sleep timing can be optimized based on genetic predispositions. Do not diagnose sleep apnea or insomnia."
+  },
+  brain_mood: {
+    label: "Brain & Mood (Neuropsych)",
+    icon: "🧠",
+    instructions: "Focus on neurotransmitter synthesis, transport, and receptors (e.g., COMT, MAOA, DRD2, 5-HTTLPR). Discuss how these relate to focus, mood, stress response, and caffeine/alcohol sensitivity. Strictly avoid diagnosing clinical depression, ADHD, or anxiety disorders."
+  },
+  joints: {
+    label: "Joints & Connective Tissue",
+    icon: "🦴",
+    instructions: "Focus on collagen structure, joint mobility, tendon/ligament integrity (e.g. COL1A1, COL5A1), and bone density markers. Discuss training volume, recovery protocols, joint-supporting nutrition, and injury prevention, emphasizing consult with physical therapists or sports medicine doctors."
+  },
+  thyroid_autoimmune: {
+    label: "Thyroid & Autoimmune Context",
+    icon: "🛡️",
+    instructions: "Focus on thyroid hormone conversion (e.g. DIO1, DIO2), inflammation pathways, and immune sensitivity markers. Discuss environmental triggers, gut health/dietary links, and thyroid cofactors (selenium, iodine) from a high-level perspective. Strictly avoid diagnosing autoimmune diseases."
+  },
+  cardiovascular: {
+    label: "Cardiovascular Health",
+    icon: "❤️",
+    instructions: "Focus on vascular integrity, blood pressure regulation, lipid profile (e.g. NOS3, ACE, LPA, APOE), and nitric oxide production. Discuss cardiovascular lifestyle habits, aerobic conditioning, salt sensitivity, and dietary fats. Do not diagnose cardiovascular disease or prescribe statins."
+  }
+};
+
 interface PromptBuildParams {
   selectedSample: GenomeSample;
   generatedReport: GeneratedReport;
   selectedPacks: Record<string, boolean>;
   onlyActiveFindings: boolean;
+  contextMode: AiContextMode;
+  consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
   systemInstructions: string;
-  manifestPacks: { id: string; label: string }[];
-  packsMap: Record<string, { name?: string }>;
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>;
 }
 
@@ -108,66 +193,138 @@ function buildMarkerPayload(
 export function buildSystemPrompt(params: PromptBuildParams): string {
   const {
     selectedSample, generatedReport, selectedPacks, onlyActiveFindings,
-    userProfile, systemInstructions, manifestPacks, packsMap, laypersonMap,
+    contextMode = "active_findings",
+    consultationMode = "general",
+    userProfile, systemInstructions, laypersonMap,
   } = params;
 
+  const todayStr = new Date().toDateString();
+
   // --- Genomic JSON Context ---
-  const sectionsData = generatedReport.sections
-    .map((sec) => {
-      const pack = manifestPacks.find(
-        (p) => p.label === sec.name || packsMap[p.id]?.name === sec.name
-      );
-      if (!pack || !selectedPacks[pack.id]) return null;
+  let sectionsData: any[] = [];
 
-      const findings = sec.markers
-        .filter((m) =>
-          onlyActiveFindings
-            ? m.effect_count > 0 && m.severity_class !== "no_data"
-            : m.severity_class !== "no_data"
-        )
-        .map((m) => buildMarkerPayload(m, laypersonMap));
+  if (contextMode !== "developer_raw_json") {
+    sectionsData = generatedReport.sections
+      .map((sec) => {
+        const pack = manifest.packs.find(
+          (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
+        );
+        
+        const isPackSelected = pack ? selectedPacks[pack.id] : false;
+        
+        // Skip pack if it's not selected and we are NOT in global active findings mode
+        if (contextMode !== "active_findings" && !isPackSelected) {
+          return null;
+        }
 
-      return { section_name: sec.name, findings };
-    })
-    .filter(
-      (s): s is NonNullable<typeof s> => s !== null && s.findings.length > 0
-    );
+        const filteredMarkers = sec.markers.filter((m) => {
+          const isMissing = m.severity_class === "no_data" || m.user_genotype === "--" || m.user_genotype.includes("-");
+          if (isMissing) return false;
 
-  const payloadContext = {
-    sample_name: selectedSample.name,
-    genetic_sex: selectedSample.genetic_sex,
-    sections: sectionsData,
-  };
+          switch (contextMode) {
+            case "active_findings":
+            case "selected_pack_active":
+              return m.effect_count > 0;
+            case "active_context_dependent":
+              return m.effect_count > 0 || m.severity_class === "context_dependent";
+            case "full_selected":
+              return true;
+            case "clinical_checklist":
+              return m.clinical_confirmation_required === true || 
+                     m.severity_class === "confirmation_required" ||
+                     m.severity_class === "high_risk" ||
+                     m.severity_class === "moderate_risk";
+            case "evidence_audit":
+              return m.effect_count > 0;
+            default:
+              return true;
+          }
+        });
 
-  // --- User Biohacking Profile ---
-  let profileBlock = "";
-  if (userProfile.injectProfile) {
-    const lines: string[] = [];
-    if (userProfile.goals.trim())           lines.push(`- Biohacking Goals: ${userProfile.goals.trim()}`);
-    if (userProfile.challenges.trim())      lines.push(`- Current Challenges & Symptoms: ${userProfile.challenges.trim()}`);
-    if (userProfile.diet.trim())            lines.push(`- Average Diet: ${userProfile.diet.trim()}`);
-    if (userProfile.supplements.trim())     lines.push(`- Supplements List: ${userProfile.supplements.trim()}`);
-    if (userProfile.medications.trim())     lines.push(`- Medications List: ${userProfile.medications.trim()}`);
-    if (userProfile.bloodwork.trim())       lines.push(`- Blood Work History (DATED): ${userProfile.bloodwork.trim()}`);
-    if (userProfile.diagnoses.trim())       lines.push(`- Diagnosis List: ${userProfile.diagnoses.trim()}`);
-    if (userProfile.supportiveTests.trim()) lines.push(`- Supportive Tests: ${userProfile.supportiveTests.trim()}`);
+        if (filteredMarkers.length === 0) return null;
 
-    if (lines.length > 0) {
-      profileBlock = `\n[USER PROFILE & GOALS MEMORY]
-The user has provided the following personal biohacking and wellness context:
-${lines.join("\n")}
-Refer to this context (especially their goals, diet, blood work, or supplements) when explaining active genomic findings. Tailor your dietary, lifestyle, or supplement suggestions to align with their self-reported objectives and health profile.`;
-    }
+        const findings = filteredMarkers.map((m) => buildMarkerPayload(m, laypersonMap));
+        return { section_name: sec.name, findings };
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null);
+  }
+
+  // --- Construct Payload JSON ---
+  let payloadContext: any = {};
+  
+  if (contextMode === "developer_raw_json") {
+    payloadContext = {
+      app_context: {
+        name: "Genomics Caddy",
+        version: "1.0.0",
+        date: todayStr,
+        mode: "Developer raw JSON"
+      },
+      sample_context: {
+        sample_name: selectedSample.name,
+        genetic_sex: selectedSample.genetic_sex,
+        profile: userProfile.injectProfile ? userProfile : undefined,
+        raw_report: generatedReport
+      }
+    };
+  } else {
+    const modeLabel = {
+      active_findings: "Active findings (All packs)",
+      active_context_dependent: "Active + context-dependent",
+      selected_pack_active: "Selected pack active",
+      full_selected: "Full selected packs",
+      clinical_checklist: "Clinical confirmation checklist",
+      evidence_audit: "Evidence audit"
+    }[contextMode] || contextMode;
+
+    payloadContext = {
+      app_context: {
+        name: "Genomics Caddy",
+        version: "1.0.0",
+        date: todayStr,
+        mode: modeLabel
+      },
+      sample_context: {
+        sample_name: selectedSample.name,
+        genetic_sex: selectedSample.genetic_sex,
+        profile: userProfile.injectProfile ? {
+          goals: userProfile.goals.trim() || undefined,
+          challenges: userProfile.challenges.trim() || undefined,
+          diet: userProfile.diet.trim() || undefined,
+          supplements: userProfile.supplements.trim() || undefined,
+          medications: userProfile.medications.trim() || undefined,
+          bloodwork: userProfile.bloodwork.trim() || undefined,
+          diagnoses: userProfile.diagnoses.trim() || undefined,
+          supportiveTests: userProfile.supportiveTests.trim() || undefined
+        } : undefined,
+        sections: sectionsData
+      },
+      rules: [
+        "Consultation is educational only and does not substitute for medical professional consultation.",
+        "Rely ONLY on the provided genomic variants in the JSON context. Do not speculate on unlisted genes or genotypes.",
+        "Use simple, layperson-friendly language. Heavily rely on the 'layperson_summary' simple_impact and simple_meaning fields.",
+        "If the user asks about genes, variants, or conditions not present in the context, politely push back and refuse to speculate.",
+        "Recommend discussing all findings and changes with a licensed clinician."
+      ],
+      forbidden_actions: [
+        "Do not diagnose diseases or conditions.",
+        "Do not prescribe treatments or recommend specific drug/supplement dosages.",
+        "Do not speculate on general genetic knowledge if data is not present in user profile."
+      ]
+    };
   }
 
   // --- Final Assembly ---
-  const todayStr = new Date().toDateString();
   const instructions = systemInstructions.trim() || DEFAULT_INSTRUCTIONS;
+  const modeInfo = CONSULTATION_MODES[consultationMode] || CONSULTATION_MODES.general;
+  const specialtyInstructions = `[SPECIALTY CONSULTATION MODE: ${modeInfo.label}]
+${modeInfo.instructions}`;
 
   return `[SYSTEM INSTRUCTIONS]
 - Today's Date: ${todayStr} (Pay close attention to dates on any user blood work, diagnoses, or supportive tests above. If any results are older than 1 year relative to Today's Date, explicitly warn the user that they are historical, and recommend obtaining updated testing to see their current values).
 ${instructions}
-${profileBlock}
+
+${specialtyInstructions}
 
 [JSON CONTEXT]
 ${JSON.stringify(payloadContext, null, 2)}`;
@@ -177,33 +334,50 @@ ${JSON.stringify(payloadContext, null, 2)}`;
 // Context Statistics
 // ---------------------------------------------------------------------------
 
-/**
- * Count how many found variants are included vs total found for the active packs.
- */
 export function calculateContextStats(
   generatedReport: GeneratedReport,
   selectedPacks: Record<string, boolean>,
-  onlyActiveFindings: boolean,
-  manifestPacks: { id: string; label: string }[],
-  packsMap: Record<string, { name?: string }>
+  contextMode: AiContextMode
 ): ContextStats {
   let included = 0;
   let total = 0;
 
   for (const sec of generatedReport.sections) {
-    const pack = manifestPacks.find(
-      (p) => p.label === sec.name || packsMap[p.id]?.name === sec.name
+    const pack = manifest.packs.find(
+      (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
     );
-    if (!pack || !selectedPacks[pack.id]) continue;
+    const isPackSelected = pack ? selectedPacks[pack.id] : false;
+    
+    // active_findings scans all packs, others only selected packs
+    if (contextMode !== "active_findings" && !isPackSelected) continue;
 
     for (const m of sec.markers) {
       const isFound = m.user_genotype !== "--" && !m.user_genotype.includes("-");
       if (isFound) {
         total++;
-        if (onlyActiveFindings) {
-          if (m.effect_count > 0) included++;
-        } else {
-          included++;
+        switch (contextMode) {
+          case "active_findings":
+          case "selected_pack_active":
+          case "evidence_audit":
+            if (m.effect_count > 0) included++;
+            break;
+          case "active_context_dependent":
+            if (m.effect_count > 0 || m.severity_class === "context_dependent") included++;
+            break;
+          case "full_selected":
+            included++;
+            break;
+          case "clinical_checklist":
+            if (m.clinical_confirmation_required === true || 
+                m.severity_class === "confirmation_required" ||
+                m.severity_class === "high_risk" ||
+                m.severity_class === "moderate_risk") {
+              included++;
+            }
+            break;
+          case "developer_raw_json":
+            included++;
+            break;
         }
       }
     }
@@ -221,9 +395,7 @@ export function calculateContextStats(
  */
 export function getActiveCategories(
   generatedReport: GeneratedReport,
-  selectedPacks: Record<string, boolean>,
-  manifestPacks: { id: string; label: string }[],
-  packsMap: Record<string, { name?: string }>
+  selectedPacks: Record<string, boolean>
 ): ActiveCategories {
   const cats: ActiveCategories = {
     metabolicMethylation: false,
@@ -233,8 +405,8 @@ export function getActiveCategories(
   };
 
   for (const sec of generatedReport.sections) {
-    const pack = manifestPacks.find(
-      (p) => p.label === sec.name || packsMap[p.id]?.name === sec.name
+    const pack = manifest.packs.find(
+      (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
     );
     if (!pack || !selectedPacks[pack.id]) continue;
 

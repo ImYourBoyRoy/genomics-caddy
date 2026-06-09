@@ -1,0 +1,480 @@
+{
+  "name": "Pharmacogenomics (PGx)",
+  "markers": [
+    {
+      "rsid": "rs3892097",
+      "gene": "CYP2D6",
+      "variant_name": "CYP2D6*4",
+      "effect_allele": "A",
+      "impact": "Reduced/Inactive CYP2D6 enzyme activity",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "CYP2D6*4 is a well-established loss-of-function allele. Homozygous A/A results in a poor metabolizer phenotype, leading to impaired clearance and elevated levels of dextromethorphan (DXM), atomoxetine, and many antidepressants, while reducing the activation of codeine/tramadol.",
+      "do_not_claim": ["serotonin syndrome diagnosis", "definitive ADHD medication tolerance prediction"],
+      "confirm_with": ["medication side effects", "DXM response duration", "clinical PGx panel"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Single-SNP CYP2D6 checks cannot infer full metabolizer phenotype. Copy number variations (CNV), hybrid alleles, and additional star alleles require validated PGx calling.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guidelines for CYP2D6",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Highly validated consensus clinical guideline for dosing adjustments based on metabolizer status."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1057910",
+      "gene": "CYP2C9",
+      "variant_name": "CYP2C9*3",
+      "effect_allele": "C",
+      "impact": "Reduced CYP2C9 enzyme clearance",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The CYP2C9*3 variant significantly reduces enzymatic clearance. C-carriers may experience slower clearance and higher systemic levels of warfarin, statins, and common NSAIDs (like ibuprofen or celecoxib).",
+      "do_not_claim": ["bleeding disorder diagnosis", "statin myopathy diagnosis"],
+      "confirm_with": ["NSAID tolerability", "clinical warfarin/statin dosing panel"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Array-based DNA testing only reads specific targeted SNPs. Full gene sequencing is required to detect rare novel variants.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2C9 and NSAIDs",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Recommends alternative therapies or lower starting doses for poor metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799853",
+      "gene": "CYP2C9",
+      "variant_name": "CYP2C9*2",
+      "effect_allele": "T",
+      "impact": "Reduced CYP2C9 enzyme clearance",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "CYP2C9*2 (rs1799853) is a common coding variant that reduces enzyme activity. Individuals carrying T-alleles metabolize warfarin, phenytoin, and NSAIDs slower than typical *1/*1 individuals.",
+      "do_not_claim": ["drug dosage calculator", "bleeding diagnosis"],
+      "confirm_with": ["clinical PGx assay", "warfarin dose history"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Overall drug clearance depends on VKORC1 and CYP4F2 co-genotypes as well.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2C9",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Clinical recommendations for warfarin and NSAID dosing."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12248560",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*17",
+      "effect_allele": "T",
+      "impact": "Ultra-rapid CYP2C19 enzyme metabolism",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The CYP2C19*17 variant is associated with increased transcription. T-carriers are ultra-rapid metabolizers of SSRI antidepressants (like escitalopram and sertraline) and proton pump inhibitors (PPIs), potentially leading to lower drug efficacy at standard doses.",
+      "do_not_claim": ["antidepressant resistance diagnosis", "PPI failure certainty"],
+      "confirm_with": ["therapeutic response to SSRIs/PPIs", "serum drug levels if clinically indicated"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "TODO: replace single-marker CYP2C19 display with star-allele diplotype interpreter.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2C19 and SSRIs",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Outlines therapeutic alterations for CYP2C19 ultrarapid metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4244285",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*2",
+      "effect_allele": "A",
+      "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "CYP2C19*2 is a common loss-of-function allele. Homozygous carriers have poor metabolizer status, leading to reduced activation of clopidogrel and slow clearance of certain SSRIs and PPIs.",
+      "do_not_claim": ["antiplatelet resistance diagnosis", "clinical SSRI selection guidance"],
+      "confirm_with": ["clinical PGx testing", "cardiologist consultation"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "TODO: replace single-marker CYP2C19 display with star-allele diplotype interpreter.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2C19 and Clopidogrel",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Suggests alternative antiplatelet therapies for CYP2C19 poor metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4986893",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*3",
+      "effect_allele": "A",
+      "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "CYP2C19*3 is a loss-of-function allele that introduces a premature stop codon. Primarily observed in East Asian populations, homozygosity or compound heterozygosity results in a poor metabolizer phenotype.",
+      "do_not_claim": ["antiplatelet resistance diagnosis", "clinical SSRI selection guidance"],
+      "confirm_with": ["clinical PGx testing", "cardiologist consultation"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "TODO: replace single-marker CYP2C19 display with star-allele diplotype interpreter.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2C19 and Clopidogrel",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Suggests alternative antiplatelet therapies for CYP2C19 poor metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4149056",
+      "gene": "SLCO1B1",
+      "variant_name": "Val174Ala",
+      "effect_allele": "C",
+      "impact": "Impaired statin transport / elevated systemic statin levels",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The SLCO1B1 Val174Ala C allele decreases the transport of statins (especially simvastatin) into the liver, resulting in higher blood concentrations and a significantly higher risk of statin-induced myopathy (muscle pain).",
+      "do_not_claim": ["statin myopathy diagnosis", "cardiovascular event prediction"],
+      "confirm_with": ["statin muscle tolerability", "serum creatine kinase (CK) levels if symptomatic"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Statin tolerance is multifactorial and depends heavily on dosage, age, drug interactions, and thyroid status.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for SLCO1B1 and Statins",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None declared",
+          "notes": "Prescribes lower doses of simvastatin or alternative statins for C allele carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs762551",
+      "gene": "CYP1A2",
+      "variant_name": "CYP1A2*1F",
+      "effect_allele": "C",
+      "impact": "Slower caffeine clearance rate",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "CYP1A2*1F C-carriers (A/C or C/C) are slow caffeine metabolizers. Slower clearance prolongs caffeine's systemic effects, increasing the risk of sleep disruption, anxiety, and cardiovascular stress under heavy caffeine intake.",
+      "do_not_claim": ["arrhythmia diagnosis", "caffeine addiction diagnosis"],
+      "confirm_with": ["caffeine-induced anxiety", "sleep latency", "blood pressure response to coffee"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Induction by smoking or high cruciferous vegetable intake can drastically modify actual CYP1A2 clearance velocity.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Association of Caffeine Intake and CYP1A2 Haplotype",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16512999/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Discusses myocardial infarction risk linked to heavy coffee in slow metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9923231",
+      "gene": "VKORC1",
+      "variant_name": "-1639G>A",
+      "effect_allele": "A",
+      "impact": "Increased sensitivity to warfarin",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The VKORC1 -1639G>A promoter variant decreases VKORC1 expression. Individuals with the A allele require significantly lower therapeutic warfarin doses to avoid bleeding risks.",
+      "do_not_claim": ["anticoagulant plan", "bleeding diagnosis"],
+      "confirm_with": ["INR monitoring", "clinical warfarin dosing algorithms"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Requires integration with CYP2C9 genotypes to calculate actual dose predictions.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for Warfarin Dosing",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Standardized dose tables based on CYP2C9 and VKORC1 combinations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2108622",
+      "gene": "CYP4F2",
+      "variant_name": "Val433Met",
+      "effect_allele": "T",
+      "impact": "Altered Vitamin K metabolism / higher warfarin dose requirements",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The Met433 variant reduces CYP4F2 activity, causing lower breakdown of Vitamin K. Consequently, T-carriers require slightly higher doses of warfarin to achieve anticoagulation.",
+      "do_not_claim": ["warfarin resistance diagnosis"],
+      "confirm_with": ["clinical PGx screening", "INR level tracking"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Has a smaller effect size compared to CYP2C9 and VKORC1, but adds precision to dosing.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CYP4F2 association with warfarin dosing",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18794851/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large replication study detailing Met433 contribution to warfarin dosing variability."
+        }
+      ]
+    },
+    {
+      "rsid": "rs776746",
+      "gene": "CYP3A5",
+      "variant_name": "CYP3A5*3",
+      "effect_allele": "C",
+      "impact": "Impaired CYP3A5 enzyme activity (non-expressor)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "Homozygosity for the CYP3A5*3 C-allele causes a splicing defect and lack of active enzyme. Carriers of *3/*3 are CYP3A5 'non-expressors', leading to slower clearance of drugs like tacrolimus, midazolam, and certain statins.",
+      "do_not_claim": ["immunosuppressant dose calculation"],
+      "confirm_with": ["clinical PGx testing", "therapeutic drug monitoring"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "CYP3A4 activity can partially overlap and compensate for CYP3A5 non-expression.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP3A5 and Tacrolimus",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Recommends dosage adjustments based on CYP3A5 expressor status."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3745274",
+      "gene": "CYP2B6",
+      "variant_name": "CYP2B6*6",
+      "effect_allele": "T",
+      "impact": "Reduced CYP2B6 metabolism",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The CYP2B6*6 variant is associated with reduced enzyme activity and expression. Carriers of the T allele may experience slow clearance of bupropion (Wellbutrin), methadone, and efavirenz, leading to elevated drug exposure.",
+      "do_not_claim": ["antidepressant selection plan", "Wellbutrin efficacy guarantee"],
+      "confirm_with": ["medication side effects history", "clinical PGx panel"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Substrate clearance is highly complex and depends on secondary Phase I/II pathways.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for CYP2B6",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Consensus recommendations for efavirenz and other CYP2B6 substrates."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2231142",
+      "gene": "ABCG2",
+      "variant_name": "Gln141Lys",
+      "effect_allele": "T",
+      "impact": "Impaired drug transport / statin toxicity risk / gout susceptibility",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The ABCG2 Gln141Lys T allele impairs active transport of substrates, resulting in elevated systemic levels of statins (specifically rosuvastatin) and reduced renal uric acid export, increasing gout risk.",
+      "do_not_claim": ["gout diagnosis", "statin myopathy certainty"],
+      "confirm_with": ["serum uric acid", "statin tolerability status"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Drug-induced myopathy risks are heavily mediated by SLCO1B1 and kidney clearance parameters.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for ABCG2 and Statins",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Recommends statin selection based on SLCO1B1 and ABCG2 genotypes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3918290",
+      "gene": "DPYD",
+      "variant_name": "DPYD*2A",
+      "effect_allele": "A",
+      "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "DPYD*2A is a critical splice-site variant leading to complete lack of DPD enzyme activity. Carriers of the A allele are at extreme risk of life-threatening toxicity (neutropenia, severe mucosal inflammation) if treated with standard doses of fluorouracil or capecitabine.",
+      "do_not_claim": ["cancer chemotherapy selector", "definitive DPD deficiency"],
+      "confirm_with": ["clinical DPYD genotyping", "dihydropyrimidine dehydrogenase enzyme assay"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Microarray analysis cannot rule out other rare, private DPYD variants that compromise clearance.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for DPYD and Fluoropyrimidines",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Mandates dose reduction or alternative agents for intermediate/poor DPD metabolizers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs55886062",
+      "gene": "DPYD",
+      "variant_name": "rs55886062 / I560S",
+      "effect_allele": "A",
+      "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The I560S variant is a rare DPYD allele that causes a severe reduction in DPD enzyme clearance. Carriers of the A allele require alternative cancer therapies or drastic dose reductions to prevent severe systemic toxicity.",
+      "do_not_claim": ["definitive chemo recommendation"],
+      "confirm_with": ["clinical DPYD screening"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "High-risk variant with very low prevalence; false positive array errors require clinical validation.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC DPYD Guideline",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Covers I560S as a high-priority PGx variant."
+        }
+      ]
+    },
+    {
+      "rsid": "rs67376798",
+      "gene": "DPYD",
+      "variant_name": "rs67376798 / Y186C",
+      "effect_allele": "A",
+      "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The Y186C variant causes intermediate to poor DPD clearance. A-carriers have a high susceptibility to severe adverse events from 5-FU based chemotherapy regimens.",
+      "do_not_claim": ["definitive chemo recommendation"],
+      "confirm_with": ["clinical DPYD screening"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Requires clinical confirmatory assay prior to initiating chemotherapy.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC DPYD Guideline",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Covers Y186C clinical recommendations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800460",
+      "gene": "TPMT",
+      "variant_name": "TPMT*3C",
+      "effect_allele": "C",
+      "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "TPMT*3C is a primary coding variant that reduces activity of the thiopurine S-methyltransferase enzyme. Carriers of the C allele are susceptible to severe, potentially fatal bone marrow toxicity (myelosuppression) under standard doses of azathioprine or mercaptopurine.",
+      "do_not_claim": ["leukemia/IBD treatment decisions"],
+      "confirm_with": ["clinical TPMT genotype", "erythrocyte TPMT enzyme activity assay"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "NUDT15 genotypes must also be integrated for complete thiopurine tolerance assessment.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for TPMT and NUDT15",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Specifies therapeutic adjustments based on TPMT/NUDT15 status."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1142345",
+      "gene": "TPMT",
+      "variant_name": "TPMT*3A (rs1142345)",
+      "effect_allele": "G",
+      "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The TPMT*3A allele contains two mutations (rs1142345 and rs1800460). Homozygous carriers have nearly zero TPMT activity and require extremely reduced dosing (e.g. 10% of typical dose) of thiopurines.",
+      "do_not_claim": ["azathioprine dosing plan"],
+      "confirm_with": ["clinical TPMT genotyping", "myelosuppression laboratory tests"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Array testing cannot phase these variants accurately; clinical testing is required.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for TPMT and NUDT15",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Specifies dosage reductions."
+        }
+      ]
+    },
+    {
+      "rsid": "rs116855232",
+      "gene": "NUDT15",
+      "variant_name": "rs116855232 / *3",
+      "effect_allele": "T",
+      "impact": "Severe thiopurine-induced myelosuppression (loss of function)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "NUDT15 rs116855232 is a major loss-of-function allele, highly prevalent in East Asian populations. Homozygotes or compound heterozygotes develop severe leucopenia and alopecia under thiopurines, independent of TPMT status.",
+      "do_not_claim": ["chemotherapy plan adjustment"],
+      "confirm_with": ["clinical NUDT15 testing", "CBC monitoring"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "NUDT15 testing is clinically indicated for patients of Asian or Native American descent before thiopurine therapy.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CPIC Guideline for TPMT and NUDT15",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Integrates NUDT15 and TPMT status for dosing."
+        }
+      ]
+    }
+  ]
+}

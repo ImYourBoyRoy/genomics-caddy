@@ -1,0 +1,130 @@
+{
+  "name": "Cardiovascular & Lipid Transport",
+  "markers": [
+    {
+      "rsid": "rs429358",
+      "gene": "APOE",
+      "variant_name": "APOE e4 marker",
+      "effect_allele": "C",
+      "impact": "APOE e4 isoform structural driver / LDL cholesterol elevations",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "APOE rs429358 C-allele determines the e4 isoform. Combined with rs7412, it defines the APOE haplotype. One or two copies of e4 drive higher LDL cholesterol, elevated cardiovascular risk, and late-onset Alzheimer's susceptibility.",
+      "do_not_claim": ["Alzheimer's disease diagnosis", "inevitable cognitive decline", "life insurance eligibility impacts"],
+      "confirm_with": ["apolipoprotein E genotyping (clinical)", "advanced lipid panel (ApoB, LDL-P)", "cognitive screening"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Haplotype determination from single raw SNPs can occasionally fail if phasing is incorrect. Clinically confirm haplotype structure.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "APOE Haplotypes and Alzheimer's Risk Consensus",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9215680/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Documents the highly robust risk increase in APOE e4/e4 homozygotes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7412",
+      "gene": "APOE",
+      "variant_name": "APOE e2/e3/e4 marker",
+      "effect_allele": "T",
+      "impact": "APOE isoform determination (e2, e3, e4 haplotype)",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "Determines the APOE e2 vs e3/e4 isoform. T/T at rs7412 combined with T/T at rs429358 defines e2/e2 (associated with lower LDL but risk of Type III hyperlipoproteinemia). G/G at rs7412 combined with C/C at rs429358 defines e4/e4.",
+      "do_not_claim": ["cardiovascular disease diagnosis", "cognitive decline certainty"],
+      "confirm_with": ["ApoB levels", "lipid panels", "clinical genotype confirmation"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Haplotype phasing requires validating both APOE loci (rs429358 and rs7412) in tandem.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "APOE variant molecular classification",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/variation/12529/",
+          "accessed": "2026-06-07",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "None declared",
+          "notes": "ClinVar catalog mapping the alleles to ApoE polypeptide variants."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10757278",
+      "gene": "9p21",
+      "variant_name": "Heart Attack Gene marker",
+      "effect_allele": "G",
+      "impact": "Altered cell cycle regulation in vascular walls",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The 9p21 non-coding region regulates vascular smooth muscle. The rs10757278 G allele is one of the most replicated risk markers for early-onset coronary artery disease and myocardial infarction, independent of lipid levels.",
+      "do_not_claim": ["heart attack prediction", "coronary artery calcification diagnosis"],
+      "confirm_with": ["coronary artery calcium (CAC) scan", "carotid ultrasound", "blood pressure"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Polygenic hazard score; absolute risk is highly modifiable by dietary lipids, smoking, and blood pressure control.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "9p21 locus association with coronary artery disease",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17540902/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Large GWAS identification of 9p21 non-coding risk variants for cardiovascular events."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799983",
+      "gene": "NOS3",
+      "variant_name": "Glu298Asp",
+      "effect_allele": "T",
+      "impact": "Altered nitric oxide synthesis / vascular recovery",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "NOS3 synthesizes nitric oxide, which regulates vasodilation and blood flow. The T (Asp) allele reduces enzyme function, potentially impairing endothelial nitric oxide production, athletic recovery, and arterial dilation under stress.",
+      "do_not_claim": ["coronary artery disease diagnosis", "hypertension diagnosis"],
+      "confirm_with": ["blood pressure", "muscle soreness recovery times", "endothelial function tests"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Nitric oxide levels are highly modifiable by dietary inorganic nitrates (beets, leafy greens) and UV sunlight exposure.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NOS3 Glu298Asp and vascular function",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12480641/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Shows reduction in endothelial nitric oxide synthase enzyme stability in T-carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070744",
+      "gene": "NOS3",
+      "variant_name": "-786T>C promoter",
+      "effect_allele": "C",
+      "impact": "Reduced nitric oxide synthase promoter transcription",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The C allele of rs2070744 is located in the NOS3 promoter, decreasing transcription rate. Associated with reduced basal nitric oxide production. Works synergistically with rs1799983 to affect vascular tone.",
+      "do_not_claim": ["atherosclerosis diagnosis", "heart disease"],
+      "confirm_with": ["resting blood pressure", "cardiovascular fitness (VO2 max)"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Exercise training induces NOS3 transcription and can overcome genetic promoter reductions.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NOS3 promoter polymorphism and coronary spasm",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10700140/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Demonstrates reduction in reporter gene transcription driven by the -786C variant."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+/* ./src/lib/styles/print.css */
+
+@media print {
+  @page {
+    margin: 0.6in;
+  }
+
+  html, body, body > div {
+    background: white !important;
+    color: black !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+  }
+
+  .sidebar,
+  .tabs,
+  .content-header,
+  .filter-bar,
+  .no-print {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block !important;
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  .main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .card,
+  .section-card,
+  .marker-card,
+  .report-header {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #999 !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    margin-bottom: 20px !important;
+  }
+
+  .marker-card {
+    border: 1px solid #ccc !important;
+    background: #fdfdfd !important;
+    color: #000 !important;
+    opacity: 1 !important;
+  }
+
+  .marker-card-collapsed {
+    opacity: 1 !important;
+  }
+
+  .gene-label,
+  .variant-sub,
+  .rsid-sub,
+  .genotype-val,
+  .marker-severity-label {
+    color: black !important;
+  }
+
+  .severity-explainer {
+    color: #333 !important;
+    background: #f9f9f9 !important;
+    border-left-color: #999 !important;
+  }
+
+  .summary-pill {
+    background: #f0f0f0 !important;
+    border-color: #ccc !important;
+    color: #333 !important;
+  }
+
+  .score-explainer {
+    background: #f5f5ff !important;
+    border-color: #ccc !important;
+    color: #333 !important;
+  }
+
+  .confirm-pathway {
+    background: #f0f7ff !important;
+    border: 1px solid #bcd7f6 !important;
+    color: black !important;
+  }
+
+  .claim-warning {
+    background: #fff5f5 !important;
+    border: 1px solid #fed7d7 !important;
+    color: black !important;
+  }
+
+  .raw-limitation-warning {
+    background: #fffaf0 !important;
+    border: 1px solid #feebc8 !important;
+    color: black !important;
+  }
+
+  .clinical-confirmation-warning {
+    background: #fff5f5 !important;
+    border: 1px solid #fed7d7 !important;
+    color: black !important;
+  }
+
+  .sources-list,
+  .confirm-list,
+  .warning-list {
+    color: #333 !important;
+  }
+
+  /* ===== Print styles for View Modes ===== */
+  .dual-explanations {
+    gap: 4px !important;
+  }
+  .dual-row {
+    padding: 4px 6px !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+  }
+  .layperson-box {
+    border-left: 2px solid #22c55e !important;
+  }
+  .clinical-box {
+    border-left: 2px solid #718096 !important;
+  }
+  .layperson-text {
+    color: black !important;
+  }
+  .clinical-text {
+    color: #4a5568 !important;
+  }
+  .simple-alert {
+    background: #fffaf0 !important;
+    border: 1px solid #feebc8 !important;
+    color: black !important;
+  }
+}

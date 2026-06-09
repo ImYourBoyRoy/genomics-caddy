@@ -1,0 +1,74 @@
+{
+  "packs": [
+    {
+      "id": "core",
+      "label": "Core Traits",
+      "description": "Essential physiological and histamine traits.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "pgx",
+      "label": "Pharmacogenomics (PGx)",
+      "description": "Liver enzymes and drug transport variations based on CPIC guidelines.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": true
+    },
+    {
+      "id": "metabolic",
+      "label": "Metabolic Health & T2D",
+      "description": "Insulin sensitivity, secretion, and satiety pathways.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "nutrients",
+      "label": "Nutrients & One-Carbon Methylation",
+      "description": "Methylation (MTHFR), vitamin D, iron, and choline cofactors.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "neuropsych",
+      "label": "Neurotransmitter & Mood Resiliency",
+      "description": "Dopamine, serotonin, HPA axis stress, and hormonal sensitivity.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "sleep",
+      "label": "Sleep & Circadian Rhythms",
+      "description": "Adenosine accumulation, melatonin, and circadian phase clocks.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "connective_tissue",
+      "label": "Connective Tissue Laxity",
+      "description": "Collagen structural properties and joint hypermobility indicators.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "thyroid_autoimmune",
+      "label": "Thyroid Hormone Conversion",
+      "description": "Intracellular T4-to-T3 deiodinases and thyroid oxidative protection.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "cardiovascular",
+      "label": "Cardiovascular & Lipid Transport",
+      "description": "Apolipoproteins, endothelial nitric oxide, and CAD risk SNPs.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": false
+    },
+    {
+      "id": "cancer_confirmation_only",
+      "label": "High-Stakes Cancer Predisposition",
+      "description": "BRCA1 and BRCA2 pathogenic alleles requiring clinical confirmatory sequencing.",
+      "default_enabled": true,
+      "requires_clinical_confirmation": true
+    }
+  ]
+}

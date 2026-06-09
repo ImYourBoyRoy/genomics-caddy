@@ -1,0 +1,80 @@
+{
+  "name": "Core Traits",
+  "markers": [
+    {
+      "rsid": "rs10156191",
+      "gene": "AOC1",
+      "variant_name": "DAO promoter",
+      "effect_allele": "T",
+      "impact": "Reduced Diamine Oxidase (DAO) activity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The AOC1 rs10156191 T allele is associated with lower DAO enzyme production. DAO is the primary enzyme responsible for breaking down ingested histamine in the gut. T-carriers may experience elevated sensitivity to high-histamine foods.",
+      "do_not_claim": ["histamine intolerance diagnosis", "mast cell activation syndrome (MCAS) diagnosis"],
+      "confirm_with": ["histamine-rich food response", "serum DAO activity", "plasma histamine levels"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Gut microbiome, inflammatory bowel conditions, and DAO inhibitors (alcohol, certain medications) play a massive role in actual histamine tolerance.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "AOC1 gene variants and diamine oxidase activity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22428537/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identifies promoter SNPs associated with decreased DAO expression."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11558538",
+      "gene": "HNMT",
+      "variant_name": "Thr105Ile",
+      "effect_allele": "T",
+      "impact": "Reduced Histamine N-Methyltransferase activity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "HNMT is responsible for intracellular histamine breakdown, particularly in the brain. The Thr105Ile T allele reduces enzyme activity, potentially prolonging intracellular histamine signals in the central nervous system.",
+      "do_not_claim": ["allergy diagnosis", "sleep disorder diagnosis"],
+      "confirm_with": ["symptoms of central histamine sensitivity (congestion, headaches)", "allergen responses"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Overall histamine load (including DAO status and mast cell degranulation) dictates central nervous system symptoms.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "HNMT Thr105Ile polymorphism impact on enzyme function",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11265882/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Demonstrates reduction in thermal stability and activity of the HNMT 105Ile isoform."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4988235",
+      "gene": "MCM6",
+      "variant_name": "-13910C>T",
+      "effect_allele": "C",
+      "impact": "Lactase gene promoter downregulation (Lactose Intolerance)",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MCM6 regulates the LCT (lactase) gene. Homozygous C/C results in adult lactase non-persistence (lactose intolerance) in European populations. T-carriers (C/T or T/T) maintain lactase expression throughout adulthood.",
+      "do_not_claim": ["dairy allergy diagnosis", "irritable bowel syndrome"],
+      "confirm_with": ["lactose elimination diet", "hydrogen breath test"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Specific to European ancestry; lactase persistence in other regions is driven by distinct MCM6 variants.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MCM6 promoter mutations regulating LCT expression",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11782486/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identifies the upstream promoter mutation responsible for lactase persistence."
+        }
+      ]
+    }
+  ]
+}

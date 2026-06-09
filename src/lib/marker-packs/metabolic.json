@@ -1,0 +1,330 @@
+{
+  "name": "Metabolic Health & T2D",
+  "markers": [
+    {
+      "rsid": "rs9939609",
+      "gene": "FTO",
+      "variant_name": "FTO intron variant",
+      "effect_allele": "A",
+      "impact": "Altered satiety signaling / increased appetite susceptibility",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FTO rs9939609 is the most robust common obesity-risk locus. The A allele affects FTO expression, altering hypothalamus satiety signaling and increasing baseline appetite and food intake. Strongly modifiable by exercise and protein intake.",
+      "do_not_claim": ["obesity diagnosis", "inevitable weight gain"],
+      "confirm_with": ["satiety levels after meals", "body fat percentage", "leptin/insulin resistance panels"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "The risk effect is completely abolished in individuals with high physical activity or high-protein diet regimes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FTO gene variants and obesity association",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17431174/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Large-scale genome-wide association study identifying FTO as a primary locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801282",
+      "gene": "PPARG",
+      "variant_name": "Pro12Ala",
+      "effect_allele": "G",
+      "impact": "Altered peroxisome proliferator-activated receptor-gamma activity",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PPARG is a master regulator of fat cell development and insulin sensitivity. The G allele (Ala) is associated with improved insulin sensitivity and lower type 2 diabetes risk compared to the Pro/Pro genotype. A robust metabolic marker.",
+      "do_not_claim": ["diabetes diagnosis", "metabolic syndrome certainty"],
+      "confirm_with": ["fasting blood glucose", "HbA1c", "fasting insulin (HOMA-IR)"],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Though protective, metabolic health is ultimately determined by caloric balance, fiber intake, and skeletal muscle insulin action.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PPARG Pro12Ala and Type 2 Diabetes Risk Meta-Analysis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10986435/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Confirms a highly replicated, modest protective effect of the Ala allele against type 2 diabetes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2237897",
+      "gene": "KCNQ1",
+      "variant_name": "KCNQ1 intron variant",
+      "effect_allele": "A",
+      "impact": "Reduced glucose-stimulated insulin secretion",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "KCNQ1 regulates potassium channels in pancreatic beta cells. The rs2237897 A allele is a robust marker associated with impaired insulin secretion following glucose loads, carrying a modest risk signal for type 2 diabetes.",
+      "do_not_claim": ["diabetes diagnosis", "insulin deficiency"],
+      "confirm_with": ["oral glucose tolerance test (OGTT)", "HbA1c"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common risk SNP; actual insulin secretion and glucose disposal are highly responsive to cardiovascular fitness and carbohydrate load.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "KCNQ1 variants and Type 2 Diabetes susceptibility in East Asian populations",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18711367/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Seminal study identifying KCNQ1 as a key diabetes locus in Asian and European cohorts."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7903146",
+      "gene": "TCF7L2",
+      "variant_name": "rs7903146 intron variant",
+      "effect_allele": "T",
+      "impact": "Impaired GLP-1 secretion / elevated type 2 diabetes risk",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TCF7L2 rs7903146 is the most significant common genetic risk locus for Type 2 Diabetes. The T allele is linked to reduced insulin secretion and impaired beta-cell response to GLP-1. Modifiable via low-glycemic index diets and exercise.",
+      "do_not_claim": ["T2D diagnosis", "insulin therapy requirements prediction"],
+      "confirm_with": ["fasting blood glucose", "HbA1c", "oral glucose tolerance test"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common risk SNP; dietary composition and physical training mitigate the risk completely.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TCF7L2 polymorphism and T2D risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16415884/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Replicated association of TCF7L2 with beta-cell function impairment."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13266634",
+      "gene": "SLC30A8",
+      "variant_name": "Trp325Arg",
+      "effect_allele": "C",
+      "impact": "Impaired zinc transport / reduced beta-cell insulin crystallization",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC30A8 is a zinc transporter in pancreatic beta cells. The C allele (Arg325) affects insulin storage and secretion kinetics, slightly increasing diabetes risk.",
+      "do_not_claim": ["pancreatitis diagnosis"],
+      "confirm_with": ["fasting insulin", "blood zinc levels"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Dietary zinc status can influence the manifestation of this transporter phenotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SLC30A8 Arg325 variant and diabetes risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17435754/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies SLC30A8 as a highly replicated beta-cell GWAS locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5219",
+      "gene": "KCNJ11",
+      "variant_name": "Glu23Lys",
+      "effect_allele": "T",
+      "impact": "Altered ATP-sensitive potassium channel activation",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "KCNJ11 rs5219 (E23K variant, T allele) keeps the pancreatic beta-cell potassium channel open longer, decreasing insulin secretion in response to glucose.",
+      "do_not_claim": ["neonatal diabetes diagnosis"],
+      "confirm_with": ["postprandial blood glucose", "c-peptide level"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "ATP-sensitive potassium channels are drug targets for sulfonylureas; clinical PGx requires full panel curation.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "KCNJ11 Glu23Lys and diabetes susceptibility",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12844117/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Meta-analysis confirming modest risk elevation of E23K."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1260326",
+      "gene": "GCKR",
+      "variant_name": "GCKR intron variant",
+      "effect_allele": "T",
+      "impact": "Altered glucokinase activity / triglyceride-glucose balance shift",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GCKR regulates glucokinase in the liver. The T allele is associated with lower fasting glucose but higher fasting triglycerides, illustrating a metabolic lipid-glucose partition tradeoff.",
+      "do_not_claim": ["hypertriglyceridemia diagnosis", "fatty liver diagnosis"],
+      "confirm_with": ["fasting triglycerides", "fasting glucose", "AST/ALT liver enzymes"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Substrate partitioning is highly modified by fructose/alcohol intake and cardiovascular training.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GCKR and lipid-glucose phenotypes",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19043547/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "GWAS showing GCKR's dual effects on glucose and plasma lipids."
+        }
+      ]
+    },
+    {
+      "rsid": "rs662799",
+      "gene": "APOA5",
+      "variant_name": "-1131T>C",
+      "effect_allele": "C",
+      "impact": "Reduced APOA5 expression / elevated fasting triglycerides",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "APOA5 rs662799 C allele is strongly associated with elevated serum triglycerides due to reduced clearing of triglyceride-rich lipoproteins.",
+      "do_not_claim": ["cardiac event prediction", "statins requirement indicator"],
+      "confirm_with": ["lipid panel (triglycerides)", "ApoB"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Fasting triglycerides are highly responsive to dietary refined carbohydrate levels and omega-3 intake.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "APOA5 -1131T>C and hypertriglyceridemia",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12181513/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large cohort study mapping APOA5 variants to triglyceride clearance."
+        }
+      ]
+    },
+    {
+      "rsid": "rs328",
+      "gene": "LPL",
+      "variant_name": "Ser447Ter",
+      "effect_allele": "G",
+      "impact": "Altered Lipoprotein Lipase activity / triglyceride clearance",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPL rs328 G-allele (Ser44Ter) causes premature truncation, resulting in increased LPL activity, leading to lower triglycerides and higher HDL.",
+      "do_not_claim": ["hyperlipidemia exclusion"],
+      "confirm_with": ["basal lipid panel", "HDL levels"],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Protective variant; clearance rates are also regulated by insulin levels (metabolic health).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPL Ser447Ter meta-analysis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9851778/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large scale consensus mapping of LPL protective variations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs708272",
+      "gene": "CETP",
+      "variant_name": "TaqIB polymorphism",
+      "effect_allele": "A",
+      "impact": "Altered cholesteryl ester transfer protein activity",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The A (TaqIB B2) allele of rs708272 is linked to decreased CETP expression, which increases protective HDL cholesterol levels.",
+      "do_not_claim": ["cardioprotection guarantee"],
+      "confirm_with": ["HDL-C", "ApoA-I levels"],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "High HDL levels do not always translate to cardiac protection if particles are dysfunctional.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CETP TaqIB and coronary heart disease risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16280332/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large cohort study confirming increased HDL in B2 carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10455872",
+      "gene": "LPA",
+      "variant_name": "rs10455872 promoter variant",
+      "effect_allele": "G",
+      "impact": "Elevated Lipoprotein(a) expression / atherosclerosis risk",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPA rs10455872 is a robust promoter-associated SNP driving elevated levels of Lipoprotein(a). High Lp(a) levels are an independent, highly genetically determined risk factor for cardiovascular disease.",
+      "do_not_claim": ["cardiovascular disease diagnosis", "atherosclerosis certainty"],
+      "confirm_with": ["serum Lipoprotein(a) [Lp(a)]", "CAC heart scan"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Microarray analysis only captures specific alleles; direct measurement of serum Lp(a) is required to determine absolute risk.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPA variants and coronary disease risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20032320/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Highlights rs10455872 as a major risk driver for cardiovascular events."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3798220",
+      "gene": "LPA",
+      "variant_name": "Ile4399Met",
+      "effect_allele": "C",
+      "impact": "APO(a) isoform reduction / elevated Lipoprotein(a)",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The rs3798220 C-allele is associated with smaller apolipoprotein(a) size isoforms, which are cleared slower, leading to elevated Lp(a) levels.",
+      "do_not_claim": ["cardiovascular disease diagnosis"],
+      "confirm_with": ["serum Lipoprotein(a) concentration", "ApoB"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Variant frequency varies widely by geographic ancestry.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPA Ile4399Met and coronary risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20032320/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies the smaller isoform-associated Met4399 variant as a genetic risk marker."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17782313",
+      "gene": "MC4R",
+      "variant_name": "MC4R downstream variant",
+      "effect_allele": "C",
+      "impact": "Altered melanocortin-4 receptor expression / satiety regulation",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC4R is a master hypothalamic regulator of energy homeostasis. The C allele is associated with minor satiety signaling impairments and higher baseline caloric intake.",
+      "do_not_claim": ["bipolar eating disorder diagnosis", "inevitable obesity"],
+      "confirm_with": ["satiety logs", "hormone profile (leptin)"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with small phenotypic impact compared to rare monogenic MC4R mutations.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MC4R variants and obesity risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18454148/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large GWAS detailing common MC4R modifier effects."
+        }
+      ]
+    }
+  ]
+}

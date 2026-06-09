@@ -1,0 +1,255 @@
+{
+  "name": "Connective Tissue Laxity",
+  "markers": [
+    {
+      "rsid": "rs1800012",
+      "gene": "COL1A1",
+      "variant_name": "Sp1 binding polymorphism",
+      "effect_allele": "T",
+      "impact": "Altered Type I collagen transcription / bone density reduction",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The COL1A1 Sp1 T-allele alters transcription factors, leading to a minor reduction in collagen Type I strength. It is replicated in studies showing reduced bone mineral density, osteopenic fracture risk, and soft-tissue injury susceptibility.",
+      "do_not_claim": ["Ehlers-Danlos Syndrome (EDS) diagnosis", "osteoporosis diagnosis"],
+      "confirm_with": ["DEXA bone scan", "joint range of motion", "soft-tissue injury history"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common polymorphism with modest odds ratio; bone density is heavily driven by resistance training, vitamin D/K2 status, and hormonal balance.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "COL1A1 Sp1 polymorphism and osteoporosis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9530515/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Large multi-cohort replication study confirming bone density reduction in T-carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12722",
+      "gene": "COL5A1",
+      "variant_name": "COL5A1 3'-UTR variant",
+      "effect_allele": "T",
+      "impact": "Altered Type V collagen mRNA stability / tendon-ligament laxity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "COL5A1 rs12722 regulates Type V collagen, which controls fibril diameter in tendons and ligaments. The T allele is linked to mechanical property variations; C/C genotypes often display higher range of motion, while T/T has been associated with tendon injury susceptibility.",
+      "do_not_claim": ["classical EDS diagnosis", "tendinitis certainty"],
+      "confirm_with": ["Beighton hypermobility score", "tendon flexibility", "ligament injury history"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Array genotyping does not rule out rare coding mutations in COL5A1/COL5A2 that cause classical Ehlers-Danlos Syndrome.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "COL5A1 and Range of Motion",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19794058/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates the UTR variant with flexibility and tendon strain risks."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800255",
+      "gene": "COL3A1",
+      "variant_name": "Ala531Thr",
+      "effect_allele": "A",
+      "impact": "Type III collagen protein structure variation",
+      "evidence_tier": "D_research_only",
+      "interpretation": "COL3A1 Ala531Thr has been investigated in relation to tissue elasticity and pelvic/mitral valve laxity. It represents a common research variant, not a pathogenic mutation, and does not indicate vascular pathology.",
+      "do_not_claim": ["Vascular Ehlers-Danlos (vEDS) diagnosis", "aortic aneurysm risk certainty"],
+      "confirm_with": ["echocardiogram if clinically warranted", "general skin hyperextensibility"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "This common variant is benign in ClinVar. Do not mistake common SNPs for rare syndromic mutations (e.g. pathogenic COL3A1 variants causing vascular EDS).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "COL3A1 Ala531Thr in joint laxity cohorts",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20309621/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Common population variant with no pathogenic association for vascular syndromes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs143383",
+      "gene": "GDF5",
+      "variant_name": "GDF5 promoter variant",
+      "effect_allele": "T",
+      "impact": "Reduced growth differentiation factor 5 expression / joint cartilage remodeling",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GDF5 is involved in joint development and cartilage repair. The T allele is associated with lower GDF5 promoter activity, showing a robust association with minor increases in osteoarthritis susceptibility (particularly knee and hip).",
+      "do_not_claim": ["osteoarthritis diagnosis", "joint replacement prediction"],
+      "confirm_with": ["joint pain/stiffness", "X-ray imaging if clinically indicated"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Highly common allele; cartilage loss is also driven by mechanical loading, joint alignment, and systemic inflammatory tone.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GDF5 promoter polymorphism association with osteoarthritis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17393437/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Large replication study demonstrating functional promoter reduction."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3025058",
+      "gene": "MMP3",
+      "variant_name": "5A/6A polymorphism",
+      "effect_allele": "A",
+      "impact": "Altered matrix metalloproteinase 3 expression / tissue remodeling",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MMP3 breaks down extracellular matrix. The 5A allele (represented by A) has higher transcription activity than 6A, altering matrix remodeling rates in tendons and ligaments. Replicated in studies of Achilles tendon injury risk.",
+      "do_not_claim": ["Achilles tendon rupture diagnosis", "connective tissue disease"],
+      "confirm_with": ["tendon stiffness", "recovery rate from heavy exercise"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Extracellular matrix remodeling is complex and influenced by growth factors, nutrition (ascorbate), and mechanical loading schedules.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MMP3 promoter polymorphism and tendon pathology",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16380181/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Replicates association of the 5A/6A promoter polymorphism with Achilles tendinopathy."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2118181",
+      "gene": "FBN1",
+      "variant_name": "FBN1 intron variant",
+      "effect_allele": "T",
+      "impact": "Fibrillin-1 structural integrity / aortic wall tension variation",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The FBN1 rs2118181 T allele is associated with increased susceptibility to sporadic thoracic aortic dissection and aneurysm in the general population, affecting baseline tissue elasticity. It is NOT diagnostic of syndromic Marfan syndrome.",
+      "do_not_claim": ["Marfan Syndrome diagnosis", "aortic rupture certainty"],
+      "confirm_with": ["echocardiographic aortic root diameter Z-score", "blood pressure control"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Intronic marker with minor risk effect; does not screen for rare pathogenic FBN1 stop/missense mutations.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FBN1 variants and sporadic thoracic aortic dissection",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20978250/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS showing association of 15q21.1 variants with thoracic aortic aneurysm."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8033037",
+      "gene": "FBN1",
+      "variant_name": "Fibrillin-1 coding variant",
+      "effect_allele": "A",
+      "impact": "Fibrillin-1 microfibril structure / height variation",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "FBN1 rs8033037 is a common variant investigated in genome-wide association studies for tall stature and bone elongation in the general population. It reflects minor, non-pathogenic variation in microfibril assembly.",
+      "do_not_claim": ["Marfan Syndrome diagnosis", "gigantism diagnosis"],
+      "confirm_with": ["skeletal measurements (arm span to height ratio)", "clinical exam for Marfan skeletal signs"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Benign polymorphism; does not predict connective tissue disease.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FBN1 polymorphisms and height variation in healthy populations",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18485292/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates common FBN1 coding SNPs with normal anthropometric distribution."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1815739",
+      "gene": "ACTN3",
+      "variant_name": "R577X",
+      "effect_allele": "T",
+      "impact": "Alpha-actinin-3 deficiency / fast-twitch power reduction",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ACTN3 R577X. Homozygous T/T (X/X) results in complete deficiency of alpha-actinin-3 in fast muscle fibers. This shifts profile performance toward slow-twitch endurance, decreasing high-velocity sprint performance.",
+      "do_not_claim": ["athletic performance guarantee"],
+      "confirm_with": ["sprint vs endurance performance history"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Muscle composition is heavily determined by resistance and anaerobic physical training regimes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ACTN3 genotype and athletic performance",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12879365/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies R577X as a key regulator of fast-twitch skeletal muscle properties."
+        }
+      ]
+    },
+    {
+      "rsid": "rs970547",
+      "gene": "COL12A1",
+      "variant_name": "rs970547 UTR variant",
+      "effect_allele": "T",
+      "impact": "Altered collagen XII expression / ACL injury risk",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "COL12A1 rs970547 regulates Type XII collagen. The T allele is linked in association studies to altered baseline ligament properties, showing elevated susceptibility to ACL tears.",
+      "do_not_claim": ["ligament tear prediction"],
+      "confirm_with": ["ACL tear history", "joint laxity exams"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common modifier; injury risk is primarily driven by biomechanics, warmups, and joint loading patterns.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "COL12A1 and ACL injury risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20075151/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Associates COL12A1 variants with cruciate ligament tears in female cohorts."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3918242",
+      "gene": "MMP9",
+      "variant_name": "-1562C>T",
+      "effect_allele": "T",
+      "impact": "Altered gelatinase B expression / matrix remodeling",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MMP9 regulates gelatinase B, which cleaves collagen Type IV. The T allele increases promoter activity, modifying extracellular matrix remodeling in cardiovascular tissues and joint cartilage.",
+      "do_not_claim": ["joint disease diagnosis"],
+      "confirm_with": ["hs-CRP", "joint range of motion"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Overall enzyme activity is guided by secondary factors (zinc/calcium availability).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MMP9 promoter polymorphism expression",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10439494/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Shows elevated transcription driven by the -1562T allele."
+        }
+      ]
+    }
+  ]
+}

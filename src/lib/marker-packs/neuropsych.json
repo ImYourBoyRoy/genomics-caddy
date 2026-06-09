@@ -1,0 +1,455 @@
+{
+  "name": "Neurotransmitter & Mood Resiliency",
+  "markers": [
+    {
+      "rsid": "rs1360780",
+      "gene": "FKBP5",
+      "variant_name": "FKBP5 intron variant",
+      "effect_allele": "T",
+      "impact": "Altered glucocorticoid receptor sensitivity / HPA-axis stress response",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The FKBP5 rs1360780 T allele leads to higher induction of FKBP5, which reduces glucocorticoid receptor sensitivity, delaying negative feedback of cortisol during stress. Associated with stress sensitivity, PTSD, and major depression, particularly following early-life trauma.",
+      "do_not_claim": ["PTSD diagnosis", "major depressive disorder diagnosis", "adrenal fatigue"],
+      "confirm_with": ["stress recovery speed", "heart rate variability (HRV)", "cortisol rhythm if clinically warranted"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Epigenetic changes (methylation of FKBP5) driven by early-life stress are the primary molecular switch.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FKBP5 gene-environment interactions and HPA axis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15630064/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Seminal study detailing T allele association with HPA axis hyper-responsiveness."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6311",
+      "gene": "HTR2A",
+      "variant_name": "A-1438G promoter",
+      "effect_allele": "A",
+      "impact": "Altered serotonin 2A receptor expression",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The HTR2A A-1438G A allele has been studied for its potential to increase serotonin 2A receptor density. It is evaluated as a research-grade marker for emotional reactivity and atypical responses to serotonergic drugs.",
+      "do_not_claim": ["depression diagnosis", "anxiety disorder diagnosis", "antidepressant failure prediction"],
+      "confirm_with": ["emotional sensitivity", "antidepressant response history"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Promoter activity varies widely based on localized cellular factors and epigenetic methylation state.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "HTR2A promoter polymorphism expression studies",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9473595/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Shows modest impact of A allele on receptor promoter activity."
+        }
+      ]
+    },
+    {
+      "rsid": "rs53576",
+      "gene": "OXTR",
+      "variant_name": "OXTR intron variant",
+      "effect_allele": "A",
+      "impact": "Altered oxytocin receptor sensitivity / social stress buffering",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The OXTR rs53576 A allele is studied in relation to social-emotional traits. A-carriers (AA/AG) may experience reduced oxytocin receptor sensitivity, affecting social support seeking and stress buffering under pressure.",
+      "do_not_claim": ["empathy deficiency diagnosis", "autism diagnosis"],
+      "confirm_with": ["social stress resilience", "emotional support networks"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Oxytocin dynamics are heavily modulated by early maternal bonding, social environment, and vasopressin pathways.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "OXTR polymorphism and emotional reactivity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19759361/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Explores how the AA/AG genotypes buffer social stress less effectively."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6323",
+      "gene": "MAOA",
+      "variant_name": "MAOA coding variant",
+      "effect_allele": "T",
+      "impact": "Lower monoamine oxidase A enzyme activity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MAOA is responsible for clearing dopamine, serotonin, and norepinephrine. The rs6323 T allele represents a lower-activity enzyme, resulting in slower neurotransmitter clearance, which can lead to higher emotional reactivity under acute stress.",
+      "do_not_claim": ["aggression diagnosis", "bipolar disorder", "anti-social personality diagnosis"],
+      "confirm_with": ["irritability under stress", "stimulant/tyramine sensitivity"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "MAOA is X-linked. Hemizygous males carrying the low-activity allele are affected much more strongly than heterozygous females.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MAOA activity polymorphism and emotional regulation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12154080/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Discusses interactions of low-activity MAOA with childhood environment."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4680",
+      "gene": "COMT",
+      "variant_name": "Val158Met",
+      "effect_allele": "A",
+      "impact": "Slower prefrontal dopamine & norepinephrine clearance",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "COMT Val158Met. Homozygous A/A (Met/Met) decreases COMT enzyme activity up to 4-fold, leading to higher prefrontal dopamine levels. Associated with high cognitive focus and executive capacity, but increases stress and anxiety vulnerability ('Worrier' type).",
+      "do_not_claim": ["ADHD diagnosis", "OCD diagnosis", "high IQ certainty"],
+      "confirm_with": ["executive function capacity", "stress vulnerability", "response to dopaminergic stimulants"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Estrogens inhibit COMT transcription; COMT activity is significantly lower in females than males.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "COMT Val158Met impact on cognition and stress",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17008817/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Seminal review paper on Val158Met 'worrier vs. warrior' evolutionary tradeoff."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800497",
+      "gene": "DRD2",
+      "variant_name": "TaqIA (ANKK1)",
+      "effect_allele": "T",
+      "impact": "Reduced dopamine D2 receptor density",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "DRD2 TaqIA (A1 allele, represented by T) is located in the adjacent ANKK1 gene and is associated with a 30-40% reduction in dopamine D2 receptor density in the striatum, potentially predisposing to reward-seeking behaviors and ADHD-like traits.",
+      "do_not_claim": ["addiction diagnosis", "ADHD diagnosis"],
+      "confirm_with": ["reward-seeking tendencies", "impulsivity levels", "dopaminergic drug response"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Striatal dopamine tone is also modified by daily reward cues, sleep duration, and physical exercise.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ANKK1 TaqIA and dopamine D2 receptor binding",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9018544/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Confirms receptor density reduction in human PET imaging."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6277",
+      "gene": "DRD2",
+      "variant_name": "C957T",
+      "effect_allele": "T",
+      "impact": "Altered DRD2 mRNA stability & translation efficiency",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "DRD2 C957T regulates translation efficiency and binding affinity of dopamine D2 receptors. The T allele is linked to differences in D2 receptor availability, which has been replicated in working memory and cognitive flexibility tasks.",
+      "do_not_claim": ["cognitive deficit diagnosis", "schizophrenia diagnosis"],
+      "confirm_with": ["working memory capacity", "cognitive flexibility (ability to shift tasks)"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Receptor activity operates in concert with prefrontal dopamine levels (COMT status).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "DRD2 C957T effects on translation and mRNA stability",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12861036/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Demonstrates structural mRNA stability changes caused by synonymous variant."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7794154",
+      "gene": "CNTNAP2",
+      "variant_name": "CNTNAP2 intron variant",
+      "effect_allele": "T",
+      "impact": "Neurodevelopmental cell adhesion / sensory processing traits",
+      "evidence_tier": "D_research_only",
+      "interpretation": "CNTNAP2 is involved in neural migration and synaptic development. The T allele is evaluated as a research-grade marker linked to language development variation, sensory processing, and autism spectrum traits.",
+      "do_not_claim": ["autism spectrum diagnosis", "sensory processing disorder"],
+      "confirm_with": ["sensory sensitivities", "auditory processing traits"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Extremely weak statistical odds ratio; not diagnostic for any neurodevelopmental condition.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CNTNAP2 and language processing in the general population",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18987163/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Examines association with developmental language profiles."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4307059",
+      "gene": "MSNP1AS",
+      "variant_name": "MSNP1AS variant",
+      "effect_allele": "T",
+      "impact": "Altered neuronal adhesion susceptibility",
+      "evidence_tier": "D_research_only",
+      "interpretation": "MSNP1AS regulates neuronal structure. The T allele represents a minor research-level susceptibility variant replicated in broad neurodevelopmental studies, showing weak statistical correlation with autism spectrum traits.",
+      "do_not_claim": ["autism diagnosis", "developmental delay"],
+      "confirm_with": ["social-communication style", "executive planning capacity"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Non-diagnostic common variant with very low penetrance.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MSNP1AS expression changes in autism cerebral cortex",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22180456/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Analyzes how this non-coding RNA affects cell adhesion markers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800544",
+      "gene": "ADRA2A",
+      "variant_name": "-1291C>G promoter",
+      "effect_allele": "G",
+      "impact": "Altered prefrontal alpha-2A adrenergic receptor tone",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "ADRA2A encodes the alpha-2A adrenergic receptor, which regulates norepinephrine in the prefrontal cortex. The G allele is linked to differences in receptor density and has been replicated in studies of methylphenidate response in ADHD.",
+      "do_not_claim": ["stimulant success certainty", "ADHD diagnosis"],
+      "confirm_with": ["methylphenidate response", "baseline inattention/hyperactivity"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Individual therapeutic response is mediated by secondary factors including sleep hygiene and thyroid status.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ADRA2A polymorphism and methylphenidate response",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16819504/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Finds association between G allele and improved response rate in children with ADHD."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801132",
+      "gene": "ESR1",
+      "variant_name": "Pvull polymorphism",
+      "effect_allele": "G",
+      "impact": "Estrogen receptor alpha transcriptional sensitivity",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The ESR1 Pvull G allele is a research-grade marker associated with altered transcriptional activity of estrogen receptor alpha, investigated in studies of mood fluctuations during rapid hormone drops.",
+      "do_not_claim": ["PMDD diagnosis", "estrogen deficiency diagnosis"],
+      "confirm_with": ["hormonal mood symptoms (luteal phase)", "menstrual cycle regularity"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Hormone sensitivity is a complex neurobiological trait involving estrogen receptor complexing, progesterone balance, and central GABAA receptors.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ESR1 polymorphisms and premenstrual dysphoric symptoms",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17604313/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Investigates estrogen receptor variants and luteal mood patterns."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2234693",
+      "gene": "ESR1",
+      "variant_name": "Xbal polymorphism",
+      "effect_allele": "T",
+      "impact": "Estrogen receptor splicing / binding affinity variation",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR1 rs2234693 regulates receptor splicing. The T allele is evaluated as a research-grade marker linked to estrogen signaling sensitivity and emotional/physical symptoms during estrogen withdrawal.",
+      "do_not_claim": ["hormone replacement therapy guidance", "PMDD diagnosis"],
+      "confirm_with": ["symptoms of estrogen dominance or withdrawal", "luteal mood charts"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Replication in PMDD is restricted to candidate-gene studies; GWAS results show highly polygenic etiology.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Estrogen receptor alpha gene (ESR1) and mood regulation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18317224/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Details splicing variance in response to estrogen concentration shifts."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8079626",
+      "gene": "PGR",
+      "variant_name": "Progesterone receptor variant",
+      "effect_allele": "A",
+      "impact": "Progesterone receptor expression & sensitivity",
+      "evidence_tier": "D_research_only",
+      "interpretation": "PGR rs8079626 A-carriers are evaluated in research regarding progesterone receptor sensitivity. Linked to mood fluctuations during the luteal progesterone spike.",
+      "do_not_claim": ["progesterone intolerance diagnosis", "infertility diagnosis"],
+      "confirm_with": ["luteal phase mood swings", "response to progesterone therapy"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Progesterone's neuroactive metabolite (allopregnanolone) acts directly on GABAA receptors; PGR sequence is only part of the pathway.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PGR variants and progesterone sensitivity in mood disorders",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19503764/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Finds mild association with adverse progesterone effects."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6265",
+      "gene": "BDNF",
+      "variant_name": "Val66Met",
+      "effect_allele": "A",
+      "impact": "Reduced activity-dependent BDNF secretion",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The Met66 (A) allele reduces the activity-dependent release of Brain-Derived Neurotrophic Factor, which regulates synaptic plasticity and neurogenesis. Associated with alterations in episodic memory, working memory, and plasticity response to aerobic exercise.",
+      "do_not_claim": ["depression diagnosis", "dementia prediction"],
+      "confirm_with": ["cognitive flexibility status", "aerobic training response"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Overall BDNF levels are highly modifiable by exercise, environmental enrichment, heat shock (sauna), and dietary polyphenols.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "BDNF Val66Met polymorphism impact on brain plasticity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12551480/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Key paper establishing secretion defects of the Met66 variant."
+        }
+      ]
+    },
+    {
+      "rsid": "rs324420",
+      "gene": "FAAH",
+      "variant_name": "Pro129Thr",
+      "effect_allele": "A",
+      "impact": "Increased anandamide levels / reduced FAAH expression",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "FAAH degrades anandamide (the bliss molecule). The Thr129 (A) allele reduces enzyme activity, leading to elevated baseline anandamide. Associated with lower baseline anxiety, faster fear extinction, and decreased stress sensitivity.",
+      "do_not_claim": ["anxiety protection guarantee"],
+      "confirm_with": ["baseline stress recovery", "pain threshold"],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Synonymous genetic background; other cannabinoid receptor variants (CNR1) modulate the actual endocannabinoid tone.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FAAH Pro129Thr and anxiety phenotypes",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12410313/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Documents reduction in FAAH protein expression and increased drug/alcohol abuse protection."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5751876",
+      "gene": "ADORA2A",
+      "variant_name": "1083C>T",
+      "effect_allele": "T",
+      "impact": "Altered adenosine receptor sensitivity / caffeine anxiety risk",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The T allele of rs5751876 is associated with increased susceptibility to caffeine-induced anxiety. Caffeine blocks ADORA2A receptors; carriers of the risk allele experience heightened sympathetic stimulation and panic responses.",
+      "do_not_claim": ["panic disorder diagnosis"],
+      "confirm_with": ["caffeine-induced panic", "resting heart rate post-caffeine"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Interacts closely with CYP1A2 clearance velocity; fast metabolizers clear caffeine before anxiety spikes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ADORA2A and caffeine anxiety",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18058253/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Establishes genetic link between adenosine receptor variants and panic sensitivity."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799971",
+      "gene": "OPRM1",
+      "variant_name": "Asn40Asp / A118G",
+      "effect_allele": "G",
+      "impact": "Altered mu-opioid receptor binding affinity / reward sensitivity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The G (Asp) allele alters the mu-opioid receptor, reducing beta-endorphin binding affinity. Leads to minor reductions in pain sensitivity threshold but is associated in literature with altered reward seeking and higher social attachment demands.",
+      "do_not_claim": ["opioid addiction diagnosis"],
+      "confirm_with": ["social bonding patterns", "pain response"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Epigenetic endorphin feedback loops are heavily dependent on environmental social stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "OPRM1 A118G and opioid receptor expression",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11252003/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Demonstrates reduction in receptor mRNA levels in G allele carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1611115",
+      "gene": "DBH",
+      "variant_name": "-1021C>T",
+      "effect_allele": "T",
+      "impact": "Reduced dopamine beta-hydroxylase expression / lower norepinephrine",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The DBH -1021C>T promoter T allele reduces the conversion of dopamine to norepinephrine. Homozygous T/T carriers have significantly lower plasma DBH activity, shifting dopamine-norepinephrine ratios in stress circuits.",
+      "do_not_claim": ["dystonia diagnosis", "ADHD diagnosis"],
+      "confirm_with": ["blood pressure response to standing", "stress focus capability"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Norepinephrine release is heavily buffered by cellular adrenal output and MAO-A clearance rates.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "DBH promoter polymorphism and plasma activity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12444101/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Confirms -1021C>T explains up to 35-50% of the variance in circulating DBH activity."
+        }
+      ]
+    }
+  ]
+}

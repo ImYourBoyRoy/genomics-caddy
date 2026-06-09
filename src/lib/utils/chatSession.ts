@@ -22,26 +22,7 @@ export interface ChatSession {
   consultationMode?: string;
 }
 
-/**
- * Load all consultation chat sessions from localStorage.
- */
-export function loadSessionsFromLocalStorage(): ChatSession[] {
-  const saved = localStorage.getItem("genomics_chat_sessions");
-  if (!saved) return [];
-  try {
-    return JSON.parse(saved);
-  } catch (e) {
-    console.error("Failed to parse chat sessions from local storage:", e);
-    return [];
-  }
-}
 
-/**
- * Save the entire chat sessions array to localStorage.
- */
-export function saveSessionsToLocalStorage(sessions: ChatSession[]): void {
-  localStorage.setItem("genomics_chat_sessions", JSON.stringify(sessions));
-}
 
 /**
  * Factory function to create a new empty consultation session.

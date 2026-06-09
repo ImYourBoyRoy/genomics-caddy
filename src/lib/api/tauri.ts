@@ -121,3 +121,15 @@ export async function searchEvidence(
     ollamaToken: ollamaToken || undefined,
   });
 }
+
+export async function getChatSessions(sampleId: number | null): Promise<any[]> {
+  return invoke<any[]>("get_chat_sessions", { sampleId });
+}
+
+export async function saveChatSession(session: any): Promise<void> {
+  return invoke<void>("save_chat_session", { session });
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  return invoke<void>("delete_chat_session", { sessionId });
+}

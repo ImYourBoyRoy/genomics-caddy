@@ -31,6 +31,11 @@ struct ProgressPayload {
 fn get_db_path(app: &AppHandle) -> PathBuf {
     let mut path = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
     std::fs::create_dir_all(&path).ok();
+    
+    // Create marker-packs folder for dynamic JSON overrides
+    let packs_dir = path.join("marker-packs");
+    std::fs::create_dir_all(&packs_dir).ok();
+
     path.push("user_genome.db");
     path
 }
@@ -576,6 +581,7 @@ async fn stream_ollama_chat(
     
     let mut prompt_eval_count = None;
     let mut eval_count = None;
+    let mut in_thinking = false;
     
     let mut buffer = String::new();
     while let Some(chunk) = res.chunk().await.map_err(|e| format!("Stream error: {}", e))? {
@@ -591,9 +597,28 @@ async fn stream_ollama_chat(
             }
             
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) {
-                if let Some(content) = val.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
-                    app.emit("ollama-chunk", content).ok();
+                let message = val.get("message");
+                
+                if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str()) {
+                    if !reasoning.is_empty() {
+                        if !in_thinking {
+                            app.emit("ollama-chunk", "<think>").ok();
+                            in_thinking = true;
+                        }
+                        app.emit("ollama-chunk", reasoning).ok();
+                    }
                 }
+                
+                if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
+                    if !content.is_empty() {
+                        if in_thinking {
+                            app.emit("ollama-chunk", "</think>").ok();
+                            in_thinking = false;
+                        }
+                        app.emit("ollama-chunk", content).ok();
+                    }
+                }
+                
                 if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
                     prompt_eval_count = Some(pec);
                 }
@@ -606,9 +631,28 @@ async fn stream_ollama_chat(
     
     if !buffer.trim().is_empty() {
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(buffer.trim()) {
-            if let Some(content) = val.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
-                app.emit("ollama-chunk", content).ok();
+            let message = val.get("message");
+            
+            if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str()) {
+                if !reasoning.is_empty() {
+                    if !in_thinking {
+                        app.emit("ollama-chunk", "<think>").ok();
+                        in_thinking = true;
+                    }
+                    app.emit("ollama-chunk", reasoning).ok();
+                }
             }
+            
+            if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
+                if !content.is_empty() {
+                    if in_thinking {
+                        app.emit("ollama-chunk", "</think>").ok();
+                        in_thinking = false;
+                    }
+                    app.emit("ollama-chunk", content).ok();
+                }
+            }
+            
             if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
                 prompt_eval_count = Some(pec);
             }
@@ -616,6 +660,10 @@ async fn stream_ollama_chat(
                 eval_count = Some(ec);
             }
         }
+    }
+    
+    if in_thinking {
+        app.emit("ollama-chunk", "</think>").ok();
     }
     
     #[derive(serde::Serialize, Clone)]
@@ -630,6 +678,31 @@ async fn stream_ollama_chat(
     }).ok();
     Ok(())
 }
+
+#[tauri::command]
+async fn get_chat_sessions(app: AppHandle, sample_id: Option<i64>) -> Result<Vec<db::DbChatSession>, String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    let sessions = db::get_chat_sessions(&conn, sample_id).map_err(|e| e.to_string())?;
+    Ok(sessions)
+}
+
+#[tauri::command]
+async fn save_chat_session(app: AppHandle, session: db::DbChatSession) -> Result<(), String> {
+    let db_path = get_db_path(&app);
+    let mut conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    db::save_chat_session(&mut conn, &session).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn delete_chat_session(app: AppHandle, session_id: String) -> Result<(), String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    db::delete_chat_session(&conn, &session_id).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 
 #[tauri::command]
 fn get_current_exe() -> Result<String, String> {
@@ -685,6 +758,80 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
                 { "name": "pack_ids", "type": "array of strings", "required": false, "description": "Predefined pack IDs to evaluate, e.g. ['core', 'pgx', 'nutrients']. If omitted, evaluates all." },
                 { "name": "only_active_findings", "type": "boolean", "required": false, "description": "If true, only returns evaluated markers with effect alleles detected (effect_count > 0). Defaults to false." }
             ]
+        },
+        {
+            "name": "list_evidence_sources",
+            "description": "Lists all unique source citations in the local RAG evidence library.",
+            "params": []
+        },
+        {
+            "name": "get_evidence_for_marker",
+            "description": "Queries the local evidence library for references and interpretation notes associated with a specific rsID.",
+            "params": [
+                { "name": "rsid", "type": "string", "required": true, "description": "The target rsID, e.g. 'rs4680'" }
+            ]
+        },
+        {
+            "name": "search_evidence",
+            "description": "Performs keyword and semantic vector search in the local evidence library.",
+            "params": [
+                { "name": "query", "type": "string", "required": true, "description": "The search term or query" },
+                { "name": "ollama_url", "type": "string", "required": false, "description": "Ollama server URL for semantic search embeddings" },
+                { "name": "ollama_token", "type": "string", "required": false, "description": "Authentication token for remote Ollama server" }
+            ]
+        },
+        {
+            "name": "get_chat_sessions",
+            "description": "Lists saved consultation chat sessions from the local SQLite database.",
+            "params": [
+                { "name": "sample_id", "type": "integer", "required": false, "description": "Filter sessions by sample ID (optional)" }
+            ]
+        },
+        {
+            "name": "delete_chat_session",
+            "description": "Deletes a specific consultation chat session.",
+            "params": [
+                { "name": "session_id", "type": "string", "required": true, "description": "The session ID to delete" }
+            ]
+        },
+        {
+            "name": "export_chat_history",
+            "description": "Exports a saved chat session history in a clean, human-readable Markdown format.",
+            "params": [
+                { "name": "session_id", "type": "string", "required": true, "description": "The session ID to export" }
+            ]
+        },
+        {
+            "name": "get_app_paths",
+            "description": "Retrieves the local application directory paths (database and marker packs folders).",
+            "params": []
+        },
+        {
+            "name": "check_chain_status",
+            "description": "Checks if the GRCh37-to-GRCh38 liftover chain alignment file is locally present.",
+            "params": []
+        },
+        {
+            "name": "get_current_exe",
+            "description": "Returns the absolute path of the running Genomics Caddy executable.",
+            "params": []
+        },
+        {
+            "name": "scan_ollama_models",
+            "description": "Queries a local or remote Ollama server to list all available LLM models.",
+            "params": [
+                { "name": "url", "type": "string", "required": true, "description": "Ollama server URL" },
+                { "name": "token", "type": "string", "required": false, "description": "Authentication token" }
+            ]
+        },
+        {
+            "name": "show_ollama_model",
+            "description": "Retrieves detailed configuration and parameters for a specific Ollama model.",
+            "params": [
+                { "name": "url", "type": "string", "required": true, "description": "Ollama server URL" },
+                { "name": "token", "type": "string", "required": false, "description": "Authentication token" },
+                { "name": "name", "type": "string", "required": true, "description": "The model tag name" }
+            ]
         }
     ]))
 }
@@ -712,7 +859,10 @@ pub fn run() {
             get_mcp_tools,
             list_evidence_sources,
             search_evidence,
-            get_evidence_for_marker
+            get_evidence_for_marker,
+            get_chat_sessions,
+            save_chat_session,
+            delete_chat_session
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

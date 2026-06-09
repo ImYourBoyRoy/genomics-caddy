@@ -38,7 +38,7 @@ pub struct DbSnpRecord {
 
 /// Initializes the user genome database schema.
 pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
-    let conn = Connection::open(path)?;
+    let conn = Connection::open(path.as_ref())?;
     conn.execute_batch("PRAGMA foreign_keys = ON;")?;
 
     // Create samples table
@@ -90,8 +90,43 @@ pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
     conn.execute("CREATE INDEX IF NOT EXISTS idx_evidence_rsid ON evidence_library(rsid)", [])?;
     conn.execute("CREATE INDEX IF NOT EXISTS idx_evidence_gene ON evidence_library(gene)", [])?;
 
+    // Create chat_sessions table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS chat_sessions (
+            id TEXT PRIMARY KEY,
+            sample_id INTEGER,
+            title TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            selected_packs TEXT NOT NULL,
+            only_active_findings INTEGER NOT NULL,
+            temperature REAL NOT NULL,
+            selected_model TEXT NOT NULL,
+            max_tokens INTEGER,
+            extended_thinking INTEGER,
+            consultation_mode TEXT,
+            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    // Create chat_messages table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            images TEXT,
+            safety_review TEXT,
+            FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)", [])?;
+
     // Seed evidence library if needed
-    let _ = seed_evidence_library(&conn);
+    let app_data_dir = path.as_ref().parent();
+    let _ = seed_evidence_library(&conn, app_data_dir);
 
     Ok(conn)
 }
@@ -338,77 +373,313 @@ struct Pack {
     markers: Vec<PackMarker>,
 }
 
-pub fn seed_evidence_library(conn: &Connection) -> std::result::Result<(), String> {
-    let manifest_str = include_str!("../../src/lib/marker-packs/manifest.json");
-    let manifest: Manifest = serde_json::from_str(manifest_str)
+pub(crate) fn get_manifest_str(app_data_dir: Option<&Path>) -> String {
+    if let Some(dir) = app_data_dir {
+        let manifest_path = dir.join("marker-packs").join("manifest.json");
+        if manifest_path.exists() {
+            if let Ok(s) = std::fs::read_to_string(manifest_path) {
+                return s;
+            }
+        }
+    }
+    include_str!("../../src/lib/marker-packs/manifest.json").to_string()
+}
+
+pub(crate) fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option<String> {
+    if let Some(dir) = app_data_dir {
+        let pack_path = dir.join("marker-packs").join(format!("{}.json", pack_id));
+        if pack_path.exists() {
+            if let Ok(s) = std::fs::read_to_string(pack_path) {
+                return Some(s);
+            }
+        }
+    }
+    match pack_id {
+        "core" => Some(include_str!("../../src/lib/marker-packs/core.json").to_string()),
+        "pgx" => Some(include_str!("../../src/lib/marker-packs/pgx.json").to_string()),
+        "metabolic" => Some(include_str!("../../src/lib/marker-packs/metabolic.json").to_string()),
+        "nutrients" => Some(include_str!("../../src/lib/marker-packs/nutrients.json").to_string()),
+        "neuropsych" => Some(include_str!("../../src/lib/marker-packs/neuropsych.json").to_string()),
+        "sleep" => Some(include_str!("../../src/lib/marker-packs/sleep.json").to_string()),
+        "connective_tissue" => Some(include_str!("../../src/lib/marker-packs/connective_tissue.json").to_string()),
+        "thyroid_autoimmune" => Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json").to_string()),
+        "cardiovascular" => Some(include_str!("../../src/lib/marker-packs/cardiovascular.json").to_string()),
+        "cancer_confirmation_only" => Some(include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json").to_string()),
+        _ => None,
+    }
+}
+
+pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> std::result::Result<(), String> {
+    let manifest_str = get_manifest_str(app_data_dir);
+    let manifest: Manifest = serde_json::from_str(&manifest_str)
         .map_err(|e| format!("Failed to parse manifest: {}", e))?;
 
     for pack_info in manifest.packs {
-        let pack_str = match pack_info.id.as_str() {
-            "core" => Some(include_str!("../../src/lib/marker-packs/core.json")),
-            "pgx" => Some(include_str!("../../src/lib/marker-packs/pgx.json")),
-            "metabolic" => Some(include_str!("../../src/lib/marker-packs/metabolic.json")),
-            "nutrients" => Some(include_str!("../../src/lib/marker-packs/nutrients.json")),
-            "neuropsych" => Some(include_str!("../../src/lib/marker-packs/neuropsych.json")),
-            "sleep" => Some(include_str!("../../src/lib/marker-packs/sleep.json")),
-            "connective_tissue" => Some(include_str!("../../src/lib/marker-packs/connective_tissue.json")),
-            "thyroid_autoimmune" => Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json")),
-            "cardiovascular" => Some(include_str!("../../src/lib/marker-packs/cardiovascular.json")),
-            "cancer_confirmation_only" => Some(include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json")),
-            _ => None,
-        };
+        let pack_str = get_pack_str(app_data_dir, &pack_info.id);
 
         if let Some(p_str) = pack_str {
-            let pack: Pack = serde_json::from_str(p_str)
+            let pack: Pack = serde_json::from_str(&p_str)
                 .map_err(|e| format!("Failed to parse pack {}: {}", pack_info.id, e))?;
 
             for m in pack.markers {
-                let exists: bool = conn
-                    .query_row(
-                        "SELECT EXISTS(SELECT 1 FROM evidence_library WHERE rsid = ?)",
-                        params![m.rsid],
-                        |row| row.get(0),
-                    )
-                    .unwrap_or(false);
+                if let Some(ref sources) = m.sources {
+                    if !sources.is_empty() {
+                        for src in sources {
+                            let citation = format!(
+                                "{} ({})",
+                                src.name,
+                                src.url.as_deref().unwrap_or("No URL")
+                            );
+                            let text = format!(
+                                "Gene: {} | Marker: {} | Impact: {} | Interpretation: {} | Source Notes: {}",
+                                m.gene,
+                                m.rsid,
+                                m.impact,
+                                m.interpretation,
+                                src.notes.as_deref().unwrap_or("N/A")
+                            );
 
-                if !exists {
-                    if let Some(ref sources) = m.sources {
-                        if !sources.is_empty() {
-                            for src in sources {
-                                let citation = format!(
-                                    "{} ({})",
-                                    src.name,
-                                    src.url.as_deref().unwrap_or("No URL")
-                                );
-                                let text = format!(
-                                    "Gene: {} | Marker: {} | Impact: {} | Interpretation: {} | Source Notes: {}",
-                                    m.gene,
-                                    m.rsid,
-                                    m.impact,
-                                    m.interpretation,
-                                    src.notes.as_deref().unwrap_or("N/A")
-                                );
-                                let _ = conn.execute(
-                                    "INSERT OR IGNORE INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
-                                    params![m.rsid, m.gene, text, citation],
-                                );
+                            // Query existing evidence text by exact key
+                            let existing_text: Option<String> = conn.query_row(
+                                "SELECT evidence_text FROM evidence_library WHERE rsid = ? AND source_citation = ?",
+                                params![m.rsid, citation],
+                                |row| row.get(0),
+                            ).ok();
+
+                            match existing_text {
+                                None => {
+                                    // Not found, insert new
+                                    let _ = conn.execute(
+                                        "INSERT INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
+                                        params![m.rsid, m.gene, text, citation],
+                                    );
+                                }
+                                Some(old_text) if old_text != text => {
+                                    // Text updated, reset embedding to force re-vectorization
+                                    let _ = conn.execute(
+                                        "UPDATE evidence_library SET evidence_text = ?, embedding = NULL WHERE rsid = ? AND source_citation = ?",
+                                        params![text, m.rsid, citation],
+                                    );
+                                }
+                                _ => {} // Identical, skip
                             }
-                            continue;
                         }
+                        continue;
                     }
+                }
 
-                    let citation = format!("Genomics Caddy Pack: {}", pack.name);
-                    let text = format!(
-                        "Gene: {} | Marker: {} | Impact: {} | Interpretation: {}",
-                        m.gene, m.rsid, m.impact, m.interpretation
-                    );
-                    let _ = conn.execute(
-                        "INSERT OR IGNORE INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
-                        params![m.rsid, m.gene, text, citation],
-                    );
+                // Default fallback source when no references are provided in the pack
+                let citation = format!("Genomics Caddy Pack: {}", pack.name);
+                let text = format!(
+                    "Gene: {} | Marker: {} | Impact: {} | Interpretation: {}",
+                    m.gene, m.rsid, m.impact, m.interpretation
+                );
+                
+                let existing_text: Option<String> = conn.query_row(
+                    "SELECT evidence_text FROM evidence_library WHERE rsid = ? AND source_citation = ?",
+                    params![m.rsid, citation],
+                    |row| row.get(0),
+                ).ok();
+
+                match existing_text {
+                    None => {
+                        let _ = conn.execute(
+                            "INSERT INTO evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
+                            params![m.rsid, m.gene, text, citation],
+                        );
+                    }
+                    Some(old_text) if old_text != text => {
+                        let _ = conn.execute(
+                            "UPDATE evidence_library SET evidence_text = ?, embedding = NULL WHERE rsid = ? AND source_citation = ?",
+                            params![text, m.rsid, citation],
+                        );
+                    }
+                    _ => {}
                 }
             }
         }
     }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// SQLite Chat History Serialization & Persistence
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ChatMessage {
+    pub role: String,
+    pub content: String,
+    pub images: Option<Vec<String>>,
+    #[serde(rename = "safetyReview")]
+    pub safety_review: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+pub struct DbChatSession {
+    pub id: String,
+    pub title: String,
+    pub messages: Vec<ChatMessage>,
+    pub timestamp: i64,
+    #[serde(rename = "sampleId")]
+    pub sample_id: Option<i64>,
+    #[serde(rename = "selectedPacks")]
+    pub selected_packs: serde_json::Value,
+    #[serde(rename = "onlyActiveFindings")]
+    pub only_active_findings: bool,
+    pub temperature: f64,
+    #[serde(rename = "selectedModel")]
+    pub selected_model: String,
+    #[serde(rename = "maxTokens")]
+    pub max_tokens: Option<i32>,
+    #[serde(rename = "extendedThinking")]
+    pub extended_thinking: Option<bool>,
+    #[serde(rename = "consultationMode")]
+    pub consultation_mode: Option<String>,
+}
+
+pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Result<Vec<DbChatSession>> {
+    let mut stmt = if sample_id_filter.is_some() {
+        conn.prepare(
+            "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
+                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+             FROM chat_sessions WHERE sample_id = ? ORDER BY timestamp DESC"
+        )?
+    } else {
+        conn.prepare(
+            "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
+                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+             FROM chat_sessions ORDER BY timestamp DESC"
+        )?
+    };
+
+    let mapper = |row: &rusqlite::Row<'_>| {
+        let id: String = row.get(0)?;
+        let sample_id: Option<i64> = row.get(1)?;
+        let title: String = row.get(2)?;
+        let timestamp: i64 = row.get(3)?;
+        let selected_packs_str: String = row.get(4)?;
+        let only_active_findings_int: i32 = row.get(5)?;
+        let temperature: f64 = row.get(6)?;
+        let selected_model: String = row.get(7)?;
+        let max_tokens: Option<i32> = row.get(8)?;
+        let extended_thinking_int: Option<i32> = row.get(9)?;
+        let consultation_mode: Option<String> = row.get(10)?;
+
+        let selected_packs = serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
+        let only_active_findings = only_active_findings_int != 0;
+        let extended_thinking = extended_thinking_int.map(|v| v != 0);
+
+        Ok((id, sample_id, title, timestamp, selected_packs, only_active_findings, temperature, selected_model, max_tokens, extended_thinking, consultation_mode))
+    };
+
+    let rows = if let Some(sample_id) = sample_id_filter {
+        stmt.query_map(params![sample_id], mapper)?
+    } else {
+        stmt.query_map([], mapper)?
+    };
+
+    let mut sessions = Vec::new();
+    for r in rows {
+        let (id, sample_id, title, timestamp, selected_packs, only_active_findings, temperature, selected_model, max_tokens, extended_thinking, consultation_mode) = r?;
+        
+        // Load messages for this session
+        let mut msg_stmt = conn.prepare(
+            "SELECT role, content, images, safety_review FROM chat_messages WHERE session_id = ? ORDER BY id ASC"
+        )?;
+        let msg_rows = msg_stmt.query_map(params![id], |row| {
+            let role: String = row.get(0)?;
+            let content: String = row.get(1)?;
+            let images_str: Option<String> = row.get(2)?;
+            let safety_review: Option<String> = row.get(3)?;
+
+            let images = images_str.and_then(|s| serde_json::from_str(&s).ok());
+
+            Ok(ChatMessage {
+                role,
+                content,
+                images,
+                safety_review,
+            })
+        })?;
+
+        let mut messages = Vec::new();
+        for mr in msg_rows {
+            messages.push(mr?);
+        }
+
+        sessions.push(DbChatSession {
+            id,
+            title,
+            messages,
+            timestamp,
+            sample_id,
+            selected_packs,
+            only_active_findings,
+            temperature,
+            selected_model,
+            max_tokens,
+            extended_thinking,
+            consultation_mode,
+        });
+    }
+
+    Ok(sessions)
+}
+
+pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Result<()> {
+    let tx = conn.transaction()?;
+
+    let selected_packs_str = serde_json::to_string(&session.selected_packs).unwrap_or_else(|_| "{}".to_string());
+    let only_active_findings_int = if session.only_active_findings { 1 } else { 0 };
+    let extended_thinking_int = session.extended_thinking.map(|v| if v { 1 } else { 0 });
+
+    tx.execute(
+        "INSERT OR REPLACE INTO chat_sessions (id, sample_id, title, timestamp, selected_packs, 
+                                               only_active_findings, temperature, selected_model, 
+                                               max_tokens, extended_thinking, consultation_mode) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params![
+            session.id,
+            session.sample_id,
+            session.title,
+            session.timestamp,
+            selected_packs_str,
+            only_active_findings_int,
+            session.temperature,
+            session.selected_model,
+            session.max_tokens,
+            extended_thinking_int,
+            session.consultation_mode,
+        ],
+    )?;
+
+    // Delete existing messages to prevent duplication
+    tx.execute("DELETE FROM chat_messages WHERE session_id = ?", params![session.id])?;
+
+    // Insert new messages
+    let mut stmt = tx.prepare(
+        "INSERT INTO chat_messages (session_id, role, content, images, safety_review) 
+         VALUES (?, ?, ?, ?, ?)"
+    )?;
+
+    for msg in &session.messages {
+        let images_str = msg.images.as_ref().map(|imgs| serde_json::to_string(imgs).unwrap_or_else(|_| "[]".to_string()));
+        stmt.execute(params![
+            session.id,
+            msg.role,
+            msg.content,
+            images_str,
+            msg.safety_review,
+        ])?;
+    }
+
+    stmt.finalize()?;
+    tx.commit()?;
+    Ok(())
+}
+
+pub fn delete_chat_session(conn: &Connection, session_id: &str) -> Result<()> {
+    conn.execute("DELETE FROM chat_sessions WHERE id = ?", params![session_id])?;
     Ok(())
 }

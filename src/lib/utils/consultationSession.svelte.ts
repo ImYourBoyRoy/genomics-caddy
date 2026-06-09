@@ -7,7 +7,8 @@
  * Operational Notes: Leverages Svelte 5's class-based reactive state.
  */
 
-import { loadSessionsFromLocalStorage, saveSessionsToLocalStorage, createNewSession, type ChatSession } from "./chatSession";
+import { createNewSession, type ChatSession } from "./chatSession";
+import { getChatSessions, saveChatSession, deleteChatSession } from "../api/tauri";
 import type { GenomeSample } from "../types/genomics";
 
 export class ConsultationSessionStore {
@@ -15,12 +16,17 @@ export class ConsultationSessionStore {
   currentSessionId = $state<string | null>(null);
 
   constructor() {
-    this.sessions = loadSessionsFromLocalStorage();
+    // sessions will be loaded asynchronously during load()
   }
 
-  load(selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
-    this.sessions = loadSessionsFromLocalStorage();
+  async load(selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
     const pid = selectedSample ? selectedSample.id : null;
+    try {
+      this.sessions = await getChatSessions(pid);
+    } catch (e) {
+      console.error("Failed to load chat sessions from database:", e);
+      this.sessions = [];
+    }
     const activeId = localStorage.getItem(`genomics_active_session_id_${pid}`);
     const found = activeId ? this.sessions.find(s => s.id === activeId && s.sampleId === pid) : null;
     if (found) {
@@ -33,24 +39,32 @@ export class ConsultationSessionStore {
         localStorage.setItem(`genomics_active_session_id_${pid}`, ps[0].id);
         localStorage.setItem("genomics_active_session_id", ps[0].id);
       } else {
-        this.startNew(selectedSample, selectedModel, models, manifestPacks);
+        await this.startNew(selectedSample, selectedModel, models, manifestPacks);
       }
     }
   }
 
-  startNew(selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
+  async startNew(selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
     const pid = selectedSample ? selectedSample.id : null;
     const ns = createNewSession({ sampleName: selectedSample?.name || "Guest", sampleId: pid, selectedModel, models, manifestPacks });
     this.sessions = [ns, ...this.sessions];
     this.currentSessionId = ns.id;
     localStorage.setItem(`genomics_active_session_id_${pid}`, ns.id);
     localStorage.setItem("genomics_active_session_id", ns.id);
-    saveSessionsToLocalStorage(this.sessions);
+    try {
+      await saveChatSession(ns);
+    } catch (e) {
+      console.error("Failed to save new chat session to database:", e);
+    }
   }
 
-  delete(id: string, selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
+  async delete(id: string, selectedSample: GenomeSample | null, selectedModel: string, models: string[], manifestPacks: any[]) {
     this.sessions = this.sessions.filter(s => s.id !== id);
-    saveSessionsToLocalStorage(this.sessions);
+    try {
+      await deleteChatSession(id);
+    } catch (e) {
+      console.error("Failed to delete chat session from database:", e);
+    }
     if (this.currentSessionId === id) {
       const pid = selectedSample ? selectedSample.id : null;
       const ps = this.sessions.filter(s => s.sampleId === pid);
@@ -59,12 +73,20 @@ export class ConsultationSessionStore {
         localStorage.setItem(`genomics_active_session_id_${pid}`, ps[0].id);
         localStorage.setItem("genomics_active_session_id", ps[0].id);
       } else {
-        this.startNew(selectedSample, selectedModel, models, manifestPacks);
+        await this.startNew(selectedSample, selectedModel, models, manifestPacks);
       }
     }
   }
 
-  saveTitle() {
-    saveSessionsToLocalStorage(this.sessions);
+  async saveTitle() {
+    if (!this.currentSessionId) return;
+    const current = this.sessions.find(s => s.id === this.currentSessionId);
+    if (current) {
+      try {
+        await saveChatSession(current);
+      } catch (e) {
+        console.error("Failed to auto-save chat session to database:", e);
+      }
+    }
   }
 }

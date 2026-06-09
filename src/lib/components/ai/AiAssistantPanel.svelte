@@ -76,6 +76,7 @@
 
   let isScanning = $state(false);
   let isChatting = $state(false);
+  let isLoadingSession = $state(false);
   let scanError = $state("");
   let promptText = $state("");
   let models = $state<string[]>([]);
@@ -92,26 +93,11 @@
     if (unlistenReviewDone) { unlistenReviewDone(); unlistenReviewDone = null; }
   }
 
-  // Token tracking
-  let sessionPromptTokens = $state(0);
-  let sessionResponseTokens = $state(0);
+  let sessionPromptTokens = $state(0), sessionResponseTokens = $state(0);
   let sessionTotalTokens = $derived(sessionPromptTokens + sessionResponseTokens);
-
-  // Model details
-  let modelDetails = $state<any>(null);
-  let contextWindow = $state<number>(4096);
-  let isVisionCapable = $state<boolean>(false);
-
-  // Attachments
+  let modelDetails = $state<any>(null), contextWindow = $state<number>(4096), isVisionCapable = $state<boolean>(false);
   let attachedImages = $state<{ name: string; base64: string; previewUrl: string }[]>([]);
-
-  // Biohacking Profile
-  let userProfile = $state<UserBiohackingProfile>({
-    goals: "", challenges: "", diet: "", supplements: "", medications: "",
-    bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true,
-  });
-
-  // Custom system instructions
+  let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
   let systemInstructions = $state("");
 
   // ── Clipboard / Copy ──────────────────────────────────────────────────
@@ -215,35 +201,42 @@
         messages[assistantIndex].safetyReview = "Reviewing response safety...";
         messages = [...messages];
 
-        const reviewPrompt = `You are a medical safety auditor. Review the following genomic consultation draft for any clinical overclaiming, dosing advice, or diagnosing assertions. Output your safety corrections, warnings, or notes to the patient.
+        try {
+          const reviewPrompt = `You are a medical safety auditor. Review the following genomic consultation draft for any clinical overclaiming, dosing advice, or diagnosing assertions. Output your safety corrections, warnings, or notes to the patient.
 
 Draft Response to Review:
 """
 ${stripThinkingTokens(messages[assistantIndex].content)}
 """`;
 
-        stopReviewListeners();
+          stopReviewListeners();
 
-        const [unReviewChunk, unReviewDone] = await Promise.all([
-          listen("ollama-chunk", (event) => {
-            if (messages[assistantIndex].safetyReview === "Reviewing response safety...") {
-              messages[assistantIndex].safetyReview = "";
-            }
-            messages[assistantIndex].safetyReview += event.payload as string;
-            messages = [...messages];
-          }),
-          listen("ollama-done", (event) => {
-            const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
-            if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
-            if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
-            stopReviewListeners();
-            isChatting = false;
-          }),
-        ]);
-        unlistenReviewChunk = unReviewChunk;
-        unlistenReviewDone = unReviewDone;
+          const [unReviewChunk, unReviewDone] = await Promise.all([
+            listen("ollama-chunk", (event) => {
+              if (messages[assistantIndex].safetyReview === "Reviewing response safety...") {
+                messages[assistantIndex].safetyReview = "";
+              }
+              messages[assistantIndex].safetyReview += event.payload as string;
+              messages = [...messages];
+            }),
+            listen("ollama-done", (event) => {
+              const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
+              if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
+              if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
+              stopReviewListeners();
+              isChatting = false;
+            }),
+          ]);
+          unlistenReviewChunk = unReviewChunk;
+          unlistenReviewDone = unReviewDone;
 
-        await streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, 2048);
+          await streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, 2048);
+        } catch (revError: any) {
+          stopReviewListeners();
+          messages[assistantIndex].safetyReview = `⚠️ Safety Review Failed: ${revError.message || revError}`;
+          messages = [...messages];
+          isChatting = false;
+        }
       } else {
         isChatting = false;
       }
@@ -289,8 +282,12 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
 
   // ── Session Management ────────────────────────────────────────────────
   function loadSession(id: string) {
+    isLoadingSession = true;
     const s = sessionStore.sessions.find(x => x.id === id);
-    if (!s) return;
+    if (!s) {
+      isLoadingSession = false;
+      return;
+    }
     sessionStore.currentSessionId = id;
     const pid = selectedSample ? selectedSample.id : null;
     localStorage.setItem(`genomics_active_session_id_${pid}`, id);
@@ -301,17 +298,22 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
     maxTokens = s.maxTokens || 2048; extendedThinking = s.extendedThinking || false;
     consultationMode = (s.consultationMode || "general") as ConsultationMode;
     sessionPromptTokens = 0; sessionResponseTokens = 0;
+    setTimeout(() => {
+      isLoadingSession = false;
+    }, 0);
   }
-  function startNewSession() {
-    sessionStore.startNew(selectedSample, selectedModel, models, manifest.packs);
+  async function startNewSession() {
+    isLoadingSession = true;
+    await sessionStore.startNew(selectedSample, selectedModel, models, manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
   }
-  function saveSessionTitle(session: any) {
-    if (session.title.trim()) sessionStore.saveTitle();
+  async function saveSessionTitle(session: any) {
+    if (session.title.trim()) await sessionStore.saveTitle();
   }
-  function deleteSession(id: string) {
-    dialogStore.confirm("Delete this consultation history? This cannot be undone.", () => {
-      sessionStore.delete(id, selectedSample, selectedModel, models, manifest.packs);
+  async function deleteSession(id: string) {
+    dialogStore.confirm("Delete this consultation history? This cannot be undone.", async () => {
+      isLoadingSession = true;
+      await sessionStore.delete(id, selectedSample, selectedModel, models, manifest.packs);
       if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     }, "Delete Consultation");
   }
@@ -321,14 +323,18 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
     if (selectedSample) {
       const active = sessionStore.sessions.find(s => s.id === sessionStore.currentSessionId);
       if (!active || active.sampleId !== selectedSample.id) {
-        sessionStore.load(selectedSample, selectedModel, models, manifest.packs);
-        if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
+        isLoadingSession = true;
+        sessionStore.load(selectedSample, selectedModel, models, manifest.packs).then(() => {
+          if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
+          else isLoadingSession = false;
+        });
       }
     }
   });
 
   // ── Session Auto-Save ─────────────────────────────────────────────────
   $effect(() => {
+    if (isLoadingSession) return;
     if (!sessionStore.currentSessionId || sessionStore.sessions.length === 0) return;
     const s = sessionStore.sessions.find(x => x.id === sessionStore.currentSessionId);
     if (!s) return;
@@ -385,15 +391,9 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
     };
   });
 
-  // Persist thinking settings in local storage
   $effect(() => {
-    localStorage.setItem("genomics_show_thinking_process", String(showThinkingProcess));
-    localStorage.setItem("genomics_auto_collapse_thinking", String(autoCollapseThinking));
-    localStorage.setItem("genomics_include_trace_in_export", String(includeTraceInExport));
-    localStorage.setItem("genomics_context_mode", contextMode);
-    localStorage.setItem("genomics_consultation_mode", consultationMode);
-    localStorage.setItem("genomics_review_model", reviewModel);
-    localStorage.setItem("genomics_two_model_review", String(twoModelReview));
+    const sets = { show_thinking_process: showThinkingProcess, auto_collapse_thinking: autoCollapseThinking, include_trace_in_export: includeTraceInExport, context_mode: contextMode, consultation_mode: consultationMode, review_model: reviewModel, two_model_review: twoModelReview };
+    for (const [k, v] of Object.entries(sets)) localStorage.setItem(`genomics_${k}`, String(v));
   });
 </script>
 
@@ -483,16 +483,5 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
 />
 
 <style>
-  .ai-consultation-container {
-    display: flex;
-    gap: 0;
-    height: calc(100vh - 140px);
-    width: 100%;
-    box-sizing: border-box;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    background: rgba(10, 11, 20, 0.3);
-    backdrop-filter: blur(16px);
-  }
+  .ai-consultation-container { display: flex; gap: 0; height: calc(100vh - 140px); width: 100%; box-sizing: border-box; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: rgba(10, 11, 20, 0.3); backdrop-filter: blur(16px); }
 </style>

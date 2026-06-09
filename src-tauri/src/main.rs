@@ -29,7 +29,10 @@ fn main() {
         db_path.push("com.dna.explorer");
         db_path.push("user_genome.db");
 
-        tauri_app_lib::mcp::run_mcp_server(db_path);
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            tauri_app_lib::mcp::run_mcp_server(db_path).await;
+        });
     } else {
         tauri_app_lib::run();
     }

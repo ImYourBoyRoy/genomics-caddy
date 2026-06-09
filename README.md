@@ -224,6 +224,62 @@ Add the server globally to Claude Code by executing:
      * `pack_ids` (array of strings, optional): Predefined pack IDs to evaluate, e.g., `["core", "pgx"]`. If omitted/empty, evaluates all packs.
      * `only_active_findings` (boolean, optional): If true, filters out any evaluated markers where `effect_count == 0` or data is missing, returning only positive variant findings. Defaults to false.
 
+7. **`list_evidence_sources`**
+   * **Description:** Lists all unique source citations in the local RAG evidence library.
+   * **Arguments:** None.
+
+8. **`get_evidence_for_marker`**
+   * **Description:** Queries the local evidence library for references and interpretation notes associated with a specific rsID.
+   * **Arguments:**
+     * `rsid` (string, required): The target rsID, e.g., `"rs4680"`.
+
+9. **`search_evidence`**
+   * **Description:** Performs keyword and semantic vector search in the local evidence library.
+   * **Arguments:**
+     * `query` (string, required): The search term or query.
+     * `ollama_url` (string, optional): Ollama server URL for semantic search embeddings.
+     * `ollama_token` (string, optional): Authentication token for remote Ollama server.
+
+10. **`get_chat_sessions`**
+    * **Description:** Lists saved consultation chat sessions from the local SQLite database.
+    * **Arguments:**
+      * `sample_id` (integer, optional): Filter sessions by sample ID.
+
+11. **`delete_chat_session`**
+    * **Description:** Deletes a specific consultation chat session.
+    * **Arguments:**
+      * `session_id` (string, required): The session ID to delete.
+
+12. **`export_chat_history`**
+    * **Description:** Exports a saved chat session history in a clean, human-readable Markdown format.
+    * **Arguments:**
+      * `session_id` (string, required): The session ID to export.
+
+13. **`get_app_paths`**
+    * **Description:** Retrieves the local application directory paths (database and marker packs folders).
+    * **Arguments:** None.
+
+14. **`check_chain_status`**
+    * **Description:** Checks if the GRCh37-to-GRCh38 liftover chain alignment file is locally present.
+    * **Arguments:** None.
+
+15. **`get_current_exe`**
+    * **Description:** Returns the absolute path of the running Genomics Caddy executable.
+    * **Arguments:** None.
+
+16. **`scan_ollama_models`**
+    * **Description:** Queries a local or remote Ollama server to list all available LLM models.
+    * **Arguments:**
+      * `url` (string, required): Ollama server URL.
+      * `token` (string, optional): Authentication token.
+
+17. **`show_ollama_model`**
+    * **Description:** Retrieves detailed configuration and parameters for a specific Ollama model.
+    * **Arguments:**
+      * `url` (string, required): Ollama server URL.
+      * `token` (string, optional): Authentication token.
+      * `name` (string, required): The model tag name.
+
 ---
 
 ## 🔧 Troubleshooting Remote Ollama Servers

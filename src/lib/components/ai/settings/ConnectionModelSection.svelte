@@ -81,7 +81,7 @@
         {#if twoModelReview}
           <div class="input-row">
             <label for="review-model-selector">Secondary Review Model</label>
-            <select id="review-model-selector" bind:value={reviewModel} class="w-full" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem;">
+            <select id="review-model-selector" bind:value={reviewModel} class="settings-select">
               {#each models as m}
                 <option value={m}>{m}</option>
               {/each}

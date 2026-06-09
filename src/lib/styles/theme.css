@@ -7,6 +7,7 @@ Responsibilities:
 */
 
 :root {
+  color-scheme: dark; /* Force native form controls and scrollbars to render in dark theme */
   --bg-primary: #0a0b10;
   --bg-secondary: #12131a;
   --border-color: rgba(255, 255, 255, 0.08);
@@ -17,6 +18,28 @@ Responsibilities:
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
+}
+
+/* Custom premium scrollbar styles for a polished glassmorphic UI */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Global select options style for dark mode high-contrast readability */
+select option {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
 }
 
 html, body {
@@ -1295,3 +1318,24 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.35;
   margin: 4px 0;
 }
+
+/* Reusable select styles for the Settings drawer */
+.settings-select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.settings-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(88, 80, 236, 0.15);
+}
+

@@ -54,7 +54,7 @@
     <!-- Context Mode Selector -->
     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08);">
       <label for="context-mode-select" class="highlight-text font-bold" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">AI Context Mode</label>
-      <select id="context-mode-select" bind:value={contextMode} style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem; outline: none; cursor: pointer;">
+      <select id="context-mode-select" bind:value={contextMode} class="settings-select">
         <option value="active_findings">Active findings (All packs)</option>
         <option value="active_context_dependent">Active + context-dependent</option>
         <option value="selected_pack_active">Selected pack active</option>
@@ -68,7 +68,7 @@
     <!-- Specialty Consultation Mode Selector -->
     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08);">
       <label for="consultation-mode-select" class="highlight-text font-bold" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Specialty Mode</label>
-      <select id="consultation-mode-select" bind:value={consultationMode} style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px; border-radius: 4px; font-size: 0.78rem; outline: none; cursor: pointer;">
+      <select id="consultation-mode-select" bind:value={consultationMode} class="settings-select">
         <option value="general">🧬 General Consultation</option>
         <option value="pgx">💊 Pharmacogenomics (PGx)</option>
         <option value="nutrients">🍎 Nutrients &amp; Methylation</option>

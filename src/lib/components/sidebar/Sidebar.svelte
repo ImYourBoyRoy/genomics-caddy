@@ -57,7 +57,7 @@
 
 <aside class="sidebar">
   <div class="brand">
-    <span class="logo-emoji">🧬</span>
+    <img src="/logo.png" alt="Genomics Caddy Logo" class="brand-logo" />
     <h2>Genomics Caddy</h2>
   </div>
 

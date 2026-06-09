@@ -21,7 +21,7 @@
 </script>
 
 <div class="welcome-screen">
-  <div class="welcome-badge">🧬 Welcome</div>
+  <img src="/logo.png" alt="Genomics Caddy Logo" class="welcome-logo" />
   <h1>Genomics & Personal Biohacking Dashboard</h1>
   <p>Ingest your AncestryDNA or 23andMe exports to map your chromosomes, track hormone & neurotransmitter traits, and connect securely with AI model assistants.</p>
   {#if appPaths}

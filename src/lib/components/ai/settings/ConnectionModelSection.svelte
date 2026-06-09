@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getActiveOllamaModels } from "../../../api/tauri";
-  import { isReasoningModel } from "../../../utils/aiPrompt";
+  import { isReasoningModel, isModelVisionCapable } from "../../../utils/aiPrompt";
 
   interface Props {
     ollamaUrl: string;
@@ -95,7 +95,7 @@
         <label for="model-selector">Primary LLM Model</label>
         <select id="model-selector" bind:value={selectedModel} class="w-full">
           {#each models as m}
-            <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}</option>
+            <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}</option>
           {/each}
         </select>
         
@@ -126,7 +126,7 @@
             <label for="review-model-selector">Secondary Review Model</label>
             <select id="review-model-selector" bind:value={reviewModel} class="w-full">
               {#each models as m}
-                <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}</option>
+                <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}</option>
               {/each}
             </select>
             <p style="font-size: 0.68rem; color: var(--text-secondary); line-height: 1.3; margin: 0;">

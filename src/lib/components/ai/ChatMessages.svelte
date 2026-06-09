@@ -12,6 +12,7 @@
     copyToClipboard: (text: string, index: number) => void;
     editMessage: (index: number) => void;
     deleteMessage: (index: number) => void;
+    selectedModel: string;
   }
 
   let {
@@ -24,6 +25,7 @@
     copyToClipboard,
     editMessage,
     deleteMessage,
+    selectedModel,
   }: Props = $props();
 </script>
 
@@ -88,6 +90,13 @@
         {:else}
           <!-- Assistant Message: parse out thought process -->
           {@const parsed = parseThinking(msg.content)}
+          
+          {#if !msg.content && isChatting && idx === messages.length - 1}
+            <div class="model-loading-indicator">
+              <span class="loading-pulse-dot"></span>
+              <span class="loading-text font-mono">Loading {selectedModel} into VRAM...</span>
+            </div>
+          {/if}
           
           {#if parsed.thought}
             {@const isCollapsed = userCollapsedThinkingMap.get(msg) ?? (autoCollapseThinking && parsed.thoughtCompleted)}
@@ -440,5 +449,37 @@
   }
   :global(.safety-review-body p:last-child) {
     margin-bottom: 0;
+  }
+
+  /* Model Loading Styles */
+  .model-loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-left: 20px;
+    align-self: flex-start;
+    animation: fadeIn 0.25s ease-out;
+    margin-bottom: 12px;
+  }
+  .loading-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: loading-pulse 1.5s infinite ease-in-out;
+  }
+  @keyframes loading-pulse {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 10px var(--accent); }
+    100% { transform: scale(0.9); opacity: 0.6; }
+  }
+  .loading-text {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
   }
 </style>

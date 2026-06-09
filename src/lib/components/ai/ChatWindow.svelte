@@ -29,6 +29,7 @@
     
     copiedMsgId: number | null;
     copyToClipboard: (text: string, index: number) => void;
+    selectedModel: string;
   }
 
   let {
@@ -50,8 +51,10 @@
     clearHistory,
     editMessage,
     deleteMessage,
+    
     copiedMsgId = $bindable(null),
-    copyToClipboard
+    copyToClipboard,
+    selectedModel
   }: Props = $props();
 
   // Internal local state
@@ -184,6 +187,7 @@
         {copyToClipboard}
         {editMessage}
         {deleteMessage}
+        {selectedModel}
       />
     {/if}
   </div>

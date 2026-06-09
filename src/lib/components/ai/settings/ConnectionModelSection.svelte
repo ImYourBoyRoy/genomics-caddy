@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getActiveOllamaModels } from "../../../api/tauri";
+  import { isReasoningModel } from "../../../utils/aiPrompt";
 
   interface Props {
     ollamaUrl: string;
@@ -94,7 +95,7 @@
         <label for="model-selector">Primary LLM Model</label>
         <select id="model-selector" bind:value={selectedModel} class="w-full">
           {#each models as m}
-            <option value={m}>{m}</option>
+            <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}</option>
           {/each}
         </select>
         
@@ -106,6 +107,9 @@
               <span class="capability-badge text-badge">✍️ Text-Only</span>
             {/if}
             <span class="capability-badge context-badge">📏 {contextWindow.toLocaleString()} context</span>
+            {#if isReasoningModel(selectedModel)}
+              <span class="capability-badge reasoning-badge">🧠 Reasoning</span>
+            {/if}
           </div>
         {/if}
       </div>
@@ -122,7 +126,7 @@
             <label for="review-model-selector">Secondary Review Model</label>
             <select id="review-model-selector" bind:value={reviewModel} class="w-full">
               {#each models as m}
-                <option value={m}>{m}</option>
+                <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}</option>
               {/each}
             </select>
             <p style="font-size: 0.68rem; color: var(--text-secondary); line-height: 1.3; margin: 0;">
@@ -170,17 +174,19 @@
       </div>
 
       <!-- Educational Guidance Note -->
-      <div class="telemetry-guidance mt-2">
-        <div class="guidance-title">💡 Standard vs. Reasoning Models</div>
-        <p class="guidance-text">
-          Standard instruction models (like <strong>MedGemma</strong>) stream answers directly and do not show a "thinking" phase. If you wish to see step-by-step reasoning streams, select a reasoning model (like <strong>DeepSeek-R1</strong> or R1-distilled models).
-        </p>
-        {#if twoModelReview}
-          <p class="guidance-text warning-text mt-1">
-            ⚠️ <strong>VRAM Warning:</strong> Running primary and safety review models concurrently requires sufficient VRAM. If Ollama crashes with <em>HTTP 500</em>, reduce model sizes or context windows.
+      <details class="guidance-details mt-2">
+        <summary class="guidance-summary">💡 About Model Reasoning &amp; VRAM</summary>
+        <div class="guidance-content">
+          <p class="guidance-text">
+            Standard chat models (like <strong>Qwen</strong>) stream answers directly without a "thinking" phase. Only reasoning models (like <strong>DeepSeek-R1</strong> or distilled models, and <strong>MedGemma</strong> in reasoning mode) output step-by-step thinking processes.
           </p>
-        {/if}
-      </div>
+          {#if twoModelReview}
+            <p class="guidance-text warning-text mt-1">
+              ⚠️ <strong>VRAM Warning:</strong> Running primary and safety review models concurrently requires sufficient VRAM. If Ollama crashes with <em>HTTP 500</em>, reduce model sizes or context windows.
+            </p>
+          {/if}
+        </div>
+      </details>
     {/if}
   </div>
 </details>
@@ -349,17 +355,49 @@
   .active-model-size {
     color: var(--text-secondary);
   }
-  .telemetry-guidance {
-    background: rgba(59, 130, 246, 0.04);
+  .reasoning-badge {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+
+  .guidance-details {
+    background: rgba(59, 130, 246, 0.02);
     border: 1px solid rgba(59, 130, 246, 0.15);
     border-radius: 6px;
-    padding: 8px 10px;
+    overflow: hidden;
   }
-  .guidance-title {
+  .guidance-summary {
     font-size: 0.72rem;
     font-weight: 600;
     color: #60a5fa;
-    margin-bottom: 4px;
+    cursor: pointer;
+    padding: 6px 8px;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .guidance-summary::-webkit-details-marker {
+    display: none;
+  }
+  .guidance-summary::after {
+    content: "▶";
+    font-size: 0.55rem;
+    transition: transform 0.2s;
+    opacity: 0.7;
+  }
+  .guidance-details[open] .guidance-summary::after {
+    transform: rotate(90deg);
+  }
+  .guidance-content {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid rgba(59, 130, 246, 0.1);
   }
   .guidance-text {
     font-size: 0.68rem;

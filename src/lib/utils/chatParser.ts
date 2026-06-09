@@ -45,7 +45,9 @@ const TAG_PAIRS = [
   { open: "<thought>", close: "</thought>" },
   { open: "[think]", close: "[/think]" },
   { open: "[thought]", close: "[/thought]" },
-  { open: "\x3Cunused94>thought", close: "\x3Cunused95>" }
+  { open: "<unused94>thought", close: "<unused95>" },
+  { open: "<unused94> thought", close: "<unused95>" },
+  { open: "<unused94>", close: "<unused95>" }
 ];
 
 /**

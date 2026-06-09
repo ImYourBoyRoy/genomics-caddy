@@ -193,7 +193,14 @@
       ]);
       unlistenChunk = unChunk; unlistenDone = unDone;
 
-      const limit = extendedThinking ? 8192 : maxTokens;
+      // Calculate output token limit dynamically based on model's context window.
+      const defaultLimit = checkReasoningModel(selectedModel) 
+        ? Math.max(4096, Math.min(8192, Math.floor(contextWindow / 4))) 
+        : Math.max(2048, Math.min(4096, Math.floor(contextWindow / 8)));
+      const limit = extendedThinking 
+        ? Math.max(8192, Math.min(16384, Math.floor(contextWindow / 2))) 
+        : Math.min(defaultLimit, maxTokens);
+
       await streamOllamaChat(ollamaUrl, ollamaToken || undefined, selectedModel, payloadMessages, temperature, limit);
 
       // --- Dual-Model Safety Review ---
@@ -230,7 +237,25 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
           unlistenReviewChunk = unReviewChunk;
           unlistenReviewDone = unReviewDone;
 
-          await streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, 2048);
+          // Calculate safety review model output limit dynamically.
+          const reviewDetails = await showOllamaModel(ollamaUrl, ollamaToken || undefined, reviewModel).catch(() => null);
+          const reviewCtx = reviewDetails ? getContextWindow(reviewDetails.model_info) : 4096;
+          const reviewLimit = checkReasoningModel(reviewModel) 
+            ? Math.max(4096, Math.min(8192, Math.floor(reviewCtx / 4)))
+            : Math.max(2048, Math.min(4096, Math.floor(reviewCtx / 8)));
+
+          // Wrap safety review execution in a 60-second timeout to prevent UI freezes due to model-switching delays
+          let reviewTimeoutId: any = null;
+          const reviewPromise = streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, reviewLimit);
+          const timeoutPromise = new Promise((_, reject) => {
+            reviewTimeoutId = setTimeout(() => reject(new Error("Safety review timed out (server busy or loading review model)")), 60000);
+          });
+
+          try {
+            await Promise.race([reviewPromise, timeoutPromise]);
+          } finally {
+            if (reviewTimeoutId) clearTimeout(reviewTimeoutId);
+          }
         } catch (revError: any) {
           stopReviewListeners();
           messages[assistantIndex].safetyReview = `⚠️ Safety Review Failed: ${revError.message || revError}`;
@@ -430,6 +455,7 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
       copyToClipboard={copyToClipboard}
       editMessage={editMessage}
       deleteMessage={deleteMessage}
+      selectedModel={selectedModel}
     />
   {:else}
     <EvidenceLibraryPanel

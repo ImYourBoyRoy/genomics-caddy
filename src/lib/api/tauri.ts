@@ -85,6 +85,13 @@ export async function showOllamaModel(
   return invoke<any>("show_ollama_model", { url, token, name });
 }
 
+export async function getActiveOllamaModels(
+  url: string,
+  token: string | undefined
+): Promise<any> {
+  return invoke<any>("get_active_ollama_models", { url, token });
+}
+
 export async function getCurrentExe(): Promise<string> {
   return invoke<string>("get_current_exe");
 }

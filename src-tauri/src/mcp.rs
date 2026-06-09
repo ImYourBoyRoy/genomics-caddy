@@ -297,6 +297,18 @@ async fn handle_request(req: JsonRpcRequest, db_path: &PathBuf) -> JsonRpcRespon
                             },
                             "required": ["url", "name"]
                         }
+                    },
+                    {
+                        "name": "get_active_ollama_models",
+                        "description": "Queries a local or remote Ollama server to list currently loaded models and VRAM usage.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "url": { "type": "string", "description": "Ollama server URL" },
+                                "token": { "type": "string", "description": "Authentication token" }
+                            },
+                            "required": ["url"]
+                        }
                     }
                 ]
             })),
@@ -757,6 +769,28 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf) -> Result<Valu
             
             let details: serde_json::Value = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
             Ok(details)
+        }
+        "get_active_ollama_models" => {
+            let url = args.get("url").and_then(|v| v.as_str()).ok_or("Missing url")?;
+            let token = args.get("token").and_then(|v| v.as_str());
+            
+            let client = reqwest::Client::new();
+            let clean_url = url.trim().trim_end_matches('/');
+            let mut req = client.get(format!("{}/api/ps", clean_url));
+            
+            if let Some(t) = token {
+                if !t.trim().is_empty() {
+                    req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
+                }
+            }
+            
+            let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
+            if !res.status().is_success() {
+                return Err(format!("Ollama ps API returned HTTP error: {}", res.status()));
+            }
+            
+            let info: serde_json::Value = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
+            Ok(info)
         }
         _ => Err(format!("Unknown tool: {}", name)),
     }

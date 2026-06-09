@@ -280,6 +280,12 @@ Add the server globally to Claude Code by executing:
       * `token` (string, optional): Authentication token.
       * `name` (string, required): The model tag name.
 
+18. **`get_active_ollama_models`**
+    * **Description:** Queries a local or remote Ollama server to list currently loaded models and VRAM usage.
+    * **Arguments:**
+      * `url` (string, required): Ollama server URL.
+      * `token` (string, optional): Authentication token.
+
 ---
 
 ## 🔧 Troubleshooting Remote Ollama Servers

@@ -483,6 +483,28 @@ async fn fetch_embedding(
 }
 
 #[tauri::command]
+async fn get_active_ollama_models(url: String, token: Option<String>) -> Result<serde_json::Value, String> {
+    let client = reqwest::Client::new();
+    let clean_url = url.trim().trim_end_matches('/');
+    let mut req = client.get(format!("{}/api/ps", clean_url));
+    
+    if let Some(t) = token {
+        if !t.trim().is_empty() {
+            let t_val = t.trim();
+            req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
+        }
+    }
+    
+    let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
+    if !res.status().is_success() {
+        return Err(format!("Ollama returned HTTP error: {}", res.status()));
+    }
+    
+    let info: serde_json::Value = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
+    Ok(info)
+}
+
+#[tauri::command]
 async fn scan_ollama_models(url: String, token: Option<String>) -> Result<Vec<String>, String> {
     let client = reqwest::Client::new();
     let clean_url = url.trim().trim_end_matches('/');
@@ -832,6 +854,14 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
                 { "name": "token", "type": "string", "required": false, "description": "Authentication token" },
                 { "name": "name", "type": "string", "required": true, "description": "The model tag name" }
             ]
+        },
+        {
+            "name": "get_active_ollama_models",
+            "description": "Queries a local or remote Ollama server to list currently loaded models and VRAM usage.",
+            "params": [
+                { "name": "url", "type": "string", "required": true, "description": "Ollama server URL" },
+                { "name": "token", "type": "string", "required": false, "description": "Authentication token" }
+            ]
         }
     ]))
 }
@@ -855,6 +885,7 @@ pub fn run() {
             scan_ollama_models,
             stream_ollama_chat,
             show_ollama_model,
+            get_active_ollama_models,
             get_current_exe,
             get_mcp_tools,
             list_evidence_sources,

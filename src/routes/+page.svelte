@@ -39,6 +39,7 @@
   import VariantSearchPanel from "$lib/components/search/VariantSearchPanel.svelte";
   import McpPanel from "$lib/components/mcp/McpPanel.svelte";
   import AiAssistantPanel from "$lib/components/ai/AiAssistantPanel.svelte";
+  import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
 
   // Static Marker Packs & Manifest
   import manifest from "$lib/marker-packs/manifest.json";
@@ -89,7 +90,7 @@
   let importError = $state("");
   let importSuccess = $state("");
 
-  let activeTab = $state("report"); // "report", "map", "browser", "mcp"
+  let activeTab = $state("report"); // "report", "map", "browser", "mcp", "agent", "ai"
 
   let generatedReport = $state<GeneratedReport | null>(null);
   let isGeneratingReport = $state(false);
@@ -341,6 +342,7 @@
             <button class="tab-btn" class:active={activeTab === "map"} onclick={() => activeTab = "map"}>🎨 Chromosome Map</button>
             <button class="tab-btn" class:active={activeTab === "browser"} onclick={() => activeTab = "browser"}>🔍 Raw Browser</button>
             <button class="tab-btn" class:active={activeTab === "mcp"} onclick={() => activeTab = "mcp"}>🤖 MCP Integration</button>
+            <button class="tab-btn" class:active={activeTab === "agent"} onclick={() => activeTab = "agent"}>🕵️ Research Agent</button>
             <button class="tab-btn" class:active={activeTab === "ai"} onclick={() => activeTab = "ai"}>💬 AI Consultation</button>
           </nav>
         </header>
@@ -369,6 +371,14 @@
             />
           {:else if activeTab === "mcp"}
             <McpPanel {appPaths} />
+          {:else if activeTab === "agent"}
+            <AgentResearchPanel
+              {selectedSample}
+              {generatedReport}
+              bind:ollamaUrl={aiOllamaUrl}
+              bind:ollamaToken={aiOllamaToken}
+              bind:selectedModel={aiSelectedModel}
+            />
           {:else if activeTab === "ai"}
             <AiAssistantPanel
               {selectedSample}

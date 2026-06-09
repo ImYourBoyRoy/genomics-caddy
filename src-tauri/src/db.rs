@@ -331,6 +331,27 @@ pub fn query_region(
     Ok(results)
 }
 
+/// Queries variant counts grouped by chromosome for a given sample.
+pub fn get_chromosome_counts(
+    conn: &Connection,
+    sample_id: i64,
+) -> Result<std::collections::HashMap<String, i64>> {
+    let mut stmt = conn.prepare(
+        "SELECT chromosome, COUNT(*) FROM genotypes WHERE sample_id = ? GROUP BY chromosome"
+    )?;
+    
+    let rows = stmt.query_map(params![sample_id], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+    })?;
+    
+    let mut results = std::collections::HashMap::new();
+    for r in rows {
+        let (chr, count) = r?;
+        results.insert(chr, count);
+    }
+    Ok(results)
+}
+
 /// Deletes a sample and its genotypes from the database.
 pub fn delete_sample(conn: &Connection, sample_id: i64) -> Result<()> {
     conn.execute("DELETE FROM samples WHERE id = ?", params![sample_id])?;

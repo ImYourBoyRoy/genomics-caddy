@@ -62,10 +62,13 @@ pub async fn run_mcp_server(db_path: PathBuf) {
                 }
 
                 if let Ok(req) = serde_json::from_str::<JsonRpcRequest>(trimmed) {
+                    let is_notification = req.id.is_none();
                     let res = handle_request(req, &db_path).await;
-                    if let Ok(res_str) = serde_json::to_string(&res) {
-                        println!("{}", res_str);
-                        let _ = io::stdout().flush();
+                    if !is_notification {
+                        if let Ok(res_str) = serde_json::to_string(&res) {
+                            println!("{}", res_str);
+                            let _ = io::stdout().flush();
+                        }
                     }
                 } else {
                     let err_res = JsonRpcResponse {

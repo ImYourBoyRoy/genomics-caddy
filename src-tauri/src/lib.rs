@@ -190,6 +190,14 @@ async fn delete_sample(app: AppHandle, sample_id: i64) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn get_chromosome_counts(app: AppHandle, sample_id: i64) -> Result<std::collections::HashMap<String, i64>, String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    let counts = db::get_chromosome_counts(&conn, sample_id).map_err(|e| e.to_string())?;
+    Ok(counts)
+}
+
+#[tauri::command]
 async fn check_chain_status(app: AppHandle) -> Result<bool, String> {
     let chain_path = get_chain_path(&app);
     Ok(chain_path.exists())
@@ -977,7 +985,8 @@ pub fn run() {
             get_chat_sessions,
             save_chat_session,
             delete_chat_session,
-            fetch_external_api
+            fetch_external_api,
+            get_chromosome_counts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

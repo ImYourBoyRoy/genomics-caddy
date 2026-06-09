@@ -36,20 +36,48 @@
   }: Props = $props();
 
   let showBenign = $state(false);
+  let severityFilter = $state<"all" | "risk_only">("all");
   let tierFilter = $state<string>("all");
+  let sortBy = $state<"default" | "severity">("default");
   let viewMode = $state<"simple" | "clinical" | "dual">("dual");
 
+  function getSeverityRank(severity: string): number {
+    switch (severity) {
+      case "high_risk": return 1;
+      case "confirmation_required": return 2;
+      case "moderate_risk": return 3;
+      case "protective": return 4;
+      case "trait": return 5;
+      case "context_dependent": return 6;
+      case "benign": return 7;
+      case "no_data": return 8;
+      default: return 9;
+    }
+  }
+
   let filteredSections = $derived(
-    generatedReport?.sections.map(sec => ({
-      ...sec,
-      markers: sec.markers.filter(m => {
+    generatedReport?.sections.map(sec => {
+      let markers = sec.markers.filter(m => {
         if (!showBenign && (m.severity_class === "benign" || m.severity_class === "no_data")) return false;
-        if (tierFilter !== "all") {
-          if (tierFilter === "ab" && !m.evidence_tier.startsWith("A_") && !m.evidence_tier.startsWith("B_")) return false;
+        if (tierFilter === "ab" && !m.evidence_tier.startsWith("A") && !m.evidence_tier.startsWith("B")) return false;
+        if (severityFilter === "risk_only" && 
+            m.severity_class !== "high_risk" && 
+            m.severity_class !== "moderate_risk" && 
+            m.severity_class !== "confirmation_required") {
+          return false;
         }
         return true;
-      })
-    })).filter(sec => sec.markers.length > 0) ?? []
+      });
+
+      if (sortBy === "severity") {
+        markers = [...markers].sort((a, b) => getSeverityRank(a.severity_class) - getSeverityRank(b.severity_class));
+      }
+
+      return {
+        ...sec,
+        markers
+      };
+    }).filter(sec => sec.markers.length > 0) ?? []
   );
 
   async function exportJson() {
@@ -107,7 +135,7 @@
   </div>
 
   <!-- Color Legend (how to read this report) -->
-  <div class="report-legend card no-print">
+  <div class="report-legend card">
     <h4>📖 How to Read This Report</h4>
     <p class="legend-intro">Each card below represents a single genetic marker. The card's color and icon tell you what was found:</p>
     <div class="legend-grid">
@@ -175,11 +203,21 @@
     <span class="filter-label">Filter:</span>
     <label class="filter-toggle">
       <input type="checkbox" bind:checked={showBenign} />
-      Show undetected variants
+      Show undetected
+    </label>
+    <label class="filter-toggle">
+      <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
+      Risk variants only
     </label>
     <select class="filter-select" bind:value={tierFilter}>
       <option value="all">All evidence tiers</option>
-      <option value="ab">Tier A & B only (well-established)</option>
+      <option value="ab">Tier A & B only</option>
+    </select>
+    
+    <span class="filter-label" style="margin-left: 12px;">Sort:</span>
+    <select class="filter-select" bind:value={sortBy}>
+      <option value="default">Default Order</option>
+      <option value="severity">By Severity (highest first)</option>
     </select>
     
     <span class="filter-label" style="margin-left: auto;">View Mode:</span>

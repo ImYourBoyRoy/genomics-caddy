@@ -147,4 +147,87 @@
     border: 1px solid #feebc8 !important;
     color: black !important;
   }
+
+  /* Legend Print Styles */
+  .report-legend {
+    margin-bottom: 24px !important;
+    border: 1px solid #ccc !important;
+    background: #fdfdfd !important;
+    padding: 14px !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .report-legend h4 {
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    font-size: 1rem !important;
+    color: black !important;
+  }
+  .legend-intro {
+    font-size: 0.78rem !important;
+    color: #444 !important;
+    margin-bottom: 12px !important;
+  }
+  .legend-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .legend-item {
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .legend-item strong {
+    font-size: 0.75rem !important;
+    color: black !important;
+  }
+  .legend-item span {
+    font-size: 0.7rem !important;
+    color: #555 !important;
+  }
+  .legend-swatch {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    border-radius: 3px !important;
+    border: 1px solid #777 !important;
+    margin-top: 2px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .legend-swatch.signal-high-risk {
+    border-color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+  }
+  .legend-swatch.signal-moderate-risk {
+    border-color: #f59e0b !important;
+    background-color: #fef3c7 !important;
+  }
+  .legend-swatch.signal-protective {
+    border-color: #10b981 !important;
+    background-color: #d1fae5 !important;
+  }
+  .legend-swatch.signal-trait {
+    border-color: #3b82f6 !important;
+    background-color: #dbeafe !important;
+  }
+  .legend-swatch.signal-context {
+    border-color: #8b5cf6 !important;
+    background-color: #ede9fe !important;
+  }
+  .legend-swatch.signal-confirm {
+    border-color: #f59e0b !important;
+    border-style: dashed !important;
+    background-color: #fffbeb !important;
+  }
+  .legend-swatch.signal-benign {
+    border-color: #ccc !important;
+    background-color: #fcfcfc !important;
+  }
+  .legend-swatch.signal-nodata {
+    border-color: #999 !important;
+    background-color: #e5e7eb !important;
+  }
 }

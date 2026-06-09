@@ -152,3 +152,7 @@ export async function fetchExternalApi(
     ttlSecs: ttlSecs || undefined,
   });
 }
+
+export async function getChromosomeCounts(sampleId: number): Promise<Record<string, number>> {
+  return invoke<Record<string, number>>("get_chromosome_counts", { sampleId });
+}

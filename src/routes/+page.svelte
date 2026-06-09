@@ -59,7 +59,7 @@
   import "$lib/styles/print.css";
 
   // Map pack IDs to static content
-  const PACKS_MAP: Record<string, any> = {
+  const PACKS_MAP: Record<string, { name: string; markers: any[] }> = {
     core,
     pgx,
     metabolic,
@@ -72,7 +72,7 @@
     cancer_confirmation_only: cancerConfirmationOnly
   };
 
-  import type { GenomeSample, AppPaths, GeneratedReport, DbSnpRecord } from "$lib/types/genomics";
+  import type { GenomeSample, AppPaths, GeneratedReport, DbSnpRecord, SectionDefinition, ReportTemplate, MarkerDefinition } from "$lib/types/genomics";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
@@ -122,7 +122,7 @@
     }
     init();
 
-    listen("import-progress", (event: any) => {
+    listen<{ percentage: number; status: string }>("import-progress", (event) => {
       progressPercent = event.payload.percentage;
       progressStatus = event.payload.status;
     }).then(unlisten => {
@@ -220,14 +220,14 @@
     }
   }
 
-  function buildMergedTemplate(): any {
-    const sections = [];
+  function buildMergedTemplate(): ReportTemplate {
+    const sections: SectionDefinition[] = [];
     for (const pack of manifest.packs) {
       const packContent = PACKS_MAP[pack.id];
       if (packContent && packContent.markers) {
         sections.push({
           name: packContent.name || pack.label,
-          markers: packContent.markers
+          markers: packContent.markers as MarkerDefinition[]
         });
       }
     }
@@ -358,7 +358,7 @@
               {reportError}
             />
           {:else if activeTab === "map"}
-            <GenomeMap />
+            <GenomeMap {selectedSample} {generatedReport} />
           {:else if activeTab === "browser"}
             <VariantSearchPanel
               bind:searchRsid

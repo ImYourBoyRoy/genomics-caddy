@@ -38,6 +38,7 @@ pub enum EffectDirection {
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MarkerSource {
     pub name: String,
     pub url: Option<String>,
@@ -48,6 +49,7 @@ pub struct MarkerSource {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct MarkerDefinition {
     pub rsid: String,
     pub gene: String,
@@ -74,12 +76,14 @@ pub struct MarkerDefinition {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SectionDefinition {
     pub name: String,
     pub markers: Vec<MarkerDefinition>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct ReportTemplate {
     pub title: String,
     pub description: String,
@@ -236,6 +240,7 @@ pub fn generate_report(
     let mut evaluated_sections = Vec::new();
     let mut total_risk_possible: u16 = 0;
     let mut total_risk_effects: u16 = 0;
+    let mut evaluated_rsids = std::collections::HashSet::new();
 
     for sec in &template.sections {
         let mut evaluated_markers = Vec::new();
@@ -297,6 +302,10 @@ pub fn generate_report(
                     EffectDirection::Risk => {
                         risk_possible += 2;
                         risk_effect_count += effect_count as u16;
+                        if evaluated_rsids.insert(m.rsid.clone()) {
+                            total_risk_possible += 2;
+                            total_risk_effects += effect_count as u16;
+                        }
                     }
                     EffectDirection::Protective => {
                         protective_possible += 2;
@@ -406,9 +415,6 @@ pub fn generate_report(
         } else {
             0.0
         };
-
-        total_risk_possible += risk_possible;
-        total_risk_effects += risk_effect_count;
 
         let summary = SectionSummary {
             risk_effect_count,

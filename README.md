@@ -79,11 +79,21 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Anti-Hallucination Formatting:** Uses bullet-point structures and clear bracketed markers rather than numbered lists to prevent low-parameter models (like `gemma4:e4b` or `tinyllama`) from mimicking the prompt rules.
 * **Strict Parameters:** Enforces `temperature: 0.0` in Ollama options by default to completely eliminate genomic hallucinations.
 
-### 5. Dynamic MCP Integration Hub
+### 9. Dynamic MCP Integration Hub
 * Implements a stdin/stdout Model Context Protocol (MCP) server directly.
 * **Vite Environment Sync:** Automatically toggles commands between Development mode (using `npm run mcp`) and Production mode (using the compiled app binary).
 * **Tauri Executable Auto-Detection:** Dynamically queries the exact path of the running executable on the user's filesystem.
 * **Active Tool Catalog:** Exposes a list of all active MCP tools and parameters in Svelte using live schemas queried from the Rust backend.
+
+### 10. Live Chromosome Density & Variant Map
+* **SQLite Live Density Query:** Computes and renders SNP density across 24 chromosomes (1-22, X, Y) based on actual records stored in the local SQLite genotypes database.
+* **Risk Coordinate Mapping:** Maps all evaluated risk/moderate/needs-confirmation variants at their exact physical base-pair positions on the chromosome capsules.
+* **Interactive Tooltips:** Hovering over mapped variant indicators displays full gene details, rsID, and severity class.
+
+### 11. Advanced Report Filters & Severity Sorting
+* **Multiple Filtering Criteria:** Toggle between showing undetected benign markers, filtering strictly to active risk findings, and selecting specific evidence tiers (Tier A/B only).
+* **Severity Ranking Sort:** Reorders markers dynamically within each section to bubble up High Risk and Needs Confirmation markers to the top.
+* **Wrapped Exports:** JSON exports wrap raw reports in metadata envelopes containing version numbers, timestamps, and sample genetic sex.
 
 ---
 

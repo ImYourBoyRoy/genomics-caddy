@@ -140,3 +140,15 @@ export async function saveChatSession(session: any): Promise<void> {
 export async function deleteChatSession(sessionId: string): Promise<void> {
   return invoke<void>("delete_chat_session", { sessionId });
 }
+
+export async function fetchExternalApi(
+  url: string,
+  apiKey?: string,
+  ttlSecs?: number
+): Promise<any> {
+  return invoke<any>("fetch_external_api", {
+    url,
+    apiKey: apiKey || undefined,
+    ttlSecs: ttlSecs || undefined,
+  });
+}

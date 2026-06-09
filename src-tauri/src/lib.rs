@@ -727,6 +727,89 @@ async fn delete_chat_session(app: AppHandle, session_id: String) -> Result<(), S
 
 
 #[tauri::command]
+async fn fetch_external_api(
+    app: AppHandle,
+    url: String,
+    api_key: Option<String>,
+    ttl_secs: Option<u64>,
+) -> Result<serde_json::Value, String> {
+    let db_path = get_db_path(&app);
+    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+
+    // Create table if it doesn't exist
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS api_cache (
+            url TEXT PRIMARY KEY,
+            response_json TEXT NOT NULL,
+            fetched_at INTEGER NOT NULL
+        )",
+        [],
+    ).map_err(|e| format!("Failed to initialize api_cache table: {}", e))?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+
+    let ttl = ttl_secs.unwrap_or(86400 * 7) as i64; // Default to 7 days cache
+
+    // Check cache
+    if let Ok((cached_json, fetched_at)) = conn.query_row(
+        "SELECT response_json, fetched_at FROM api_cache WHERE url = ?",
+        rusqlite::params![url],
+        |row| {
+            let json: String = row.get(0)?;
+            let fetched: i64 = row.get(1)?;
+            Ok((json, fetched))
+        },
+    ) {
+        if now - fetched_at < ttl {
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&cached_json) {
+                return Ok(parsed);
+            }
+        }
+    }
+
+    // Cache miss, execute query
+    let client = reqwest::Client::new();
+    let mut target_url = url.clone();
+    
+    // If it's an NCBI URL and we have an API key, append it
+    if url.contains("eutils.ncbi.nlm.nih.gov") {
+        if let Some(ref key) = api_key {
+            if !key.trim().is_empty() {
+                let separator = if url.contains('?') { "&" } else { "?" };
+                target_url = format!("{}{}{}api_key={}", url, separator, "", key.trim());
+            }
+        }
+    }
+
+    let res = client.get(&target_url)
+        .header("User-Agent", "GenomicsCaddy/0.1")
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("Server returned HTTP error: {}", res.status()));
+    }
+
+    let json_val: serde_json::Value = res.json()
+        .await
+        .map_err(|e| format!("Failed to parse response JSON: {}", e))?;
+
+    // Write back to cache
+    let json_str = serde_json::to_string(&json_val).unwrap_or_default();
+    let _ = conn.execute(
+        "INSERT OR REPLACE INTO api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
+        rusqlite::params![url, json_str, now],
+    );
+
+    Ok(json_val)
+}
+
+
+#[tauri::command]
 fn get_current_exe() -> Result<String, String> {
     let p = std::env::current_exe()
         .map_err(|e| e.to_string())?;
@@ -893,7 +976,8 @@ pub fn run() {
             get_evidence_for_marker,
             get_chat_sessions,
             save_chat_session,
-            delete_chat_session
+            delete_chat_session,
+            fetch_external_api
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

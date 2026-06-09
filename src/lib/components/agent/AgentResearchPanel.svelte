@@ -40,6 +40,7 @@
   let scanError = $state("");
   let models = $state<string[]>([]);
   let showThinking = $state(true);
+  let ncbiApiKey = $state("");
 
   // Agent Loop Variables
   let steps = $state<AgentStep[]>([]);
@@ -72,6 +73,7 @@
   );
 
   onMount(async () => {
+    ncbiApiKey = localStorage.getItem("genomics_ncbi_api_key") || "";
     await scanModels();
   });
 
@@ -121,6 +123,7 @@
       return;
     }
 
+    localStorage.setItem("genomics_ncbi_api_key", ncbiApiKey);
     reportText = "";
     validationResult = null;
     runState = "running";
@@ -179,15 +182,15 @@
       advanceStep(0, "success", `Resolved target ${mainRsid}. Genotype: ${localResult.genotype}. Gene: ${localResult.gene || "Unknown"}`);
 
       // Step 2: NCBI ClinVar/dbSNP
-      ncbiData = await fetchNcbiDbsnpAndClinvar(mainRsid);
+      ncbiData = await fetchNcbiDbsnpAndClinvar(mainRsid, ncbiApiKey);
       advanceStep(1, "success", `ClinVar significance: ${ncbiData.clinicalSignificance}. Position: Chr ${ncbiData.chromosome}:${ncbiData.position}`);
 
       // Step 3: PubMed
-      pubmedArticles = await fetchPubMedArticles(mainRsid);
+      pubmedArticles = await fetchPubMedArticles(mainRsid, ncbiApiKey);
       advanceStep(2, "success", `Retrieved ${pubmedArticles.length} recent PubMed publications`);
 
       // Step 4: ClinicalTrials.gov
-      trials = await fetchClinicalTrials(mainRsid, localResult.gene);
+      trials = await fetchClinicalTrials(mainRsid, localResult.gene, ncbiApiKey);
       advanceStep(3, "success", `Found ${trials.length} active/recruiting trials`);
 
       // Step 5: Self-Critique & Gap Analysis (LLM)
@@ -204,7 +207,7 @@
       if (critiqueObj?.recommendedGeneHealing && critiqueObj.recommendedGeneHealing !== "none") {
         const geneTarget = critiqueObj.recommendedGeneHealing;
         if (trials.length === 0) {
-          healedTrials = await fetchClinicalTrials(mainRsid, geneTarget);
+          healedTrials = await fetchClinicalTrials(mainRsid, geneTarget, ncbiApiKey);
         }
         if (drugs.length === 0) {
           healedDrugs = await fetchChemblDrugs(geneTarget);
@@ -341,6 +344,20 @@
             {#if isScanning}
               <span class="scanning-text font-mono">Scanning Ollama...</span>
             {/if}
+          </div>
+
+          <!-- NCBI API Key -->
+          <div class="input-row">
+            <label for="ncbi-api-key">NCBI API Key (Optional)</label>
+            <input
+              id="ncbi-api-key"
+              type="password"
+              bind:value={ncbiApiKey}
+              placeholder="e.g. 32-character key"
+            />
+            <p style="font-size: 0.65rem; color: var(--text-secondary); margin: 0; line-height: 1.35;">
+              🔑 Speeds up queries to 10 requests/second. Saved locally.
+            </p>
           </div>
 
           <button class="btn btn-primary w-full" type="submit" disabled={isScanning || !queryText.trim()}>

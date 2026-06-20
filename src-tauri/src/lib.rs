@@ -11,14 +11,27 @@ Key Outputs: JSON responses to the frontend.
 Operational Notes: Manages SQLite database connection pools and executes requests.
 */
 
+#![allow(
+    clippy::too_many_arguments,
+    clippy::type_complexity,
+)]
+
 pub mod parser;
 pub mod liftover;
+pub mod research;
+pub mod config;
+pub mod agent;
 pub mod db;
+pub mod db_crypto;
 pub mod mcp;
 pub mod report;
+pub mod paths;
+mod agent_commands;
+mod db_runtime;
+mod stream_control;
 
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager, Emitter};
+use tauri::{AppHandle, Emitter};
 use db::{SampleInfo, DbSnpRecord};
 use report::GeneratedReport;
 
@@ -28,23 +41,18 @@ struct ProgressPayload {
     status: String,
 }
 
-fn get_db_path(app: &AppHandle) -> PathBuf {
-    let mut path = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
-    std::fs::create_dir_all(&path).ok();
-    
-    // Create marker-packs folder for dynamic JSON overrides
-    let packs_dir = path.join("marker-packs");
-    std::fs::create_dir_all(&packs_dir).ok();
+pub(crate) fn get_data_dir(_app: &AppHandle) -> PathBuf {
+    let dir = paths::resolve_data_dir();
+    paths::ensure_data_layout(&dir).ok();
+    dir
+}
 
-    path.push("user_genome.db");
-    path
+pub(crate) fn get_db_path(app: &AppHandle) -> PathBuf {
+    paths::db_path(&get_data_dir(app))
 }
 
 fn get_chain_path(app: &AppHandle) -> PathBuf {
-    let mut path = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
-    std::fs::create_dir_all(&path).ok();
-    path.push("GRCh37_to_GRCh38.chain.gz");
-    path
+    paths::chain_path(&get_data_dir(app))
 }
 
 #[tauri::command]
@@ -52,7 +60,11 @@ async fn select_file() -> Result<Option<String>, String> {
     let file = rfd::FileDialog::new()
         .add_filter("Genomic Data", &["txt", "zip"])
         .pick_file();
-    Ok(file.map(|p| p.to_string_lossy().to_string()))
+    Ok(file.map(|p| {
+        let path_str = p.to_string_lossy().to_string();
+        config::register_import_path(&path_str);
+        path_str
+    }))
 }
 
 #[tauri::command]
@@ -63,6 +75,8 @@ async fn save_report_json(content: String, default_filename: String) -> Result<b
         .save_file();
 
     if let Some(path) = file {
+        let path_str = path.to_string_lossy().to_string();
+        config::register_export_path(&path_str);
         std::fs::write(&path, content)
             .map_err(|e| format!("Failed to write file: {}", e))?;
         Ok(true)
@@ -72,87 +86,129 @@ async fn save_report_json(content: String, default_filename: String) -> Result<b
 }
 
 #[tauri::command]
-fn get_app_paths(app: AppHandle) -> Result<serde_json::Value, String> {
+async fn get_app_bootstrap(app: AppHandle) -> Result<db::AppBootstrapStatus, String> {
+    let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
-    let chain_path = get_chain_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
+        db::get_bootstrap_status(&conn, &data_dir)
+    })
+    .await
+    .map_err(|e| format!("Bootstrap worker failed: {}", e))?
+}
+
+#[tauri::command]
+fn get_app_paths(app: AppHandle) -> Result<serde_json::Value, String> {
+    let data_dir = get_data_dir(&app);
+    let db_path = paths::db_path(&data_dir);
+    let chain_path = paths::chain_path(&data_dir);
+    let env_path = config::recommended_env_path();
     Ok(serde_json::json!({
+        "data_dir": data_dir.to_string_lossy().to_string(),
         "db_path": db_path.to_string_lossy().to_string(),
         "chain_path": chain_path.to_string_lossy().to_string(),
+        "references_dir": paths::references_dir(&data_dir).to_string_lossy().to_string(),
+        "env_path": env_path.to_string_lossy().to_string(),
     }))
 }
 
 #[tauri::command]
 async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -> Result<i64, String> {
-    // Emit initial status
-    app.emit("import-progress", ProgressPayload {
-        percentage: 5,
-        status: "Loading file...".to_string(),
-    }).ok();
+    config::validate_import_path(&file_path)?;
+    let app_handle = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        app_handle
+            .emit(
+                "import-progress",
+                ProgressPayload {
+                    percentage: 5,
+                    status: "Loading file...".to_string(),
+                },
+            )
+            .ok();
 
-    // 1. Parse raw DNA file (either txt or zip)
-    let app_clone = app.clone();
-    let records = parser::parse_dna_file(&file_path, move |status| {
-        app_clone.emit("import-progress", ProgressPayload {
-            percentage: 15,
-            status: status.to_string(),
-        }).ok();
-    })?;
+        let app_clone = app_handle.clone();
+        let records = parser::parse_dna_file(&file_path, move |status| {
+            app_clone
+                .emit(
+                    "import-progress",
+                    ProgressPayload {
+                        percentage: 15,
+                        status: status.to_string(),
+                    },
+                )
+                .ok();
+        })?;
 
-    app.emit("import-progress", ProgressPayload {
-        percentage: 45,
-        status: "Initializing liftover database...".to_string(),
-    }).ok();
+        app_handle
+            .emit(
+                "import-progress",
+                ProgressPayload {
+                    percentage: 45,
+                    status: "Initializing liftover database...".to_string(),
+                },
+            )
+            .ok();
 
-    // 2. Resolve liftover engine if chain file exists
-    let chain_path = get_chain_path(&app);
-    let liftover_engine = if chain_path.exists() {
-        match liftover::LiftoverEngine::new(&chain_path) {
-            Ok(engine) => Some(engine),
-            Err(e) => {
-                eprintln!("Failed to initialize liftover engine: {}", e);
-                None
+        let chain_path = paths::chain_path(&paths::resolve_data_dir());
+        let liftover_engine = if chain_path.exists() {
+            match liftover::LiftoverEngine::new(&chain_path) {
+                Ok(engine) => Some(engine),
+                Err(e) => {
+                    eprintln!("Failed to initialize liftover engine: {}", e);
+                    None
+                }
             }
-        }
-    } else {
-        println!("No liftover chain found at {:?}. Importing without GRCh38 coordinates.", chain_path);
-        None
-    };
+        } else {
+            println!(
+                "No liftover chain found at {:?}. Importing without GRCh38 coordinates.",
+                chain_path
+            );
+            None
+        };
 
-    // 3. Import into database
-    let db_path = get_db_path(&app);
-    let mut conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    
-    let app_clone = app.clone();
-    let sample_id = db::import_raw_genome(
-        &mut conn, 
-        &sample_name, 
-        &records, 
-        liftover_engine.as_ref(),
-        move |pct, status| {
-            app_clone.emit("import-progress", ProgressPayload {
-                percentage: pct,
-                status: status.to_string(),
-            }).ok();
-        }
-    )?;
+        let db_path = paths::db_path(&paths::resolve_data_dir());
+        let mut conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
 
-    Ok(sample_id)
+        let app_clone = app_handle.clone();
+        db::import_raw_genome(
+            &mut conn,
+            &sample_name,
+            &records,
+            liftover_engine.as_ref(),
+            move |pct, status| {
+                app_clone
+                    .emit(
+                        "import-progress",
+                        ProgressPayload {
+                            percentage: pct,
+                            status: status.to_string(),
+                        },
+                    )
+                    .ok();
+            },
+        )
+    })
+    .await
+    .map_err(|e| format!("Import worker failed: {}", e))?
 }
 
 #[tauri::command]
 async fn get_samples(app: AppHandle) -> Result<Vec<SampleInfo>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let samples = db::get_samples(&conn).map_err(|e| e.to_string())?;
-    Ok(samples)
+    db_runtime::with_connection(db_path, |conn| {
+        db::get_samples(conn).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
 async fn query_rsids(app: AppHandle, sample_id: i64, rsids: Vec<String>) -> Result<Vec<DbSnpRecord>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let records = db::query_by_rsids(&conn, sample_id, &rsids).map_err(|e| e.to_string())?;
-    Ok(records)
+    db_runtime::with_connection(db_path, move |conn| {
+        db::query_by_rsids(conn, sample_id, &rsids).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -164,37 +220,40 @@ async fn query_region(
     end: u64,
 ) -> Result<Vec<DbSnpRecord>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let records = db::query_region(&conn, sample_id, &chromosome, start, end).map_err(|e| e.to_string())?;
-    Ok(records)
+    db_runtime::with_connection(db_path, move |conn| {
+        db::query_region(conn, sample_id, &chromosome, start, end).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
 async fn generate_report(app: AppHandle, sample_id: i64, template_json: String) -> Result<GeneratedReport, String> {
+    config::validate_template_json(&template_json)?;
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    
-    let template: report::ReportTemplate = serde_json::from_str(&template_json)
-        .map_err(|e| format!("Failed to parse report template JSON: {}", e))?;
-
-    let report = report::generate_report(&conn, sample_id, &template)?;
-    Ok(report)
+    db_runtime::with_connection(db_path, move |conn| {
+        let template: report::ReportTemplate = serde_json::from_str(&template_json)
+            .map_err(|e| format!("Failed to parse report template JSON: {}", e))?;
+        report::generate_report(conn, sample_id, &template)
+    })
+    .await
 }
 
 #[tauri::command]
 async fn delete_sample(app: AppHandle, sample_id: i64) -> Result<(), String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    db::delete_sample(&conn, sample_id).map_err(|e| e.to_string())?;
-    Ok(())
+    db_runtime::with_connection(db_path, move |conn| {
+        db::delete_sample(conn, sample_id).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
 async fn get_chromosome_counts(app: AppHandle, sample_id: i64) -> Result<std::collections::HashMap<String, i64>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let counts = db::get_chromosome_counts(&conn, sample_id).map_err(|e| e.to_string())?;
-    Ok(counts)
+    db_runtime::with_connection(db_path, move |conn| {
+        db::get_chromosome_counts(conn, sample_id).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -231,47 +290,49 @@ struct EvidenceRecord {
 #[tauri::command]
 async fn list_evidence_sources(app: AppHandle) -> Result<Vec<String>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let mut stmt = conn
-        .prepare("SELECT DISTINCT source_citation FROM evidence_library ORDER BY source_citation ASC")
-        .map_err(|e| e.to_string())?;
-    let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
-        .map_err(|e| e.to_string())?;
-    let mut sources = Vec::new();
-    for r in rows {
-        if let Ok(s) = r {
+    db_runtime::with_connection(db_path, |conn| {
+        let mut stmt = conn
+            .prepare("SELECT DISTINCT source_citation FROM evidence_library ORDER BY source_citation ASC")
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| e.to_string())?;
+        let mut sources = Vec::new();
+        for s in rows.flatten() {
             sources.push(s);
         }
-    }
-    Ok(sources)
+        Ok(sources)
+    })
+    .await
 }
 
 #[tauri::command]
 async fn get_evidence_for_marker(app: AppHandle, rsid: String) -> Result<Vec<EvidenceRecord>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let mut stmt = conn
-        .prepare("SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE rsid = ?")
-        .map_err(|e| e.to_string())?;
-    let rows = stmt
-        .query_map(rusqlite::params![rsid], |row| {
-            let embedding: Option<String> = row.get(4)?;
-            Ok(EvidenceRecord {
-                rsid: row.get(0)?,
-                gene: row.get(1)?,
-                evidence_text: row.get(2)?,
-                source_citation: row.get(3)?,
-                has_embedding: embedding.is_some() && !embedding.unwrap().trim().is_empty(),
-                similarity: None,
+    db_runtime::with_connection(db_path, move |conn| {
+        let mut stmt = conn
+            .prepare("SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE rsid = ?")
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map(rusqlite::params![rsid], |row| {
+                let embedding: Option<String> = row.get(4)?;
+                Ok(EvidenceRecord {
+                    rsid: row.get(0)?,
+                    gene: row.get(1)?,
+                    evidence_text: row.get(2)?,
+                    source_citation: row.get(3)?,
+                    has_embedding: embedding.is_some() && !embedding.as_ref().unwrap().trim().is_empty(),
+                    similarity: None,
+                })
             })
-        })
-        .map_err(|e| e.to_string())?;
-    let mut results = Vec::new();
-    for r in rows {
-        results.push(r.map_err(|e| e.to_string())?);
-    }
-    Ok(results)
+            .map_err(|e| e.to_string())?;
+        let mut results = Vec::new();
+        for r in rows {
+            results.push(r.map_err(|e| e.to_string())?);
+        }
+        Ok(results)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -287,10 +348,10 @@ async fn search_evidence(
         return Ok(Vec::new());
     }
 
-    // 1. Perform keyword search first (under separate scope so conn/stmt are dropped)
-    let keyword_hits = {
-        let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-        let search_pattern = format!("%{}%", query_clean.to_lowercase());
+    // 1. Perform keyword search on a background worker thread
+    let query_for_db = query_clean.clone();
+    let keyword_hits = db_runtime::with_connection(db_path.clone(), move |conn| {
+        let search_pattern = config::sql_like_contains_pattern(&query_for_db);
         let mut stmt = conn.prepare(
             "SELECT rsid, gene, evidence_text, source_citation, embedding 
              FROM evidence_library 
@@ -312,13 +373,13 @@ async fn search_evidence(
         for r in rows {
             hits.push(r.map_err(|e| e.to_string())?);
         }
-        hits
-    };
+        Ok(hits)
+    }).await?;
 
     // 2. If Ollama URL is provided, try Semantic Vector Search
-    if let Some(ref url) = ollama_url {
-        if !url.trim().is_empty() {
-            let clean_url = url.trim().trim_end_matches('/').to_string();
+    if let Some(ref url) = ollama_url
+        && !url.trim().is_empty() {
+            let clean_url = config::validate_service_url(url)?;
             let token_ref = ollama_token.as_deref();
             
             // Try to find an embedding model on the server
@@ -329,16 +390,16 @@ async fn search_evidence(
                     // Generate embeddings on-demand for the top keyword hits (up to 10) to fill the vector cache
                     let mut new_embeddings = Vec::new();
                     for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
-                        if embedding_opt.is_none() || embedding_opt.as_ref().unwrap().trim().is_empty() {
-                            if let Ok(emb) = fetch_embedding(&clean_url, token_ref, &embed_model, text).await {
+                        if (embedding_opt.is_none() || embedding_opt.as_ref().unwrap().trim().is_empty())
+                            && let Ok(emb) = fetch_embedding(&clean_url, token_ref, &embed_model, text).await {
                                 new_embeddings.push((rsid.clone(), citation.clone(), emb));
                             }
-                        }
                     }
 
                     // Save new embeddings back to database
                     if !new_embeddings.is_empty() {
-                        if let Ok(conn) = db::init_user_db(&db_path) {
+                        let db_path_save = db_path.clone();
+                        let _ = db_runtime::with_connection_mut(db_path_save, move |conn| {
                             for (rsid, citation, emb) in new_embeddings {
                                 if let Ok(emb_json) = serde_json::to_string(&emb) {
                                     let _ = conn.execute(
@@ -347,47 +408,42 @@ async fn search_evidence(
                                     );
                                 }
                             }
-                        }
+                            Ok(())
+                        })
+                        .await;
                     }
 
                     // Reload all rows with cached embeddings and calculate similarity
-                    let vector_results = {
-                        if let Ok(conn) = db::init_user_db(&db_path) {
-                            if let Ok(mut stmt_all) = conn.prepare(
-                                "SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE embedding IS NOT NULL AND embedding != ''"
-                            ) {
-                                if let Ok(rows_all) = stmt_all.query_map([], |row| {
-                                    let embedding_str: String = row.get(4)?;
-                                    Ok(EvidenceRecord {
-                                        rsid: row.get(0)?,
-                                        gene: row.get(1)?,
-                                        evidence_text: row.get(2)?,
-                                        source_citation: row.get(3)?,
-                                        has_embedding: true,
-                                        similarity: serde_json::from_str::<Vec<f32>>(&embedding_str)
-                                            .ok()
-                                            .map(|v| cosine_similarity(&query_embedding, &v)),
-                                    })
-                                }) {
-                                    let mut results = Vec::new();
-                                    for r in rows_all {
-                                        if let Ok(rec) = r {
-                                            if rec.similarity.is_some() {
-                                                results.push(rec);
-                                            }
-                                        }
-                                    }
-                                    results
-                                } else {
-                                    Vec::new()
+                    let vector_results = db_runtime::with_connection(db_path.clone(), move |conn| {
+                        let mut stmt_all = conn.prepare(
+                            "SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE embedding IS NOT NULL AND embedding != ''"
+                        ).map_err(|e| e.to_string())?;
+
+                        let rows_all = stmt_all.query_map([], |row| {
+                            let embedding_str: String = row.get(4)?;
+                            Ok(EvidenceRecord {
+                                rsid: row.get(0)?,
+                                gene: row.get(1)?,
+                                evidence_text: row.get(2)?,
+                                source_citation: row.get(3)?,
+                                has_embedding: true,
+                                similarity: serde_json::from_str::<Vec<f32>>(&embedding_str)
+                                    .ok()
+                                    .map(|v| cosine_similarity(&query_embedding, &v)),
+                            })
+                        }).map_err(|e| e.to_string())?;
+
+                        let mut results = Vec::new();
+                        for r in rows_all {
+                            if let Ok(rec) = r
+                                && rec.similarity.is_some() {
+                                    results.push(rec);
                                 }
-                            } else {
-                                Vec::new()
-                            }
-                        } else {
-                            Vec::new()
                         }
-                    };
+                        Ok(results)
+                    })
+                    .await
+                    .unwrap_or_default();
 
                     let mut sorted_results = vector_results;
                     // Sort by similarity descending
@@ -404,7 +460,6 @@ async fn search_evidence(
                 }
             }
         }
-    }
 
     // Fallback: convert keyword hits to EvidenceRecords
     let fallback_results = keyword_hits.into_iter().map(|(rsid, gene, text, citation, emb_opt)| {
@@ -442,11 +497,10 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 async fn get_embedding_model(url: &str, token: Option<&str>) -> Option<String> {
     let client = reqwest::Client::new();
     let mut req = client.get(format!("{}/api/tags", url));
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
         }
-    }
     let res = req.send().await.ok()?;
     #[derive(serde::Deserialize)]
     struct OllamaModel { name: String }
@@ -469,11 +523,10 @@ async fn fetch_embedding(
 ) -> Result<Vec<f32>, String> {
     let client = reqwest::Client::new();
     let mut req = client.post(format!("{}/api/embeddings", url));
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
         }
-    }
     let payload = serde_json::json!({
         "model": model,
         "prompt": prompt,
@@ -491,17 +544,21 @@ async fn fetch_embedding(
 }
 
 #[tauri::command]
+fn cancel_ollama_stream() {
+    stream_control::request_ollama_stream_cancel();
+}
+
+#[tauri::command]
 async fn get_active_ollama_models(url: String, token: Option<String>) -> Result<serde_json::Value, String> {
+    let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
-    let clean_url = url.trim().trim_end_matches('/');
     let mut req = client.get(format!("{}/api/ps", clean_url));
     
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             let t_val = t.trim();
             req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
         }
-    }
     
     let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
@@ -514,16 +571,15 @@ async fn get_active_ollama_models(url: String, token: Option<String>) -> Result<
 
 #[tauri::command]
 async fn scan_ollama_models(url: String, token: Option<String>) -> Result<Vec<String>, String> {
+    let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
-    let clean_url = url.trim().trim_end_matches('/');
     let mut req = client.get(format!("{}/api/tags", clean_url));
     
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             let t_val = t.trim();
             req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
         }
-    }
     
     let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
@@ -549,16 +605,15 @@ async fn show_ollama_model(
     token: Option<String>,
     name: String,
 ) -> Result<serde_json::Value, String> {
+    let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
-    let clean_url = url.trim().trim_end_matches('/');
     let mut req = client.post(format!("{}/api/show", clean_url));
     
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             let t_val = t.trim();
             req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
         }
-    }
     
     let payload = serde_json::json!({
         "name": name
@@ -576,6 +631,7 @@ async fn show_ollama_model(
 #[tauri::command]
 async fn stream_ollama_chat(
     app: AppHandle,
+    stream_id: String,
     url: String,
     token: Option<String>,
     model: String,
@@ -583,16 +639,20 @@ async fn stream_ollama_chat(
     temperature: Option<f64>,
     num_predict: Option<u32>,
 ) -> Result<(), String> {
+    stream_control::validate_stream_id(&stream_id)?;
+    let clean_url = config::validate_service_url(&url)?;
+    stream_control::reset_ollama_stream(&stream_id);
+    let chunk_event = stream_control::ollama_chunk_event(&stream_id);
+    let done_event = stream_control::ollama_done_event(&stream_id);
+
     let client = reqwest::Client::new();
-    let clean_url = url.trim().trim_end_matches('/');
     let mut req = client.post(format!("{}/api/chat", clean_url));
     
-    if let Some(t) = token {
-        if !t.trim().is_empty() {
+    if let Some(t) = token
+        && !t.trim().is_empty() {
             let t_val = t.trim();
             req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
         }
-    }
     
     let payload = serde_json::json!({
         "model": model,
@@ -615,6 +675,10 @@ async fn stream_ollama_chat(
     
     let mut buffer = String::new();
     while let Some(chunk) = res.chunk().await.map_err(|e| format!("Stream error: {}", e))? {
+        if stream_control::is_ollama_stream_cancelled() {
+            app.emit(&done_event, serde_json::json!({ "cancelled": true })).ok();
+            return Ok(());
+        }
         let text = String::from_utf8_lossy(&chunk);
         buffer.push_str(&text);
         
@@ -629,25 +693,23 @@ async fn stream_ollama_chat(
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) {
                 let message = val.get("message");
                 
-                if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str()) {
-                    if !reasoning.is_empty() {
+                if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str())
+                    && !reasoning.is_empty() {
                         if !in_thinking {
-                            app.emit("ollama-chunk", "<think>").ok();
+                            app.emit(&chunk_event, "<think>").ok();
                             in_thinking = true;
                         }
-                        app.emit("ollama-chunk", reasoning).ok();
+                        app.emit(&chunk_event, reasoning).ok();
                     }
-                }
                 
-                if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
-                    if !content.is_empty() {
+                if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str())
+                    && !content.is_empty() {
                         if in_thinking {
-                            app.emit("ollama-chunk", "</think>").ok();
+                            app.emit(&chunk_event, "</think>").ok();
                             in_thinking = false;
                         }
-                        app.emit("ollama-chunk", content).ok();
+                        app.emit(&chunk_event, content).ok();
                     }
-                }
                 
                 if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
                     prompt_eval_count = Some(pec);
@@ -659,29 +721,27 @@ async fn stream_ollama_chat(
         }
     }
     
-    if !buffer.trim().is_empty() {
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(buffer.trim()) {
+    if !buffer.trim().is_empty()
+        && let Ok(val) = serde_json::from_str::<serde_json::Value>(buffer.trim()) {
             let message = val.get("message");
             
-            if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str()) {
-                if !reasoning.is_empty() {
+            if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str())
+                && !reasoning.is_empty() {
                     if !in_thinking {
-                        app.emit("ollama-chunk", "<think>").ok();
+                        app.emit(&chunk_event, "<think>").ok();
                         in_thinking = true;
                     }
-                    app.emit("ollama-chunk", reasoning).ok();
+                    app.emit(&chunk_event, reasoning).ok();
                 }
-            }
             
-            if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
-                if !content.is_empty() {
+            if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str())
+                && !content.is_empty() {
                     if in_thinking {
-                        app.emit("ollama-chunk", "</think>").ok();
+                        app.emit(&chunk_event, "</think>").ok();
                         in_thinking = false;
                     }
-                    app.emit("ollama-chunk", content).ok();
+                    app.emit(&chunk_event, content).ok();
                 }
-            }
             
             if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
                 prompt_eval_count = Some(pec);
@@ -690,10 +750,9 @@ async fn stream_ollama_chat(
                 eval_count = Some(ec);
             }
         }
-    }
     
     if in_thinking {
-        app.emit("ollama-chunk", "</think>").ok();
+        app.emit(&chunk_event, "</think>").ok();
     }
     
     #[derive(serde::Serialize, Clone)]
@@ -702,7 +761,7 @@ async fn stream_ollama_chat(
         eval_count: Option<u64>,
     }
     
-    app.emit("ollama-done", DonePayload {
+    app.emit(&done_event, DonePayload {
         prompt_eval_count,
         eval_count,
     }).ok();
@@ -712,25 +771,28 @@ async fn stream_ollama_chat(
 #[tauri::command]
 async fn get_chat_sessions(app: AppHandle, sample_id: Option<i64>) -> Result<Vec<db::DbChatSession>, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    let sessions = db::get_chat_sessions(&conn, sample_id).map_err(|e| e.to_string())?;
-    Ok(sessions)
+    db_runtime::with_connection(db_path, move |conn| {
+        db::get_chat_sessions(conn, sample_id).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
 async fn save_chat_session(app: AppHandle, session: db::DbChatSession) -> Result<(), String> {
     let db_path = get_db_path(&app);
-    let mut conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    db::save_chat_session(&mut conn, &session).map_err(|e| e.to_string())?;
-    Ok(())
+    db_runtime::with_connection_mut(db_path, move |conn| {
+        db::save_chat_session(conn, &session).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 #[tauri::command]
 async fn delete_chat_session(app: AppHandle, session_id: String) -> Result<(), String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
-    db::delete_chat_session(&conn, &session_id).map_err(|e| e.to_string())?;
-    Ok(())
+    db_runtime::with_connection(db_path, move |conn| {
+        db::delete_chat_session(conn, &session_id).map_err(|e| e.to_string())
+    })
+    .await
 }
 
 
@@ -742,55 +804,80 @@ async fn fetch_external_api(
     ttl_secs: Option<u64>,
 ) -> Result<serde_json::Value, String> {
     let db_path = get_db_path(&app);
-    let conn = db::init_user_db(&db_path).map_err(|e| e.to_string())?;
+    let url_for_cache = url.clone();
+    let ttl = ttl_secs.unwrap_or(86400 * 7) as i64;
 
-    // Create table if it doesn't exist
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS api_cache (
-            url TEXT PRIMARY KEY,
-            response_json TEXT NOT NULL,
-            fetched_at INTEGER NOT NULL
-        )",
-        [],
-    ).map_err(|e| format!("Failed to initialize api_cache table: {}", e))?;
+    let cache_hit = db_runtime::with_connection(db_path.clone(), move |conn| {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS api_cache (
+                url TEXT PRIMARY KEY,
+                response_json TEXT NOT NULL,
+                fetched_at INTEGER NOT NULL
+            )",
+            [],
+        )
+        .map_err(|e| format!("Failed to initialize api_cache table: {}", e))?;
 
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64;
 
-    let ttl = ttl_secs.unwrap_or(86400 * 7) as i64; // Default to 7 days cache
+        if let Ok((cached_json, fetched_at)) = conn.query_row(
+            "SELECT response_json, fetched_at FROM api_cache WHERE url = ?",
+            rusqlite::params![url_for_cache],
+            |row| {
+                let json: String = row.get(0)?;
+                let fetched: i64 = row.get(1)?;
+                Ok((json, fetched))
+            },
+        )
+            && now - fetched_at < ttl
+                && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&cached_json) {
+                    return Ok(Some(parsed));
+                }
 
-    // Check cache
-    if let Ok((cached_json, fetched_at)) = conn.query_row(
-        "SELECT response_json, fetched_at FROM api_cache WHERE url = ?",
-        rusqlite::params![url],
-        |row| {
-            let json: String = row.get(0)?;
-            let fetched: i64 = row.get(1)?;
-            Ok((json, fetched))
-        },
-    ) {
-        if now - fetched_at < ttl {
-            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&cached_json) {
-                return Ok(parsed);
-            }
-        }
+        Ok(None)
+    })
+    .await?;
+
+    if let Some(parsed) = cache_hit {
+        return Ok(parsed);
     }
 
-    // Cache miss, execute query
-    let client = reqwest::Client::new();
+    // Cache miss — validate URL before network egress
+    config::validate_external_url(&url)?;
+
+    let effective_api_key = if url.contains("eutils.ncbi.nlm.nih.gov") {
+        if api_key.as_ref().is_some_and(|k| !k.trim().is_empty()) {
+            api_key
+        } else {
+            db_runtime::with_connection(db_path.clone(), |conn| {
+                Ok(config::load_qdrant_config(conn)
+                    .ok()
+                    .and_then(|c| c.ncbi_api_key))
+            })
+            .await
+            .ok()
+            .flatten()
+        }
+    } else {
+        api_key
+    };
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .redirect(config::redirect_policy())
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
     let mut target_url = url.clone();
-    
-    // If it's an NCBI URL and we have an API key, append it
-    if url.contains("eutils.ncbi.nlm.nih.gov") {
-        if let Some(ref key) = api_key {
-            if !key.trim().is_empty() {
+
+    if url.contains("eutils.ncbi.nlm.nih.gov")
+        && let Some(ref key) = effective_api_key
+            && !key.trim().is_empty() {
                 let separator = if url.contains('?') { "&" } else { "?" };
                 target_url = format!("{}{}{}api_key={}", url, separator, "", key.trim());
             }
-        }
-    }
 
     let res = client.get(&target_url)
         .header("User-Agent", "GenomicsCaddy/0.1")
@@ -806,12 +893,21 @@ async fn fetch_external_api(
         .await
         .map_err(|e| format!("Failed to parse response JSON: {}", e))?;
 
-    // Write back to cache
     let json_str = serde_json::to_string(&json_val).unwrap_or_default();
-    let _ = conn.execute(
-        "INSERT OR REPLACE INTO api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
-        rusqlite::params![url, json_str, now],
-    );
+    let url_write = url.clone();
+    let _ = db_runtime::with_connection(db_path, move |conn| {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64;
+        conn.execute(
+            "INSERT OR REPLACE INTO api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
+            rusqlite::params![url_write, json_str, now],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    })
+    .await;
 
     Ok(json_val)
 }
@@ -947,6 +1043,25 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
             ]
         },
         {
+            "name": "get_app_bootstrap",
+            "description": "Returns startup database stats after migrations: sample counts, genotype totals, GWAS/evidence counts, and paths.",
+            "params": []
+        },
+        {
+            "name": "get_research_job_status",
+            "description": "Returns the persisted vector research enrichment job for a sample (idle/running/paused/complete/error).",
+            "params": [
+                { "name": "sample_id", "type": "integer", "required": true, "description": "The target sample ID" }
+            ]
+        },
+        {
+            "name": "get_discovered_findings_summary",
+            "description": "Lists persisted Research Agent discoveries for a sample (rsID, gene, genotype, interpretation status).",
+            "params": [
+                { "name": "sample_id", "type": "integer", "required": true, "description": "The target sample ID" }
+            ]
+        },
+        {
             "name": "get_active_ollama_models",
             "description": "Queries a local or remote Ollama server to list currently loaded models and VRAM usage.",
             "params": [
@@ -959,11 +1074,14 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    config::init_env();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             select_file,
             save_report_json,
+            get_app_bootstrap,
             get_app_paths,
             import_genome,
             get_samples,
@@ -975,6 +1093,7 @@ pub fn run() {
             download_chain_file,
             scan_ollama_models,
             stream_ollama_chat,
+            cancel_ollama_stream,
             show_ollama_model,
             get_active_ollama_models,
             get_current_exe,
@@ -986,8 +1105,75 @@ pub fn run() {
             save_chat_session,
             delete_chat_session,
             fetch_external_api,
-            get_chromosome_counts
+            get_chromosome_counts,
+            research::commands::get_research_scope,
+            research::commands::save_research_scope,
+            research::commands::preview_research_scope,
+            research::commands::preview_pipeline_tuning,
+            research::commands::get_reference_status,
+            research::commands::sync_gwas_reference,
+            research::commands::test_qdrant_connection,
+            research::commands::get_qdrant_config,
+            research::commands::save_qdrant_config,
+            research::commands::create_qdrant_collection,
+            research::commands::purge_qdrant_collection,
+            research::commands::get_research_job_status,
+            research::commands::start_research_job,
+            research::commands::pause_research_job,
+            research::commands::cancel_research_job,
+            research::commands::resume_research_job,
+            research::commands::get_research_debug_log,
+            research::commands::set_research_debug_log,
+            research::commands::search_qdrant_evidence,
+            research::commands::search_qdrant_trait_discovery,
+            research::commands::get_vector_promoted_findings,
+            research::commands::get_vector_research_diagnostics,
+            research::commands::get_ollama_token,
+            research::commands::save_ollama_token,
+            research::commands::purge_database_cache,
+            research::commands::select_save_path,
+            research::evidence::commands::search_associations_hybrid,
+            research::evidence::commands::get_similar_associations,
+            research::evidence::commands::explain_vector_match_cmd,
+            research::evidence::commands::get_quality_dashboard,
+            research::evidence::commands::build_trait_clusters_cmd,
+            research::evidence::commands::export_evidence_packet_cmd,
+            research::evidence::commands::list_candidate_markers,
+            research::evidence::commands::update_candidate_marker_status,
+            research::evidence::commands::ensure_qdrant_payload_indexes,
+            research::evidence::commands::get_variant_evidence_card,
+            research::evidence::commands::backfill_evidence_payloads_cmd,
+            research::evidence::commands::reembed_stale_vectors_cmd,
+            research::evidence::commands::get_actionability_matrix,
+            research::evidence::commands::get_chromosome_trait_overlay,
+            research::evidence::commands::get_pathway_flow_rows,
+            research::evidence::commands::build_vector_atlas_cmd,
+            research::evidence::commands::get_vector_atlas_cached,
+            research::evidence::commands::enable_named_vectors_collection,
+            research::gnomad::commands::get_gnomad_context_cmd,
+            research::gnomad::commands::batch_enrich_gnomad_context_cmd,
+            research::gnomad::commands::get_gnomad_config_cmd,
+            research::gnomad::commands::save_gnomad_config_cmd,
+            research::gnomad::commands::test_gnomad_source_urls_cmd,
+            research::gnomad::commands::get_gnomad_readiness_cmd,
+            research::gnomad::commands::download_gnomad_indexes_cmd,
+            research::gnomad::commands::select_gnomad_local_dir_cmd,
+            research::gnomad::commands::clear_gnomad_cache_cmd,
+            agent_commands::get_variant_evidence,
+            agent_commands::get_discovered_findings_summary,
+            agent_commands::get_db_discovered_findings,
+            agent_commands::run_safety_audit,
+            agent_commands::export_discovered_findings,
+            agent_commands::chat_ollama,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            if let tauri::RunEvent::Exit = event {
+                let db_path = paths::db_path(&paths::resolve_data_dir());
+                if let Err(e) = db::seal(&db_path) {
+                    eprintln!("Failed to seal genome database at rest: {e}");
+                }
+            }
+        });
 }

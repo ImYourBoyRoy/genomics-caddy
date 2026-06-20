@@ -3,6 +3,8 @@
   import ConnectionModelSection from "./settings/ConnectionModelSection.svelte";
   import InferenceSettingsSection from "./settings/InferenceSettingsSection.svelte";
   import GenomicContextSection from "./settings/GenomicContextSection.svelte";
+  import VectorResearchSettingsSection from "./settings/VectorResearchSettingsSection.svelte";
+  import type { VectorResearchDiagnostics } from "../../types/research";
   import SystemPromptSection from "./settings/SystemPromptSection.svelte";
   import BiohackingProfileSection from "./BiohackingProfileSection.svelte";
   import type { AiContextMode, ConsultationMode } from "../../utils/aiPrompt";
@@ -49,6 +51,10 @@
     consultationMode: ConsultationMode;
     reviewModel: string;
     twoModelReview: boolean;
+    useVectorResearch: boolean;
+    vectorDiagnostics: VectorResearchDiagnostics | null;
+    vectorDiagnosticsLoading?: boolean;
+    refreshVectorDiagnostics: () => void;
   }
 
   let {
@@ -80,7 +86,11 @@
     contextMode = $bindable(),
     consultationMode = $bindable(),
     reviewModel = $bindable(),
-    twoModelReview = $bindable()
+    twoModelReview = $bindable(),
+    useVectorResearch = $bindable(true),
+    vectorDiagnostics = null,
+    vectorDiagnosticsLoading = false,
+    refreshVectorDiagnostics,
   }: Props = $props();
 </script>
 
@@ -126,6 +136,13 @@
         bind:selectedPacks
         bind:onlyActiveFindings
         {contextStats}
+      />
+
+      <VectorResearchSettingsSection
+        bind:useVectorResearch
+        {vectorDiagnostics}
+        diagnosticsLoading={vectorDiagnosticsLoading}
+        refreshDiagnostics={refreshVectorDiagnostics}
       />
 
       <!-- SECTION 4: Biohacking & Health Profile -->

@@ -9,28 +9,17 @@
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getSeverityInfo } from '../../utils/evidence';
   import { LAYPERSON_MAP } from '../../utils/layperson';
-
-  /*
-  Module Docstring:
-  Purpose: Card component for a single genetic variant, styled by severity_class.
-  Responsibilities:
-  - Display allele counts and genotyping status with plain-language labels.
-  - Apply severity-class-driven CSS (not raw effect_count).
-  - Collapse cards where the variant was not detected or no data exists — keeping
-    user attention on actual findings.
-  - Show direction badge, warnings, and sources ONLY when the variant was detected.
-  Key Inputs: marker (EvaluatedMarker).
-  Key Outputs: Visual representation of a single gene marker.
-  Operational Notes: severity_class comes from the Rust backend, not local computation.
-    Design targets: average users, clinical professionals, and AI/MCP consumers.
-  */
+  import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
     marker: EvaluatedMarker;
     viewMode: "simple" | "clinical" | "dual";
+    onExploreResearch?: (rsid: string) => void;
+    highlightRsid?: string;
+    onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
 
-  let { marker, viewMode }: Props = $props();
+  let { marker, viewMode, onExploreResearch, highlightRsid = "", onNavigateToVariant }: Props = $props();
 
   let effectCount = $derived(getEffectCount(marker));
   let effectAllele = $derived(getEffectAllele(marker));
@@ -41,11 +30,16 @@
   let isActiveFindings = $derived(
     marker.severity_class !== "benign" && marker.severity_class !== "no_data"
   );
+  let isHighlighted = $derived(
+    highlightRsid !== "" && marker.rsid.toLowerCase() === highlightRsid.toLowerCase()
+  );
 </script>
 
 <div
+  id="variant-{marker.rsid.toLowerCase()}"
   class="marker-card {severity.cssClass}"
   class:marker-card-collapsed={!isActiveFindings}
+  class:marker-card-highlight={isHighlighted}
 >
   <!-- Header row: gene name + evidence tier -->
   <div class="marker-top">
@@ -54,7 +48,23 @@
       {#if marker.variant_name}
         <span class="variant-sub">({marker.variant_name})</span>
       {/if}
-      <span class="rsid-sub">{marker.rsid}</span>
+      <span class="rsid-sub">
+        {marker.rsid}
+        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+          <span class="nav-links no-print">
+            <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "map")} title="Genome map">🗺️</button>
+            <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")} title="Raw browser">🔍</button>
+            <button
+              type="button"
+              class="research-explore-link"
+              onclick={() => onExploreResearch?.(marker.rsid)}
+              title="Search Enriched Vector Research"
+            >
+              🔬
+            </button>
+          </span>
+        {/if}
+      </span>
     </span>
     <EvidenceBadge tier={marker.evidence_tier} />
   </div>
@@ -142,3 +152,34 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .research-explore-link {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0 4px;
+    margin-left: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    vertical-align: middle;
+  }
+
+  .research-explore-link:hover {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  .nav-links {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 4px;
+  }
+
+  :global(.marker-card-highlight) {
+    outline: 2px solid rgba(56, 189, 248, 0.75);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+  }
+</style>

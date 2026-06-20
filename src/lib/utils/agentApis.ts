@@ -1,6 +1,7 @@
 // ./src/lib/utils/agentApis.ts
 import { queryRsids, searchEvidence, getEvidenceForMarker, fetchExternalApi } from "../api/tauri";
 import type { DbSnpRecord, GeneratedReport, EvaluatedMarker } from "../types/genomics";
+import { asApiJson } from "../types/api";
 
 export interface AgentStep {
   id: string;
@@ -145,31 +146,38 @@ export async function fetchNcbiDbsnpAndClinvar(rsid: string, apiKey?: string): P
   try {
     // 1. Fetch dbSNP summary info
     const dbSnpUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=snp&id=${snpId}&retmode=json`;
-    const snpRes = await fetchExternalApi(dbSnpUrl, apiKey).catch(() => null);
-    if (snpRes?.result?.[snpId]) {
-      const data = snpRes.result[snpId];
-      defaultData.chromosome = data.chr || "Unknown";
-      defaultData.position = data.chrpos || "Unknown";
-      defaultData.alleles = data.doclist?.flat_alleles || data.alleles || "Unknown";
+    const snpRes = asApiJson(await fetchExternalApi(dbSnpUrl, apiKey).catch(() => null));
+    if (snpRes?.result && typeof snpRes.result === "object" && snpRes.result !== null) {
+      const result = snpRes.result as Record<string, Record<string, unknown>>;
+      const data = result[snpId];
+      if (data) {
+      defaultData.chromosome = String(data.chr ?? "Unknown");
+      defaultData.position = String(data.chrpos ?? "Unknown");
+      const doclist = data.doclist as { flat_alleles?: string } | undefined;
+      defaultData.alleles = String(doclist?.flat_alleles ?? data.alleles ?? "Unknown");
+      }
     }
 
     // 2. Fetch ClinVar search IDs
     const clinVarSearch = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&term=${rsid}&retmode=json`;
-    const searchRes = await fetchExternalApi(clinVarSearch, apiKey).catch(() => null);
-    const ids = searchRes?.esearchresult?.idlist;
+    const searchRes = asApiJson(await fetchExternalApi(clinVarSearch, apiKey).catch(() => null));
+    const esearch = searchRes?.esearchresult as { idlist?: string[] } | undefined;
+    const ids = esearch?.idlist;
     
     if (ids && ids.length > 0) {
       const clinVarSummaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=clinvar&id=${ids.slice(0, 3).join(",")}&retmode=json`;
-      const summaryRes = await fetchExternalApi(clinVarSummaryUrl, apiKey).catch(() => null);
-      if (summaryRes?.result) {
+      const summaryRes = asApiJson(await fetchExternalApi(clinVarSummaryUrl, apiKey).catch(() => null));
+      const summaryResult = summaryRes?.result as Record<string, Record<string, unknown>> | undefined;
+      if (summaryResult) {
         const sigs = new Set<string>();
         const traits = new Set<string>();
         for (const id of ids) {
-          const summary = summaryRes.result[id];
+          const summary = summaryResult[id];
           if (summary) {
-            const sig = summary.clinical_significance?.description;
+            const sigObj = summary.clinical_significance as { description?: string } | undefined;
+            const sig = sigObj?.description;
             if (sig) sigs.add(sig);
-            const traitList = summary.trait_set?.map((t: any) => t.trait_name) || [];
+            const traitList = (summary.trait_set as Array<{ trait_name?: string }> | undefined)?.map((t) => t.trait_name) || [];
             for (const t of traitList) if (t) traits.add(t);
           }
         }
@@ -187,27 +195,31 @@ export async function fetchNcbiDbsnpAndClinvar(rsid: string, apiKey?: string): P
 }
 
 /**
- * Fetch relevant PubMed articles via Tauri Rust reqwest proxy.
+ * Search PubMed articles by custom query term via Tauri Rust reqwest proxy.
  */
-export async function fetchPubMedArticles(rsid: string, apiKey?: string): Promise<PubMedArticle[]> {
+export async function searchPubMedQuery(term: string, apiKey?: string, limit: number = 3): Promise<PubMedArticle[]> {
   try {
-    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${rsid}+AND+human&retmode=json&retmax=3`;
-    const searchRes = await fetchExternalApi(searchUrl, apiKey).catch(() => null);
-    const ids = searchRes?.esearchresult?.idlist;
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=${limit}`;
+    const searchRes = asApiJson(await fetchExternalApi(searchUrl, apiKey).catch(() => null));
+    const pubmedSearch = searchRes?.esearchresult as { idlist?: string[] } | undefined;
+    const ids = pubmedSearch?.idlist;
 
     if (ids && ids.length > 0) {
       const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
-      const summaryRes = await fetchExternalApi(summaryUrl, apiKey).catch(() => null);
-      if (summaryRes?.result) {
+      const summaryRes = asApiJson(await fetchExternalApi(summaryUrl, apiKey).catch(() => null));
+      const summaryResult = summaryRes?.result as Record<string, Record<string, unknown>> | undefined;
+      if (summaryResult) {
         return ids.map((id: string) => {
-          const item = summaryRes.result[id];
-          const author = item?.sortauthors || item?.authors?.[0]?.name || "Unknown Author";
-          const year = item?.pubdate ? item.pubdate.substring(0, 4) : "Unknown Year";
+          const item = summaryResult[id];
+          const authors = item?.authors as Array<{ name?: string }> | undefined;
+          const author = String(item?.sortauthors ?? authors?.[0]?.name ?? "Unknown Author");
+          const pubdate = item?.pubdate;
+          const year = typeof pubdate === "string" ? pubdate.substring(0, 4) : "Unknown Year";
           return {
             id,
-            title: item?.title || "Untitled Article",
+            title: String(item?.title ?? "Untitled Article"),
             author,
-            journal: item?.source || "PubMed Journal",
+            journal: String(item?.source ?? "PubMed Journal"),
             year,
             url: `https://pubmed.ncbi.nlm.nih.gov/${id}/`
           };
@@ -215,9 +227,16 @@ export async function fetchPubMedArticles(rsid: string, apiKey?: string): Promis
       }
     }
   } catch (e) {
-    console.error("PubMed fetch failed", e);
+    console.error("PubMed search failed", e);
   }
   return [];
+}
+
+/**
+ * Fetch relevant PubMed articles via Tauri Rust reqwest proxy.
+ */
+export async function fetchPubMedArticles(rsid: string, apiKey?: string): Promise<PubMedArticle[]> {
+  return searchPubMedQuery(`${rsid} AND human`, apiKey, 3);
 }
 
 /**
@@ -227,14 +246,20 @@ export async function fetchClinicalTrials(rsid: string, geneSymbol?: string, api
   try {
     const term = rsid + (geneSymbol ? ` OR ${geneSymbol}` : "");
     const url = `https://clinicaltrials.gov/api/v2/studies?query.term=${encodeURIComponent(term)}&pageSize=3`;
-    const res = await fetchExternalApi(url, apiKey).catch(() => null);
-    if (res?.studies) {
-      return res.studies.map((study: any) => {
-        const NCTId = study.protocolSection?.identificationModule?.nctId || "Unknown NCT";
-        const title = study.protocolSection?.identificationModule?.officialTitle || study.protocolSection?.identificationModule?.briefTitle || "No Title";
-        const sponsor = study.protocolSection?.sponsorCollaboratorsModule?.leadSponsor?.name || "Unknown Sponsor";
-        const status = study.protocolSection?.statusModule?.overallStatus || "Unknown Status";
-        const phases = study.protocolSection?.designModule?.phases || [];
+    const res = asApiJson(await fetchExternalApi(url, apiKey).catch(() => null));
+    const studies = res?.studies as Array<Record<string, unknown>> | undefined;
+    if (studies) {
+      return studies.map((study) => {
+        const protocol = study.protocolSection as Record<string, Record<string, unknown>> | undefined;
+        const ident = protocol?.identificationModule;
+        const NCTId = String(ident?.nctId ?? "Unknown NCT");
+        const title = String(ident?.officialTitle ?? ident?.briefTitle ?? "No Title");
+        const sponsorMod = protocol?.sponsorCollaboratorsModule as { leadSponsor?: { name?: string } } | undefined;
+        const sponsor = String(sponsorMod?.leadSponsor?.name ?? "Unknown Sponsor");
+        const statusMod = protocol?.statusModule as { overallStatus?: string } | undefined;
+        const status = String(statusMod?.overallStatus ?? "Unknown Status");
+        const designMod = protocol?.designModule as { phases?: string[] } | undefined;
+        const phases = designMod?.phases ?? [];
         const phase = phases.join(", ") || "N/A";
         return { id: NCTId, title, sponsor, status, phase };
       });
@@ -253,13 +278,17 @@ export async function fetchChemblDrugs(geneSymbol: string): Promise<ChemblDrug[]
   try {
     // ChEMBL supports wildcard search on compounds
     const url = `https://www.ebi.ac.uk/chembl/api/data/molecule.json?q=${encodeURIComponent(geneSymbol)}&limit=3&format=json`;
-    const res = await fetchExternalApi(url).catch(() => null);
-    if (res?.molecules) {
-      return res.molecules.map((m: any) => ({
-        name: m.pref_name || m.molecule_synonyms?.[0]?.synonym || "Compound ID: " + m.molecule_chembl_id,
-        type: m.molecule_type || "Unknown Type",
-        maxPhase: m.max_phase ? `Phase ${m.max_phase}` : "N/A"
-      }));
+    const res = asApiJson(await fetchExternalApi(url).catch(() => null));
+    const molecules = res?.molecules as Array<Record<string, unknown>> | undefined;
+    if (molecules) {
+      return molecules.map((m) => {
+        const synonyms = m.molecule_synonyms as Array<{ synonym?: string }> | undefined;
+        return {
+          name: String(m.pref_name ?? synonyms?.[0]?.synonym ?? `Compound ID: ${m.molecule_chembl_id}`),
+          type: String(m.molecule_type ?? "Unknown Type"),
+          maxPhase: m.max_phase ? `Phase ${m.max_phase}` : "N/A",
+        };
+      });
     }
   } catch (e) {
     console.error("ChEMBL fetch failed", e);

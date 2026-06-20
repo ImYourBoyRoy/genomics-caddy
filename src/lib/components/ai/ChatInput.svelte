@@ -1,12 +1,14 @@
 <!-- ./src/lib/components/ai/ChatInput.svelte -->
 <script lang="ts">
+  import type { ChatMessage } from "../../types/agent";
+
   interface Props {
     promptText: string;
     attachedImages: { name: string; base64: string; previewUrl: string }[];
     isChatting: boolean;
     isVisionCapable: boolean;
     imageInput: HTMLInputElement | null;
-    messages: any[];
+    messages: ChatMessage[];
     sendPrompt: (customPrompt?: string) => void;
     stopGeneration: () => void;
     clearHistory: () => void;

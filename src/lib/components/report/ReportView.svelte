@@ -2,8 +2,13 @@
 <script lang="ts">
   import type { GeneratedReport, GenomeSample } from '../../types/genomics';
   import { saveReportJson } from '../../api/tauri';
+  import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
   import SectionCard from './SectionCard.svelte';
+  import DiscoveredFindingsBanner from './DiscoveredFindingsBanner.svelte';
+  import VectorPromotedSection from './VectorPromotedSection.svelte';
+  import PanelLoadingState from '../common/loading/PanelLoadingState.svelte';
+  import type { VariantNavTarget } from '../../constants/traitCategories';
 
   /*
   Module Docstring:
@@ -24,6 +29,9 @@
     foundMarkersCount: number;
     totalMarkersChecked: number;
     reportError?: string;
+    highlightRsid?: string;
+    onExploreResearch?: (rsid: string) => void;
+    onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
 
   let {
@@ -32,7 +40,10 @@
     selectedSample,
     foundMarkersCount,
     totalMarkersChecked,
-    reportError
+    reportError,
+    highlightRsid = "",
+    onExploreResearch,
+    onNavigateToVariant,
   }: Props = $props();
 
   let showBenign = $state(false);
@@ -98,7 +109,7 @@
       const defaultFilename = `${selectedSample.name.toLowerCase().replace(/\s+/g, '_')}_report.json`;
       await saveReportJson(content, defaultFilename);
     } catch (e: any) {
-      alert("Failed to save JSON report: " + e.toString());
+      dialogStore.alert("Failed to save JSON report: " + e.toString());
     }
   }
 </script>
@@ -114,9 +125,16 @@
 {/if}
 
 {#if isGeneratingReport}
-  <div class="loader">Analyzing genetic markers...</div>
+  <PanelLoadingState
+    message="Analyzing genetic markers across marker packs…"
+    submessage="Evaluating curated SNPs against your local genotype database."
+    accent="#fbbf24"
+  />
 {:else if generatedReport}
   <!-- Disclaimer Banner -->
+  <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
+  <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
+
   <div class="disclaimer-banner">
     ⚠️ <strong>Important:</strong> This report shows which genetic variants were found in your raw DNA file. It is <strong>not</strong> a medical diagnosis. Variants labeled "risk" show statistical associations — they do not guarantee you will develop a condition. Always consult a healthcare professional for medical decisions.
   </div>
@@ -256,7 +274,7 @@
 
   <div class="sections-container">
     {#each filteredSections as section}
-      <SectionCard {section} {viewMode} />
+      <SectionCard {section} {viewMode} {onExploreResearch} {highlightRsid} onNavigateToVariant={onNavigateToVariant} />
     {/each}
   </div>
 {/if}

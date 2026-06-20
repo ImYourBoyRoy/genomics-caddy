@@ -3,8 +3,11 @@
   import WelcomeChat from './WelcomeChat.svelte';
   import ChatMessages from './ChatMessages.svelte';
   import ChatInput from './ChatInput.svelte';
+  import VectorResearchCitations from './VectorResearchCitations.svelte';
   import { normalizeImage } from '../../utils/image';
   import { dialogStore } from '../../utils/dialogState.svelte';
+  import type { QdrantHit } from '../../types/research';
+  import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
     messages: { role: "user" | "assistant" | "system"; content: string; fullContent?: string; images?: string[] }[];
@@ -19,6 +22,12 @@
     selectedSample: any;
     showHistorySidebar: boolean;
     showSettingsDrawer: boolean;
+    vectorHits?: QdrantHit[];
+    vectorQuery?: string;
+    vectorError?: string;
+    useVectorResearch?: boolean;
+    onOpenEvidence?: (query: string) => void;
+    onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     
     // Actions/Handlers
     sendPrompt: (customPrompt?: string) => void;
@@ -54,7 +63,13 @@
     
     copiedMsgId = $bindable(null),
     copyToClipboard,
-    selectedModel
+    selectedModel,
+    vectorHits = [],
+    vectorQuery = "",
+    vectorError = "",
+    useVectorResearch = true,
+    onOpenEvidence,
+    onNavigateToVariant,
   }: Props = $props();
 
   // Internal local state
@@ -191,6 +206,15 @@
       />
     {/if}
   </div>
+
+  <VectorResearchCitations
+    hits={vectorHits}
+    query={vectorQuery}
+    error={vectorError}
+    enabled={useVectorResearch}
+    onOpenEvidence={onOpenEvidence}
+    onNavigateToVariant={onNavigateToVariant}
+  />
 
   <!-- Curated Helpers -->
   {#if !isChatting}
@@ -345,7 +369,4 @@
     color: var(--text-primary);
   }
 
-  .badge.success {
-    /* inherits global badge styles */
-  }
 </style>

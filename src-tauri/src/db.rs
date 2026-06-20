@@ -17,7 +17,9 @@ use std::path::Path;
 use crate::parser::SnpRecord;
 use crate::liftover::LiftoverEngine;
 
-#[derive(Debug, serde::Serialize)]
+const DB_BOOTSTRAP_KEY: &str = "db_bootstrapped_v1";
+
+#[derive(Debug, serde::Serialize, Clone)]
 pub struct SampleInfo {
     pub id: i64,
     pub name: String,
@@ -36,12 +38,91 @@ pub struct DbSnpRecord {
     pub allele2: String,
 }
 
-/// Initializes the user genome database schema.
-pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
-    let conn = Connection::open(path.as_ref())?;
-    conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+/// Opens an encrypted SQLite connection (no schema migration).
+pub fn connect<P: AsRef<Path>>(path: P) -> Result<Connection> {
+    crate::db_crypto::open_encrypted(path.as_ref())
+}
 
-    // Create samples table
+/// Seal the database file (encrypt at rest). Call on graceful shutdown.
+pub fn seal<P: AsRef<Path>>(path: P) -> Result<(), String> {
+    let path = path.as_ref();
+    if path.is_file() {
+        // Checkpoint WAL into main file before sealing.
+        if let Ok(conn) = Connection::open(path) {
+            let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
+        }
+    }
+    crate::db_crypto::seal_encrypted(path)
+}
+
+/// Opens the user genome database. Runs full schema migrations every time (cheap),
+/// but heavy seed/GWAS bootstrap only once per database file.
+pub fn open_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
+    let conn = connect(path.as_ref())?;
+    ensure_schema(&conn)?;
+
+    if let Err(e) = crate::config::sync_qdrant_sqlite_from_env(&conn) {
+        eprintln!("Could not sync Qdrant defaults from environment: {}", e);
+    }
+
+    let app_data_dir = path.as_ref().parent();
+    if !is_db_bootstrapped(&conn)? {
+        run_heavy_bootstrap(&conn, app_data_dir).map_err(rusqlite::Error::InvalidParameterName)?;
+        mark_db_bootstrapped(&conn)?;
+    }
+
+    Ok(conn)
+}
+
+/// Backward-compatible alias for `open_user_db`.
+pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
+    open_user_db(path)
+}
+
+fn ensure_app_metadata(conn: &Connection) -> Result<()> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS app_metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )",
+        [],
+    )?;
+    Ok(())
+}
+
+fn is_db_bootstrapped(conn: &Connection) -> Result<bool> {
+    ensure_app_metadata(conn)?;
+    let value: Result<String, _> = conn.query_row(
+        "SELECT value FROM app_metadata WHERE key = ?",
+        params![DB_BOOTSTRAP_KEY],
+        |row| row.get(0),
+    );
+    match value {
+        Ok(v) => Ok(v == "1"),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+fn mark_db_bootstrapped(conn: &Connection) -> Result<()> {
+    ensure_app_metadata(conn)?;
+    conn.execute(
+        "INSERT OR REPLACE INTO app_metadata (key, value) VALUES (?, '1')",
+        params![DB_BOOTSTRAP_KEY],
+    )?;
+    Ok(())
+}
+
+fn run_heavy_bootstrap(conn: &Connection, app_data_dir: Option<&Path>) -> Result<(), String> {
+    seed_evidence_library(conn, app_data_dir)?;
+    crate::research::references::seed_gwas_reference_fallback(conn, app_data_dir)
+        .map_err(|e| e.to_string())?;
+    crate::research::references::normalize_gwas_reference_rsids_on_startup(conn)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn ensure_schema(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS samples (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -124,14 +205,112 @@ pub fn init_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
     )?;
     conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)", [])?;
 
-    // Seed evidence library if needed
-    let app_data_dir = path.as_ref().parent();
-    let _ = seed_evidence_library(&conn, app_data_dir);
+    // Qdrant / research settings (secrets live in OS keyring — columns kept for legacy migration)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS qdrant_config (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            url TEXT NOT NULL DEFAULT 'http://localhost:6333',
+            api_key TEXT,
+            collection TEXT NOT NULL DEFAULT 'genomics_evidence',
+            embedding_model TEXT NOT NULL DEFAULT 'mxbai-embed-large',
+            gwas_strict INTEGER NOT NULL DEFAULT 1,
+            ncbi_api_key TEXT,
+            auto_start INTEGER NOT NULL DEFAULT 0
+        )",
+        [],
+    )?;
+    let default_url = std::env::var("QDRANT_URL").unwrap_or_else(|_| "http://localhost:6333".to_string());
+    let default_collection = std::env::var("QDRANT_COLLECTION").unwrap_or_else(|_| "genomics_evidence".to_string());
+    let default_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".to_string());
+    conn.execute(
+        "INSERT OR IGNORE INTO qdrant_config (id, url, collection, embedding_model) VALUES (1, ?, ?, ?)",
+        rusqlite::params![default_url, default_collection, default_model],
+    )?;
 
-    Ok(conn)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS research_jobs (
+            job_id TEXT PRIMARY KEY,
+            sample_id INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            total_markers INTEGER NOT NULL DEFAULT 0,
+            enriched_count INTEGER NOT NULL DEFAULT 0,
+            priority_complete INTEGER NOT NULL DEFAULT 0,
+            current_rsid TEXT,
+            current_source TEXT,
+            started_at INTEGER NOT NULL,
+            last_updated INTEGER NOT NULL,
+            error_message TEXT,
+            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_research_jobs_sample ON research_jobs(sample_id, started_at DESC)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS api_cache (
+            url TEXT PRIMARY KEY,
+            response_json TEXT NOT NULL,
+            fetched_at INTEGER NOT NULL
+        )",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS clinvar_reference (
+            rsid TEXT PRIMARY KEY,
+            gene TEXT,
+            clinical_significance TEXT NOT NULL DEFAULT '',
+            conditions TEXT NOT NULL DEFAULT '',
+            relevant_allele TEXT NOT NULL DEFAULT ''
+        )",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS discovered_findings (
+            sample_id INTEGER NOT NULL,
+            rsid TEXT NOT NULL,
+            gene TEXT,
+            user_genotype TEXT,
+            allele_match_status TEXT NOT NULL,
+            orientation_status TEXT NOT NULL,
+            clinvar_clinical_significance TEXT,
+            clinvar_condition TEXT,
+            notes TEXT,
+            interpretation_status TEXT NOT NULL,
+            PRIMARY KEY (sample_id, rsid),
+            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS gwas_reference (
+            rsid TEXT PRIMARY KEY,
+            association_count INTEGER NOT NULL DEFAULT 1,
+            top_trait TEXT NOT NULL DEFAULT ''
+        )",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gwas_reference_rsid ON gwas_reference(rsid)",
+        [],
+    )?;
+    let _ = migrate_gwas_reference_columns(conn);
+
+    let _ = migrate_qdrant_scope_columns(conn);
+    let _ = migrate_research_job_scope_column(conn);
+    let _ = migrate_vector_promoted_findings(conn);
+    let _ = crate::config::migrate_plaintext_secrets(conn);
+    let _ = crate::research::evidence::migrate_evidence_schema(conn);
+    let _ = crate::research::gnomad::migrate_gnomad_schema(conn);
+
+    Ok(())
 }
 
-/// Imports raw parsed genomic records into the user database, performing liftover in the process.
 pub fn import_raw_genome<F: Fn(u32, &str)>(
     conn: &mut Connection,
     sample_name: &str,
@@ -272,18 +451,30 @@ pub fn get_samples(conn: &Connection) -> Result<Vec<SampleInfo>> {
     Ok(list)
 }
 
-/// Queries specific variants by rsID.
+/// Queries specific variants by rsID (batched IN queries).
 pub fn query_by_rsids(conn: &Connection, sample_id: i64, rsids: &[String]) -> Result<Vec<DbSnpRecord>> {
-    let mut stmt = conn.prepare(
-        "SELECT sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2 
-         FROM genotypes WHERE sample_id = ? AND rsid = ?",
-    )?;
+    if rsids.is_empty() {
+        return Ok(Vec::new());
+    }
 
+    const CHUNK: usize = 100;
     let mut results = Vec::new();
-    for rsid in rsids {
-        let mut rows = stmt.query(params![sample_id, rsid])?;
-        while let Some(row) = rows.next()? {
-            results.push(DbSnpRecord {
+
+    for chunk in rsids.chunks(CHUNK) {
+        let placeholders: Vec<&str> = chunk.iter().map(|_| "?").collect();
+        let sql = format!(
+            "SELECT sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2
+             FROM genotypes WHERE sample_id = ? AND rsid IN ({})",
+            placeholders.join(", ")
+        );
+        let mut stmt = conn.prepare(&sql)?;
+        let mut param_refs: Vec<&dyn rusqlite::ToSql> = Vec::with_capacity(1 + chunk.len());
+        param_refs.push(&sample_id);
+        for rsid in chunk {
+            param_refs.push(rsid);
+        }
+        let rows = stmt.query_map(param_refs.as_slice(), |row| {
+            Ok(DbSnpRecord {
                 sample_id: row.get(0)?,
                 rsid: row.get(1)?,
                 chromosome: row.get(2)?,
@@ -291,11 +482,17 @@ pub fn query_by_rsids(conn: &Connection, sample_id: i64, rsids: &[String]) -> Re
                 position_grch38: row.get::<_, Option<i64>>(4)?.map(|p| p as u64),
                 allele1: row.get(5)?,
                 allele2: row.get(6)?,
-            });
+            })
+        })?;
+        for row in rows {
+            results.push(row?);
         }
     }
     Ok(results)
 }
+
+const MAX_REGION_WIDTH: u64 = 10_000_000;
+const MAX_REGION_RESULTS: usize = 10_000;
 
 /// Queries variants in a chromosome region (GRCh38 coordinates).
 pub fn query_region(
@@ -305,24 +502,40 @@ pub fn query_region(
     start: u64,
     end: u64,
 ) -> Result<Vec<DbSnpRecord>> {
+    if end < start {
+        return Err(rusqlite::Error::InvalidParameterName(
+            "end must be >= start".into(),
+        ));
+    }
+    if end - start > MAX_REGION_WIDTH {
+        return Err(rusqlite::Error::InvalidParameterName(format!(
+            "Region width exceeds maximum of {} base pairs",
+            MAX_REGION_WIDTH
+        )));
+    }
+
     let mut stmt = conn.prepare(
         "SELECT sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2 
          FROM genotypes 
          WHERE sample_id = ? AND chromosome = ? AND position_grch38 >= ? AND position_grch38 <= ?
-         ORDER BY position_grch38 ASC",
+         ORDER BY position_grch38 ASC
+         LIMIT ?",
     )?;
 
-    let rows = stmt.query_map(params![sample_id, chromosome, start as i64, end as i64], |row| {
-        Ok(DbSnpRecord {
-            sample_id: row.get(0)?,
-            rsid: row.get(1)?,
-            chromosome: row.get(2)?,
-            position_grch37: row.get::<_, i64>(3)? as u64,
-            position_grch38: row.get::<_, Option<i64>>(4)?.map(|p| p as u64),
-            allele1: row.get(5)?,
-            allele2: row.get(6)?,
-        })
-    })?;
+    let rows = stmt.query_map(
+        params![sample_id, chromosome, start as i64, end as i64, MAX_REGION_RESULTS as i64],
+        |row| {
+            Ok(DbSnpRecord {
+                sample_id: row.get(0)?,
+                rsid: row.get(1)?,
+                chromosome: row.get(2)?,
+                position_grch37: row.get::<_, i64>(3)? as u64,
+                position_grch38: row.get::<_, Option<i64>>(4)?.map(|p| p as u64),
+                allele1: row.get(5)?,
+                allele2: row.get(6)?,
+            })
+        },
+    )?;
 
     let mut results = Vec::new();
     for row in rows {
@@ -397,24 +610,24 @@ struct Pack {
 pub(crate) fn get_manifest_str(app_data_dir: Option<&Path>) -> String {
     if let Some(dir) = app_data_dir {
         let manifest_path = dir.join("marker-packs").join("manifest.json");
-        if manifest_path.exists() {
-            if let Ok(s) = std::fs::read_to_string(manifest_path) {
+        if manifest_path.exists()
+            && let Ok(s) = std::fs::read_to_string(manifest_path) {
                 return s;
             }
-        }
     }
     include_str!("../../src/lib/marker-packs/manifest.json").to_string()
 }
 
 pub(crate) fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option<String> {
-    if let Some(dir) = app_data_dir {
-        let pack_path = dir.join("marker-packs").join(format!("{}.json", pack_id));
-        if pack_path.exists() {
-            if let Ok(s) = std::fs::read_to_string(pack_path) {
+    if let Err(e) = crate::config::validate_pack_id(pack_id) {
+        eprintln!("Rejected pack_id: {}", e);
+        return None;
+    }
+    if let Some(dir) = app_data_dir
+        && let Ok(pack_path) = crate::config::resolve_pack_path(dir, pack_id)
+            && let Ok(s) = std::fs::read_to_string(pack_path) {
                 return Some(s);
             }
-        }
-    }
     match pack_id {
         "core" => Some(include_str!("../../src/lib/marker-packs/core.json").to_string()),
         "pgx" => Some(include_str!("../../src/lib/marker-packs/pgx.json").to_string()),
@@ -426,8 +639,69 @@ pub(crate) fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option
         "thyroid_autoimmune" => Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json").to_string()),
         "cardiovascular" => Some(include_str!("../../src/lib/marker-packs/cardiovascular.json").to_string()),
         "cancer_confirmation_only" => Some(include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json").to_string()),
+        "discovery_catalog" => Some(include_str!("../../src/lib/marker-packs/discovery_catalog.json").to_string()),
         _ => None,
     }
+}
+
+fn migrate_qdrant_scope_columns(conn: &Connection) -> Result<(), rusqlite::Error> {
+    for sql in [
+        "ALTER TABLE qdrant_config ADD COLUMN scope_curated INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_agent INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_gwas INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_non_ref INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_non_ref_limit INTEGER NOT NULL DEFAULT 5000",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_gwas_limit INTEGER NOT NULL DEFAULT 10000",
+        "ALTER TABLE qdrant_config ADD COLUMN named_vectors_enabled INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_sweep_fast INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE qdrant_config ADD COLUMN scope_sources_json TEXT",
+    ] {
+        let _ = conn.execute(sql, []);
+    }
+    Ok(())
+}
+
+fn migrate_research_job_scope_column(conn: &Connection) -> Result<(), rusqlite::Error> {
+    let _ = conn.execute("ALTER TABLE research_jobs ADD COLUMN scope_json TEXT", []);
+    Ok(())
+}
+
+fn migrate_gwas_reference_columns(conn: &Connection) -> Result<(), rusqlite::Error> {
+    for sql in [
+        "ALTER TABLE gwas_reference ADD COLUMN primary_gene TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE gwas_reference ADD COLUMN mapped_genes TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE gwas_reference ADD COLUMN reported_genes TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE gwas_reference ADD COLUMN best_pvalue REAL",
+        "ALTER TABLE gwas_reference ADD COLUMN associations_json TEXT NOT NULL DEFAULT '[]'",
+    ] {
+        let _ = conn.execute(sql, []);
+    }
+    Ok(())
+}
+
+fn migrate_vector_promoted_findings(conn: &Connection) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS vector_promoted_findings (
+            sample_id INTEGER NOT NULL,
+            rsid TEXT NOT NULL,
+            gene TEXT,
+            user_genotype TEXT,
+            trait_summary TEXT NOT NULL DEFAULT '',
+            trait_categories TEXT NOT NULL DEFAULT '[]',
+            significance_score REAL NOT NULL DEFAULT 0,
+            gwas_best_pvalue REAL,
+            enrichment_version TEXT NOT NULL DEFAULT '4',
+            promoted_at INTEGER NOT NULL,
+            PRIMARY KEY (sample_id, rsid),
+            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_vector_promoted_sample ON vector_promoted_findings(sample_id)",
+        [],
+    )?;
+    Ok(())
 }
 
 pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> std::result::Result<(), String> {
@@ -443,8 +717,8 @@ pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> 
                 .map_err(|e| format!("Failed to parse pack {}: {}", pack_info.id, e))?;
 
             for m in pack.markers {
-                if let Some(ref sources) = m.sources {
-                    if !sources.is_empty() {
+                if let Some(ref sources) = m.sources
+                    && !sources.is_empty() {
                         for src in sources {
                             let citation = format!(
                                 "{} ({})",
@@ -487,7 +761,6 @@ pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> 
                         }
                         continue;
                     }
-                }
 
                 // Default fallback source when no references are provided in the pack
                 let citation = format!("Genomics Caddy Pack: {}", pack.name);
@@ -559,6 +832,117 @@ pub struct DbChatSession {
     pub consultation_mode: Option<String>,
 }
 
+fn load_chat_messages(conn: &Connection, session_id: &str) -> Result<Vec<ChatMessage>> {
+    let mut msg_stmt = conn.prepare(
+        "SELECT role, content, images, safety_review FROM chat_messages WHERE session_id = ? ORDER BY id ASC"
+    )?;
+    let msg_rows = msg_stmt.query_map(params![session_id], |row| {
+        let role: String = row.get(0)?;
+        let content: String = row.get(1)?;
+        let images_str: Option<String> = row.get(2)?;
+        let safety_review: Option<String> = row.get(3)?;
+
+        let images = images_str.and_then(|s| serde_json::from_str(&s).ok());
+
+        Ok(ChatMessage {
+            role,
+            content,
+            images,
+            safety_review,
+        })
+    })?;
+
+    let mut messages = Vec::new();
+    for mr in msg_rows {
+        messages.push(mr?);
+    }
+    Ok(messages)
+}
+
+fn map_chat_session_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<(
+    String,
+    Option<i64>,
+    String,
+    i64,
+    serde_json::Value,
+    bool,
+    f64,
+    String,
+    Option<i32>,
+    Option<bool>,
+    Option<String>,
+)> {
+    let id: String = row.get(0)?;
+    let sample_id: Option<i64> = row.get(1)?;
+    let title: String = row.get(2)?;
+    let timestamp: i64 = row.get(3)?;
+    let selected_packs_str: String = row.get(4)?;
+    let only_active_findings_int: i32 = row.get(5)?;
+    let temperature: f64 = row.get(6)?;
+    let selected_model: String = row.get(7)?;
+    let max_tokens: Option<i32> = row.get(8)?;
+    let extended_thinking_int: Option<i32> = row.get(9)?;
+    let consultation_mode: Option<String> = row.get(10)?;
+
+    let selected_packs = serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
+    let only_active_findings = only_active_findings_int != 0;
+    let extended_thinking = extended_thinking_int.map(|v| v != 0);
+
+    Ok((
+        id,
+        sample_id,
+        title,
+        timestamp,
+        selected_packs,
+        only_active_findings,
+        temperature,
+        selected_model,
+        max_tokens,
+        extended_thinking,
+        consultation_mode,
+    ))
+}
+
+pub fn get_chat_session_by_id(conn: &Connection, session_id: &str) -> Result<Option<DbChatSession>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
+                temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+         FROM chat_sessions WHERE id = ?"
+    )?;
+    let mut rows = stmt.query_map(params![session_id], map_chat_session_row)?;
+    let Some(row) = rows.next() else {
+        return Ok(None);
+    };
+    let (
+        id,
+        sample_id,
+        title,
+        timestamp,
+        selected_packs,
+        only_active_findings,
+        temperature,
+        selected_model,
+        max_tokens,
+        extended_thinking,
+        consultation_mode,
+    ) = row?;
+    let messages = load_chat_messages(conn, &id)?;
+    Ok(Some(DbChatSession {
+        id,
+        title,
+        messages,
+        timestamp,
+        sample_id,
+        selected_packs,
+        only_active_findings,
+        temperature,
+        selected_model,
+        max_tokens,
+        extended_thinking,
+        consultation_mode,
+    }))
+}
+
 pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Result<Vec<DbChatSession>> {
     let mut stmt = if sample_id_filter.is_some() {
         conn.prepare(
@@ -574,25 +958,7 @@ pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Re
         )?
     };
 
-    let mapper = |row: &rusqlite::Row<'_>| {
-        let id: String = row.get(0)?;
-        let sample_id: Option<i64> = row.get(1)?;
-        let title: String = row.get(2)?;
-        let timestamp: i64 = row.get(3)?;
-        let selected_packs_str: String = row.get(4)?;
-        let only_active_findings_int: i32 = row.get(5)?;
-        let temperature: f64 = row.get(6)?;
-        let selected_model: String = row.get(7)?;
-        let max_tokens: Option<i32> = row.get(8)?;
-        let extended_thinking_int: Option<i32> = row.get(9)?;
-        let consultation_mode: Option<String> = row.get(10)?;
-
-        let selected_packs = serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
-        let only_active_findings = only_active_findings_int != 0;
-        let extended_thinking = extended_thinking_int.map(|v| v != 0);
-
-        Ok((id, sample_id, title, timestamp, selected_packs, only_active_findings, temperature, selected_model, max_tokens, extended_thinking, consultation_mode))
-    };
+    let mapper = map_chat_session_row;
 
     let rows = if let Some(sample_id) = sample_id_filter {
         stmt.query_map(params![sample_id], mapper)?
@@ -602,32 +968,21 @@ pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Re
 
     let mut sessions = Vec::new();
     for r in rows {
-        let (id, sample_id, title, timestamp, selected_packs, only_active_findings, temperature, selected_model, max_tokens, extended_thinking, consultation_mode) = r?;
-        
-        // Load messages for this session
-        let mut msg_stmt = conn.prepare(
-            "SELECT role, content, images, safety_review FROM chat_messages WHERE session_id = ? ORDER BY id ASC"
-        )?;
-        let msg_rows = msg_stmt.query_map(params![id], |row| {
-            let role: String = row.get(0)?;
-            let content: String = row.get(1)?;
-            let images_str: Option<String> = row.get(2)?;
-            let safety_review: Option<String> = row.get(3)?;
+        let (
+            id,
+            sample_id,
+            title,
+            timestamp,
+            selected_packs,
+            only_active_findings,
+            temperature,
+            selected_model,
+            max_tokens,
+            extended_thinking,
+            consultation_mode,
+        ) = r?;
 
-            let images = images_str.and_then(|s| serde_json::from_str(&s).ok());
-
-            Ok(ChatMessage {
-                role,
-                content,
-                images,
-                safety_review,
-            })
-        })?;
-
-        let mut messages = Vec::new();
-        for mr in msg_rows {
-            messages.push(mr?);
-        }
+        let messages = load_chat_messages(conn, &id)?;
 
         sessions.push(DbChatSession {
             id,
@@ -703,4 +1058,126 @@ pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Resu
 pub fn delete_chat_session(conn: &Connection, session_id: &str) -> Result<()> {
     conn.execute("DELETE FROM chat_sessions WHERE id = ?", params![session_id])?;
     Ok(())
+}
+
+#[derive(Debug, serde::Serialize, Clone)]
+pub struct AppBootstrapStatus {
+    pub data_dir: String,
+    pub db_path: String,
+    pub chain_path: String,
+    pub chain_present: bool,
+    pub env_path: String,
+    pub sample_count: u64,
+    pub genotype_count: u64,
+    pub discovered_findings_count: u64,
+    pub gwas_reference_count: u64,
+    pub evidence_library_count: u64,
+    pub samples: Vec<SampleInfo>,
+}
+
+/// Collect database stats after schema init/migrations for the startup splash screen.
+pub fn get_bootstrap_status(conn: &Connection, data_dir: &Path) -> Result<AppBootstrapStatus, String> {
+    let count_query = |sql: &str| -> u64 {
+        conn.query_row(sql, [], |row| row.get::<_, i64>(0))
+            .unwrap_or(0) as u64
+    };
+
+    let samples = get_samples(conn).map_err(|e| e.to_string())?;
+    let chain_path = crate::paths::chain_path(data_dir);
+
+    Ok(AppBootstrapStatus {
+        data_dir: data_dir.to_string_lossy().to_string(),
+        db_path: crate::paths::db_path(data_dir).to_string_lossy().to_string(),
+        chain_path: chain_path.to_string_lossy().to_string(),
+        chain_present: chain_path.exists(),
+        env_path: crate::config::recommended_env_path()
+            .to_string_lossy()
+            .to_string(),
+        sample_count: samples.len() as u64,
+        genotype_count: count_query("SELECT COUNT(*) FROM genotypes"),
+        discovered_findings_count: count_query("SELECT COUNT(*) FROM discovered_findings"),
+        gwas_reference_count: count_query("SELECT COUNT(*) FROM gwas_reference"),
+        evidence_library_count: count_query("SELECT COUNT(*) FROM evidence_library"),
+        samples,
+    })
+}
+
+#[derive(Debug, serde::Serialize, Clone)]
+pub struct DiscoveredFindingSummary {
+    pub rsid: String,
+    pub gene: Option<String>,
+    pub user_genotype: Option<String>,
+    pub interpretation_status: String,
+    pub clinvar_clinical_significance: Option<String>,
+}
+
+pub fn get_discovered_findings_summary(
+    conn: &Connection,
+    sample_id: i64,
+) -> Result<Vec<DiscoveredFindingSummary>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT rsid, gene, user_genotype, interpretation_status, clinvar_clinical_significance
+             FROM discovered_findings WHERE sample_id = ? ORDER BY rsid",
+        )
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![sample_id], |row| {
+            Ok(DiscoveredFindingSummary {
+                rsid: row.get(0)?,
+                gene: row.get(1)?,
+                user_genotype: row.get(2)?,
+                interpretation_status: row.get(3)?,
+                clinvar_clinical_significance: row.get(4)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
+}
+
+#[derive(Debug, serde::Serialize, Clone)]
+pub struct VectorPromotedFinding {
+    pub rsid: String,
+    pub gene: Option<String>,
+    pub user_genotype: Option<String>,
+    pub trait_summary: String,
+    pub trait_categories: Vec<String>,
+    pub significance_score: f32,
+    pub gwas_best_pvalue: Option<f64>,
+    pub enrichment_version: String,
+    pub promoted_at: i64,
+}
+
+pub fn get_vector_promoted_findings(
+    conn: &Connection,
+    sample_id: i64,
+) -> Result<Vec<VectorPromotedFinding>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT rsid, gene, user_genotype, trait_summary, trait_categories,
+                    significance_score, gwas_best_pvalue, enrichment_version, promoted_at
+             FROM vector_promoted_findings WHERE sample_id = ?
+             ORDER BY significance_score DESC, rsid",
+        )
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![sample_id], |row| {
+            let categories_json: String = row.get(4)?;
+            let trait_categories: Vec<String> = serde_json::from_str(&categories_json).unwrap_or_default();
+            Ok(VectorPromotedFinding {
+                rsid: row.get(0)?,
+                gene: row.get(1)?,
+                user_genotype: row.get(2)?,
+                trait_summary: row.get(3)?,
+                trait_categories,
+                significance_score: row.get(5)?,
+                gwas_best_pvalue: row.get(6)?,
+                enrichment_version: row.get(7)?,
+                promoted_at: row.get(8)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }

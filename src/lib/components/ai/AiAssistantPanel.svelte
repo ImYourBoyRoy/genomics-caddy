@@ -1,20 +1,30 @@
 <!-- ./src/lib/components/ai/AiAssistantPanel.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listen } from "@tauri-apps/api/event";
-  import { scanOllamaModels, streamOllamaChat, showOllamaModel, saveReportJson } from "../../api/tauri";
+  import { getOllamaToken, cancelOllamaStream } from "../../api/tauri";
+  import type { ChatMessage } from "../../types/agent";
+  import type { QdrantHit, VectorResearchDiagnostics } from "../../types/research";
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
+  import type { VariantNavTarget } from "../../constants/traitCategories";
   import { LAYPERSON_MAP } from "../../utils/layperson";
-  import { buildStandardMarkdown, buildClinicalHandoffMarkdown } from "../../utils/aiExport";
-  import { stripThinkingTokens } from "../../utils/chatParser";
+  import { copyMessageToClipboard, exportConsultationMarkdown } from "../../utils/aiAssistantExportActions";
+  import {
+    readConsultationSession,
+    startNewConsultationSession,
+    saveConsultationSessionTitle,
+    deleteConsultationSession,
+  } from "../../utils/aiAssistantSessionActions";
+  import { loadOllamaModelDetails, scanChatModels } from "../../utils/aiAssistantModelActions";
+  import { loadAiAssistantPreferences, persistAiAssistantPreferences } from "../../utils/aiAssistantPreferences";
+  import { fetchVectorResearchDiagnostics } from "../../utils/aiAssistantVectorDiagnostics";
+  import { sendConsultationPrompt, stopConsultationGeneration } from "../../utils/aiAssistantSendActions";
+  import { saveOllamaUrl, loadOllamaUrl } from "../../utils/ollamaSettings";
   import { dialogStore } from "../../utils/dialogState.svelte";
-  import { type ChatSession } from "../../utils/chatSession";
   import { ConsultationSessionStore } from "../../utils/consultationSession.svelte";
   import {
     type UserBiohackingProfile, type ContextStats, type ActiveCategories,
     DEFAULT_INSTRUCTIONS, buildSystemPrompt, calculateContextStats,
     getActiveCategories, getDynamicQuestions, isReasoningModel as checkReasoningModel,
-    isModelVisionCapable, getContextWindow, filterChatModels, autoSelectModel,
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
   import manifest from "../../marker-packs/manifest.json";
@@ -24,17 +34,19 @@
   import ChatModals from "./ChatModals.svelte";
   import EvidenceLibraryPanel from "./EvidenceLibraryPanel.svelte";
 
-  // ── Props ──────────────────────────────────────────────────────────────
   interface Props {
     selectedSample: GenomeSample | null;
     generatedReport: GeneratedReport | null;
     ollamaUrl: string;
     ollamaToken: string;
     selectedModel: string;
-    messages: any[];
+    messages: ChatMessage[];
     selectedPacks: Record<string, boolean>;
     onlyActiveFindings: boolean;
     temperature: number;
+    initialSearchQuery?: string;
+    activeView?: "chat" | "evidence";
+    onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
   let {
     selectedSample, generatedReport,
@@ -45,9 +57,11 @@
     selectedPacks = $bindable({}),
     onlyActiveFindings = $bindable(true),
     temperature = $bindable(0.0),
+    initialSearchQuery = $bindable(""),
+    activeView = $bindable("chat"),
+    onNavigateToVariant,
   }: Props = $props();
 
-  // ── Core UI State ──────────────────────────────────────────────────────
   const sessionStore = new ConsultationSessionStore();
   let filteredSessions = $derived(sessionStore.sessions.filter(s => s.sampleId === (selectedSample ? selectedSample.id : null)));
 
@@ -65,7 +79,6 @@
   let twoModelReview = $state(false);
   let userCollapsedThinkingMap = $state(new Map<any, boolean>());
   let copiedMsgId = $state<number | null>(null);
-  let activeView = $state<"chat" | "evidence">("chat");
 
   // Link contextMode and onlyActiveFindings bi-directionally
   $effect(() => {
@@ -90,7 +103,7 @@
 
   function stopReviewListeners() {
     if (unlistenReviewChunk) { unlistenReviewChunk(); unlistenReviewChunk = null; }
-    if (unlistenReviewDone) { unlistenReviewDone(); unlistenReviewDone = null; }
+    unlistenReviewDone = null;
   }
 
   let sessionPromptTokens = $state(0), sessionResponseTokens = $state(0);
@@ -100,196 +113,129 @@
   let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
   let systemInstructions = $state("");
 
-  // ── Clipboard / Copy ──────────────────────────────────────────────────
+  let useVectorResearch = $state(
+    typeof localStorage !== "undefined" && localStorage.getItem("genomics_consultation_vector_rag") !== null
+      ? localStorage.getItem("genomics_consultation_vector_rag") !== "false"
+      : true
+  );
+  let lastVectorHits = $state<QdrantHit[]>([]);
+  let lastVectorQuery = $state("");
+  let lastVectorError = $state("");
+  let vectorDiagnostics = $state<VectorResearchDiagnostics | null>(null);
+  let vectorDiagnosticsLoading = $state(false);
+
+  async function refreshVectorDiagnostics() {
+    if (!selectedSample) {
+      vectorDiagnostics = null;
+      return;
+    }
+    vectorDiagnosticsLoading = true;
+    vectorDiagnostics = await fetchVectorResearchDiagnostics(selectedSample);
+    vectorDiagnosticsLoading = false;
+  }
+
+  function openEvidenceFromCitation(query: string) {
+    initialSearchQuery = query;
+    activeView = "evidence";
+  }
+
   function copyToClipboard(text: string, index: number) {
-    navigator.clipboard.writeText(includeTraceInExport ? text : stripThinkingTokens(text))
-      .then(() => { copiedMsgId = index; setTimeout(() => { if (copiedMsgId === index) copiedMsgId = null; }, 2000); })
-      .catch(err => console.error("Failed to copy text: ", err));
+    copyMessageToClipboard({
+      text,
+      includeTraceInExport,
+      onSuccess: () => {
+        copiedMsgId = index;
+        setTimeout(() => {
+          if (copiedMsgId === index) copiedMsgId = null;
+        }, 2000);
+      },
+    });
   }
 
-  // ── Export ────────────────────────────────────────────────────────────
   async function exportConversation(type: "standard" | "clinical") {
-    if (!messages.length) { dialogStore.alert("No conversation history to export."); return; }
-    const md = type === "clinical"
-      ? buildClinicalHandoffMarkdown(messages, selectedSample, selectedModel, userProfile, currentSystemPrompt, generatedReport, includeTraceInExport)
-      : buildStandardMarkdown(messages, selectedSample, selectedModel, includeTraceInExport);
-    const cleanName = (selectedSample ? selectedSample.name : "genome").replace(/[^a-zA-Z0-9]/g, "_");
-    try {
-      if (await saveReportJson(md, `${cleanName}_consultation_${type}_${Date.now()}.md`))
-        dialogStore.alert("Chat conversation exported and saved successfully!");
-    } catch (e: any) { dialogStore.alert("Failed to save chat export: " + e.message); }
+    await exportConsultationMarkdown({
+      type,
+      messages,
+      selectedSample,
+      selectedModel,
+      userProfile,
+      currentSystemPrompt,
+      generatedReport,
+      includeTraceInExport,
+      alert: (message) => dialogStore.alert(message),
+    });
   }
 
-  // ── Model Details Loading ─────────────────────────────────────────────
-  async function loadModelDetails() {
-    if (!selectedModel) { modelDetails = null; isVisionCapable = false; contextWindow = 4096; return; }
-    try {
-      const details = await showOllamaModel(ollamaUrl, ollamaToken || undefined, selectedModel);
-      modelDetails = details;
-      isVisionCapable = isModelVisionCapable(selectedModel, details);
-      contextWindow = getContextWindow(details.model_info);
-    } catch {
-      isVisionCapable = isModelVisionCapable(selectedModel, null);
-      contextWindow = 4096;
-    }
-  }
-  $effect(() => { if (selectedModel) loadModelDetails(); });
-
-  // ── Model Scanning ────────────────────────────────────────────────────
   async function scanModels() {
-    isScanning = true; scanError = ""; models = [];
-    localStorage.setItem("genomics_ollama_url", ollamaUrl);
-    localStorage.setItem("genomics_ollama_token", ollamaToken);
-    try {
-      models = filterChatModels(await scanOllamaModels(ollamaUrl, ollamaToken || undefined));
-      selectedModel = autoSelectModel(models, selectedModel);
-    } catch (e: any) {
-      scanError = `Failed to connect: ${e.message || e}`;
-      if (!ollamaUrl.includes("localhost") && !ollamaUrl.includes("127.0.0.1")) {
-        scanError += "\n\n💡 Remote Connection Tips:\n1. Ensure Ollama is running on the remote host.\n2. Set OLLAMA_HOST=0.0.0.0 before starting Ollama.\n3. Verify port 11434 is open in the firewall.";
-      }
-    } finally { isScanning = false; }
+    isScanning = true;
+    const result = await scanChatModels(ollamaUrl, ollamaToken, selectedModel);
+    models = result.models;
+    selectedModel = result.selectedModel;
+    scanError = result.scanError;
+    isScanning = false;
   }
 
-  // ── Chat Sending ──────────────────────────────────────────────────────
+  async function loadModelDetails() {
+    const details = await loadOllamaModelDetails(ollamaUrl, ollamaToken, selectedModel);
+    modelDetails = details.modelDetails;
+    isVisionCapable = details.isVisionCapable;
+    contextWindow = details.contextWindow;
+  }
+  $effect(() => { if (selectedModel) void loadModelDetails(); });
+
   async function sendPrompt(customPrompt?: string) {
-    if (customPrompt === "TRIGGER_EXPORT_MODAL") { showExportModal = true; return; }
-    if (customPrompt === "TRIGGER_CONTEXT_INSPECTOR") { showPromptInspector = true; return; }
-    const text = customPrompt || promptText.trim();
-    if (!text || isChatting || !selectedSample) return;
-    if (!selectedModel) { dialogStore.alert("Please configure a connection and select an LLM model."); return; }
-    if (!generatedReport) { dialogStore.alert("Report calculations are still loading. Please wait a moment."); return; }
-
-    const userMsg: any = { role: "user", content: text };
-    if (attachedImages.length > 0) userMsg.images = attachedImages.map(img => img.base64);
-    messages = [...messages, userMsg];
-    for (const img of attachedImages) { if (img.previewUrl.startsWith("blob:")) URL.revokeObjectURL(img.previewUrl); }
-    attachedImages = [];
-    if (!customPrompt) promptText = "";
-    isChatting = true;
-    messages = [...messages, { role: "assistant", content: "" }];
-    const assistantIndex = messages.length - 1;
-
-    try {
-      const chatHistory = messages.slice(0, -1).map(m => {
-        const msgObj: any = { role: m.role, content: m.fullContent || m.content };
-        if (m.images?.length > 0) msgObj.images = m.images;
-        return msgObj;
-      });
-      const payloadMessages = [{ role: "system", content: currentSystemPrompt }, ...chatHistory];
-      stopListeners();
-
-      const [unChunk, unDone] = await Promise.all([
-        listen("ollama-chunk", (event) => {
-          messages[assistantIndex].content += event.payload as string;
-          messages = [...messages];
-        }),
-        listen("ollama-done", (event) => {
-          const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
-          if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
-          if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
-          stopListeners();
-        }),
-      ]);
-      unlistenChunk = unChunk; unlistenDone = unDone;
-
-      // Calculate output token limit dynamically based on model's context window.
-      const defaultLimit = checkReasoningModel(selectedModel) 
-        ? Math.max(4096, Math.min(8192, Math.floor(contextWindow / 4))) 
-        : Math.max(2048, Math.min(4096, Math.floor(contextWindow / 8)));
-      const limit = extendedThinking 
-        ? Math.max(8192, Math.min(16384, Math.floor(contextWindow / 2))) 
-        : Math.min(defaultLimit, maxTokens);
-
-      await streamOllamaChat(ollamaUrl, ollamaToken || undefined, selectedModel, payloadMessages, temperature, limit);
-
-      // --- Dual-Model Safety Review ---
-      if (twoModelReview && reviewModel) {
-        messages[assistantIndex].safetyReview = "Reviewing response safety...";
-        messages = [...messages];
-
-        try {
-          const reviewPrompt = `You are a medical safety auditor. Review the following genomic consultation draft for any clinical overclaiming, dosing advice, or diagnosing assertions. Output your safety corrections, warnings, or notes to the patient.
-
-Draft Response to Review:
-"""
-${stripThinkingTokens(messages[assistantIndex].content)}
-"""`;
-
-          stopReviewListeners();
-
-          const [unReviewChunk, unReviewDone] = await Promise.all([
-            listen("ollama-chunk", (event) => {
-              if (messages[assistantIndex].safetyReview === "Reviewing response safety...") {
-                messages[assistantIndex].safetyReview = "";
-              }
-              messages[assistantIndex].safetyReview += event.payload as string;
-              messages = [...messages];
-            }),
-            listen("ollama-done", (event) => {
-              const payload = event.payload as { prompt_eval_count?: number; eval_count?: number } | null;
-              if (payload?.prompt_eval_count) sessionPromptTokens += payload.prompt_eval_count;
-              if (payload?.eval_count) sessionResponseTokens += payload.eval_count;
-              stopReviewListeners();
-              isChatting = false;
-            }),
-          ]);
-          unlistenReviewChunk = unReviewChunk;
-          unlistenReviewDone = unReviewDone;
-
-          // Calculate safety review model output limit dynamically.
-          const reviewDetails = await showOllamaModel(ollamaUrl, ollamaToken || undefined, reviewModel).catch(() => null);
-          const reviewCtx = reviewDetails ? getContextWindow(reviewDetails.model_info) : 4096;
-          const reviewLimit = checkReasoningModel(reviewModel) 
-            ? Math.max(4096, Math.min(8192, Math.floor(reviewCtx / 4)))
-            : Math.max(2048, Math.min(4096, Math.floor(reviewCtx / 8)));
-
-          // Wrap safety review execution in a 60-second timeout to prevent UI freezes due to model-switching delays
-          let reviewTimeoutId: any = null;
-          const reviewPromise = streamOllamaChat(ollamaUrl, ollamaToken || undefined, reviewModel, [{ role: "user", content: reviewPrompt }], 0.0, reviewLimit);
-          const timeoutPromise = new Promise((_, reject) => {
-            reviewTimeoutId = setTimeout(() => reject(new Error("Safety review timed out (server busy or loading review model)")), 60000);
-          });
-
-          try {
-            await Promise.race([reviewPromise, timeoutPromise]);
-          } finally {
-            if (reviewTimeoutId) clearTimeout(reviewTimeoutId);
-          }
-        } catch (revError: any) {
-          stopReviewListeners();
-          messages[assistantIndex].safetyReview = `⚠️ Safety Review Failed: ${revError.message || revError}`;
-          messages = [...messages];
-          isChatting = false;
-        }
-      } else {
-        isChatting = false;
-      }
-    } catch (e: any) {
-      stopListeners();
-      stopReviewListeners();
-      isChatting = false;
-      if (messages[assistantIndex].content === "") {
-        messages[assistantIndex].content = `Error connecting to AI: ${e.message || e}`;
-      } else {
-        messages[assistantIndex].content += `\n\n*[Error during stream: ${e.message || e}]*`;
-      }
-      messages = [...messages];
-    }
+    await sendConsultationPrompt({
+      customPrompt,
+      promptText,
+      isChatting,
+      selectedSample,
+      selectedModel,
+      generatedReport,
+      attachedImages,
+      messages,
+      ollamaUrl,
+      ollamaToken,
+      temperature,
+      maxTokens,
+      extendedThinking,
+      contextWindow,
+      useVectorResearch,
+      twoModelReview,
+      reviewModel,
+      selectedPacks,
+      onlyActiveFindings,
+      contextMode,
+      consultationMode,
+      userProfile,
+      systemInstructions,
+      alert: (message) => dialogStore.alert(message),
+      onExportModal: () => { showExportModal = true; },
+      onPromptInspector: () => { showPromptInspector = true; },
+      onState: (patch) => {
+        if (patch.promptText !== undefined) promptText = patch.promptText;
+        if (patch.attachedImages !== undefined) attachedImages = patch.attachedImages;
+        if (patch.messages !== undefined) messages = patch.messages;
+        if (patch.isChatting !== undefined) isChatting = patch.isChatting;
+        if (patch.lastVectorQuery !== undefined) lastVectorQuery = patch.lastVectorQuery;
+        if (patch.lastVectorHits !== undefined) lastVectorHits = patch.lastVectorHits;
+        if (patch.lastVectorError !== undefined) lastVectorError = patch.lastVectorError;
+        if (patch.sessionPromptTokens !== undefined) sessionPromptTokens = patch.sessionPromptTokens;
+        if (patch.sessionResponseTokens !== undefined) sessionResponseTokens = patch.sessionResponseTokens;
+      },
+      getSessionPromptTokens: () => sessionPromptTokens,
+      getSessionResponseTokens: () => sessionResponseTokens,
+      stopListeners,
+      stopReviewListeners,
+      registerMainListener: (stop) => { unlistenChunk = stop; unlistenDone = null; },
+      registerReviewListener: (stop) => { unlistenReviewChunk = stop; unlistenReviewDone = null; },
+    });
   }
 
   function stopGeneration() {
-    stopListeners();
-    stopReviewListeners();
-    isChatting = false;
-    const last = messages.length - 1;
-    if (last >= 0 && messages[last].role === "assistant") {
-      if (messages[last].safetyReview === "Reviewing response safety...") {
-        messages[last].safetyReview = "*[Review stopped by user]*";
-      }
-      messages[last].content += "\n\n*[Consultation response stopped by user]*";
-      messages = [...messages];
-    }
+    stopConsultationGeneration(messages, stopListeners, stopReviewListeners, (patch) => {
+      messages = patch.messages;
+      isChatting = patch.isChatting;
+    });
   }
   function clearHistory() {
     dialogStore.confirm("Are you sure you want to clear this consultation's chat history?", () => { messages = []; sessionPromptTokens = 0; sessionResponseTokens = 0; }, "Clear Chat History");
@@ -302,48 +248,44 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
   }
   function stopListeners() {
     if (unlistenChunk) { unlistenChunk(); unlistenChunk = null; }
-    if (unlistenDone) { unlistenDone(); unlistenDone = null; }
+    unlistenDone = null;
   }
 
-  // ── Session Management ────────────────────────────────────────────────
   function loadSession(id: string) {
     isLoadingSession = true;
-    const s = sessionStore.sessions.find(x => x.id === id);
-    if (!s) {
+    const snapshot = readConsultationSession(id, sessionStore, selectedSample);
+    if (!snapshot) {
       isLoadingSession = false;
       return;
     }
-    sessionStore.currentSessionId = id;
-    const pid = selectedSample ? selectedSample.id : null;
-    localStorage.setItem(`genomics_active_session_id_${pid}`, id);
-    localStorage.setItem("genomics_active_session_id", id);
-    messages = s.messages || [];
-    selectedPacks = { ...s.selectedPacks }; onlyActiveFindings = s.onlyActiveFindings;
-    temperature = s.temperature; selectedModel = s.selectedModel;
-    maxTokens = s.maxTokens || 2048; extendedThinking = s.extendedThinking || false;
-    consultationMode = (s.consultationMode || "general") as ConsultationMode;
-    sessionPromptTokens = 0; sessionResponseTokens = 0;
-    setTimeout(() => {
-      isLoadingSession = false;
-    }, 0);
+    messages = snapshot.messages;
+    selectedPacks = snapshot.selectedPacks;
+    onlyActiveFindings = snapshot.onlyActiveFindings;
+    temperature = snapshot.temperature;
+    selectedModel = snapshot.selectedModel;
+    maxTokens = snapshot.maxTokens;
+    extendedThinking = snapshot.extendedThinking;
+    consultationMode = snapshot.consultationMode;
+    sessionPromptTokens = 0;
+    sessionResponseTokens = 0;
+    setTimeout(() => { isLoadingSession = false; }, 0);
   }
   async function startNewSession() {
     isLoadingSession = true;
-    await sessionStore.startNew(selectedSample, selectedModel, models, manifest.packs);
+    await startNewConsultationSession(sessionStore, selectedSample, selectedModel, models, manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
   }
-  async function saveSessionTitle(session: any) {
-    if (session.title.trim()) await sessionStore.saveTitle();
+  async function saveSessionTitle(session: { title: string }) {
+    await saveConsultationSessionTitle(sessionStore, session);
   }
   async function deleteSession(id: string) {
     dialogStore.confirm("Delete this consultation history? This cannot be undone.", async () => {
       isLoadingSession = true;
-      await sessionStore.delete(id, selectedSample, selectedModel, models, manifest.packs);
+      await deleteConsultationSession(id, sessionStore, selectedSample, selectedModel, models, manifest.packs);
       if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     }, "Delete Consultation");
   }
 
-  // ── Profile Watcher ───────────────────────────────────────────────────
   $effect(() => {
     if (selectedSample) {
       const active = sessionStore.sessions.find(s => s.id === sessionStore.currentSessionId);
@@ -357,7 +299,6 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
     }
   });
 
-  // ── Session Auto-Save ─────────────────────────────────────────────────
   $effect(() => {
     if (isLoadingSession) return;
     if (!sessionStore.currentSessionId || sessionStore.sessions.length === 0) return;
@@ -373,13 +314,11 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
 
   $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  // ── Derived State Calculations ────────────────────────────────────────
   let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
   let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
   let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false });
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
 
-  // ── Context Update Notifications ──────────────────────────────────────
   let lastContextSignature = $state("");
   $effect(() => {
     const sig = `${Object.keys(selectedPacks).filter(k => selectedPacks[k]).sort().join(",")}|${onlyActiveFindings}|${selectedSample?.id}`;
@@ -393,23 +332,27 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
   onMount(() => {
-    ollamaUrl = localStorage.getItem("genomics_ollama_url") || ollamaUrl;
-    ollamaToken = localStorage.getItem("genomics_ollama_token") || ollamaToken;
+    void (async () => {
+      ollamaUrl = loadOllamaUrl(ollamaUrl);
+      ollamaToken = (await getOllamaToken()) || ollamaToken;
+    })();
     if (Object.keys(selectedPacks).length === 0) {
       selectedPacks = Object.fromEntries(manifest.packs.map(p => [p.id, true]));
     }
-    showThinkingProcess = localStorage.getItem("genomics_show_thinking_process") !== "false";
-    autoCollapseThinking = localStorage.getItem("genomics_auto_collapse_thinking") !== "false";
-    includeTraceInExport = localStorage.getItem("genomics_include_trace_in_export") === "true";
-    contextMode = (localStorage.getItem("genomics_context_mode") || "active_findings") as AiContextMode;
-    consultationMode = (localStorage.getItem("genomics_consultation_mode") || "general") as ConsultationMode;
-    reviewModel = localStorage.getItem("genomics_review_model") || "";
-    twoModelReview = localStorage.getItem("genomics_two_model_review") === "true";
-    try { userProfile = { ...userProfile, ...JSON.parse(localStorage.getItem("genomics_user_biohacking_profile") || "{}") }; } catch {}
-    systemInstructions = localStorage.getItem("genomics_system_instructions") || DEFAULT_INSTRUCTIONS;
+    const prefs = loadAiAssistantPreferences(userProfile);
+    showThinkingProcess = prefs.showThinkingProcess;
+    autoCollapseThinking = prefs.autoCollapseThinking;
+    includeTraceInExport = prefs.includeTraceInExport;
+    contextMode = prefs.contextMode;
+    consultationMode = prefs.consultationMode;
+    reviewModel = prefs.reviewModel;
+    twoModelReview = prefs.twoModelReview;
+    userProfile = prefs.userProfile as UserBiohackingProfile;
+    systemInstructions = prefs.systemInstructions;
     sessionStore.load(selectedSample, selectedModel, models, manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     scanModels();
+    refreshVectorDiagnostics();
     return () => {
       stopListeners();
       stopReviewListeners();
@@ -417,8 +360,19 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
   });
 
   $effect(() => {
-    const sets = { show_thinking_process: showThinkingProcess, auto_collapse_thinking: autoCollapseThinking, include_trace_in_export: includeTraceInExport, context_mode: contextMode, consultation_mode: consultationMode, review_model: reviewModel, two_model_review: twoModelReview };
-    for (const [k, v] of Object.entries(sets)) localStorage.setItem(`genomics_${k}`, String(v));
+    if (selectedSample?.id) refreshVectorDiagnostics();
+  });
+
+  $effect(() => {
+    persistAiAssistantPreferences({
+      showThinkingProcess,
+      autoCollapseThinking,
+      includeTraceInExport,
+      contextMode,
+      consultationMode,
+      reviewModel,
+      twoModelReview,
+    });
   });
 </script>
 
@@ -456,6 +410,12 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
       editMessage={editMessage}
       deleteMessage={deleteMessage}
       selectedModel={selectedModel}
+      vectorHits={lastVectorHits}
+      vectorQuery={lastVectorQuery}
+      vectorError={lastVectorError}
+      useVectorResearch={useVectorResearch}
+      onOpenEvidence={openEvidenceFromCitation}
+      onNavigateToVariant={onNavigateToVariant}
     />
   {:else}
     <EvidenceLibraryPanel
@@ -463,6 +423,9 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
       ollamaToken={ollamaToken}
       bind:showHistorySidebar={showHistorySidebar}
       bind:showSettingsDrawer={showSettingsDrawer}
+      selectedSample={selectedSample}
+      bind:initialSearchQuery={initialSearchQuery}
+      onNavigateToVariant={onNavigateToVariant}
     />
   {/if}
 
@@ -497,6 +460,10 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
       bind:consultationMode={consultationMode}
       bind:reviewModel={reviewModel}
       bind:twoModelReview={twoModelReview}
+      bind:useVectorResearch={useVectorResearch}
+      vectorDiagnostics={vectorDiagnostics}
+      vectorDiagnosticsLoading={vectorDiagnosticsLoading}
+      refreshVectorDiagnostics={refreshVectorDiagnostics}
     />
   {/if}
 </div>
@@ -508,6 +475,4 @@ ${stripThinkingTokens(messages[assistantIndex].content)}
   exportConversation={exportConversation}
 />
 
-<style>
-  .ai-consultation-container { display: flex; gap: 0; height: calc(100vh - 140px); width: 100%; box-sizing: border-box; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: rgba(10, 11, 20, 0.3); backdrop-filter: blur(16px); }
-</style>
+<style src="../../styles/components/ai-assistant-panel.css"></style>

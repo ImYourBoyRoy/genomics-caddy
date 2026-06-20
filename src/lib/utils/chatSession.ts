@@ -1,16 +1,14 @@
 // ./src/lib/utils/chatSession.ts
 /**
  * Consultation Chat Session Serialization & Persistence Helpers.
- * Purpose: Handle reading/writing of chat session histories from local storage.
- * Key Inputs: ChatSession objects, local storage access keys.
- * Key Outputs: Serialized session strings, new ChatSession templates.
- * Operational Notes: Keeps AI panel state thin by isolating persistence logic.
  */
+
+import type { ChatMessage } from "../types/agent";
 
 export interface ChatSession {
   id: string;
   title: string;
-  messages: any[];
+  messages: ChatMessage[];
   timestamp: number;
   sampleId: number | null;
   selectedPacks: Record<string, boolean>;

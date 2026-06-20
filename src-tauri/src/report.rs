@@ -326,8 +326,8 @@ pub fn generate_report(
 
             // Verify allele orientation
             let mut orientation_warning = false;
-            if !is_missing {
-                if let Some(ref expected) = m.expected_plus_alleles {
+            if !is_missing
+                && let Some(ref expected) = m.expected_plus_alleles {
                     for c in genotype.chars() {
                         let c_str = c.to_string();
                         if !expected.contains(&c_str) {
@@ -335,7 +335,6 @@ pub fn generate_report(
                         }
                     }
                 }
-            }
 
             // Compute severity class
             let mut severity_class = compute_severity_class(

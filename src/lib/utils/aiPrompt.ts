@@ -15,6 +15,8 @@
  */
 
 import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/genomics";
+import type { QdrantHit } from "../types/research";
+import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import manifest from "../marker-packs/manifest.json";
 import core from "../marker-packs/core.json";
 import pgx from "../marker-packs/pgx.json";
@@ -72,11 +74,15 @@ export interface CuratedQuestion {
 
 export const DEFAULT_INSTRUCTIONS = `\
 - Role: You are Genomics Caddy AI, a private local assistant helping the user understand raw genomic data.
-- Data Scope: Refer ONLY to the genomic variants explicitly provided in the JSON Context below. Do not speculate, generalize, or invent other findings. If a variant is not in the data, state that you do not have data for it.
-- Scope Pushback: If the user asks about genes, variants, medical conditions, or drug responses NOT explicitly present in the JSON Context below, you MUST politely push back. Refuse to speculate, generalize, or answer from general knowledge. Explicitly state that you do not have genomic data for that query in their profile.
-- Language: Use simple, layperson-friendly language while maintaining accuracy. Translate complex terms (e.g. use "copies of variant gene" instead of "homozygous"). Heavily rely on the 'layperson_summary' fields in the JSON.
+- Data Scope: The JSON CONTEXT has two complementary layers:
+  1. sample_context.sections — curated trait report markers from marker packs (user genotype, effect direction, layperson summaries).
+  2. vector_research — semantically retrieved enriched variants from the local Qdrant index (GWAS associations, ClinVar, gnomAD, gene mapping). When vector_research.status is "ok", you HAVE this data — use it and cite rsIDs. Do NOT ask the user for database access or claim you cannot parse vector data.
+- Merging sources: When the same rsID appears in both layers, combine them — trait report for personal genotype/impact; vector_research for literature traits, gene provenance, and population frequency.
+- No matches: If vector_research.status is "no_matches", answer from sample_context only and note that no indexed vector research matched the query.
+- Scope Pushback: If the user asks about genes, variants, or conditions absent from BOTH sample_context AND vector_research, politely push back. Refuse to speculate from general knowledge.
+- Language: Use simple, layperson-friendly language while maintaining accuracy. Heavily rely on layperson_summary fields when present.
 - Safety: Always emphasize that this is raw consumer data and requires clinical confirmation. Recommend discussing all findings with a licensed medical professional.
-- Format: Keep answers concise, direct, and structured. Use bullet points and headings for clarity. When discussing multiple variants, group them logically by category.`;
+- Format: Keep answers concise, direct, and structured. Use bullet points and headings. Group variants by category. Cite rsIDs when referencing vector research hits.`;
 
 // ---------------------------------------------------------------------------
 // System Prompt Builder
@@ -160,6 +166,8 @@ interface PromptBuildParams {
   userProfile: UserBiohackingProfile;
   systemInstructions: string;
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>;
+  qdrantHits?: QdrantHit[];
+  vectorSearchMeta?: VectorSearchMeta;
 }
 
 /**
@@ -196,6 +204,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     contextMode = "active_findings",
     consultationMode = "general",
     userProfile, systemInstructions, laypersonMap,
+    qdrantHits = [],
+    vectorSearchMeta,
   } = params;
 
   const todayStr = new Date().toDateString();
@@ -301,16 +311,22 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       },
       rules: [
         "Consultation is educational only and does not substitute for medical professional consultation.",
-        "Rely ONLY on the provided genomic variants in the JSON context. Do not speculate on unlisted genes or genotypes.",
-        "Use simple, layperson-friendly language. Heavily rely on the 'layperson_summary' simple_impact and simple_meaning fields.",
-        "If the user asks about genes, variants, or conditions not present in the context, politely push back and refuse to speculate.",
+        "Use sample_context.sections for curated trait report markers AND vector_research for semantically retrieved enriched evidence when present.",
+        "When vector_research.status is ok, cite rsIDs from vector_research.hits — do not claim lack of database access.",
+        "Use simple, layperson-friendly language. Heavily rely on layperson_summary fields when present.",
+        "If a gene or condition is absent from both sample_context and vector_research, politely push back and refuse to speculate.",
         "Recommend discussing all findings and changes with a licensed clinician."
       ],
       forbidden_actions: [
         "Do not diagnose diseases or conditions.",
         "Do not prescribe treatments or recommend specific drug/supplement dosages.",
-        "Do not speculate on general genetic knowledge if data is not present in user profile."
-      ]
+        "Do not ask the user how to access Qdrant or vector databases — the data is already in vector_research when status is ok.",
+        "Do not speculate from general genetic knowledge when data is absent from both context layers."
+      ],
+      vector_research: buildVectorResearchBlock(qdrantHits, vectorSearchMeta ?? {
+        query: "",
+        enabled: false,
+      }),
     };
   }
 

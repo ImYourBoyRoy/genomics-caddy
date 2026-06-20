@@ -158,9 +158,18 @@ pub fn parse_zip_file<P: AsRef<Path>>(
     path: P,
     progress_callback: &dyn Fn(&str),
 ) -> Result<Vec<SnpRecord>, String> {
+    const MAX_ZIP_ENTRIES: usize = 32;
+    const MAX_UNCOMPRESSED_BYTES: u64 = 250 * 1024 * 1024;
+
     progress_callback("Unpacking ZIP archive...");
     let file = File::open(path).map_err(|e| format!("Failed to open ZIP file: {}", e))?;
     let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Invalid ZIP archive: {}", e))?;
+    if archive.len() > MAX_ZIP_ENTRIES {
+        return Err(format!(
+            "ZIP archive exceeds maximum of {} entries",
+            MAX_ZIP_ENTRIES
+        ));
+    }
 
     let mut found_index = None;
     for i in 0..archive.len() {
@@ -181,6 +190,12 @@ pub fn parse_zip_file<P: AsRef<Path>>(
     // Open second time to parse
     progress_callback("Parsing genetic records...");
     let entry_data = archive.by_index(idx).map_err(|e| format!("Failed to read ZIP entry: {}", e))?;
+    if entry_data.size() > MAX_UNCOMPRESSED_BYTES {
+        return Err(format!(
+            "ZIP entry exceeds maximum uncompressed size of {} bytes",
+            MAX_UNCOMPRESSED_BYTES
+        ));
+    }
     let reader = BufReader::new(entry_data);
     parse_reader(reader, format)
 }
@@ -191,7 +206,7 @@ pub fn parse_dna_file<P: AsRef<Path>, F: Fn(&str)>(
     progress_callback: F,
 ) -> Result<Vec<SnpRecord>, String> {
     let path_ref = path.as_ref();
-    let is_zip = path_ref.extension().map_or(false, |ext| ext.eq_ignore_ascii_case("zip"));
+    let is_zip = path_ref.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip"));
 
     if is_zip {
         parse_zip_file(path_ref, &progress_callback)

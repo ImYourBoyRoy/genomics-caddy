@@ -183,6 +183,21 @@ Add the server globally to Claude Code by executing:
 
 ---
 
+## Evidence Workbench (vector + SQLite associations)
+
+The **Evidence Workbench** tab in the AI Evidence Library provides inspectable, source-grounded association cards:
+
+- **Hybrid search** — Qdrant semantic discovery + SQLite `association_facts` with filters (data quality, direction, evidence tier).
+- **Quality dashboard** — stale vector counts, schema mismatch, source coverage bars, cache health; **Backfill payloads** normalizes existing Qdrant points without re-embedding when text is unchanged.
+- **Dynamic candidates** — surfaced during enrichment; promote to `curated_lite` only when GWAS/association evidence exists; rejected rsIDs are suppressed from search.
+- **Evidence packets** — export JSON (facts + source records + similar hits + prohibited claims) via save dialog.
+
+MCP tools: `search_vector_associations`, `get_variant_evidence_card`, `explain_vector_match`, `export_evidence_packet`, `backfill_evidence_payloads`, `get_quality_dashboard`, `list_candidate_markers`.
+
+Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cross-sample HTTP cache) → live APIs; raw responses stored in `source_records`.
+
+---
+
 ## 🐚 Commands & Arguments
 
 ### NPM Build and Execution Scripts
@@ -190,10 +205,51 @@ Add the server globally to Claude Code by executing:
 * **`npm run tauri dev`**: Starts Vite server and mounts the Tauri desktop window.
 * **`npm run build`**: Compiles static production web assets into `/build`.
 * **`npm run check`**: Runs Svelte compiler and TypeScript diagnostics.
+* **`npm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
 * **`npm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.
 
+### Local `.env` and smoke tests
+
+1. Copy the template: `copy .env.example .env` (Windows) or `cp .env.example .env`.
+2. Set your secrets in `.env` (never commit this file):
+
+```env
+QDRANT_URL=http://your-host:6333
+QDRANT_API_KEY=your-key
+QDRANT_COLLECTION=genomics_evidence
+NCBI_API_KEY=
+OLLAMA_URL=http://localhost:11434
+OLLAMA_TOKEN=
+```
+
+3. Run smoke tests:
+
+```bash
+npm run smoke
+```
+
+Checks performed:
+- Qdrant auth + target collection exists
+- NCBI esearch (when `NCBI_API_KEY` is set)
+- Ollama model list (when `OLLAMA_URL` is set)
+
+### Purging sensitive files from git history
+
+If personal genotype files were ever committed, run (rewrites local history):
+
+```powershell
+pwsh -File scripts/purge_git_secrets.ps1
+```
+
+If the repo was pushed to a remote, follow with `git push --force --all` and rotate any exposed API keys.
+
 ### Application Executable Flags
-* **`--mcp`**: Launches the stdin/stdout JSON-RPC 2.0 Model Context Protocol loop.
+* **`--mcp`**: Launches the stdin/stdout JSON-RPC 2.0 Model Context Protocol loop (read-only tools by default).
+* **`--mcp-write`**: Enables mutating MCP tools (`delete_chat_session`, `backfill_evidence_payloads`, `update_candidate_marker_status`, `enable_named_vectors_collection`). Combine with `--mcp` when an agent must perform writes.
+* **`--mcp-auth-token=<secret>`** (optional): When set (or when `GENOMICS_MCP_TOKEN` is in the environment), every MCP `tools/call` must include `params._meta.authToken` matching that value. `ping` is exempt. Omit the flag for local-only, unauthenticated MCP (default).
+
+### Database encryption at rest
+The genome SQLite file is **AES-256-GCM sealed** when the app or MCP server exits (`user_genome.db.enc`). While running, a plaintext `user_genome.db` is used for normal SQLite access; on startup the sealed file is decrypted automatically. The encryption key is stored in the OS credential manager (Windows Credential Locker / macOS Keychain). SQLCipher was not used on Windows due to OpenSSL build constraints; file-level sealing provides at-rest protection when the process is not running.
 
 ---
 

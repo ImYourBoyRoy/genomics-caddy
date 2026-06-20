@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/search/VariantSearchPanel.svelte -->
 <script lang="ts">
   import type { DbSnpRecord } from '../../types/genomics';
+  import PanelLoadingState from '../common/loading/PanelLoadingState.svelte';
 
   /*
   Module Docstring:
@@ -70,7 +71,14 @@
 
   <div class="browser-results">
     <h4>Results ({browserResults.length})</h4>
-    {#if browserResults.length === 0}
+    {#if isBrowsing}
+      <PanelLoadingState
+        message="Searching genotypes in SQLite…"
+        submessage={searchRsid.trim() ? `Looking up ${searchRsid.trim()}` : `Region chr${browseChr}:${browseStart.toLocaleString()}-${browseEnd.toLocaleString()}`}
+        accent="#818cf8"
+        compact
+      />
+    {:else if browserResults.length === 0}
       <p class="empty-hint">No query results. Enter an rsID or chromosome range above.</p>
     {:else}
       <table class="results-table">

@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/agent/AgentReportView.svelte -->
 <script lang="ts">
-  import { formatMarkdown, parseThinking } from "../../utils/chatParser";
+  import { formatMarkdownSafe, parseThinking } from "../../utils/chatParser";
 
   interface Props {
     reportText: string;
@@ -103,7 +103,7 @@
     {/if}
 
     <div class="report-body message-body">
-      {@html formatMarkdown(parsed.response)}
+      {@html formatMarkdownSafe(parsed.response)}
     </div>
   </div>
 

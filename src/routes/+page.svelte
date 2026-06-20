@@ -2,77 +2,64 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
-  
-  /*
-  Module Docstring:
-  Purpose: Main orchestrator page for the Genomics Caddy frontend.
-  Responsibilities:
-  - Coordinate Tauri API operations (sample management, file selection, report requests).
-  - Manage application tab navigation, current profile, and file ingestion progress state.
-  - Load and merge genetic marker packs statically before invoking Rust evaluation.
-  - Mount high-level UI panels (Sidebar, ReportView, GenomeMap, VariantSearchPanel, McpPanel).
-  Key Inputs: Tauri events and user selection inputs.
-  Key Outputs: Full reactive dashboard views.
-  Operational Notes: Uses Svelte 5 runes and snippets for clean separation of layout and logic.
-  */
 
   // API wrappers
   import {
     selectFile,
-    getAppPaths,
-    importGenome as apiImportGenome,
-    getSamples,
-    queryRsids,
-    queryRegion,
-    generateReport,
-    deleteSample as apiDeleteSample,
     checkChainStatus,
-    downloadChain as apiDownloadChain
+    downloadChain as apiDownloadChain,
+    getResearchJobStatus,
+    getOllamaToken,
   } from "$lib/api/tauri";
+  import type { ChatMessage } from "$lib/types/agent";
+  import type { ResearchJob } from "$lib/types/research";
+  import {
+    startResearchEventListeners,
+    stopResearchEventListeners,
+  } from "$lib/research/researchEvents";
+  import {
+    jobRefs,
+    researchEventContext,
+  } from "$lib/research/liveProgress.svelte";
 
   // Svelte 5 components
   import AppShell from "$lib/components/layout/AppShell.svelte";
   import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
   import EmptyState from "$lib/components/common/EmptyState.svelte";
+  import BootstrapOverlay from "$lib/components/common/bootstrap/BootstrapOverlay.svelte";
+  import {
+    DB_TICKER_MESSAGES,
+    type BootstrapPhase,
+  } from "$lib/components/common/bootstrap/bootstrapPhases";
   import ReportView from "$lib/components/report/ReportView.svelte";
   import GenomeMap from "$lib/components/genome/GenomeMap.svelte";
   import VariantSearchPanel from "$lib/components/search/VariantSearchPanel.svelte";
   import McpPanel from "$lib/components/mcp/McpPanel.svelte";
   import AiAssistantPanel from "$lib/components/ai/AiAssistantPanel.svelte";
   import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
-
-  // Static Marker Packs & Manifest
-  import manifest from "$lib/marker-packs/manifest.json";
-  import core from "$lib/marker-packs/core.json";
-  import pgx from "$lib/marker-packs/pgx.json";
-  import metabolic from "$lib/marker-packs/metabolic.json";
-  import nutrients from "$lib/marker-packs/nutrients.json";
-  import neuropsych from "$lib/marker-packs/neuropsych.json";
-  import sleep from "$lib/marker-packs/sleep.json";
-  import connectiveTissue from "$lib/marker-packs/connective_tissue.json";
-  import thyroidAutoimmune from "$lib/marker-packs/thyroid_autoimmune.json";
-  import cardiovascular from "$lib/marker-packs/cardiovascular.json";
-  import cancerConfirmationOnly from "$lib/marker-packs/cancer_confirmation_only.json";
+  import ResearchPanel from "$lib/components/research/ResearchPanel.svelte";
+  import { dialogStore } from "$lib/utils/dialogState.svelte";
+  import { runPageBootstrap } from "$lib/utils/pageBootstrap";
+  import {
+    runImportGenome,
+    warmReport as runWarmReport,
+    triggerReport as runTriggerReport,
+    deleteSampleWithConfirm,
+    fetchSamples,
+    searchVariants,
+    computeReportMarkerCounts,
+    browseGenomeFile,
+    downloadReferenceChain,
+  } from "$lib/utils/pageSampleHandlers";
+  import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
+  import { loadOllamaUrl } from "$lib/utils/ollamaSettings";
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
   import "$lib/styles/print.css";
 
-  // Map pack IDs to static content
-  const PACKS_MAP: Record<string, { name: string; markers: any[] }> = {
-    core,
-    pgx,
-    metabolic,
-    nutrients,
-    neuropsych,
-    sleep,
-    connective_tissue: connectiveTissue,
-    thyroid_autoimmune: thyroidAutoimmune,
-    cardiovascular,
-    cancer_confirmation_only: cancerConfirmationOnly
-  };
-
-  import type { GenomeSample, AppPaths, GeneratedReport, DbSnpRecord, SectionDefinition, ReportTemplate, MarkerDefinition } from "$lib/types/genomics";
+  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, DbSnpRecord } from "$lib/types/genomics";
+  import type { VariantNavTarget } from "$lib/constants/traitCategories";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
@@ -80,7 +67,15 @@
   let filePath = $state("");
   let sampleNameInput = $state("");
   let appPaths = $state<AppPaths | null>(null);
-  
+
+  let isBootstrapping = $state(true);
+  let bootstrapPhase = $state<BootstrapPhase>("db");
+  let bootstrapMessage = $state("Opening local database…");
+  let bootstrapError = $state("");
+  let bootstrapStatus = $state<AppBootstrapStatus | null>(null);
+  let showBootstrapOverlay = $derived(
+    isBootstrapping || (bootstrapPhase === "error" && samples.length === 0)
+  );
   let isChainDownloaded = $state(false);
   let isDownloadingChain = $state(false);
   
@@ -90,7 +85,7 @@
   let importError = $state("");
   let importSuccess = $state("");
 
-  let activeTab = $state("report"); // "report", "map", "browser", "mcp", "agent", "ai"
+  let activeTab = $state("report"); // "report", "map", "browser", "mcp", "agent", "research", "ai"
 
   let generatedReport = $state<GeneratedReport | null>(null);
   let isGeneratingReport = $state(false);
@@ -107,18 +102,103 @@
   let aiOllamaUrl = $state("http://localhost:11434");
   let aiOllamaToken = $state("");
   let aiSelectedModel = $state("");
-  let aiMessages = $state<{ role: "user" | "assistant" | "system"; content: string; fullContent?: string; images?: string[] }[]>([]);
+  let aiMessages = $state<ChatMessage[]>([]);
   let aiSelectedPacks = $state<Record<string, boolean>>({});
   let aiOnlyActiveFindings = $state(true);
   let aiTemperature = $state(0.0);
+  let researchJob = $state<import("$lib/types/research").ResearchJob | null>(null);
+  
+  let aiInitialSearchQuery = $state("");
+  let aiActiveView = $state<"chat" | "evidence">("chat");
+
+  let highlightRsid = $state("");
+  let mapFocusRsid = $state("");
+  let activeSampleId = $state<number | null>(null);
+
+  $effect(() => {
+    activeSampleId = selectedSample?.id ?? null;
+  });
+
+  function handleExploreResearch(rsid: string) {
+    aiInitialSearchQuery = rsid;
+    aiActiveView = "evidence";
+    activeTab = "ai";
+  }
+
+  function navigateToVariant(rsid: string, target: VariantNavTarget) {
+    goToVariant(rsid, target, {
+      getSelectedSample: () => selectedSample,
+      setState: (patch) => {
+        if (patch.activeTab !== undefined) activeTab = patch.activeTab;
+        if (patch.highlightRsid !== undefined) highlightRsid = patch.highlightRsid;
+        if (patch.mapFocusRsid !== undefined) mapFocusRsid = patch.mapFocusRsid;
+        if (patch.searchRsid !== undefined) searchRsid = patch.searchRsid;
+        if (patch.browserResults !== undefined) browserResults = patch.browserResults;
+        if (patch.isBrowsing !== undefined) isBrowsing = patch.isBrowsing;
+        if (patch.aiInitialSearchQuery !== undefined) aiInitialSearchQuery = patch.aiInitialSearchQuery;
+        if (patch.aiActiveView !== undefined) aiActiveView = patch.aiActiveView;
+      },
+      onExploreResearch: handleExploreResearch,
+      onSearchError: (message) => dialogStore.alert("Search failed: " + message),
+    });
+  }
 
   let unlistenProgress: () => void;
 
+  $effect(() => {
+    const sampleId = selectedSample?.id;
+    if (!sampleId) {
+      researchJob = null;
+      return;
+    }
+    void getResearchJobStatus(sampleId)
+      .then((job) => { researchJob = job; })
+      .catch((e) => {
+        console.warn("Research job status load failed:", e);
+        researchJob = null;
+      });
+  });
+
+  $effect(() => {
+    const sampleId = selectedSample?.id;
+    const shouldPoll =
+      sampleId != null &&
+      activeTab !== "research" &&
+      (researchJob?.status === "running" ||
+        (researchJob?.status === "paused" && researchJob?.loop_active === true));
+
+    if (!shouldPoll || sampleId == null) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      void getResearchJobStatus(sampleId)
+        .then((job) => {
+          if (job) researchJob = job;
+        })
+        .catch((e) => {
+          console.warn("Research job poll failed:", e);
+        });
+    }, 8000);
+
+    return () => clearInterval(interval);
+  });
+
+  $effect(() => {
+    researchEventContext.sampleId = selectedSample?.id ?? null;
+    jobRefs.getJob = () => researchJob;
+    jobRefs.setJob = (j) => {
+      researchJob = j;
+    };
+  });
+
   onMount(() => {
     async function init() {
-      await refreshChainStatus();
-      await refreshSamples();
-      await loadAppPaths();
+      if (typeof localStorage !== "undefined") {
+        aiOllamaUrl = loadOllamaUrl();
+      }
+      aiOllamaToken = (await getOllamaToken()) || "";
+      await runBootstrap();
     }
     init();
 
@@ -129,16 +209,49 @@
       unlistenProgress = unlisten;
     });
 
+    void startResearchEventListeners();
+
     return () => {
       if (unlistenProgress) unlistenProgress();
+      stopResearchEventListeners();
     };
   });
 
-  async function loadAppPaths() {
-    try {
-      appPaths = await getAppPaths();
-    } catch (e) {
-      console.error("Failed to load paths", e);
+  async function runBootstrap() {
+    isBootstrapping = true;
+    bootstrapPhase = "db";
+    bootstrapMessage = DB_TICKER_MESSAGES[0];
+    bootstrapError = "";
+
+    const { pendingSample } = await runPageBootstrap({
+      onPhase: (phase, message) => {
+        bootstrapPhase = phase;
+        bootstrapMessage = message;
+      },
+      onStatus: (status) => {
+        bootstrapStatus = status;
+      },
+      onPaths: (paths) => {
+        appPaths = paths;
+      },
+      onChainPresent: (present) => {
+        isChainDownloaded = present;
+      },
+      onSamples: (loaded) => {
+        samples = loaded;
+      },
+      onError: (message) => {
+        bootstrapError = message;
+      },
+      warmReport,
+    });
+
+    isBootstrapping = false;
+    if (pendingSample) {
+      selectedSample = pendingSample;
+      if (!generatedReport) {
+        void triggerReport();
+      }
     }
   }
 
@@ -151,20 +264,20 @@
   }
 
   async function downloadChain() {
-    isDownloadingChain = true;
-    try {
-      await apiDownloadChain();
-      await refreshChainStatus();
-    } catch (e: any) {
-      alert("Failed to download chain file: " + e.toString());
-    } finally {
-      isDownloadingChain = false;
-    }
+    await downloadReferenceChain(
+      apiDownloadChain,
+      checkChainStatus,
+      (patch) => {
+        if (patch.isDownloadingChain !== undefined) isDownloadingChain = patch.isDownloadingChain;
+        if (patch.isChainDownloaded !== undefined) isChainDownloaded = patch.isChainDownloaded;
+      },
+      (message) => dialogStore.alert(message),
+    );
   }
 
   async function refreshSamples() {
     try {
-      samples = await getSamples();
+      samples = await fetchSamples();
       if (samples.length > 0 && selectedSample === null) {
         selectSample(samples[0]);
       }
@@ -175,134 +288,99 @@
 
   function selectSample(sample: GenomeSample) {
     selectedSample = sample;
-    triggerReport();
+    generatedReport = null;
+    void runTriggerReport({
+      selectedSample,
+      generatedReport,
+      warmReportFn: (id) => warmReport(id),
+    });
   }
 
   async function browseFile() {
-    try {
-      const selected = await selectFile();
-      if (selected) {
-        filePath = selected;
-        const parts = selected.split(/[\\/]/);
-        const fileName = parts[parts.length - 1];
-        sampleNameInput = fileName.replace(/\.[^/.]+$/, "");
-      }
-    } catch (e) {
-      console.error("File selector error", e);
-    }
+    await browseGenomeFile(selectFile, (patch) => {
+      if (patch.filePath !== undefined) filePath = patch.filePath;
+      if (patch.sampleNameInput !== undefined) sampleNameInput = patch.sampleNameInput;
+    });
   }
 
   async function importGenome(e: Event) {
-    e.preventDefault();
-    if (!filePath || !sampleNameInput) {
-      importError = "Please specify both file path and sample name.";
-      return;
-    }
-    isImporting = true;
-    importError = "";
-    importSuccess = "";
-    progressPercent = 0;
-    progressStatus = "Initializing ingestion...";
-    
-    try {
-      const sampleId = await apiImportGenome(filePath, sampleNameInput);
-      importSuccess = `Successfully imported sample as ID: ${sampleId}!`;
-      filePath = "";
-      sampleNameInput = "";
-      await refreshSamples();
-      
-      const newSample = samples.find(s => s.id === sampleId);
-      if (newSample) selectSample(newSample);
-    } catch (e: any) {
-      importError = e.toString();
-    } finally {
-      isImporting = false;
-    }
+    await runImportGenome(e, {
+      filePath,
+      sampleNameInput,
+      onState: (patch) => {
+        if (patch.isImporting !== undefined) isImporting = patch.isImporting;
+        if (patch.importError !== undefined) importError = patch.importError;
+        if (patch.importSuccess !== undefined) importSuccess = patch.importSuccess;
+        if (patch.progressPercent !== undefined) progressPercent = patch.progressPercent;
+        if (patch.progressStatus !== undefined) progressStatus = patch.progressStatus;
+        if (patch.filePath !== undefined) filePath = patch.filePath;
+        if (patch.sampleNameInput !== undefined) sampleNameInput = patch.sampleNameInput;
+      },
+      refreshSamples: async () => {
+        await refreshSamples();
+        return samples;
+      },
+      selectSample,
+    });
   }
 
-  function buildMergedTemplate(): ReportTemplate {
-    const sections: SectionDefinition[] = [];
-    for (const pack of manifest.packs) {
-      const packContent = PACKS_MAP[pack.id];
-      if (packContent && packContent.markers) {
-        sections.push({
-          name: packContent.name || pack.label,
-          markers: packContent.markers as MarkerDefinition[]
-        });
-      }
-    }
-    return {
-      title: "DNA Analysis & Biohacker Profile Report",
-      description: "Personal genomic profile matching candidate markers across multiple health systems.",
-      sections
-    };
+  async function warmReport(sampleId: number) {
+    await runWarmReport({
+      sampleId,
+      onState: (patch) => {
+        if (patch.isGeneratingReport !== undefined) isGeneratingReport = patch.isGeneratingReport;
+        if (patch.reportError !== undefined) reportError = patch.reportError;
+        if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
+      },
+    });
   }
 
   async function triggerReport() {
-    if (!selectedSample) return;
-    isGeneratingReport = true;
-    reportError = "";
-    try {
-      const mergedTemplate = buildMergedTemplate();
-      const templateJson = JSON.stringify(mergedTemplate);
-      generatedReport = await generateReport(selectedSample.id, templateJson);
-    } catch (e: any) {
-      reportError = "Report generation failed: " + e.toString();
-      console.error(e);
-    } finally {
-      isGeneratingReport = false;
-    }
+    await runTriggerReport({ selectedSample, generatedReport, warmReportFn: warmReport });
   }
 
   async function deleteSample(id: number) {
-    if (!confirm("Are you sure you want to delete this sample and all its genotypes?")) return;
-    try {
-      await apiDeleteSample(id);
-      if (selectedSample && selectedSample.id === id) {
-        selectedSample = null;
-        generatedReport = null;
-      }
-      await refreshSamples();
-    } catch (e: any) {
-      alert("Delete failed: " + e.toString());
-    }
+    await deleteSampleWithConfirm({
+      id,
+      selectedSample,
+      confirm: (message, onConfirm, title) => dialogStore.confirm(message, onConfirm, title),
+      alert: (message) => dialogStore.alert(message),
+      onState: (patch) => {
+        if (patch.selectedSample !== undefined) selectedSample = patch.selectedSample;
+        if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
+      },
+      refreshSamples,
+    });
   }
 
   async function searchVariant(e: Event) {
-    e.preventDefault();
-    if (!selectedSample) return;
-    isBrowsing = true;
-    try {
-      if (searchRsid.trim()) {
-        browserResults = await queryRsids(selectedSample.id, [searchRsid.trim()]);
-      } else {
-        browserResults = await queryRegion(
-          selectedSample.id,
-          browseChr,
-          Number(browseStart),
-          Number(browseEnd)
-        );
-      }
-    } catch (e: any) {
-      alert("Search failed: " + e.toString());
-    } finally {
-      isBrowsing = false;
-    }
+    await searchVariants(e, {
+      selectedSample,
+      searchRsid,
+      browseChr,
+      browseStart,
+      browseEnd,
+      onState: (patch) => {
+        if (patch.isBrowsing !== undefined) isBrowsing = patch.isBrowsing;
+        if (patch.browserResults !== undefined) browserResults = patch.browserResults;
+      },
+      alert: (message) => dialogStore.alert(message),
+    });
   }
 
-  let totalMarkersChecked = $derived(
-    generatedReport && generatedReport.sections
-      ? generatedReport.sections.reduce((acc: number, sec) => acc + (sec.markers ? sec.markers.length : 0), 0)
-      : 0
-  );
-
-  let foundMarkersCount = $derived(
-    generatedReport && generatedReport.sections
-      ? generatedReport.sections.reduce((acc: number, sec) => 
-          acc + (sec.markers ? sec.markers.filter(m => m.user_genotype !== "--" && !m.user_genotype.includes('-')).length : 0), 0)
-      : 0
-  );
+  let reportMarkerCounts = $derived(computeReportMarkerCounts(generatedReport));
+  let totalMarkersChecked = $derived(reportMarkerCounts.totalMarkersChecked);
+  let foundMarkersCount = $derived(reportMarkerCounts.foundMarkersCount);
 </script>
+
+{#if showBootstrapOverlay}
+  <BootstrapOverlay
+    phase={bootstrapPhase}
+    message={bootstrapMessage}
+    status={bootstrapStatus}
+    error={bootstrapError}
+  />
+{/if}
 
 <AppShell>
   {#snippet sidebar()}
@@ -343,6 +421,14 @@
             <button class="tab-btn" class:active={activeTab === "browser"} onclick={() => activeTab = "browser"}>🔍 Raw Browser</button>
             <button class="tab-btn" class:active={activeTab === "mcp"} onclick={() => activeTab = "mcp"}>🤖 MCP Integration</button>
             <button class="tab-btn" class:active={activeTab === "agent"} onclick={() => activeTab = "agent"}>🕵️ Research Agent</button>
+            <button class="tab-btn" class:active={activeTab === "research"} onclick={() => activeTab = "research"}>
+              🔬 Vector Research
+              {#if researchJob?.status === "running"}
+                <span class="tab-status-pill running" title="Enrichment sweep in progress">{researchJob.enriched_count}/{researchJob.total_markers}</span>
+              {:else if researchJob?.status === "paused"}
+                <span class="tab-status-pill paused" title="Sweep paused">paused</span>
+              {/if}
+            </button>
             <button class="tab-btn" class:active={activeTab === "ai"} onclick={() => activeTab = "ai"}>💬 AI Consultation</button>
           </nav>
         </header>
@@ -356,9 +442,12 @@
               {foundMarkersCount}
               {totalMarkersChecked}
               {reportError}
+              {highlightRsid}
+              onExploreResearch={handleExploreResearch}
+              onNavigateToVariant={navigateToVariant}
             />
           {:else if activeTab === "map"}
-            <GenomeMap {selectedSample} {generatedReport} />
+            <GenomeMap {selectedSample} {generatedReport} focusRsid={mapFocusRsid} onNavigateToVariant={navigateToVariant} />
           {:else if activeTab === "browser"}
             <VariantSearchPanel
               bind:searchRsid
@@ -379,6 +468,13 @@
               bind:ollamaToken={aiOllamaToken}
               bind:selectedModel={aiSelectedModel}
             />
+          {:else if activeTab === "research"}
+            <ResearchPanel
+              {selectedSample}
+              bind:ollamaUrl={aiOllamaUrl}
+              bind:ollamaToken={aiOllamaToken}
+              bind:job={researchJob}
+            />
           {:else if activeTab === "ai"}
             <AiAssistantPanel
               {selectedSample}
@@ -390,6 +486,9 @@
               bind:selectedPacks={aiSelectedPacks}
               bind:onlyActiveFindings={aiOnlyActiveFindings}
               bind:temperature={aiTemperature}
+              bind:initialSearchQuery={aiInitialSearchQuery}
+              bind:activeView={aiActiveView}
+              onNavigateToVariant={navigateToVariant}
             />
           {/if}
         </div>

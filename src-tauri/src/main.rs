@@ -13,25 +13,39 @@ Operational Notes: Enables unified CLI + GUI packaging.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+fn parse_mcp_auth_token(args: &[String]) -> Option<String> {
+    for arg in args {
+        if let Some(token) = arg.strip_prefix("--mcp-auth-token=") {
+            let trimmed = token.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed.to_string());
+            }
+        }
+    }
+    std::env::var("GENOMICS_MCP_TOKEN")
+        .ok()
+        .map(|t| t.trim().to_string())
+        .filter(|t| !t.is_empty())
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    let mcp_write = args.iter().any(|arg| arg == "--mcp-write");
     if args.iter().any(|arg| arg == "--mcp") {
-        // Run MCP server loop
-        let mut db_path = if let Ok(appdata) = std::env::var("APPDATA") {
-            std::path::PathBuf::from(appdata)
-        } else if let Ok(home) = std::env::var("HOME") {
-            let mut p = std::path::PathBuf::from(home);
-            p.push(".config");
-            p
-        } else {
-            std::path::PathBuf::from(".")
-        };
-        db_path.push("com.dna.explorer");
-        db_path.push("user_genome.db");
+        let data_dir = tauri_app_lib::paths::resolve_data_dir();
+        tauri_app_lib::paths::ensure_data_layout(&data_dir).ok();
+        let db_path = tauri_app_lib::paths::db_path(&data_dir);
+        let auth_token = parse_mcp_auth_token(&args);
 
-        let rt = tokio::runtime::Runtime::new().unwrap();
+        let rt = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt,
+            Err(e) => {
+                eprintln!("Failed to start async runtime: {}", e);
+                std::process::exit(1);
+            }
+        };
         rt.block_on(async {
-            tauri_app_lib::mcp::run_mcp_server(db_path).await;
+            tauri_app_lib::mcp::run_mcp_server(db_path, mcp_write, auth_token).await;
         });
     } else {
         tauri_app_lib::run();

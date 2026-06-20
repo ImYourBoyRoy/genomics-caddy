@@ -59,8 +59,12 @@
       </div>
       <div class="health-stat">
         <span class="lbl">Markers Checked</span>
-        <span class="val">{foundMarkersCount} / {totalMarkersChecked} SNPs Found</span>
+        <span class="val">{foundMarkersCount} / {totalMarkersChecked} curated SNPs found</span>
       </div>
+      <p class="marker-scope-note">
+        Counts reflect hand-curated marker packs only (~99 SNPs), not your full chip (~600k variants).
+        Use Agent Discovery and Vector Research scopes to expand beyond this baseline.
+      </p>
     </div>
   </div>
 </div>

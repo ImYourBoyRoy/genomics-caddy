@@ -23,7 +23,7 @@
 
   function triggerAlert(msg: string) {
     navigator.clipboard.writeText(currentSystemPrompt);
-    alert(msg);
+    dialogStore.alert(msg);
   }
 </script>
 

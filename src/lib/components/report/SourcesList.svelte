@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/report/SourcesList.svelte -->
 <script lang="ts">
   import type { MarkerSource } from '../../types/genomics';
+  import { safeExternalHref } from '../../utils/urlSafety';
 
   /*
   Module Docstring:
@@ -27,7 +28,12 @@
       {#each sources as source}
         <li>
           {#if source.url}
-            <a href={source.url} target="_blank" rel="noopener noreferrer" class="source-link">{source.name}</a>
+            {@const safeUrl = safeExternalHref(source.url)}
+            {#if safeUrl}
+              <a href={safeUrl} target="_blank" rel="noopener noreferrer" class="source-link">{source.name}</a>
+            {:else}
+              {source.name}
+            {/if}
           {:else}
             {source.name}
           {/if}

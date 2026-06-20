@@ -1,0 +1,150 @@
+/* ./src/lib/styles/bootstrap-animations.css */
+/*
+Purpose: Keyframes and motion tokens for the bootstrap splash screen.
+Uses Genomics Caddy theme variables from theme.css (--accent, --success, etc.).
+*/
+
+:root {
+  --bootstrap-glow: rgba(88, 80, 236, 0.42);
+  --bootstrap-glow-soft: rgba(88, 80, 236, 0.12);
+  --bootstrap-glow-success: rgba(16, 185, 129, 0.38);
+  --bootstrap-glow-error: rgba(239, 68, 68, 0.35);
+  --bootstrap-shimmer: rgba(255, 255, 255, 0.06);
+}
+
+@keyframes bootstrap-helix-drift {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.5deg);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.55;
+  }
+}
+
+@keyframes bootstrap-orb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+
+@keyframes bootstrap-orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bootstrap-shimmer-slide {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+@keyframes bootstrap-border-flow {
+  to {
+    --bootstrap-border-angle: 360deg;
+  }
+}
+
+@keyframes bootstrap-step-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bootstrap-stat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bootstrap-line-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes bootstrap-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bootstrap-ready-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--bootstrap-glow-soft);
+  }
+  50% {
+    box-shadow: 0 0 32px 4px var(--bootstrap-glow);
+  }
+}
+
+@keyframes bootstrap-message-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bootstrap-particle-float {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(var(--dx, 8px), var(--dy, -18px));
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bootstrap-motion,
+  .bootstrap-motion::before,
+  .bootstrap-motion::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

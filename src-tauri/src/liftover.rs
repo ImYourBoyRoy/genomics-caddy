@@ -48,7 +48,7 @@ impl LiftoverEngine {
         let path_ref = path.as_ref();
         let file = File::open(path_ref).map_err(|e| format!("Failed to open chain file: {}", e))?;
         
-        let reader: Box<dyn Read> = if path_ref.extension().map_or(false, |ext| ext == "gz") {
+        let reader: Box<dyn Read> = if path_ref.extension().is_some_and(|ext| ext == "gz") {
             Box::new(GzDecoder::new(file))
         } else {
             Box::new(file)

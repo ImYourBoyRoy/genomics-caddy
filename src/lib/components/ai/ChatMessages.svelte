@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/ai/ChatMessages.svelte -->
 <script lang="ts">
-  import { parseThinking, formatMarkdown } from '../../utils/chatParser';
+  import { parseThinking, formatMarkdownSafe } from '../../utils/chatParser';
 
   interface Props {
     messages: { role: 'user' | 'assistant' | 'system'; content: string; fullContent?: string; images?: string[]; safetyReview?: string }[];
@@ -120,7 +120,7 @@
           
           {#if parsed.response || (!parsed.thought && !isChatting)}
             <div class="message-body">
-              {@html formatMarkdown(parsed.response)}
+              {@html formatMarkdownSafe(parsed.response)}
               {#if !parsed.response && isChatting}
                 <span class="typing-indicator">Streaming response...</span>
               {/if}
@@ -143,7 +143,7 @@
               {/if}
               {#if parsedSafety.response}
                 <div class="safety-review-body font-mono">
-                  {@html formatMarkdown(parsedSafety.response)}
+                  {@html formatMarkdownSafe(parsedSafety.response)}
                 </div>
               {/if}
             </div>

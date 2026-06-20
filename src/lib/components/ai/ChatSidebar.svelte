@@ -1,17 +1,10 @@
 <!-- ./src/lib/components/ai/ChatSidebar.svelte -->
 <script lang="ts">
-  interface ChatSession {
-    id: string;
-    title: string;
-    messages: any[];
-    timestamp: number;
-    sampleId: number | null;
-    selectedPacks: Record<string, boolean>;
-    onlyActiveFindings: boolean;
-    temperature: number;
-    selectedModel: string;
-    maxTokens?: number;
-    extendedThinking?: boolean;
+  import type { ChatSession } from "../../utils/chatSession";
+  import type { ChatMessage } from "../../types/agent";
+
+  interface SidebarSession extends ChatSession {
+    messages: ChatMessage[];
   }
 
   interface Props {

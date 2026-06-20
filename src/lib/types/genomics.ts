@@ -139,11 +139,52 @@ export interface GenomeSample {
   name: string;
   genetic_sex: string;
   imported_at: string;
+  qc_status?: string | null;
+  call_rate?: number | null;
+  titv_ratio?: number | null;
+  heterozygosity_rate?: number | null;
 }
 
 export interface AppPaths {
+  data_dir?: string;
   db_path: string;
   chain_path: string;
+  env_path?: string;
+}
+
+/** Startup payload after a single DB open + migration pass. */
+export interface AppBootstrapStatus {
+  data_dir: string;
+  db_path: string;
+  chain_path: string;
+  chain_present: boolean;
+  env_path: string;
+  sample_count: number;
+  genotype_count: number;
+  discovered_findings_count: number;
+  gwas_reference_count: number;
+  evidence_library_count: number;
+  samples: GenomeSample[];
+}
+
+export interface DiscoveredFindingSummary {
+  rsid: string;
+  gene?: string | null;
+  user_genotype?: string | null;
+  interpretation_status: string;
+  clinvar_clinical_significance?: string | null;
+}
+
+export interface VectorPromotedFinding {
+  rsid: string;
+  gene?: string | null;
+  user_genotype?: string | null;
+  trait_summary: string;
+  trait_categories: string[];
+  significance_score: number;
+  gwas_best_pvalue?: number | null;
+  enrichment_version: string;
+  promoted_at: number;
 }
 
 export interface DbSnpRecord {

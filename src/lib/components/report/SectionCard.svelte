@@ -16,12 +16,17 @@
   Operational Notes: Uses SectionSummary from backend to decide display mode.
   */
 
+  import type { VariantNavTarget } from '../../constants/traitCategories';
+
   interface Props {
     section: EvaluatedSection;
     viewMode: "simple" | "clinical" | "dual";
+    onExploreResearch?: (rsid: string) => void;
+    highlightRsid?: string;
+    onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
 
-  let { section, viewMode }: Props = $props();
+  let { section, viewMode, onExploreResearch, highlightRsid = "", onNavigateToVariant }: Props = $props();
 
   let summaryParts = $derived(getSectionSummaryParts(section.summary));
   let showPercent = $derived(section.summary.show_percent_score);
@@ -55,7 +60,7 @@
 
   <div class="markers-grid">
     {#each section.markers as marker}
-      <VariantCard {marker} {viewMode} />
+      <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
     {/each}
   </div>
 </div>

@@ -1,11 +1,12 @@
 <!-- ./src/lib/components/agent/AgentResearchPanel.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listen } from "@tauri-apps/api/event";
-  import { scanOllamaModels, streamOllamaChat, saveReportJson } from "../../api/tauri";
+  import { scanOllamaModels, streamOllamaChat, saveReportJson, chatOllama } from "../../api/tauri";
+  import type { ChatMessage } from "../../types/agent";
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
   import { dialogStore } from "../../utils/dialogState.svelte";
   import { isReasoningModel, filterChatModels, autoSelectModel } from "../../utils/aiPrompt";
+  import { newOllamaStreamId, subscribeOllamaStream } from "../../utils/ollamaStream";
   import {
     type AgentStep, type LocalGenotypeResult, type NcbiData, type PubMedArticle,
     type ClinicalTrial, type ChemblDrug, fetchLocalGenotype, resolveGeneToRsids,
@@ -40,7 +41,6 @@
   let scanError = $state("");
   let models = $state<string[]>([]);
   let showThinking = $state(true);
-  let ncbiApiKey = $state("");
 
   // Agent Loop Variables
   let steps = $state<AgentStep[]>([]);
@@ -73,7 +73,6 @@
   );
 
   onMount(async () => {
-    ncbiApiKey = localStorage.getItem("genomics_ncbi_api_key") || "";
     await scanModels();
   });
 
@@ -102,18 +101,13 @@
   }
 
   async function callOllamaNonStreamed(prompt: string): Promise<string> {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (ollamaToken) headers["Authorization"] = ollamaToken;
-    const body = JSON.stringify({
-      model: selectedModel,
-      messages: [{ role: "user", content: prompt }],
-      stream: false,
-      options: { temperature: 0.0 }
-    });
-    const res = await fetch(`${ollamaUrl}/api/chat`, { method: "POST", headers, body });
-    if (!res.ok) throw new Error(`Ollama returned status ${res.status}`);
-    const json = await res.json();
-    return json?.message?.content || "";
+    return chatOllama(
+      ollamaUrl,
+      ollamaToken || undefined,
+      selectedModel,
+      [{ role: "user", content: prompt }],
+      0.0
+    );
   }
 
   async function runAgent() {
@@ -123,8 +117,6 @@
       return;
     }
 
-    localStorage.setItem("genomics_ncbi_api_key", ncbiApiKey);
-    reportText = "";
     validationResult = null;
     runState = "running";
     currentStepIndex = 0;
@@ -182,15 +174,15 @@
       advanceStep(0, "success", `Resolved target ${mainRsid}. Genotype: ${localResult.genotype}. Gene: ${localResult.gene || "Unknown"}`);
 
       // Step 2: NCBI ClinVar/dbSNP
-      ncbiData = await fetchNcbiDbsnpAndClinvar(mainRsid, ncbiApiKey);
+      ncbiData = await fetchNcbiDbsnpAndClinvar(mainRsid);
       advanceStep(1, "success", `ClinVar significance: ${ncbiData.clinicalSignificance}. Position: Chr ${ncbiData.chromosome}:${ncbiData.position}`);
 
       // Step 3: PubMed
-      pubmedArticles = await fetchPubMedArticles(mainRsid, ncbiApiKey);
+      pubmedArticles = await fetchPubMedArticles(mainRsid);
       advanceStep(2, "success", `Retrieved ${pubmedArticles.length} recent PubMed publications`);
 
       // Step 4: ClinicalTrials.gov
-      trials = await fetchClinicalTrials(mainRsid, localResult.gene, ncbiApiKey);
+      trials = await fetchClinicalTrials(mainRsid, localResult.gene);
       advanceStep(3, "success", `Found ${trials.length} active/recruiting trials`);
 
       // Step 5: Self-Critique & Gap Analysis (LLM)
@@ -207,7 +199,7 @@
       if (critiqueObj?.recommendedGeneHealing && critiqueObj.recommendedGeneHealing !== "none") {
         const geneTarget = critiqueObj.recommendedGeneHealing;
         if (trials.length === 0) {
-          healedTrials = await fetchClinicalTrials(mainRsid, geneTarget, ncbiApiKey);
+          healedTrials = await fetchClinicalTrials(mainRsid, geneTarget);
         }
         if (drugs.length === 0) {
           healedDrugs = await fetchChemblDrugs(geneTarget);
@@ -230,41 +222,45 @@
         localMatch: localResult.genotype !== "Not found in raw DNA file"
       };
 
-      let unChunk: () => void;
-      let unDone: () => void;
+      let stopStream: (() => void) | null = null;
+      const synthesisStreamId = newOllamaStreamId();
 
-      const streamPromise = new Promise<void>(async (resolveStream, rejectStream) => {
-        try {
-          [unChunk, unDone] = await Promise.all([
-            listen("ollama-chunk", (event) => {
-              reportText += event.payload as string;
-            }),
-            listen("ollama-done", () => {
-              unChunk(); unDone();
-              resolveStream();
-            })
-          ]);
+      try {
+        stopStream = await subscribeOllamaStream(synthesisStreamId, {
+          onChunk: (chunk) => {
+            reportText += chunk;
+          },
+          onDone: () => {},
+        });
 
-          const payload = [{ role: "system", content: "You are an AI research scientist." }, { role: "user", content: synthesisPrompt }];
-          await streamOllamaChat(ollamaUrl, ollamaToken || undefined, selectedModel, payload, 0.2, 4096);
-        } catch (err) {
-          rejectStream(err);
-        }
-      });
-
-      await streamPromise;
+        const payload: ChatMessage[] = [
+          { role: "system", content: "You are an AI research scientist." },
+          { role: "user", content: synthesisPrompt },
+        ];
+        await streamOllamaChat(
+          synthesisStreamId,
+          ollamaUrl,
+          ollamaToken || undefined,
+          selectedModel,
+          payload,
+          0.2,
+          4096,
+        );
+      } finally {
+        stopStream?.();
+      }
       advanceStep(6, "success", "Draft report synthesis streamed and compiled successfully.");
 
       // Step 8: Quality Validation (LLM)
       const valPrompt = buildValidationPrompt(reportText);
       const valText = await callOllamaNonStreamed(valPrompt);
       const valObj = parseJsonSafely(valText);
-      validationResult = valObj || {
-        medicalClaimingFree: true,
-        disclaimerPresent: true,
-        structureOk: true,
-        auditComments: "Quality audit completed successfully.",
-        approved: true
+      validationResult = valObj ?? {
+        medicalClaimingFree: false,
+        disclaimerPresent: false,
+        structureOk: false,
+        auditComments: "Quality audit returned invalid JSON — report blocked pending manual review.",
+        approved: false
       };
       advanceStep(7, "success", `Quality check results: Approved=${validationResult.approved}. Notes: ${validationResult.auditComments}`);
 
@@ -346,19 +342,9 @@
             {/if}
           </div>
 
-          <!-- NCBI API Key -->
-          <div class="input-row">
-            <label for="ncbi-api-key">NCBI API Key (Optional)</label>
-            <input
-              id="ncbi-api-key"
-              type="password"
-              bind:value={ncbiApiKey}
-              placeholder="e.g. 32-character key"
-            />
-            <p style="font-size: 0.65rem; color: var(--text-secondary); margin: 0; line-height: 1.35;">
-              🔑 Speeds up queries to 10 requests/second. Saved locally.
-            </p>
-          </div>
+          <p style="font-size: 0.65rem; color: var(--text-secondary); margin: 0 0 12px; line-height: 1.35;">
+            NCBI API key (optional) is configured in AI Settings → Advanced → Vector Research.
+          </p>
 
           <button class="btn btn-primary w-full" type="submit" disabled={isScanning || !queryText.trim()}>
             🕵️ Start Agentic Research
@@ -410,140 +396,4 @@
   {/if}
 </div>
 
-<style>
-  .agent-panel-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  .setup-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 1100px;
-    margin: 20px auto;
-  }
-  .setup-config {
-    display: flex;
-    flex-direction: column;
-  }
-  .input-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .input-row label {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-  }
-  .input-row input, .input-row select {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 0.88rem;
-  }
-  .input-row input:focus, .input-row select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .w-full { width: 100%; }
-  .scanning-text {
-    font-size: 0.65rem;
-    color: var(--accent);
-    margin-top: 4px;
-  }
-
-  /* Findings shortcuts */
-  .setup-quick-launch {
-    display: flex;
-    flex-direction: column;
-  }
-  .empty-quick-list {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 40px;
-  }
-  .findings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    max-height: 480px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-  .finding-shortcut-btn {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 12px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .finding-shortcut-btn:hover {
-    background: rgba(88, 80, 236, 0.05);
-    border-color: var(--accent);
-    transform: translateY(-2px);
-  }
-  .shortcut-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .shortcut-header .rsid {
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    font-weight: 600;
-  }
-  .shortcut-header .gene {
-    font-size: 0.72rem;
-    color: var(--accent);
-  }
-  .shortcut-body {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-  }
-  .severity-tag {
-    font-size: 0.6rem;
-    padding: 1px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-  }
-  .severity-tag.high_risk {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-  }
-  .severity-tag.moderate_risk {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-  }
-  .severity-tag.protective {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-  }
-  .severity-tag.no_data {
-    background: rgba(107, 114, 128, 0.15);
-    color: #9ca3af;
-  }
-  
-  .font-mono { font-family: monospace; }
-  .font-bold { font-weight: 700; }
-
-  @media (max-width: 900px) {
-    .setup-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
+<style src="../../styles/components/agent-research-panel.css"></style>

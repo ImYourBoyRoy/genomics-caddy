@@ -6,6 +6,12 @@ node_modules
 .env
 .env.*
 !.env.example
+/data/*
+!/data/.gitkeep
+!/data/references/.gitkeep
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-*.log
+*.txt
+*DNA*.txt
+AncestryDNA.txt
+23andMe*.txt

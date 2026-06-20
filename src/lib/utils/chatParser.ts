@@ -22,6 +22,15 @@
  * - Paragraph breaks
  */
 
+import DOMPurify from "isomorphic-dompurify";
+
+const MARKDOWN_ALLOWED_TAGS = [
+  "p", "br", "strong", "em", "h3", "h4", "h5",
+  "pre", "code", "blockquote", "hr", "ul", "ol", "li", "a",
+];
+
+const MARKDOWN_ALLOWED_ATTR = ["href", "target", "rel", "class"];
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -164,10 +173,18 @@ export function formatMarkdown(md: string): string {
   // 8. Horizontal rules (must be a line by itself)
   html = html.replace(/^(---+|\*\*\*+|___+)\s*$/gim, '<hr class="md-hr" />');
 
-  // 9. Links [text](url) — after HTML escaping so parens are intact
+  // 9. Links [text](url) — allow http(s) only; escape attribute values
   html = html.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1</a>'
+    (_match, label: string, rawUrl: string) => {
+      const url = rawUrl.trim();
+      if (!/^https?:\/\//i.test(url) || /[\s"'<>]/.test(url)) {
+        return `${label} (${url})`;
+      }
+      const safeUrl = url.replace(/"/g, "&quot;");
+      const safeLabel = String(label);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="md-link">${safeLabel}</a>`;
+    }
   );
 
   // 10. Process lists line-by-line
@@ -208,4 +225,14 @@ export function formatMarkdown(md: string): string {
   html = html.replace(/\n/g, "<br/>");
 
   return "<p>" + html + "</p>";
+}
+
+/** Format markdown then sanitize for safe `{@html}` rendering. */
+export function formatMarkdownSafe(md: string): string {
+  const textOnly = DOMPurify.sanitize(md, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  const raw = formatMarkdown(textOnly);
+  return DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: MARKDOWN_ALLOWED_TAGS,
+    ALLOWED_ATTR: MARKDOWN_ALLOWED_ATTR,
+  });
 }

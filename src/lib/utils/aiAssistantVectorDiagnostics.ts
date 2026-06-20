@@ -21,6 +21,8 @@ export async function fetchVectorResearchDiagnostics(
       collection_exists: false,
       qdrant_url: "",
       embedding_model: "",
+      sweep_quality: "unknown",
+      embedding_model_mismatch: false,
       error: message,
     };
   }

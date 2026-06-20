@@ -32,7 +32,7 @@
   <summary class="settings-details-summary">🔬 Vector Research (Consultation RAG)</summary>
   <div class="settings-details-content">
     <p class="card-hint">
-      Semantically searches your Qdrant index on each message and injects enriched hits into the AI context.
+      Uses hybrid workbench search (filtered + reranked) on each message and injects enriched hits into the AI context.
     </p>
 
     <label class="filter-toggle-label">
@@ -85,7 +85,42 @@
               </strong>
             </li>
           {/if}
+          <li>
+            <span>Sweep quality</span>
+            <strong class:bad={vectorDiagnostics.sweep_quality === "fast"}>
+              {vectorDiagnostics.sweep_quality === "fast" ? "Fast (reduced sources)" : "Full"}
+            </strong>
+          </li>
+          <li>
+            <span>Named vectors</span>
+            <strong>{vectorDiagnostics.named_vectors_enabled ? "Enabled" : "Default only"}</strong>
+          </li>
+          {#if vectorDiagnostics.stale_vector_count != null && vectorDiagnostics.stale_vector_count > 0}
+            <li>
+              <span>Stale vectors</span>
+              <strong class="bad">{vectorDiagnostics.stale_vector_count.toLocaleString()}</strong>
+            </li>
+          {/if}
+          {#if vectorDiagnostics.index_embedding_model}
+            <li>
+              <span>Index embed model</span>
+              <strong class:bad={vectorDiagnostics.embedding_model_mismatch}>
+                {vectorDiagnostics.index_embedding_model}
+              </strong>
+            </li>
+          {/if}
         </ul>
+        {#if vectorDiagnostics.embedding_model_mismatch}
+          <p class="diag-warn">
+            Embedding model mismatch — consultation RAG is blocked until you re-embed or re-sweep with
+            <strong>{vectorDiagnostics.embedding_model}</strong>.
+          </p>
+        {/if}
+        {#if vectorDiagnostics.sweep_quality === "fast"}
+          <p class="diag-warn">
+            Last sweep used fast mode (gnomAD/named vectors/secondary sources may be skipped). Run a full sweep for richer retrieval.
+          </p>
+        {/if}
         {#if vectorDiagnostics.error}
           <p class="diag-error">{vectorDiagnostics.error}</p>
         {/if}

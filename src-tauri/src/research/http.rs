@@ -114,6 +114,17 @@ pub static EMBED_CLIENT: LazyLock<Client> = LazyLock::new(|| {
         .expect("Failed to build shared embed HTTP client")
 });
 
+/// Shared client for Qdrant REST (search, upsert, scroll). Reuses connection pool across requests.
+pub static QDRANT_CLIENT: LazyLock<Client> = LazyLock::new(|| {
+    Client::builder()
+        .timeout(Duration::from_secs(60))
+        .connect_timeout(Duration::from_secs(10))
+        .pool_max_idle_per_host(24)
+        .tcp_keepalive(Duration::from_secs(60))
+        .build()
+        .expect("Failed to build Qdrant HTTP client")
+});
+
 /// Sync HTTP for `spawn_blocking` paths (gnomAD tabix). Never call `Handle::block_on` from blocking threads.
 pub static BLOCKING_HTTP_CLIENT: LazyLock<reqwest::blocking::Client> = LazyLock::new(|| {
     reqwest::blocking::Client::builder()

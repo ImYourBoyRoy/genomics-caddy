@@ -17,6 +17,49 @@ pub fn named_vectors_enabled(config: &QdrantConfig) -> bool {
     config.named_vectors_enabled
 }
 
+/// Route semantic queries to the best named vector space when the collection supports it.
+pub fn query_vector_name_for_text(query: &str, config: &QdrantConfig) -> Option<&'static str> {
+    if !config.named_vectors_enabled {
+        return None;
+    }
+    let q = query.to_lowercase();
+    if q.contains("gene ")
+        || q.contains(" genes")
+        || q.contains("mechanism")
+        || q.contains("pathway")
+        || q.contains("protein")
+    {
+        return Some(NAMED_GENE);
+    }
+    if q.contains("actionable")
+        || q.contains("clinical")
+        || q.contains("drug")
+        || q.contains("treat")
+        || q.contains("therap")
+        || q.contains("pharm")
+        || q.contains("medication")
+    {
+        return Some(NAMED_ACTIONABILITY);
+    }
+    if q.contains("evidence")
+        || q.contains("study")
+        || q.contains("gwas")
+        || q.contains("literature")
+        || q.contains("pubmed")
+        || q.contains("research")
+    {
+        return Some(NAMED_EVIDENCE);
+    }
+    if q.contains("trait")
+        || q.contains("risk")
+        || q.contains("association")
+        || q.contains("phenotype")
+    {
+        return Some(NAMED_TRAIT);
+    }
+    None
+}
+
 pub fn build_named_vector_texts(payload: &Map<String, Value>, full_text: &str) -> HashMap<&'static str, String> {
     let rsid = payload.get("rsid").and_then(|v| v.as_str()).unwrap_or("unknown");
     let genotype = payload.get("genotype").and_then(|v| v.as_str()).unwrap_or("unknown");
@@ -200,5 +243,37 @@ pub fn extend_payload_named_vector_meta(payload: &mut Map<String, Value>, enable
             "named_vector_names".into(),
             json!([NAMED_TRAIT, NAMED_GENE, NAMED_EVIDENCE, NAMED_ACTIONABILITY]),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cfg_named(enabled: bool) -> QdrantConfig {
+        QdrantConfig {
+            url: "http://localhost:6333".into(),
+            api_key: None,
+            collection: "test".into(),
+            embedding_model: "mxbai-embed-large".into(),
+            gwas_strict: true,
+            ncbi_api_key: None,
+            auto_start: false,
+            named_vectors_enabled: enabled,
+        }
+    }
+
+    #[test]
+    fn query_vector_routes_trait_and_gene() {
+        let cfg = cfg_named(true);
+        assert_eq!(
+            query_vector_name_for_text("What traits affect bone density?", &cfg),
+            Some(NAMED_TRAIT)
+        );
+        assert_eq!(
+            query_vector_name_for_text("gene mechanism for COMT", &cfg),
+            Some(NAMED_GENE)
+        );
+        assert!(query_vector_name_for_text("hello", &cfg_named(false)).is_none());
     }
 }

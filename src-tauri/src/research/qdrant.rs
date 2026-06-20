@@ -1,9 +1,19 @@
 // ./src-tauri/src/research/qdrant.rs
 use super::embed::embed_text;
-use super::http::HEALTH_CHECK_CLIENT;
+use super::http::{HEALTH_CHECK_CLIENT, QDRANT_CLIENT};
 use super::types::*;
 use super::util::{is_current_enrichment_version, string_to_u64};
 use std::collections::HashMap;
+
+fn qdrant_http() -> &'static reqwest::Client {
+    &QDRANT_CLIENT
+}
+
+fn apply_named_vector(body: &mut serde_json::Value, vector_name: Option<&str>) {
+    if let Some(name) = vector_name.filter(|n| !n.is_empty()) {
+        body["using"] = serde_json::json!(name);
+    }
+}
 
 pub async fn test_qdrant_connection(
     url: &str,
@@ -143,10 +153,7 @@ pub async fn ensure_qdrant_collection(
     collection: &str,
     dims: u32,
 ) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!("{}/collections/{}", url.trim_end_matches('/'), collection);
     let body = serde_json::json!({
@@ -178,10 +185,7 @@ pub async fn purge_qdrant_collection(
     api_key: Option<&str>,
     collection: &str,
 ) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}",
@@ -243,10 +247,7 @@ pub async fn check_existing_points(
     collection: &str,
     ids: Vec<u64>,
 ) -> Result<Vec<u64>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
     let body = serde_json::json!({
@@ -303,10 +304,7 @@ pub async fn classify_points_sweep_state(
         });
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
     let body = serde_json::json!({
@@ -373,10 +371,7 @@ pub async fn classify_points_index_state(
         return Ok(Vec::new());
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(45))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
     let body = serde_json::json!({
@@ -442,10 +437,7 @@ pub async fn upsert_to_qdrant(
     vector: Vec<f32>,
     payload: serde_json::Value,
 ) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let numeric_id = string_to_u64(point_id);
     let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
@@ -483,10 +475,7 @@ pub async fn upsert_points_batch(
         return Ok(());
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let qdrant_points: Vec<serde_json::Value> = points
         .into_iter()
@@ -556,11 +545,9 @@ pub async fn search_qdrant(
     sample_id: Option<i64>,
     limit: u32,
     trait_category: Option<&str>,
+    vector_name: Option<&str>,
 ) -> Result<Vec<QdrantHit>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/search",
@@ -569,7 +556,7 @@ pub async fn search_qdrant(
     );
 
     let filter = build_payload_filter(sample_id, trait_category);
-    let body = if let Some(f) = filter {
+    let mut body = if let Some(f) = filter {
         serde_json::json!({
             "vector": vector,
             "limit": limit,
@@ -583,6 +570,7 @@ pub async fn search_qdrant(
             "with_payload": true
         })
     };
+    apply_named_vector(&mut body, vector_name);
 
     let mut req = client.post(&endpoint).json(&body);
     if let Some(key) = api_key {
@@ -620,10 +608,7 @@ pub async fn scroll_qdrant_points(
     trait_category: Option<&str>,
     limit: u32,
 ) -> Result<Vec<QdrantHit>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/scroll",
@@ -705,10 +690,7 @@ pub async fn scroll_qdrant_vectors_sample(
     limit: usize,
     _vector_name: &str,
 ) -> Result<Vec<ScrollVectorItem>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(60))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/scroll",
@@ -803,10 +785,7 @@ pub async fn ensure_qdrant_collection_named(
     collection: &str,
     dims: u32,
 ) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!("{}/collections/{}", url.trim_end_matches('/'), collection);
     let body = serde_json::json!({
@@ -839,10 +818,7 @@ async fn update_collection_named_vectors(
     collection: &str,
     dims: u32,
 ) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/vectors",
@@ -877,10 +853,7 @@ pub async fn upsert_points_batch_named(
         return Ok(());
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(45))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let qdrant_points: Vec<serde_json::Value> = points
         .into_iter()
@@ -992,10 +965,7 @@ pub async fn count_qdrant_points(
     collection: &str,
     sample_id: Option<i64>,
 ) -> Result<u64, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/count",
@@ -1108,11 +1078,9 @@ pub async fn search_qdrant_filtered(
     has_direction: Option<bool>,
     min_data_quality: Option<f32>,
     min_wellness_actionability: Option<f32>,
+    vector_name: Option<&str>,
 ) -> Result<Vec<(QdrantHit, u64, serde_json::Value)>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/search",
@@ -1128,7 +1096,7 @@ pub async fn search_qdrant_filtered(
         min_data_quality,
         min_wellness_actionability,
     );
-    let body = if let Some(f) = filter {
+    let mut body = if let Some(f) = filter {
         serde_json::json!({
             "vector": vector,
             "limit": limit,
@@ -1142,6 +1110,7 @@ pub async fn search_qdrant_filtered(
             "with_payload": true
         })
     };
+    apply_named_vector(&mut body, vector_name);
 
     let mut req = client.post(&endpoint).json(&body);
     if let Some(key) = api_key {
@@ -1181,10 +1150,7 @@ pub async fn recommend_qdrant_points(
     filter: Option<serde_json::Value>,
     vector_name: Option<&str>,
 ) -> Result<Vec<(QdrantHit, u64, serde_json::Value)>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/recommend",
@@ -1240,10 +1206,7 @@ pub async fn find_point_payload_by_rsid(
     sample_id: i64,
     rsid: &str,
 ) -> Result<Option<(serde_json::Value, u64)>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/scroll",
@@ -1327,10 +1290,7 @@ pub async fn ensure_payload_indexes(
     api_key: Option<&str>,
     collection: &str,
 ) -> Result<Vec<String>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let mut created = Vec::new();
     for (field, schema) in PAYLOAD_INDEX_FIELDS {
@@ -1375,10 +1335,7 @@ pub async fn scroll_qdrant_payload_batch(
     limit: u32,
     offset: Option<serde_json::Value>,
 ) -> Result<ScrollPayloadBatch, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/scroll",
@@ -1456,10 +1413,7 @@ pub async fn set_qdrant_payload_batch(
     if point_ids.is_empty() {
         return Ok(());
     }
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/payload",
@@ -1493,10 +1447,7 @@ pub async fn count_qdrant_points_with_filter(
     sample_id: i64,
     extra_must: serde_json::Value,
 ) -> Result<u64, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let client = qdrant_http();
 
     let endpoint = format!(
         "{}/collections/{}/points/count",
@@ -1536,4 +1487,41 @@ pub async fn count_qdrant_points_with_filter(
         .map_err(|e| format!("Failed to parse Qdrant count response: {}", e))?;
 
     Ok(val["result"]["count"].as_u64().unwrap_or(0))
+}
+
+/// Read `embedding_model` from one indexed point (for config vs index mismatch checks).
+pub async fn sample_index_embedding_model(
+    url: &str,
+    api_key: Option<&str>,
+    collection: &str,
+    sample_id: i64,
+) -> Option<String> {
+    let client = qdrant_http();
+    let endpoint = format!(
+        "{}/collections/{}/points/scroll",
+        url.trim_end_matches('/'),
+        collection
+    );
+    let body = serde_json::json!({
+        "filter": {
+            "must": [{ "key": "sample_id", "match": { "value": sample_id } }]
+        },
+        "limit": 1,
+        "with_payload": true,
+        "with_vector": false
+    });
+    let mut req = client.post(&endpoint).json(&body);
+    if let Some(key) = api_key {
+        req = req.header("api-key", key);
+    }
+    let res = req.send().await.ok()?;
+    if !res.status().is_success() {
+        return None;
+    }
+    let val: serde_json::Value = res.json().await.ok()?;
+    val["result"]["points"]
+        .as_array()
+        .and_then(|pts| pts.first())
+        .and_then(|pt| pt["payload"]["embedding_model"].as_str())
+        .map(String::from)
 }

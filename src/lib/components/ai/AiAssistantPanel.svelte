@@ -200,6 +200,7 @@
       extendedThinking,
       contextWindow,
       useVectorResearch,
+      vectorDiagnostics,
       twoModelReview,
       reviewModel,
       selectedPacks,

@@ -158,6 +158,17 @@ pub struct VectorResearchDiagnostics {
     pub enrichment_total: Option<u32>,
     pub enrichment_status: Option<String>,
     pub error: Option<String>,
+    #[serde(default)]
+    pub named_vectors_enabled: bool,
+    /// `fast`, `full`, or `unknown` — reflects last sweep / scope posture.
+    #[serde(default)]
+    pub sweep_quality: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_embedding_model: Option<String>,
+    #[serde(default)]
+    pub embedding_model_mismatch: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stale_vector_count: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -31,12 +31,13 @@ pub use types::*;
 pub use commands::*;
 
 pub use qdrant::{
-    check_existing_points, count_qdrant_points, ensure_qdrant_collection,
-    ensure_qdrant_collection_named, find_point_payload_by_rsid, initialize_qdrant_collection,
-    purge_qdrant_collection, scroll_qdrant_points, search_qdrant, test_qdrant_connection,
-    upsert_points_batch, upsert_points_batch_named, upsert_to_qdrant,
+    check_existing_points, count_qdrant_points, count_qdrant_points_with_filter,
+    ensure_qdrant_collection, ensure_qdrant_collection_named, find_point_payload_by_rsid,
+    initialize_qdrant_collection, purge_qdrant_collection, sample_index_embedding_model,
+    scroll_qdrant_points, search_qdrant, test_qdrant_connection, upsert_points_batch,
+    upsert_points_batch_named, upsert_to_qdrant,
 };
-pub use embed::{embed_text, embed_texts_batch};
+pub use embed::{embed_query_cached, embed_text, embed_texts_batch};
 pub use sources::{
     fetch_gnomad_frequency, fetch_gtex_eqtls_for_rsid, fetch_gtex_gencode_id,
     fetch_gtex_median_expression, fetch_gwas_associations,

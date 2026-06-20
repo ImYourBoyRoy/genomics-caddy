@@ -3,10 +3,11 @@
 
 use super::card::evidence_card_from_payload;
 use super::types::{EvidenceCard, HybridSearchParams, MatchExplanation, SimilarSearchParams};
-use crate::research::embed::embed_text;
+use crate::research::embed::embed_query_cached;
 use crate::research::qdrant::{
     find_point_payload_by_rsid, recommend_qdrant_points, search_qdrant_filtered,
 };
+use crate::research::evidence::named_vectors::query_vector_name_for_text;
 use crate::research::types::{QdrantConfig, QdrantHit};
 use crate::research::util::string_to_u64;
 use std::path::Path;
@@ -25,8 +26,9 @@ pub async fn search_associations_hybrid(
     config: &QdrantConfig,
     db_path: Option<&Path>,
 ) -> Result<Vec<EvidenceCard>, String> {
-    let vector = embed_text(&params.query, ollama_url, &config.embedding_model).await?;
+    let vector = embed_query_cached(&params.query, ollama_url, &config.embedding_model).await?;
     let limit = params.limit.clamp(5, 50);
+    let vector_name = query_vector_name_for_text(&params.query, config);
     let hits = search_qdrant_filtered(
         &config.url,
         config.api_key.as_deref(),
@@ -39,6 +41,7 @@ pub async fn search_associations_hybrid(
         params.has_direction,
         params.min_data_quality,
         params.min_wellness_actionability,
+        vector_name,
     )
     .await?;
 

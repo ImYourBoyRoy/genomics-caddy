@@ -7,11 +7,12 @@ import { listen } from "@tauri-apps/api/event";
 import {
   streamOllamaChat,
   showOllamaModel,
-  searchQdrantEvidence,
+  searchAssociationsHybrid,
 } from "../api/tauri";
 import type { ChatMessage } from "../types/agent";
-import type { QdrantHit } from "../types/research";
+import type { QdrantHit, VectorResearchDiagnostics } from "../types/research";
 import type { GenomeSample, GeneratedReport } from "../types/genomics";
+import { evidenceCardsToQdrantHits } from "./qdrantRag";
 import {
   buildSystemPrompt,
   DEFAULT_INSTRUCTIONS,
@@ -42,6 +43,7 @@ export interface ConsultationTurnInput {
   extendedThinking: boolean;
   contextWindow: number;
   useVectorResearch: boolean;
+  vectorDiagnostics?: VectorResearchDiagnostics | null;
   twoModelReview: boolean;
   reviewModel: string;
   selectedPacks: Record<string, boolean>;
@@ -93,6 +95,7 @@ export async function runConsultationTurn(
     extendedThinking,
     contextWindow,
     useVectorResearch,
+    vectorDiagnostics,
     twoModelReview,
     reviewModel,
     selectedPacks,
@@ -107,13 +110,30 @@ export async function runConsultationTurn(
   let vectorSearchError = "";
 
   if (useVectorResearch) {
-    try {
-      qdrantHits = await searchQdrantEvidence(text, ollamaUrl, selectedSample.id, 8);
-      callbacks.onVectorResult(qdrantHits, text);
-    } catch (err: unknown) {
-      vectorSearchError = err instanceof Error ? err.message : String(err);
+    if (vectorDiagnostics?.embedding_model_mismatch) {
+      vectorSearchError =
+        `Index embedding model (${vectorDiagnostics.index_embedding_model ?? "unknown"}) ` +
+        `does not match settings (${vectorDiagnostics.embedding_model}). ` +
+        "Run re-embed stale vectors or re-sweep before consultation RAG.";
       callbacks.onVectorResult([], text, vectorSearchError);
-      console.warn("Failed to retrieve Qdrant context for LLM prompt:", err);
+    } else {
+      try {
+        const cards = await searchAssociationsHybrid(
+          {
+            sample_id: selectedSample.id,
+            query: text,
+            min_data_quality: 0.25,
+            limit: 8,
+          },
+          ollamaUrl,
+        );
+        qdrantHits = evidenceCardsToQdrantHits(cards);
+        callbacks.onVectorResult(qdrantHits, text);
+      } catch (err: unknown) {
+        vectorSearchError = err instanceof Error ? err.message : String(err);
+        callbacks.onVectorResult([], text, vectorSearchError);
+        console.warn("Failed to retrieve hybrid vector context for LLM prompt:", err);
+      }
     }
   } else {
     callbacks.onVectorResult([], text);

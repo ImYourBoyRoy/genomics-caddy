@@ -6,7 +6,7 @@
 import { cancelOllamaStream } from "../api/tauri";
 import type { ChatMessage } from "../types/agent";
 import type { GeneratedReport, GenomeSample } from "../types/genomics";
-import type { QdrantHit } from "../types/research";
+import type { QdrantHit, VectorResearchDiagnostics } from "../types/research";
 import {
   type AiContextMode,
   type ConsultationMode,
@@ -30,6 +30,7 @@ export interface SendConsultationPromptParams {
   extendedThinking: boolean;
   contextWindow: number;
   useVectorResearch: boolean;
+  vectorDiagnostics?: VectorResearchDiagnostics | null;
   twoModelReview: boolean;
   reviewModel: string;
   selectedPacks: Record<string, boolean>;
@@ -117,6 +118,7 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
         extendedThinking: params.extendedThinking,
         contextWindow: params.contextWindow,
         useVectorResearch: params.useVectorResearch,
+        vectorDiagnostics: params.vectorDiagnostics,
         twoModelReview: params.twoModelReview,
         reviewModel: params.reviewModel,
         selectedPacks: params.selectedPacks,

@@ -2,7 +2,33 @@
 use super::http::EMBED_CLIENT;
 use super::tuning::embed_batch_timeout_secs;
 use serde::Deserialize;
+use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
+
+const QUERY_EMBED_CACHE_MAX: usize = 128;
+
+static QUERY_EMBED_CACHE: LazyLock<Mutex<HashMap<String, Vec<f32>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn query_cache_key(text: &str, ollama_url: &str, model: &str) -> String {
+    format!("{}|{}|{}", model, ollama_url.trim(), text)
+}
+
+fn read_query_cache(key: &str) -> Option<Vec<f32>> {
+    QUERY_EMBED_CACHE.lock().ok()?.get(key).cloned()
+}
+
+fn write_query_cache(key: String, vector: Vec<f32>) {
+    if let Ok(mut cache) = QUERY_EMBED_CACHE.lock() {
+        if cache.len() >= QUERY_EMBED_CACHE_MAX
+            && let Some(oldest) = cache.keys().next().cloned()
+        {
+            cache.remove(&oldest);
+        }
+        cache.insert(key, vector);
+    }
+}
 
 fn normalize_ollama_url(url: &str) -> String {
     url.trim().trim_end_matches('/').to_string()
@@ -98,6 +124,17 @@ pub async fn embed_text(text: &str, ollama_url: &str, model: &str) -> Result<Vec
         Ok(_) => embed_via_legacy_api(client, ollama_url, model, text).await,
         Err(_) => embed_via_legacy_api(client, ollama_url, model, text).await,
     }
+}
+
+/// Embed a user query with a small in-memory LRU-style cache (consultation + hybrid search).
+pub async fn embed_query_cached(text: &str, ollama_url: &str, model: &str) -> Result<Vec<f32>, String> {
+    let key = query_cache_key(text, ollama_url, model);
+    if let Some(cached) = read_query_cache(&key) {
+        return Ok(cached);
+    }
+    let vector = embed_text(text, ollama_url, model).await?;
+    write_query_cache(key, vector.clone());
+    Ok(vector)
 }
 
 async fn embed_texts_batch_inner(

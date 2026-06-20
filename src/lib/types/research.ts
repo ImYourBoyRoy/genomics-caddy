@@ -159,8 +159,8 @@ export const DEFAULT_RESEARCH_SCOPE: ResearchScopeConfig = {
   non_reference: true,
   non_reference_limit: 5000,
   gwas_discovery_limit: 10000,
-  sweep_fast: true,
-  enrichment_sources: { ...DEFAULT_ENRICHMENT_SOURCES },
+  sweep_fast: false,
+  enrichment_sources: { ...FULL_ENRICHMENT_SOURCES },
 };
 
 /** @deprecated Use QdrantConfigPublic for reads and QdrantConfigUpdate for saves. */
@@ -277,6 +277,12 @@ export interface VectorResearchDiagnostics {
   enrichment_total?: number;
   enrichment_status?: string;
   error?: string;
+  named_vectors_enabled?: boolean;
+  /** `fast`, `full`, or `unknown` */
+  sweep_quality?: string;
+  index_embedding_model?: string;
+  embedding_model_mismatch?: boolean;
+  stale_vector_count?: number;
 }
 
 export interface QdrantConnectionStatus {

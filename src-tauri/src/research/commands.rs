@@ -339,7 +339,9 @@ pub async fn search_qdrant_evidence(
     trait_category: Option<String>,
 ) -> Result<Vec<QdrantHit>, String> {
     let cfg = load_config(&app).await?;
-    let vector = super::embed_text(&query, &ollama_url, &cfg.embedding_model).await?;
+    let vector =
+        super::embed::embed_query_cached(&query, &ollama_url, &cfg.embedding_model).await?;
+    let vector_name = super::evidence::named_vectors::query_vector_name_for_text(&query, &cfg);
     super::search_qdrant(
         &cfg.url,
         cfg.api_key.as_deref(),
@@ -348,6 +350,7 @@ pub async fn search_qdrant_evidence(
         sample_id,
         limit.unwrap_or(10),
         trait_category.as_deref(),
+        vector_name,
     )
     .await
 }
@@ -366,7 +369,10 @@ pub async fn search_qdrant_trait_discovery(
     let category = trait_category.filter(|c| !c.trim().is_empty());
 
     if let Some(q) = query.filter(|s| !s.trim().is_empty()) {
-        let vector = super::embed_text(q.trim(), &ollama_url, &cfg.embedding_model).await?;
+        let vector =
+            super::embed::embed_query_cached(q.trim(), &ollama_url, &cfg.embedding_model).await?;
+        let vector_name =
+            super::evidence::named_vectors::query_vector_name_for_text(q.trim(), &cfg);
         return super::search_qdrant(
             &cfg.url,
             cfg.api_key.as_deref(),
@@ -375,6 +381,7 @@ pub async fn search_qdrant_trait_discovery(
             Some(sample_id),
             lim,
             category.as_deref(),
+            vector_name,
         )
         .await;
     }
@@ -424,6 +431,8 @@ pub async fn get_vector_research_diagnostics(
     )
     .await;
 
+    let scope = with_db(&app, config::load_research_scope).await.unwrap_or_default();
+
     let mut diag = VectorResearchDiagnostics {
         connected: conn_status.success,
         collection: cfg.collection.clone(),
@@ -436,6 +445,15 @@ pub async fn get_vector_research_diagnostics(
         enrichment_total: None,
         enrichment_status: None,
         error: conn_status.error.clone(),
+        named_vectors_enabled: cfg.named_vectors_enabled,
+        sweep_quality: if scope.sweep_fast {
+            "fast".into()
+        } else {
+            "full".into()
+        },
+        index_embedding_model: None,
+        embedding_model_mismatch: false,
+        stale_vector_count: None,
     };
 
     if !conn_status.success {
@@ -478,6 +496,35 @@ pub async fn get_vector_research_diagnostics(
             diag.enrichment_total = Some(job.total_markers as u32);
             diag.enrichment_status = Some(job.status);
         }
+
+        let q_url = cfg.url.clone();
+        let q_key = cfg.api_key.clone();
+        let q_coll = cfg.collection.clone();
+        let q_model = cfg.embedding_model.clone();
+
+        if let Some(index_model) = super::sample_index_embedding_model(
+            &q_url,
+            q_key.as_deref(),
+            &q_coll,
+            id,
+        )
+        .await
+        {
+            diag.embedding_model_mismatch = !index_model.eq_ignore_ascii_case(&q_model);
+            diag.index_embedding_model = Some(index_model);
+        }
+
+        diag.stale_vector_count = Some(
+            super::count_qdrant_points_with_filter(
+                &q_url,
+                q_key.as_deref(),
+                &q_coll,
+                id,
+                serde_json::json!({ "key": "stale", "match": { "value": true } }),
+            )
+            .await
+            .unwrap_or(0),
+        );
     }
 
     Ok(diag)

@@ -48,7 +48,7 @@
   let results = $state<EvidenceRecord[]>([]);
   let qdrantResults = $state<QdrantHit[]>([]);
   let workbenchCards = $state<EvidenceCard[]>([]);
-  let searchSource = $state<"sqlite" | "qdrant" | "workbench">("sqlite");
+  let searchSource = $state<"sqlite" | "qdrant" | "workbench">("workbench");
   let workbenchView = $state<"search" | "quality" | "candidates" | "clusters" | "atlas" | "matrix" | "pathways">("search");
   let similarRsid = $state("");
   let exportMsg = $state("");

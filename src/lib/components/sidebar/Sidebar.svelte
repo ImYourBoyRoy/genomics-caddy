@@ -161,6 +161,8 @@
           startedAt,
         },
       };
+    });
+
     unlistenImport = await listen<{
       asset_id: string;
       rows_processed: number;

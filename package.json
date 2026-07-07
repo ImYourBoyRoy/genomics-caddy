@@ -3,37 +3,59 @@
   "version": "0.1.0",
   "description": "",
   "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "tauri": "tauri",
+
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+
+	"clean:deep": "node -e \"const fs=require('fs'); for (const p of ['node_modules','package-lock.json','dist','.svelte-kit']) fs.rmSync(p,{recursive:true,force:true});\"",
+	"clean:fresh": "npm run clean:deep && npm install",
+
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "python scripts/smoke_test.py",
-    "tauri": "tauri",
-    "mcp": "tauri dev -- --mcp"
+    "mcp": "tauri dev -- --mcp",
+
+    "cargo:check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "cargo:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -W clippy::pedantic -D warnings",
+    "cargo:test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "cargo:update": "cargo update --manifest-path src-tauri/Cargo.toml",
+
+    "build:release": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/purge_and_build.ps1",
+    "build:release-fast": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/purge_and_build.ps1 -SkipPurge",
+    "purge:build": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/purge_and_build.ps1 -PurgeOnly"
   },
   "license": "MIT",
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "isomorphic-dompurify": "^3.17.0"
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "isomorphic-dompurify": "^3.18.0"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^3",
-    "@sveltejs/kit": "^2",
-    "@sveltejs/vite-plugin-svelte": "^7",
-    "@tauri-apps/cli": "^2",
-    "@types/node": "^22",
-    "svelte": "^5",
-    "svelte-check": "^4",
-    "typescript": "^6",
-    "vite": "^8",
-    "vitest": "^3"
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.69.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tauri-apps/cli": "^2.11.3",
+    "@types/node": "^26.0.1",
+    "svelte": "^5.56.4",
+    "svelte-check": "^4.7.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
+  },
+  "overrides": {
+     "cookie": "1.1.1"
   },
   "allowScripts": {
-    "esbuild@0.27.7": true
+    "esbuild": true
   }
 }

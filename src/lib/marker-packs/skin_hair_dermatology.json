@@ -1,0 +1,1312 @@
+{
+  "name": "Skin, Hair & Dermatology Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_SKIN_HAIR_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Skin/hair genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents dermatology overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Skin, hair, pigmentation, acne, psoriasis, eczema, and scarring phenotypes require visual exam and exposure context. DNA can inform risk context only.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "hair-loss certainty"
+      ],
+      "confirm_with": [
+        "dermatology exam",
+        "skin phenotype",
+        "family history",
+        "sun exposure history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805007",
+      "gene": "MC1R",
+      "variant_name": "R151C red-hair/fair-skin variant",
+      "effect_allele": "T",
+      "impact": "Pigmentation, UV sensitivity, melanoma-context marker",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC1R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805008",
+      "gene": "MC1R",
+      "variant_name": "R160W red-hair/fair-skin variant",
+      "effect_allele": "T",
+      "impact": "Pigmentation and UV sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC1R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805009",
+      "gene": "MC1R",
+      "variant_name": "D294H pigmentation variant",
+      "effect_allele": "C",
+      "impact": "Pigmentation and UV sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC1R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228479",
+      "gene": "MC1R",
+      "variant_name": "V92M pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Pigmentation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MC1R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs885479",
+      "gene": "MC1R",
+      "variant_name": "R163Q pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Pigmentation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MC1R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1426654",
+      "gene": "SLC24A5",
+      "variant_name": "A111T pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Skin pigmentation / sun response context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC24A5 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs16891982",
+      "gene": "SLC45A2",
+      "variant_name": "L374F pigmentation marker",
+      "effect_allele": "C",
+      "impact": "Pigmentation and melanoma-context marker",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC45A2 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12913832",
+      "gene": "HERC2/OCA2",
+      "variant_name": "Eye/pigmentation regulatory marker",
+      "effect_allele": "G",
+      "impact": "Pigmentation and iris/skin color context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HERC2/OCA2 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1129038",
+      "gene": "HERC2/OCA2",
+      "variant_name": "Pigmentation regulatory marker",
+      "effect_allele": "T",
+      "impact": "Pigmentation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HERC2/OCA2 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12203592",
+      "gene": "IRF4",
+      "variant_name": "Pigmentation/freckling marker",
+      "effect_allele": "T",
+      "impact": "Freckling, pigmentation, sun sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IRF4 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6059655",
+      "gene": "ASIP",
+      "variant_name": "Pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Pigmentation/melanocortin pathway context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ASIP variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042602",
+      "gene": "TYR",
+      "variant_name": "S192Y pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Melanin synthesis context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TYR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1393350",
+      "gene": "TYR",
+      "variant_name": "TYR pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Pigmentation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TYR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1126809",
+      "gene": "TYR",
+      "variant_name": "R402Q tyrosinase temperature-sensitive marker",
+      "effect_allele": "A",
+      "impact": "Melanin synthesis and pigmentation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TYR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800407",
+      "gene": "OCA2",
+      "variant_name": "OCA2 pigmentation marker",
+      "effect_allele": "A",
+      "impact": "Pigmentation/eye color context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "OCA2 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11209026",
+      "gene": "IL23R",
+      "variant_name": "IL23R psoriasis/immune marker",
+      "effect_allele": "A",
+      "impact": "Psoriasis/Th17 immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL23R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12191877",
+      "gene": "HLA-C",
+      "variant_name": "HLA-C psoriasis locus tag",
+      "effect_allele": "T",
+      "impact": "Psoriasis HLA-C locus context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-C variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4085613",
+      "gene": "IL23R",
+      "variant_name": "Psoriasis/IBD immune locus",
+      "effect_allele": "G",
+      "impact": "Th17 skin/gut inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL23R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17728338",
+      "gene": "TNIP1",
+      "variant_name": "Psoriasis immune locus",
+      "effect_allele": "A",
+      "impact": "NF-kB skin inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TNIP1 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs610604",
+      "gene": "TNFAIP3",
+      "variant_name": "Psoriasis/autoimmune inflammation locus",
+      "effect_allele": "G",
+      "impact": "Inflammatory regulation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TNFAIP3 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs61816761",
+      "gene": "IL4R",
+      "variant_name": "Atopic dermatitis/Th2 context",
+      "effect_allele": "T",
+      "impact": "Eczema/allergic skin inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs20541",
+      "gene": "IL13",
+      "variant_name": "IL13 eczema/atopy context",
+      "effect_allele": "A",
+      "impact": "Th2 skin inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL13 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7521902",
+      "gene": "WNT4",
+      "variant_name": "Endometriosis/skin-hormone overlap marker",
+      "effect_allele": "A",
+      "impact": "Hormone-inflammatory overlap context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "WNT4 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800012",
+      "gene": "COL1A1",
+      "variant_name": "Collagen I skin/bone marker",
+      "effect_allele": "T",
+      "impact": "Collagen matrix and skin aging/scarring context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "COL1A1 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3918242",
+      "gene": "MMP9",
+      "variant_name": "MMP9 promoter matrix remodeling",
+      "effect_allele": "T",
+      "impact": "Matrix remodeling / scar and inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MMP9 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3025058",
+      "gene": "MMP3",
+      "variant_name": "MMP3 5A/6A remodeling marker",
+      "effect_allele": "A",
+      "impact": "Matrix remodeling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MMP3 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL6",
+      "variant_name": "IL6 inflammatory marker",
+      "effect_allele": "G",
+      "impact": "Inflammatory skin flare context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF inflammatory marker",
+      "effect_allele": "A",
+      "impact": "Inflammatory skin flare context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11568818",
+      "gene": "VDR",
+      "variant_name": "VDR Cdx2 marker",
+      "effect_allele": "A",
+      "impact": "Vitamin D skin/immune context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228570",
+      "gene": "VDR",
+      "variant_name": "VDR FokI marker",
+      "effect_allele": "T",
+      "impact": "Vitamin D receptor skin/immune context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6152",
+      "gene": "AR",
+      "variant_name": "Androgen receptor hair/acne context marker",
+      "effect_allele": "A",
+      "impact": "Androgen sensitivity and hair/acne context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AR variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1385699",
+      "gene": "EDA2R",
+      "variant_name": "Male-pattern hair loss locus",
+      "effect_allele": "T",
+      "impact": "Androgenic alopecia context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "EDA2R variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1160312",
+      "gene": "TARDBP",
+      "variant_name": "Hair morphology/growth locus",
+      "effect_allele": "A",
+      "impact": "Hair trait context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TARDBP variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7349332",
+      "gene": "WNT10A",
+      "variant_name": "Hair/tooth/ectodermal context",
+      "effect_allele": "T",
+      "impact": "Ectodermal hair/tooth context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "WNT10A variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12350739",
+      "gene": "HDAC9",
+      "variant_name": "Hair shape marker",
+      "effect_allele": "A",
+      "impact": "Hair morphology context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "HDAC9 variation is included as skin/hair/dermatology context. Use with phenotype, dermatology exam, and exposure history.",
+      "do_not_claim": [
+        "skin disease diagnosis",
+        "melanoma diagnosis",
+        "cosmetic outcome prediction"
+      ],
+      "confirm_with": [
+        "visible phenotype",
+        "family history",
+        "dermatology review if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_FILAGGRIN_BARRIER_ECZEMA",
+      "gene": "FLG",
+      "variant_name": "Filaggrin skin-barrier loss-of-function panel",
+      "effect_allele": "ANY_CONFIRMED_LOF",
+      "impact": "Atopic dermatitis and barrier dysfunction context",
+      "evidence_tier": "A_rare_high_effect_when_confirmed",
+      "interpretation": "FLG loss-of-function variants can strongly affect skin barrier and eczema risk, but consumer SNPs do not comprehensively test FLG.",
+      "do_not_claim": [
+        "eczema diagnosis"
+      ],
+      "confirm_with": [
+        "eczema phenotype",
+        "dermatology review",
+        "sequencing if indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MELANOMA_SKIN_TYPE_CONTEXT",
+      "gene": "MC1R/CDKN2A/MITF/BAP1/PIGMENTATION",
+      "variant_name": "Melanoma and skin-type guardrail panel",
+      "effect_allele": "N/A",
+      "impact": "UV sensitivity and hereditary melanoma context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Pigmentation SNPs inform UV sensitivity context. Hereditary melanoma genes require clinical testing when family/personal history suggests risk.",
+      "do_not_claim": [
+        "melanoma diagnosis",
+        "no melanoma risk"
+      ],
+      "confirm_with": [
+        "dermatology skin checks",
+        "family history",
+        "clinical genetic testing when indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "ClinGen Gene-Disease Validity and Actionability",
+          "url": "https://clinicalgenome.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical gene curation resource",
+          "conflict_of_interest": "NIH-funded clinical genetics resource; expert panel curation",
+          "notes": "Use for clinical gene-disease validity, actionability, and expert-panel interpretation frameworks."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_KELOID_SCARRING_CONTEXT",
+      "gene": "TGFB1/MMPs/SMADs/HLA",
+      "variant_name": "Keloid and hypertrophic scar context panel",
+      "effect_allele": "N/A",
+      "impact": "Scarring tendency context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "Keloid/scarring risk is ancestry-, wound-, site-, and inflammation-dependent. Genetics is context only.",
+      "do_not_claim": [
+        "keloid diagnosis"
+      ],
+      "confirm_with": [
+        "scar history",
+        "surgical/wound history",
+        "dermatology context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

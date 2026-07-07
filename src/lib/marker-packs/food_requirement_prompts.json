@@ -1,0 +1,135 @@
+{
+  "name": "Food Requirement Intake Prompts",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine",
+  "purpose": "Structured questions to capture hard food requirements, values, allergies, symptoms, labs and goals before generating diet guidance.",
+  "global_first_run_questions": [
+    {
+      "id": "diet_hard_exclusions",
+      "question": "Are there foods you never eat or must avoid?",
+      "examples": [
+        "pork",
+        "shellfish",
+        "beef",
+        "dairy",
+        "gluten",
+        "alcohol",
+        "coffee/tea",
+        "animal products"
+      ]
+    },
+    {
+      "id": "allergies",
+      "question": "Do you have confirmed or suspected food allergies?",
+      "examples": [
+        "milk",
+        "egg",
+        "fish",
+        "shellfish",
+        "tree nuts",
+        "peanuts",
+        "wheat",
+        "soy",
+        "sesame"
+      ]
+    },
+    {
+      "id": "religious_cultural_rules",
+      "question": "Do you follow religious, cultural, ethical, or personal food rules?",
+      "examples": [
+        "halal",
+        "kosher",
+        "LDS Word of Wisdom",
+        "vegetarian",
+        "vegan",
+        "pork-free",
+        "alcohol-free"
+      ]
+    },
+    {
+      "id": "medical_diets",
+      "question": "Has a clinician told you to follow a specific diet?",
+      "examples": [
+        "gluten-free for celiac",
+        "renal diet",
+        "low sodium",
+        "diabetes diet",
+        "low histamine",
+        "low FODMAP",
+        "low oxalate",
+        "low purine"
+      ]
+    },
+    {
+      "id": "goal",
+      "question": "What are you optimizing for right now?",
+      "examples": [
+        "fat loss",
+        "muscle gain",
+        "energy",
+        "sleep",
+        "blood sugar",
+        "cholesterol",
+        "gut symptoms",
+        "PMDD/cycle symptoms",
+        "allergy/histamine symptoms"
+      ]
+    },
+    {
+      "id": "labs_available",
+      "question": "Which recent labs do you have?",
+      "examples": [
+        "A1c",
+        "fasting insulin",
+        "lipids/ApoB/Lp(a)",
+        "ferritin",
+        "B12/MMA",
+        "homocysteine",
+        "vitamin D",
+        "TSH/free T4/free T3",
+        "TPO/Tg antibodies",
+        "kidney function/eGFR"
+      ]
+    }
+  ],
+  "conditional_prompts": {
+    "fish_yes_pork_no": [
+      "Is pork avoidance strict enough to include gelatin, lard, pork broth, enzymes, or cross-contact?",
+      "Do you eat shellfish, or only fin fish?",
+      "Are you pregnant, trying to conceive, feeding children, or needing mercury limits?",
+      "Do you have histamine reactions to canned/smoked/fish leftovers?"
+    ],
+    "allergy_or_atopy": [
+      "Which foods cause immediate symptoms within minutes to hours?",
+      "Have you ever had swelling, wheezing, throat tightness, faintness, or needed epinephrine?",
+      "Was allergy confirmed by an allergist, IgE test, or food challenge?"
+    ],
+    "histamine": [
+      "Do symptoms worsen with wine/beer, aged cheese, cured meats, fermented foods, leftovers, canned fish, or vinegar?",
+      "Do fresh-cooked foods feel different than leftovers?",
+      "Do antihistamines or DAO enzymes change symptoms?"
+    ],
+    "glucose_metabolic": [
+      "Do you have A1c, fasting glucose, fasting insulin, or CGM data?",
+      "Do symptoms worsen after refined carbs or sugary drinks?",
+      "What protein/fiber intake is typical at breakfast?"
+    ],
+    "pmdd_cycle": [
+      "Are symptoms clearly worse in the luteal phase and relieved after menstruation starts?",
+      "Have symptoms been tracked daily across at least two cycles?",
+      "Do caffeine, alcohol, poor sleep, low meals, or high sugar worsen symptoms?",
+      "Do you have ferritin, B12/MMA, vitamin D, and thyroid labs?"
+    ],
+    "muscle_gain": [
+      "What is body weight, training volume, and current daily protein estimate?",
+      "Any kidney disease, high creatinine, or abnormal eGFR?",
+      "Any dairy/egg/fish/soy restrictions that affect protein options?"
+    ],
+    "kidney_stone_or_gout": [
+      "Was the stone type confirmed or uric acid measured?",
+      "Any 24-hour urine results?",
+      "Do beer, organ meats, sardines/anchovies, or high-fructose drinks trigger flares?"
+    ]
+  }
+}

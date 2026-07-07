@@ -25,10 +25,17 @@ import type {
   GenomeSample,
   DbSnpRecord,
   GeneratedReport,
+  NormalizedReport,
+  ReportPayload,
 } from "../types/genomics";
+import { denormalizeReport } from "../utils/viewModels";
 
 export async function selectFile(): Promise<string | null> {
   return invoke<string | null>("select_file");
+}
+
+export async function selectDirectory(): Promise<string | null> {
+  return invoke<string | null>("select_directory");
 }
 
 export async function saveReportJson(content: string, defaultFilename: string): Promise<boolean> {
@@ -70,12 +77,24 @@ export async function queryRegion(
   return invoke<DbSnpRecord[]>("query_region", { sampleId, chromosome, start, end });
 }
 
-export async function generateReport(sampleId: number, templateJson: string): Promise<GeneratedReport> {
-  return invoke<GeneratedReport>("generate_report", { sampleId, templateJson });
+export async function generateReport(sampleId: number, templateJson: string): Promise<ReportPayload> {
+  const raw = await invoke<NormalizedReport>("generate_report", { sampleId, templateJson });
+  const report = denormalizeReport(raw);
+  return { report, raw };
 }
 
 export async function deleteSample(sampleId: number): Promise<void> {
   return invoke<void>("delete_sample", { sampleId });
+}
+
+export async function logJsError(
+  message: string,
+  source: string,
+  line: number | null,
+  col: number | null,
+  stack: string | null
+): Promise<void> {
+  return invoke<void>("log_js_error", { message, source, line, col, stack });
 }
 
 export async function checkChainStatus(): Promise<boolean> {
@@ -217,6 +236,8 @@ import type {
   ResearchScopePreview,
   ReferenceStatus,
   GwasSyncResult,
+  OfflineUpdateCheck,
+  OfflineSyncResult,
   PurgeCollectionResult,
   ConnectionActivity,
   EvidenceCard,
@@ -234,6 +255,9 @@ import type {
   PathwayFlowRow,
   AtlasPoint,
   VectorAtlasResult,
+  EvidenceCorpusSummary,
+  BrowseAssociationsParams,
+  BrowseAssociationsResult,
 } from "../types/research";
 
 export type {
@@ -247,6 +271,8 @@ export type {
   ResearchScopePreview,
   ReferenceStatus,
   GwasSyncResult,
+  OfflineUpdateCheck,
+  OfflineSyncResult,
   PurgeCollectionResult,
   ConnectionActivity,
   EvidenceCard,
@@ -365,6 +391,13 @@ export async function getVectorResearchDiagnostics(
   });
 }
 
+export async function getRecentFindingPreviews(
+  sampleId: number,
+  limit?: number
+): Promise<import("../types/research").ResearchFindingPreview[]> {
+  return invoke("get_recent_finding_previews", { sampleId, limit });
+}
+
 // ── Evidence workbench ──────────────────────────────────────────────────────
 
 export async function searchAssociationsHybrid(
@@ -438,6 +471,24 @@ export async function getQualityDashboard(sampleId: number): Promise<QualityDash
   return invoke<QualityDashboard>("get_quality_dashboard", { sampleId });
 }
 
+export async function getEvidenceCorpusSummary(
+  sampleId: number,
+  enrichmentEnriched?: number,
+  enrichmentTotal?: number,
+): Promise<EvidenceCorpusSummary> {
+  return invoke<EvidenceCorpusSummary>("get_evidence_corpus_summary", {
+    sampleId,
+    enrichmentEnriched: enrichmentEnriched ?? null,
+    enrichmentTotal: enrichmentTotal ?? null,
+  });
+}
+
+export async function browseAssociations(
+  params: BrowseAssociationsParams,
+): Promise<BrowseAssociationsResult> {
+  return invoke<BrowseAssociationsResult>("browse_associations_cmd", { params });
+}
+
 export async function buildTraitClusters(
   sampleId: number,
   traitCategory?: string,
@@ -504,6 +555,16 @@ export async function getOllamaToken(): Promise<string | null> {
   return invoke<string | null>("get_ollama_token");
 }
 
+export interface OllamaServiceConfig {
+  url: string;
+  from_env: boolean;
+  token_set: boolean;
+}
+
+export async function getOllamaServiceConfig(): Promise<OllamaServiceConfig> {
+  return invoke<OllamaServiceConfig>("get_ollama_service_config");
+}
+
 export async function saveOllamaToken(token?: string): Promise<void> {
   return invoke<void>("save_ollama_token", { token: token || undefined });
 }
@@ -557,6 +618,85 @@ export async function getReferenceStatus(): Promise<ReferenceStatus> {
 
 export async function syncGwasReference(): Promise<GwasSyncResult> {
   return invoke<GwasSyncResult>("sync_gwas_reference");
+}
+
+export async function checkOfflineDataUpdates(): Promise<OfflineUpdateCheck> {
+  return invoke<OfflineUpdateCheck>("check_offline_data_updates");
+}
+
+export interface ReferenceStatusDetails {
+  clinvar_raw_found: boolean;
+  clinvar_indexed_rows: number;
+  clinvar_rsid_hits: number;
+  clinvar_last_indexed: number | null;
+  dbsnp_merged_raw_found: boolean;
+  dbsnp_merge_mappings_indexed: number;
+  dbsnp_rsids_normalized: number;
+  dbsnp_merge_index_available: boolean;
+  dbsnp_placement_index_available: boolean;
+  orientation_verification_available: boolean;
+}
+
+export async function getOfflineReferenceStatus(
+  reportRsids?: string[] | null
+): Promise<ReferenceStatusDetails> {
+  return invoke<ReferenceStatusDetails>("get_offline_reference_status", {
+    reportRsids: reportRsids ?? null,
+  });
+}
+
+export async function syncOfflineDataTier(
+  tier: number,
+  force = false,
+  sampleId?: number
+): Promise<OfflineSyncResult> {
+  return invoke<OfflineSyncResult>('sync_offline_data_tier', {
+    tier,
+    force,
+    sampleId: sampleId ?? null,
+  });
+}
+
+/** Sync a single asset by its asset_id. force=true re-downloads even if the file exists. */
+export async function syncSingleOfflineAsset(
+  assetId: string,
+  force = false,
+  sampleId?: number
+): Promise<OfflineSyncResult> {
+  return invoke<OfflineSyncResult>('sync_single_offline_asset', {
+    assetId,
+    force,
+    sampleId: sampleId ?? null,
+  });
+}
+
+/** Download all missing/outdated assets across all tiers (no force re-download). */
+export async function syncAllOfflineMissing(sampleId?: number): Promise<OfflineSyncResult[]> {
+  return invoke<OfflineSyncResult[]>('sync_all_offline_missing', {
+    sampleId: sampleId ?? null,
+  });
+}
+
+export async function syncAllOfflineData(
+  force = false,
+  sampleId?: number
+): Promise<OfflineSyncResult[]> {
+  return invoke<OfflineSyncResult[]>('sync_all_offline_data', {
+    force,
+    sampleId: sampleId ?? null,
+  });
+}
+
+export async function buildOfflineTier2(sampleId: number): Promise<OfflineSyncResult> {
+  return invoke<OfflineSyncResult>('build_offline_tier2', { sampleId });
+}
+
+export async function getCustomDownloadDir(): Promise<string | null> {
+  return invoke<string | null>('get_custom_download_dir');
+}
+
+export async function setCustomDownloadDir(path: string | null): Promise<void> {
+  return invoke<void>('set_custom_download_dir', { path });
 }
 
 // ── Agent / Evidence ────────────────────────────────────────────────────────
@@ -633,4 +773,22 @@ export async function getGnomadContext(
   request: Record<string, unknown>
 ): Promise<import("../types/research").GnomadContext> {
   return invoke("get_gnomad_context_cmd", { request });
+}
+
+export async function getAllMarkerPacks(): Promise<any> {
+  return invoke("get_all_marker_packs");
+}
+
+export async function queryLocalReferenceDb(
+  table: string,
+  searchQuery?: string,
+  limit?: number,
+  offset?: number
+): Promise<{ rows: any[]; total: number }> {
+  return invoke<{ rows: any[]; total: number }>("query_local_reference_db", {
+    table,
+    searchQuery: searchQuery || null,
+    limit: limit ?? null,
+    offset: offset ?? null,
+  });
 }

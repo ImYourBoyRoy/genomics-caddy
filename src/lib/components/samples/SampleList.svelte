@@ -17,6 +17,7 @@
   interface Props {
     samples: GenomeSample[];
     selectedSample: GenomeSample | null;
+    disabled?: boolean;
     onSelectSample: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
   }
@@ -24,6 +25,7 @@
   let {
     samples,
     selectedSample,
+    disabled = false,
     onSelectSample,
     onDeleteSample
   }: Props = $props();
@@ -36,13 +38,14 @@
   {:else}
     <ul class="sample-list">
       {#each samples as s}
-        <li class="sample-item" class:active={selectedSample && selectedSample.id === s.id}>
+        <li class="sample-item" class:active={selectedSample && selectedSample.id === s.id} class:disabled={disabled}>
           <span class="sample-name" role="button" tabindex="0"
-            onclick={() => onSelectSample(s)}
-            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectSample(s); } }}>
+            style={disabled ? "pointer-events: none; opacity: 0.65; cursor: not-allowed;" : ""}
+            onclick={() => { if (!disabled) onSelectSample(s); }}
+            onkeydown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectSample(s); } }}>
             👤 {s.name} <span class="sex-pill">{s.genetic_sex}</span>
           </span>
-          <button class="btn-delete" onclick={() => onDeleteSample(s.id)}>🗑️</button>
+          <button class="btn-delete" disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>
         </li>
       {/each}
     </ul>

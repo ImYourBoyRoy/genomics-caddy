@@ -10,6 +10,7 @@ use noodles_tabix as tabix;
 use std::path::Path;
 use std::str::FromStr;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn query_local_vcf(
     db_path: &Path,
     cfg: &GnomadConfig,

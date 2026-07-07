@@ -23,13 +23,16 @@ pub async fn test_qdrant_connection(
     let client = &*HEALTH_CHECK_CLIENT;
 
     let coll = collection
-        .filter(|c| !c.trim().is_empty())
+        .map(str::trim)
+        .filter(|c| !c.is_empty())
         .unwrap_or("genomics_evidence");
 
+    let base = url.trim_end_matches('/');
+
     // Step 1: Check if the database is live by calling /collections
-    let collections_endpoint = format!("{}/collections", url.trim_end_matches('/'));
+    let collections_endpoint = format!("{base}/collections");
     let mut req = client.get(&collections_endpoint);
-    if let Some(key) = api_key {
+    if let Some(key) = api_key.filter(|k| !k.trim().is_empty()) {
         req = req.header("api-key", key);
     }
 
@@ -80,17 +83,12 @@ pub async fn test_qdrant_connection(
         }
     };
 
-    let mut collections = Vec::new();
-    let mut exists = false;
-    if let Some(collections_arr) = body["result"]["collections"].as_array() {
-        for c in collections_arr {
-            if let Some(name) = c["name"].as_str() {
-                collections.push(name.to_string());
-                if name == coll.trim() {
-                    exists = true;
-                }
-            }
-        }
+    let collections = parse_collection_names(&body);
+    let mut exists = collection_name_matches(&collections, coll);
+
+    // Step 1b: Some proxies return an incomplete list — probe the collection directly.
+    if !exists {
+        exists = probe_collection_exists(client, base, api_key, coll).await;
     }
 
     if !exists {
@@ -104,9 +102,9 @@ pub async fn test_qdrant_connection(
     }
 
     // Step 2: Since collection exists, fetch its details to get vectors_count
-    let detail_endpoint = format!("{}/collections/{}", url.trim_end_matches('/'), coll.trim());
+    let detail_endpoint = format!("{base}/collections/{}", urlencoding_path_segment(coll));
     let mut detail_req = client.get(&detail_endpoint);
-    if let Some(key) = api_key {
+    if let Some(key) = api_key.filter(|k| !k.trim().is_empty()) {
         detail_req = detail_req.header("api-key", key);
     }
 
@@ -140,6 +138,68 @@ pub async fn test_qdrant_connection(
             collections: Some(collections),
             error: None,
         },
+    }
+}
+
+fn parse_collection_names(body: &serde_json::Value) -> Vec<String> {
+    let mut collections = Vec::new();
+    let candidates = [
+        body.pointer("/result/collections"),
+        body.pointer("/collections"),
+        body.get("result").filter(|v| v.is_array()),
+    ];
+    for node in candidates.into_iter().flatten() {
+        if let Some(arr) = node.as_array() {
+            for c in arr {
+                if let Some(name) = c.as_str() {
+                    collections.push(name.trim().to_string());
+                } else if let Some(name) = c.get("name").and_then(|v| v.as_str()) {
+                    collections.push(name.trim().to_string());
+                }
+            }
+        }
+    }
+    collections.sort_unstable();
+    collections.dedup();
+    collections
+}
+
+fn collection_name_matches(collections: &[String], target: &str) -> bool {
+    let target = target.trim();
+    collections
+        .iter()
+        .any(|name| name.eq_ignore_ascii_case(target))
+}
+
+fn urlencoding_path_segment(segment: &str) -> String {
+    segment
+        .chars()
+        .map(|ch| match ch {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '_' | '.' | '~' => ch.to_string(),
+            _ => format!("%{:02X}", ch as u8),
+        })
+        .collect()
+}
+
+async fn probe_collection_exists(
+    client: &reqwest::Client,
+    base_url: &str,
+    api_key: Option<&str>,
+    collection: &str,
+) -> bool {
+    let endpoint = format!(
+        "{}/collections/{}",
+        base_url,
+        urlencoding_path_segment(collection.trim())
+    );
+    let mut req = client.get(&endpoint);
+    if let Some(key) = api_key.filter(|k| !k.trim().is_empty()) {
+        req = req.header("api-key", key);
+    }
+    match req.send().await {
+        Ok(res) if res.status().is_success() => true,
+        Ok(res) if res.status() == 404 => false,
+        _ => false,
     }
 }
 
@@ -537,6 +597,7 @@ fn build_payload_filter(sample_id: Option<i64>, trait_category: Option<&str>) ->
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn search_qdrant(
     url: &str,
     api_key: Option<&str>,
@@ -755,6 +816,56 @@ pub async fn scroll_qdrant_vectors_sample(
         });
     }
     Ok(out)
+}
+
+/// Scroll recent point payloads for a sample (full payload for finding previews).
+pub async fn scroll_sample_payloads(
+    url: &str,
+    api_key: Option<&str>,
+    collection: &str,
+    sample_id: i64,
+    limit: usize,
+) -> Result<Vec<serde_json::Value>, String> {
+    let client = qdrant_http();
+    let endpoint = format!(
+        "{}/collections/{}/points/scroll",
+        url.trim_end_matches('/'),
+        collection
+    );
+    let body = serde_json::json!({
+        "filter": {
+            "must": [{
+                "key": "sample_id",
+                "match": { "value": sample_id }
+            }]
+        },
+        "limit": limit.min(24),
+        "with_payload": true,
+        "with_vector": false
+    });
+    let mut req = client.post(&endpoint).json(&body);
+    if let Some(key) = api_key {
+        req = req.header("api-key", key);
+    }
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant payload scroll failed: {}", e))?;
+    if !res.status().is_success() {
+        return Err(format!("Qdrant payload scroll returned HTTP {}", res.status()));
+    }
+    let val: serde_json::Value = res
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse Qdrant payload scroll: {}", e))?;
+    let points = val["result"]["points"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    Ok(points
+        .into_iter()
+        .filter_map(|item| item.get("payload").cloned())
+        .collect())
 }
 
 fn extract_default_vector(v: &serde_json::Value) -> Vec<f32> {
@@ -1066,6 +1177,7 @@ fn build_extended_filter(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn search_qdrant_filtered(
     url: &str,
     api_key: Option<&str>,
@@ -1524,4 +1636,34 @@ pub async fn sample_index_embedding_model(
         .and_then(|pts| pts.first())
         .and_then(|pt| pt["payload"]["embedding_model"].as_str())
         .map(String::from)
+}
+
+#[cfg(test)]
+mod connection_tests {
+    use super::{collection_name_matches, parse_collection_names};
+    use serde_json::json;
+
+    #[test]
+    fn parses_collection_names_from_result_objects_and_strings() {
+        let body = json!({
+            "result": {
+                "collections": [
+                    { "name": "genomics_roy" },
+                    "genomics_evidence"
+                ]
+            }
+        });
+        let names = parse_collection_names(&body);
+        assert!(collection_name_matches(&names, "genomics_roy"));
+        assert!(collection_name_matches(&names, "GENOMICS_EVIDENCE"));
+    }
+
+    #[test]
+    fn parses_top_level_collections_array() {
+        let body = json!({
+            "collections": [{ "name": "genomics_roy" }]
+        });
+        let names = parse_collection_names(&body);
+        assert_eq!(names, vec!["genomics_roy"]);
+    }
 }

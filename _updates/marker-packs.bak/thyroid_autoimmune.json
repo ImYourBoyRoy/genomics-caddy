@@ -1,0 +1,180 @@
+{
+  "name": "Thyroid Hormone & Autoimmune Risk",
+  "markers": [
+    {
+      "rsid": "rs225014",
+      "gene": "DIO2",
+      "variant_name": "Thr92Ala",
+      "effect_allele": "G",
+      "impact": "Reduced intracellular T4-to-T3 thyroid hormone conversion",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "DIO2 converts inactive T4 into active T3 inside cells. The G (Ala) allele is linked to reduced conversion efficiency, which may contribute to localized tissue hypothyroid symptoms (fatigue, brain fog) despite normal serum TSH levels.",
+      "do_not_claim": ["hypothyroidism diagnosis", "Hashimoto's disease diagnosis"],
+      "confirm_with": ["TSH", "Free T3", "Reverse T3", "body temperature patterns", "unexplained fatigue"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Serum thyroid measurements do not measure intracellular levels directly. Cellular T3 depends on nutrient cofactors (selenium, zinc, iron) as well.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "DIO2 Thr92Ala and Thyroid Hormone Replacement Response",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19126635/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identifies that carriers of the Ala92 allele show preference for combination T4/T3 therapy."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1050450",
+      "gene": "GPX1",
+      "variant_name": "Pro198Leu / Pro200Leu",
+      "effect_allele": "T",
+      "impact": "Reduced selenium-dependent glutathione peroxidase activity",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "GPX1 is a key antioxidant enzyme that protects the thyroid gland from hydrogen peroxide during hormone synthesis. The T (Leu) allele reduces enzyme activity, increasing thyroid oxidative stress vulnerability, particularly if selenium status is low.",
+      "do_not_claim": ["thyroiditis diagnosis", "selenium deficiency diagnosis"],
+      "confirm_with": ["anti-TPO antibodies", "anti-Tg antibodies", "selenium levels", "hs-CRP"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Actual GPX1 activity is highly dependent on selenium status; supplementation can rescue enzyme expression levels in some genotypes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ClinVar GPX1 variant entry",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/RCV000017462/",
+          "accessed": "2026-06-07",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "None declared",
+          "notes": "Maps the GPX1 Pro198Leu variant to rs1050450."
+        }
+      ]
+    },
+    {
+      "rsid": "rs231775",
+      "gene": "CTLA4",
+      "variant_name": "Thr17Ala",
+      "effect_allele": "G",
+      "impact": "Altered T-cell activation regulation / autoimmune susceptibility",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "CTLA-4 is an immune checkpoint receptor. The G (Ala) allele reduces CTLA-4 cell surface expression, leading to elevated T-cell activation and increased baseline predisposition to autoimmune conditions including thyroiditis.",
+      "do_not_claim": ["Hashimoto's thyroiditis diagnosis", "autoimmune disease certainty"],
+      "confirm_with": ["thyroid peroxidase antibodies (TPO)", "thyroglobulin antibodies (Tg)"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "CTLA4 is one of many polygenic risk modifiers; environmental triggers and intestinal permeability are primary determinants.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CTLA4 polymorphisms and autoimmune thyroid disease",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12717434/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large association study establishing CTLA4 as a primary autoimmune thyroid locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2476601",
+      "gene": "PTPN22",
+      "variant_name": "Arg620Trp",
+      "effect_allele": "T",
+      "impact": "Impaired lymphoid phosphatase regulation / autoimmune risk modifier",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "PTPN22 Arg620Trp (T allele) alters a tyrosine phosphatase, which compromises T-cell receptor signaling inhibition. Associated with elevated risks of systemic lupus, rheumatoid arthritis, type 1 diabetes, and autoimmune thyroiditis.",
+      "do_not_claim": ["lupus diagnosis", "rheumatoid arthritis diagnosis"],
+      "confirm_with": ["antinuclear antibody (ANA)", "hs-CRP"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Low prevalence but highly significant common modifier; requires clinical confirmation if autoimmune symptoms present.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PTPN22 and autoimmune diseases",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15208626/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Seminal study mapping PTPN22 to multiple autoimmune syndromes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1883832",
+      "gene": "CD40",
+      "variant_name": "-1C>T",
+      "effect_allele": "C",
+      "impact": "Altered CD40 translation / thyroid antibody production",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The C allele of the CD40 -1C>T translation start site variant increases translation efficiency, promoting B-cell activation and elevating baseline levels of thyroid antibodies in susceptible individuals.",
+      "do_not_claim": ["Graves' disease diagnosis"],
+      "confirm_with": ["anti-TPO antibodies", "anti-Tg antibodies"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Highly polygenic modifier; thyroid antibodies must be directly checked in serum.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CD40 gene variants in thyroid autoimmunity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12379654/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Associates CD40 promoter mutations with increased antibody production."
+        }
+      ]
+    },
+    {
+      "rsid": "rs179247",
+      "gene": "TSHR",
+      "variant_name": "TSHR intron variant",
+      "effect_allele": "A",
+      "impact": "Altered thyroid stimulating hormone receptor expression",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The TSHR rs179247 A allele is a replicated risk modifier associated with autoimmune thyroid diseases (such as Graves' disease and Hashimoto's), affecting receptor signaling sensitivity.",
+      "do_not_claim": ["Graves' disease diagnosis", "hypothyroidism"],
+      "confirm_with": ["serum TSH", "TSH receptor antibodies (TRAb)"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Circulating thyroid antibodies provide direct evidence of pathology, not raw array SNPs.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TSHR variants and thyroid dysfunction",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19401718/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Details the TSHR locus contribution to genetic thyroid risks."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2235544",
+      "gene": "DIO1",
+      "variant_name": "rs2235544 intron variant",
+      "effect_allele": "C",
+      "impact": "Altered T4-to-T3 deiodination in liver/kidneys",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "DIO1 is responsible for baseline peripheral deiodination. The C allele is linked to shifts in Free T4/Free T3 ratios in serum, reflecting minor variations in systemic conversion velocity.",
+      "do_not_claim": ["hypothyroidism diagnosis"],
+      "confirm_with": ["Free T3", "Free T4", "Reverse T3"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Substrate partitioning depends on liver health and cortisol levels.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "DIO1 polymorphisms and thyroid hormone levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19088166/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Confirms DIO1 variants modulate circulating thyroid hormone concentrations."
+        }
+      ]
+    }
+  ]
+}

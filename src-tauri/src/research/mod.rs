@@ -7,7 +7,7 @@ Purpose: Autonomous marker research, enrichment sources, and Qdrant vector index
 pub(crate) mod debug_log;
 mod types;
 mod state;
-mod util;
+pub(crate) mod util;
 mod http;
 mod tuning;
 mod sources_config;
@@ -17,9 +17,11 @@ mod sources;
 mod enrich;
 mod markers;
 mod job;
+mod sweep_runtime;
 mod sweep;
 mod sweep_metrics;
 mod prefetch;
+mod headless;
 mod crossmap;
 mod promote;
 pub mod evidence;
@@ -51,5 +53,7 @@ pub use job::{get_research_job_from_db, reset_research_job_after_purge, save_res
 pub use sweep::run_research_loop;
 pub use state::{RESEARCH_PAUSED, RESEARCH_RUNNING};
 
-pub use tuning::{install_sweep_tuning, clear_sweep_tuning, resolve_pipeline_tuning, PipelineTuning, PipelineTuningPublic, SweepTuningGuard};
+pub use tuning::{install_sweep_tuning, clear_sweep_tuning, resolve_pipeline_tuning, probe_service_latencies, PipelineTuning, PipelineTuningPublic, SweepTuningGuard};
+pub use sweep_runtime::SweepProgressSink;
+pub use headless::{parse_headless_args, print_headless_usage, run_headless_sweep, HeadlessSweepArgs};
 pub use sweep_metrics::{snapshot_sweep_metrics, SweepPhaseMetricsSnapshot};

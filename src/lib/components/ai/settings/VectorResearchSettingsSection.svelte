@@ -22,7 +22,7 @@
     }
   });
 
-  function pct(enriched?: number, total?: number): string {
+  function pct(enriched: number | undefined = undefined, total: number | undefined = undefined): string {
     if (enriched == null || !total) return "—";
     return `${Math.round((enriched / total) * 100)}%`;
   }

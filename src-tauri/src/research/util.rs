@@ -39,7 +39,7 @@ pub(crate) fn normalize_rsid(raw: &str) -> Option<String> {
 pub(crate) fn normalize_gwas_reference_rsids(conn: &Connection) -> Result<usize, String> {
     let updated = conn
         .execute(
-            "UPDATE gwas_reference
+            "UPDATE reference.gwas_reference
              SET rsid = 'rs' || SUBSTR(UPPER(rsid), 3)
              WHERE UPPER(rsid) LIKE 'RS%'",
             [],
@@ -85,51 +85,61 @@ pub(crate) fn parse_gene_tokens(raw: &str) -> Vec<String> {
 }
 
 pub(crate) fn lookup_gene_from_db(db_path: &Path, rsid: &str) -> Option<String> {
-    let conn = crate::db::connect(db_path).ok()?;
     let rsid_key = normalize_rsid(rsid)?.to_uppercase();
-    let from_evidence: Option<String> = conn
-        .query_row(
-            "SELECT gene FROM evidence_library WHERE UPPER(rsid) = ? AND gene IS NOT NULL AND TRIM(gene) != '' LIMIT 1",
+    crate::db::with_cached_conn(db_path, |conn| {
+        let from_evidence: Option<String> = conn
+            .query_row(
+                "SELECT gene FROM evidence_library WHERE UPPER(rsid) = ? AND gene IS NOT NULL AND TRIM(gene) != '' LIMIT 1",
+                params![rsid_key],
+                |row| row.get(0),
+            )
+            .ok();
+        if let Some(ref g) = from_evidence
+            && !is_placeholder_gene(g) {
+                return Ok(Some(g.clone()));
+            }
+        let from_clinvar: Option<String> = conn.query_row(
+            "SELECT gene FROM clinvar_reference WHERE UPPER(rsid) = ? AND gene IS NOT NULL AND TRIM(gene) != '' LIMIT 1",
             params![rsid_key],
             |row| row.get(0),
         )
-        .ok();
-    if let Some(ref g) = from_evidence
-        && !is_placeholder_gene(g) {
-            return from_evidence;
-        }
-    conn.query_row(
-        "SELECT gene FROM clinvar_reference WHERE UPPER(rsid) = ? AND gene IS NOT NULL AND TRIM(gene) != '' LIMIT 1",
-        params![rsid_key],
-        |row| row.get(0),
-    )
+        .ok()
+        .filter(|g: &String| !is_placeholder_gene(g));
+        Ok(from_clinvar)
+    })
     .ok()
-    .filter(|g: &String| !is_placeholder_gene(g))
+    .flatten()
 }
 
 pub(crate) fn lookup_gene_from_gwas_reference(
     db_path: &Path,
     rsid: &str,
 ) -> Option<(String, &'static str)> {
-    let conn = crate::db::connect(db_path).ok()?;
     let rsid_norm = normalize_rsid(rsid)?;
-    let row: Result<(String, String, String), _> = conn.query_row(
-        "SELECT primary_gene, mapped_genes, reported_genes FROM gwas_reference WHERE rsid = ?",
-        params![rsid_norm],
-        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-    );
-    let (primary, mapped, reported) = row.ok()?;
+    crate::db::with_cached_conn(db_path, |conn| {
+        let row: Result<(String, String, String), _> = conn.query_row(
+            "SELECT primary_gene, mapped_genes, reported_genes FROM gwas_reference WHERE rsid = ?",
+            params![rsid_norm],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        );
+        let (primary, mapped, reported) = match row {
+            Ok(r) => r,
+            Err(_) => return Ok(None),
+        };
 
-    if !is_placeholder_gene(&primary) {
-        return Some((primary.trim().to_string(), "gwas_catalog"));
-    }
-    if let Some(gene) = parse_gene_tokens(&mapped).into_iter().next() {
-        return Some((gene, "gwas_catalog"));
-    }
-    if let Some(gene) = parse_gene_tokens(&reported).into_iter().next() {
-        return Some((gene, "gwas_reported"));
-    }
-    None
+        if !is_placeholder_gene(&primary) {
+            return Ok(Some((primary.trim().to_string(), "gwas_catalog")));
+        }
+        if let Some(gene) = parse_gene_tokens(&mapped).into_iter().next() {
+            return Ok(Some((gene, "gwas_catalog")));
+        }
+        if let Some(gene) = parse_gene_tokens(&reported).into_iter().next() {
+            return Ok(Some((gene, "gwas_reported")));
+        }
+        Ok(None)
+    })
+    .ok()
+    .flatten()
 }
 
 pub(crate) fn collect_gene_candidates(
@@ -402,14 +412,15 @@ pub(crate) fn lookup_variant_locus(
     sample_id: i64,
     rsid: &str,
 ) -> Option<(String, i64)> {
-    let conn = crate::db::connect(db_path).ok()?;
     let rsid_key = normalize_rsid(rsid)?.to_lowercase();
-    conn.query_row(
-        "SELECT chromosome, position_grch38 FROM genotypes
-         WHERE sample_id = ? AND LOWER(rsid) = ? LIMIT 1",
-        params![sample_id, rsid_key],
-        |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)),
-    )
+    crate::db::with_cached_conn(db_path, |conn| {
+        conn.query_row(
+            "SELECT chromosome, position_grch38 FROM genotypes
+             WHERE sample_id = ? AND LOWER(rsid) = ? LIMIT 1",
+            params![sample_id, rsid_key],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)),
+        )
+    })
     .ok()
 }
 
@@ -420,6 +431,7 @@ pub(crate) fn best_gwas_pvalue(assocs: &[serde_json::Value]) -> Option<f64> {
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_enrichment_narrative(
     rsid: &str,
     genotype: &str,
@@ -526,6 +538,7 @@ pub(crate) fn is_current_enrichment_version(version: Option<&str>) -> bool {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_enrichment_payload(
     sample_id: i64,
     rsid: &str,

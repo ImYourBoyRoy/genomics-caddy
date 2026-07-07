@@ -11,9 +11,56 @@ Key Outputs: JSON responses to the frontend.
 Operational Notes: Manages SQLite database connection pools and executes requests.
 */
 
+// Clippy configuration:
+// Disable optional, stylistic pedantic warnings that do not represent defects.
+// This defines the project style guidelines for the binary target.
 #![allow(
-    clippy::too_many_arguments,
-    clippy::type_complexity,
+    clippy::uninlined_format_args,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::redundant_closure_for_method_calls,
+    clippy::must_use_candidate,
+    clippy::cast_possible_truncation,
+    clippy::cast_lossless,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::map_unwrap_or,
+    clippy::too_many_lines,
+    clippy::doc_markdown,
+    clippy::manual_let_else,
+    clippy::format_push_string,
+    clippy::duration_suboptimal_units,
+    clippy::match_same_arms,
+    clippy::bool_to_int_with_if,
+    clippy::struct_excessive_bools,
+    clippy::needless_pass_by_value,
+    clippy::items_after_statements,
+    clippy::unnecessary_wraps,
+    clippy::assigning_clones,
+    clippy::wildcard_imports,
+    clippy::manual_is_variant_and,
+    clippy::similar_names,
+    clippy::if_not_else,
+    clippy::single_match_else,
+    clippy::case_sensitive_file_extension_comparisons,
+    clippy::collapsible_if,
+    clippy::ref_option,
+    clippy::redundant_else,
+    clippy::implicit_hasher,
+    clippy::manual_string_new,
+    clippy::single_char_pattern,
+    clippy::implicit_clone,
+    clippy::unnested_or_patterns,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::explicit_iter_loop,
+    clippy::fn_params_excessive_bools,
+    clippy::unchecked_time_subtraction,
+    clippy::match_wildcard_for_single_variants,
+    clippy::ignored_unit_patterns,
+    clippy::large_stack_arrays,
+    clippy::unnecessary_debug_formatting,
+    clippy::unused_async,
 )]
 
 pub mod parser;
@@ -26,6 +73,8 @@ pub mod db_crypto;
 pub mod mcp;
 pub mod report;
 pub mod paths;
+pub mod offline;
+pub mod app_log;
 mod agent_commands;
 mod db_runtime;
 mod stream_control;
@@ -42,9 +91,7 @@ struct ProgressPayload {
 }
 
 pub(crate) fn get_data_dir(_app: &AppHandle) -> PathBuf {
-    let dir = paths::resolve_data_dir();
-    paths::ensure_data_layout(&dir).ok();
-    dir
+    paths::resolve_data_dir()
 }
 
 pub(crate) fn get_db_path(app: &AppHandle) -> PathBuf {
@@ -65,6 +112,12 @@ async fn select_file() -> Result<Option<String>, String> {
         config::register_import_path(&path_str);
         path_str
     }))
+}
+
+#[tauri::command]
+async fn select_directory() -> Result<Option<String>, String> {
+    let folder = rfd::FileDialog::new().pick_folder();
+    Ok(folder.map(|p| p.to_string_lossy().to_string()))
 }
 
 #[tauri::command]
@@ -98,20 +151,355 @@ async fn get_app_bootstrap(app: AppHandle) -> Result<db::AppBootstrapStatus, Str
 }
 
 #[tauri::command]
-fn get_app_paths(app: AppHandle) -> Result<serde_json::Value, String> {
-    let data_dir = get_data_dir(&app);
+fn get_app_paths(_app: AppHandle) -> Result<serde_json::Value, String> {
+    let info = paths::resolve_data_dir_info();
+    let project_root = paths::resolve_project_root(None);
+    let data_dir = info.path;
     let db_path = paths::db_path(&data_dir);
     let chain_path = paths::chain_path(&data_dir);
     let env_path = config::recommended_env_path();
     Ok(serde_json::json!({
+        "project_root": project_root.to_string_lossy().to_string(),
+        "app_layout_dir": paths::app_layout_dir(&project_root).to_string_lossy().to_string(),
         "data_dir": data_dir.to_string_lossy().to_string(),
+        "data_dir_mode": info.mode,
         "db_path": db_path.to_string_lossy().to_string(),
         "chain_path": chain_path.to_string_lossy().to_string(),
         "references_dir": paths::references_dir(&data_dir).to_string_lossy().to_string(),
+        "raw_downloads_dir": paths::raw_downloads_dir(&data_dir).to_string_lossy().to_string(),
         "env_path": env_path.to_string_lossy().to_string(),
     }))
 }
 
+#[tauri::command]
+async fn get_all_marker_packs(app: AppHandle) -> Result<serde_json::Value, String> {
+    let data_dir = get_data_dir(&app);
+    let manifest_str = db::get_manifest_str(Some(&data_dir));
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_str)
+        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+
+    let mut packs_map = serde_json::Map::new();
+    if let Some(packs_array) = manifest.get("packs").and_then(|v| v.as_array()) {
+        for pack_info in packs_array {
+            if let Some(pack_id) = pack_info.get("id").and_then(|v| v.as_str())
+                && let Some(pack_str) = db::get_pack_str(Some(&data_dir), pack_id)
+                && let Ok(pack_json) = serde_json::from_str::<serde_json::Value>(&pack_str)
+            {
+                packs_map.insert(pack_id.to_string(), pack_json);
+            }
+        }
+    }
+
+    Ok(serde_json::json!({
+        "manifest": manifest,
+        "packs": packs_map,
+    }))
+}
+
+#[tauri::command]
+async fn get_marker_pack_warnings() -> Result<std::collections::HashMap<String, String>, String> {
+    Ok(db::get_warnings())
+}
+
+#[tauri::command]
+async fn reload_marker_packs(app: AppHandle) -> Result<std::collections::HashMap<String, String>, String> {
+    let data_dir = get_data_dir(&app);
+    db::clear_marker_packs_registry();
+    db::sync_marker_packs_registry(Some(&data_dir));
+    Ok(db::get_warnings())
+}
+
+#[tauri::command]
+async fn query_local_reference_db(
+    app: AppHandle,
+    table: String,
+    search_query: Option<String>,
+    limit: Option<u32>,
+    offset: Option<u32>,
+) -> Result<serde_json::Value, String> {
+    let db_path = get_db_path(&app);
+    let q_limit = limit.unwrap_or(20).clamp(1, 100);
+    let q_offset = offset.unwrap_or(0);
+    let q_search = search_query.as_deref().unwrap_or("").trim().to_lowercase();
+
+    db_runtime::with_connection(db_path, move |conn| {
+        let has_search = !q_search.is_empty();
+        let search_pattern = format!("%{}%", q_search);
+
+        match table.as_str() {
+            "clinvar" => {
+                let (rows, total) = if has_search {
+                    let mut stmt_count = conn.prepare(
+                        "SELECT COUNT(*) FROM clinvar_reference 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(phenotype_names) LIKE ? OR LOWER(clinical_significance) LIKE ?"
+                    ).map_err(|e| e.to_string())?;
+                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
+
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, variation_id, clinical_significance, review_status, phenotype_names, last_evaluated 
+                         FROM clinvar_reference 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(phenotype_names) LIKE ? OR LOWER(clinical_significance) LIKE ?
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "variation_id": r.get::<_, String>(1)?,
+                            "clinical_significance": r.get::<_, String>(2)?,
+                            "review_status": r.get::<_, String>(3)?,
+                            "phenotype_names": r.get::<_, String>(4)?,
+                            "last_evaluated": r.get::<_, Option<String>>(5)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                } else {
+                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM clinvar_reference", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, variation_id, clinical_significance, review_status, phenotype_names, last_evaluated 
+                         FROM clinvar_reference 
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "variation_id": r.get::<_, String>(1)?,
+                            "clinical_significance": r.get::<_, String>(2)?,
+                            "review_status": r.get::<_, String>(3)?,
+                            "phenotype_names": r.get::<_, String>(4)?,
+                            "last_evaluated": r.get::<_, Option<String>>(5)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                };
+                Ok(serde_json::json!({ "rows": rows, "total": total }))
+            }
+            "pharmgkb" => {
+                let (rows, total) = if has_search {
+                    let mut stmt_count = conn.prepare(
+                        "SELECT COUNT(*) FROM pharmgkb_clinical_variants 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(gene) LIKE ? OR LOWER(drug) LIKE ? OR LOWER(phenotype) LIKE ?"
+                    ).map_err(|e| e.to_string())?;
+                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
+
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, gene, drug, phenotype, evidence_level 
+                         FROM pharmgkb_clinical_variants 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(gene) LIKE ? OR LOWER(drug) LIKE ? OR LOWER(phenotype) LIKE ?
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "gene": r.get::<_, Option<String>>(1)?,
+                            "drug": r.get::<_, Option<String>>(2)?,
+                            "phenotype": r.get::<_, Option<String>>(3)?,
+                            "evidence_level": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                } else {
+                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM pharmgkb_clinical_variants", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, gene, drug, phenotype, evidence_level 
+                         FROM pharmgkb_clinical_variants 
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "gene": r.get::<_, Option<String>>(1)?,
+                            "drug": r.get::<_, Option<String>>(2)?,
+                            "phenotype": r.get::<_, Option<String>>(3)?,
+                            "evidence_level": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                };
+                Ok(serde_json::json!({ "rows": rows, "total": total }))
+            }
+            "clingen" => {
+                let (rows, total) = if has_search {
+                    let mut stmt_count = conn.prepare(
+                        "SELECT COUNT(*) FROM clingen_gene_validity 
+                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(disease_label) LIKE ? OR LOWER(classification) LIKE ?"
+                    ).map_err(|e| e.to_string())?;
+                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
+
+                    let mut stmt = conn.prepare(
+                        "SELECT gene_symbol, disease_label, classification, moi, report_url 
+                         FROM clingen_gene_validity 
+                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(disease_label) LIKE ? OR LOWER(classification) LIKE ?
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "gene_symbol": r.get::<_, String>(0)?,
+                            "disease_label": r.get::<_, String>(1)?,
+                            "classification": r.get::<_, Option<String>>(2)?,
+                            "moi": r.get::<_, Option<String>>(3)?,
+                            "report_url": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                } else {
+                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM clingen_gene_validity", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+                    let mut stmt = conn.prepare(
+                        "SELECT gene_symbol, disease_label, classification, moi, report_url 
+                         FROM clingen_gene_validity 
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "gene_symbol": r.get::<_, String>(0)?,
+                            "disease_label": r.get::<_, String>(1)?,
+                            "classification": r.get::<_, Option<String>>(2)?,
+                            "moi": r.get::<_, Option<String>>(3)?,
+                            "report_url": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                };
+                Ok(serde_json::json!({ "rows": rows, "total": total }))
+            }
+            "gwas" => {
+                let (rows, total) = if has_search {
+                    let mut stmt_count = conn.prepare(
+                        "SELECT COUNT(*) FROM gwas_reference 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(trait_name) LIKE ? OR LOWER(study_title) LIKE ?"
+                    ).map_err(|e| e.to_string())?;
+                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
+
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal 
+                         FROM gwas_reference 
+                         WHERE LOWER(rsid) LIKE ? OR LOWER(trait_name) LIKE ? OR LOWER(study_title) LIKE ?
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "trait_name": r.get::<_, String>(1)?,
+                            "p_value": r.get::<_, f64>(2)?,
+                            "or_or_beta": r.get::<_, Option<String>>(3)?,
+                            "pubmed_id": r.get::<_, Option<String>>(4)?,
+                            "study_title": r.get::<_, Option<String>>(5)?,
+                            "journal": r.get::<_, Option<String>>(6)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                } else {
+                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM gwas_reference", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+                    let mut stmt = conn.prepare(
+                        "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal 
+                         FROM gwas_reference 
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "rsid": r.get::<_, String>(0)?,
+                            "trait_name": r.get::<_, String>(1)?,
+                            "p_value": r.get::<_, f64>(2)?,
+                            "or_or_beta": r.get::<_, Option<String>>(3)?,
+                            "pubmed_id": r.get::<_, Option<String>>(4)?,
+                            "study_title": r.get::<_, Option<String>>(5)?,
+                            "journal": r.get::<_, Option<String>>(6)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                };
+                Ok(serde_json::json!({ "rows": rows, "total": total }))
+            }
+            "mane" => {
+                let (rows, total) = if has_search {
+                    let mut stmt_count = conn.prepare(
+                        "SELECT COUNT(*) FROM mane_transcripts 
+                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(ensembl_transcript) LIKE ? OR LOWER(refseq_transcript) LIKE ?"
+                    ).map_err(|e| e.to_string())?;
+                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
+
+                    let mut stmt = conn.prepare(
+                        "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates 
+                         FROM mane_transcripts 
+                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(ensembl_transcript) LIKE ? OR LOWER(refseq_transcript) LIKE ?
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "gene_symbol": r.get::<_, String>(0)?,
+                            "ensembl_transcript": r.get::<_, Option<String>>(1)?,
+                            "refseq_transcript": r.get::<_, Option<String>>(2)?,
+                            "mane_status": r.get::<_, Option<String>>(3)?,
+                            "grch38_coordinates": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                } else {
+                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM mane_transcripts", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+                    let mut stmt = conn.prepare(
+                        "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates 
+                         FROM mane_transcripts 
+                         LIMIT ? OFFSET ?"
+                    ).map_err(|e| e.to_string())?;
+                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
+                        Ok(serde_json::json!({
+                            "gene_symbol": r.get::<_, String>(0)?,
+                            "ensembl_transcript": r.get::<_, Option<String>>(1)?,
+                            "refseq_transcript": r.get::<_, Option<String>>(2)?,
+                            "mane_status": r.get::<_, Option<String>>(3)?,
+                            "grch38_coordinates": r.get::<_, Option<String>>(4)?,
+                        }))
+                    }).map_err(|e| e.to_string())?;
+                    let mut vec = Vec::new();
+                    for row in rows {
+                        vec.push(row.map_err(|e| e.to_string())?);
+                    }
+                    (vec, total)
+                };
+                Ok(serde_json::json!({ "rows": rows, "total": total }))
+            }
+            _ => Err(format!("Unknown database table: {}", table)),
+        }
+    })
+    .await
+}
+
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -> Result<i64, String> {
     config::validate_import_path(&file_path)?;
@@ -150,7 +538,8 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
             )
             .ok();
 
-        let chain_path = paths::chain_path(&paths::resolve_data_dir());
+        let data_dir = get_data_dir(&app_handle);
+        let chain_path = paths::chain_path(&data_dir);
         let liftover_engine = if chain_path.exists() {
             match liftover::LiftoverEngine::new(&chain_path) {
                 Ok(engine) => Some(engine),
@@ -167,7 +556,7 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
             None
         };
 
-        let db_path = paths::db_path(&paths::resolve_data_dir());
+        let db_path = paths::db_path(&data_dir);
         let mut conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
 
         let app_clone = app_handle.clone();
@@ -227,15 +616,38 @@ async fn query_region(
 }
 
 #[tauri::command]
+fn log_js_error(message: String, source: Option<String>, line: Option<u32>, col: Option<u32>, stack: Option<String>) {
+    let details = format!(
+        "JS ERROR: {} | Source: {} | Line: {:?} | Col: {:?} | Stack: {:?}",
+        message,
+        source.unwrap_or_else(|| "unknown".to_string()),
+        line,
+        col,
+        stack
+    );
+    app_log::log("WEBVIEW_ERROR", &details);
+}
+
+#[tauri::command]
 async fn generate_report(app: AppHandle, sample_id: i64, template_json: String) -> Result<GeneratedReport, String> {
-    config::validate_template_json(&template_json)?;
+    app_log::log("CMD_GENERATE_REPORT", &format!("Invoked for sample_id = {}", sample_id));
+    let res = config::validate_template_json(&template_json);
+    if let Err(e) = &res {
+        app_log::log("CMD_GENERATE_REPORT", &format!("Validation failed: {}", e));
+        return Err(e.clone());
+    }
     let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
+    let result = db_runtime::with_connection(db_path, move |conn| {
         let template: report::ReportTemplate = serde_json::from_str(&template_json)
             .map_err(|e| format!("Failed to parse report template JSON: {}", e))?;
         report::generate_report(conn, sample_id, &template)
     })
-    .await
+    .await;
+    match &result {
+        Ok(_) => app_log::log("CMD_GENERATE_REPORT", "Report generated successfully."),
+        Err(e) => app_log::log("CMD_GENERATE_REPORT", &format!("ERROR: {}", e)),
+    }
+    result
 }
 
 #[tauri::command]
@@ -628,6 +1040,7 @@ async fn show_ollama_model(
     Ok(details)
 }
 
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 async fn stream_ollama_chat(
     app: AppHandle,
@@ -809,7 +1222,7 @@ async fn fetch_external_api(
 
     let cache_hit = db_runtime::with_connection(db_path.clone(), move |conn| {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS api_cache (
+            "CREATE TABLE IF NOT EXISTS reference.api_cache (
                 url TEXT PRIMARY KEY,
                 response_json TEXT NOT NULL,
                 fetched_at INTEGER NOT NULL
@@ -901,7 +1314,7 @@ async fn fetch_external_api(
             .unwrap_or_default()
             .as_secs() as i64;
         conn.execute(
-            "INSERT OR REPLACE INTO api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
+            "INSERT OR REPLACE INTO reference.api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
             rusqlite::params![url_write, json_str, now],
         )
         .map_err(|e| e.to_string())?;
@@ -1078,16 +1491,28 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let data_dir = paths::initialize_data_dir(app.handle());
+            app_log::init(data_dir.clone());
+            db::dump_default_marker_packs_if_missing(&data_dir);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             select_file,
+            select_directory,
             save_report_json,
             get_app_bootstrap,
             get_app_paths,
+            get_all_marker_packs,
+            get_marker_pack_warnings,
+            reload_marker_packs,
+            query_local_reference_db,
             import_genome,
             get_samples,
             query_rsids,
             query_region,
             generate_report,
+            log_js_error,
             delete_sample,
             check_chain_status,
             download_chain_file,
@@ -1112,6 +1537,15 @@ pub fn run() {
             research::commands::preview_pipeline_tuning,
             research::commands::get_reference_status,
             research::commands::sync_gwas_reference,
+            offline::commands::check_offline_data_updates,
+            offline::commands::sync_offline_data_tier,
+            offline::commands::sync_single_offline_asset,
+            offline::commands::sync_all_offline_missing,
+            offline::commands::sync_all_offline_data,
+            offline::commands::build_offline_tier2,
+            offline::commands::get_custom_download_dir,
+            offline::commands::set_custom_download_dir,
+            offline::commands::get_offline_reference_status,
             research::commands::test_qdrant_connection,
             research::commands::get_qdrant_config,
             research::commands::save_qdrant_config,
@@ -1128,7 +1562,9 @@ pub fn run() {
             research::commands::search_qdrant_trait_discovery,
             research::commands::get_vector_promoted_findings,
             research::commands::get_vector_research_diagnostics,
+            research::commands::get_recent_finding_previews,
             research::commands::get_ollama_token,
+            research::commands::get_ollama_service_config,
             research::commands::save_ollama_token,
             research::commands::purge_database_cache,
             research::commands::select_save_path,
@@ -1150,6 +1586,8 @@ pub fn run() {
             research::evidence::commands::build_vector_atlas_cmd,
             research::evidence::commands::get_vector_atlas_cached,
             research::evidence::commands::enable_named_vectors_collection,
+            research::evidence::commands::get_evidence_corpus_summary,
+            research::evidence::commands::browse_associations_cmd,
             research::gnomad::commands::get_gnomad_context_cmd,
             research::gnomad::commands::batch_enrich_gnomad_context_cmd,
             research::gnomad::commands::get_gnomad_config_cmd,

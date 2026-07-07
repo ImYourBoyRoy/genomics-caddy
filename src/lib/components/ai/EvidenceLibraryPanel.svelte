@@ -1,9 +1,16 @@
 <!-- ./src/lib/components/ai/EvidenceLibraryPanel.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listEvidenceSources, exportEvidencePacket, getVariantEvidenceCard, saveReportJson, type EvidenceRecord } from "../../api/tauri";
+  import {
+    listEvidenceSources,
+    exportEvidencePacket,
+    getVariantEvidenceCard,
+    getEvidenceCorpusSummary,
+    saveReportJson,
+    type EvidenceRecord,
+  } from "../../api/tauri";
   import type { VariantNavTarget } from "../../constants/traitCategories";
-  import type { QdrantHit, EvidenceCard } from "../../types/research";
+  import type { QdrantHit, EvidenceCard, EvidenceCorpusSummary } from "../../types/research";
   import type { GenomeSample } from "../../types/genomics";
   import VectorEvidenceCard from "./evidence/VectorEvidenceCard.svelte";
   import SimilarAssociationsPanel from "./evidence/SimilarAssociationsPanel.svelte";
@@ -17,9 +24,12 @@
   import EvidenceResultsList from "./evidence/EvidenceResultsList.svelte";
   import QdrantResultsList from "./evidence/QdrantResultsList.svelte";
   import EvidenceSourcesSidebar from "./evidence/EvidenceSourcesSidebar.svelte";
+  import EvidenceCorpusOverview from "./evidence/EvidenceCorpusOverview.svelte";
+  import FindingsNavigator from "./evidence/FindingsNavigator.svelte";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
-  import { runEvidenceSearch } from "../../utils/evidenceSearch";
+  import { runEvidenceSearch, type BrowsePreset } from "../../utils/evidenceSearch";
   import { TRAIT_CATEGORIES } from "../../constants/traitCategories";
+  import "$lib/styles/components/evidence-library-panel.css";
 
   interface Props {
     ollamaUrl: string;
@@ -59,6 +69,11 @@
   let sources = $state<string[]>([]);
   let searchError = $state("");
   let hasSearched = $state(false);
+  let corpusSummary = $state<EvidenceCorpusSummary | null>(null);
+  let corpusLoading = $state(false);
+  let activeBrowsePreset = $state<BrowsePreset | "">("");
+  let libraryMode = $state<"browse" | "search">("browse");
+  let showAdvancedSearch = $state(false);
 
   $effect(() => {
     if (initialSearchQuery) {
@@ -71,15 +86,21 @@
 
   let isSemanticSearchAvailable = $derived(!!ollamaUrl && ollamaUrl.trim() !== "");
 
-  async function performSearch() {
+  async function performSearch(browsePreset: BrowsePreset | undefined = undefined) {
     const q = searchQuery.trim();
     const traitBrowse =
       searchSource === "qdrant" && discoveryMode === "trait_index" && !!traitCategory;
-    if (!q && !traitBrowse) return;
+    const preset = browsePreset ?? (activeBrowsePreset || undefined);
+    if (!q && !traitBrowse && !preset) return;
 
     isSearching = true;
     searchError = "";
     hasSearched = true;
+    if (browsePreset) {
+      activeBrowsePreset = browsePreset;
+    } else if (q) {
+      activeBrowsePreset = "";
+    }
 
     try {
       const out = await runEvidenceSearch({
@@ -94,6 +115,7 @@
         wbMinDq,
         wbMinWellness,
         wbEvidenceTier,
+        browsePreset: preset,
       });
       results = out.results;
       qdrantResults = out.qdrantResults;
@@ -107,6 +129,39 @@
     } finally {
       isSearching = false;
     }
+  }
+
+  async function loadCorpusOverview(autoBrowse = false) {
+    if (!selectedSample) {
+      corpusSummary = null;
+      return;
+    }
+    corpusLoading = true;
+    try {
+      corpusSummary = await getEvidenceCorpusSummary(selectedSample.id);
+      const indexed = corpusSummary.dashboard.vectorized_variants ?? 0;
+      if (autoBrowse && indexed > 0 && !initialSearchQuery && !hasSearched) {
+        libraryMode = "browse";
+      }
+    } catch (e) {
+      console.warn("Failed to load evidence corpus summary:", e);
+      corpusSummary = null;
+    } finally {
+      corpusLoading = false;
+    }
+  }
+
+  function handleBrowsePreset(preset: BrowsePreset) {
+    libraryMode = "browse";
+    activeBrowsePreset = preset;
+  }
+
+  function handleCorpusRsid(rsid: string) {
+    searchQuery = rsid;
+    searchSource = "workbench";
+    workbenchView = "search";
+    activeBrowsePreset = "";
+    handleCandidateSelect(rsid);
   }
 
   async function loadSources() {
@@ -188,6 +243,16 @@
 
   onMount(() => {
     loadSources();
+    void loadCorpusOverview(true);
+  });
+
+  $effect(() => {
+    const sampleId = selectedSample?.id;
+    if (sampleId) {
+      void loadCorpusOverview(!hasSearched && !initialSearchQuery);
+    } else {
+      corpusSummary = null;
+    }
   });
 </script>
 
@@ -205,10 +270,28 @@
         📂
       </button>
       <h3>Local Evidence Library</h3>
-      <span class="badge info">📚 Guidelines & Citations</span>
+      <span class="badge info">Browse · Filter · Export</span>
     </div>
 
     <div class="panel-header-actions">
+      <div class="library-mode-toggle">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          class:drawer-open={libraryMode === "browse"}
+          onclick={() => (libraryMode = "browse")}
+        >
+          Findings Navigator
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          class:drawer-open={libraryMode === "search"}
+          onclick={() => (libraryMode = "search")}
+        >
+          Search &amp; tools
+        </button>
+      </div>
       <button
         class="btn btn-secondary btn-sm toggle-settings-btn"
         onclick={() => (showSettingsDrawer = !showSettingsDrawer)}
@@ -221,7 +304,33 @@
   </div>
 
   <div class="panel-content-scroll">
-    <EvidenceSearchToolbar
+    {#if selectedSample && libraryMode === "browse"}
+      <FindingsNavigator
+        sampleId={selectedSample.id}
+        summary={corpusSummary}
+        loadingSummary={corpusLoading}
+        initialPreset={activeBrowsePreset || undefined}
+        initialTraitCategory={traitCategory}
+        {onNavigateToVariant}
+        onExportPacket={handleExportPacket}
+      />
+    {:else if selectedSample}
+      {#if corpusSummary && (corpusSummary.dashboard.vectorized_variants ?? 0) > 0}
+        <EvidenceCorpusOverview
+          summary={corpusSummary}
+          loading={corpusLoading}
+          activePreset={activeBrowsePreset}
+          onBrowsePreset={handleBrowsePreset}
+          onSelectRsid={handleCorpusRsid}
+          onBrowseTrait={(cat) => {
+            traitCategory = cat;
+            activeBrowsePreset = "";
+            libraryMode = "browse";
+          }}
+        />
+      {/if}
+
+      <EvidenceSearchToolbar
       bind:searchQuery
       bind:searchSource
       bind:discoveryMode
@@ -325,7 +434,7 @@
 
       <EvidenceSourcesSidebar {sources} />
     </div>
+    {/if}
   </div>
 </section>
 
-<style src="../../styles/components/evidence-library-panel.css"></style>

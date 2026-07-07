@@ -15,6 +15,7 @@ use std::io::{BufRead, Cursor, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn query_remote_vcf(
     db_path: &Path,
     cfg: &GnomadConfig,
@@ -122,6 +123,7 @@ pub async fn query_remote_vcf(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn query_remote_sync(
     cache_dir: &Path,
     vcf_url: &str,

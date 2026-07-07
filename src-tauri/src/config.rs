@@ -31,6 +31,8 @@ pub fn app_config_roots() -> Vec<PathBuf> {
         && let Some(parent) = exe.parent() {
             roots.push(parent.to_path_buf());
         }
+    let project_root = crate::paths::resolve_project_root(None);
+    roots.push(crate::paths::app_layout_dir(&project_root));
     if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR")
         && let Some(project_root) = PathBuf::from(manifest).parent() {
             roots.push(project_root.to_path_buf());
@@ -198,14 +200,14 @@ pub fn sync_qdrant_sqlite_from_env(conn: &Connection) -> Result<(), String> {
     let stored_url = url.clone();
     let stored_collection = collection.clone();
 
-    let next_url = if url.trim().is_empty() || url == "http://localhost:6333" {
-        env_url.unwrap_or(url)
+    let next_url = if let Some(ref env) = env_url {
+        env.clone()
     } else {
         url
     };
 
-    let next_collection = if collection.trim().is_empty() || collection == "genomics_evidence" {
-        env_collection.unwrap_or(collection)
+    let next_collection = if let Some(ref env) = env_collection {
+        env.clone()
     } else {
         collection
     };
@@ -264,16 +266,16 @@ pub fn load_qdrant_config(conn: &Connection) -> Result<QdrantConfig, String> {
         )
         .map_err(|e| e.to_string())?;
 
-    let url = if !url.trim().is_empty() && url != "http://localhost:6333" {
-        url
+    let url = if let Some(env) = env_var("QDRANT_URL") {
+        env
     } else {
-        env_var("QDRANT_URL").unwrap_or(url)
+        url
     };
 
-    let collection = if !collection.trim().is_empty() && collection != "genomics_evidence" {
-        collection
+    let collection = if let Some(env) = env_var("QDRANT_COLLECTION") {
+        env
     } else {
-        env_var("QDRANT_COLLECTION").unwrap_or(collection)
+        collection
     };
 
     Ok(QdrantConfig {
@@ -358,6 +360,35 @@ pub fn get_ollama_token() -> Option<String> {
 
 pub fn save_ollama_token(token: Option<&str>) -> Result<(), String> {
     set_keyring_secret(SECRET_OLLAMA_TOKEN, token)
+}
+
+const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
+
+/// Ollama base URL from `.env` (`GENOMICS_OLLAMA_URL` or `OLLAMA_URL`), else localhost.
+pub fn resolve_ollama_service_url() -> String {
+    ollama_url_from_env().unwrap_or_else(|| DEFAULT_OLLAMA_URL.to_string())
+}
+
+pub fn ollama_url_from_env() -> Option<String> {
+    env_var("GENOMICS_OLLAMA_URL").or_else(|| env_var("OLLAMA_URL"))
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct OllamaServiceConfig {
+    pub url: String,
+    pub from_env: bool,
+    pub token_set: bool,
+}
+
+pub fn load_ollama_service_config() -> OllamaServiceConfig {
+    let from_env = ollama_url_from_env();
+    OllamaServiceConfig {
+        url: from_env
+            .clone()
+            .unwrap_or_else(|| DEFAULT_OLLAMA_URL.to_string()),
+        from_env: from_env.is_some(),
+        token_set: get_ollama_token().is_some(),
+    }
 }
 
 /// 256-bit SQLCipher key (hex), stored in OS keyring.
@@ -513,8 +544,8 @@ pub fn validate_import_file_size(path: &std::path::Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Maximum report template JSON payload (2 MiB).
-pub const MAX_TEMPLATE_JSON_BYTES: usize = 2 * 1024 * 1024;
+/// Maximum report template JSON payload (16 MiB — covers all 22+ marker packs combined).
+pub const MAX_TEMPLATE_JSON_BYTES: usize = 16 * 1024 * 1024;
 
 pub fn validate_template_json(template_json: &str) -> Result<(), String> {
     if template_json.len() > MAX_TEMPLATE_JSON_BYTES {
@@ -725,7 +756,6 @@ pub fn install_research_debug_logging(conn: &Connection) {
 mod tests {
     use super::*;
     use std::fs;
-    use std::path::PathBuf;
 
     #[test]
     fn sql_like_pattern_escapes_wildcards() {

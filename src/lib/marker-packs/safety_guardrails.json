@@ -1,0 +1,62 @@
+{
+  "name": "Global Safety Guardrails",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "rules": [
+    {
+      "id": "NO_DIAGNOSIS_FROM_RAW_DNA",
+      "severity": "critical",
+      "text": "Never diagnose disease from raw DNA or marker packs."
+    },
+    {
+      "id": "MISSING_VARIANT_NOT_NEGATIVE",
+      "severity": "critical",
+      "text": "A missing rsID or uncalled marker means unknown/not tested, not low risk."
+    },
+    {
+      "id": "PGX_NO_MED_CHANGE",
+      "severity": "critical",
+      "text": "Never recommend medication start/stop/dose change from raw DNA. Require clinical PGx and clinician/pharmacist review."
+    },
+    {
+      "id": "CANCER_CONFIRMATION_ONLY",
+      "severity": "critical",
+      "text": "Cancer predisposition findings require clinical confirmation and genetic counseling. Negative raw DNA does not rule out hereditary cancer."
+    },
+    {
+      "id": "HLA_TAGS_NOT_TYPING",
+      "severity": "critical",
+      "text": "HLA tag SNPs are not clinical HLA typing."
+    },
+    {
+      "id": "CNV_STR_VNTR_NOT_ARRAY_SAFE",
+      "severity": "critical",
+      "text": "CNVs, VNTRs, STRs, copy-number alleles and structural variants usually require specialized callers."
+    },
+    {
+      "id": "PSYCH_NON_DIAGNOSTIC",
+      "severity": "critical",
+      "text": "Do not infer ADHD, autism, PTSD, depression, bipolar disorder, addiction, personality, aggression, or intelligence from SNPs."
+    },
+    {
+      "id": "ALLERGY_NON_DIAGNOSTIC",
+      "severity": "high",
+      "text": "Do not infer food allergy, anaphylaxis risk, or safe exposure from genotype."
+    },
+    {
+      "id": "ATHLETIC_DESTINY_BLOCK",
+      "severity": "high",
+      "text": "Do not tell users they are genetically unable or destined to build muscle, perform, or recover."
+    },
+    {
+      "id": "ANCESTRY_CALIBRATION_REQUIRED",
+      "severity": "high",
+      "text": "PRS and many common-marker effects require ancestry/platform calibration."
+    },
+    {
+      "id": "LABS_AND_PHENOTYPE_FIRST",
+      "severity": "high",
+      "text": "When phenotype/labs conflict with genotype, phenotype/labs dominate."
+    }
+  ]
+}

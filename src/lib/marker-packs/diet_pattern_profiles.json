@@ -1,0 +1,502 @@
+{
+  "name": "Diet Pattern Profiles & Requirement Templates",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine",
+  "purpose": "Reusable diet-pattern templates for user-declared values, medical constraints, allergies/intolerances, and biohacking goals.",
+  "implementation_note": "Do not infer religious, ethical, or medical diet membership from genotype. These profiles must be enabled by user declaration, clinician diagnosis, or explicit app workflow.",
+  "profiles": [
+    {
+      "id": "omnivore_minimally_processed",
+      "label": "Minimally processed omnivore",
+      "type": "preference_pattern",
+      "allowed_emphasis": [
+        "vegetables",
+        "fruit",
+        "whole grains if tolerated",
+        "fish/seafood if tolerated",
+        "eggs",
+        "dairy if tolerated",
+        "poultry",
+        "legumes",
+        "nuts/seeds"
+      ],
+      "exclusions": [],
+      "watchouts": [
+        "processed meat",
+        "added sugar",
+        "excess sodium",
+        "allergen profile"
+      ],
+      "best_for": [
+        "general health",
+        "flexible biohacking baseline"
+      ],
+      "not_enough_when": [
+        "allergy/celiac/CKD/medical restrictions require narrower rules"
+      ]
+    },
+    {
+      "id": "pescatarian_pork_free",
+      "label": "Pescatarian / pork-free",
+      "type": "preference_or_religious_pattern",
+      "allowed_emphasis": [
+        "fish_low_mercury_fatty",
+        "eggs if allowed",
+        "dairy if tolerated",
+        "legumes",
+        "soy",
+        "nuts/seeds",
+        "whole grains if tolerated"
+      ],
+      "exclusions": [
+        "pork",
+        "processed_pork",
+        "red_meat if user excludes",
+        "poultry if user excludes"
+      ],
+      "watchouts": [
+        "fish allergy",
+        "shellfish allergy",
+        "mercury",
+        "histamine freshness",
+        "gout/high purine"
+      ],
+      "best_for": [
+        "fish yes / pork no users",
+        "omega-3 support without pork",
+        "many religious/cultural pork-free patterns with user-defined certification"
+      ],
+      "not_enough_when": [
+        "strict halal/kosher certification needed",
+        "fish allergy"
+      ]
+    },
+    {
+      "id": "pork_free_omnivore",
+      "label": "Pork-free omnivore",
+      "type": "preference_or_religious_pattern",
+      "allowed_emphasis": [
+        "fish",
+        "poultry",
+        "eggs",
+        "dairy if tolerated",
+        "beef/lamb if allowed",
+        "legumes",
+        "soy"
+      ],
+      "exclusions": [
+        "pork",
+        "bacon",
+        "ham",
+        "lard",
+        "pork gelatin",
+        "pork broth"
+      ],
+      "watchouts": [
+        "hidden pork derivatives",
+        "processed foods",
+        "certification strictness"
+      ],
+      "best_for": [
+        "users who avoid pork but still eat other animal foods"
+      ],
+      "not_enough_when": [
+        "kosher/halal certification required"
+      ]
+    },
+    {
+      "id": "halal_compatible",
+      "label": "Halal-compatible",
+      "type": "religious_pattern",
+      "allowed_emphasis": [
+        "halal-certified meat if desired",
+        "fish if user accepts",
+        "eggs",
+        "dairy if tolerated",
+        "legumes",
+        "grains",
+        "vegetables",
+        "fruit"
+      ],
+      "exclusions": [
+        "pork",
+        "alcohol",
+        "non-halal meat",
+        "lard",
+        "pork gelatin"
+      ],
+      "watchouts": [
+        "gelatin",
+        "enzymes",
+        "broths",
+        "flavor extracts",
+        "cross-contact",
+        "certification strictness"
+      ],
+      "best_for": [
+        "Muslim users or anyone choosing halal-compatible rules"
+      ],
+      "not_enough_when": [
+        "user requires specific certifying authority"
+      ]
+    },
+    {
+      "id": "kosher_style",
+      "label": "Kosher-style",
+      "type": "religious_pattern",
+      "allowed_emphasis": [
+        "kosher-certified foods if strict",
+        "fish with fins/scales if user accepts",
+        "eggs",
+        "dairy/meat separation if enabled",
+        "legumes/grains/vegetables"
+      ],
+      "exclusions": [
+        "pork",
+        "shellfish",
+        "non-kosher meat",
+        "meat-dairy combinations if enabled"
+      ],
+      "watchouts": [
+        "gelatin",
+        "rennet",
+        "broths",
+        "certification",
+        "Passover constraints if relevant"
+      ],
+      "best_for": [
+        "Jewish users or anyone choosing kosher-style rules"
+      ],
+      "not_enough_when": [
+        "strict certification authority/passover details needed"
+      ]
+    },
+    {
+      "id": "lds_word_of_wisdom",
+      "label": "LDS Word of Wisdom compatible",
+      "type": "religious_pattern",
+      "allowed_emphasis": [
+        "whole foods",
+        "grains/vegetables/fruit",
+        "protein foods",
+        "herbal infusions if acceptable"
+      ],
+      "exclusions": [
+        "alcohol",
+        "coffee",
+        "black tea",
+        "green tea",
+        "tobacco",
+        "recreational drugs"
+      ],
+      "watchouts": [
+        "personal caffeine interpretation",
+        "extracts/cooking alcohol",
+        "tea ingredient source"
+      ],
+      "best_for": [
+        "users choosing LDS-compatible food/drink filters"
+      ],
+      "not_enough_when": [
+        "individual standards differ; ask strictness"
+      ]
+    },
+    {
+      "id": "vegetarian_lacto_ovo",
+      "label": "Lacto-ovo vegetarian",
+      "type": "ethical_or_preference_pattern",
+      "allowed_emphasis": [
+        "eggs",
+        "dairy if tolerated",
+        "legumes",
+        "soy",
+        "nuts/seeds",
+        "whole grains",
+        "vegetables",
+        "fruit"
+      ],
+      "exclusions": [
+        "meat",
+        "poultry",
+        "fish",
+        "pork",
+        "shellfish"
+      ],
+      "watchouts": [
+        "B12",
+        "iron",
+        "zinc",
+        "omega-3 EPA/DHA",
+        "protein/leucine",
+        "milk/egg allergy"
+      ],
+      "best_for": [
+        "vegetarian users"
+      ],
+      "not_enough_when": [
+        "vegan required"
+      ]
+    },
+    {
+      "id": "vegan",
+      "label": "Vegan",
+      "type": "ethical_or_preference_pattern",
+      "allowed_emphasis": [
+        "legumes",
+        "soy",
+        "nuts/seeds",
+        "whole grains",
+        "vegetables",
+        "fruit",
+        "fortified foods"
+      ],
+      "exclusions": [
+        "meat",
+        "poultry",
+        "fish",
+        "shellfish",
+        "eggs",
+        "dairy",
+        "honey if strict",
+        "animal gelatin"
+      ],
+      "watchouts": [
+        "B12 supplementation",
+        "vitamin D",
+        "iodine",
+        "iron",
+        "zinc",
+        "calcium",
+        "EPA/DHA via algae",
+        "protein/leucine"
+      ],
+      "best_for": [
+        "strict plant-based users"
+      ],
+      "not_enough_when": [
+        "user has soy/legume/nut allergies or severe IBS without planning"
+      ]
+    },
+    {
+      "id": "gluten_free_celiac",
+      "label": "Strict gluten-free / celiac",
+      "type": "medical_pattern",
+      "allowed_emphasis": [
+        "rice",
+        "quinoa",
+        "corn",
+        "potatoes",
+        "certified GF oats if tolerated",
+        "naturally gluten-free whole foods"
+      ],
+      "exclusions": [
+        "wheat",
+        "barley",
+        "rye",
+        "malt",
+        "non-certified oats",
+        "cross-contact risk"
+      ],
+      "watchouts": [
+        "testing before gluten removal if diagnosis pending",
+        "fiber/B vitamins",
+        "restaurant cross-contact"
+      ],
+      "best_for": [
+        "confirmed celiac disease"
+      ],
+      "not_enough_when": [
+        "wheat allergy requires allergy-specific rules"
+      ]
+    },
+    {
+      "id": "low_histamine_trial",
+      "label": "Low-histamine trial",
+      "type": "symptom_trial_pattern",
+      "allowed_emphasis": [
+        "fresh-cooked proteins",
+        "fresh/frozen fish if tolerated",
+        "rice/oats",
+        "fresh vegetables/fruits excluding individual triggers",
+        "olive oil"
+      ],
+      "exclusions": [
+        "aged/fermented foods",
+        "cured meats",
+        "alcohol",
+        "leftovers held too long",
+        "canned/smoked fish"
+      ],
+      "watchouts": [
+        "over-restriction",
+        "freshness logistics",
+        "MCAS evaluation if severe"
+      ],
+      "best_for": [
+        "histamine-like symptom trial"
+      ],
+      "not_enough_when": [
+        "anaphylaxis/allergy requires allergy rules"
+      ]
+    },
+    {
+      "id": "low_fodmap_trial",
+      "label": "Low-FODMAP structured trial",
+      "type": "symptom_trial_pattern",
+      "allowed_emphasis": [
+        "low-FODMAP carbs/proteins/vegetables in portions",
+        "rechallenge after trial"
+      ],
+      "exclusions": [
+        "temporary high-FODMAP categories during elimination"
+      ],
+      "watchouts": [
+        "must reintroduce",
+        "dietitian support",
+        "fiber adequacy"
+      ],
+      "best_for": [
+        "IBS-like symptoms"
+      ],
+      "not_enough_when": [
+        "celiac/allergy/IBD red flags"
+      ]
+    },
+    {
+      "id": "diabetes_low_glycemic",
+      "label": "Glucose-control / low-glycemic pattern",
+      "type": "medical_or_goal_pattern",
+      "allowed_emphasis": [
+        "protein",
+        "fiber",
+        "vegetables",
+        "low-glycemic carbs",
+        "unsaturated fats",
+        "post-meal movement"
+      ],
+      "exclusions": [
+        "sugary drinks",
+        "frequent refined starch/sweets"
+      ],
+      "watchouts": [
+        "hypoglycemia medications",
+        "carb elimination overreach",
+        "CGM/lab feedback"
+      ],
+      "best_for": [
+        "prediabetes/T2D risk/glucose spikes"
+      ],
+      "not_enough_when": [
+        "type 1 diabetes or medication dosing needs clinician"
+      ]
+    },
+    {
+      "id": "heart_apoB_LpA",
+      "label": "Heart-health / ApoB-Lp(a) aware pattern",
+      "type": "medical_or_goal_pattern",
+      "allowed_emphasis": [
+        "unsaturated fats",
+        "fiber",
+        "low-mercury fish if allowed",
+        "legumes",
+        "nuts/seeds if tolerated",
+        "vegetables"
+      ],
+      "exclusions": [
+        "frequent processed meats",
+        "excess saturated fat if ApoB high",
+        "trans fats"
+      ],
+      "watchouts": [
+        "Lp(a) is lab-measured",
+        "ApoB/LDL response",
+        "fish allergy"
+      ],
+      "best_for": [
+        "cardiovascular/lipid risk context"
+      ],
+      "not_enough_when": [
+        "familial hypercholesterolemia or clinical ASCVD needs clinician"
+      ]
+    },
+    {
+      "id": "nafld_liver_support",
+      "label": "Fatty liver support pattern",
+      "type": "medical_or_goal_pattern",
+      "allowed_emphasis": [
+        "protein",
+        "fiber",
+        "whole foods",
+        "choline adequacy",
+        "weight-loss support if needed",
+        "low added sugar"
+      ],
+      "exclusions": [
+        "alcohol",
+        "sugary drinks",
+        "frequent refined carbs"
+      ],
+      "watchouts": [
+        "PNPLA3/TM6SF2 are not diagnosis",
+        "liver labs/imaging",
+        "rapid weight loss"
+      ],
+      "best_for": [
+        "fatty liver context"
+      ],
+      "not_enough_when": [
+        "advanced liver disease"
+      ]
+    },
+    {
+      "id": "hypertrophy_high_protein",
+      "label": "Hypertrophy / strength protein pattern",
+      "type": "performance_goal_pattern",
+      "allowed_emphasis": [
+        "complete protein",
+        "leucine-rich meals",
+        "creatine context",
+        "carb support around training"
+      ],
+      "exclusions": [],
+      "watchouts": [
+        "CKD",
+        "allergens",
+        "religious protein source restrictions",
+        "protein powder quality"
+      ],
+      "best_for": [
+        "muscle development"
+      ],
+      "not_enough_when": [
+        "kidney disease or eating disorder risk"
+      ]
+    },
+    {
+      "id": "renal_cautious",
+      "label": "Renal cautious pattern",
+      "type": "medical_pattern",
+      "allowed_emphasis": [
+        "clinician-defined sodium/potassium/phosphorus/protein targets"
+      ],
+      "exclusions": [
+        "potassium salt substitutes unless cleared",
+        "unguided electrolyte loading",
+        "very high protein without clearance"
+      ],
+      "watchouts": [
+        "eGFR",
+        "albuminuria",
+        "potassium",
+        "phosphorus"
+      ],
+      "best_for": [
+        "CKD or abnormal renal labs"
+      ],
+      "not_enough_when": [
+        "needs individualized renal dietitian plan"
+      ]
+    }
+  ]
+}

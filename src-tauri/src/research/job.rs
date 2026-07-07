@@ -39,7 +39,7 @@ pub fn get_research_job_from_db(db_path: &Path, sample_id: i64) -> Option<Resear
         .query_row(
             "SELECT job_id, sample_id, status, total_markers, enriched_count,
                 priority_complete, current_rsid, current_source,
-                started_at, last_updated, error_message, scope_json
+                started_at, last_updated, error_message, scope_json, session_started_at
          FROM research_jobs WHERE sample_id = ?
          ORDER BY started_at DESC LIMIT 1",
             params![sample_id],
@@ -57,7 +57,16 @@ pub fn get_research_job_from_db(db_path: &Path, sample_id: i64) -> Option<Resear
                     last_updated: row.get(9)?,
                     error_message: row.get(10)?,
                     scope_json: row.get(11).ok(),
+                    session_started_at: row.get(12).ok(),
                     loop_active: None,
+                    live_message: None,
+                    activity_phase: None,
+                    batch_prepared: None,
+                    batch_prefetch_done: None,
+                    batch_total: None,
+                    batch_elapsed_secs: None,
+                    qdrant_sample_count: None,
+                    session_elapsed_secs: None,
                 })
             },
         )
@@ -144,8 +153,8 @@ pub fn save_research_job(db_path: &Path, job: &ResearchJob) -> Result<(), String
         "INSERT OR REPLACE INTO research_jobs (
             job_id, sample_id, status, total_markers, enriched_count,
             priority_complete, current_rsid, current_source,
-            started_at, last_updated, error_message, scope_json
-         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            started_at, last_updated, error_message, scope_json, session_started_at
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
         params![
             job.job_id,
             job.sample_id,
@@ -159,6 +168,7 @@ pub fn save_research_job(db_path: &Path, job: &ResearchJob) -> Result<(), String
             job.last_updated,
             job.error_message,
             job.scope_json,
+            job.session_started_at,
         ],
     )
     .map_err(|e| e.to_string())?;

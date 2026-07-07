@@ -26,6 +26,38 @@ export function syncSweepFastFromSources(scope: ResearchScopeConfig): void {
     !s.secondary;
 }
 
+export function detectActivePreset(
+  scope: ResearchScopeConfig
+): "fast" | "clinical" | "full" | null {
+  ensureEnrichmentSources(scope);
+  const s = scope.enrichment_sources!;
+  const isFull =
+    s.gnomad &&
+    s.clinvar_live &&
+    s.pubmed &&
+    s.gtex &&
+    s.vep_dbsnp &&
+    s.secondary;
+  const isClinical =
+    !s.gnomad &&
+    s.clinvar_live &&
+    s.pubmed &&
+    s.gtex &&
+    s.vep_dbsnp &&
+    !s.secondary;
+  const isFast =
+    !s.gnomad &&
+    !s.clinvar_live &&
+    !s.pubmed &&
+    !s.gtex &&
+    !s.vep_dbsnp &&
+    !s.secondary;
+  if (isFull) return "full";
+  if (isClinical) return "clinical";
+  if (isFast) return "fast";
+  return null;
+}
+
 export function applySourcePreset(
   scope: ResearchScopeConfig,
   preset: "fast" | "clinical" | "full"

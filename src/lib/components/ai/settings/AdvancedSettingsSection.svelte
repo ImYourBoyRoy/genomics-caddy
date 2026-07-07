@@ -229,8 +229,16 @@
       <span class="section-label">📂 App Data Paths</span>
       {#if paths}
         <div class="path-box">
+          <span class="path-title">Data root ({paths.data_dir_mode.replaceAll("_", " ")}):</span>
+          <code class="font-mono path-value" title={paths.data_dir}>{paths.data_dir}</code>
+        </div>
+        <div class="path-box mt-1">
           <span class="path-title">Database:</span>
           <code class="font-mono path-value" title={paths.db_path}>{paths.db_path}</code>
+        </div>
+        <div class="path-box mt-1">
+          <span class="path-title">Offline downloads:</span>
+          <code class="font-mono path-value" title={paths.raw_downloads_dir}>{paths.raw_downloads_dir}</code>
         </div>
         <div class="path-box mt-1">
           <span class="path-title">Chain File:</span>
@@ -242,7 +250,8 @@
             <code class="font-mono path-value" title={paths.env_path}>{paths.env_path}</code>
           </div>
           <span class="help-text mt-1">
-            Copy <code>.env.example</code> to this path for QDRANT_URL, QDRANT_API_KEY, NCBI_API_KEY, and OLLAMA_TOKEN.
+            Copy <code>.env.example</code> to <code>App/.env</code> (or project root) for QDRANT_URL, QDRANT_API_KEY, NCBI_API_KEY, and OLLAMA_TOKEN.
+            Persistent genome data lives in <code>App/Data/</code>. Legacy <code>data/</code> is still read when App/Data is empty.
             Secrets are stored in the OS keychain when saved from settings — never in git.
           </span>
         {/if}

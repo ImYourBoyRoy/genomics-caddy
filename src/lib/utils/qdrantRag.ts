@@ -11,6 +11,7 @@ export interface VectorSearchMeta {
   query: string;
   enabled: boolean;
   error?: string;
+  indexBrief?: string;
 }
 
 export function formatHitForContext(hit: QdrantHit) {
@@ -75,6 +76,7 @@ export function buildVectorResearchBlock(hits: QdrantHit[], meta: VectorSearchMe
     status: "ok",
     query: meta.query,
     hit_count: hits.length,
+    index_brief: meta.indexBrief || undefined,
     purpose:
       "Semantically retrieved enriched variants from the local Qdrant vector index (GWAS associations, ClinVar, gnomAD, gene mapping). This data IS available to you inside this JSON block.",
     usage_rules: [

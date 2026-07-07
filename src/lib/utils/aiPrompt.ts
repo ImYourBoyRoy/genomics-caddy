@@ -17,23 +17,7 @@
 import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/genomics";
 import type { QdrantHit } from "../types/research";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
-import manifest from "../marker-packs/manifest.json";
-import core from "../marker-packs/core.json";
-import pgx from "../marker-packs/pgx.json";
-import metabolic from "../marker-packs/metabolic.json";
-import nutrients from "../marker-packs/nutrients.json";
-import neuropsych from "../marker-packs/neuropsych.json";
-import sleep from "../marker-packs/sleep.json";
-import connectiveTissue from "../marker-packs/connective_tissue.json";
-import thyroidAutoimmune from "../marker-packs/thyroid_autoimmune.json";
-import cardiovascular from "../marker-packs/cardiovascular.json";
-import cancerConfirmationOnly from "../marker-packs/cancer_confirmation_only.json";
-
-const PACKS_MAP: Record<string, any> = {
-  core, pgx, metabolic, nutrients, neuropsych, sleep,
-  connective_tissue: connectiveTissue, thyroid_autoimmune: thyroidAutoimmune,
-  cardiovascular, cancer_confirmation_only: cancerConfirmationOnly,
-};
+import { markerPacksStore } from "./markerPacksState.svelte";
 
 // ---------------------------------------------------------------------------
 // Shared Interfaces (re-exported for convenience)
@@ -216,8 +200,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   if (contextMode !== "developer_raw_json") {
     sectionsData = generatedReport.sections
       .map((sec) => {
-        const pack = manifest.packs.find(
-          (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
+        const pack = markerPacksStore.manifest.packs.find(
+          (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name
         );
         
         const isPackSelected = pack ? selectedPacks[pack.id] : false;
@@ -234,9 +218,9 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
           switch (contextMode) {
             case "active_findings":
             case "selected_pack_active":
-              return m.effect_count > 0;
+              return (m.effect_count ?? 0) > 0;
             case "active_context_dependent":
-              return m.effect_count > 0 || m.severity_class === "context_dependent";
+              return (m.effect_count ?? 0) > 0 || m.severity_class === "context_dependent";
             case "full_selected":
               return true;
             case "clinical_checklist":
@@ -245,7 +229,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
                      m.severity_class === "high_risk" ||
                      m.severity_class === "moderate_risk";
             case "evidence_audit":
-              return m.effect_count > 0;
+              return (m.effect_count ?? 0) > 0;
             default:
               return true;
           }
@@ -359,8 +343,8 @@ export function calculateContextStats(
   let total = 0;
 
   for (const sec of generatedReport.sections) {
-    const pack = manifest.packs.find(
-      (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
+    const pack = markerPacksStore.manifest.packs.find(
+      (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name
     );
     const isPackSelected = pack ? selectedPacks[pack.id] : false;
     
@@ -375,10 +359,10 @@ export function calculateContextStats(
           case "active_findings":
           case "selected_pack_active":
           case "evidence_audit":
-            if (m.effect_count > 0) included++;
+            if ((m.effect_count ?? 0) > 0) included++;
             break;
           case "active_context_dependent":
-            if (m.effect_count > 0 || m.severity_class === "context_dependent") included++;
+            if ((m.effect_count ?? 0) > 0 || m.severity_class === "context_dependent") included++;
             break;
           case "full_selected":
             included++;
@@ -421,14 +405,14 @@ export function getActiveCategories(
   };
 
   for (const sec of generatedReport.sections) {
-    const pack = manifest.packs.find(
-      (p) => p.label === sec.name || PACKS_MAP[p.id]?.name === sec.name
+    const pack = markerPacksStore.manifest.packs.find(
+      (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name
     );
     if (!pack || !selectedPacks[pack.id]) continue;
 
     for (const m of sec.markers) {
       const isActive =
-        m.effect_count > 0 &&
+        (m.effect_count ?? 0) > 0 &&
         m.user_genotype !== "--" &&
         !m.user_genotype.includes("-");
       if (!isActive) continue;

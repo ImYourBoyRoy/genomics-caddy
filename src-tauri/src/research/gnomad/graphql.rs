@@ -72,6 +72,7 @@ async fn post_graphql(body: &serde_json::Value) -> Result<serde_json::Value, Gno
     Err(GnomadLookupStatus::NetworkError)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn fetch_graphql_context(
     db_path: &Path,
     rsid: &str,

@@ -1,0 +1,75 @@
+name: "Publish Release"
+
+on:
+  push:
+    tags:
+      - "v*" # Triggers build on tag pushes (e.g. v1.0.0)
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows target
+          - platform: "windows-latest"
+            args: ""
+          # Linux target
+          - platform: "ubuntu-latest"
+            args: ""
+          # macOS Universal target (compiles for both Intel & Apple Silicon)
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26 # Matches your package.json node engine requirement
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin,aarch64-apple-darwin' || '' }}
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          work-dir: "./src-tauri"
+
+      # Install Linux dependencies
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            webkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libdbus-1-dev # Required for the keyring crate
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Svelte frontend
+        run: npm run build
+
+      - name: Build and Publish Tauri App
+        uses: tauri-apps/tauri-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Genomics Caddy ${{ github.ref_name }}"
+          releaseBody: "Automated cross-compiled release of version ${{ github.ref_name }}."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

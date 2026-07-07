@@ -11,6 +11,7 @@ use crate::research::crossmap::CrossMapContext;
 use crate::research::util::{best_gwas_pvalue, ENRICHMENT_VERSION, unix_now};
 use serde_json::{json, Map, Value};
 
+#[allow(clippy::too_many_arguments)]
 pub fn build_structured_embedding_text(
     rsid: &str,
     genotype: &str,
@@ -94,6 +95,7 @@ pub fn build_evidence_ledger(
     rows
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn extend_payload_normalized(
     payload: &mut Map<String, Value>,
     sample_id: i64,

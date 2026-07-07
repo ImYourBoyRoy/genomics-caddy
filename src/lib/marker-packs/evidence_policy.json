@@ -1,0 +1,56 @@
+{
+  "name": "Evidence Policy",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "tiers": {
+    "A_clinical_guideline": "Clinical guideline or guideline-backed marker. Display with clinical confirmation and clinician action warning.",
+    "A_clinically_actionable_gene_panel": "Clinically meaningful when confirmed by validated sequencing or assay. Raw DNA is not sufficient.",
+    "A_clinical_guardrail": "Safety rule. Always display/execute before marker interpretation when relevant.",
+    "A_rare_high_effect_when_confirmed": "Rare variant can be high effect if clinically confirmed. Consumer array false positives/missingness are major concerns.",
+    "B_replicated_common_marker": "Replicated common SNP/locus with modest effect. Show as context, not diagnosis.",
+    "B_polygenic_trait": "Trait is polygenic. Requires weighted model, ancestry/platform calibration, and phenotype.",
+    "C_candidate_OR_mechanistic": "Mechanistically plausible or candidate evidence. Use as weak context only.",
+    "D_research_only": "Research-only. Do not score as actionable.",
+    "E_negative_evidence_or_gap": "Included to block unsupported claims."
+  },
+  "display_policy": [
+    {
+      "tier_prefix": "A_",
+      "display": "show_with_strong_warning_and_confirmation_requirements"
+    },
+    {
+      "tier_prefix": "B_",
+      "display": "show_as_context_with_confirm_with"
+    },
+    {
+      "tier_prefix": "C_",
+      "display": "show_low_confidence_context_only"
+    },
+    {
+      "tier_prefix": "D_",
+      "display": "hide_by_default_or_show_research_mode"
+    },
+    {
+      "tier_prefix": "E_",
+      "display": "guardrail_only"
+    }
+  ],
+  "claim_policy": {
+    "never_claim": [
+      "diagnosis from raw DNA",
+      "absence of risk from missing marker",
+      "medication change from raw DNA",
+      "psychiatric diagnosis from SNPs",
+      "cancer predisposition confirmation from array",
+      "allergy diagnosis from genotype"
+    ],
+    "prefer_language": [
+      "may modify plausibility",
+      "context marker",
+      "confirm with",
+      "not diagnostic",
+      "requires phenotype",
+      "requires clinical confirmation if high stakes"
+    ]
+  }
+}

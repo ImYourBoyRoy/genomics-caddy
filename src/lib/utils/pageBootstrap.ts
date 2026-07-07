@@ -3,8 +3,9 @@
  * Application startup bootstrap sequence for the main dashboard page.
  */
 
-import { getAppBootstrap } from "../api/tauri";
+import { getAppBootstrap, getAppPaths } from "../api/tauri";
 import type { AppBootstrapStatus, AppPaths, GenomeSample } from "../types/genomics";
+import { markerPacksStore } from "./markerPacksState.svelte";
 import {
   DB_TICKER_MESSAGES,
   sleep as bootstrapSleep,
@@ -39,16 +40,14 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
 
   try {
     await yieldToUi();
-    const status = await getAppBootstrap();
+    callbacks.onPhase("db", "Loading marker pack databases…");
+    await markerPacksStore.load();
+    await yieldToUi();
+    const [status, paths] = await Promise.all([getAppBootstrap(), getAppPaths()]);
     clearInterval(ticker);
 
     callbacks.onStatus(status);
-    callbacks.onPaths({
-      data_dir: status.data_dir,
-      db_path: status.db_path,
-      chain_path: status.chain_path,
-      env_path: status.env_path,
-    });
+    callbacks.onPaths(paths);
     callbacks.onChainPresent(status.chain_present);
     callbacks.onSamples(status.samples);
 
@@ -57,18 +56,18 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
       `Indexed ${status.genotype_count.toLocaleString()} genotypes across your local database`
     );
     await yieldToUi();
-    await bootstrapSleep(450);
+    await bootstrapSleep(150);
 
     if (status.sample_count > 0) {
       pendingSample = status.samples[0];
       callbacks.onPhase("profile", `Loading profile: ${pendingSample.name}…`);
       await yieldToUi();
-      await bootstrapSleep(400);
+      await bootstrapSleep(150);
 
       callbacks.onPhase("report", "Analyzing genetic markers…");
       await yieldToUi();
       await callbacks.warmReport(pendingSample.id);
-      await bootstrapSleep(350);
+      await bootstrapSleep(100);
     }
 
     callbacks.onPhase(
@@ -76,7 +75,7 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
       status.sample_count > 0 ? "All systems ready — welcome back." : "Ready — import a genome to begin."
     );
     await yieldToUi();
-    await bootstrapSleep(700);
+    await bootstrapSleep(250);
   } catch (e: unknown) {
     clearInterval(ticker);
     const message = e instanceof Error ? e.message : String(e);

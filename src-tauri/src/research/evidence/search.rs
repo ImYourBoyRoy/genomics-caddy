@@ -27,7 +27,7 @@ pub async fn search_associations_hybrid(
     db_path: Option<&Path>,
 ) -> Result<Vec<EvidenceCard>, String> {
     let vector = embed_query_cached(&params.query, ollama_url, &config.embedding_model).await?;
-    let limit = params.limit.clamp(5, 50);
+    let limit = params.limit.clamp(5, 100);
     let vector_name = query_vector_name_for_text(&params.query, config);
     let hits = search_qdrant_filtered(
         &config.url,

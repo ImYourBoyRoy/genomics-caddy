@@ -1,0 +1,156 @@
+{
+  "name": "Meal Planning Rules & Conflict Resolution",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine",
+  "purpose": "Score, filter, and explain meal/food recommendations using hard requirements, soft goals, genetic context, lab context, and user preferences.",
+  "decision_pipeline": [
+    {
+      "step": 1,
+      "name": "Collect hard constraints",
+      "examples": [
+        "allergies",
+        "celiac",
+        "CKD electrolyte limits",
+        "pregnancy mercury limits",
+        "religious exclusions",
+        "medication interactions"
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Apply strict exclusions",
+      "examples": [
+        "remove pork for pork-free",
+        "remove gluten for celiac",
+        "remove fish for fish allergy"
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Apply safety overrides",
+      "examples": [
+        "eating disorder risk",
+        "anaphylaxis",
+        "renal disease",
+        "chemotherapy/PGx medication flags"
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Score nutritional fit",
+      "examples": [
+        "protein adequacy",
+        "omega-3",
+        "fiber",
+        "choline",
+        "B12",
+        "iron",
+        "vitamin D/calcium"
+      ]
+    },
+    {
+      "step": 5,
+      "name": "Overlay genetics/labs",
+      "examples": [
+        "HFE + ferritin",
+        "MTHFR + homocysteine",
+        "FTO/TCF7L2 + A1c/insulin",
+        "CYP1A2/ADORA2A + caffeine symptoms"
+      ]
+    },
+    {
+      "step": 6,
+      "name": "Generate substitutions",
+      "examples": [
+        "fish allowed/pork excluded",
+        "vegan B12",
+        "low histamine fish freshness",
+        "low-FODMAP fiber"
+      ]
+    },
+    {
+      "step": 7,
+      "name": "Explain uncertainty",
+      "examples": [
+        "genotype is context",
+        "lab confirmation needed",
+        "temporary trial vs permanent rule"
+      ]
+    }
+  ],
+  "priority_weights": {
+    "confirmed_anaphylactic_allergy": 100,
+    "medication_or_chemotherapy_safety": 98,
+    "eating_disorder_safety_override": 98,
+    "celiac_or_medically_required_exclusion": 92,
+    "CKD_or_renal_electrolyte_safety": 90,
+    "pregnancy_or_lactation_safety": 86,
+    "religious_or_cultural_requirement": 75,
+    "clinician_directed_therapeutic_diet": 72,
+    "lab_confirmed_deficiency_or_excess": 65,
+    "symptom_confirmed_intolerance": 58,
+    "genotype_context": 35,
+    "general_preference": 25
+  },
+  "conflict_examples": [
+    {
+      "case": "fish encouraged but fish allergy present",
+      "resolution": "Disable fish suggestions; use algal DHA/EPA and non-fish protein sources."
+    },
+    {
+      "case": "pork-free but low iron",
+      "resolution": "Use beef/lamb if allowed, shellfish if allowed, fish, poultry, legumes/tofu with vitamin C, or clinician-guided iron supplement."
+    },
+    {
+      "case": "vegan but B12 risk",
+      "resolution": "Use fortified foods or B12 supplement; do not recommend animal foods."
+    },
+    {
+      "case": "low-FODMAP but fiber/glucose goals",
+      "resolution": "Use tolerated low-FODMAP fiber sources and structured reintroduction."
+    },
+    {
+      "case": "low-histamine but fish desired",
+      "resolution": "Use very fresh/frozen low-mercury fish; avoid canned, smoked, fermented, or leftover fish."
+    },
+    {
+      "case": "hypertrophy high-protein goal but CKD",
+      "resolution": "Do not recommend high-protein targets; require renal labs/clinician guidance."
+    },
+    {
+      "case": "MTHFR variant but folic acid fear",
+      "resolution": "Do not advise folic-acid avoidance solely from genotype; check folate/B12/homocysteine and follow pregnancy/medical guidance."
+    },
+    {
+      "case": "ApoB/Lp(a) risk but ketogenic high saturated-fat preference",
+      "resolution": "Require lipid feedback; prioritize unsaturated-fat/fiber pattern if ApoB rises."
+    }
+  ],
+  "meal_score_components": {
+    "hard_constraint_pass": "boolean required",
+    "allergen_cross_contact_risk": "none/low/medium/high",
+    "religious_cultural_fit": "none/partial/full/needs_certification",
+    "medical_fit": "contraindicated/caution/neutral/supportive",
+    "lab_fit": "unknown/misaligned/aligned",
+    "genotype_fit": "unknown/weak/moderate/strong_contextual",
+    "satiety_score": "0-5",
+    "protein_quality_score": "0-5",
+    "fiber_micronutrient_score": "0-5",
+    "metabolic_load_score": "0-5",
+    "explanation_required_when": [
+      "any exclusion applied",
+      "genotype changes suggestion",
+      "lab confirmation missing",
+      "rule conflict resolved"
+    ]
+  },
+  "do_not_do": [
+    "Do not recommend foods that violate a user-declared religious/cultural restriction.",
+    "Do not infer food restrictions from ethnicity/religion; ask or let user set profile.",
+    "Do not diagnose allergy, celiac, PMDD, diabetes, CKD, or eating disorders from genotype.",
+    "Do not use raw DNA as the sole basis for strict long-term elimination diets.",
+    "Do not treat absence of an rsID as absence of risk.",
+    "Do not suggest high-dose supplements or medication changes without clinician context."
+  ]
+}

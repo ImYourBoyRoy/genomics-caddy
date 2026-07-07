@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/ai/settings/GenomicContextSection.svelte -->
 <script lang="ts">
-  import manifest from "../../../marker-packs/manifest.json";
+  import { markerPacksStore } from "../../../utils/markerPacksState.svelte";
 
   interface Props {
     selectedPacks: Record<string, boolean>;
@@ -20,7 +20,7 @@
   <div class="settings-details-content">
     <p class="card-hint">Select which marker packs the model is allowed to read:</p>
     <div class="packs-list scrollable">
-      {#each manifest.packs as pack}
+      {#each markerPacksStore.manifest.packs as pack}
         <label class="pack-checkbox-label">
           <input type="checkbox" bind:checked={selectedPacks[pack.id]} />
           <span>{pack.label}</span>
@@ -99,11 +99,7 @@
 
   .card-hint {
     font-size: 0.72rem;
-    color: var(--text-secondary);
-    line-height: 1.3;
-    margin: 0;
+    color: var(--text-muted);
+    margin-bottom: 6px;
   }
-
-  .highlight-text { color: var(--text-primary); }
-  .mt-2 { margin-top: 8px; }
 </style>

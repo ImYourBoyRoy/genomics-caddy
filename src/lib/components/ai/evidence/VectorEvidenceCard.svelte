@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { EvidenceCard } from "../../../types/research";
   import type { VariantNavTarget } from "../../../constants/traitCategories";
+  import { userFindingFromEvidenceCard } from "../../../utils/userFinding";
 
   interface Props {
     card: EvidenceCard;
@@ -25,11 +26,13 @@
     return `${Math.round(v * 100)}%`;
   }
 
-  function formatP(p?: number) {
+  function formatP(p: number | undefined = undefined) {
     if (p == null) return "unknown";
     if (p < 0.001) return p.toExponential(2);
     return p.toFixed(6);
   }
+
+  let userFinding = $derived(userFindingFromEvidenceCard(card));
 </script>
 
 <article class="evidence-card" class:stale={card.stale}>
@@ -56,13 +59,65 @@
     </div>
   </header>
 
-  <section class="ev-section summary">
-    <h5>Summary</h5>
+  <section class="ev-user-finding impact-{userFinding.impact}">
+    <div class="ev-user-heading">
+      <div>
+        <span class="finding-label">Scanned finding</span>
+        <h4>{userFinding.title}</h4>
+      </div>
+      <div class="finding-status-stack" aria-label="Finding status">
+        <span class="impact-chip">{userFinding.impactLabel}</span>
+        <span class="confidence-chip">{userFinding.confidenceLabel}</span>
+      </div>
+    </div>
+    <p class="impact-description">{userFinding.impactDescription}</p>
+    <p>{userFinding.plainEnglishMeaning}</p>
+    <div class="finding-badges">
+      {#each userFinding.evidenceBadges as badge}
+        <span>{badge}</span>
+      {/each}
+    </div>
+    <p class="safety-boundary">{userFinding.safetyBoundary}</p>
+    <div class="next-action-callout">
+      <strong>Suggested next action</strong>
+      <span>{userFinding.primaryNextStep}</span>
+    </div>
+
+    {#if expanded}
+      <div class="finding-detail-grid">
+        <div>
+          <h5>Why surfaced</h5>
+          <ul>
+            {#each userFinding.whySurfaced as reason}
+              <li>{reason}</li>
+            {/each}
+          </ul>
+        </div>
+        <div>
+          <h5>Useful next steps</h5>
+          <ul>
+            {#each userFinding.suggestedNextSteps as step}
+              <li>{step}</li>
+            {/each}
+          </ul>
+        </div>
+      </div>
+    {/if}
+  </section>
+
+  <section class="ev-section summary technical-note">
+    <h5>Indexed evidence note</h5>
     <p>{card.primary_trait || "Trait unknown"}</p>
     {#if card.trait_category}
       <span class="trait-cat">{card.trait_category.replace(/_/g, " ")}</span>
     {/if}
-    <p class="synthesis">{card.synthesis}</p>
+    <p class="synthesis">
+      {#if expanded || card.synthesis.length <= 260}
+        {card.synthesis}
+      {:else}
+        {card.synthesis.slice(0, 260)}… Expand details for the full indexed source text.
+      {/if}
+    </p>
   </section>
 
   <section class="ev-section">
@@ -174,16 +229,16 @@
       {expanded ? "Collapse" : "Expand details"}
     </button>
     <button type="button" class="btn btn-secondary btn-xs" onclick={() => (showRaw = !showRaw)}>
-      {showRaw ? "Hide raw" : "View raw payload"}
+      {showRaw ? "Hide raw" : "Raw payload"}
     </button>
     {#if onShowSimilar}
       <button type="button" class="btn btn-secondary btn-xs" onclick={() => onShowSimilar?.(card.rsid)}>
-        Similar
+        Find similar
       </button>
     {/if}
     {#if onExportPacket}
       <button type="button" class="btn btn-secondary btn-xs" onclick={() => onExportPacket?.(card.rsid)}>
-        Export packet
+        Export evidence
       </button>
     {/if}
     {#if onNavigateToVariant}
@@ -198,7 +253,7 @@
 </article>
 
 <style>
-  .evidence-card {
+.evidence-card {
     border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
     border-radius: 10px;
     padding: 14px;
@@ -207,6 +262,129 @@
   }
   .evidence-card.stale {
     border-color: rgba(255, 180, 80, 0.35);
+  }
+  .ev-user-finding {
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 10px;
+    padding: 12px;
+    margin: 10px 0 12px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(0, 0, 0, 0.16));
+  }
+  .ev-user-finding.impact-clinical_review {
+    border-color: rgba(248, 113, 113, 0.32);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.16));
+  }
+  .ev-user-finding.impact-wellness_relevant {
+    border-color: rgba(52, 211, 153, 0.32);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.22), rgba(0, 0, 0, 0.16));
+  }
+  .ev-user-finding.impact-low_confidence {
+    border-color: rgba(251, 191, 36, 0.3);
+    background: linear-gradient(135deg, rgba(113, 63, 18, 0.18), rgba(0, 0, 0, 0.16));
+  }
+  .ev-user-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .finding-label {
+    display: inline-block;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #7dd3fc;
+    margin-bottom: 4px;
+  }
+  .ev-user-heading h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .confidence-chip {
+    flex-shrink: 0;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .finding-status-stack {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 5px;
+    flex-shrink: 0;
+    max-width: 44%;
+  }
+  .impact-chip {
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #dbeafe;
+    background: rgba(59, 130, 246, 0.14);
+  }
+  .ev-user-finding p {
+    margin: 8px 0;
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+  .impact-description {
+    color: #bfdbfe;
+    font-size: 0.78rem !important;
+  }
+  .finding-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .finding-badges span {
+    font-size: 0.68rem;
+    border-radius: 999px;
+    padding: 2px 7px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .safety-boundary {
+    color: #fcd34d;
+    font-size: 0.74rem !important;
+  }
+  .next-action-callout {
+    display: grid;
+    gap: 3px;
+    margin-top: 9px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(125, 211, 252, 0.22);
+    background: rgba(14, 165, 233, 0.08);
+  }
+  .next-action-callout strong {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #7dd3fc;
+  }
+  .next-action-callout span {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+  .finding-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .finding-detail-grid h5 {
+    margin: 0 0 5px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.8;
+  }
+  .finding-detail-grid ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.78rem;
+    line-height: 1.4;
   }
   .ev-card-header {
     display: flex;
@@ -232,6 +410,10 @@
   .score-chip.direction { background: rgba(100, 200, 140, 0.15); }
   .ev-card-scores { display: flex; flex-wrap: wrap; gap: 6px; }
   .ev-section { margin-top: 10px; }
+  .technical-note {
+    padding-top: 2px;
+    opacity: 0.9;
+  }
   .ev-section h5 {
     margin: 0 0 6px;
     font-size: 0.78rem;

@@ -1,0 +1,1169 @@
+{
+  "name": "Food Nutrient Matrix & Restriction Tags",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine",
+  "purpose": "Provide food-group tags, nutrient strengths, caution flags, and substitution logic for local meal filtering and food requirement reasoning.",
+  "integration_note": "For exact nutrient values, use USDA FoodData Central or a local derivative table. This file is a rule/tag matrix, not a gram-level nutrient database.",
+  "tag_conventions": {
+    "allergens": [
+      "milk",
+      "egg",
+      "fish",
+      "crustacean_shellfish",
+      "tree_nut",
+      "peanut",
+      "wheat",
+      "soy",
+      "sesame"
+    ],
+    "requirements": [
+      "pork_free",
+      "halal_incompatible",
+      "kosher_incompatible",
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "dairy_free",
+      "low_histamine",
+      "low_FODMAP",
+      "low_purine",
+      "low_oxalate"
+    ],
+    "metabolic_tags": [
+      "high_added_sugar",
+      "high_sodium",
+      "high_glycemic",
+      "fiber",
+      "protein",
+      "omega3_EPA_DHA",
+      "heme_iron",
+      "choline_high"
+    ]
+  },
+  "food_groups": [
+    {
+      "id": "fish_low_mercury_fatty",
+      "label": "Low-mercury fatty fish",
+      "examples": [
+        "salmon",
+        "sardines",
+        "trout",
+        "herring",
+        "anchovies"
+      ],
+      "tags": [
+        "fish",
+        "seafood",
+        "low_mercury_fish",
+        "omega3_EPA_DHA",
+        "B12_high",
+        "selenium",
+        "iodine",
+        "protein",
+        "histamine_sensitive_if_not_fresh",
+        "purine_moderate_to_high"
+      ],
+      "nutrient_strengths": [
+        "EPA",
+        "DHA",
+        "protein",
+        "B12",
+        "selenium",
+        "iodine"
+      ],
+      "caution_flags": [
+        "fish_allergy",
+        "histamine_intolerance_if_canned_smoked_aged",
+        "gout_high_purine_context",
+        "pregnancy_portion_guidance"
+      ],
+      "common_substitutes": [
+        "algal DHA/EPA",
+        "eggs",
+        "poultry",
+        "fortified foods"
+      ],
+      "requirement_notes": "Best default fish category when fish is allowed; freshness matters for histamine-sensitive users."
+    },
+    {
+      "id": "fish_high_mercury",
+      "label": "High-mercury fish",
+      "examples": [
+        "shark",
+        "swordfish",
+        "king mackerel",
+        "bigeye tuna",
+        "marlin",
+        "orange roughy"
+      ],
+      "tags": [
+        "fish",
+        "seafood",
+        "high_mercury",
+        "omega3_EPA_DHA"
+      ],
+      "nutrient_strengths": [
+        "EPA",
+        "DHA",
+        "protein"
+      ],
+      "caution_flags": [
+        "pregnancy",
+        "children",
+        "frequent_intake",
+        "fish_allergy"
+      ],
+      "common_substitutes": [
+        "salmon",
+        "sardines",
+        "trout",
+        "algal DHA/EPA"
+      ],
+      "requirement_notes": "Avoid or minimize for pregnancy/children and frequent-consumption plans."
+    },
+    {
+      "id": "shellfish_crustacean",
+      "label": "Crustacean shellfish",
+      "examples": [
+        "shrimp",
+        "crab",
+        "lobster"
+      ],
+      "tags": [
+        "crustacean_shellfish",
+        "seafood",
+        "major_allergen",
+        "iodine",
+        "B12_high",
+        "protein",
+        "purine_moderate"
+      ],
+      "nutrient_strengths": [
+        "protein",
+        "B12",
+        "iodine",
+        "selenium"
+      ],
+      "caution_flags": [
+        "shellfish_allergy",
+        "kosher_incompatible",
+        "gout_context"
+      ],
+      "common_substitutes": [
+        "fish with fins/scales if allowed",
+        "eggs",
+        "poultry",
+        "legumes"
+      ],
+      "requirement_notes": "Major allergen and not compatible with kosher-style filters."
+    },
+    {
+      "id": "pork_and_processed_pork",
+      "label": "Pork and processed pork",
+      "examples": [
+        "pork chop",
+        "bacon",
+        "ham",
+        "pork sausage",
+        "lard",
+        "pork broth",
+        "pork gelatin"
+      ],
+      "tags": [
+        "pork",
+        "processed_pork",
+        "processed_meat",
+        "heme_iron",
+        "protein",
+        "high_sodium_when_processed",
+        "high_histamine_when_cured"
+      ],
+      "nutrient_strengths": [
+        "protein",
+        "thiamin",
+        "heme iron"
+      ],
+      "caution_flags": [
+        "pork_free",
+        "halal_incompatible",
+        "kosher_incompatible",
+        "processed_meat_limit",
+        "histamine_cured_meat"
+      ],
+      "common_substitutes": [
+        "fish",
+        "poultry",
+        "eggs",
+        "legumes",
+        "beef/lamb if allowed",
+        "plant proteins"
+      ],
+      "requirement_notes": "Must be excluded for pork-free, halal-compatible, and kosher-style profiles."
+    },
+    {
+      "id": "poultry",
+      "label": "Poultry",
+      "examples": [
+        "chicken",
+        "turkey"
+      ],
+      "tags": [
+        "protein",
+        "low_lactose",
+        "low_FODMAP",
+        "B_vitamins",
+        "lean_protein"
+      ],
+      "nutrient_strengths": [
+        "protein",
+        "niacin",
+        "B6"
+      ],
+      "caution_flags": [
+        "halal_kosher_certification_if_required",
+        "histamine_if_leftover_aged"
+      ],
+      "common_substitutes": [
+        "fish",
+        "eggs",
+        "tofu",
+        "legumes"
+      ],
+      "requirement_notes": "Useful neutral protein source for pork-free and low-FODMAP users when certification needs are met."
+    },
+    {
+      "id": "eggs",
+      "label": "Eggs",
+      "examples": [
+        "chicken eggs",
+        "duck eggs"
+      ],
+      "tags": [
+        "egg",
+        "major_allergen",
+        "complete_protein",
+        "choline_high",
+        "B12_high",
+        "leucine_rich",
+        "low_FODMAP"
+      ],
+      "nutrient_strengths": [
+        "choline",
+        "protein",
+        "B12",
+        "selenium"
+      ],
+      "caution_flags": [
+        "egg_allergy",
+        "vegan"
+      ],
+      "common_substitutes": [
+        "tofu scramble",
+        "choline supplement if appropriate",
+        "fish/poultry if allowed"
+      ],
+      "requirement_notes": "High-value choline source when eggs are tolerated."
+    },
+    {
+      "id": "dairy_lactose_high",
+      "label": "High-lactose dairy",
+      "examples": [
+        "milk",
+        "ice cream",
+        "soft cheese",
+        "whey concentrate"
+      ],
+      "tags": [
+        "milk",
+        "major_allergen",
+        "lactose",
+        "calcium_rich",
+        "protein",
+        "B12_high",
+        "iodine"
+      ],
+      "nutrient_strengths": [
+        "calcium",
+        "protein",
+        "B12",
+        "iodine"
+      ],
+      "caution_flags": [
+        "milk_allergy",
+        "lactose_intolerance",
+        "vegan",
+        "dairy_free"
+      ],
+      "common_substitutes": [
+        "lactose-free dairy",
+        "fortified soy milk",
+        "fortified pea milk",
+        "calcium-set tofu"
+      ],
+      "requirement_notes": "Differentiate lactose intolerance from milk allergy."
+    },
+    {
+      "id": "dairy_lactose_low_fermented",
+      "label": "Low-lactose fermented/hard dairy",
+      "examples": [
+        "hard cheese",
+        "Greek yogurt",
+        "kefir"
+      ],
+      "tags": [
+        "milk",
+        "fermented",
+        "calcium_rich",
+        "protein",
+        "low_lactose_possible",
+        "histamine_possible"
+      ],
+      "nutrient_strengths": [
+        "calcium",
+        "protein",
+        "B12"
+      ],
+      "caution_flags": [
+        "milk_allergy",
+        "histamine_intolerance",
+        "strict_dairy_free"
+      ],
+      "common_substitutes": [
+        "lactose-free yogurt",
+        "fortified plant yogurt",
+        "calcium-set tofu"
+      ],
+      "requirement_notes": "May be tolerated in lactose intolerance but not safe for milk allergy."
+    },
+    {
+      "id": "soy_foods",
+      "label": "Soy foods",
+      "examples": [
+        "tofu",
+        "tempeh",
+        "edamame",
+        "soy milk"
+      ],
+      "tags": [
+        "soy",
+        "major_allergen",
+        "plant_protein",
+        "complete_protein",
+        "isoflavone",
+        "low_lactose",
+        "choline_context"
+      ],
+      "nutrient_strengths": [
+        "protein",
+        "isoflavones",
+        "iron",
+        "calcium if set/fortified"
+      ],
+      "caution_flags": [
+        "soy_allergy",
+        "low_FODMAP_portion_for_some",
+        "histamine_if_fermented_tempeh"
+      ],
+      "common_substitutes": [
+        "pea protein",
+        "eggs",
+        "fish",
+        "legumes if tolerated"
+      ],
+      "requirement_notes": "Excellent substitute in pork-free/vegetarian patterns if tolerated."
+    },
+    {
+      "id": "legumes",
+      "label": "Legumes and pulses",
+      "examples": [
+        "lentils",
+        "beans",
+        "chickpeas",
+        "peas"
+      ],
+      "tags": [
+        "plant_protein",
+        "fiber",
+        "folate_high",
+        "non_heme_iron",
+        "GOS_high_FODMAP",
+        "low_glycemic"
+      ],
+      "nutrient_strengths": [
+        "fiber",
+        "folate",
+        "magnesium",
+        "potassium",
+        "plant protein"
+      ],
+      "caution_flags": [
+        "low_FODMAP_trial",
+        "IBS_symptoms",
+        "CKD_potassium_phosphorus"
+      ],
+      "common_substitutes": [
+        "firm tofu",
+        "eggs",
+        "fish/poultry",
+        "low-FODMAP portions"
+      ],
+      "requirement_notes": "High metabolic value but may require portioning for FODMAP-sensitive users."
+    },
+    {
+      "id": "wheat_barley_rye",
+      "label": "Gluten grains",
+      "examples": [
+        "wheat",
+        "barley",
+        "rye",
+        "malt"
+      ],
+      "tags": [
+        "wheat",
+        "gluten",
+        "major_allergen",
+        "fructan_high_FODMAP",
+        "whole_grain_possible"
+      ],
+      "nutrient_strengths": [
+        "carbohydrate",
+        "fiber if whole grain",
+        "B vitamins"
+      ],
+      "caution_flags": [
+        "celiac",
+        "wheat_allergy",
+        "gluten_free",
+        "low_FODMAP_trial"
+      ],
+      "common_substitutes": [
+        "rice",
+        "quinoa",
+        "buckwheat",
+        "corn",
+        "certified gluten-free oats"
+      ],
+      "requirement_notes": "Celiac strict avoidance differs from FODMAP/fructan sensitivity."
+    },
+    {
+      "id": "gluten_free_grains_starches",
+      "label": "Gluten-free grains and starches",
+      "examples": [
+        "rice",
+        "quinoa",
+        "buckwheat",
+        "corn",
+        "potato",
+        "certified GF oats"
+      ],
+      "tags": [
+        "gluten_free",
+        "carbohydrate",
+        "low_FODMAP_options",
+        "whole_grain_possible"
+      ],
+      "nutrient_strengths": [
+        "carbohydrate",
+        "fiber varies",
+        "magnesium varies"
+      ],
+      "caution_flags": [
+        "glucose_control_portioning",
+        "celiac_certification_needed_for_oats"
+      ],
+      "common_substitutes": [
+        "legumes if tolerated",
+        "lower-glycemic portions"
+      ],
+      "requirement_notes": "Useful base for celiac/pork-free/fish-allowed diets; portion for glucose goals."
+    },
+    {
+      "id": "nuts_tree_nuts",
+      "label": "Tree nuts",
+      "examples": [
+        "almonds",
+        "walnuts",
+        "cashews",
+        "pistachios",
+        "pecans"
+      ],
+      "tags": [
+        "tree_nut",
+        "major_allergen",
+        "healthy_fat",
+        "magnesium_rich",
+        "fiber",
+        "oxalate_variable",
+        "FODMAP_variable"
+      ],
+      "nutrient_strengths": [
+        "monounsaturated fats",
+        "magnesium",
+        "fiber",
+        "ALA in walnuts"
+      ],
+      "caution_flags": [
+        "tree_nut_allergy",
+        "low_oxalate_context_almonds",
+        "low_FODMAP_portioning"
+      ],
+      "common_substitutes": [
+        "seeds if tolerated",
+        "olive oil",
+        "avocado"
+      ],
+      "requirement_notes": "High value for many patterns but allergen/oxalate/FODMAP constraints matter."
+    },
+    {
+      "id": "seeds",
+      "label": "Seeds",
+      "examples": [
+        "chia",
+        "flax",
+        "pumpkin",
+        "sunflower",
+        "sesame"
+      ],
+      "tags": [
+        "seed",
+        "sesame_major_allergen",
+        "ALA_omega3",
+        "magnesium_rich",
+        "fiber",
+        "zinc",
+        "choline_context"
+      ],
+      "nutrient_strengths": [
+        "magnesium",
+        "zinc",
+        "fiber",
+        "ALA omega-3"
+      ],
+      "caution_flags": [
+        "sesame_allergy",
+        "seed_allergy",
+        "low_FODMAP_portioning"
+      ],
+      "common_substitutes": [
+        "nuts if tolerated",
+        "olive oil",
+        "fish/algal omega-3"
+      ],
+      "requirement_notes": "Sesame is a major allergen; treat tahini/sesame oil/benne as sesame-containing."
+    },
+    {
+      "id": "leafy_greens_low_oxalate",
+      "label": "Lower-oxalate leafy greens",
+      "examples": [
+        "kale",
+        "bok choy",
+        "collards",
+        "romaine"
+      ],
+      "tags": [
+        "folate_high",
+        "vitamin_K",
+        "magnesium",
+        "calcium_rich_some",
+        "low_oxalate_option"
+      ],
+      "nutrient_strengths": [
+        "folate",
+        "vitamin K",
+        "magnesium",
+        "calcium varies"
+      ],
+      "caution_flags": [
+        "warfarin_vitamin_K_consistency",
+        "thyroid_iodine_context_not_goitrogen_fear"
+      ],
+      "common_substitutes": [
+        "other tolerated vegetables"
+      ],
+      "requirement_notes": "Often better than spinach for calcium-oxalate stone context."
+    },
+    {
+      "id": "leafy_greens_high_oxalate",
+      "label": "High-oxalate greens",
+      "examples": [
+        "spinach",
+        "beet greens",
+        "Swiss chard"
+      ],
+      "tags": [
+        "folate_high",
+        "high_oxalate",
+        "magnesium",
+        "vitamin_K"
+      ],
+      "nutrient_strengths": [
+        "folate",
+        "magnesium",
+        "vitamin K"
+      ],
+      "caution_flags": [
+        "calcium_oxalate_stones",
+        "warfarin_vitamin_K_consistency"
+      ],
+      "common_substitutes": [
+        "kale",
+        "bok choy",
+        "romaine"
+      ],
+      "requirement_notes": "Nutritious but can be restricted in oxalate-stone contexts."
+    },
+    {
+      "id": "cruciferous_vegetables",
+      "label": "Cruciferous vegetables",
+      "examples": [
+        "broccoli",
+        "cabbage",
+        "cauliflower",
+        "Brussels sprouts"
+      ],
+      "tags": [
+        "fiber",
+        "sulforaphane",
+        "vitamin_C",
+        "goitrogen_context",
+        "FODMAP_variable"
+      ],
+      "nutrient_strengths": [
+        "fiber",
+        "vitamin C",
+        "glucosinolates"
+      ],
+      "caution_flags": [
+        "low_FODMAP_portioning",
+        "iodine_deficiency_extreme_raw_intake_context"
+      ],
+      "common_substitutes": [
+        "low-FODMAP vegetables"
+      ],
+      "requirement_notes": "Do not automatically avoid for thyroid; iodine status and extreme raw intake matter."
+    },
+    {
+      "id": "alliums_high_fodmap",
+      "label": "Alliums / high-FODMAP flavor bases",
+      "examples": [
+        "onion",
+        "garlic",
+        "shallot",
+        "leek whites"
+      ],
+      "tags": [
+        "fructan_high_FODMAP",
+        "prebiotic",
+        "flavoring"
+      ],
+      "nutrient_strengths": [
+        "prebiotic fibers",
+        "polyphenols"
+      ],
+      "caution_flags": [
+        "low_FODMAP_trial",
+        "IBS_symptoms"
+      ],
+      "common_substitutes": [
+        "garlic-infused oil",
+        "chive/green onion tops",
+        "asafoetida if tolerated"
+      ],
+      "requirement_notes": "Often major IBS trigger despite general health value."
+    },
+    {
+      "id": "fermented_aged_foods",
+      "label": "Fermented and aged foods",
+      "examples": [
+        "kimchi",
+        "sauerkraut",
+        "soy sauce",
+        "aged cheese",
+        "kombucha",
+        "vinegar"
+      ],
+      "tags": [
+        "fermented",
+        "high_histamine_possible",
+        "probiotic_context",
+        "sodium_variable"
+      ],
+      "nutrient_strengths": [
+        "microbial metabolites",
+        "flavor",
+        "possible probiotics"
+      ],
+      "caution_flags": [
+        "histamine_intolerance",
+        "MCAS_context",
+        "sodium_hypertension",
+        "alcohol_trace_context"
+      ],
+      "common_substitutes": [
+        "fresh vegetables",
+        "non-fermented sauces",
+        "low-sodium alternatives"
+      ],
+      "requirement_notes": "Good for some gut contexts, bad for histamine-sensitive users."
+    },
+    {
+      "id": "processed_meats",
+      "label": "Processed meats",
+      "examples": [
+        "bacon",
+        "ham",
+        "salami",
+        "hot dogs",
+        "deli meats"
+      ],
+      "tags": [
+        "processed_meat",
+        "high_sodium",
+        "nitrate_nitrite",
+        "heme_iron",
+        "high_histamine",
+        "pork_possible"
+      ],
+      "nutrient_strengths": [
+        "protein"
+      ],
+      "caution_flags": [
+        "pork_free",
+        "kosher_halal",
+        "hypertension",
+        "histamine_intolerance",
+        "cardiometabolic_risk"
+      ],
+      "common_substitutes": [
+        "fresh poultry",
+        "fresh fish",
+        "eggs",
+        "tofu"
+      ],
+      "requirement_notes": "Usually a limit/avoid category in health-oriented plans."
+    },
+    {
+      "id": "organ_meats",
+      "label": "Organ meats",
+      "examples": [
+        "liver",
+        "kidney",
+        "heart"
+      ],
+      "tags": [
+        "heme_iron_high",
+        "B12_high",
+        "vitamin_A_high",
+        "choline_high",
+        "purine_high"
+      ],
+      "nutrient_strengths": [
+        "B12",
+        "iron",
+        "vitamin A",
+        "choline"
+      ],
+      "caution_flags": [
+        "iron_overload",
+        "gout",
+        "pregnancy_vitamin_A_excess",
+        "pork_free_if_pork_liver"
+      ],
+      "common_substitutes": [
+        "eggs",
+        "fish",
+        "B12 supplement",
+        "choline supplement"
+      ],
+      "requirement_notes": "Nutrient dense but high-risk in iron overload/gout/pregnancy contexts."
+    },
+    {
+      "id": "red_meat_non_pork",
+      "label": "Non-pork red meat",
+      "examples": [
+        "beef",
+        "lamb",
+        "venison",
+        "bison"
+      ],
+      "tags": [
+        "heme_iron",
+        "protein",
+        "B12_high",
+        "creatine_food",
+        "saturated_fat_variable"
+      ],
+      "nutrient_strengths": [
+        "protein",
+        "B12",
+        "heme iron",
+        "zinc",
+        "creatine"
+      ],
+      "caution_flags": [
+        "iron_overload",
+        "ApoB_LDL_context_if_high_saturated_fat",
+        "religious_certification_if_required"
+      ],
+      "common_substitutes": [
+        "fish",
+        "poultry",
+        "eggs",
+        "legumes",
+        "soy"
+      ],
+      "requirement_notes": "Can be useful for low iron/muscle goals but not required; certification may matter."
+    },
+    {
+      "id": "fruit_low_glycemic",
+      "label": "Lower-glycemic fruits",
+      "examples": [
+        "berries",
+        "kiwi",
+        "citrus"
+      ],
+      "tags": [
+        "fruit",
+        "fiber",
+        "polyphenols",
+        "vitamin_C",
+        "low_glycemic"
+      ],
+      "nutrient_strengths": [
+        "vitamin C",
+        "polyphenols",
+        "fiber"
+      ],
+      "caution_flags": [
+        "histamine_or_citrus_individual_trigger",
+        "low_FODMAP_portioning"
+      ],
+      "common_substitutes": [
+        "other tolerated fruit"
+      ],
+      "requirement_notes": "Often useful for glucose, iron absorption, and antioxidant support."
+    },
+    {
+      "id": "fruit_high_fructose_or_polyol",
+      "label": "High-fructose/polyol fruits",
+      "examples": [
+        "apple",
+        "pear",
+        "mango",
+        "watermelon",
+        "dried fruit"
+      ],
+      "tags": [
+        "fruit",
+        "high_FODMAP",
+        "excess_fructose",
+        "polyol",
+        "sugar_dense_when_dried"
+      ],
+      "nutrient_strengths": [
+        "potassium",
+        "fiber varies"
+      ],
+      "caution_flags": [
+        "low_FODMAP_trial",
+        "glucose_control_portioning"
+      ],
+      "common_substitutes": [
+        "berries",
+        "kiwi",
+        "citrus portions"
+      ],
+      "requirement_notes": "Healthy for many users but can trigger IBS/FODMAP symptoms."
+    },
+    {
+      "id": "added_sugar_sugary_drinks",
+      "label": "Added sugar and sugary drinks",
+      "examples": [
+        "soda",
+        "sweet tea",
+        "juice drinks",
+        "candy",
+        "desserts"
+      ],
+      "tags": [
+        "high_added_sugar",
+        "fructose_sweetened",
+        "high_glycemic",
+        "dental_caries_risk"
+      ],
+      "nutrient_strengths": [],
+      "caution_flags": [
+        "T2D",
+        "prediabetes",
+        "NAFLD",
+        "hypertriglycerides",
+        "dental_caries",
+        "PMDD_symptom_worsening_possible"
+      ],
+      "common_substitutes": [
+        "water",
+        "sparkling water",
+        "unsweetened drinks",
+        "whole fruit portions"
+      ],
+      "requirement_notes": "Limit across most health patterns."
+    },
+    {
+      "id": "coffee",
+      "label": "Coffee",
+      "examples": [
+        "coffee",
+        "espresso",
+        "cold brew"
+      ],
+      "tags": [
+        "coffee",
+        "caffeine",
+        "polyphenols",
+        "acidic",
+        "LDS_restricted_if_enabled"
+      ],
+      "nutrient_strengths": [
+        "polyphenols"
+      ],
+      "caution_flags": [
+        "CYP1A2_slow",
+        "ADORA2A_sensitive",
+        "insomnia",
+        "anxiety",
+        "GERD",
+        "LDS_word_of_wisdom"
+      ],
+      "common_substitutes": [
+        "herbal tea",
+        "decaf if acceptable",
+        "chicory if tolerated"
+      ],
+      "requirement_notes": "Personal/religious rules can fully exclude coffee regardless of genotype."
+    },
+    {
+      "id": "tea_camellia",
+      "label": "Black/green/white tea",
+      "examples": [
+        "black tea",
+        "green tea",
+        "white tea",
+        "oolong"
+      ],
+      "tags": [
+        "tea_camellia_sinensis",
+        "caffeine",
+        "polyphenols",
+        "tannins",
+        "LDS_restricted_if_enabled"
+      ],
+      "nutrient_strengths": [
+        "polyphenols"
+      ],
+      "caution_flags": [
+        "iron_absorption_timing",
+        "CYP1A2_ADORA2A",
+        "insomnia",
+        "LDS_word_of_wisdom"
+      ],
+      "common_substitutes": [
+        "herbal tea",
+        "rooibos",
+        "water"
+      ],
+      "requirement_notes": "Can reduce non-heme iron absorption when taken with meals; also religiously restricted for some users."
+    },
+    {
+      "id": "herbal_teas",
+      "label": "Herbal teas / non-Camellia infusions",
+      "examples": [
+        "peppermint",
+        "rooibos",
+        "chamomile",
+        "ginger"
+      ],
+      "tags": [
+        "herbal_tea",
+        "non_caffeinated_usually",
+        "LDS_compatible_often"
+      ],
+      "nutrient_strengths": [
+        "hydration",
+        "polyphenols varies"
+      ],
+      "caution_flags": [
+        "pregnancy_herbal_safety",
+        "medication_interactions",
+        "ragweed_cross_reactivity_chamomile"
+      ],
+      "common_substitutes": [
+        "water",
+        "electrolyte drinks"
+      ],
+      "requirement_notes": "Not all herbs are pregnancy/medication safe; ingredient-specific checks needed."
+    },
+    {
+      "id": "alcoholic_beverages",
+      "label": "Alcoholic beverages",
+      "examples": [
+        "beer",
+        "wine",
+        "liquor",
+        "hard cider"
+      ],
+      "tags": [
+        "alcohol",
+        "fermented_alcohol",
+        "histamine",
+        "sleep_disruptor",
+        "liver_load"
+      ],
+      "nutrient_strengths": [],
+      "caution_flags": [
+        "ALDH2_flush",
+        "ADH1B_acetaldehyde",
+        "liver_disease",
+        "sleep_disorder",
+        "PMDD",
+        "religious_restriction",
+        "medication_interactions"
+      ],
+      "common_substitutes": [
+        "sparkling water",
+        "mocktails",
+        "tea/herbal drinks if compatible"
+      ],
+      "requirement_notes": "Avoid for many user profiles; never required for health."
+    },
+    {
+      "id": "ultra_processed_foods",
+      "label": "Highly/ultra-processed foods",
+      "examples": [
+        "packaged snacks",
+        "fast food",
+        "sweetened cereals",
+        "processed frozen meals"
+      ],
+      "tags": [
+        "ultra_processed",
+        "high_sodium_possible",
+        "added_sugar_possible",
+        "refined_grain",
+        "emulsifiers_additives_possible"
+      ],
+      "nutrient_strengths": [],
+      "caution_flags": [
+        "metabolic_goal",
+        "hypertension",
+        "IBS_individual",
+        "allergen_hidden_ingredients"
+      ],
+      "common_substitutes": [
+        "whole foods",
+        "batch-cooked meals",
+        "minimally processed convenience proteins"
+      ],
+      "requirement_notes": "General limit category under current dietary guidelines."
+    },
+    {
+      "id": "olive_oil_avocado_healthy_fats",
+      "label": "Olive oil, avocado and unsaturated fats",
+      "examples": [
+        "extra virgin olive oil",
+        "avocado",
+        "olives"
+      ],
+      "tags": [
+        "healthy_fat",
+        "monounsaturated_fat",
+        "polyphenols",
+        "low_carb",
+        "FODMAP_avocado_portion"
+      ],
+      "nutrient_strengths": [
+        "monounsaturated fats",
+        "polyphenols",
+        "vitamin E"
+      ],
+      "caution_flags": [
+        "calorie_density",
+        "avocado_FODMAP_portion"
+      ],
+      "common_substitutes": [
+        "canola oil",
+        "nuts/seeds if tolerated"
+      ],
+      "requirement_notes": "Useful in Mediterranean/heart/metabolic patterns."
+    },
+    {
+      "id": "iodized_salt_seaweed",
+      "label": "Iodized salt and seaweed",
+      "examples": [
+        "iodized salt",
+        "nori",
+        "kelp",
+        "dulse"
+      ],
+      "tags": [
+        "iodine",
+        "sodium",
+        "thyroid_context",
+        "seaweed_high_iodine_variable"
+      ],
+      "nutrient_strengths": [
+        "iodine"
+      ],
+      "caution_flags": [
+        "thyroid_autoimmune",
+        "hyperthyroid_context",
+        "excess_iodine_kelp",
+        "hypertension_sodium"
+      ],
+      "common_substitutes": [
+        "iodine-containing multivitamin if appropriate",
+        "seafood/dairy/eggs depending on diet"
+      ],
+      "requirement_notes": "Iodine adequacy matters, but kelp/seaweed can overshoot."
+    },
+    {
+      "id": "protein_powders_supplements",
+      "label": "Protein powders and nutrition supplements",
+      "examples": [
+        "whey",
+        "casein",
+        "soy protein",
+        "pea protein",
+        "collagen",
+        "mass gainer"
+      ],
+      "tags": [
+        "supplement",
+        "protein",
+        "allergen_hidden",
+        "sweetener_additive",
+        "third_party_testing_needed"
+      ],
+      "nutrient_strengths": [
+        "protein"
+      ],
+      "caution_flags": [
+        "milk_allergy_whey_casein",
+        "soy_allergy",
+        "CKD",
+        "contamination_quality",
+        "ultra_processed"
+      ],
+      "common_substitutes": [
+        "whole-food protein",
+        "third-party-tested allergen-compatible powder"
+      ],
+      "requirement_notes": "Quality/allergen labeling matters; collagen is not complete protein."
+    }
+  ],
+  "sources": [
+    "usda_fooddata_central",
+    "fda_major_food_allergens",
+    "nih_ods_omega3"
+  ]
+}

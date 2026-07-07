@@ -1,0 +1,175 @@
+{
+  "name": "Source Registry",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "sources": {
+    "gwas_catalog": {
+      "name": "NHGRI-EBI GWAS Catalog",
+      "url": "https://www.ebi.ac.uk/gwas/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Curated GWAS Catalog",
+      "conflict_of_interest": "Public academic/NIH-EBI resource",
+      "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+    },
+    "clinvar": {
+      "name": "NCBI ClinVar",
+      "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+      "accessed": "2026-07-01",
+      "evidence_type": "ClinVar",
+      "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+      "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+    },
+    "clingen": {
+      "name": "ClinGen Gene-Disease Validity and Actionability",
+      "url": "https://clinicalgenome.org/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Clinical gene curation resource",
+      "conflict_of_interest": "NIH-funded clinical genetics resource; expert panel curation",
+      "notes": "Use for clinical gene-disease validity, actionability, and expert-panel interpretation frameworks."
+    },
+    "genereviews": {
+      "name": "GeneReviews",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+    },
+    "cpic": {
+      "name": "Clinical Pharmacogenetics Implementation Consortium (CPIC)",
+      "url": "https://cpicpgx.org/guidelines/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Clinical PGx guideline",
+      "conflict_of_interest": "Professional pharmacogenomics guideline consortium",
+      "notes": "Use only for how to interpret already-available PGx results. Does not mean raw DNA is sufficient for medication changes."
+    },
+    "pharmgkb": {
+      "name": "PharmGKB",
+      "url": "https://www.pharmgkb.org/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Pharmacogenomics knowledgebase",
+      "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+      "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+    },
+    "omim": {
+      "name": "OMIM",
+      "url": "https://www.omim.org/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Mendelian disease catalog",
+      "conflict_of_interest": "Curated biomedical genetics database",
+      "notes": "Use for rare monogenic disorder context. Consumer raw SNP data usually cannot rule in or rule out these conditions."
+    },
+    "gnomad": {
+      "name": "gnomAD",
+      "url": "https://gnomad.broadinstitute.org/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Population variant frequency database",
+      "conflict_of_interest": "Academic consortium population database",
+      "notes": "Use for allele frequency and rare-variant plausibility checks. Frequency alone does not classify pathogenicity."
+    },
+    "cdc_mthfr": {
+      "name": "CDC MTHFR and Folic Acid Guidance",
+      "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+      "accessed": "2026-07-01",
+      "evidence_type": "Public health guidance",
+      "conflict_of_interest": "U.S. public health agency",
+      "notes": "Use to prevent common MTHFR overclaims; genotype does not mean folic acid cannot be processed."
+    },
+    "pmdd_review": {
+      "name": "PMDD neuroactive steroid sensitivity review",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Peer-reviewed review",
+      "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+      "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+    },
+    "hpo": {
+      "name": "Human Phenotype Ontology",
+      "url": "https://hpo.jax.org/",
+      "accessed": "2026-07-01",
+      "evidence_type": "Phenotype ontology",
+      "conflict_of_interest": "Academic phenotype resource",
+      "notes": "Use to standardize symptom prompts and phenotype tags."
+    },
+    "dietary_guidelines_2025_2030": {
+      "name": "Dietary Guidelines for Americans, 2025-2030",
+      "url": "https://www.dietaryguidelines.gov/",
+      "accessed": "2026-07-06",
+      "evidence_type": "Federal dietary guidance",
+      "conflict_of_interest": "U.S. government public health guidance",
+      "notes": "Use as general dietary-pattern baseline. Individual medical, allergy, religious/cultural and lab-confirmed requirements override general guidance."
+    },
+    "usda_fooddata_central": {
+      "name": "USDA FoodData Central",
+      "url": "https://fdc.nal.usda.gov/",
+      "accessed": "2026-07-06",
+      "evidence_type": "Nutrient composition database/API",
+      "conflict_of_interest": "U.S. Department of Agriculture public data resource; data sources vary by food type",
+      "notes": "Use for exact nutrient values and food lookup. This JSON stack stores rule tags, not full nutrient composition tables."
+    },
+    "fda_major_food_allergens": {
+      "name": "FDA Food Allergies and Major Food Allergens",
+      "url": "https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/food-allergies",
+      "accessed": "2026-07-06",
+      "evidence_type": "Regulatory food allergen labeling guidance",
+      "conflict_of_interest": "U.S. Food and Drug Administration public regulatory resource",
+      "notes": "Use for U.S. major food allergen categories; sesame is included through the FASTER Act implementation. Allergy diagnosis still requires clinical context."
+    },
+    "usda_big_9_allergens": {
+      "name": "USDA FSIS Big 9 Allergens",
+      "url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/food-allergies-big-9",
+      "accessed": "2026-07-06",
+      "evidence_type": "Food safety allergen guidance",
+      "conflict_of_interest": "U.S. government food safety resource",
+      "notes": "Use for consumer-facing Big 9 allergen wording: milk, eggs, fish, shellfish, tree nuts, peanuts, wheat, soybeans and sesame."
+    },
+    "nih_ods_omega3": {
+      "name": "NIH Office of Dietary Supplements Omega-3 Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+      "accessed": "2026-07-06",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for ALA/EPA/DHA distinctions, fish/algal sources and omega-3 supplement caveats."
+    },
+    "nih_ods_folate": {
+      "name": "NIH Office of Dietary Supplements Folate Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Folate-HealthProfessional/",
+      "accessed": "2026-07-06",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for folate/folic acid intake context and lab interpretation with one-carbon metabolism markers."
+    },
+    "cdc_mthfr_folic_acid": {
+      "name": "CDC MTHFR and Folic Acid Guidance",
+      "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+      "accessed": "2026-07-06",
+      "evidence_type": "CDC public health guidance",
+      "conflict_of_interest": "U.S. CDC public health resource",
+      "notes": "Use to prevent MTHFR overclaims and false folic-acid avoidance recommendations."
+    },
+    "nih_ods_b12": {
+      "name": "NIH Office of Dietary Supplements Vitamin B12 Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/",
+      "accessed": "2026-07-06",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for B12 food sources, deficiency risk and supplement/fortified food context."
+    },
+    "nih_ods_choline": {
+      "name": "NIH Office of Dietary Supplements Choline Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Choline-HealthProfessional/",
+      "accessed": "2026-07-06",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for choline adequate intake, food sources, pregnancy context and deficiency/excess caveats."
+    },
+    "nih_ods_vitamin_d": {
+      "name": "NIH Office of Dietary Supplements Vitamin D Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/",
+      "accessed": "2026-07-06",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for vitamin D intake/lab context; genotype does not diagnose deficiency."
+    }
+  }
+}

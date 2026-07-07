@@ -256,9 +256,80 @@ pub struct BatchActivitySnapshot {
 }
 
 static BATCH_ACTIVITY: Mutex<Option<BatchActivitySnapshot>> = Mutex::new(None);
+static LAST_LIVE_MESSAGE: Mutex<Option<String>> = Mutex::new(None);
+static SWEEP_SESSION_STARTED: Mutex<Option<i64>> = Mutex::new(None);
+static QDRANT_SAMPLE_BASELINE: Mutex<Option<u64>> = Mutex::new(None);
+
+fn phase_rank(phase: &str) -> u8 {
+    let p = phase.to_lowercase();
+    if p.contains("qdrant") {
+        4
+    } else if p.contains("embedding") {
+        3
+    } else if p.contains("prepare") {
+        2
+    } else if p.contains("prefetch") || p.contains("gnomad") || p.contains("api") {
+        1
+    } else {
+        0
+    }
+}
+
+pub fn set_sweep_session_started() {
+    let now = crate::research::util::unix_now();
+    if let Ok(mut guard) = SWEEP_SESSION_STARTED.lock() {
+        *guard = Some(now);
+    }
+}
+
+pub fn clear_sweep_session() {
+    if let Ok(mut guard) = SWEEP_SESSION_STARTED.lock() {
+        *guard = None;
+    }
+    if let Ok(mut guard) = QDRANT_SAMPLE_BASELINE.lock() {
+        *guard = None;
+    }
+}
+
+pub fn set_qdrant_sample_baseline(count: u64) {
+    if let Ok(mut guard) = QDRANT_SAMPLE_BASELINE.lock() {
+        *guard = Some(count);
+    }
+}
+
+pub fn qdrant_sample_baseline() -> Option<u64> {
+    QDRANT_SAMPLE_BASELINE.lock().ok().and_then(|g| *g)
+}
+
+pub fn sweep_session_elapsed_secs() -> Option<i64> {
+    let started = SWEEP_SESSION_STARTED.lock().ok().and_then(|g| *g)?;
+    Some((crate::research::util::unix_now() - started).max(0))
+}
+
+pub fn set_live_message(message: impl Into<String>) {
+    if let Ok(mut guard) = LAST_LIVE_MESSAGE.lock() {
+        *guard = Some(message.into());
+    }
+}
+
+pub fn get_live_message() -> Option<String> {
+    LAST_LIVE_MESSAGE.lock().ok().and_then(|g| g.clone())
+}
+
+pub fn clear_live_message() {
+    if let Ok(mut guard) = LAST_LIVE_MESSAGE.lock() {
+        *guard = None;
+    }
+}
 
 pub fn set_batch_activity(phase: &str, rsid: &str, total: u32) {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock() {
+        let incoming_rank = phase_rank(phase);
+        if let Some(ref existing) = *guard
+            && phase_rank(&existing.phase) > incoming_rank
+        {
+            return;
+        }
         *guard = Some(BatchActivitySnapshot {
             phase: phase.to_string(),
             current_rsid: rsid.to_string(),
@@ -306,14 +377,26 @@ pub fn bump_batch_prepared() {
         }
 }
 
-pub fn set_batch_embedding(rsid: &str) {
-    if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
+pub fn set_batch_embedding(rsid: &str, total: u32) {
+    if let Ok(mut guard) = BATCH_ACTIVITY.lock() {
+        let total = total.max(1);
+        if let Some(ref mut snap) = *guard {
             snap.phase = "embedding".to_string();
             snap.current_rsid = rsid.to_string();
-            snap.prepared = snap.total;
-            snap.prefetch_done = snap.total;
+            snap.total = total;
+            snap.prepared = total;
+            snap.prefetch_done = total;
+        } else {
+            *guard = Some(BatchActivitySnapshot {
+                phase: "embedding".to_string(),
+                current_rsid: rsid.to_string(),
+                prepared: total,
+                prefetch_done: total,
+                total,
+                started_at: crate::research::util::unix_now(),
+            });
         }
+    }
 }
 
 pub fn set_batch_qdrant() {
@@ -327,6 +410,24 @@ pub fn set_batch_qdrant() {
 pub fn clear_batch_activity() {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock() {
         *guard = None;
+    }
+    clear_live_message();
+}
+
+/// Attach in-memory sweep activity to a DB job row for UI polling.
+pub fn attach_live_job_fields(job: &mut super::types::ResearchJob) {
+    job.live_message = get_live_message();
+    job.qdrant_sample_count = qdrant_sample_baseline();
+    job.session_elapsed_secs = sweep_session_elapsed_secs();
+    if let Some(snap) = snapshot_batch_activity() {
+        job.activity_phase = Some(snap.phase);
+        job.batch_prepared = Some(snap.prepared);
+        job.batch_prefetch_done = Some(snap.prefetch_done);
+        job.batch_total = Some(snap.total);
+        job.batch_elapsed_secs = Some((crate::research::util::unix_now() - snap.started_at).max(0));
+        if job.current_rsid.is_none() && !snap.current_rsid.is_empty() {
+            job.current_rsid = Some(snap.current_rsid);
+        }
     }
 }
 

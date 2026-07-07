@@ -39,6 +39,12 @@
     align-items: center;
   }
 
+  .library-mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-right: 8px;
+  }
+
   .btn-sm {
     padding: 6px 12px;
     font-size: 0.78rem;

@@ -1,0 +1,1423 @@
+{
+  "name": "Allergy, Atopy & Mast-Cell Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_ALLERGY_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Allergy genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents allergy and mast-cell overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Allergic disease requires exposure history and immune testing. Genotype can suggest predisposition, but it cannot diagnose allergy, anaphylaxis risk, MCAS, or food intolerance by itself.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "anaphylaxis prediction",
+        "MCAS diagnosis",
+        "safe food guarantee"
+      ],
+      "confirm_with": [
+        "symptom/exposure history",
+        "serum specific IgE",
+        "skin-prick testing",
+        "tryptase if clinically indicated",
+        "elimination and supervised challenge when appropriate"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "Human Phenotype Ontology",
+          "url": "https://hpo.jax.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Phenotype ontology",
+          "conflict_of_interest": "Academic phenotype resource",
+          "notes": "Use to standardize symptom prompts and phenotype tags."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_ATOPY_ALLERGIC_DISEASE",
+      "gene": "MULTI_GENE",
+      "variant_name": "Atopy / allergic disease PRS module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic allergic disease susceptibility",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Atopy, allergic rhinitis, eczema, asthma, and IgE tendency are polygenic and environmentally triggered. Use only as a calibrated PRS module with ancestry-aware interpretation.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "food allergy certainty",
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "IgE testing",
+        "eosinophil count",
+        "asthma spirometry if symptomatic",
+        "eczema history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MAST_CELL_MEDIATOR_CONTEXT",
+      "gene": "TPSAB1/KIT/CPA3/HDC",
+      "variant_name": "Mast-cell mediator and activation context panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_VARIANT",
+      "impact": "Mast-cell activation and mediator biology context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Mast-cell disorders and hereditary alpha-tryptasemia are not reliably inferred from ordinary SNP arrays. Use this as a callability/triage panel requiring validated testing when symptoms fit.",
+      "do_not_claim": [
+        "MCAS diagnosis",
+        "mastocytosis diagnosis",
+        "anaphylaxis prediction"
+      ],
+      "confirm_with": [
+        "baseline serum tryptase",
+        "event tryptase",
+        "allergist/immunologist review",
+        "TPSAB1 copy-number testing if indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "rs61816761",
+      "gene": "IL4R",
+      "variant_name": "Ile50Val / IL4R alpha variant",
+      "effect_allele": "T",
+      "impact": "Th2 allergic inflammation signaling modifier",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4R regulates IL-4 and IL-13 signaling, central to allergic inflammation and IgE class switching. This variant is a context marker for atopy/asthma tendency, not an allergy test.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "IgE",
+        "eosinophils",
+        "allergic rhinitis/asthma history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801275",
+      "gene": "IL4R",
+      "variant_name": "Gln576Arg",
+      "effect_allele": "G",
+      "impact": "IL-4/IL-13 receptor signaling modifier",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4R Gln576Arg has been studied in atopy and asthma phenotypes. Treat as a pathway marker for Th2 tone and airway/allergy context.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "food allergy prediction"
+      ],
+      "confirm_with": [
+        "IgE",
+        "eosinophils",
+        "wheeze history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs20541",
+      "gene": "IL13",
+      "variant_name": "Arg130Gln",
+      "effect_allele": "A",
+      "impact": "IL-13 allergic inflammation / IgE tendency",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL13 is a key Th2 cytokine. rs20541 has been repeatedly studied for asthma, IgE, and atopy-related phenotypes, but effect sizes are modest.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "eczema diagnosis"
+      ],
+      "confirm_with": [
+        "IgE",
+        "eosinophils",
+        "eczema/asthma phenotype"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2243250",
+      "gene": "IL4",
+      "variant_name": "-590C>T promoter",
+      "effect_allele": "T",
+      "impact": "IL-4 expression / IgE class switching context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4 promoter variation can modify Th2 cytokine expression and IgE tendency in some cohorts. Use as a weak context marker only.",
+      "do_not_claim": [
+        "allergy diagnosis"
+      ],
+      "confirm_with": [
+        "IgE",
+        "allergic rhinitis symptoms"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7216389",
+      "gene": "ORMDL3/GSDMB",
+      "variant_name": "17q21 asthma-associated locus",
+      "effect_allele": "T",
+      "impact": "Childhood asthma / airway inflammation locus",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The 17q21 ORMDL3/GSDMB region is a robust asthma susceptibility locus. It is not specific to allergy and should be interpreted with respiratory symptoms.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "inhaler need prediction"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "wheeze history",
+        "allergic sensitization"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1837253",
+      "gene": "TSLP",
+      "variant_name": "TSLP epithelial alarmin locus",
+      "effect_allele": "T",
+      "impact": "Epithelial barrier allergic inflammation signal",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TSLP is an epithelial cytokine involved in initiating allergic inflammation. Common variants are useful as atopy/asthma context markers.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "eczema/rhinitis/asthma history",
+        "IgE"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2251746",
+      "gene": "FCER1A",
+      "variant_name": "High-affinity IgE receptor alpha promoter",
+      "effect_allele": "T",
+      "impact": "IgE receptor expression / atopy context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FCER1A encodes a component of the high-affinity IgE receptor. Variation can modify total IgE and allergic sensitization tendency.",
+      "do_not_claim": [
+        "food allergy diagnosis",
+        "anaphylaxis risk"
+      ],
+      "confirm_with": [
+        "total IgE",
+        "specific IgE",
+        "allergy history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11591147_FLG_LOF_PANEL",
+      "gene": "FLG",
+      "variant_name": "Filaggrin loss-of-function skin barrier panel",
+      "effect_allele": "ANY_CONFIRMED_LOF",
+      "impact": "Skin barrier disruption / eczema and food sensitization risk",
+      "evidence_tier": "A_rare_high_effect_when_confirmed",
+      "interpretation": "Filaggrin loss-of-function variants can strongly influence atopic dermatitis and skin barrier dysfunction. Consumer SNP files may include only selected FLG variants and cannot rule out FLG loss-of-function.",
+      "do_not_claim": [
+        "eczema diagnosis",
+        "food allergy certainty"
+      ],
+      "confirm_with": [
+        "clinical dermatology exam",
+        "eczema history",
+        "skin barrier symptoms",
+        "sequencing if needed"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "rs61839660",
+      "gene": "IL2RA",
+      "variant_name": "IL2RA immune-regulatory locus",
+      "effect_allele": "T",
+      "impact": "T-cell immune regulation / allergy-autoimmunity overlap",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL2RA variants are immune-regulatory markers relevant across autoimmune and allergic immune tone. Use only as broad immune context.",
+      "do_not_claim": [
+        "immune disease diagnosis"
+      ],
+      "confirm_with": [
+        "immune history",
+        "autoantibodies if symptomatic"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3771166",
+      "gene": "IL1RL1",
+      "variant_name": "IL33 receptor pathway asthma/allergy locus",
+      "effect_allele": "T",
+      "impact": "IL-33 receptor pathway susceptibility",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL1RL1 participates in IL-33 signaling, an epithelial alarmin pathway involved in asthma and allergic inflammation.",
+      "do_not_claim": [
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "asthma/allergy history",
+        "eosinophils"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3939286",
+      "gene": "IL33",
+      "variant_name": "IL33 allergic airway locus",
+      "effect_allele": "A",
+      "impact": "Epithelial alarmin signaling / asthma-atopy context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL33 variants appear in allergic airway and asthma GWAS. Useful as pathway context, not individual prediction.",
+      "do_not_claim": [
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "eosinophils",
+        "rhinitis history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4794820",
+      "gene": "GSDMB",
+      "variant_name": "GSDMB asthma locus",
+      "effect_allele": "A",
+      "impact": "Airway inflammation and asthma susceptibility locus",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GSDMB is part of the 17q21 asthma locus. Treat as a small-effect respiratory/allergy context marker.",
+      "do_not_claim": [
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "wheeze history",
+        "spirometry"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7212938",
+      "gene": "GSDMA",
+      "variant_name": "GSDMA asthma/allergy locus",
+      "effect_allele": "T",
+      "impact": "Gasdermin airway inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "Gasdermin loci are associated with asthma and inflammatory airway traits. Individual interpretation requires phenotype.",
+      "do_not_claim": [
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "allergy history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17513503",
+      "gene": "RAD50/IL13 region",
+      "variant_name": "Th2 cytokine-region allergy locus",
+      "effect_allele": "C",
+      "impact": "IgE and allergic sensitization context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "RAD50 lies near Th2 cytokine genes and has appeared in allergy/asthma association studies. Treat as locus-level context only.",
+      "do_not_claim": [
+        "allergy diagnosis"
+      ],
+      "confirm_with": [
+        "IgE",
+        "allergen testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7775228",
+      "gene": "HLA-DQB1/HLA-DQA1",
+      "variant_name": "HLA food/immune sensitivity context",
+      "effect_allele": "N/A",
+      "impact": "HLA-mediated food and immune reaction context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "HLA alleles drive many immune reactions, but tagging SNPs are unreliable. Use this only as a prompt to require true HLA typing for celiac/drug/allergy-related questions.",
+      "do_not_claim": [
+        "celiac diagnosis",
+        "food allergy diagnosis"
+      ],
+      "confirm_with": [
+        "HLA typing",
+        "celiac serology",
+        "allergy testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "hla_tag",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "ClinGen Gene-Disease Validity and Actionability",
+          "url": "https://clinicalgenome.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical gene curation resource",
+          "conflict_of_interest": "NIH-funded clinical genetics resource; expert panel curation",
+          "notes": "Use for clinical gene-disease validity, actionability, and expert-panel interpretation frameworks."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_HEREDITARY_ANGIOEDEMA",
+      "gene": "SERPING1/F12/PLG/ANGPT1/KNG1",
+      "variant_name": "Hereditary angioedema confirmation panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Bradykinin-mediated angioedema susceptibility",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Hereditary angioedema is not an IgE allergy and is not ruled out by SNP arrays. Use as a red-flag panel for recurrent swelling without hives.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "safe antihistamine response prediction"
+      ],
+      "confirm_with": [
+        "C4 level",
+        "C1 inhibitor antigen/function",
+        "allergist/immunologist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "rs730012",
+      "gene": "LTC4S",
+      "variant_name": "Leukotriene C4 synthase promoter",
+      "effect_allele": "C",
+      "impact": "Leukotriene pathway / aspirin-sensitive airway context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "LTC4S is involved in leukotriene synthesis and has been studied in aspirin-exacerbated respiratory disease and asthma medication response.",
+      "do_not_claim": [
+        "aspirin allergy diagnosis",
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "NSAID reaction history",
+        "asthma/nasal polyp history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800896",
+      "gene": "IL10",
+      "variant_name": "IL10 promoter anti-inflammatory tone",
+      "effect_allele": "A",
+      "impact": "Anti-inflammatory cytokine expression context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL10 promoter variation can modify anti-inflammatory cytokine tone. Use as a weak inflammation/allergy context marker.",
+      "do_not_claim": [
+        "immune diagnosis"
+      ],
+      "confirm_with": [
+        "CRP",
+        "immune symptom history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1143634",
+      "gene": "IL1B",
+      "variant_name": "IL1B inflammatory cytokine variant",
+      "effect_allele": "T",
+      "impact": "Inflammatory cytokine tendency context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL1B variants can influence inflammatory response patterns. Use only as broad inflammatory context with symptoms/labs.",
+      "do_not_claim": [
+        "allergy diagnosis",
+        "autoimmune diagnosis"
+      ],
+      "confirm_with": [
+        "hs-CRP",
+        "ESR"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2289276",
+      "gene": "FCER2",
+      "variant_name": "Low-affinity IgE receptor / asthma medication context",
+      "effect_allele": "A",
+      "impact": "IgE receptor and asthma controller response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FCER2 has been studied in IgE regulation and asthma controller response. Not useful without asthma phenotype and medication history.",
+      "do_not_claim": [
+        "asthma medication guidance"
+      ],
+      "confirm_with": [
+        "asthma diagnosis",
+        "medication response history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042713",
+      "gene": "ADRB2",
+      "variant_name": "Arg16Gly beta-2 adrenergic receptor",
+      "effect_allele": "G",
+      "impact": "Bronchodilator response and airway tone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 variants can modify beta-agonist response in some asthma cohorts, but effects are inconsistent and not sufficient for medication decisions.",
+      "do_not_claim": [
+        "inhaler response prediction",
+        "asthma diagnosis"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "bronchodilator response"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042714",
+      "gene": "ADRB2",
+      "variant_name": "Gln27Glu beta-2 adrenergic receptor",
+      "effect_allele": "C",
+      "impact": "Airway tone and beta-agonist response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 Gln27Glu is a context marker for airway and bronchodilator-response studies, not a prescribing rule.",
+      "do_not_claim": [
+        "medication selection"
+      ],
+      "confirm_with": [
+        "asthma phenotype",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs763361",
+      "gene": "CD226",
+      "variant_name": "CD226 Gly307Ser immune activation marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "T-cell activation / autoimmunity-allergy overlap",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CD226 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2201841",
+      "gene": "IL23R",
+      "variant_name": "IL23R immune-inflammatory locus",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Th17 inflammatory disease overlap",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL23R variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3024505",
+      "gene": "IL10",
+      "variant_name": "IL10 regulatory cytokine locus",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Immune regulation / inflammatory sensitivity",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL10 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10760117",
+      "gene": "DENND1B",
+      "variant_name": "Asthma susceptibility locus",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Airway immune signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "DENND1B variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9500927",
+      "gene": "HLA-DQA1",
+      "variant_name": "HLA allergy/immune marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "HLA immune context, true HLA typing preferred",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "HLA-DQA1 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2305480",
+      "gene": "GSDMB",
+      "variant_name": "Gasdermin asthma locus",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Airway inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSDMB variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9273349",
+      "gene": "HLA-DQB1",
+      "variant_name": "HLA immune-sensitization marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "HLA immune context, not diagnostic",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "HLA-DQB1 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1295686",
+      "gene": "IL13",
+      "variant_name": "IL13 locus marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Th2 cytokine allergic tendency context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL13 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070874",
+      "gene": "IL4",
+      "variant_name": "IL4 promoter marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Th2 cytokine expression context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805010",
+      "gene": "IL4R",
+      "variant_name": "IL4R Ile75Val",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "IL-4 receptor signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4R variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs41423247",
+      "gene": "NR3C1",
+      "variant_name": "Glucocorticoid receptor BclI",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Steroid/inflammation response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NR3C1 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228145",
+      "gene": "IL6R",
+      "variant_name": "IL6 receptor Asp358Ala",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "IL-6 signaling and inflammatory tone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6R variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs755622",
+      "gene": "MIF",
+      "variant_name": "MIF promoter inflammatory marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Macrophage migration inhibitory factor context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MIF variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1051931",
+      "gene": "ALOX5",
+      "variant_name": "Arachidonate 5-lipoxygenase marker",
+      "effect_allele": "study_reported_risk_allele",
+      "impact": "Leukotriene synthesis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ALOX5 variation is included as an allergy/immune pathway context marker. Treat as a weak modifier unless supported by phenotype and testing.",
+      "do_not_claim": [
+        "diagnosis",
+        "treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "objective testing",
+        "clinician context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_FOOD_ALLERGY_CONTEXT",
+      "gene": "HLA/IL4/IL13/FLG/STAT6",
+      "variant_name": "Food-allergy susceptibility context panel",
+      "effect_allele": "N/A",
+      "impact": "Food sensitization and barrier/Th2 pathway context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Food allergy is an exposure-specific immune phenotype. This panel only flags biology that may raise the plausibility of sensitization or barrier-driven allergy.",
+      "do_not_claim": [
+        "food allergy diagnosis",
+        "safe food challenge advice"
+      ],
+      "confirm_with": [
+        "allergist evaluation",
+        "specific IgE",
+        "skin-prick testing",
+        "oral food challenge when clinically indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_CHRONIC_URTICARIA_CONTEXT",
+      "gene": "HLA/FCER1A/TNFAIP3/IL6",
+      "variant_name": "Chronic urticaria immune context panel",
+      "effect_allele": "N/A",
+      "impact": "Hives and immune activation context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "Chronic urticaria is usually not explained by one SNP. Use this panel to prompt phenotype questions and clinician testing.",
+      "do_not_claim": [
+        "chronic urticaria diagnosis"
+      ],
+      "confirm_with": [
+        "hive duration",
+        "thyroid antibodies",
+        "IgE",
+        "tryptase if indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_ECZEMA_BARRIER_INFLAMMATION",
+      "gene": "FLG/IL13/IL4R/TSLP",
+      "variant_name": "Atopic dermatitis barrier-inflammatory panel",
+      "effect_allele": "N/A",
+      "impact": "Skin barrier plus Th2 inflammation context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Eczema risk combines skin barrier, immune signaling, microbiome, irritants, and allergens. Use as a context panel with skin phenotype.",
+      "do_not_claim": [
+        "eczema diagnosis",
+        "food allergy certainty"
+      ],
+      "confirm_with": [
+        "dermatology exam",
+        "eczema severity",
+        "allergic sensitization testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MOLD_DUST_POLLEN_ATOPY",
+      "gene": "IL4/IL13/TSLP/FCER1A/HLA",
+      "variant_name": "Inhalant allergen atopy context panel",
+      "effect_allele": "N/A",
+      "impact": "Pollen, dust mite, mold sensitization context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Inhalant allergy is best confirmed by exposure-linked symptoms and IgE/skin testing. Genetics can only raise or lower prior plausibility.",
+      "do_not_claim": [
+        "specific allergen diagnosis"
+      ],
+      "confirm_with": [
+        "seasonal symptom timing",
+        "specific IgE",
+        "skin-prick testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

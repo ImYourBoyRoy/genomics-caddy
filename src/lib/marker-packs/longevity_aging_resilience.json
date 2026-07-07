@@ -1,0 +1,1428 @@
+{
+  "name": "Longevity, Aging Resilience & Healthspan Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_LONGEVITY_NO_PREDICTION",
+      "gene": "MULTI_GENE",
+      "variant_name": "Longevity non-prediction rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents lifespan prediction claims",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "No raw DNA file can predict lifespan, healthspan, or aging rate. This pack provides aging-resilience context around lipids, inflammation, DNA repair, telomere biology, and oxidative stress.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age from genotype",
+        "disease-free guarantee"
+      ],
+      "confirm_with": [
+        "family history",
+        "labs",
+        "lifestyle factors",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs429358",
+      "gene": "APOE",
+      "variant_name": "APOE e4 marker",
+      "effect_allele": "C",
+      "impact": "Lipid transport/cognitive-cardiovascular aging context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "APOE is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7412",
+      "gene": "APOE",
+      "variant_name": "APOE e2/e3/e4 marker",
+      "effect_allele": "T",
+      "impact": "APOE isoform and lipid/cognitive aging context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "APOE is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2802292",
+      "gene": "FOXO3",
+      "variant_name": "FOXO3 longevity-associated marker",
+      "effect_allele": "G",
+      "impact": "Stress resistance/longevity association context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FOXO3 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1935949",
+      "gene": "FOXO3",
+      "variant_name": "FOXO3 longevity marker",
+      "effect_allele": "T",
+      "impact": "Longevity association context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FOXO3 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042522",
+      "gene": "TP53",
+      "variant_name": "Arg72Pro",
+      "effect_allele": "C",
+      "impact": "DNA damage/apoptosis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TP53 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2736100",
+      "gene": "TERT",
+      "variant_name": "TERT telomere/longevity marker",
+      "effect_allele": "C",
+      "impact": "Telomere biology and cancer-aging tradeoff context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TERT is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2853677",
+      "gene": "TERT",
+      "variant_name": "TERT telomere marker",
+      "effect_allele": "A",
+      "impact": "Telomere/cancer-aging context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TERT is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10936599",
+      "gene": "TERC",
+      "variant_name": "TERC telomere marker",
+      "effect_allele": "T",
+      "impact": "Telomere length context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TERC is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7675998",
+      "gene": "NAF1",
+      "variant_name": "Telomere length locus",
+      "effect_allele": "A",
+      "impact": "Telomere biology context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "NAF1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs755017",
+      "gene": "OBFC1/STN1",
+      "variant_name": "Telomere locus",
+      "effect_allele": "A",
+      "impact": "Telomere maintenance context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "OBFC1/STN1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800562",
+      "gene": "HFE",
+      "variant_name": "C282Y iron overload marker",
+      "effect_allele": "A",
+      "impact": "Iron overload/oxidative aging context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "HFE is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4880",
+      "gene": "SOD2",
+      "variant_name": "Val16Ala mitochondrial antioxidant marker",
+      "effect_allele": "G",
+      "impact": "Mitochondrial oxidative stress context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SOD2 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1050450",
+      "gene": "GPX1",
+      "variant_name": "Pro198Leu selenium antioxidant marker",
+      "effect_allele": "T",
+      "impact": "Selenium-dependent antioxidant context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GPX1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800566",
+      "gene": "NQO1",
+      "variant_name": "Pro187Ser",
+      "effect_allele": "T",
+      "impact": "Quinone detox/oxidative stress context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NQO1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1695",
+      "gene": "GSTP1",
+      "variant_name": "Ile105Val",
+      "effect_allele": "G",
+      "impact": "Detox/oxidative stress context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTP1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL6",
+      "variant_name": "IL6 inflammatory marker",
+      "effect_allele": "G",
+      "impact": "Inflammaging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF inflammatory marker",
+      "effect_allele": "A",
+      "impact": "Inflammaging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1205",
+      "gene": "CRP",
+      "variant_name": "CRP inflammatory marker",
+      "effect_allele": "T",
+      "impact": "Baseline CRP/inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CRP is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801282",
+      "gene": "PPARG",
+      "variant_name": "Pro12Ala",
+      "effect_allele": "G",
+      "impact": "Insulin sensitivity/aging-metabolic context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PPARG is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7903146",
+      "gene": "TCF7L2",
+      "variant_name": "T2D risk marker",
+      "effect_allele": "T",
+      "impact": "Glucose aging-metabolic context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TCF7L2 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10455872",
+      "gene": "LPA",
+      "variant_name": "Lp(a) marker",
+      "effect_allele": "G",
+      "impact": "Atherosclerotic aging/calcific valve context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPA is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3798220",
+      "gene": "LPA",
+      "variant_name": "Lp(a) marker",
+      "effect_allele": "C",
+      "impact": "Atherosclerotic aging context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPA is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs708272",
+      "gene": "CETP",
+      "variant_name": "TaqIB",
+      "effect_allele": "A",
+      "impact": "HDL/CETP longevity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CETP is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5882",
+      "gene": "SCARB1",
+      "variant_name": "SR-BI lipid marker",
+      "effect_allele": "A",
+      "impact": "HDL transport/cardiometabolic aging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SCARB1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9536314",
+      "gene": "KL",
+      "variant_name": "Klotho KL-VS F352V",
+      "effect_allele": "G",
+      "impact": "Klotho aging/cognition/cardiometabolic context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "KL is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9527025",
+      "gene": "KL",
+      "variant_name": "Klotho KL-VS C370S linked marker",
+      "effect_allele": "T",
+      "impact": "Klotho aging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "KL is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801133",
+      "gene": "MTHFR",
+      "variant_name": "C677T homocysteine context",
+      "effect_allele": "T",
+      "impact": "Homocysteine/vascular aging context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTHFR is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs662",
+      "gene": "PON1",
+      "variant_name": "Q192R",
+      "effect_allele": "G",
+      "impact": "Paraoxonase/lipid oxidation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "PON1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs854560",
+      "gene": "PON1",
+      "variant_name": "L55M",
+      "effect_allele": "T",
+      "impact": "Lipid oxidation/detox context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "PON1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800469",
+      "gene": "TGFB1",
+      "variant_name": "TGFB1 promoter marker",
+      "effect_allele": "T",
+      "impact": "Fibrosis/inflammation aging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TGFB1 is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6265",
+      "gene": "BDNF",
+      "variant_name": "Val66Met",
+      "effect_allele": "A",
+      "impact": "Neuroplasticity/cognitive aging context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BDNF is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7412_APOE_E2_CONTEXT",
+      "gene": "APOE",
+      "variant_name": "APOE e2 longevity/lipid context",
+      "effect_allele": "T",
+      "impact": "APOE e2/lipid-cognitive aging context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "APOE is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "do_not_claim": [
+        "lifespan prediction",
+        "biological age diagnosis",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "family history",
+        "lipids/glucose/inflammation labs",
+        "clinical screening"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Aging outcomes are dominated by environment, socioeconomic factors, sleep, exercise, diet, toxins, accidents, medical care, and screening.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_LONGEVITY_HEALTHSPAN_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "Longevity/healthspan PRS context module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic healthy aging context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "Longevity PRS is not mature enough for individual lifespan prediction. Use only for research-style context and never as destiny.",
+      "do_not_claim": [
+        "lifespan prediction"
+      ],
+      "confirm_with": [
+        "family longevity history",
+        "clinical risk factors",
+        "labs"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_DNA_REPAIR_RARE_DISEASE_GUARDRAIL",
+      "gene": "ATM/BRCA1/BRCA2/WRN/BLM/RECQL",
+      "variant_name": "DNA repair rare-disease guardrail",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare DNA repair syndrome/cancer predisposition context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "DNA repair genes can be clinically important, but ordinary SNPs do not diagnose rare syndromes or cancer predisposition. Use clinical testing when indicated.",
+      "do_not_claim": [
+        "cancer/aging syndrome diagnosis"
+      ],
+      "confirm_with": [
+        "genetic counseling",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "ClinGen Gene-Disease Validity and Actionability",
+          "url": "https://clinicalgenome.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical gene curation resource",
+          "conflict_of_interest": "NIH-funded clinical genetics resource; expert panel curation",
+          "notes": "Use for clinical gene-disease validity, actionability, and expert-panel interpretation frameworks."
+        }
+      ]
+    }
+  ]
+}

@@ -233,12 +233,14 @@ export function effectiveSpeed(
   recentProgressSpeed: number | null | undefined,
   batchSpeed: number | null,
   progressSpeed: number | null | undefined,
+  sessionSpeed: number | null = null,
 ): number | null {
   return (
     rolling ??
     plausibleSpeed(recentProgressSpeed) ??
     batchSpeed ??
-    plausibleSpeed(progressSpeed)
+    plausibleSpeed(progressSpeed) ??
+    sessionSpeed
   );
 }
 
@@ -248,6 +250,7 @@ export function speedLabel(
   batchSpeed: number | null,
   activityPhase: string | null | undefined,
   progressSpeed: number | null | undefined,
+  sessionSpeed: number | null = null,
 ): string {
   if (rolling != null) return "recent";
   if (plausibleSpeed(recentProgressSpeed) != null) return "batch";
@@ -255,6 +258,7 @@ export function speedLabel(
     return isPrefetchPhase(activityPhase) ? "prefetch" : "preparing";
   }
   if (plausibleSpeed(progressSpeed) != null) return "session";
+  if (sessionSpeed != null) return "overall avg";
   return "estimating";
 }
 
@@ -267,10 +271,59 @@ export function prefetchElapsedLabel(
 ): string | null {
   if (jobStatus !== "running") return null;
   const elapsed = batchElapsedSecs ?? 0;
-  if (elapsed >= 30 && batchDone === 0 && batchTotal != null && batchTotal > 0 && isPrefetchPhase(activityPhase)) {
-    return formatDuration(elapsed);
+  if (elapsed >= 15 && batchTotal != null && batchTotal > 0) {
+    if (batchDone === 0 && isPrefetchPhase(activityPhase)) {
+      return formatDuration(elapsed);
+    }
+    if (batchDone > 0) {
+      return formatDuration(elapsed);
+    }
+    if (elapsed >= 30) {
+      return formatDuration(elapsed);
+    }
   }
   return null;
+}
+
+export function sessionSpeedFromJob(
+  job: { enriched_count: number; started_at: number; status: string } | null,
+): number | null {
+  if (!job || job.status !== "running" || job.enriched_count <= 0) return null;
+  const elapsed = Math.floor(Date.now() / 1000) - job.started_at;
+  if (elapsed < 60) return null;
+  return plausibleSpeed(job.enriched_count / elapsed);
+}
+
+export function inferActivityPhase(
+  phase: string | null | undefined,
+  currentSource: string | null | undefined,
+  liveMessage: string | null | undefined,
+): string | null {
+  if (phase) return phase;
+  const src = (currentSource ?? "").toLowerCase();
+  if (src.includes("prepare")) return "prepare";
+  if (src.includes("qdrant")) return "Checking Qdrant";
+  if (src.includes("embed")) return "embedding";
+  if (src.includes("prefetch") || src.includes("gnomad")) return "gnomad prefetch";
+  const msg = (liveMessage ?? "").toLowerCase();
+  if (msg.includes("checking qdrant")) return "Checking Qdrant";
+  if (msg.includes("prepare")) return "prepare";
+  if (msg.includes("prefetch")) return "gnomad prefetch";
+  if (msg.includes("embedding")) return "embedding";
+  return phase ?? null;
+}
+
+export function formatRemainingCount(
+  enriched: number,
+  total: number,
+): string {
+  const rem = Math.max(0, total - enriched);
+  return `${rem.toLocaleString()} remaining`;
+}
+
+export function secondsSince(ts: number | null | undefined): number | null {
+  if (ts == null) return null;
+  return Math.max(0, Math.floor((Date.now() - ts) / 1000));
 }
 
 export function scopeQueueMismatch(
@@ -282,8 +335,14 @@ export function scopeQueueMismatch(
   return { configured: scopePreview.total_unique, running: job.total_markers };
 }
 
-export function jobStatusText(job: { status: string; loop_active?: boolean; total_markers: number; enriched_count: number } | null): string {
+export function jobStatusText(job: {
+  status: string;
+  loop_active?: boolean;
+  total_markers: number;
+  enriched_count: number;
+} | null): string {
   if (!job) return "Not Started";
+  if (job.status === "running" && job.loop_active === false) return "Interrupted";
   if (job.status === "paused" && job.loop_active) return "Pausing…";
   if (job.status === "complete" || (job.total_markers > 0 && job.enriched_count >= job.total_markers)) {
     return "Complete";
@@ -291,11 +350,17 @@ export function jobStatusText(job: { status: string; loop_active?: boolean; tota
   return job.status.charAt(0).toUpperCase() + job.status.slice(1);
 }
 
-export function jobStatusClass(job: { status: string; loop_active?: boolean; total_markers: number; enriched_count: number } | null): string {
+export function jobStatusClass(job: {
+  status: string;
+  loop_active?: boolean;
+  total_markers: number;
+  enriched_count: number;
+} | null): string {
   if (!job) return "idle";
   if (job.status === "complete" || (job.total_markers > 0 && job.enriched_count >= job.total_markers)) {
     return "complete";
   }
+  if (job.status === "running" && job.loop_active === false) return "paused";
   if (job.status === "paused" && job.loop_active) return "running";
   return job.status;
 }

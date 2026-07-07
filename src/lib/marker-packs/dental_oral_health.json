@@ -1,0 +1,843 @@
+{
+  "name": "Dental, Oral Health & Taste Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_DENTAL_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Dental genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents dental/oral overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Caries, periodontal disease, enamel defects, bruxism, and oral inflammation require dental exam, hygiene/diet history, microbial context, and imaging. DNA is context only.",
+      "do_not_claim": [
+        "dental diagnosis",
+        "cavity prediction",
+        "periodontitis diagnosis"
+      ],
+      "confirm_with": [
+        "dentist exam",
+        "X-rays",
+        "periodontal probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12640848",
+      "gene": "ENAM",
+      "variant_name": "Enamelin enamel/caries marker",
+      "effect_allele": "A",
+      "impact": "Enamel formation and caries context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ENAM is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3796704",
+      "gene": "AMELX",
+      "variant_name": "Amelogenin enamel marker",
+      "effect_allele": "T",
+      "impact": "Enamel development context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AMELX is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17878486",
+      "gene": "DEFB1",
+      "variant_name": "Beta-defensin oral immunity marker",
+      "effect_allele": "T",
+      "impact": "Oral antimicrobial peptide context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "DEFB1 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11362",
+      "gene": "DEFB1",
+      "variant_name": "DEFB1 -20G>A",
+      "effect_allele": "A",
+      "impact": "Oral innate immunity/caries context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "DEFB1 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800587",
+      "gene": "IL1A",
+      "variant_name": "IL1A inflammatory marker",
+      "effect_allele": "T",
+      "impact": "Periodontal inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL1A is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1143634",
+      "gene": "IL1B",
+      "variant_name": "IL1B inflammatory marker",
+      "effect_allele": "T",
+      "impact": "Periodontal inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL1B is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL6",
+      "variant_name": "IL6 inflammatory marker",
+      "effect_allele": "G",
+      "impact": "Gum inflammation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF inflammatory marker",
+      "effect_allele": "A",
+      "impact": "Periodontal inflammatory context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3025058",
+      "gene": "MMP3",
+      "variant_name": "MMP3 remodeling marker",
+      "effect_allele": "A",
+      "impact": "Periodontal matrix remodeling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MMP3 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3918242",
+      "gene": "MMP9",
+      "variant_name": "MMP9 promoter marker",
+      "effect_allele": "T",
+      "impact": "Periodontal remodeling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MMP9 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11225395",
+      "gene": "MMP8",
+      "variant_name": "MMP8 promoter marker",
+      "effect_allele": "T",
+      "impact": "Collagen breakdown/periodontal context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MMP8 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228570",
+      "gene": "VDR",
+      "variant_name": "FokI vitamin D receptor",
+      "effect_allele": "T",
+      "impact": "Vitamin D dental/bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1544410",
+      "gene": "VDR",
+      "variant_name": "BsmI vitamin D receptor",
+      "effect_allele": "A",
+      "impact": "Vitamin D periodontal/bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs601338",
+      "gene": "FUT2",
+      "variant_name": "Non-secretor mucosal glycan marker",
+      "effect_allele": "A",
+      "impact": "Oral/mucosal microbiome context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FUT2 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs713598",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "G",
+      "impact": "Bitter taste and food preference context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1726866",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "T",
+      "impact": "Taste and diet context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10246939",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "T",
+      "impact": "Taste and diet context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs35874116",
+      "gene": "TAS1R2",
+      "variant_name": "Sweet taste receptor marker",
+      "effect_allele": "T",
+      "impact": "Sweet taste preference context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TAS1R2 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs307355",
+      "gene": "TAS1R3",
+      "variant_name": "Sweet taste receptor marker",
+      "effect_allele": "T",
+      "impact": "Sweet preference context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TAS1R3 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7349332",
+      "gene": "WNT10A",
+      "variant_name": "Ectodermal/tooth marker",
+      "effect_allele": "T",
+      "impact": "Tooth morphology/ectodermal context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "WNT10A is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3827760",
+      "gene": "EDAR",
+      "variant_name": "Ectodermal morphology marker",
+      "effect_allele": "G",
+      "impact": "Tooth/hair morphology context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "EDAR is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800012",
+      "gene": "COL1A1",
+      "variant_name": "Collagen I periodontal/bone marker",
+      "effect_allele": "T",
+      "impact": "Periodontal connective tissue/bone context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "COL1A1 is included as oral/dental context. Interpret with dental exam, hygiene, diet, saliva, and microbial context.",
+      "do_not_claim": [
+        "dental disease diagnosis",
+        "cavity prediction",
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental exam",
+        "X-ray/probing",
+        "diet/hygiene history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Dental outcomes are dominated by oral hygiene, diet/sugar frequency, fluoride exposure, saliva flow, microbiome, dental anatomy, and access to care.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_AM_ECTODERMAL_TOOTH_DEFECTS",
+      "gene": "AMELX/ENAM/WNT10A/EDA/EDAR",
+      "variant_name": "Rare enamel/tooth development panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare enamel and ectodermal tooth-development disorder context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Significant enamel defects, missing teeth, or ectodermal symptoms may require clinical genetics/dental specialist evaluation. SNP arrays cannot rule these out.",
+      "do_not_claim": [
+        "amelogenesis imperfecta diagnosis"
+      ],
+      "confirm_with": [
+        "dental specialist exam",
+        "family history",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_BRUXISM_EVIDENCE_GAP",
+      "gene": "MULTI_GENE",
+      "variant_name": "Sleep bruxism evidence-gap rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents bruxism overinterpretation",
+      "evidence_tier": "E_negative_evidence_or_gap",
+      "interpretation": "Sleep bruxism is multifactorial and current consumer SNP data is not sufficient to diagnose or predict it. Use dental wear, sleep, stress, and medication context.",
+      "do_not_claim": [
+        "bruxism diagnosis"
+      ],
+      "confirm_with": [
+        "dental wear pattern",
+        "sleep history",
+        "stress/medication review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

@@ -20,6 +20,7 @@
     progressStatus: string;
     importError: string;
     importSuccess: string;
+    disabled?: boolean;
     onBrowseFile: () => void;
     onImportGenome: (e: Event) => void;
   }
@@ -32,6 +33,7 @@
     progressStatus,
     importError,
     importSuccess,
+    disabled = false,
     onBrowseFile,
     onImportGenome
   }: Props = $props();
@@ -43,15 +45,15 @@
     <div class="form-group">
       <label for="file-path">File Path (.txt or .zip)</label>
       <div class="file-input-wrapper">
-        <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly />
-        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile}>Browse...</button>
+        <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled} />
+        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={disabled}>Browse...</button>
       </div>
     </div>
     <div class="form-group">
       <label for="sample-name">Sample Nickname</label>
-      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} />
+      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} disabled={disabled} />
     </div>
-    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting}>
+    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting || disabled}>
       {isImporting ? "Processing..." : "Import Genome"}
     </button>
 

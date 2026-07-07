@@ -12,7 +12,7 @@ import {
   queryRsids,
   queryRegion,
 } from "../api/tauri";
-import type { GenomeSample, GeneratedReport, DbSnpRecord } from "../types/genomics";
+import type { GenomeSample, GeneratedReport, NormalizedReport, DbSnpRecord } from "../types/genomics";
 import { mergedReportTemplateJson } from "./reportTemplate";
 
 export interface ImportGenomeParams {
@@ -67,14 +67,15 @@ export interface WarmReportParams {
     isGeneratingReport?: boolean;
     reportError?: string;
     generatedReport?: GeneratedReport | null;
+    rawReport?: NormalizedReport | null;
   }) => void;
 }
 
 export async function warmReport({ sampleId, onState }: WarmReportParams): Promise<void> {
   onState({ isGeneratingReport: true, reportError: "" });
   try {
-    const report = await generateReport(sampleId, mergedReportTemplateJson());
-    onState({ generatedReport: report });
+    const payload = await generateReport(sampleId, mergedReportTemplateJson());
+    onState({ generatedReport: payload.report, rawReport: payload.raw });
   } catch (err: unknown) {
     onState({ reportError: "Report generation failed: " + String(err) });
     console.error(err);

@@ -6,12 +6,38 @@ node_modules
 .env
 .env.*
 !.env.example
+
+# Local data & temporary scratch script caches
 /data/*
 !/data/.gitkeep
 !/data/references/.gitkeep
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+/scratch/
+screenshot.png
+*.log
+tmp_error.log
+
+# App distribution artifacts & private databases
+/App/*
+!/App/
+!/App/Data/
+!/App/.gitkeep
+!/App/Data/.gitkeep
+/App/Data/*.db
+/App/Data/*.db.enc
+/App/Data/*.gz
+/App/Data/gnomad_indexes/
+/App/Data/marker-packs/
+/App/Data/raw_downloads/
+/App/Data/references/
+/App/Data/tier2/
+
+# Personal genomic raw data files & report outputs
 *.txt
 *DNA*.txt
 AncestryDNA.txt
 23andMe*.txt
+*.zip
+*.csv
+*report.json
+roy_report.json
+

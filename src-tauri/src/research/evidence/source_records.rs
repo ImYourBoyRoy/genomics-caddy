@@ -11,6 +11,7 @@ pub fn payload_hash(body: &str) -> String {
     format!("{:016x}", string_to_u64(body))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn upsert_source_record(
     conn: &Connection,
     source_name: &str,
@@ -46,7 +47,7 @@ pub fn upsert_source_record(
     }
 
     conn.execute(
-        "INSERT OR REPLACE INTO source_records (
+        "INSERT OR REPLACE INTO reference.source_records (
             source_record_id, source_name, endpoint_family, source_entity_type,
             source_entity_id, rsid, gene_symbol, trait_name, study_accession,
             pubmed_id, source_url, fetched_at, raw_payload_hash, parser_version,
@@ -76,6 +77,7 @@ pub fn upsert_source_record(
     Ok(record_id)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn record_generic_json(
     conn: &Connection,
     source_name: &str,

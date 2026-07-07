@@ -759,10 +759,16 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             // 4. Optionally filter to only active findings
             if only_active_findings {
                 for section in &mut report.sections {
-                    section.markers.retain(|m| m.effect_count > 0 && m.severity_class != "no_data");
+                    section.link_ids.retain(|link_id| {
+                        if let Some(link) = report.category_links.get(link_id) {
+                            link.effect_count.unwrap_or(0) > 0 && link.severity_class != "no_data"
+                        } else {
+                            false
+                        }
+                    });
                 }
                 // Filter out sections that are now empty
-                report.sections.retain(|section| !section.markers.is_empty());
+                report.sections.retain(|section| !section.link_ids.is_empty());
             }
 
             Ok(serde_json::to_value(report).map_err(|e| format!("Serialization error: {}", e))?)
@@ -1130,7 +1136,7 @@ async fn mcp_search_evidence(
                             for (rsid, citation, emb) in &writes {
                                 if let Ok(emb_json) = serde_json::to_string(emb) {
                                     let _ = conn.execute(
-                                        "UPDATE evidence_library SET embedding = ? WHERE rsid = ? AND source_citation = ?",
+                                        "UPDATE reference.evidence_library SET embedding = ? WHERE rsid = ? AND source_citation = ?",
                                         params![emb_json, rsid, citation],
                                     );
                                 }

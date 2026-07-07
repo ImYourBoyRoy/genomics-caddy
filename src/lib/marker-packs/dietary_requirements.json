@@ -1,0 +1,1399 @@
+{
+  "name": "Dietary Requirements & Food Decision Rules",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine",
+  "purpose": "Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute decisions.",
+  "critical_design_rule": "Food requirements are not inferred from DNA unless the rule explicitly uses genotype as one weak input. Allergy, medical diagnosis, medication safety, pregnancy, kidney disease, and user-declared values override nutrigenomic optimization.",
+  "priority_order": [
+    "anaphylaxis/allergy safety",
+    "medication interaction / clinical contraindication",
+    "diagnosed disease requirement such as celiac or CKD",
+    "pregnancy/lactation safety",
+    "religious/cultural/ethical requirement",
+    "clinician-directed therapeutic diet",
+    "lab-confirmed deficiency/excess",
+    "symptom-confirmed intolerance",
+    "genotype-informed optimization",
+    "general preference"
+  ],
+  "rules": [
+    {
+      "id": "RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE",
+      "label": "Major food allergen strict avoidance",
+      "trigger_sources": [
+        "self_reported_allergy",
+        "clinician_diagnosis",
+        "allergy_testing",
+        "anaphylaxis_history"
+      ],
+      "rule_type": "strict_avoid",
+      "priority": 100,
+      "applies_to_food_tags": [
+        "milk",
+        "egg",
+        "fish",
+        "crustacean_shellfish",
+        "tree_nut",
+        "peanut",
+        "wheat",
+        "soy",
+        "sesame"
+      ],
+      "recommendation": "If a user reports a confirmed allergy to a major allergen, remove that allergen and likely cross-contact foods from meal suggestions. Do not override allergy avoidance with genetic or nutrient recommendations.",
+      "substitutions": [
+        "use allergen-specific substitutes",
+        "prefer certified allergen-free products when reaction history is severe",
+        "route unclear cases to clinician/allergist"
+      ],
+      "confirm_with": [
+        "allergist evaluation",
+        "skin-prick testing",
+        "serum specific IgE",
+        "supervised oral food challenge when appropriate"
+      ],
+      "do_not_claim": [
+        "genetics diagnoses allergy",
+        "absence of allergy from genotype",
+        "safe reintroduction after severe reaction"
+      ],
+      "relevant_pack_signals": [
+        "allergy_atopy_mast_cell",
+        "digestive_gut_microbiome"
+      ],
+      "conflict_resolution": "Allergy rules outrank nutrient optimization and dietary-pattern preferences.",
+      "sources": [
+        "fda_major_food_allergens",
+        "usda_big_9_allergens"
+      ]
+    },
+    {
+      "id": "RULE_FISH_ENCOURAGED_PORK_AVOIDED",
+      "label": "Fish encouraged while pork avoided",
+      "trigger_sources": [
+        "user_preference",
+        "religious_requirement",
+        "cultural_requirement",
+        "medical_nutrition_goal"
+      ],
+      "rule_type": "allowed_emphasize_and_exclude",
+      "priority": 72,
+      "applies_to_food_tags": [
+        "fish",
+        "seafood",
+        "pork",
+        "processed_pork"
+      ],
+      "recommendation": "When the user marks fish as acceptable/desired and pork as prohibited, recommend low-mercury fish and seafood for EPA/DHA, iodine, selenium, B12 and protein while excluding pork, bacon, ham, lard, gelatin-from-pork, pork sausage, and pork-derived broths where relevant.",
+      "substitutions": [
+        "salmon",
+        "sardines",
+        "trout",
+        "herring",
+        "anchovies",
+        "cod",
+        "eggs",
+        "poultry",
+        "beans/lentils if tolerated",
+        "soy/tofu if tolerated",
+        "algal EPA/DHA if fish not tolerated"
+      ],
+      "confirm_with": [
+        "user's reason for pork avoidance",
+        "fish/shellfish allergy status",
+        "mercury/pregnancy status",
+        "religious strictness level",
+        "whether gelatin/enzymes/broth cross-contact matters"
+      ],
+      "do_not_claim": [
+        "DNA determines religious food requirements",
+        "fish is required for every user",
+        "all seafood is low mercury"
+      ],
+      "relevant_pack_signals": [
+        "nutrients",
+        "cardiovascular",
+        "metabolic",
+        "allergy_atopy_mast_cell"
+      ],
+      "conflict_resolution": "If fish allergy exists, fish emphasis is disabled and algal EPA/DHA or other substitutes are suggested.",
+      "sources": [
+        "nih_ods_omega3",
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_HALAL_COMPATIBLE",
+      "label": "Halal-compatible dietary filter",
+      "trigger_sources": [
+        "religious_requirement",
+        "user_preference"
+      ],
+      "rule_type": "exclude_and_verify",
+      "priority": 75,
+      "applies_to_food_tags": [
+        "pork",
+        "alcohol",
+        "non_halal_meat",
+        "gelatin",
+        "lard",
+        "animal_enzymes"
+      ],
+      "recommendation": "If halal-compatible mode is enabled, exclude pork and alcohol by default and flag meat, gelatin, enzymes, broths, flavorings, and supplements that may require halal certification depending on strictness.",
+      "substitutions": [
+        "halal-certified poultry/beef/lamb",
+        "fish",
+        "eggs",
+        "legumes",
+        "plant-based gelatin alternatives such as agar or pectin"
+      ],
+      "confirm_with": [
+        "strictness level",
+        "halal certification requirement",
+        "whether alcohol-derived extracts are acceptable",
+        "whether shellfish is acceptable"
+      ],
+      "do_not_claim": [
+        "all fish is halal for all users",
+        "all plant-based products are automatically halal"
+      ],
+      "relevant_pack_signals": [],
+      "conflict_resolution": "Religious exclusions outrank nutrient optimization; use allowed substitutes to meet nutrient targets.",
+      "sources": [
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "RULE_KOSHER_STYLE",
+      "label": "Kosher-style dietary filter",
+      "trigger_sources": [
+        "religious_requirement",
+        "user_preference"
+      ],
+      "rule_type": "exclude_and_verify",
+      "priority": 75,
+      "applies_to_food_tags": [
+        "pork",
+        "shellfish",
+        "non_kosher_meat",
+        "meat_dairy_combination",
+        "gelatin",
+        "animal_enzymes"
+      ],
+      "recommendation": "If kosher-style mode is enabled, exclude pork and shellfish by default, flag meat/dairy combinations, and require user-defined strictness for certification, gelatin, rennet, broths, and cross-contact.",
+      "substitutions": [
+        "kosher-certified fish with fins/scales",
+        "eggs",
+        "legumes",
+        "kosher-certified poultry/beef",
+        "pareve-certified substitutes"
+      ],
+      "confirm_with": [
+        "kosher strictness level",
+        "certification requirement",
+        "meat/dairy separation preference",
+        "fish/shellfish distinctions"
+      ],
+      "do_not_claim": [
+        "genetics determines kosher status",
+        "all seafood is kosher"
+      ],
+      "relevant_pack_signals": [],
+      "conflict_resolution": "Religious exclusions outrank nutrient optimization; use allowed substitutes to meet nutrient targets.",
+      "sources": [
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "RULE_LDS_WORD_OF_WISDOM_COMPATIBLE",
+      "label": "LDS Word of Wisdom compatible filter",
+      "trigger_sources": [
+        "religious_requirement",
+        "user_preference"
+      ],
+      "rule_type": "exclude_or_limit_by_user_standard",
+      "priority": 70,
+      "applies_to_food_tags": [
+        "alcohol",
+        "coffee",
+        "tea_camellia_sinensis",
+        "tobacco",
+        "recreational_drugs",
+        "caffeine_context"
+      ],
+      "recommendation": "If LDS-compatible mode is enabled, exclude alcohol, coffee, black/green tea, tobacco, and recreational drugs by default. Caffeine from other sources should be user-configurable because personal practice varies.",
+      "substitutions": [
+        "herbal teas not from Camellia sinensis",
+        "decaf-compatible alternatives if acceptable",
+        "electrolyte drinks without stimulant load",
+        "non-alcoholic cooking substitutes"
+      ],
+      "confirm_with": [
+        "personal interpretation of caffeine",
+        "coffee/tea ingredient strictness",
+        "alcohol in extracts/cooking strictness"
+      ],
+      "do_not_claim": [
+        "religious compliance from ingredient name alone",
+        "genetic reason for religious requirements"
+      ],
+      "relevant_pack_signals": [
+        "pgx",
+        "sleep",
+        "neuropsych"
+      ],
+      "conflict_resolution": "Religious restrictions override CYP1A2/ADORA2A caffeine optimization.",
+      "sources": [
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "RULE_LACTOSE_INTOLERANCE",
+      "label": "Lactose intolerance / lactase non-persistence",
+      "trigger_sources": [
+        "genotype",
+        "symptoms",
+        "breath_test",
+        "elimination_rechallenge"
+      ],
+      "rule_type": "limit_or_substitute",
+      "priority": 64,
+      "applies_to_food_tags": [
+        "lactose",
+        "milk",
+        "soft_dairy",
+        "whey_concentrate"
+      ],
+      "recommendation": "If lactase non-persistence genotype or lactose symptoms are present, reduce high-lactose dairy and prefer lactose-free dairy, hard cheeses, fermented yogurt if tolerated, lactase enzyme, or fortified non-dairy substitutes.",
+      "substitutions": [
+        "lactose-free milk",
+        "Greek yogurt if tolerated",
+        "hard cheese",
+        "fortified soy milk",
+        "fortified pea milk",
+        "calcium/vitamin D fortified alternatives"
+      ],
+      "confirm_with": [
+        "hydrogen breath test",
+        "lactose elimination/rechallenge",
+        "symptom timing"
+      ],
+      "do_not_claim": [
+        "dairy allergy",
+        "IBS diagnosis",
+        "all dairy must be avoided"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "digestive_gut_microbiome"
+      ],
+      "conflict_resolution": "If milk allergy exists, use dairy-free substitution instead of lactose-free dairy.",
+      "sources": [
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_CELIAC_OR_STRICT_GLUTEN_FREE",
+      "label": "Celiac / strict gluten-free mode",
+      "trigger_sources": [
+        "diagnosis",
+        "serology",
+        "biopsy",
+        "HLA_DQ2_DQ8_context",
+        "clinician_recommendation"
+      ],
+      "rule_type": "strict_avoid",
+      "priority": 92,
+      "applies_to_food_tags": [
+        "gluten",
+        "wheat",
+        "barley",
+        "rye",
+        "non_certified_oats",
+        "malt"
+      ],
+      "recommendation": "For confirmed celiac disease, remove gluten-containing grains and cross-contact risk. HLA-DQ2/DQ8 genetic risk alone should not trigger celiac diagnosis or strict lifelong gluten removal without clinical context.",
+      "substitutions": [
+        "certified gluten-free oats if tolerated",
+        "rice",
+        "quinoa",
+        "buckwheat",
+        "corn",
+        "potatoes",
+        "certified gluten-free products"
+      ],
+      "confirm_with": [
+        "tTG-IgA",
+        "total IgA",
+        "EMA",
+        "deamidated gliadin peptide",
+        "duodenal biopsy when indicated",
+        "clinician review before gluten withdrawal if testing pending"
+      ],
+      "do_not_claim": [
+        "celiac diagnosis from HLA alone",
+        "gluten sensitivity from genotype",
+        "wheat allergy diagnosis"
+      ],
+      "relevant_pack_signals": [
+        "digestive_gut_microbiome",
+        "immune_autoimmune_general",
+        "thyroid_autoimmune"
+      ],
+      "conflict_resolution": "Confirmed celiac strict avoidance outranks whole-grain dietary recommendations.",
+      "sources": [
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_LOW_HISTAMINE_CONTEXT",
+      "label": "Low-histamine trial context",
+      "trigger_sources": [
+        "symptoms",
+        "AOC1_HNMT_context",
+        "mast_cell_context",
+        "clinician_recommendation"
+      ],
+      "rule_type": "temporary_trial_or_limit",
+      "priority": 58,
+      "applies_to_food_tags": [
+        "high_histamine",
+        "histamine_liberator",
+        "fermented",
+        "aged",
+        "cured_meat",
+        "alcohol"
+      ],
+      "recommendation": "If histamine-like symptoms are strong, consider a time-limited low-histamine trial rather than permanent broad restriction. Emphasize fresh proteins, rapidly frozen fish/meat, non-fermented foods, and trigger logging.",
+      "substitutions": [
+        "fresh poultry",
+        "fresh/frozen low-histamine fish if tolerated",
+        "fresh eggs if tolerated",
+        "rice",
+        "oats",
+        "fresh vegetables except individual triggers",
+        "olive oil"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "food timing",
+        "DAO activity where available",
+        "tryptase if mast-cell disorder suspected",
+        "clinician review for severe reactions"
+      ],
+      "do_not_claim": [
+        "MCAS diagnosis",
+        "histamine intolerance diagnosis from SNPs",
+        "permanent restriction required"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "allergy_atopy_mast_cell",
+        "digestive_gut_microbiome"
+      ],
+      "conflict_resolution": "If fish is desired but histamine sensitive, prefer very fresh/frozen low-mercury fish and avoid canned/smoked/aged fish.",
+      "sources": [
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "RULE_LOW_FODMAP_TRIAL",
+      "label": "Low-FODMAP trial context",
+      "trigger_sources": [
+        "IBS_symptoms",
+        "clinician_or_dietitian_recommendation",
+        "elimination_rechallenge"
+      ],
+      "rule_type": "temporary_trial_then_rechallenge",
+      "priority": 55,
+      "applies_to_food_tags": [
+        "high_FODMAP",
+        "fructan",
+        "GOS",
+        "polyol",
+        "excess_fructose",
+        "lactose"
+      ],
+      "recommendation": "Use low-FODMAP as a structured short-term trial with reintroduction, not as a permanent broad diet. DNA does not diagnose FODMAP intolerance.",
+      "substitutions": [
+        "rice",
+        "potatoes",
+        "oats",
+        "firm tofu",
+        "eggs",
+        "meat/fish if allowed",
+        "low-FODMAP vegetables",
+        "low-FODMAP fruit portions"
+      ],
+      "confirm_with": [
+        "dietitian-guided elimination",
+        "rechallenge phase",
+        "symptom timing"
+      ],
+      "do_not_claim": [
+        "IBS diagnosis from genotype",
+        "permanent FODMAP restriction required"
+      ],
+      "relevant_pack_signals": [
+        "digestive_gut_microbiome",
+        "allergy_atopy_mast_cell"
+      ],
+      "conflict_resolution": "Low-FODMAP restrictions should not override confirmed allergy/celiac rules; they are trial rules.",
+      "sources": [
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "RULE_OMEGA3_LOW_SEAFOOD_OR_FADS_CONTEXT",
+      "label": "EPA/DHA omega-3 support",
+      "trigger_sources": [
+        "diet_history",
+        "FADS_context",
+        "cardiometabolic_goal",
+        "pregnancy_status",
+        "triglycerides"
+      ],
+      "rule_type": "emphasize_or_substitute",
+      "priority": 52,
+      "applies_to_food_tags": [
+        "low_mercury_fish",
+        "seafood",
+        "algal_oil",
+        "omega3_ALA",
+        "fish_oil"
+      ],
+      "recommendation": "If seafood intake is low or EPA/DHA support is desired, emphasize low-mercury fatty fish when allowed. If fish is avoided or allergy exists, use algal DHA/EPA and plant ALA sources while noting ALA conversion is limited and genetically variable.",
+      "substitutions": [
+        "salmon",
+        "sardines",
+        "trout",
+        "herring",
+        "anchovies",
+        "algal DHA/EPA",
+        "chia",
+        "flax",
+        "walnuts"
+      ],
+      "confirm_with": [
+        "dietary intake",
+        "omega-3 index if available",
+        "triglycerides",
+        "pregnancy/mercury considerations"
+      ],
+      "do_not_claim": [
+        "fish required for everyone",
+        "ALA equals EPA/DHA",
+        "supplements replace medical therapy"
+      ],
+      "relevant_pack_signals": [
+        "nutrients",
+        "cardiovascular",
+        "metabolic"
+      ],
+      "conflict_resolution": "Fish allergy or religious restriction overrides fish recommendation; use algal/plant alternatives.",
+      "sources": [
+        "nih_ods_omega3",
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_IRON_OVERLOAD_HFE_CONTEXT",
+      "label": "Iron-overload caution",
+      "trigger_sources": [
+        "HFE_context",
+        "high_ferritin",
+        "high_transferrin_saturation",
+        "clinician_diagnosis"
+      ],
+      "rule_type": "limit_and_monitor",
+      "priority": 68,
+      "applies_to_food_tags": [
+        "heme_iron_high",
+        "iron_fortified",
+        "organ_meat",
+        "vitamin_C_with_high_iron_meals",
+        "alcohol"
+      ],
+      "recommendation": "If iron overload is confirmed or strongly suspected, avoid unnecessary iron supplements and frequent organ-meat/high-heme-iron loading. Use labs, not genotype alone, to decide restriction intensity.",
+      "substitutions": [
+        "fish/poultry instead of frequent red meat if allowed",
+        "plant proteins",
+        "non-iron multivitamin",
+        "tea/coffee only if compatible with user values and medically appropriate"
+      ],
+      "confirm_with": [
+        "ferritin",
+        "transferrin saturation",
+        "CBC",
+        "liver enzymes",
+        "clinician review"
+      ],
+      "do_not_claim": [
+        "hemochromatosis diagnosis from SNP alone",
+        "avoid all iron foods without labs"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "nutrients"
+      ],
+      "conflict_resolution": "Do not recommend iron-rich foods for low energy until iron overload/anemia labs are checked.",
+      "sources": [
+        "gene_reviews_hemochromatosis"
+      ]
+    },
+    {
+      "id": "RULE_LOW_IRON_OR_ANEMIA_CONTEXT",
+      "label": "Low iron / anemia support",
+      "trigger_sources": [
+        "low_ferritin",
+        "low_hemoglobin",
+        "menstruation_context",
+        "diet_history"
+      ],
+      "rule_type": "emphasize_and_monitor",
+      "priority": 62,
+      "applies_to_food_tags": [
+        "heme_iron",
+        "non_heme_iron",
+        "vitamin_C",
+        "iron_inhibitors"
+      ],
+      "recommendation": "If low ferritin or anemia is confirmed, prioritize iron adequacy through allowed foods and supplement only with clinician guidance. Pair non-heme iron with vitamin C and separate from calcium/tea/coffee when relevant.",
+      "substitutions": [
+        "shellfish if allowed",
+        "beef/lamb if allowed",
+        "poultry",
+        "lentils/beans if tolerated",
+        "tofu",
+        "pumpkin seeds",
+        "vitamin-C-rich fruit/veg"
+      ],
+      "confirm_with": [
+        "ferritin",
+        "CBC",
+        "transferrin saturation",
+        "B12",
+        "folate",
+        "MMA if B12 concern"
+      ],
+      "do_not_claim": [
+        "fatigue is iron deficiency",
+        "genotype proves anemia"
+      ],
+      "relevant_pack_signals": [
+        "nutrients",
+        "hormones_reproductive",
+        "thyroid_autoimmune"
+      ],
+      "conflict_resolution": "If pork-free and fish-allowed, use fish/shellfish if allowed; if shellfish allergy, use poultry/legume/seed options.",
+      "sources": [
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_CHOLINE_SUPPORT_PEMT_MTHFD1",
+      "label": "Choline support",
+      "trigger_sources": [
+        "PEMT_context",
+        "MTHFD1_context",
+        "pregnancy_status",
+        "fatty_liver_context",
+        "low_choline_diet"
+      ],
+      "rule_type": "emphasize",
+      "priority": 50,
+      "applies_to_food_tags": [
+        "choline_high",
+        "egg",
+        "liver",
+        "fish",
+        "soy",
+        "legumes"
+      ],
+      "recommendation": "If choline demand appears elevated, prioritize allowed choline sources such as eggs, fish, poultry, soy lecithin, legumes, or supplements if clinically appropriate. Do not require liver/pork if restricted.",
+      "substitutions": [
+        "eggs",
+        "salmon/cod",
+        "chicken",
+        "turkey",
+        "soy lecithin",
+        "tofu/soybeans",
+        "choline bitartrate or phosphatidylcholine if appropriate"
+      ],
+      "confirm_with": [
+        "dietary choline estimate",
+        "ALT/AST",
+        "fatty liver imaging if indicated",
+        "pregnancy/lactation status"
+      ],
+      "do_not_claim": [
+        "PEMT genotype diagnoses deficiency",
+        "all users need high-dose choline"
+      ],
+      "relevant_pack_signals": [
+        "nutrients",
+        "metabolic",
+        "hormones_reproductive"
+      ],
+      "conflict_resolution": "Use non-pork choline sources when pork-free rules are enabled.",
+      "sources": [
+        "nih_ods_choline"
+      ]
+    },
+    {
+      "id": "RULE_FOLATE_ONE_CARBON_SUPPORT",
+      "label": "Folate and one-carbon support",
+      "trigger_sources": [
+        "MTHFR_context",
+        "MTR_context",
+        "MTRR_context",
+        "homocysteine",
+        "pregnancy_status",
+        "low_folate_diet"
+      ],
+      "rule_type": "emphasize_and_monitor",
+      "priority": 50,
+      "applies_to_food_tags": [
+        "folate_high",
+        "B12_high",
+        "riboflavin",
+        "leafy_greens",
+        "legumes"
+      ],
+      "recommendation": "Use genotype as a context flag, not a diagnosis. Emphasize folate-rich foods, B12 adequacy, riboflavin, and homocysteine-guided decisions. Do not tell users to avoid folic acid solely from MTHFR variants.",
+      "substitutions": [
+        "leafy greens",
+        "lentils/beans",
+        "asparagus",
+        "avocado",
+        "eggs",
+        "fish/meat/dairy for B12 if allowed",
+        "fortified foods when compatible"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "serum/RBC folate",
+        "B12",
+        "MMA",
+        "CBC"
+      ],
+      "do_not_claim": [
+        "MTHFR disease",
+        "folic acid toxicity",
+        "methylation failure"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "nutrients"
+      ],
+      "conflict_resolution": "Pregnancy/medical folate guidance outranks internet MTHFR claims.",
+      "sources": [
+        "cdc_mthfr_folic_acid",
+        "nih_ods_folate"
+      ]
+    },
+    {
+      "id": "RULE_B12_SUPPORT_FUT2_TCN2_VEGAN",
+      "label": "Vitamin B12 support",
+      "trigger_sources": [
+        "vegan_or_low_animal_food",
+        "FUT2_context",
+        "TCN2_context",
+        "low_B12",
+        "high_MMA"
+      ],
+      "rule_type": "emphasize_or_supplement_context",
+      "priority": 53,
+      "applies_to_food_tags": [
+        "B12_high",
+        "fortified_B12",
+        "animal_food",
+        "fish",
+        "egg",
+        "dairy"
+      ],
+      "recommendation": "If B12 risk is present, prioritize allowed B12 sources or supplementation. Vegetarian/vegan users need fortified foods or supplements because plant foods are not reliable B12 sources.",
+      "substitutions": [
+        "fish",
+        "eggs",
+        "dairy if tolerated",
+        "fortified nutritional yeast",
+        "fortified plant milks",
+        "B12 supplement"
+      ],
+      "confirm_with": [
+        "serum B12",
+        "MMA",
+        "homocysteine",
+        "holotranscobalamin if available",
+        "CBC"
+      ],
+      "do_not_claim": [
+        "serum B12 alone proves cellular sufficiency",
+        "FUT2 genotype diagnoses deficiency"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "nutrients",
+        "digestive_gut_microbiome"
+      ],
+      "conflict_resolution": "If animal foods are restricted, use fortified foods/supplements rather than violating dietary rules.",
+      "sources": [
+        "nih_ods_b12"
+      ]
+    },
+    {
+      "id": "RULE_CAFFEINE_SLEEP_ANXIETY",
+      "label": "Caffeine timing and sensitivity",
+      "trigger_sources": [
+        "CYP1A2_context",
+        "ADORA2A_context",
+        "sleep_latency",
+        "anxiety_after_caffeine",
+        "hypertension"
+      ],
+      "rule_type": "limit_or_time_restrict",
+      "priority": 60,
+      "applies_to_food_tags": [
+        "caffeine",
+        "coffee",
+        "tea_camellia_sinensis",
+        "energy_drink",
+        "preworkout",
+        "dark_chocolate"
+      ],
+      "recommendation": "If caffeine sensitivity, insomnia, anxiety, or blood-pressure response is present, move caffeine earlier, reduce dose, or avoid. Religious restrictions can disable caffeine-containing categories entirely.",
+      "substitutions": [
+        "decaf if allowed",
+        "herbal tea",
+        "electrolytes",
+        "non-stim preworkout",
+        "morning light",
+        "protein breakfast"
+      ],
+      "confirm_with": [
+        "sleep latency",
+        "heart rate",
+        "blood pressure",
+        "anxiety/panic response",
+        "caffeine dose log"
+      ],
+      "do_not_claim": [
+        "CYP1A2 alone determines safe caffeine",
+        "caffeine causes anxiety disorder"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "pgx",
+        "sleep",
+        "neuropsych",
+        "cardiovascular"
+      ],
+      "conflict_resolution": "If LDS/halal/kosher or other rules restrict coffee/tea/alcohol-containing products, those rules outrank caffeine optimization.",
+      "sources": [
+        "nih_caffeine_general_context"
+      ]
+    },
+    {
+      "id": "RULE_ALCOHOL_AVOIDANCE_ALDH2_ADH1B",
+      "label": "Alcohol avoidance or strong caution",
+      "trigger_sources": [
+        "ALDH2_context",
+        "ADH1B_context",
+        "religious_requirement",
+        "liver_disease",
+        "sleep_issue",
+        "medication_interaction"
+      ],
+      "rule_type": "avoid_or_limit",
+      "priority": 78,
+      "applies_to_food_tags": [
+        "alcohol",
+        "fermented_alcohol",
+        "cooking_wine",
+        "liquor",
+        "beer",
+        "wine"
+      ],
+      "recommendation": "If ALDH2 flush, liver risk, medication interaction, sleep disruption, or religious restriction applies, avoid alcohol. Do not recommend alcohol for cardiovascular or stress reasons.",
+      "substitutions": [
+        "sparkling water",
+        "non-alcoholic mocktails",
+        "vinegar-free alternatives if histamine sensitive",
+        "non-alcoholic extracts if compatible"
+      ],
+      "confirm_with": [
+        "flushing/tachycardia/nausea",
+        "ALT/AST/GGT",
+        "medications",
+        "personal/religious requirements"
+      ],
+      "do_not_claim": [
+        "moderate alcohol is required for health",
+        "genotype diagnoses alcohol use disorder"
+      ],
+      "relevant_pack_signals": [
+        "core",
+        "metabolic",
+        "sleep",
+        "pgx",
+        "cardiovascular"
+      ],
+      "conflict_resolution": "Alcohol avoidance rules outrank recipes/food patterns that include alcohol.",
+      "sources": [
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_DIABETES_GLYCEMIC_CONTROL",
+      "label": "Glucose control / T2D risk dietary pattern",
+      "trigger_sources": [
+        "T2D_diagnosis",
+        "prediabetes",
+        "A1c",
+        "fasting_insulin",
+        "TCF7L2_context",
+        "metabolic_pack_context"
+      ],
+      "rule_type": "prioritize_pattern",
+      "priority": 63,
+      "applies_to_food_tags": [
+        "high_added_sugar",
+        "refined_grain",
+        "high_fiber",
+        "protein",
+        "low_glycemic",
+        "sugary_drink"
+      ],
+      "recommendation": "For poor glucose control or strong T2D context, prioritize protein, fiber, minimally processed carbohydrates, post-meal movement, and reduced sugary drinks/refined grains. Genotype refines focus but labs drive intensity.",
+      "substitutions": [
+        "beans/lentils if tolerated",
+        "Greek yogurt if tolerated",
+        "fish/poultry/eggs",
+        "tofu/tempeh",
+        "berries",
+        "oats",
+        "vegetables",
+        "low-sugar sauces"
+      ],
+      "confirm_with": [
+        "A1c",
+        "fasting glucose",
+        "fasting insulin",
+        "CGM data",
+        "triglycerides",
+        "waist circumference"
+      ],
+      "do_not_claim": [
+        "T2D diagnosis from SNPs",
+        "carbs must be eliminated",
+        "genetic diet certainty"
+      ],
+      "relevant_pack_signals": [
+        "metabolic",
+        "core",
+        "nutrients"
+      ],
+      "conflict_resolution": "If high-fiber foods conflict with low-FODMAP trial, choose tolerated low-FODMAP fiber sources.",
+      "sources": [
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_NAFLD_FATTY_LIVER_CONTEXT",
+      "label": "Fatty liver / hepatic lipid handling context",
+      "trigger_sources": [
+        "PNPLA3_context",
+        "TM6SF2_context",
+        "ALT_AST",
+        "ultrasound",
+        "insulin_resistance",
+        "alcohol_intake"
+      ],
+      "rule_type": "prioritize_pattern",
+      "priority": 62,
+      "applies_to_food_tags": [
+        "alcohol",
+        "high_added_sugar",
+        "fructose_sweetened",
+        "refined_carbohydrate",
+        "choline_high",
+        "protein",
+        "fiber"
+      ],
+      "recommendation": "For fatty-liver context, reduce alcohol and sugary/refined carbohydrate load, support weight loss if needed, emphasize protein/fiber, and ensure choline adequacy using allowed foods.",
+      "substitutions": [
+        "eggs if allowed",
+        "fish",
+        "poultry",
+        "tofu/soy",
+        "legumes if tolerated",
+        "vegetables",
+        "berries",
+        "olive oil"
+      ],
+      "confirm_with": [
+        "ALT",
+        "AST",
+        "GGT",
+        "fasting insulin",
+        "triglycerides",
+        "liver ultrasound/FibroScan if indicated"
+      ],
+      "do_not_claim": [
+        "fatty liver diagnosis from PNPLA3",
+        "choline supplement required"
+      ],
+      "relevant_pack_signals": [
+        "metabolic",
+        "nutrients",
+        "core"
+      ],
+      "conflict_resolution": "Alcohol avoidance intensifies if ALDH2 risk, religious restriction, or liver markers exist.",
+      "sources": [
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_HYPERTRIGLYCERIDES_APOA5_GCKR",
+      "label": "Triglyceride-lowering context",
+      "trigger_sources": [
+        "high_triglycerides",
+        "APOA5_context",
+        "GCKR_context",
+        "insulin_resistance",
+        "alcohol_intake"
+      ],
+      "rule_type": "prioritize_pattern",
+      "priority": 61,
+      "applies_to_food_tags": [
+        "alcohol",
+        "added_sugar",
+        "refined_grain",
+        "omega3_EPA_DHA",
+        "protein",
+        "fiber"
+      ],
+      "recommendation": "For high triglycerides or triglyceride-prone genotype, reduce alcohol/sugar/refined starch, support insulin sensitivity, and emphasize EPA/DHA from allowed low-mercury fish or algal/fish oil under clinician context.",
+      "substitutions": [
+        "salmon",
+        "sardines",
+        "trout",
+        "algal EPA/DHA",
+        "lean protein",
+        "beans if tolerated",
+        "vegetables"
+      ],
+      "confirm_with": [
+        "fasting triglycerides",
+        "ApoB",
+        "A1c",
+        "fasting insulin",
+        "liver enzymes"
+      ],
+      "do_not_claim": [
+        "omega-3 supplement prescription",
+        "statin/fibrate decision"
+      ],
+      "relevant_pack_signals": [
+        "metabolic",
+        "cardiovascular",
+        "nutrients"
+      ],
+      "conflict_resolution": "Fish allergy disables fish suggestions; use algal EPA/DHA or clinician-guided supplement alternatives.",
+      "sources": [
+        "nih_ods_omega3"
+      ]
+    },
+    {
+      "id": "RULE_LOW_PURINE_GOUT_URIC_ACID",
+      "label": "Uric acid / gout context",
+      "trigger_sources": [
+        "gout",
+        "high_uric_acid",
+        "ABCG2_context",
+        "SLC2A9_context",
+        "kidney_context"
+      ],
+      "rule_type": "limit_and_monitor",
+      "priority": 59,
+      "applies_to_food_tags": [
+        "very_high_purine",
+        "beer",
+        "organ_meat",
+        "anchovy_sardine_high_purine",
+        "fructose_sweetened"
+      ],
+      "recommendation": "For gout/high uric acid context, limit beer, organ meats, high-purine seafood, and fructose-sweetened beverages. Do not ban all protein or all fish; choose lower-purine options and monitor uric acid.",
+      "substitutions": [
+        "eggs",
+        "low-fat dairy if tolerated",
+        "poultry portions",
+        "tofu if tolerated",
+        "lower-purine fish portions",
+        "vegetables",
+        "water"
+      ],
+      "confirm_with": [
+        "serum uric acid",
+        "gout history",
+        "kidney function",
+        "medications"
+      ],
+      "do_not_claim": [
+        "gout diagnosis from ABCG2",
+        "all seafood forbidden"
+      ],
+      "relevant_pack_signals": [
+        "kidney_fluid_electrolytes",
+        "metabolic",
+        "pgx"
+      ],
+      "conflict_resolution": "If fish is encouraged for omega-3 but gout flares exist, prefer lower-purine fish/algal omega-3 and clinician guidance.",
+      "sources": [
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_LOW_OXALATE_KIDNEY_STONE_CONTEXT",
+      "label": "Oxalate/kidney-stone context",
+      "trigger_sources": [
+        "kidney_stones",
+        "urine_oxalate",
+        "CLDN14_context",
+        "SLC26_context",
+        "clinician_recommendation"
+      ],
+      "rule_type": "limit_and_pair",
+      "priority": 57,
+      "applies_to_food_tags": [
+        "high_oxalate",
+        "spinach",
+        "almond",
+        "beet_greens",
+        "rhubarb",
+        "calcium_with_meals"
+      ],
+      "recommendation": "For calcium-oxalate stone context, reduce very high-oxalate foods, maintain adequate calcium with meals, hydrate, and avoid extreme vitamin C dosing unless medically indicated.",
+      "substitutions": [
+        "kale instead of spinach",
+        "pumpkin/sunflower seeds instead of almonds if tolerated",
+        "rice/quinoa",
+        "citrus/citrate sources if appropriate"
+      ],
+      "confirm_with": [
+        "24-hour urine stone panel",
+        "stone analysis",
+        "serum calcium",
+        "PTH if indicated"
+      ],
+      "do_not_claim": [
+        "kidney stone diagnosis from genotype",
+        "all greens are bad"
+      ],
+      "relevant_pack_signals": [
+        "kidney_fluid_electrolytes",
+        "bone_growth_mineral_density",
+        "nutrients"
+      ],
+      "conflict_resolution": "Bone health calcium adequacy should be preserved while lowering oxalate load.",
+      "sources": [
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_BLOOD_PRESSURE_SODIUM_DASH_CONTEXT",
+      "label": "Blood pressure / sodium-potassium pattern",
+      "trigger_sources": [
+        "hypertension",
+        "high_BP",
+        "AGT_ACE_context",
+        "kidney_context",
+        "family_history"
+      ],
+      "rule_type": "prioritize_pattern",
+      "priority": 61,
+      "applies_to_food_tags": [
+        "high_sodium",
+        "processed_food",
+        "potassium_rich",
+        "magnesium_rich",
+        "DASH_pattern"
+      ],
+      "recommendation": "For high blood pressure or salt-sensitive context, reduce high-sodium processed foods and emphasize potassium/magnesium-rich whole foods unless kidney disease or medication restrictions apply.",
+      "substitutions": [
+        "herbs/spices",
+        "low-sodium sauces",
+        "beans/lentils if tolerated",
+        "potatoes/fruit/vegetables if kidney-safe",
+        "unsalted nuts/seeds if tolerated"
+      ],
+      "confirm_with": [
+        "home blood pressure log",
+        "serum potassium",
+        "kidney function/eGFR",
+        "medications such as ACE inhibitors/ARBs/spironolactone"
+      ],
+      "do_not_claim": [
+        "hypertension diagnosis from AGT/ACE",
+        "potassium loading is safe for everyone"
+      ],
+      "relevant_pack_signals": [
+        "cardiovascular",
+        "kidney_fluid_electrolytes",
+        "nutrients"
+      ],
+      "conflict_resolution": "CKD/hyperkalemia rules override potassium-rich food encouragement.",
+      "sources": [
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_CKD_ELECTROLYTE_PROTEIN_CAUTION",
+      "label": "Kidney disease electrolyte/protein caution",
+      "trigger_sources": [
+        "CKD_diagnosis",
+        "low_eGFR",
+        "high_potassium",
+        "high_phosphorus",
+        "nephrologist_recommendation"
+      ],
+      "rule_type": "clinician_guided_restriction",
+      "priority": 90,
+      "applies_to_food_tags": [
+        "high_potassium",
+        "high_phosphorus",
+        "high_sodium",
+        "very_high_protein",
+        "potassium_salt_substitute"
+      ],
+      "recommendation": "For CKD or abnormal potassium/phosphorus, do not auto-recommend high-protein, high-potassium, or electrolyte strategies. Use nephrology/lab-guided limits.",
+      "substitutions": [
+        "individualized renal diet substitutions",
+        "lower-potassium produce when needed",
+        "avoid potassium chloride salt substitutes unless cleared"
+      ],
+      "confirm_with": [
+        "eGFR",
+        "urine albumin/creatinine",
+        "potassium",
+        "phosphorus",
+        "PTH",
+        "nephrologist plan"
+      ],
+      "do_not_claim": [
+        "genotype diagnoses CKD",
+        "biohacking electrolyte loading is safe"
+      ],
+      "relevant_pack_signals": [
+        "kidney_fluid_electrolytes",
+        "cardiovascular",
+        "metabolic"
+      ],
+      "conflict_resolution": "CKD safety overrides muscle-building protein targets and blood-pressure potassium recommendations.",
+      "sources": [
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "RULE_MUSCLE_HYPERTROPHY_PROTEIN_LEUCINE",
+      "label": "Muscle development protein/leucine support",
+      "trigger_sources": [
+        "muscle_goal",
+        "training_history",
+        "ACTN3_context",
+        "low_protein_intake",
+        "older_age"
+      ],
+      "rule_type": "emphasize_pattern",
+      "priority": 45,
+      "applies_to_food_tags": [
+        "complete_protein",
+        "leucine_rich",
+        "creatine_food",
+        "protein_distribution"
+      ],
+      "recommendation": "For hypertrophy or strength goals, emphasize adequate total protein, meal protein distribution, leucine-rich proteins, and creatine-rich foods/supplement context if appropriate. Genetics should adjust expectations and recovery, not determine destiny.",
+      "substitutions": [
+        "fish",
+        "eggs",
+        "dairy/whey if tolerated",
+        "poultry",
+        "lean meat if allowed",
+        "soy",
+        "pea/rice protein blends",
+        "creatine monohydrate if appropriate"
+      ],
+      "confirm_with": [
+        "training volume",
+        "protein intake estimate",
+        "kidney function if high-risk",
+        "body composition",
+        "recovery markers"
+      ],
+      "do_not_claim": [
+        "ACTN3 decides athletic potential",
+        "high protein safe for CKD"
+      ],
+      "relevant_pack_signals": [
+        "muscle_performance_recovery",
+        "metabolic",
+        "kidney_fluid_electrolytes"
+      ],
+      "conflict_resolution": "CKD and allergy/religious rules override protein-source recommendations.",
+      "sources": [
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
+      "id": "RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN",
+      "label": "Bone density nutrition support",
+      "trigger_sources": [
+        "low_BMD",
+        "fracture_history",
+        "VDR_GC_CYP2R1_context",
+        "postmenopause",
+        "low_calcium_diet"
+      ],
+      "rule_type": "emphasize_and_monitor",
+      "priority": 51,
+      "applies_to_food_tags": [
+        "calcium_rich",
+        "vitamin_D",
+        "vitamin_K",
+        "protein",
+        "magnesium"
+      ],
+      "recommendation": "For bone-density context, support adequate protein, calcium, vitamin D, magnesium, and vitamin K through allowed foods/labs. Avoid assuming vitamin D receptor SNPs mean deficiency.",
+      "substitutions": [
+        "dairy if tolerated",
+        "fortified plant milks",
+        "sardines with bones if allowed",
+        "tofu set with calcium",
+        "leafy greens lower in oxalate",
+        "eggs/fish"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "DEXA",
+        "calcium",
+        "PTH",
+        "magnesium",
+        "fracture history"
+      ],
+      "do_not_claim": [
+        "osteoporosis diagnosis from genotype",
+        "high-dose vitamin D required"
+      ],
+      "relevant_pack_signals": [
+        "bone_growth_mineral_density",
+        "connective_tissue",
+        "nutrients"
+      ],
+      "conflict_resolution": "Low-oxalate stone rules should steer greens choice but not eliminate calcium adequacy.",
+      "sources": [
+        "nih_ods_vitamin_d"
+      ]
+    },
+    {
+      "id": "RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY",
+      "label": "PMDD/cycle symptom nutrition overlay",
+      "trigger_sources": [
+        "PMDD_symptoms",
+        "luteal_phase_pattern",
+        "hormones_reproductive_context",
+        "thyroid_context",
+        "low_iron_B12_D_magnesium"
+      ],
+      "rule_type": "supportive_overlay",
+      "priority": 46,
+      "applies_to_food_tags": [
+        "regular_meals",
+        "protein",
+        "magnesium_rich",
+        "iron_context",
+        "B6_context",
+        "caffeine",
+        "alcohol",
+        "high_added_sugar"
+      ],
+      "recommendation": "For cyclic luteal mood/physical symptoms, focus on symptom tracking, stable meals with protein/fiber, adequate magnesium/iron/B12/vitamin D status, and reducing alcohol/caffeine if they worsen symptoms. Do not use genetics to diagnose PMDD.",
+      "substitutions": [
+        "protein breakfast",
+        "fish if allowed",
+        "eggs",
+        "beans/lentils if tolerated",
+        "pumpkin seeds",
+        "leafy greens",
+        "fortified foods"
+      ],
+      "confirm_with": [
+        "daily symptom chart across at least two cycles",
+        "TSH/free T4",
+        "ferritin",
+        "B12/MMA",
+        "25(OH)D",
+        "magnesium if clinically useful"
+      ],
+      "do_not_claim": [
+        "PMDD diagnosis from ESR1/PGR/COMT",
+        "thyroid genotype explains PMDD"
+      ],
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "thyroid_autoimmune",
+        "neuropsych",
+        "nutrients"
+      ],
+      "conflict_resolution": "PMDD support rules do not override allergy, CKD, pregnancy, or eating-disorder safety rules.",
+      "sources": [
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "RULE_EATING_DISORDER_SAFETY_OVERRIDE",
+      "label": "Disordered-eating safety override",
+      "trigger_sources": [
+        "self_reported_history",
+        "clinician_context",
+        "rapid_weight_loss",
+        "restrictive_behavior",
+        "underweight"
+      ],
+      "rule_type": "safety_override",
+      "priority": 98,
+      "applies_to_food_tags": [
+        "restriction",
+        "fasting",
+        "elimination_diet",
+        "calorie_deficit"
+      ],
+      "recommendation": "If disordered-eating risk is present, avoid restrictive optimization language and do not suggest elimination diets, fasting, or aggressive tracking without clinical support.",
+      "substitutions": [
+        "regular meals",
+        "gentle nutrition",
+        "clinician/dietitian support",
+        "symptom-safe substitutions only"
+      ],
+      "confirm_with": [
+        "user history",
+        "clinician support",
+        "weight trajectory",
+        "mental-health status"
+      ],
+      "do_not_claim": [
+        "genetics justifies restriction",
+        "food fear is optimization"
+      ],
+      "relevant_pack_signals": [
+        "neuropsych",
+        "metabolic",
+        "hormones_reproductive"
+      ],
+      "conflict_resolution": "This safety override outranks biohacking optimization rules except immediate anaphylaxis/celiac safety.",
+      "sources": [
+        "safety_guardrail"
+      ]
+    }
+  ]
+}

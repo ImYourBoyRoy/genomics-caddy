@@ -408,6 +408,35 @@ async fn fetch_pharmgkb_context(
     rsid: &str,
     gene: Option<&str>,
 ) -> PharmGkbSlice {
+    if let Ok(conn) = crate::db::connect(db_path) {
+        let (drugs, annotation_count, hit) =
+            crate::offline::lookup_pharmgkb_local(&conn, rsid);
+        if hit {
+            let narrative = if drugs.is_empty() {
+                format!(
+                    "PharmGKB (local): {} PGx annotations — context only",
+                    annotation_count
+                )
+            } else {
+                format!(
+                    "PharmGKB (local, {} annotations): drugs {} — context only",
+                    annotation_count,
+                    drugs.join(", ")
+                )
+            };
+            return PharmGkbSlice {
+                provenance: json!({
+                    "queried": true,
+                    "hit": true,
+                    "local": true,
+                    "annotations": annotation_count,
+                }),
+                narrative: vec![narrative],
+                drugs,
+            };
+        }
+    }
+
     let _permit = acquire_adapter_permit(&PHARMGKB_SEMAPHORE).await;
     let url = format!("{}/data/clinicalAnnotation?location.rsId={}", PHARMGKB_BASE, rsid);
     let cache_key = format!("pharmgkb|clinical_annotation|{}", rsid);

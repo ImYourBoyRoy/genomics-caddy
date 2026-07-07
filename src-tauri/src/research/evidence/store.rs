@@ -46,6 +46,7 @@ fn trait_mapping_for_row(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn persist_enrichment_evidence(
     db_path: &Path,
     sample_id: i64,
@@ -339,6 +340,7 @@ fn count_direction_conflicts(ledger: &[EvidenceLedgerRow]) -> u32 {
     conflicts
 }
 
+#[allow(clippy::too_many_arguments)]
 fn upsert_candidate(
     conn: &Connection,
     rsid: &str,

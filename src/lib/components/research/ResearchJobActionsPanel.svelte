@@ -1,15 +1,13 @@
 <!-- ./src/lib/components/research/ResearchJobActionsPanel.svelte -->
 <script lang="ts">
-  import type { ResearchJob, QdrantConfigPublic, QdrantConnectionStatus, ConnectionActivity } from "../../types/research";
+  import type { ResearchJob, QdrantConfigPublic, QdrantConnectionStatus } from "../../types/research";
+  import type { RunReadiness } from "../../utils/researchRunReadiness";
 
   interface Props {
     job?: ResearchJob | null;
     config?: QdrantConfigPublic | null;
     connectionStatus?: QdrantConnectionStatus | null;
-    connectionActivity?: ConnectionActivity;
-    canStart?: boolean;
-    connectionHint?: string | null;
-    gnomadBlockHint?: string | null;
+    readiness: RunReadiness;
     isStarting?: boolean;
     isCreatingCollection?: boolean;
     onStart?: (options?: { forceReenrich?: boolean }) => void;
@@ -23,10 +21,7 @@
     job = null,
     config = null,
     connectionStatus = null,
-    connectionActivity = { phase: "idle", message: "Ready" },
-    canStart = false,
-    connectionHint = null,
-    gnomadBlockHint = null,
+    readiness,
     isStarting = false,
     isCreatingCollection = false,
     onStart,
@@ -35,6 +30,12 @@
     onCancel,
     onCreateCollection,
   }: Props = $props();
+
+  let showCreateCollection = $derived(
+    connectionStatus?.success === true && !connectionStatus.collection_exists
+  );
+
+  let busy = $derived(isStarting || readiness.isConnectionPending);
 
   async function handleCreateCollection() {
     if (onCreateCollection) await onCreateCollection();
@@ -45,89 +46,144 @@
   {#if job?.status === "idle" && job.error_message}
     <div class="purge-notice">{job.error_message}</div>
   {/if}
+
   {#if !job || job.status === "idle"}
-    {#if connectionStatus && connectionStatus.success && !connectionStatus.collection_exists}
+    {#if showCreateCollection}
       <div class="setup-notice">
         <p class="hint warning-hint text-center">
-          ⚠️ Qdrant is connected, but collection <strong class="collection-highlight">'{config?.collection || "genomics_evidence"}'</strong> does not exist.
+          Qdrant is connected, but collection
+          <strong class="collection-highlight">'{config?.collection || "genomics_evidence"}'</strong>
+          does not exist.
         </p>
-        <button class="btn btn-primary w-full mt-2" onclick={handleCreateCollection} disabled={isCreatingCollection}>
+        <button
+          class="btn btn-primary w-full mt-2"
+          onclick={handleCreateCollection}
+          disabled={isCreatingCollection || readiness.isConnectionPending}
+        >
           {isCreatingCollection ? "Creating Collection..." : "Create Collection"}
         </button>
       </div>
     {:else}
-      <button class="btn btn-primary w-full" onclick={() => onStart?.()} disabled={isStarting || !canStart}>
+      <button
+        class="btn btn-primary w-full"
+        onclick={() => onStart?.()}
+        disabled={busy || !readiness.canStart}
+      >
         {isStarting ? "Initializing..." : "Start Autonomous Sweep"}
       </button>
-      {#if connectionHint}
-        <p class="hint status-hint">{connectionHint}</p>
-      {:else if gnomadBlockHint}
-        <p class="hint warning-hint">{gnomadBlockHint}</p>
-      {:else if connectionStatus && !connectionStatus.success}
-        <p class="hint error-hint">
-          ❌ Qdrant Connection Failed: {connectionStatus.error || "Cannot connect to database."}
-        </p>
-      {/if}
     {/if}
-  {:else if job.status === "running" || (job.status === "paused" && job.loop_active)}
-    <button class="btn btn-secondary w-full" onclick={() => onPause?.()}>Pause Sweep</button>
-    <button class="btn btn-danger w-full mt-2" onclick={() => onCancel?.()}>Cancel Sweep</button>
-  {:else if job.status === "paused"}
-    {#if connectionStatus && connectionStatus.success && !connectionStatus.collection_exists}
+  {:else if readiness.sweepActive}
+    <button
+      class="btn btn-secondary w-full"
+      onclick={() => onPause?.()}
+      disabled={!readiness.canPause || readiness.sweepPausing}
+    >
+      {readiness.sweepPausing ? "Pausing…" : "Pause Sweep"}
+    </button>
+    <button
+      class="btn btn-danger w-full mt-2"
+      onclick={() => onCancel?.()}
+      disabled={!readiness.canCancel}
+    >
+      Cancel Sweep
+    </button>
+  {:else if readiness.sweepPausing}
+    <button class="btn btn-secondary w-full" disabled>Pausing sweep…</button>
+    <button
+      class="btn btn-danger w-full mt-2"
+      onclick={() => onCancel?.()}
+      disabled={!readiness.canCancel}
+    >
+      Cancel Sweep
+    </button>
+  {:else if readiness.fullyPaused || readiness.sweepInterrupted}
+    {#if showCreateCollection}
       <div class="setup-notice">
         <p class="hint warning-hint text-center">
-          ⚠️ Qdrant collection <strong class="collection-highlight">'{config?.collection || "genomics_evidence"}'</strong> is missing. Create it before resuming.
+          Qdrant collection
+          <strong class="collection-highlight">'{config?.collection || "genomics_evidence"}'</strong>
+          is missing. Create it before resuming.
         </p>
-        <button class="btn btn-primary w-full mt-2" onclick={handleCreateCollection} disabled={isCreatingCollection}>
+        <button
+          class="btn btn-primary w-full mt-2"
+          onclick={handleCreateCollection}
+          disabled={isCreatingCollection || readiness.isConnectionPending}
+        >
           {isCreatingCollection ? "Creating Collection..." : "Create Collection"}
         </button>
       </div>
     {:else}
       <div class="btn-group w-full">
-        <button class="btn btn-primary" onclick={() => onResume?.()} disabled={isStarting || !canStart}>
+        <button
+          class="btn btn-primary"
+          onclick={() => onResume?.()}
+          disabled={busy || !readiness.canResume}
+        >
           {isStarting ? "..." : "Resume Sweep"}
         </button>
-        <button class="btn btn-secondary" onclick={() => onStart?.()} disabled={isStarting || !canStart}>Expand queue</button>
-        <button class="btn btn-secondary" onclick={() => onStart?.({ forceReenrich: true })} disabled={isStarting || !canStart}>
+        <button
+          class="btn btn-secondary"
+          onclick={() => onStart?.()}
+          disabled={busy || !readiness.canStart}
+        >
+          Expand queue
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick={() => onStart?.({ forceReenrich: true })}
+          disabled={busy || !readiness.canStart}
+        >
           Force re-enrich
         </button>
       </div>
-      {#if connectionHint}
-        <p class="hint status-hint">{connectionHint}</p>
-      {:else if gnomadBlockHint}
-        <p class="hint warning-hint">{gnomadBlockHint}</p>
-      {:else if connectionStatus && !connectionStatus.success}
-        <p class="hint error-hint">
-          ❌ Qdrant Connection Failed: {connectionStatus.error || "Cannot connect to database."}
-        </p>
+      {#if readiness.sweepInterrupted || readiness.fullyPaused}
+        <button
+          class="btn btn-danger w-full mt-2"
+          onclick={() => onCancel?.()}
+          disabled={!readiness.canCancel}
+        >
+          Cancel Sweep
+        </button>
       {/if}
     {/if}
   {:else if job.status === "complete"}
     <div class="completion-banner">Enrichment complete — markers indexed in Qdrant.</div>
     <p class="hint sweep-hint">
       <strong>Expand queue</strong> enriches newly capped rsIDs (skips already indexed).
-      <strong>Supplement missing only</strong> + enable sources (e.g. gnomAD) then Expand queue to backfill skipped data.
       <strong>Force re-enrich</strong> rebuilds the full queue with the latest pipeline.
-      Increase GWAS cap first if you want more of your genome overlap researched.
     </p>
     <div class="btn-group w-full mt-2">
-      <button class="btn btn-primary" onclick={() => onStart?.()} disabled={!canStart || isStarting}>
+      <button
+        class="btn btn-primary"
+        onclick={() => onStart?.()}
+        disabled={busy || !readiness.canStart}
+      >
         {isStarting ? "..." : "Expand queue"}
       </button>
-      <button class="btn btn-secondary" onclick={() => onStart?.({ forceReenrich: true })} disabled={!canStart || isStarting}>
+      <button
+        class="btn btn-secondary"
+        onclick={() => onStart?.({ forceReenrich: true })}
+        disabled={busy || !readiness.canStart}
+      >
         Force re-enrich
       </button>
     </div>
-    {#if connectionStatus && !connectionStatus.success}
-      <p class="hint error-hint">Fix the Qdrant connection before running a new sweep.</p>
-    {/if}
   {:else if job.status === "error"}
     <div class="error-banner">
       Run failed: {job.error_message || "An error occurred during the sweep."}
     </div>
-    <button class="btn btn-primary w-full mt-2" onclick={() => onStart?.()} disabled={!canStart}>Retry Sweep</button>
-    {#if connectionStatus && !connectionStatus.success}
-      <p class="hint error-hint">Fix the Qdrant connection before retrying.</p>
-    {/if}
+    <button
+      class="btn btn-primary w-full mt-2"
+      onclick={() => onStart?.()}
+      disabled={busy || !readiness.canStart}
+    >
+      {isStarting ? "..." : "Retry Sweep"}
+    </button>
+  {/if}
+
+  {#if readiness.primaryHint}
+    <p class="hint status-hint">{readiness.primaryHint}</p>
+  {:else if readiness.secondaryHint}
+    <p class="hint warning-hint">{readiness.secondaryHint}</p>
   {/if}
 </div>

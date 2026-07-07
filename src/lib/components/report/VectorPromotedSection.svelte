@@ -1,7 +1,8 @@
 <!-- ./src/lib/components/report/VectorPromotedSection.svelte -->
 <script lang="ts">
-  import { getVectorPromotedFindings } from "../../api/tauri";
+  import { getVectorPromotedFindings, getEvidenceCorpusSummary } from "../../api/tauri";
   import type { GenomeSample, VectorPromotedFinding } from "../../types/genomics";
+  import type { ActionabilityPoint } from "../../types/research";
   import type { VariantNavTarget } from "../../constants/traitCategories";
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
 
@@ -15,16 +16,46 @@
   let { selectedSample, highlightRsid = "", onNavigate, onExploreResearch }: Props = $props();
 
   let findings = $state<VectorPromotedFinding[]>([]);
+  let corpusHighlights = $state<ActionabilityPoint[]>([]);
   let isLoading = $state(true);
   let expanded = $state(true);
+
+  let displayItems = $derived.by(() => {
+    const seen = new Set(findings.map((f) => f.rsid.toLowerCase()));
+    const merged: VectorPromotedFinding[] = [...findings];
+    for (const point of corpusHighlights) {
+      if (!seen.has(point.rsid.toLowerCase())) {
+        merged.push({
+          rsid: point.rsid,
+          gene: point.gene_symbol,
+          user_genotype: undefined,
+          trait_summary: point.trait_category?.replace(/_/g, " ") ?? "Indexed actionable variant",
+          trait_categories: point.trait_category ? [point.trait_category] : [],
+          significance_score: Math.max(point.wellness_actionability_score, point.data_quality_score),
+          enrichment_version: "corpus_index",
+          promoted_at: 0,
+        });
+      }
+    }
+    return merged;
+  });
 
   $effect(() => {
     const sampleId = selectedSample.id;
     isLoading = true;
-    getVectorPromotedFindings(sampleId)
-      .then((rows) => { findings = rows; })
-      .catch(() => { findings = []; })
-      .finally(() => { isLoading = false; });
+    Promise.all([
+      getVectorPromotedFindings(sampleId).catch(() => [] as VectorPromotedFinding[]),
+      getEvidenceCorpusSummary(sampleId)
+        .then((s) => s.top_actionable.slice(0, 16))
+        .catch(() => [] as ActionabilityPoint[]),
+    ])
+      .then(([rows, highlights]) => {
+        findings = rows;
+        corpusHighlights = highlights;
+      })
+      .finally(() => {
+        isLoading = false;
+      });
   });
 </script>
 
@@ -32,13 +63,15 @@
   <div class="vector-promoted no-print">
     <ActivityPulse message="Loading vector research discoveries…" accent="#34d399" maxWidth="100%" />
   </div>
-{:else if findings.length > 0}
+{:else if displayItems.length > 0}
   <section class="vector-promoted no-print">
     <div class="header">
       <span class="icon">🧬</span>
       <div>
-        <strong>{findings.length} vector-promoted variant{findings.length === 1 ? "" : "s"}</strong>
-        <p class="hint">High-confidence GWAS hits from Vector Research — not in curated marker packs.</p>
+        <strong>{displayItems.length} vector-indexed highlight{displayItems.length === 1 ? "" : "s"}</strong>
+        <p class="hint">
+          Sweep-promoted GWAS hits plus top actionable variants from your {findings.length > 0 ? "enrichment run" : "corpus index"}.
+        </p>
       </div>
       <button type="button" class="toggle" onclick={() => (expanded = !expanded)}>
         {expanded ? "Hide" : "Show"}
@@ -47,7 +80,7 @@
 
     {#if expanded}
       <div class="grid">
-        {#each findings.slice(0, 32) as item (item.rsid)}
+        {#each displayItems.slice(0, 32) as item (item.rsid)}
           <article
             class="card"
             class:highlighted={highlightRsid && item.rsid.toLowerCase() === highlightRsid.toLowerCase()}

@@ -12,7 +12,7 @@ where
     T: Send + 'static,
 {
     async_runtime::spawn_blocking(move || {
-        let conn = crate::db::open_user_db(&db_path).map_err(|e| e.to_string())?;
+        let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
         f(&conn)
     })
     .await
@@ -25,7 +25,7 @@ where
     T: Send + 'static,
 {
     async_runtime::spawn_blocking(move || {
-        let mut conn = crate::db::open_user_db(&db_path).map_err(|e| e.to_string())?;
+        let mut conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
         f(&mut conn)
     })
     .await

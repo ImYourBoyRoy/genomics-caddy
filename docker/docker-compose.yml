@@ -1,0 +1,53 @@
+# ./docker/docker-compose.yml
+# Genomics Caddy — headless sweep worker + static UI (monitoring / docs).
+#
+# Usage:
+#   cp .env.example .env   # set QDRANT_URL, OLLAMA_URL, mount data volume
+#   docker compose -f docker/docker-compose.yml build
+#   docker compose -f docker/docker-compose.yml up -d
+#
+# Worker logs emit GENOMICS_PROGRESS / GENOMICS_FINDING NDJSON on stdout:
+#   docker compose -f docker/docker-compose.yml logs -f genomics-worker
+
+services:
+  genomics-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    image: genomics-caddy-worker:latest
+    restart: unless-stopped
+    command:
+      - "--headless-sweep"
+      - "--sample-id=${GENOMICS_SAMPLE_ID:-1}"
+    environment:
+      GENOMICS_DATA_DIR: /data
+      GENOMICS_CPU_LIMIT: ${GENOMICS_CPU_LIMIT:-80}
+      GENOMICS_OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      QDRANT_URL: ${QDRANT_URL:-http://host.docker.internal:6333}
+      GENOMICS_TUNING: ${GENOMICS_TUNING:-dynamic}
+    volumes:
+      - genomics-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          cpus: "${GENOMICS_CPU_LIMIT:-80}"
+
+  genomics-ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: ui
+    image: genomics-caddy-ui:latest
+    restart: unless-stopped
+    ports:
+      - "${GENOMICS_UI_PORT:-8080}:80"
+    profiles:
+      - ui
+
+volumes:
+  genomics-data:
+    driver: local

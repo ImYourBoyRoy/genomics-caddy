@@ -1,0 +1,105 @@
+{
+  "name": "Sleep & Circadian Rhythms",
+  "markers": [
+    {
+      "rsid": "rs73598374",
+      "gene": "ADA",
+      "variant_name": "Asp8Asn / G22A",
+      "effect_allele": "A",
+      "impact": "Reduced Adenosine Deaminase activity / elevated sleep pressure",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "ADA breaks down adenosine (the sleep-pressure molecule). The rs73598374 A allele reduces ADA activity. A-carriers accumulate adenosine slower but have higher baseline levels, leading to deeper sleep and more slow-wave activity, but potentially higher morning sleep inertia.",
+      "do_not_claim": ["narcolepsy diagnosis", "chronic fatigue syndrome"],
+      "confirm_with": ["morning grogginess (sleep inertia)", "deep sleep duration (sleep tracking)", "caffeine sensitivity"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Actual sleep architecture is heavily impacted by circadian alignment, blue light exposure, and sleep hygiene.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "ADA genetic variant and human sleep EEG",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15112126/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates the G22A (rs73598374) variant with deeper slow-wave sleep in healthy individuals."
+        }
+      ]
+    },
+    {
+      "rsid": "rs934945",
+      "gene": "PER2",
+      "variant_name": "PER2 intron variant",
+      "effect_allele": "A",
+      "impact": "Circadian rhythm phase shifting / sleep fragmentation",
+      "evidence_tier": "D_research_only",
+      "interpretation": "PER2 is a core clock gene. The rs934945 A allele has been associated with sleep schedule disruptions, night awakenings, and anxious dreams in small clinical cohorts. A research-grade chronotype marker.",
+      "do_not_claim": ["delayed sleep phase disorder diagnosis", "insomnia diagnosis"],
+      "confirm_with": ["sleep architecture (awakenings)", "natural waking/sleeping windows"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Research variant with low statistical power; does not override entrainment factors (light exposure, timing of food).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PER2 clock gene variants and sleep phenotype",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17395029/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Analyzes correlation of PER2 variants with waking/sleeping chronotypes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801260",
+      "gene": "CLOCK",
+      "variant_name": "3111T>C",
+      "effect_allele": "C",
+      "impact": "Altered circadian clock speed / eveningness preference",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The CLOCK 3111C allele is robustly associated with eveningness chronotype ('night owl') and elevated sleep latency. Individuals carrying the C allele may experience delayed melatonin secretion onset.",
+      "do_not_claim": ["insomnia diagnosis", "delayed sleep phase syndrome"],
+      "confirm_with": ["subjective chronotype preference", "melatonin timing"],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Chronotype is highly plastic and entrains strongly to morning sunlight and meal times.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CLOCK gene polymorphism and eveningness chronotype",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9519159/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Seminal study mapping 3111T>C to diurnal preference."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10830963",
+      "gene": "MTNR1B",
+      "variant_name": "MTNR1B intron variant",
+      "effect_allele": "G",
+      "impact": "Reduced melatonin receptor density / impaired morning insulin release",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTNR1B rs10830963 G allele drives increased expression of melatonin receptors on pancreatic islet cells, causing prolonged inhibition of insulin secretion during the morning when melatonin is high. Explains circadian-metabolic glucose mismatch.",
+      "do_not_claim": ["diabetes diagnosis"],
+      "confirm_with": ["fasting blood glucose", "morning glucose tolerance"],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Suggests avoidance of high-carbohydrate meals immediately after waking or close to bedtime.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MTNR1B and type 2 diabetes risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19088847/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large GWAS identifying MTNR1B as a circadian regulator of pancreatic beta-cells."
+        }
+      ]
+    }
+  ]
+}

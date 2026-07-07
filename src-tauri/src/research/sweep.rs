@@ -13,13 +13,13 @@ use super::util::{string_to_u64, unix_now};
 use super::promote::promote_enrichment_batch;
 use super::http::enrich_batch_size;
 use super::tuning::{self, install_sweep_tuning, named_vectors_in_sweep, SweepTuningGuard};
-use super::sweep_metrics::{timed_async, SweepPhase};
+use super::sweep_metrics::{timed_async, SweepPhase, set_live_message};
 use super::evidence::named_vectors::{build_named_vector_texts, embed_named_vectors};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
-use tauri::Emitter;
+use super::sweep_runtime::SweepProgressSink;
 
 struct ProgressTracker {
     loop_started_at: i64,
@@ -58,7 +58,7 @@ impl ProgressTracker {
             let (t1, c1) = *self.speed_samples.last().unwrap();
             let dt = t1 - t0;
             let delta = c1 - c0;
-            if dt >= 15 && delta > 0 {
+            if dt >= 10 && delta > 0 {
                 Some(delta as f64 / dt as f64)
             } else {
                 None
@@ -69,6 +69,7 @@ impl ProgressTracker {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn batch_activity_payload() -> (
     Option<String>,
     Option<u32>,
@@ -126,12 +127,13 @@ fn plan_resume(
     ResumePlan::NotFound
 }
 
-fn sweep_dbg(app: Option<&tauri::AppHandle>, msg: impl Into<String>) {
-    super::debug_log::log_emit(app, "sweep", msg);
+fn sweep_dbg(sink: &SweepProgressSink, msg: impl Into<String>) {
+    sink.debug_log("sweep", msg);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_progress(
-    app_handle: &tauri::AppHandle,
+    sink: &SweepProgressSink,
     job_id: &str,
     status: &str,
     enriched_count: i64,
@@ -152,9 +154,8 @@ fn emit_progress(
     let (activity_phase, batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs, activity_rsid) =
         batch_activity_payload();
     let display_rsid = activity_rsid.or(current_rsid);
-    let result = app_handle.emit(
-        "research:progress",
-        ResearchProgress {
+    set_live_message(&message);
+    sink.emit_progress(ResearchProgress {
             job_id: job_id.to_string(),
             status: status.to_string(),
             enriched_count,
@@ -170,15 +171,13 @@ fn emit_progress(
             batch_prefetch_done,
             batch_total,
             batch_elapsed_secs,
-        },
-    );
-    if let Err(e) = result {
-        eprintln!("[sweep] research:progress emit failed: {}", e);
-    }
+            qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
+            session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
+        });
 }
 
 fn emit_pulse(
-    app_handle: &tauri::AppHandle,
+    sink: &SweepProgressSink,
     job_id: &str,
     enriched_count: i64,
     total_markers: i64,
@@ -189,9 +188,13 @@ fn emit_pulse(
     let (activity_phase, batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs, activity_rsid) =
         batch_activity_payload();
     let display_rsid = activity_rsid.or(current_rsid);
-    let result = app_handle.emit(
-        "research:progress",
-        ResearchProgress {
+    let batch_rate = match (batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs) {
+        (Some(p), _, Some(t), Some(el)) if el >= 5 && p > 0 && t > 0 => Some(p as f64 / el as f64),
+        (_, Some(pref), Some(t), Some(el)) if el >= 5 && pref > 0 && t > 0 => Some(pref as f64 / el as f64),
+        _ => None,
+    };
+    set_live_message(&message);
+    sink.emit_progress(ResearchProgress {
             job_id: job_id.to_string(),
             status: "running".to_string(),
             enriched_count,
@@ -199,23 +202,162 @@ fn emit_pulse(
             current_rsid: display_rsid,
             current_source,
             message,
-            variants_per_sec: None,
-            recent_variants_per_sec: None,
+            variants_per_sec: batch_rate,
+            recent_variants_per_sec: batch_rate,
             phase_metrics: None,
             activity_phase,
             batch_prepared,
             batch_prefetch_done,
             batch_total,
             batch_elapsed_secs,
-        },
-    );
-    if let Err(e) = result {
-        eprintln!("[sweep] research:progress pulse emit failed: {}", e);
+            qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
+            session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
+        });
+}
+
+fn payload_string(payload: &serde_json::Value, key: &str) -> Option<String> {
+    payload
+        .get(key)
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+}
+
+fn payload_string_array(payload: &serde_json::Value, key: &str) -> Vec<String> {
+    payload
+        .get(key)
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn finding_impact_bucket(
+    clinical: f32,
+    wellness: f32,
+    data_quality: f32,
+    has_direction: bool,
+) -> String {
+    if clinical >= 0.35 {
+        "clinical_review".to_string()
+    } else if wellness >= 0.35 && data_quality >= 0.45 {
+        "wellness_relevant".to_string()
+    } else if has_direction && data_quality >= 0.35 {
+        "interpretable_research".to_string()
+    } else if data_quality < 0.35 {
+        "low_confidence".to_string()
+    } else {
+        "research_context".to_string()
     }
 }
 
+pub(crate) fn finding_preview_from_payload(
+    job_id: &str,
+    sample_id: i64,
+    payload: &serde_json::Value,
+) -> ResearchFindingPreview {
+    let rsid = payload_string(payload, "rsid").unwrap_or_else(|| "unknown".to_string());
+    let gene_symbol = payload_string(payload, "gene_symbol").or_else(|| payload_string(payload, "gene"));
+    let genotype = payload_string(payload, "genotype");
+    let trait_name = payload_string(payload, "trait_name")
+        .or_else(|| payload_string(payload, "primary_trait"))
+        .or_else(|| payload_string(payload, "gwas_trait"));
+    let trait_category = payload_string(payload, "trait_category").or_else(|| {
+        payload
+            .get("trait_categories")
+            .and_then(|v| v.as_array())
+            .and_then(|arr| arr.first())
+            .and_then(|v| v.as_str())
+            .map(String::from)
+    });
+    let personal_direction = payload_string(payload, "personal_direction")
+        .unwrap_or_else(|| "unknown".to_string());
+    let directionality_label = payload_string(payload, "directionality_label")
+        .unwrap_or_else(|| personal_direction.replace('_', " "));
+    let wellness = payload["wellness_actionability_score"].as_f64().unwrap_or(0.0) as f32;
+    let clinical = payload["clinical_actionability_score"].as_f64().unwrap_or(0.0) as f32;
+    let data_quality = payload["data_quality_score"].as_f64().unwrap_or(0.5) as f32;
+    let source_names = payload_string_array(payload, "source_names")
+        .into_iter()
+        .chain(payload_string_array(payload, "sources_used"))
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let source_count = payload["source_count"]
+        .as_u64()
+        .unwrap_or(source_names.len() as u64) as u32;
+    let has_direction = payload["has_direction"].as_bool().unwrap_or(false);
+    let impact_bucket = finding_impact_bucket(clinical, wellness, data_quality, has_direction);
+
+    let trait_label = trait_name
+        .as_deref()
+        .or(trait_category.as_deref())
+        .unwrap_or("an indexed trait association");
+    let gene_label = gene_symbol
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|g| format!(" near {g}"))
+        .unwrap_or_default();
+    let genotype_label = genotype
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|g| format!(" ({g})"))
+        .unwrap_or_default();
+    let summary = format!(
+        "{rsid}{genotype_label}{gene_label}: {trait_label}. {directionality_label}. Evidence quality {}%, wellness relevance {}%.",
+        (data_quality * 100.0).round() as u32,
+        (wellness * 100.0).round() as u32,
+    );
+
+    ResearchFindingPreview {
+        job_id: job_id.to_string(),
+        sample_id,
+        rsid,
+        gene_symbol,
+        genotype,
+        trait_name,
+        trait_category,
+        personal_direction,
+        directionality_label,
+        impact_bucket,
+        summary,
+        wellness_actionability_score: wellness,
+        clinical_actionability_score: clinical,
+        data_quality_score: data_quality,
+        source_count,
+        source_names,
+    }
+}
+
+fn emit_finding_previews(
+    sink: &SweepProgressSink,
+    job_id: &str,
+    sample_id: i64,
+    prepared: &[PreparedEnrichment],
+) {
+    let mut previews = prepared
+        .iter()
+        .map(|p| finding_preview_from_payload(job_id, sample_id, &p.payload))
+        .collect::<Vec<_>>();
+    previews.sort_by(|a, b| {
+        let a_score = a.clinical_actionability_score + a.wellness_actionability_score + a.data_quality_score;
+        let b_score = b.clinical_actionability_score + b.wellness_actionability_score + b.data_quality_score;
+        b_score
+            .partial_cmp(&a_score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    for preview in previews.into_iter().take(8) {
+        sink.emit_finding(preview);
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 async fn run_with_activity_pulse<F, Fut, T>(
-    app_handle: &tauri::AppHandle,
+    sink: &SweepProgressSink,
     job_id: &str,
     enriched_count: i64,
     total_markers: i64,
@@ -228,7 +370,7 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = T>,
 {
-    let app = app_handle.clone();
+    let sink_clone = sink.clone();
     let job_id = job_id.to_string();
     let rsid = current_rsid.clone();
     let source = current_source.clone();
@@ -252,7 +394,7 @@ where
                 _ => String::new(),
             };
             emit_pulse(
-                &app,
+                &sink_clone,
                 &job_id,
                 enriched_count,
                 total_markers,
@@ -272,7 +414,7 @@ where
 }
 
 async fn run_prepare_with_pulse<F, Fut>(
-    app_handle: &tauri::AppHandle,
+    sink: &SweepProgressSink,
     job_id: &str,
     enriched_count: i64,
     total_markers: i64,
@@ -285,7 +427,7 @@ where
     Fut: std::future::Future<Output = Vec<Result<PreparedEnrichment, String>>>,
 {
     run_with_activity_pulse(
-        app_handle,
+        sink,
         job_id,
         enriched_count,
         total_markers,
@@ -374,6 +516,7 @@ async fn embed_named_vectors_parallel(
         });
     }
 
+    #[allow(clippy::type_complexity)]
     let mut indexed: Vec<(usize, (u64, HashMap<String, Vec<f32>>, serde_json::Value))> =
         Vec::with_capacity(prepared_ok.len());
     while let Some(joined) = join_set.join_next().await {
@@ -388,13 +531,145 @@ async fn embed_named_vectors_parallel(
         .collect()
 }
 
+/// Parallel Qdrant index scan at sweep start — pre-seeds progress for variants already indexed.
+#[allow(clippy::too_many_arguments)]
+async fn bootstrap_qdrant_index_cache(
+    sink: &SweepProgressSink,
+    job_id: &str,
+    sample_id: i64,
+    markers: &[ScoredMarker],
+    config: &QdrantConfig,
+    job: &mut ResearchJob,
+    db_path: &Path,
+    progress_tracker: &mut ProgressTracker,
+    enriched_count: &mut i64,
+    newly_enriched_count: i64,
+    total_markers: i64,
+) -> Result<HashSet<u64>, String> {
+    const CHUNK: usize = 400;
+    let parallel = tuning::prefetch_concurrency().clamp(4, 16);
+    let semaphore = Arc::new(Semaphore::new(parallel));
+    let mut join_set: JoinSet<Result<Vec<u64>, String>> = JoinSet::new();
+    let chunks: Vec<&[ScoredMarker]> = markers.chunks(CHUNK).collect();
+    let total_chunks = chunks.len();
+
+    super::sweep_metrics::set_batch_activity("Qdrant bootstrap", "…", total_chunks.max(1) as u32);
+    sweep_dbg(
+        sink,
+        format!(
+            "Bootstrap: scanning {} markers in {} chunks (parallel={})",
+            markers.len(),
+            total_chunks,
+            parallel
+        ),
+    );
+
+    for chunk in chunks {
+        if RESEARCH_PAUSED.load(Ordering::SeqCst) {
+            break;
+        }
+        let permit = semaphore.clone().acquire_owned().await.map_err(|e| e.to_string())?;
+        let chunk_ids: Vec<u64> = chunk
+            .iter()
+            .map(|m| string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1)))
+            .collect();
+        let url = config.url.clone();
+        let api_key = config.api_key.clone();
+        let collection = config.collection.clone();
+        join_set.spawn(async move {
+            let _permit = permit;
+            let ids = classify_points_index_state(
+                &url,
+                api_key.as_deref(),
+                &collection,
+                chunk_ids,
+            )
+            .await?;
+            Ok(ids)
+        });
+    }
+
+    let mut complete = HashSet::new();
+    let mut chunks_done = 0usize;
+    while let Some(joined) = join_set.join_next().await {
+        match joined {
+            Ok(Ok(ids)) => {
+                complete.extend(ids);
+                chunks_done += 1;
+                if chunks_done.is_multiple_of(4) || chunks_done == total_chunks {
+                    let indexed_now = markers
+                        .iter()
+                        .filter(|m| {
+                            let id =
+                                string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1));
+                            complete.contains(&id)
+                        })
+                        .count() as i64;
+                    *enriched_count = indexed_now;
+                    job.enriched_count = indexed_now;
+                    job.last_updated = unix_now();
+                    let _ = save_research_job(db_path, job);
+                    emit_progress(
+                        sink,
+                        job_id,
+                        "running",
+                        indexed_now,
+                        newly_enriched_count,
+                        total_markers,
+                        None,
+                        Some("Qdrant bootstrap".to_string()),
+                        format!(
+                            "Bootstrap scan: {}/{} chunks — {} already indexed in Qdrant",
+                            chunks_done,
+                            total_chunks,
+                            indexed_now
+                        ),
+                        progress_tracker,
+                        false,
+                    );
+                }
+            }
+            Ok(Err(e)) => {
+                if is_fatal_enrichment_error(&e) {
+                    return Err(e);
+                }
+                sweep_dbg(sink, format!("Bootstrap chunk failed (continuing): {}", e));
+            }
+            Err(e) => sweep_dbg(sink, format!("Bootstrap task join failed: {}", e)),
+        }
+    }
+
+    let final_indexed = markers
+        .iter()
+        .filter(|m| {
+            let id = string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1));
+            complete.contains(&id)
+        })
+        .count() as i64;
+    *enriched_count = final_indexed;
+    job.enriched_count = final_indexed;
+    job.last_updated = unix_now();
+    let _ = save_research_job(db_path, job);
+    sweep_dbg(
+        sink,
+        format!(
+            "Bootstrap complete: {} / {} markers already at enrichment v{}",
+            final_indexed,
+            total_markers,
+            super::util::ENRICHMENT_VERSION
+        ),
+    );
+    Ok(complete)
+}
+
+#[allow(clippy::too_many_arguments)]
 pub async fn run_research_loop(
     sample_id: i64,
     db_path: PathBuf,
     ollama_url: String,
     config: QdrantConfig,
     scope: ResearchScopeConfig,
-    app_handle: tauri::AppHandle,
+    progress_sink: SweepProgressSink,
     resume_job: Option<ResearchJob>,
     force_reenrich: bool,
 ) -> Result<(), String> {
@@ -404,8 +679,11 @@ pub async fn run_research_loop(
             super::debug_log::set_emit_app(None);
         }
     }
-    super::debug_log::set_emit_app(Some(app_handle.clone()));
+    if let Some(app) = progress_sink.as_app() {
+        super::debug_log::set_emit_app(Some(app.clone()));
+    }
     let _sweep_debug_app = SweepDebugAppGuard;
+    let sink = &progress_sink;
 
     let started_at = unix_now();
     let resume_from_rsid = resume_job
@@ -452,7 +730,10 @@ pub async fn run_research_loop(
         ));
     }
 
-    let pipeline_tuning = install_sweep_tuning(&ollama_url, &config.url, &effective_scope);
+    let (ollama_lat, qdrant_lat) =
+        tuning::probe_service_latencies(&ollama_url, &config.url).await;
+    let pipeline_tuning =
+        install_sweep_tuning(&ollama_url, &config.url, &effective_scope, ollama_lat, qdrant_lat);
     let enrichment_sources = super::sources_config::active_enrichment_sources();
     let _tuning_guard = SweepTuningGuard;
     eprintln!(
@@ -471,7 +752,7 @@ pub async fn run_research_loop(
         enrichment_sources.supplement_missing,
     );
     sweep_dbg(
-        Some(&app_handle),
+        sink,
         format!(
             "Loop start sample={} total_markers={} resume={:?} force_reenrich={}",
             sample_id,
@@ -525,6 +806,7 @@ pub async fn run_research_loop(
         restored.status = "running".to_string();
         restored.total_markers = total_markers;
         restored.last_updated = started_at;
+        restored.session_started_at = Some(started_at);
         restored.error_message = None;
         if restored.enriched_count > total_markers {
             restored.enriched_count = total_markers;
@@ -542,13 +824,32 @@ pub async fn run_research_loop(
             current_source: None,
             started_at,
             last_updated: started_at,
+            session_started_at: Some(started_at),
             error_message: None,
             scope_json: scope_json.clone(),
             loop_active: None,
+            live_message: None,
+            activity_phase: None,
+            batch_prepared: None,
+            batch_prefetch_done: None,
+            batch_total: None,
+            batch_elapsed_secs: None,
+            qdrant_sample_count: None,
+            session_elapsed_secs: None,
         }
     };
     let job_id = job.job_id.clone();
     let mut enriched_count = job.enriched_count;
+    super::sweep_metrics::set_sweep_session_started();
+    let qdrant_baseline = super::count_qdrant_points(
+        &config.url,
+        config.api_key.as_deref(),
+        &config.collection,
+        Some(sample_id),
+    )
+    .await
+    .unwrap_or(0);
+    super::sweep_metrics::set_qdrant_sample_baseline(qdrant_baseline);
     let sweep_started_at = unix_now();
     let mut progress_tracker = ProgressTracker::new(sweep_started_at);
     let mut newly_enriched_count = 0i64;
@@ -564,16 +865,17 @@ pub async fn run_research_loop(
         )
     } else {
         format!(
-            "Research job started. {} markers queued (curated={}, agent={}, gwas={}, non-ref={}).",
+            "Research job started. {} markers queued (curated={}, agent={}, gwas={}, non-ref={}). {} already indexed for this sample in Qdrant.",
             total_markers,
             effective_scope.curated,
             effective_scope.agent_discoveries,
             effective_scope.gwas_discovery,
-            effective_scope.non_reference
+            effective_scope.non_reference,
+            qdrant_baseline
         )
     };
     emit_progress(
-        &app_handle,
+        sink,
         &job_id,
         "running",
         enriched_count,
@@ -585,6 +887,30 @@ pub async fn run_research_loop(
         &mut progress_tracker,
         false,
     );
+
+    let supplement_at_start =
+        super::sources_config::enrichment_supplement_missing() && !force_reenrich;
+    let mut bootstrap_cache: Option<HashSet<u64>> = None;
+    if !force_reenrich && !supplement_at_start && resume_from_rsid.is_none() {
+        match bootstrap_qdrant_index_cache(
+            sink,
+            &job_id,
+            sample_id,
+            &markers,
+            &config,
+            &mut job,
+            &db_path,
+            &mut progress_tracker,
+            &mut enriched_count,
+            newly_enriched_count,
+            total_markers,
+        )
+        .await
+        {
+            Ok(cache) => bootstrap_cache = Some(cache),
+            Err(e) => sweep_dbg(sink, format!("Bootstrap skipped: {}", e)),
+        }
+    }
 
     // 4. Split into priority (score > 0.15) and background (score <= 0.15)
     let priority: Vec<&ScoredMarker> = markers.iter().filter(|m| m.significance_score > 0.15).collect();
@@ -610,7 +936,7 @@ pub async fn run_research_loop(
         let pass_slice: &[&ScoredMarker] = match &resume_plan {
             ResumePlan::StartInPass { pass_index, marker_index } if pass_idx < *pass_index => {
                 sweep_dbg(
-                    Some(&app_handle),
+                    sink,
                     format!("Resume: skipping pass {} (already completed)", pass_idx),
                 );
                 continue;
@@ -618,7 +944,7 @@ pub async fn run_research_loop(
             ResumePlan::StartInPass { pass_index, marker_index } if pass_idx == *pass_index => {
                 let target = resume_from_rsid.as_deref().unwrap_or("?");
                 sweep_dbg(
-                    Some(&app_handle),
+                    sink,
                     format!(
                         "Resume: jumping to {} at index {} in pass {}",
                         target, marker_index, pass_idx
@@ -630,7 +956,7 @@ pub async fn run_research_loop(
                     pass_markers.len().max(1) as u32,
                 );
                 emit_pulse(
-                    &app_handle,
+                    sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -657,7 +983,7 @@ pub async fn run_research_loop(
                 }
                 let _ = save_research_job(&db_path, &job);
                 emit_progress(
-                    &app_handle,
+                    sink,
                     &job_id,
                     "paused",
                     enriched_count,
@@ -684,7 +1010,7 @@ pub async fn run_research_loop(
                                 pass_markers.len().max(1) as u32,
                             );
                             emit_pulse(
-                                &app_handle,
+                                sink,
                                 &job_id,
                                 enriched_count,
                                 total_markers,
@@ -722,7 +1048,7 @@ pub async fn run_research_loop(
                     chunk.len().max(1) as u32,
                 );
                 sweep_dbg(
-                    Some(&app_handle),
+                    sink,
                     format!(
                         "Checking Qdrant cache for {} variants (starting {})",
                         chunk.len(),
@@ -733,17 +1059,37 @@ pub async fn run_research_loop(
 
             let complete_ids: HashSet<u64> = if force_reenrich {
                 HashSet::new()
+            } else if let Some(ref cache) = bootstrap_cache {
+                chunk_ids
+                    .iter()
+                    .filter(|id| cache.contains(id))
+                    .copied()
+                    .collect()
             } else if supplement_missing {
-                match classify_points_sweep_state(
-                    &config.url,
-                    config.api_key.as_deref(),
-                    &config.collection,
-                    chunk_ids.clone(),
-                    &enrichment_sources,
-                    true,
+                let url = config.url.clone();
+                let api_key = config.api_key.clone();
+                let collection = config.collection.clone();
+                let ids_result = run_with_activity_pulse(sink,
+                    &job_id,
+                    enriched_count,
+                    total_markers,
+                    chunk_first_rsid.clone(),
+                    Some("Qdrant sweep check".to_string()),
+                    "Checking Qdrant",
+                    || async move {
+                        classify_points_sweep_state(
+                            &url,
+                            api_key.as_deref(),
+                            &collection,
+                            chunk_ids,
+                            &enrichment_sources,
+                            true,
+                        )
+                        .await
+                    },
                 )
-                .await
-                {
+                .await;
+                match ids_result {
                     Ok(result) => result.complete_ids.into_iter().collect(),
                     Err(e) => {
                         if e.contains("401 Unauthorized") {
@@ -752,7 +1098,7 @@ pub async fn run_research_loop(
                             job.last_updated = unix_now();
                             let _ = save_research_job(&db_path, &job);
                             emit_progress(
-                                &app_handle,
+                                sink,
                                 &job_id,
                                 "error",
                                 enriched_count,
@@ -774,8 +1120,7 @@ pub async fn run_research_loop(
                 let url = config.url.clone();
                 let api_key = config.api_key.clone();
                 let collection = config.collection.clone();
-                let ids_result = run_with_activity_pulse(
-                    &app_handle,
+                let ids_result = run_with_activity_pulse(sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -802,7 +1147,7 @@ pub async fn run_research_loop(
                             job.last_updated = unix_now();
                             let _ = save_research_job(&db_path, &job);
                             emit_progress(
-                                &app_handle,
+                                sink,
                                 &job_id,
                                 "error",
                                 enriched_count,
@@ -818,7 +1163,7 @@ pub async fn run_research_loop(
                             return Err(e);
                         }
                         sweep_dbg(
-                            Some(&app_handle),
+                            sink,
                             format!("Qdrant classify failed (continuing as empty cache): {}", e),
                         );
                         HashSet::new()
@@ -828,7 +1173,7 @@ pub async fn run_research_loop(
 
             if skip_until_resume {
                 emit_pulse(
-                    &app_handle,
+                    sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -866,8 +1211,10 @@ pub async fn run_research_loop(
             }
 
             if skipped_count > 0 {
-                enriched_count += skipped_count;
-                job.enriched_count = enriched_count;
+                if bootstrap_cache.is_none() {
+                    enriched_count += skipped_count;
+                    job.enriched_count = enriched_count;
+                }
                 job.last_updated = unix_now();
                 if let Some(last_skipped) = chunk.iter().rfind(|m| {
                     let p_id = string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1));
@@ -878,7 +1225,7 @@ pub async fn run_research_loop(
                 let _ = save_research_job(&db_path, &job);
 
                 emit_progress(
-                    &app_handle,
+                    sink,
                     &job_id,
                     "running",
                     enriched_count,
@@ -915,7 +1262,7 @@ pub async fn run_research_loop(
                     }
                     let _ = save_research_job(&db_path, &job);
                     emit_progress(
-                        &app_handle,
+                        sink,
                         &job_id,
                         "paused",
                         enriched_count,
@@ -945,7 +1292,7 @@ pub async fn run_research_loop(
                     job.last_updated = unix_now();
                     let _ = save_research_job(&db_path, &job);
                     emit_progress(
-                        &app_handle,
+                        sink,
                         &job_id,
                         "running",
                         enriched_count,
@@ -962,7 +1309,7 @@ pub async fn run_research_loop(
                         true,
                     );
                     sweep_dbg(
-                        Some(&app_handle),
+                        sink,
                         format!(
                             "Batch {}: {} variants starting at {}",
                             batch_idx + 1,
@@ -974,7 +1321,7 @@ pub async fn run_research_loop(
 
                 let prepared_results = if let Some(handle) = next_prepare.take() {
                     run_prepare_with_pulse(
-                        &app_handle,
+                        sink,
                         &job_id,
                         enriched_count,
                         total_markers,
@@ -990,7 +1337,7 @@ pub async fn run_research_loop(
                     .await
                 } else {
                     run_prepare_with_pulse(
-                        &app_handle,
+                        sink,
                         &job_id,
                         enriched_count,
                         total_markers,
@@ -1040,7 +1387,7 @@ pub async fn run_research_loop(
                                 job.current_rsid = Some(marker.rsid.clone());
                                 let _ = save_research_job(&db_path, &job);
                                 emit_progress(
-                                    &app_handle,
+                                    sink,
                                     &job_id,
                                     "error",
                                     enriched_count,
@@ -1071,7 +1418,7 @@ pub async fn run_research_loop(
                         .cloned()
                         .unwrap_or_else(|| "all variants failed prepare".to_string());
                     emit_progress(
-                        &app_handle,
+                        sink,
                         &job_id,
                         "running",
                         enriched_count,
@@ -1093,7 +1440,7 @@ pub async fn run_research_loop(
                 super::sweep_metrics::set_batch_phase("embedding");
                 job.current_source = Some("embedding".to_string());
                 if let Some(first) = prepared_ok.first() {
-                    super::sweep_metrics::set_batch_embedding(&first.rsid);
+                    super::sweep_metrics::set_batch_embedding(&first.rsid, prepared_ok.len() as u32);
                 }
 
                 let texts: Vec<String> = prepared_ok
@@ -1103,8 +1450,7 @@ pub async fn run_research_loop(
 
                 let ollama_url_embed = ollama_url.clone();
                 let embed_model = config.embedding_model.clone();
-                let vectors = match run_with_activity_pulse(
-                    &app_handle,
+                let vectors = match run_with_activity_pulse(sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -1129,7 +1475,7 @@ pub async fn run_research_loop(
                             job.last_updated = unix_now();
                             let _ = save_research_job(&db_path, &job);
                             emit_progress(
-                                &app_handle,
+                                sink,
                                 &job_id,
                                 "error",
                                 enriched_count,
@@ -1223,6 +1569,7 @@ pub async fn run_research_loop(
                     move || promote_enrichment_batch(&db_path, sample_id, &batch)
                 })
                 .await;
+                emit_finding_previews(sink, &job_id, sample_id, &prepared_ok);
 
                 let batch_count = prepared_ok.len() as i64;
                 enriched_count += batch_count;
@@ -1245,7 +1592,7 @@ pub async fn run_research_loop(
                     )
                 };
                 emit_progress(
-                    &app_handle,
+                    sink,
                     &job_id,
                     "running",
                     enriched_count,
@@ -1269,7 +1616,7 @@ pub async fn run_research_loop(
     job.current_source = None;
     let _ = save_research_job(&db_path, &job);
     emit_progress(
-        &app_handle,
+        sink,
         &job_id,
         "complete",
         enriched_count,
@@ -1293,6 +1640,8 @@ pub async fn run_research_loop(
         true,
     );
 
+    super::sweep_metrics::clear_batch_activity();
+    super::sweep_metrics::clear_sweep_session();
     RESEARCH_RUNNING.store(false, Ordering::SeqCst);
     Ok(())
 }

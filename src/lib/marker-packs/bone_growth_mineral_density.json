@@ -1,0 +1,1110 @@
+{
+  "name": "Bone Growth, Mineral Density & Skeletal Development",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_BONE_GENOTYPE_NOT_DXA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Bone genotype does not replace DXA/labs",
+      "effect_allele": "N/A",
+      "impact": "Prevents osteoporosis/fracture overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Bone density, fracture risk, growth, and bone healing require phenotype, imaging, nutrient/hormone status, and medical history. DNA is context only.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture prediction",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA when indicated",
+        "fracture history",
+        "25(OH)D",
+        "PTH/calcium/phosphate",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3736228",
+      "gene": "LRP5",
+      "variant_name": "Ala1330Val",
+      "effect_allele": "T",
+      "impact": "Wnt/LRP5 bone formation and BMD context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LRP5 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs599083",
+      "gene": "LRP5",
+      "variant_name": "LRP5 BMD locus",
+      "effect_allele": "T",
+      "impact": "Bone mineral density context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LRP5 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6426749",
+      "gene": "WNT16",
+      "variant_name": "WNT16 cortical bone locus",
+      "effect_allele": "G",
+      "impact": "Cortical BMD and fracture context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "WNT16 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3801387",
+      "gene": "WNT16",
+      "variant_name": "WNT16 BMD marker",
+      "effect_allele": "A",
+      "impact": "Bone density context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "WNT16 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4792909",
+      "gene": "SOST",
+      "variant_name": "Sclerostin locus",
+      "effect_allele": "G",
+      "impact": "Wnt inhibition and BMD context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SOST is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs851056",
+      "gene": "TNFRSF11B",
+      "variant_name": "OPG/RANKL pathway marker",
+      "effect_allele": "A",
+      "impact": "Bone resorption signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TNFRSF11B is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9594738",
+      "gene": "RANKL/TNFSF11",
+      "variant_name": "RANKL bone resorption locus",
+      "effect_allele": "C",
+      "impact": "Osteoclast activation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "RANKL/TNFSF11 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800012",
+      "gene": "COL1A1",
+      "variant_name": "Sp1 collagen I marker",
+      "effect_allele": "T",
+      "impact": "Collagen I bone matrix and fracture context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "COL1A1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228570",
+      "gene": "VDR",
+      "variant_name": "FokI",
+      "effect_allele": "T",
+      "impact": "Vitamin D receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1544410",
+      "gene": "VDR",
+      "variant_name": "BsmI",
+      "effect_allele": "A",
+      "impact": "Vitamin D receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs731236",
+      "gene": "VDR",
+      "variant_name": "TaqI",
+      "effect_allele": "C",
+      "impact": "Vitamin D receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7975232",
+      "gene": "VDR",
+      "variant_name": "ApaI",
+      "effect_allele": "A",
+      "impact": "Vitamin D receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2282679",
+      "gene": "GC",
+      "variant_name": "Vitamin D binding protein marker",
+      "effect_allele": "C",
+      "impact": "Circulating vitamin D context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GC is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10741657",
+      "gene": "CYP2R1",
+      "variant_name": "Vitamin D 25-hydroxylation marker",
+      "effect_allele": "A",
+      "impact": "Vitamin D conversion context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CYP2R1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12785878",
+      "gene": "DHCR7/NADSYN1",
+      "variant_name": "Vitamin D synthesis locus",
+      "effect_allele": "G",
+      "impact": "Vitamin D status context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "DHCR7/NADSYN1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801725",
+      "gene": "CASR",
+      "variant_name": "Calcium-sensing receptor A986S",
+      "effect_allele": "T",
+      "impact": "Serum calcium/PTH context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CASR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042636",
+      "gene": "CASR",
+      "variant_name": "Arg990Gly",
+      "effect_allele": "G",
+      "impact": "Calcium-sensing receptor context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CASR is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2016266",
+      "gene": "SP7/OSX",
+      "variant_name": "Osterix BMD locus",
+      "effect_allele": "T",
+      "impact": "Osteoblast differentiation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SP7/OSX is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13245690",
+      "gene": "CPED1/WNT16",
+      "variant_name": "BMD/fracture locus",
+      "effect_allele": "C",
+      "impact": "Bone density context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CPED1/WNT16 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7117858",
+      "gene": "SOX6",
+      "variant_name": "Bone density locus",
+      "effect_allele": "A",
+      "impact": "Skeletal development context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SOX6 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4727338",
+      "gene": "CRHR2",
+      "variant_name": "BMD locus",
+      "effect_allele": "G",
+      "impact": "Bone density context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CRHR2 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13204965",
+      "gene": "ESR1",
+      "variant_name": "Estrogen receptor bone locus",
+      "effect_allele": "A",
+      "impact": "Estrogen-bone signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ESR1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2234693",
+      "gene": "ESR1",
+      "variant_name": "PvuII estrogen receptor marker",
+      "effect_allele": "T",
+      "impact": "Estrogen receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ESR1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9340799",
+      "gene": "ESR1",
+      "variant_name": "XbaI estrogen receptor marker",
+      "effect_allele": "G",
+      "impact": "Estrogen receptor bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ESR1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs16945612",
+      "gene": "MEF2C",
+      "variant_name": "BMD locus",
+      "effect_allele": "T",
+      "impact": "Bone development context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MEF2C is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs430727",
+      "gene": "CTNNB1",
+      "variant_name": "Wnt/beta-catenin BMD locus",
+      "effect_allele": "T",
+      "impact": "Bone formation signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CTNNB1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17724206",
+      "gene": "FOXL1",
+      "variant_name": "Bone/growth locus",
+      "effect_allele": "A",
+      "impact": "Skeletal growth context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FOXL1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1107748",
+      "gene": "AXIN1",
+      "variant_name": "Wnt pathway BMD marker",
+      "effect_allele": "A",
+      "impact": "Bone Wnt signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AXIN1 is included as bone/growth/mineral-density context. Interpret with DXA, fracture history, and mineral/hormone labs.",
+      "do_not_claim": [
+        "osteoporosis diagnosis",
+        "fracture certainty",
+        "height prediction certainty"
+      ],
+      "confirm_with": [
+        "DXA if indicated",
+        "fracture history",
+        "vitamin D/calcium/PTH",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Bone phenotypes are strongly modified by loading, hormones, vitamin D, calcium/protein intake, kidney function, medications, and age.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_OSTEOGENESIS_IMPERFECTA",
+      "gene": "COL1A1/COL1A2/IFITM5/CRTAP/P3H1",
+      "variant_name": "Osteogenesis imperfecta clinical panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare bone fragility disorder panel",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "OI and rare bone fragility disorders require clinical sequencing and phenotype. Consumer SNPs cannot rule these out.",
+      "do_not_claim": [
+        "OI diagnosis",
+        "bone fragility exclusion"
+      ],
+      "confirm_with": [
+        "fracture pattern",
+        "DEXA",
+        "clinical genetic testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_HYPOPHOSPHATASIA",
+      "gene": "ALPL",
+      "variant_name": "Hypophosphatasia ALPL panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare mineralization disorder context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Low alkaline phosphatase, fractures, dental issues, or bone pain can warrant ALPL evaluation. Raw SNP data is not enough.",
+      "do_not_claim": [
+        "hypophosphatasia diagnosis"
+      ],
+      "confirm_with": [
+        "alkaline phosphatase",
+        "B6/PLP",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_BONE_MINERAL_DENSITY",
+      "gene": "MULTI_GENE",
+      "variant_name": "Bone mineral density PRS module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic BMD and fracture-risk context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "BMD is highly polygenic. Use PRS only if ancestry-calibrated and interpreted with DXA/fracture history.",
+      "do_not_claim": [
+        "osteoporosis diagnosis"
+      ],
+      "confirm_with": [
+        "DXA",
+        "fracture history",
+        "clinical risk calculator"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

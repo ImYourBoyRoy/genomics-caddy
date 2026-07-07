@@ -1,31 +1,33 @@
-  .glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 18px;
-  }
+/* ./src/lib/styles/components/research-job-controls.css */
 
-  .card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
+.research-job-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+}
 
-  .card-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+.research-job-card .card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
 
-  .sample-display {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-  }
+.research-job-card .card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.research-job-card .sample-display {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
 
   .tuning-banner {
     display: flex;
@@ -152,6 +154,36 @@
     color: var(--text-secondary);
   }
 
+  .qdrant-baseline-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: #a5f3fc;
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.18);
+  }
+
+  .qdrant-baseline-note {
+    color: var(--text-secondary);
+    font-size: 0.62rem;
+  }
+
+  .interrupted-banner {
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: #fde68a;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.22);
+  }
+
   .batch-stall-hint {
     margin: 8px 0 0;
     padding: 8px 10px;
@@ -168,6 +200,23 @@
     border-radius: 8px;
     background: rgba(56, 189, 248, 0.05);
     border: 1px solid rgba(56, 189, 248, 0.12);
+  }
+
+  .scan-narrative {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
+  .scan-narrative strong {
+    color: var(--text-primary);
   }
 
   .pipeline-steps {
@@ -354,6 +403,72 @@
     border-radius: 8px;
     padding: 8px 10px;
     font-size: 0.65rem;
+  }
+
+  .source-health-panel {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .source-health-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+    font-size: 0.66rem;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .source-health-note {
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .source-health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px;
+  }
+
+  .source-health-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 6px;
+    align-items: center;
+    padding: 6px 7px;
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.16);
+    font-size: 0.62rem;
+  }
+
+  .source-health-dot {
+    grid-row: span 2;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #34d399;
+  }
+
+  .source-health-row.status-active .source-health-dot {
+    background: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+  }
+
+  .source-health-row.status-slow .source-health-dot {
+    background: #fbbf24;
+  }
+
+  .source-health-label {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .source-health-stat {
+    color: var(--text-secondary);
+    font-family: monospace;
   }
 
   .phase-metrics-header {

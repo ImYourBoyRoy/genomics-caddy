@@ -4,7 +4,12 @@
   Single source of truth so +page tab badge and ResearchPanel stay in sync.
 */
 
-import type { ResearchProgress, ResearchJob, SweepPhaseMetricsSnapshot } from "../types/research";
+import type {
+  ResearchProgress,
+  ResearchJob,
+  ResearchFindingPreview,
+  SweepPhaseMetricsSnapshot,
+} from "../types/research";
 
 /** Updated by +page / ResearchPanel — avoids stale closures in Tauri listeners. */
 export const researchEventContext = $state({
@@ -42,6 +47,8 @@ export function normalizeResearchProgress(
     batch_prefetch_done: (r.batch_prefetch_done ?? r.batchPrefetchDone) as number | null | undefined,
     batch_total: (r.batch_total ?? r.batchTotal) as number | null | undefined,
     batch_elapsed_secs: (r.batch_elapsed_secs ?? r.batchElapsedSecs) as number | null | undefined,
+    qdrant_sample_count: (r.qdrant_sample_count ?? r.qdrantSampleCount) as number | null | undefined,
+    session_elapsed_secs: (r.session_elapsed_secs ?? r.sessionElapsedSecs) as number | null | undefined,
   };
 }
 
@@ -56,11 +63,14 @@ export const liveProgress = $state({
   phaseMetrics: null as SweepPhaseMetricsSnapshot | null,
   progressSpeed: null as number | null,
   recentProgressSpeed: null as number | null,
+  qdrantSampleCount: null as number | null,
+  sessionElapsedSecs: null as number | null,
   /** Bumped on every progress apply so $derived subscribers always refresh. */
   tick: 0,
 });
 
 export const liveDebugLines = $state<string[]>([]);
+export const liveFindingPreviews = $state<ResearchFindingPreview[]>([]);
 
 export function pushLiveDebugLine(line: string) {
   const stamp = new Date().toLocaleTimeString();
@@ -81,8 +91,11 @@ export function resetLiveProgress() {
   liveProgress.phaseMetrics = null;
   liveProgress.progressSpeed = null;
   liveProgress.recentProgressSpeed = null;
+  liveProgress.qdrantSampleCount = null;
+  liveProgress.sessionElapsedSecs = null;
   liveProgress.tick = 0;
   liveDebugLines.length = 0;
+  liveFindingPreviews.length = 0;
 }
 
 /** Clear speed + batch UI on resume without wiping the last milestone message. */
@@ -159,6 +172,12 @@ export function applyLiveProgressFields(payload: ResearchProgress) {
   if (payload.variants_per_sec != null && payload.variants_per_sec > 0) {
     liveProgress.progressSpeed = payload.variants_per_sec;
   }
+  if (payload.qdrant_sample_count != null) {
+    liveProgress.qdrantSampleCount = payload.qdrant_sample_count;
+  }
+  if (payload.session_elapsed_secs != null) {
+    liveProgress.sessionElapsedSecs = payload.session_elapsed_secs;
+  }
 }
 
 export function handleResearchProgressEvent(payload: ResearchProgress) {
@@ -179,7 +198,65 @@ export function handleResearchProgressEvent(payload: ResearchProgress) {
   return true;
 }
 
+export function applyLiveFieldsFromJob(job: {
+  live_message?: string;
+  activity_phase?: string;
+  batch_prepared?: number;
+  batch_prefetch_done?: number;
+  batch_total?: number;
+  batch_elapsed_secs?: number;
+  qdrant_sample_count?: number;
+  session_elapsed_secs?: number;
+  enriched_count?: number;
+}) {
+  liveProgress.lastProgressAt = Date.now();
+  liveProgress.tick += 1;
+  if (job.live_message) {
+    liveProgress.lastActivityMessage = job.live_message;
+  }
+  if (job.activity_phase != null) {
+    liveProgress.activityPhase = job.activity_phase;
+  }
+  if (job.batch_prepared != null) {
+    liveProgress.batchPrepared = job.batch_prepared;
+  }
+  if (job.batch_prefetch_done != null) {
+    liveProgress.batchPrefetchDone = job.batch_prefetch_done;
+  }
+  if (job.batch_total != null) {
+    liveProgress.batchTotal = job.batch_total;
+  }
+  if (job.batch_elapsed_secs != null) {
+    liveProgress.batchElapsedSecs = job.batch_elapsed_secs;
+  }
+  if (job.qdrant_sample_count != null) {
+    liveProgress.qdrantSampleCount = job.qdrant_sample_count;
+  }
+  if (job.session_elapsed_secs != null) {
+    liveProgress.sessionElapsedSecs = job.session_elapsed_secs;
+  }
+}
+
 export function handleResearchDebugEvent(tag: string, message: string) {
   if (!researchEventContext.debugEnabled) return;
   pushLiveDebugLine(`[${tag}] ${message}`);
+}
+
+export function handleResearchFindingEvent(payload: ResearchFindingPreview) {
+  const sampleId = researchEventContext.sampleId;
+  if (!sampleId || payload.sample_id !== sampleId || !payload.job_id) return false;
+
+  const prefix = `job_${sampleId}_`;
+  if (!payload.job_id.startsWith(prefix)) return false;
+
+  const existingIdx = liveFindingPreviews.findIndex((item) => item.rsid === payload.rsid);
+  if (existingIdx >= 0) {
+    liveFindingPreviews.splice(existingIdx, 1);
+  }
+  liveFindingPreviews.unshift(payload);
+  if (liveFindingPreviews.length > 24) {
+    liveFindingPreviews.length = 24;
+  }
+  liveProgress.tick += 1;
+  return true;
 }

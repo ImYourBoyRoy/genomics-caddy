@@ -44,6 +44,29 @@ struct LegacyEmbeddingResponse {
     embedding: Vec<f32>,
 }
 
+async fn post_json_with_retries(
+    client: &reqwest::Client,
+    url: &str,
+    payload: serde_json::Value,
+    attempts: u32,
+) -> Result<reqwest::Response, String> {
+    let mut last_err = String::new();
+    for attempt in 0..attempts {
+        match client.post(url).json(&payload).send().await {
+            Ok(res) => return Ok(res),
+            Err(e) => {
+                last_err = e.to_string();
+                if attempt + 1 < attempts {
+                    tokio::time::sleep(Duration::from_millis(400 * (attempt as u64 + 1))).await;
+                }
+            }
+        }
+    }
+    Err(format!(
+        "Ollama embed connection failed after {attempts} attempts: {last_err}"
+    ))
+}
+
 async fn embed_via_api_embed(
     client: &reqwest::Client,
     ollama_url: &str,
@@ -56,12 +79,7 @@ async fn embed_via_api_embed(
         "input": input,
     });
 
-    let res = client
-        .post(&url)
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| format!("Ollama embed connection failed: {}", e))?;
+    let res = post_json_with_retries(client, &url, payload, 3).await?;
 
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));
@@ -91,12 +109,7 @@ async fn embed_via_legacy_api(
         "prompt": text,
     });
 
-    let res = client
-        .post(&url)
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| format!("Ollama embed connection failed: {}", e))?;
+    let res = post_json_with_retries(client, &url, payload, 3).await?;
 
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));

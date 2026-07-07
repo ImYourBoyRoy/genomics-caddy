@@ -106,14 +106,58 @@ npm install
 npm run tauri dev
 ```
 
-To build the static static production bundle:
+To build the static production bundle (frontend only):
 ```bash
 npm run build
 ```
 
+To **purge build caches** (npm + Cargo only — never touches `data/`, downloads, or SQLite) and compile a **production desktop release**:
+```powershell
+npm run build:release
+```
+
+Or directly:
+```powershell
+pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\purge_and_build.ps1
+```
+
+Options:
+- `-PurgeOnly` — clear caches without building (`npm run purge:build`)
+- `-SkipPurge` — build without clearing caches first
+- `-SkipChecks` — skip `npm run check` and `cargo check` before the release build
+- `-DryRun` — show what would be removed
+
+Release output lands in **`App/`** (portable exe + sidecars) with persistence in **`App/Data/`**. Build caches stay in `src-tauri/target/` and are safe to wipe.
+
+One-time migration from legacy `data/`:
+```powershell
+pwsh -File .\scripts\migrate_data_to_app.ps1
+```
+
 ---
 
-### 2. Headless MCP Server Integration
+### 2. Headless sweep worker (Docker / server)
+
+For high-core servers (e.g. 80 CPUs), run the enrichment sweep without the desktop UI. Pipeline tuning is **dynamic** — it auto-detects logical cores, uses **all but one** for sweep work (4-core laptop → 3 workers, 80-core server → 79), and scales batch/concurrency from measured Ollama/Qdrant latency.
+
+```bash
+docker compose -f docker/docker-compose.yml build genomics-worker
+GENOMICS_CPU_LIMIT=80 GENOMICS_SAMPLE_ID=1 docker compose -f docker/docker-compose.yml up genomics-worker
+```
+
+Mount your data at `/data` (same layout as `App/Data/`). Progress streams as NDJSON on stdout (`GENOMICS_PROGRESS`, `GENOMICS_FINDING`). See **`docker/README.md`** for resume, updates, and optional static UI.
+
+Local CLI (same binary as the desktop app):
+
+```powershell
+$env:GENOMICS_DATA_DIR = "C:\path\to\App\Data"
+$env:GENOMICS_CPU_LIMIT = "80"
+.\App\DNA-Tools.exe --headless-sweep --sample-id=1
+```
+
+---
+
+### 3. Headless MCP Server Integration
 Genomics Caddy embeds a Model Context Protocol (MCP) server. Start the server in headless MCP mode:
 
 * **In Development:**

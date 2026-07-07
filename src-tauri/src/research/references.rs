@@ -84,7 +84,7 @@ pub fn seed_gwas_reference_fallback(conn: &Connection, data_dir: Option<&Path>) 
             let gene = marker["gene"].as_str().unwrap_or("");
             let impact = marker["impact"].as_str().unwrap_or("");
             tx.execute(
-                "INSERT OR IGNORE INTO gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, associations_json)
+                "INSERT OR IGNORE INTO reference.gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, associations_json)
                  VALUES (?, 1, ?, ?, ?, ?, ?)",
                 params![
                     normalize_rsid(rsid).unwrap_or_else(|| rsid.to_lowercase()),
@@ -112,7 +112,43 @@ pub fn seed_gwas_reference_fallback(conn: &Connection, data_dir: Option<&Path>) 
 
 pub async fn sync_gwas_reference(data_dir: &Path, db_path: &Path) -> Result<GwasSyncResult, String> {
     paths::ensure_data_layout(data_dir).map_err(|e| e.to_string())?;
+    let (source_path, downloaded) = ensure_gwas_source_file(data_dir).await?;
+    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let rsid_count = import_gwas_reference_tsv(&conn, &source_path)?;
+    Ok(GwasSyncResult {
+        rsid_count,
+        downloaded,
+        file_path: source_path.to_string_lossy().to_string(),
+        message: format!(
+            "Loaded {} GWAS-linked rsIDs with gene/trait cross-refs from {}. Re-run enrichment to refresh vectors.",
+            rsid_count,
+            source_path.file_name().unwrap_or_default().to_string_lossy()
+        ),
+    })
+}
 
+/// Import GWAS catalog from files already on disk (blocking — safe inside spawn_blocking).
+pub fn import_gwas_from_local_files(data_dir: &Path, db_path: &Path) -> Result<u64, String> {
+    paths::ensure_data_layout(data_dir).map_err(|e| e.to_string())?;
+    let tsv_path = gwas_catalog_file(data_dir);
+    let zip_path = gwas_catalog_zip_file(data_dir);
+    let gz_path = gwas_catalog_gz_file(data_dir);
+    let source_path = if tsv_path.exists() {
+        tsv_path
+    } else if zip_path.exists() {
+        extract_gwas_tsv_from_zip(&zip_path, &tsv_path)?;
+        tsv_path
+    } else if gz_path.exists() {
+        decompress_gz_to_tsv(&gz_path, &tsv_path)?;
+        tsv_path
+    } else {
+        return Err("GWAS catalog file not found — download Tier 0 first.".into());
+    };
+    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    import_gwas_reference_tsv(&conn, &source_path)
+}
+
+async fn ensure_gwas_source_file(data_dir: &Path) -> Result<(std::path::PathBuf, bool), String> {
     let gz_path = gwas_catalog_gz_file(data_dir);
     let zip_path = gwas_catalog_zip_file(data_dir);
     let tsv_path = gwas_catalog_file(data_dir);
@@ -134,20 +170,7 @@ pub async fn sync_gwas_reference(data_dir: &Path, db_path: &Path) -> Result<Gwas
     } else {
         return Err("GWAS catalog file missing after download attempt.".to_string());
     };
-
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    let rsid_count = import_gwas_reference_tsv(&conn, &source_path)?;
-
-    Ok(GwasSyncResult {
-        rsid_count,
-        downloaded,
-        file_path: source_path.to_string_lossy().to_string(),
-        message: format!(
-            "Loaded {} GWAS-linked rsIDs with gene/trait cross-refs from {}. Re-run enrichment to refresh vectors.",
-            rsid_count,
-            source_path.file_name().unwrap_or_default().to_string_lossy()
-        ),
-    })
+    Ok((source_path, downloaded))
 }
 
 async fn download_gwas_catalog(dest_zip: &Path) -> Result<(), String> {
@@ -314,7 +337,7 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
         &["STUDY ACCESSION", "GWAS CATALOG STUDY ACCESSION", "STUDY_ACCESSION"],
     );
 
-    conn.execute("DELETE FROM gwas_reference", [])
+    conn.execute("DELETE FROM reference.gwas_reference", [])
         .map_err(|e| e.to_string())?;
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
@@ -380,7 +403,7 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
         let associations_json =
             serde_json::to_string(&agg.associations).unwrap_or_else(|_| "[]".to_string());
         tx.execute(
-            "INSERT INTO gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json)
+            "INSERT INTO reference.gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             params![
                 rsid,

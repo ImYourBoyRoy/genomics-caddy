@@ -2,6 +2,7 @@
 <script lang="ts">
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
   import GnomadSetupPanel from "./GnomadSetupPanel.svelte";
+  import OfflineDataPanel from "./OfflineDataPanel.svelte";
   import {
     previewResearchScope,
     saveResearchScope,
@@ -16,6 +17,7 @@
   import { DEFAULT_RESEARCH_SCOPE } from "../../types/research";
   import {
     applySourcePreset as applyScopePreset,
+    detectActivePreset,
     ensureEnrichmentSources,
     syncSweepFastFromSources,
   } from "../../utils/researchScopeHelpers";
@@ -25,6 +27,7 @@
     sweepRunning?: boolean;
     scope?: ResearchScopeConfig;
     preview?: ResearchScopePreview | null;
+    previewLoading?: boolean;
     onScopeChange?: (scope: ResearchScopeConfig) => void;
     onLog?: (msg: string) => void;
     onGnomadReadyChange?: (ready: boolean) => void;
@@ -35,6 +38,7 @@
     sweepRunning = false,
     scope = $bindable({ ...DEFAULT_RESEARCH_SCOPE }),
     preview = $bindable<ResearchScopePreview | null>(null),
+    previewLoading = $bindable(false),
     onScopeChange,
     onLog,
     onGnomadReadyChange,
@@ -66,9 +70,11 @@
     if (sweepRunning) return;
     if (!selectedSample) {
       preview = null;
+      previewLoading = false;
       return;
     }
     isPreviewLoading = true;
+    previewLoading = true;
     try {
       preview = await previewResearchScope(selectedSample.id, scope);
     } catch (e: any) {
@@ -76,6 +82,7 @@
       onLog?.(`Scope preview failed: ${e.message || String(e)}`);
     } finally {
       isPreviewLoading = false;
+      previewLoading = false;
     }
   }
 
@@ -123,6 +130,7 @@
   }
 
   const gnomadSourceEnabled = $derived(scope.enrichment_sources?.gnomad ?? false);
+  const activePreset = $derived(detectActivePreset(scope));
 
   function markScopeDirty() {
     scopeDirty = true;
@@ -185,8 +193,8 @@
   });
 </script>
 
-<div class="glass-card scope-card">
-  <div class="card-header-row">
+<div class="glass-card scope-workbench">
+  <div class="scope-workbench-header">
     <h2 class="card-title">Sweep Scopes</h2>
     {#if isPreviewLoading}
       <ActivityPulse message="Counting sweep scopes…" accent="#a78bfa" maxWidth="220px" />
@@ -195,217 +203,255 @@
     {/if}
   </div>
 
-  <p class="scope-help">
-    Counts update automatically when you toggle scopes or finish a GWAS sync — no sweep run required.
-    The sweep processes the merged queue; Qdrant search uses indexed vectors after enrichment completes.
-  </p>
+  <details class="scope-help">
+    <summary>How sweep scopes work</summary>
+    Counts update when you toggle scopes or finish a GWAS sync. The sweep processes the merged queue;
+    Qdrant search uses indexed vectors after enrichment completes.
+  </details>
 
-  <div class="scope-grid">
-    <label class="scope-option">
-      <input type="checkbox" bind:checked={scope.curated} onchange={markScopeDirty} />
-      <span>
-        <strong>Curated markers</strong>
-        <small>ClinVar + marker packs in your genome{#if preview} — {preview.curated.toLocaleString()}{/if}</small>
-      </span>
-    </label>
+  <div class="scope-workbench-grid" class:scope-locked={sweepRunning}>
+    <section class="scope-subcard">
+      <h3 class="subcard-title">Variant queue</h3>
+      <div class="scope-grid scope-grid--queue">
+        <label class="scope-option">
+          <input type="checkbox" bind:checked={scope.curated} onchange={markScopeDirty} />
+          <span>
+            <strong>Curated markers</strong>
+            <small>ClinVar + marker packs{#if preview} — {preview.curated.toLocaleString()}{/if}</small>
+          </span>
+        </label>
 
-    <label class="scope-option">
-      <input type="checkbox" bind:checked={scope.agent_discoveries} onchange={markScopeDirty} />
-      <span>
-        <strong>Agent discoveries</strong>
-        <small>Research Agent saved findings{#if preview} — {preview.agent_discoveries.toLocaleString()}{/if}</small>
-      </span>
-    </label>
+        <label class="scope-option">
+          <input type="checkbox" bind:checked={scope.agent_discoveries} onchange={markScopeDirty} />
+          <span>
+            <strong>Agent discoveries</strong>
+            <small>Saved Research Agent findings{#if preview} — {preview.agent_discoveries.toLocaleString()}{/if}</small>
+          </span>
+        </label>
 
-    <label class="scope-option">
-      <input type="checkbox" bind:checked={scope.gwas_discovery} onchange={markScopeDirty} />
-      <span>
-        <strong>GWAS discovery</strong>
-        <small>
-          Your rsIDs intersecting GWAS Catalog
-          {#if preview}
-            — {preview.gwas_discovery.toLocaleString()}
-            {#if preview.gwas_genome_overlap > 0}
-              <span class="overlap-hint">({preview.gwas_genome_overlap.toLocaleString()} overlap in genome)</span>
+        <label class="scope-option">
+          <input type="checkbox" bind:checked={scope.gwas_discovery} onchange={markScopeDirty} />
+          <span>
+            <strong>GWAS discovery</strong>
+            <small>
+              rsIDs intersecting GWAS Catalog
+              {#if preview}
+                — {preview.gwas_discovery.toLocaleString()}
+                {#if preview.gwas_genome_overlap > 0}
+                  <span class="overlap-hint">({preview.gwas_genome_overlap.toLocaleString()} in genome)</span>
+                {/if}
+              {/if}
+            </small>
+          </span>
+        </label>
+
+        <label class="scope-option">
+          <input type="checkbox" bind:checked={scope.non_reference} onchange={markScopeDirty} />
+          <span>
+            <strong>GWAS het variants</strong>
+            <small>Heterozygous at GWAS loci{#if preview} — {preview.non_reference.toLocaleString()}{/if}</small>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <section class="scope-subcard">
+      <div class="sources-header">
+        <h3 class="subcard-title">Enrichment sources</h3>
+        <div class="source-presets" role="group" aria-label="Enrichment depth preset">
+          <button
+            type="button"
+            class="preset-btn"
+            class:active={activePreset === "fast"}
+            disabled={sweepRunning}
+            onclick={() => applySourcePreset("fast")}
+          >
+            Fast index
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            class:active={activePreset === "clinical"}
+            disabled={sweepRunning}
+            onclick={() => applySourcePreset("clinical")}
+          >
+            Clinical
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            class:active={activePreset === "full"}
+            disabled={sweepRunning}
+            onclick={() => applySourcePreset("full")}
+          >
+            Full depth
+          </button>
+        </div>
+      </div>
+
+      <div class="sources-grid">
+        <label class="scope-option source-slow">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.gnomad}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>gnomAD</strong>
+            <small>Population AF — slow on remote tabix.</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.clinvar_live}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>ClinVar (live)</strong>
+            <small>Clinical significance via NCBI.</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.pubmed}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>PubMed</strong>
+            <small>Trait-linked abstracts.</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.gtex}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>GTEx</strong>
+            <small>Tissue eQTL associations.</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.vep_dbsnp}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>VEP / dbSNP</strong>
+            <small>Gene symbols and coordinates.</small>
+          </span>
+        </label>
+        <label class="scope-option">
+          <input
+            type="checkbox"
+            bind:checked={scope.enrichment_sources!.secondary}
+            disabled={sweepRunning}
+            onchange={onSourceToggle}
+          />
+          <span>
+            <strong>Secondary adapters</strong>
+            <small>PGS, Reactome, Open Targets, PharmGKB.</small>
+          </span>
+        </label>
+      </div>
+
+      <label class="scope-option supplement-option">
+        <input
+          type="checkbox"
+          bind:checked={scope.enrichment_sources!.supplement_missing}
+          disabled={sweepRunning}
+          onchange={markScopeDirty}
+        />
+        <span>
+          <strong>Supplement missing only</strong>
+          <small>Add sources to already-indexed variants without re-embedding everything.</small>
+        </span>
+      </label>
+    </section>
+
+    <section class="scope-subcard scope-subcard--full">
+      <div class="scope-toolbar">
+        <label class="limit-field">
+          <span>GWAS cap</span>
+          <input type="number" min="100" max="100000" step="100" bind:value={scope.gwas_discovery_limit} disabled={sweepRunning} onchange={markScopeDirty} />
+        </label>
+        <label class="limit-field">
+          <span>GWAS het cap</span>
+          <input type="number" min="100" max="100000" step="100" bind:value={scope.non_reference_limit} disabled={sweepRunning} onchange={markScopeDirty} />
+        </label>
+
+        <div class="ref-row">
+          <div class="ref-status">
+            {#if refStatus === null}
+              <ActivityPulse message="Loading reference status…" accent="#34d399" maxWidth="220px" />
+            {:else if gwasReady}
+              <span class="ref-ok">GWAS catalog ready</span>
+              <span>{refStatus.gwas_rsid_count.toLocaleString()} reference rsIDs</span>
+            {:else}
+              <span class="ref-missing">GWAS catalog not downloaded</span>
+            {/if}
+          </div>
+          {#if refStatus !== null}
+            {#if gwasReady}
+              <button
+                class="btn btn-secondary btn-sm ref-resync-btn"
+                onclick={handleSyncGwas}
+                disabled={sweepRunning || isSyncing}
+                title="Replace local GWAS reference catalog"
+              >
+                {#if isSyncing}
+                  Syncing…
+                {:else if resyncConfirm}
+                  Confirm re-sync
+                {:else}
+                  Re-sync GWAS
+                {/if}
+              </button>
+            {:else}
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick={handleSyncGwas}
+                disabled={sweepRunning || isSyncing}
+              >
+                {isSyncing ? "Syncing…" : "Download GWAS catalog"}
+              </button>
             {/if}
           {/if}
-        </small>
-      </span>
-    </label>
-
-    <label class="scope-option">
-      <input type="checkbox" bind:checked={scope.non_reference} onchange={markScopeDirty} />
-      <span>
-        <strong>GWAS het variants</strong>
-        <small>Heterozygous at GWAS loci (capped){#if preview} — {preview.non_reference.toLocaleString()}{/if}</small>
-      </span>
-    </label>
-  </div>
-
-  <div class="sources-section">
-    <div class="sources-header">
-      <h3 class="sources-title">Enrichment sources</h3>
-      <div class="source-presets">
-        <button type="button" class="preset-btn" onclick={() => applySourcePreset("fast")}>Fast index</button>
-        <button type="button" class="preset-btn" onclick={() => applySourcePreset("clinical")}>Clinical</button>
-        <button type="button" class="preset-btn" onclick={() => applySourcePreset("full")}>Full depth</button>
+        </div>
       </div>
-    </div>
-    <p class="sources-help">
-      Local GWAS + embed always run. For 65k+ variants use <strong>Fast index</strong> first (minutes–hours).
-      Clinical / Full depth can take days — add gnomAD or other sources later with Supplement missing only.
-    </p>
-    <div class="sources-grid">
-      <label class="scope-option source-slow">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.gnomad}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>gnomAD</strong>
-          <small>Population allele frequency — slow on remote tabix; skip for fast sweeps.</small>
-        </span>
-      </label>
-      <label class="scope-option">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.clinvar_live}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>ClinVar (live)</strong>
-          <small>NCBI E-utilities clinical significance.</small>
-        </span>
-      </label>
-      <label class="scope-option">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.pubmed}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>PubMed</strong>
-          <small>Trait-linked abstracts for narrative context.</small>
-        </span>
-      </label>
-      <label class="scope-option">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.gtex}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>GTEx</strong>
-          <small>Tissue eQTL associations.</small>
-        </span>
-      </label>
-      <label class="scope-option">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.vep_dbsnp}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>VEP / dbSNP</strong>
-          <small>Gene symbols and GRCh38 coordinates when missing.</small>
-        </span>
-      </label>
-      <label class="scope-option">
-        <input
-          type="checkbox"
-          bind:checked={scope.enrichment_sources!.secondary}
-          onchange={onSourceToggle}
-        />
-        <span>
-          <strong>Secondary adapters</strong>
-          <small>PGS Catalog, Reactome, Open Targets, PharmGKB, trait ontology.</small>
-        </span>
-      </label>
-    </div>
-    <label class="scope-option supplement-option">
-      <input
-        type="checkbox"
-        bind:checked={scope.enrichment_sources!.supplement_missing}
-        onchange={markScopeDirty}
-      />
-      <span>
-        <strong>Supplement missing only</strong>
-        <small>Re-run enabled sources on already-indexed variants that skipped them — use after a fast sweep to add gnomAD (or others) without re-embedding everything.</small>
-      </span>
-    </label>
-  </div>
 
-  <div class="limit-row">
-    <label>
-      GWAS cap
-      <input type="number" min="100" max="100000" step="100" bind:value={scope.gwas_discovery_limit} onchange={markScopeDirty} />
-    </label>
-    <label>
-      GWAS het cap
-      <input type="number" min="100" max="100000" step="100" bind:value={scope.non_reference_limit} onchange={markScopeDirty} />
-    </label>
-  </div>
-
-  {#if preview}
-    <div class="preview-meta">
-      <span>Genotypes in sample: {preview.genotype_total.toLocaleString()}</span>
-      <span>GWAS reference rsIDs: {preview.gwas_reference_count.toLocaleString()}</span>
-      <span>GWAS rsIDs in your genome: {preview.gwas_genome_overlap.toLocaleString()}</span>
-      {#if preview.gwas_beyond_cap > 0}
-        <span class="cap-warn">
-          {preview.gwas_beyond_cap.toLocaleString()} GWAS overlap rsIDs not queued (cap limits to top by association count)
-        </span>
-      {/if}
-      {#if isPreviewLoading}<span>Updating…</span>{/if}
-    </div>
-    {#if preview.gwas_beyond_cap > 0}
-      <button type="button" class="btn btn-secondary btn-sm cap-preset-btn" onclick={queueFullGwasOverlap}>
-        Queue full GWAS overlap ({Math.min(preview.gwas_genome_overlap, 100_000).toLocaleString()})
-      </button>
-    {/if}
-  {/if}
-
-  <div class="ref-row">
-    <div class="ref-status">
-      {#if refStatus}
-        {#if gwasReady}
-          <span class="ref-ok">Downloaded and indexed</span>
-          <span>{refStatus.gwas_rsid_count.toLocaleString()} GWAS rsIDs in reference table</span>
-          {#if preview && preview.gwas_genome_overlap === 0}
-            <span class="ref-warn">Genome overlap is 0 — restart app after update to normalize rsID casing.</span>
+      {#if preview}
+        <div class="preview-meta">
+          <span>Genotypes: {preview.genotype_total.toLocaleString()}</span>
+          <span>GWAS ref: {preview.gwas_reference_count.toLocaleString()}</span>
+          <span>Genome overlap: {preview.gwas_genome_overlap.toLocaleString()}</span>
+          {#if preview.gwas_beyond_cap > 0}
+            <span class="cap-warn">{preview.gwas_beyond_cap.toLocaleString()} beyond cap</span>
           {/if}
-        {:else}
-          <span class="ref-missing">Not downloaded</span>
-          <span>GWAS discovery scope requires a catalog sync first.</span>
+        </div>
+        {#if preview.gwas_beyond_cap > 0}
+          <button type="button" class="btn btn-secondary btn-sm cap-preset-btn" disabled={sweepRunning} onclick={queueFullGwasOverlap}>
+            Queue full overlap ({Math.min(preview.gwas_genome_overlap, 100_000).toLocaleString()})
+          </button>
         {/if}
-      {:else}
-        <ActivityPulse message="Loading reference status…" accent="#34d399" maxWidth="280px" />
       {/if}
-    </div>
-    <button
-      class="btn btn-secondary btn-sm"
-      onclick={handleSyncGwas}
-      disabled={isSyncing}
-    >
-      {#if isSyncing}
-        Syncing GWAS…
-      {:else if gwasReady}
-        {resyncConfirm ? "Confirm Re-sync" : "Re-sync GWAS Catalog"}
+
+      {#if gnomadSourceEnabled}
+        <GnomadSetupPanel disabled={sweepRunning} onLog={onLog} onReadyChange={(ready) => onGnomadReadyChange?.(ready)} />
       {:else}
-        Download GWAS Catalog
+        <p class="gnomad-fast-note">gnomAD is off — enable above or use Supplement missing after a fast sweep.</p>
       {/if}
-    </button>
+
+      <OfflineDataPanel {selectedSample} {onLog} disabled={sweepRunning} />
+    </section>
   </div>
-
-  {#if gnomadSourceEnabled}
-    <GnomadSetupPanel
-      onLog={onLog}
-      onReadyChange={(ready) => onGnomadReadyChange?.(ready)}
-    />
-  {:else}
-    <p class="gnomad-fast-note">gnomAD is off for this sweep — enable it above or use Supplement missing only to add frequency data later.</p>
-  {/if}
 </div>
-
-<style src="../../styles/components/research-scope-section.css"></style>

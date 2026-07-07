@@ -14,86 +14,96 @@ pub(crate) fn load_local_gwas_associations(
     rsid: &str,
 ) -> Option<Vec<serde_json::Value>> {
     let rsid_norm = normalize_rsid(rsid)?;
-    let conn = crate::db::connect(db_path).ok()?;
-    let row: Result<(i64, String, String, String, String, Option<f64>, String), _> = conn
-        .query_row(
-            "SELECT association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json
-             FROM gwas_reference WHERE rsid = ?",
-            params![rsid_norm],
-            |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get(5)?,
-                    row.get(6)?,
-                ))
-            },
-        );
-    let (count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json) =
-        row.ok()?;
-    if count <= 0 {
-        return None;
-    }
-
-    if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&associations_json)
-        && !parsed.is_empty() {
-            return Some(parsed);
+    crate::db::with_cached_conn(db_path, |conn| {
+        #[allow(clippy::type_complexity)]
+        let row: Result<(i64, String, String, String, String, Option<f64>, String), _> = conn
+            .query_row(
+                "SELECT association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json
+                 FROM gwas_reference WHERE rsid = ?",
+                params![rsid_norm],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
+                    ))
+                },
+            );
+        let (count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json) =
+            match row {
+                Ok(r) => r,
+                Err(_) => return Ok(None),
+            };
+        if count <= 0 {
+            return Ok(None);
         }
 
-    let traits: Vec<String> = top_trait
-        .split(';')
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .map(String::from)
-        .collect();
-    let primary = if is_placeholder_gene(&primary_gene) {
-        parse_gene_tokens(&mapped_genes)
-            .into_iter()
-            .next()
-            .or_else(|| parse_gene_tokens(&reported_genes).into_iter().next())
-    } else {
-        Some(primary_gene)
-    };
-    let reported = parse_gene_tokens(&reported_genes);
-    let mapped = parse_gene_tokens(&mapped_genes);
-    let mapped_gene = primary
-        .as_deref()
-        .or_else(|| mapped.first().map(String::as_str));
+        if let Ok(parsed) = serde_json::from_str::<Vec<serde_json::Value>>(&associations_json)
+            && !parsed.is_empty() {
+                return Ok(Some(parsed));
+            }
 
-    let trait_names: Vec<String> = if traits.len() > 1 {
-        traits.into_iter().take(8).collect()
-    } else if !top_trait.trim().is_empty() {
-        vec![top_trait.trim().to_string()]
-    } else {
-        vec!["GWAS catalog association".to_string()]
-    };
+        let traits: Vec<String> = top_trait
+            .split(';')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from)
+            .collect();
+        let primary = if is_placeholder_gene(&primary_gene) {
+            parse_gene_tokens(&mapped_genes)
+                .into_iter()
+                .next()
+                .or_else(|| parse_gene_tokens(&reported_genes).into_iter().next())
+        } else {
+            Some(primary_gene)
+        };
+        let reported = parse_gene_tokens(&reported_genes);
+        let mapped = parse_gene_tokens(&mapped_genes);
+        let mapped_gene = primary
+            .as_deref()
+            .or_else(|| mapped.first().map(String::as_str));
 
-    Some(
-        trait_names
-            .iter()
-            .map(|trait_name| {
-                canonical_gwas_association(
-                    trait_name,
-                    best_pvalue.or(Some(1e-10)),
-                    &if reported.is_empty() {
-                        mapped.clone()
-                    } else {
-                        reported.clone()
-                    },
-                    mapped_gene,
-                    None,
-                    "gwas_catalog_local",
-                )
-            })
-            .collect(),
-    )
+        let trait_names: Vec<String> = if traits.len() > 1 {
+            traits.into_iter().take(8).collect()
+        } else if !top_trait.trim().is_empty() {
+            vec![top_trait.trim().to_string()]
+        } else {
+            vec!["GWAS catalog association".to_string()]
+        };
+
+        Ok(Some(
+            trait_names
+                .iter()
+                .map(|trait_name| {
+                    canonical_gwas_association(
+                        trait_name,
+                        best_pvalue.or(Some(1e-10)),
+                        &if reported.is_empty() {
+                            mapped.clone()
+                        } else {
+                            reported.clone()
+                        },
+                        mapped_gene,
+                        None,
+                        "gwas_catalog_local",
+                    )
+                })
+                .collect(),
+        ))
+    })
+    .ok()
+    .flatten()
 }
 
 pub fn gwas_needs_api_supplement(db_path: &Path, rsid: &str) -> bool {
     if super::tuning::local_gwas_only_in_sweep() {
+        return false;
+    }
+    if !super::sources_config::enrichment_gwas_api_supplement() {
         return false;
     }
     let Some(local) = load_local_gwas_associations(db_path, rsid) else {

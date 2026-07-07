@@ -27,7 +27,7 @@
     getActiveCategories, getDynamicQuestions, isReasoningModel as checkReasoningModel,
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
-  import manifest from "../../marker-packs/manifest.json";
+  import { markerPacksStore } from "../../utils/markerPacksState.svelte";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
   import ChatSettingsDrawer from "./ChatSettingsDrawer.svelte";
@@ -119,6 +119,8 @@
       : true
   );
   let lastVectorHits = $state<QdrantHit[]>([]);
+  let lastVectorEvidenceCards = $state<import("../../types/research").EvidenceCard[]>([]);
+  let lastVectorIndexBrief = $state("");
   let lastVectorQuery = $state("");
   let lastVectorError = $state("");
   let vectorDiagnostics = $state<VectorResearchDiagnostics | null>(null);
@@ -183,7 +185,7 @@
   }
   $effect(() => { if (selectedModel) void loadModelDetails(); });
 
-  async function sendPrompt(customPrompt?: string) {
+  async function sendPrompt(customPrompt: string | undefined = undefined) {
     await sendConsultationPrompt({
       customPrompt,
       promptText,
@@ -219,6 +221,8 @@
         if (patch.isChatting !== undefined) isChatting = patch.isChatting;
         if (patch.lastVectorQuery !== undefined) lastVectorQuery = patch.lastVectorQuery;
         if (patch.lastVectorHits !== undefined) lastVectorHits = patch.lastVectorHits;
+        if (patch.lastVectorEvidenceCards !== undefined) lastVectorEvidenceCards = patch.lastVectorEvidenceCards;
+        if (patch.lastVectorIndexBrief !== undefined) lastVectorIndexBrief = patch.lastVectorIndexBrief;
         if (patch.lastVectorError !== undefined) lastVectorError = patch.lastVectorError;
         if (patch.sessionPromptTokens !== undefined) sessionPromptTokens = patch.sessionPromptTokens;
         if (patch.sessionResponseTokens !== undefined) sessionResponseTokens = patch.sessionResponseTokens;
@@ -273,7 +277,7 @@
   }
   async function startNewSession() {
     isLoadingSession = true;
-    await startNewConsultationSession(sessionStore, selectedSample, selectedModel, models, manifest.packs);
+    await startNewConsultationSession(sessionStore, selectedSample, selectedModel, models, markerPacksStore.manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
   }
   async function saveSessionTitle(session: { title: string }) {
@@ -282,7 +286,7 @@
   async function deleteSession(id: string) {
     dialogStore.confirm("Delete this consultation history? This cannot be undone.", async () => {
       isLoadingSession = true;
-      await deleteConsultationSession(id, sessionStore, selectedSample, selectedModel, models, manifest.packs);
+      await deleteConsultationSession(id, sessionStore, selectedSample, selectedModel, models, markerPacksStore.manifest.packs);
       if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     }, "Delete Consultation");
   }
@@ -292,7 +296,7 @@
       const active = sessionStore.sessions.find(s => s.id === sessionStore.currentSessionId);
       if (!active || active.sampleId !== selectedSample.id) {
         isLoadingSession = true;
-        sessionStore.load(selectedSample, selectedModel, models, manifest.packs).then(() => {
+        sessionStore.load(selectedSample, selectedModel, models, markerPacksStore.manifest.packs).then(() => {
           if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
           else isLoadingSession = false;
         });
@@ -324,7 +328,7 @@
   $effect(() => {
     const sig = `${Object.keys(selectedPacks).filter(k => selectedPacks[k]).sort().join(",")}|${onlyActiveFindings}|${selectedSample?.id}`;
     if (lastContextSignature && sig !== lastContextSignature && messages.length > 0 && selectedSample && generatedReport) {
-      const names = manifest.packs.filter(p => selectedPacks[p.id]).map(p => p.label).join(", ") || "None";
+      const names = markerPacksStore.manifest.packs.filter(p => selectedPacks[p.id]).map(p => p.label).join(", ") || "None";
       const shortMsg = `Genomic context updated. Active packs: [${names}]. Findings sent: ${contextStats.included} variants.`;
       messages = [...messages, { role: "system", content: shortMsg, fullContent: shortMsg }];
     }
@@ -338,7 +342,7 @@
       ollamaToken = (await getOllamaToken()) || ollamaToken;
     })();
     if (Object.keys(selectedPacks).length === 0) {
-      selectedPacks = Object.fromEntries(manifest.packs.map(p => [p.id, true]));
+      selectedPacks = Object.fromEntries(markerPacksStore.manifest.packs.map(p => [p.id, true]));
     }
     const prefs = loadAiAssistantPreferences(userProfile);
     showThinkingProcess = prefs.showThinkingProcess;
@@ -350,7 +354,7 @@
     twoModelReview = prefs.twoModelReview;
     userProfile = prefs.userProfile as UserBiohackingProfile;
     systemInstructions = prefs.systemInstructions;
-    sessionStore.load(selectedSample, selectedModel, models, manifest.packs);
+    sessionStore.load(selectedSample, selectedModel, models, markerPacksStore.manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
     scanModels();
     refreshVectorDiagnostics();
@@ -412,6 +416,8 @@
       deleteMessage={deleteMessage}
       selectedModel={selectedModel}
       vectorHits={lastVectorHits}
+      vectorEvidenceCards={lastVectorEvidenceCards}
+      vectorIndexBrief={lastVectorIndexBrief}
       vectorQuery={lastVectorQuery}
       vectorError={lastVectorError}
       useVectorResearch={useVectorResearch}

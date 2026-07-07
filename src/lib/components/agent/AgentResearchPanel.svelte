@@ -143,7 +143,7 @@
     let healedTrials: ClinicalTrial[] = [];
     let healedDrugs: ChemblDrug[] = [];
 
-    const advanceStep = (index: number, status: AgentStep["status"], msg?: string) => {
+    const advanceStep = (index: number, status: AgentStep["status"], msg: string | undefined = undefined) => {
       steps[index].status = status;
       if (msg) steps[index].message = msg;
       currentStepIndex = index + 1;

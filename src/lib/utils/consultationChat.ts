@@ -8,9 +8,10 @@ import {
   streamOllamaChat,
   showOllamaModel,
   searchAssociationsHybrid,
+  getEvidenceCorpusSummary,
 } from "../api/tauri";
 import type { ChatMessage } from "../types/agent";
-import type { QdrantHit, VectorResearchDiagnostics } from "../types/research";
+import type { EvidenceCard, QdrantHit, VectorResearchDiagnostics } from "../types/research";
 import type { GenomeSample, GeneratedReport } from "../types/genomics";
 import { evidenceCardsToQdrantHits } from "./qdrantRag";
 import {
@@ -56,7 +57,13 @@ export interface ConsultationTurnInput {
 
 export interface ConsultationTurnCallbacks {
   onMessages: (messages: ChatMessage[]) => void;
-  onVectorResult: (hits: QdrantHit[], query: string, error?: string) => void;
+  onVectorResult: (
+    hits: QdrantHit[],
+    query: string,
+    error?: string,
+    evidenceCards?: EvidenceCard[],
+    indexBrief?: string,
+  ) => void;
   onTokenUsage: (promptTokens: number, responseTokens: number) => void;
   onChattingDone: () => void;
   registerMainListeners: (stop: () => void) => void;
@@ -107,7 +114,9 @@ export async function runConsultationTurn(
   } = input;
 
   let qdrantHits: QdrantHit[] = [];
+  let evidenceCards: EvidenceCard[] = [];
   let vectorSearchError = "";
+  let indexBrief = "";
 
   if (useVectorResearch) {
     if (vectorDiagnostics?.embedding_model_mismatch) {
@@ -118,17 +127,22 @@ export async function runConsultationTurn(
       callbacks.onVectorResult([], text, vectorSearchError);
     } else {
       try {
-        const cards = await searchAssociationsHybrid(
-          {
-            sample_id: selectedSample.id,
-            query: text,
-            min_data_quality: 0.25,
-            limit: 8,
-          },
-          ollamaUrl,
-        );
+        const [corpus, cards] = await Promise.all([
+          getEvidenceCorpusSummary(selectedSample.id).catch(() => null),
+          searchAssociationsHybrid(
+            {
+              sample_id: selectedSample.id,
+              query: text,
+              min_data_quality: 0.25,
+              limit: 15,
+            },
+            ollamaUrl,
+          ),
+        ]);
+        indexBrief = corpus?.index_brief ?? "";
+        evidenceCards = cards;
         qdrantHits = evidenceCardsToQdrantHits(cards);
-        callbacks.onVectorResult(qdrantHits, text);
+        callbacks.onVectorResult(qdrantHits, text, undefined, evidenceCards, indexBrief);
       } catch (err: unknown) {
         vectorSearchError = err instanceof Error ? err.message : String(err);
         callbacks.onVectorResult([], text, vectorSearchError);
@@ -163,6 +177,7 @@ export async function runConsultationTurn(
       query: text,
       enabled: useVectorResearch,
       error: vectorSearchError || undefined,
+      indexBrief: indexBrief || undefined,
     },
   });
 

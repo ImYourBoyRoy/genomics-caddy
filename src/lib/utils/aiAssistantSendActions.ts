@@ -6,7 +6,7 @@
 import { cancelOllamaStream } from "../api/tauri";
 import type { ChatMessage } from "../types/agent";
 import type { GeneratedReport, GenomeSample } from "../types/genomics";
-import type { QdrantHit, VectorResearchDiagnostics } from "../types/research";
+import type { QdrantHit, VectorResearchDiagnostics, EvidenceCard } from "../types/research";
 import {
   type AiContextMode,
   type ConsultationMode,
@@ -49,6 +49,8 @@ export interface SendConsultationPromptParams {
     isChatting?: boolean;
     lastVectorQuery?: string;
     lastVectorHits?: QdrantHit[];
+    lastVectorEvidenceCards?: EvidenceCard[];
+    lastVectorIndexBrief?: string;
     lastVectorError?: string;
     sessionPromptTokens?: number;
     sessionResponseTokens?: number;
@@ -133,10 +135,12 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
           messages = next;
           params.onState({ messages: next });
         },
-        onVectorResult: (hits, query, error) => {
+        onVectorResult: (hits, query, error, evidenceCards, indexBrief) => {
           params.onState({
             lastVectorQuery: query,
             lastVectorHits: hits,
+            lastVectorEvidenceCards: evidenceCards ?? [],
+            lastVectorIndexBrief: indexBrief ?? "",
             lastVectorError: error || "",
           });
         },

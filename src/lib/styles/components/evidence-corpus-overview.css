@@ -1,0 +1,139 @@
+/* ./src/lib/styles/components/evidence-corpus-overview.css */
+
+.evidence-corpus-overview {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.08) 0%,
+    rgba(34, 197, 94, 0.05) 100%
+  );
+}
+
+.eco-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.eco-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.eco-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.eco-stat {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.eco-brief {
+  margin: 0 0 12px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
+.eco-section-title {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.eco-buckets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.eco-bucket {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  text-transform: capitalize;
+}
+
+.eco-bucket-btn {
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.eco-bucket-btn:hover {
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.eco-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.eco-preset-btn {
+  font-size: 0.78rem;
+}
+
+.eco-preset-btn.active {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.eco-top-rsids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.eco-rsid-chip {
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  cursor: pointer;
+  color: inherit;
+}
+
+.eco-rsid-chip:hover {
+  background: rgba(168, 85, 247, 0.25);
+}
+
+.eco-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.eco-question {
+  font-size: 0.75rem;
+  text-align: left;
+  max-width: 100%;
+}
+
+.eco-loading,
+.eco-empty {
+  font-size: 0.82rem;
+  opacity: 0.8;
+  padding: 8px 0;
+}

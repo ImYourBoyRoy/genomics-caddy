@@ -266,6 +266,7 @@ pub fn build_trait_clusters(
     };
 
     let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
+    #[allow(clippy::type_complexity)]
     let rows: Vec<(Option<String>, Option<String>, Option<String>, String, Option<String>, f32, f32, f32)> =
         if let Some(cat) = trait_category {
             stmt.query_map(params![sample_id, cat, min_dq], |row| {
@@ -302,6 +303,7 @@ pub fn build_trait_clusters(
         };
 
     use std::collections::HashMap;
+    #[allow(clippy::type_complexity)]
     let mut groups: HashMap<String, Vec<(Option<String>, Option<String>, String, Option<String>, f32, f32, f32)>> =
         HashMap::new();
     for (cat, trait_name, gene, rsid, direction, dq, wellness, clinical) in rows {

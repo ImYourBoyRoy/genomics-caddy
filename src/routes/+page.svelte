@@ -10,6 +10,7 @@
     downloadChain as apiDownloadChain,
     getResearchJobStatus,
     getOllamaToken,
+    logJsError,
   } from "$lib/api/tauri";
   import type { ChatMessage } from "$lib/types/agent";
   import type { ResearchJob } from "$lib/types/research";
@@ -20,6 +21,7 @@
   import {
     jobRefs,
     researchEventContext,
+    applyLiveFieldsFromJob,
   } from "$lib/research/liveProgress.svelte";
 
   // Svelte 5 components
@@ -39,6 +41,7 @@
   import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
   import ResearchPanel from "$lib/components/research/ResearchPanel.svelte";
   import { dialogStore } from "$lib/utils/dialogState.svelte";
+  import GlobalDialogs from "$lib/components/common/GlobalDialogs.svelte";
   import { runPageBootstrap } from "$lib/utils/pageBootstrap";
   import {
     runImportGenome,
@@ -52,13 +55,13 @@
     downloadReferenceChain,
   } from "$lib/utils/pageSampleHandlers";
   import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
-  import { loadOllamaUrl } from "$lib/utils/ollamaSettings";
+  import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
   import "$lib/styles/print.css";
 
-  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, DbSnpRecord } from "$lib/types/genomics";
+  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
 
   // State Runes (Svelte 5)
@@ -88,6 +91,7 @@
   let activeTab = $state("report"); // "report", "map", "browser", "mcp", "agent", "research", "ai"
 
   let generatedReport = $state<GeneratedReport | null>(null);
+  let rawReport = $state<NormalizedReport | null>(null);
   let isGeneratingReport = $state(false);
   let reportError = $state("");
 
@@ -174,12 +178,15 @@
     const interval = setInterval(() => {
       void getResearchJobStatus(sampleId)
         .then((job) => {
-          if (job) researchJob = job;
+          if (job) {
+            researchJob = job;
+            applyLiveFieldsFromJob(job);
+          }
         })
         .catch((e) => {
           console.warn("Research job poll failed:", e);
         });
-    }, 8000);
+    }, 2000);
 
     return () => clearInterval(interval);
   });
@@ -193,9 +200,23 @@
   });
 
   onMount(() => {
+    // Intercept and route global webview JS errors to the persistent file log
+    window.onerror = (message, source, lineno, colno, error) => {
+      const msg = typeof message === "string" ? message : (message as any).message || "Unknown error";
+      const stack = error?.stack || "";
+      void logJsError(msg, source || "unknown", lineno || null, colno || null, stack || null);
+    };
+
+    window.onunhandledrejection = (event) => {
+      const reason = event.reason;
+      const msg = reason?.message || String(reason) || "Unhandled promise rejection";
+      const stack = reason?.stack || "";
+      void logJsError(msg, "unhandled_rejection", null, null, stack || null);
+    };
+
     async function init() {
       if (typeof localStorage !== "undefined") {
-        aiOllamaUrl = loadOllamaUrl();
+        aiOllamaUrl = await resolveInitialOllamaUrl();
       }
       aiOllamaToken = (await getOllamaToken()) || "";
       await runBootstrap();
@@ -246,13 +267,15 @@
       warmReport,
     });
 
-    isBootstrapping = false;
     if (pendingSample) {
       selectedSample = pendingSample;
-      if (!generatedReport) {
+      // warmReport was already called inside bootstrap — only re-trigger if it
+      // failed to produce a report (e.g. due to an error path that cleared the state).
+      if (!generatedReport && !isGeneratingReport) {
         void triggerReport();
       }
     }
+    isBootstrapping = false;
   }
 
   async function refreshChainStatus() {
@@ -331,6 +354,7 @@
         if (patch.isGeneratingReport !== undefined) isGeneratingReport = patch.isGeneratingReport;
         if (patch.reportError !== undefined) reportError = patch.reportError;
         if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
+        if (patch.rawReport !== undefined) rawReport = patch.rawReport;
       },
     });
   }
@@ -396,6 +420,8 @@
       {importSuccess}
       {samples}
       {selectedSample}
+      report={generatedReport}
+      sweepRunning={researchJob?.status === "running" && researchJob.loop_active !== false}
       onDownloadChain={downloadChain}
       onBrowseFile={browseFile}
       onImportGenome={importGenome}
@@ -403,7 +429,6 @@
       onDeleteSample={deleteSample}
     />
   {/snippet}
-
   {#snippet children()}
     <main class="main-content">
       {#if selectedSample === null}
@@ -423,8 +448,10 @@
             <button class="tab-btn" class:active={activeTab === "agent"} onclick={() => activeTab = "agent"}>🕵️ Research Agent</button>
             <button class="tab-btn" class:active={activeTab === "research"} onclick={() => activeTab = "research"}>
               🔬 Vector Research
-              {#if researchJob?.status === "running"}
+              {#if researchJob?.status === "running" && researchJob.loop_active !== false}
                 <span class="tab-status-pill running" title="Enrichment sweep in progress">{researchJob.enriched_count}/{researchJob.total_markers}</span>
+              {:else if researchJob?.status === "running"}
+                <span class="tab-status-pill paused" title="Sweep interrupted — resume on Vector Research tab">interrupted</span>
               {:else if researchJob?.status === "paused"}
                 <span class="tab-status-pill paused" title="Sweep paused">paused</span>
               {/if}
@@ -437,6 +464,7 @@
           {#if activeTab === "report"}
             <ReportView
               {generatedReport}
+              {rawReport}
               {isGeneratingReport}
               {selectedSample}
               {foundMarkersCount}
@@ -496,3 +524,5 @@
     </main>
   {/snippet}
 </AppShell>
+
+<GlobalDialogs />

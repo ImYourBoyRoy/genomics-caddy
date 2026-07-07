@@ -135,6 +135,7 @@ impl Clone for PreparedEnrichment {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn prepare_marker_enrichment(
     sample_id: i64,
     rsid: &str,
@@ -153,6 +154,28 @@ pub(crate) async fn prepare_marker_enrichment(
 
     let mut live_clinvar_sig = clinvar_sig.filter(|s| !s.is_empty()).map(String::from);
     let mut ncbi_narrative_lines: Vec<String> = Vec::new();
+    if live_clinvar_sig.is_none() {
+        let local_res = crate::db::with_cached_conn(db_path, |conn| {
+            Ok(crate::offline::lookup_clinvar_local(conn, rsid))
+        });
+        if let Ok(Some(local)) = local_res {
+            live_clinvar_sig = Some(local.significance.clone()).filter(|s| !s.is_empty());
+            if let Some(line) = crate::offline::clinvar_local_to_live_context(&local).narrative {
+                ncbi_narrative_lines.push(line);
+            }
+            if let Some(obj) = sources_provenance.as_object_mut() {
+                obj.insert(
+                    "clinvar_eutils".into(),
+                    serde_json::json!({
+                        "queried": true,
+                        "hit": live_clinvar_sig.is_some(),
+                        "local": true,
+                        "source": "clinvar_reference_local",
+                    }),
+                );
+            }
+        }
+    }
     if live_clinvar_sig.is_none() && super::sources_config::enrichment_clinvar_live_enabled() {
         let clinvar_started = Instant::now();
         let live = super::evidence::ncbi_context::fetch_clinvar_live(
@@ -624,6 +647,7 @@ pub(crate) async fn prepare_marker_enrichment(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn enrich_marker(
     sample_id: i64,
     rsid: &str,
@@ -856,7 +880,8 @@ async fn process_enrichment_batch_inner(
         }
     }
 
-    super::sweep_metrics::clear_batch_activity();
+    // Batch activity lifecycle is owned by sweep.rs (embed → upsert). Do not clear here —
+    // pipelined prepare for the next batch must not wipe embedding progress for the current batch.
 
     indexed.sort_by_key(|(idx, _)| *idx);
     indexed.into_iter().map(|(_, result)| result).collect()

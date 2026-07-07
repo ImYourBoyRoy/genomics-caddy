@@ -1,0 +1,133 @@
+{
+  "name": "PRS Registry",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "principle": "PRS modules are registries, not scored markers. Do not compute unless weight file, SNP coverage, ancestry calibration, and validation metadata are present.",
+  "prs_modules": [
+    {
+      "id": "PRS_T2D",
+      "trait": "Type 2 diabetes risk",
+      "required_inputs": [
+        "weight_file",
+        "ancestry_calibration",
+        "imputation_or_sufficient_overlap",
+        "age/sex/BMI optional clinical model"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_BMI_OBESITY",
+      "trait": "BMI/adiposity",
+      "required_inputs": [
+        "weight_file",
+        "ancestry_calibration",
+        "lifestyle context"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_CAD",
+      "trait": "Coronary artery disease",
+      "required_inputs": [
+        "weight_file",
+        "ancestry_calibration",
+        "lipids/BP/smoking context"
+      ],
+      "output_policy": "do_not_replace_clinical_risk_calculator"
+    },
+    {
+      "id": "PRS_LPA_LIPIDS",
+      "trait": "Lipids / Lp(a) / triglycerides",
+      "required_inputs": [
+        "weight_file",
+        "lipid labs"
+      ],
+      "output_policy": "lab_confirm"
+    },
+    {
+      "id": "PRS_BMD",
+      "trait": "Bone mineral density",
+      "required_inputs": [
+        "weight_file",
+        "DXA context"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_ALLERGY_ATOPY",
+      "trait": "Atopy/allergic disease",
+      "required_inputs": [
+        "weight_file",
+        "IgE/allergy phenotype"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_ASTHMA",
+      "trait": "Asthma",
+      "required_inputs": [
+        "weight_file",
+        "spirometry/symptoms"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_IBD",
+      "trait": "Inflammatory bowel disease",
+      "required_inputs": [
+        "weight_file",
+        "GI phenotype",
+        "fecal calprotectin if symptomatic"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_AUTOIMMUNE",
+      "trait": "Autoimmune disease clusters",
+      "required_inputs": [
+        "weight_file",
+        "HLA handling",
+        "autoantibody/lab context"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_MIGRAINE",
+      "trait": "Migraine",
+      "required_inputs": [
+        "weight_file",
+        "headache phenotype"
+      ],
+      "output_policy": "context_only"
+    },
+    {
+      "id": "PRS_BREAST_CANCER",
+      "trait": "Breast cancer PRS",
+      "required_inputs": [
+        "validated clinical model",
+        "ancestry calibration",
+        "family history",
+        "monogenic testing context"
+      ],
+      "output_policy": "clinical_context_only"
+    },
+    {
+      "id": "PRS_PROSTATE_CANCER",
+      "trait": "Prostate cancer PRS",
+      "required_inputs": [
+        "validated model",
+        "ancestry calibration",
+        "PSA/family history context"
+      ],
+      "output_policy": "clinical_context_only"
+    },
+    {
+      "id": "PRS_LONGEVITY",
+      "trait": "Longevity/healthspan",
+      "required_inputs": [
+        "research mode only"
+      ],
+      "output_policy": "do_not_predict_lifespan"
+    }
+  ]
+}

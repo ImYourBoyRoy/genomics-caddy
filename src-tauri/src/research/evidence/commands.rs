@@ -13,10 +13,13 @@ use super::search::{
     search_associations_hybrid as hybrid_search,
 };
 use super::store::{list_candidates, update_candidate_status};
+use super::catalog::browse_catalog;
+use super::corpus::build_evidence_corpus_summary;
 use super::types::{
-    ActionabilityPoint, ChromosomeTraitBand, EvidenceCard, EvidencePacket, HybridSearchParams,
-    PathwayFlowRow, QualityDashboard, SimilarSearchParams, TraitClusterSummary,
-    UpdateCandidateStatusRequest, CandidateMarkerRow,
+    ActionabilityPoint, BrowseAssociationsParams, BrowseAssociationsResult, ChromosomeTraitBand,
+    EvidenceCard, EvidenceCorpusSummary, EvidencePacket, HybridSearchParams, PathwayFlowRow,
+    QualityDashboard, SimilarSearchParams, TraitClusterSummary, UpdateCandidateStatusRequest,
+    CandidateMarkerRow,
 };
 use crate::config;
 use crate::db_runtime;
@@ -308,4 +311,33 @@ pub async fn enable_named_vectors_collection(
         "Named vectors enabled on collection '{}' ({} dims): trait_dense, gene_mechanism_dense, evidence_dense, actionability_dense",
         cfg.collection, dims
     ))
+}
+
+#[tauri::command]
+pub async fn get_evidence_corpus_summary(
+    app: AppHandle,
+    sample_id: i64,
+    enrichment_enriched: Option<u64>,
+    enrichment_total: Option<u64>,
+) -> Result<EvidenceCorpusSummary, String> {
+    let cfg = load_qdrant(&app).await?;
+    let db_path = get_db_path(&app);
+    build_evidence_corpus_summary(
+        &db_path,
+        sample_id,
+        &cfg,
+        enrichment_enriched,
+        enrichment_total,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn browse_associations_cmd(
+    app: AppHandle,
+    params: BrowseAssociationsParams,
+) -> Result<BrowseAssociationsResult, String> {
+    let cfg = load_qdrant(&app).await?;
+    let db_path = get_db_path(&app);
+    browse_catalog(&params, &cfg, &db_path).await
 }

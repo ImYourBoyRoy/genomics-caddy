@@ -1,0 +1,1555 @@
+{
+  "name": "Muscle Performance, Hypertrophy & Recovery",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_ATHLETIC_DESTINY_BLOCK",
+      "gene": "MULTI_GENE",
+      "variant_name": "Athletic destiny non-determinism rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents deterministic performance claims",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "No genotype makes someone destined or unable to build muscle, endurance, power, or athletic skill. Genetics can suggest training bias and recovery context only.",
+      "do_not_claim": [
+        "athletic guarantee",
+        "low potential claim",
+        "sports clearance"
+      ],
+      "confirm_with": [
+        "training history",
+        "body composition",
+        "strength/endurance testing",
+        "injury history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "Human Phenotype Ontology",
+          "url": "https://hpo.jax.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Phenotype ontology",
+          "conflict_of_interest": "Academic phenotype resource",
+          "notes": "Use to standardize symptom prompts and phenotype tags."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_LEAN_MASS_STRENGTH_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "Lean mass and strength PRS module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic muscle mass / strength context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Muscle size and strength are highly polygenic and training-dependent. Use only as a calibrated PRS with training and nutrition data.",
+      "do_not_claim": [
+        "muscle-building guarantee",
+        "low responder certainty"
+      ],
+      "confirm_with": [
+        "DXA/body composition",
+        "strength logs",
+        "protein intake",
+        "training volume"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1815739",
+      "gene": "ACTN3",
+      "variant_name": "R577X",
+      "effect_allele": "T",
+      "impact": "Fast-twitch alpha-actinin-3 deficiency / power-endurance bias",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ACTN3 R577X is one of the best-replicated sports-performance variants. T/T eliminates functional alpha-actinin-3 and may shift toward endurance/recovery traits rather than maximal sprint-power bias.",
+      "do_not_claim": [
+        "athletic ability prediction",
+        "injury prediction"
+      ],
+      "confirm_with": [
+        "sprint vs endurance history",
+        "strength/power testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4343",
+      "gene": "ACE",
+      "variant_name": "ACE I/D proxy marker",
+      "effect_allele": "G",
+      "impact": "ACE pathway / endurance-power context proxy",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ACE variation has been studied in endurance/power traits and cardiovascular adaptation. rs4343 is only a proxy and not equivalent to direct I/D typing.",
+      "do_not_claim": [
+        "elite athlete prediction",
+        "blood pressure diagnosis"
+      ],
+      "confirm_with": [
+        "training response",
+        "VO2 max",
+        "blood pressure"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "proxy_snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8192678",
+      "gene": "PPARGC1A",
+      "variant_name": "Gly482Ser",
+      "effect_allele": "A",
+      "impact": "Mitochondrial biogenesis and endurance adaptation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "PPARGC1A regulates mitochondrial biogenesis. Gly482Ser is a plausible endurance/adaptation context marker, but not deterministic.",
+      "do_not_claim": [
+        "VO2 max prediction"
+      ],
+      "confirm_with": [
+        "VO2 max",
+        "training response",
+        "mitochondrial endurance phenotype"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17602729",
+      "gene": "AMPD1",
+      "variant_name": "C34T",
+      "effect_allele": "T",
+      "impact": "Adenosine monophosphate deaminase deficiency tendency",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "AMPD1 C34T can reduce muscle AMP deaminase activity and may influence exercise intolerance, cramps, or fatigue in some carriers.",
+      "do_not_claim": [
+        "myopathy diagnosis",
+        "exercise intolerance diagnosis"
+      ],
+      "confirm_with": [
+        "exercise symptoms",
+        "CK if symptomatic",
+        "clinical evaluation"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1049434",
+      "gene": "MCT1/SLC16A1",
+      "variant_name": "T1470A lactate transporter marker",
+      "effect_allele": "T",
+      "impact": "Lactate transport and high-intensity exercise context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC16A1/MCT1 transports lactate. Variants have been studied for lactate kinetics and endurance/high-intensity performance context.",
+      "do_not_claim": [
+        "lactate threshold prediction"
+      ],
+      "confirm_with": [
+        "lactate threshold testing",
+        "interval tolerance"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4994",
+      "gene": "ADRB3",
+      "variant_name": "Trp64Arg",
+      "effect_allele": "C",
+      "impact": "Energy expenditure and lipolysis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB3 influences adipose lipolysis and energy expenditure. Use as body-composition context, not as a weight-loss prediction.",
+      "do_not_claim": [
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "body composition",
+        "training response"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042713",
+      "gene": "ADRB2",
+      "variant_name": "Arg16Gly",
+      "effect_allele": "G",
+      "impact": "Adrenergic receptor response / bronchodilation / metabolic training context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 variation may affect adrenergic signaling, airway tone, and exercise response. Effects are inconsistent and phenotype-dependent.",
+      "do_not_claim": [
+        "training outcome prediction"
+      ],
+      "confirm_with": [
+        "heart rate response",
+        "asthma/exercise symptoms"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042714",
+      "gene": "ADRB2",
+      "variant_name": "Gln27Glu",
+      "effect_allele": "C",
+      "impact": "Adrenergic metabolic and airway response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 Gln27Glu is a weak context marker for adrenergic response and body composition studies.",
+      "do_not_claim": [
+        "fat loss prediction"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800012",
+      "gene": "COL1A1",
+      "variant_name": "Sp1 binding polymorphism",
+      "effect_allele": "T",
+      "impact": "Collagen I / tendon-bone injury context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "COL1A1 Sp1 variant can affect collagen I expression and bone/tendon integrity. Use with injury history, not as a sports restriction.",
+      "do_not_claim": [
+        "injury prediction"
+      ],
+      "confirm_with": [
+        "injury history",
+        "DEXA if indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12722",
+      "gene": "COL5A1",
+      "variant_name": "COL5A1 3UTR variant",
+      "effect_allele": "T",
+      "impact": "Tendon/ligament mechanical property context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COL5A1 is relevant to tendon and ligament matrix properties. Use only as a minor injury-susceptibility context marker.",
+      "do_not_claim": [
+        "tendon rupture prediction"
+      ],
+      "confirm_with": [
+        "tendon injury history",
+        "mobility assessment"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs970547",
+      "gene": "COL12A1",
+      "variant_name": "COL12A1 UTR marker",
+      "effect_allele": "T",
+      "impact": "Ligament and ACL injury context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COL12A1 variants have been studied in ACL and connective-tissue injury contexts. Effects are modest.",
+      "do_not_claim": [
+        "ACL tear prediction"
+      ],
+      "confirm_with": [
+        "injury history",
+        "biomechanics assessment"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6265",
+      "gene": "BDNF",
+      "variant_name": "Val66Met",
+      "effect_allele": "A",
+      "impact": "Motor learning and neuroplasticity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BDNF Val66Met can influence neuroplasticity and motor learning adaptation. Exercise itself is a major BDNF modifier.",
+      "do_not_claim": [
+        "poor learning prediction"
+      ],
+      "confirm_with": [
+        "skill acquisition history",
+        "training response"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228570",
+      "gene": "VDR",
+      "variant_name": "FokI",
+      "effect_allele": "T",
+      "impact": "Vitamin D receptor and muscle/bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR variation may modify muscle function and bone interactions, but vitamin D status and training dominate phenotype.",
+      "do_not_claim": [
+        "muscle weakness diagnosis"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "strength testing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1050450",
+      "gene": "GPX1",
+      "variant_name": "Pro198Leu",
+      "effect_allele": "T",
+      "impact": "Selenium-dependent antioxidant response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GPX1 variation can influence oxidative stress handling, particularly when selenium intake/status is low.",
+      "do_not_claim": [
+        "oxidative stress diagnosis"
+      ],
+      "confirm_with": [
+        "selenium status",
+        "training recovery"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4880",
+      "gene": "SOD2",
+      "variant_name": "Val16Ala",
+      "effect_allele": "G",
+      "impact": "Mitochondrial antioxidant import context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SOD2 Val16Ala modifies mitochondrial antioxidant enzyme targeting. Use with recovery and oxidative-stress context.",
+      "do_not_claim": [
+        "recovery diagnosis"
+      ],
+      "confirm_with": [
+        "exercise recovery",
+        "oxidative stress labs if used"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF -308A",
+      "effect_allele": "A",
+      "impact": "Inflammatory recovery context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF promoter variation is a weak context marker for inflammatory tone and soreness/recovery tendencies.",
+      "do_not_claim": [
+        "chronic inflammation diagnosis"
+      ],
+      "confirm_with": [
+        "hs-CRP",
+        "recovery symptoms"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL6",
+      "variant_name": "IL6 -174G>C",
+      "effect_allele": "G",
+      "impact": "Exercise inflammation / cytokine response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 is an exercise-responsive cytokine. Promoter variants are weak context markers for inflammatory response patterns.",
+      "do_not_claim": [
+        "inflammation diagnosis"
+      ],
+      "confirm_with": [
+        "hs-CRP",
+        "training recovery"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070744",
+      "gene": "NOS3",
+      "variant_name": "NOS3 -786T>C",
+      "effect_allele": "C",
+      "impact": "Nitric oxide / blood-flow adaptation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NOS3 promoter variation can affect nitric oxide biology and vascular response to training.",
+      "do_not_claim": [
+        "hypertension diagnosis",
+        "pump response prediction"
+      ],
+      "confirm_with": [
+        "blood pressure",
+        "exercise tolerance"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799983",
+      "gene": "NOS3",
+      "variant_name": "Glu298Asp",
+      "effect_allele": "T",
+      "impact": "Endothelial nitric oxide and blood-flow context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NOS3 Glu298Asp is a context marker for endothelial function and blood-flow response, not a diagnosis.",
+      "do_not_claim": [
+        "cardiovascular disease diagnosis"
+      ],
+      "confirm_with": [
+        "blood pressure",
+        "vascular health metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801282",
+      "gene": "PPARG",
+      "variant_name": "Pro12Ala",
+      "effect_allele": "G",
+      "impact": "Insulin sensitivity and training-metabolic response",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PPARG Pro12Ala can modify insulin sensitivity and adipose metabolism, influencing training nutrition context.",
+      "do_not_claim": [
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "A1c",
+        "fasting insulin",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9939609",
+      "gene": "FTO",
+      "variant_name": "FTO appetite/body composition marker",
+      "effect_allele": "A",
+      "impact": "Satiety and adiposity tendency context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FTO is a robust common obesity/adiposity locus. Exercise and protein intake can strongly attenuate the phenotype.",
+      "do_not_claim": [
+        "obesity destiny"
+      ],
+      "confirm_with": [
+        "satiety logs",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17782313",
+      "gene": "MC4R",
+      "variant_name": "MC4R downstream satiety marker",
+      "effect_allele": "C",
+      "impact": "Appetite and energy-balance context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC4R common variation modifies appetite/body-weight susceptibility. Rare MC4R deficiency is separate and requires clinical testing.",
+      "do_not_claim": [
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "satiety/appetite logs",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs35767",
+      "gene": "IGF1",
+      "variant_name": "IGF1 promoter/context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Growth factor and muscle adaptation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IGF1 promoter/context marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805086",
+      "gene": "IGF2",
+      "variant_name": "IGF2 marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Growth signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IGF2 marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs35767_IGF1_PANEL",
+      "gene": "IGF1/IGF1R",
+      "variant_name": "IGF pathway panel",
+      "effect_allele": "study_reported_allele",
+      "impact": "Growth and hypertrophy signaling context",
+      "evidence_tier": "A_rare_high_effect_when_confirmed",
+      "interpretation": "IGF pathway panel is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "rs28497577",
+      "gene": "MSTN",
+      "variant_name": "Myostatin regulatory marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Myostatin pathway context, not a double-muscle claim",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "Myostatin regulatory marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MSTN_RARE_HIGH_EFFECT",
+      "gene": "MSTN",
+      "variant_name": "Myostatin rare variant panel",
+      "effect_allele": "study_reported_allele",
+      "impact": "Rare high-effect muscle hypertrophy variants requiring sequencing",
+      "evidence_tier": "A_rare_high_effect_when_confirmed",
+      "interpretation": "Myostatin rare variant panel is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8111989",
+      "gene": "CKM",
+      "variant_name": "Creatine kinase muscle marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Phosphocreatine shuttle and performance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "Creatine kinase muscle marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11549465",
+      "gene": "HIF1A",
+      "variant_name": "Pro582Ser hypoxia marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Hypoxia adaptation and anaerobic response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "Pro582Ser hypoxia marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070744_NOS3_DUP_CONTEXT",
+      "gene": "NOS3",
+      "variant_name": "NOS3 nitric oxide context panel",
+      "effect_allele": "study_reported_allele",
+      "impact": "Blood-flow and endurance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NOS3 nitric oxide context panel is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2073711",
+      "gene": "UCP2",
+      "variant_name": "UCP2 energy efficiency marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Mitochondrial uncoupling and energy metabolism context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "UCP2 energy efficiency marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800592",
+      "gene": "UCP1",
+      "variant_name": "UCP1 promoter thermogenesis marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Thermogenesis and energy expenditure context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "UCP1 promoter thermogenesis marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8192673",
+      "gene": "PPARGC1B",
+      "variant_name": "PGC-1 beta context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Mitochondrial metabolism context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "PGC-1 beta context marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042719",
+      "gene": "ADRB2",
+      "variant_name": "ADRB2 haplotype context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Adrenergic exercise response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 haplotype context marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11549467",
+      "gene": "HIF1A",
+      "variant_name": "HIF1A oxygen-response context",
+      "effect_allele": "study_reported_allele",
+      "impact": "Hypoxic/anaerobic adaptation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "HIF1A oxygen-response context is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs731236",
+      "gene": "VDR",
+      "variant_name": "TaqI VDR context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Bone/muscle vitamin D receptor context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TaqI VDR context marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1544410",
+      "gene": "VDR",
+      "variant_name": "BsmI VDR context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Vitamin D receptor muscle/bone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BsmI VDR context marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800796",
+      "gene": "IL6",
+      "variant_name": "IL6 promoter -572 marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Cytokine response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 promoter -572 marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs361525",
+      "gene": "TNF",
+      "variant_name": "TNF -238 marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Inflammation/recovery context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF -238 marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs174537",
+      "gene": "FADS1/FADS2",
+      "variant_name": "PUFA inflammatory lipid mediator marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Recovery/inflammation lipid context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "PUFA inflammatory lipid mediator marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1051730",
+      "gene": "CHRNA3",
+      "variant_name": "Nicotine/endurance confounder marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Smoking/nicotine confounding context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "Nicotine/endurance confounder marker is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs738409",
+      "gene": "PNPLA3",
+      "variant_name": "Fatty liver exercise-metabolic context",
+      "effect_allele": "study_reported_allele",
+      "impact": "Hepatic fat modifier relevant to training metabolism",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "Fatty liver exercise-metabolic context is included as a muscle/performance/recovery context item. It should modify training hypotheses, not determine ability or medical clearance.",
+      "do_not_claim": [
+        "athletic destiny claim",
+        "medical diagnosis",
+        "training prescription from genotype alone"
+      ],
+      "confirm_with": [
+        "training logs",
+        "body composition",
+        "performance testing",
+        "injury/recovery history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_CREATINE_RESPONSE_CONTEXT",
+      "gene": "CKM/SLC6A8/AMPD1/MULTI_GENE",
+      "variant_name": "Creatine response context panel",
+      "effect_allele": "N/A",
+      "impact": "Creatine/phosphocreatine performance-response context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "Creatine response is influenced by muscle mass, diet, training, baseline creatine intake, and transporter biology. Do not predict response from one SNP.",
+      "do_not_claim": [
+        "creatine responder status certainty"
+      ],
+      "confirm_with": [
+        "training logs",
+        "dietary creatine intake",
+        "strength/power metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_OVERTRAINING_RECOVERY_CONTEXT",
+      "gene": "IL6/TNF/CRP/SOD2/GPX1/HPA_AXIS",
+      "variant_name": "Training recovery and inflammation panel",
+      "effect_allele": "N/A",
+      "impact": "Recovery load, inflammation, and stress-axis context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "Recovery is dominated by sleep, nutrition, programming, stress, and injury load. Genetics can only add context.",
+      "do_not_claim": [
+        "overtraining diagnosis"
+      ],
+      "confirm_with": [
+        "resting HR/HRV",
+        "sleep",
+        "training volume",
+        "hs-CRP if clinically relevant"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MUSCLE_DISEASE_RED_FLAGS",
+      "gene": "DMD/RYR1/CACNA1S/PYGM/CPT2/ACADVL",
+      "variant_name": "Exercise intolerance and myopathy red-flag panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare myopathy and rhabdomyolysis red-flag context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Severe exertional rhabdomyolysis, malignant hyperthermia, recurrent cramps, or exercise intolerance requires clinical evaluation. Consumer SNPs cannot rule out myopathy.",
+      "do_not_claim": [
+        "myopathy diagnosis from raw DNA",
+        "sports clearance"
+      ],
+      "confirm_with": [
+        "CK during symptoms",
+        "neuromuscular specialist",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    }
+  ]
+}

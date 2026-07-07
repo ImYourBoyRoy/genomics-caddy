@@ -7,6 +7,8 @@ pub mod backfill;
 pub mod card;
 pub mod cache;
 pub mod commands;
+pub mod catalog;
+pub mod corpus;
 pub mod dashboard;
 pub mod named_vectors;
 pub mod ncbi_context;

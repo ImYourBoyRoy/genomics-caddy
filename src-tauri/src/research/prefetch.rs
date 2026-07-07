@@ -92,6 +92,11 @@ fn spawn_marker_prefetch_tasks(
     if enrichment_clinvar_live_enabled()
         && clinvar_sig.as_deref().filter(|s| !s.is_empty()).is_none()
     {
+        let skip_live_clinvar = crate::db::connect(db_path)
+            .ok()
+            .map(|c| crate::offline::offline_clinvar_available(&c))
+            .unwrap_or(false);
+        if !skip_live_clinvar {
         let sem = sem.clone();
         let db = db.clone();
         let rsid = rsid.clone();
@@ -113,6 +118,7 @@ fn spawn_marker_prefetch_tasks(
             )
             .await;
         });
+        }
     }
 
     if enrichment_pubmed_enabled() && needs_pubmed {

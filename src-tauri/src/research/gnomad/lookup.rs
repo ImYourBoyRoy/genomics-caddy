@@ -217,6 +217,7 @@ fn should_graphql_fallback(cfg: &GnomadConfig, ctx: &GnomadContext, priority: bo
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn resolve_gnomad_context(
     db_path: &Path,
     data_dir: &Path,

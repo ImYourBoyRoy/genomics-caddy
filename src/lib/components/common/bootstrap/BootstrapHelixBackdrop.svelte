@@ -50,12 +50,47 @@
       </linearGradient>
     </defs>
 
+    <!-- Strand A: Multi-layered hardware-accelerated vector glow -->
+    <path
+      class="strand strand-a"
+      d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
+      fill="none"
+      stroke="url(#strand-a)"
+      stroke-width="16"
+      opacity="0.15"
+    />
+    <path
+      class="strand strand-a"
+      d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
+      fill="none"
+      stroke="url(#strand-a)"
+      stroke-width="7"
+      opacity="0.45"
+    />
     <path
       class="strand strand-a"
       d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
       fill="none"
       stroke="url(#strand-a)"
       stroke-width="2"
+    />
+
+    <!-- Strand B: Multi-layered hardware-accelerated vector glow -->
+    <path
+      class="strand strand-b"
+      d="M 280 0 Q 180 65 280 130 Q 380 195 280 260 Q 180 325 280 390 Q 380 455 280 520"
+      fill="none"
+      stroke="url(#strand-b)"
+      stroke-width="16"
+      opacity="0.12"
+    />
+    <path
+      class="strand strand-b"
+      d="M 280 0 Q 180 65 280 130 Q 380 195 280 260 Q 180 325 280 390 Q 380 455 280 520"
+      fill="none"
+      stroke="url(#strand-b)"
+      stroke-width="7"
+      opacity="0.35"
     />
     <path
       class="strand strand-b"
@@ -122,7 +157,6 @@
     height: min(720px, 90vh);
     transform: translate(-50%, -50%);
     animation: bootstrap-helix-drift 9s ease-in-out infinite;
-    filter: drop-shadow(0 0 32px var(--bootstrap-glow-soft));
   }
 
   .strand {

@@ -58,12 +58,33 @@ pub struct ResearchJob {
     pub current_source: Option<String>,
     pub started_at: i64,
     pub last_updated: i64,
+    #[serde(default)]
+    pub session_started_at: Option<i64>,
     pub error_message: Option<String>,
     #[serde(default)]
     pub scope_json: Option<String>,
     /// In-memory sweep loop active (may differ briefly from DB status during pause/resume).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub loop_active: Option<bool>,
+    /// Latest sweep activity (poll + events; not persisted in SQLite).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub live_message: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activity_phase: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_prepared: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_prefetch_done: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_total: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_elapsed_secs: Option<i64>,
+    /// Sample-specific vectors already in Qdrant when this sweep session started.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub qdrant_sample_count: Option<u64>,
+    /// Seconds since this app-session sweep started (not the original job row `started_at`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_elapsed_secs: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -91,6 +112,33 @@ pub struct ResearchProgress {
     pub batch_total: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub batch_elapsed_secs: Option<i64>,
+    /// Sample-specific vectors already in Qdrant when this sweep session started.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub qdrant_sample_count: Option<u64>,
+    /// Seconds since this app-session sweep started (not the original job row `started_at`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_elapsed_secs: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResearchFindingPreview {
+    pub job_id: String,
+    pub sample_id: i64,
+    pub rsid: String,
+    pub gene_symbol: Option<String>,
+    pub genotype: Option<String>,
+    pub trait_name: Option<String>,
+    pub trait_category: Option<String>,
+    pub personal_direction: String,
+    pub directionality_label: String,
+    pub impact_bucket: String,
+    pub summary: String,
+    pub wellness_actionability_score: f32,
+    pub clinical_actionability_score: f32,
+    pub data_quality_score: f32,
+    pub source_count: u32,
+    #[serde(default)]
+    pub source_names: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -209,6 +257,9 @@ pub struct EnrichmentSourcesConfig {
     /// Re-run enabled sources on variants already indexed when data was skipped.
     #[serde(default)]
     pub supplement_missing: bool,
+    /// Call GWAS REST API when local catalog row is sparse (off by default — local authoritative).
+    #[serde(default)]
+    pub gwas_api_supplement: bool,
 }
 
 fn default_true() -> bool {
@@ -225,6 +276,7 @@ impl EnrichmentSourcesConfig {
             vep_dbsnp: false,
             secondary: false,
             supplement_missing: false,
+            gwas_api_supplement: false,
         }
     }
 
@@ -237,6 +289,7 @@ impl EnrichmentSourcesConfig {
             vep_dbsnp: true,
             secondary: true,
             supplement_missing: false,
+            gwas_api_supplement: false,
         }
     }
 

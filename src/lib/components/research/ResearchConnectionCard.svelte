@@ -31,8 +31,10 @@
     ollamaToken?: string;
     connectionStatus?: QdrantConnectionStatus | null;
     connectionActivity?: ConnectionActivity;
+    ollamaStatus?: 'untested' | 'testing' | 'live' | 'dead';
     isConfigLoaded?: boolean;
     selectedSampleId?: number | null;
+    disabled?: boolean;
     onConnectionStatus?: (status: QdrantConnectionStatus | null) => void;
     onLog?: (message: string) => void;
     onConfigUpdated?: () => void;
@@ -45,8 +47,10 @@
     ollamaToken = $bindable(""),
     connectionStatus = $bindable(null),
     connectionActivity = $bindable({ ...DEFAULT_CONNECTION_ACTIVITY }),
+    ollamaStatus = $bindable<'untested' | 'testing' | 'live' | 'dead'>('untested'),
     isConfigLoaded = false,
     selectedSampleId = null,
+    disabled = false,
     onConnectionStatus,
     onLog,
     onConfigUpdated,
@@ -58,7 +62,6 @@
   let isPurging = $state(false);
   let purgeConfirm = $state(false);
 
-  // Edit settings state
   let isEditing = $state(false);
   let editQdrantUrl = $state("");
   let editCollection = $state("");
@@ -70,9 +73,6 @@
   let availableEmbedModels = $state<string[]>([]);
   let totalOllamaModels = $state(0);
   let isScanningModels = $state(false);
-
-  // Ollama connection status
-  let ollamaStatus = $state<'untested' | 'testing' | 'live' | 'dead'>('untested');
 
   function log(msg: string) {
     onLog?.(msg);
@@ -308,11 +308,11 @@
   });
 </script>
 
-<div class="glass-card">
+<div class="glass-card research-connection-card">
   <div class="card-header-row">
     <h2 class="card-title">Vector DB Connection</h2>
     {#if !isEditing}
-      <button class="edit-settings-btn" onclick={startEditing} aria-label="Edit Connection Settings">⚙️ Edit Settings</button>
+      <button class="edit-settings-btn" onclick={startEditing} disabled={disabled} aria-label="Edit Connection Settings">⚙️ Edit Settings</button>
     {/if}
   </div>
 
@@ -348,117 +348,125 @@
       onOllamaUrlChange={() => { void refreshModels(); void handleTestOllama(); }}
     />
   {:else}
-    <!-- Readout Grid Grouped by Service -->
-    <div class="readout-section">
-      <div class="settings-group-title">📦 Qdrant Connection</div>
-      <dl class="config-readout">
-        <div>
-          <dt>Server</dt>
-          <dd class="val-with-status">
-            <span class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}" title="Qdrant status"></span>
-            <span class="url-text">{config.url}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Collection</dt>
-          <dd>{config.collection}</dd>
-        </div>
-        <div>
-          <dt>API Key</dt>
-          <dd>{config.api_key_set ? "Stored securely" : "Not configured"}</dd>
-        </div>
-        <div>
-          <dt>Named vectors</dt>
-          <dd>{config.named_vectors_enabled ? "Enabled" : "Default only"}</dd>
-        </div>
-      </dl>
-    </div>
+    <div class="connection-body">
+      <div class="readout-section">
+        <div class="settings-group-title">Qdrant</div>
+        <dl class="config-readout">
+          <div>
+            <dt>Server</dt>
+            <dd class="val-with-status">
+              <span class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}" title="Qdrant status"></span>
+              <span class="url-text">{config.url}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Collection</dt>
+            <dd>{config.collection}</dd>
+          </div>
+          <div>
+            <dt>API Key</dt>
+            <dd>{config.api_key_set ? "Stored securely" : "Not configured"}</dd>
+          </div>
+          <div>
+            <dt>Named vectors</dt>
+            <dd>{config.named_vectors_enabled ? "Enabled" : "Default only"}</dd>
+          </div>
+        </dl>
+      </div>
 
-    <hr class="section-divider" />
+      <div class="readout-section">
+        <div class="settings-group-title">Ollama</div>
+        <dl class="config-readout">
+          <div>
+            <dt>Server</dt>
+            <dd class="val-with-status">
+              <span class="status-indicator-dot {ollamaStatus}" title="Ollama status"></span>
+              <span class="url-text">{ollamaUrl}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Embed model</dt>
+            <dd>{config.embedding_model}</dd>
+          </div>
+        </dl>
+      </div>
 
-    <div class="readout-section">
-      <div class="settings-group-title">🧠 Ollama Connection</div>
-      <dl class="config-readout">
-        <div>
-          <dt>Server</dt>
-          <dd class="val-with-status">
-            <span class="status-indicator-dot {ollamaStatus}" title="Ollama status"></span>
-            <span class="url-text">{ollamaUrl}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Embed Model</dt>
-          <dd>{config.embedding_model}</dd>
-        </div>
-      </dl>
-    </div>
-
-    {#if !connectionStatus && !isTesting}
-      <p class="connection-hint">
-        {#if autoCheckOnOpen}
-          Remote server configured — connection check runs automatically on open.
-        {:else}
-          Localhost is not pinged automatically — run Test Connections or enable auto-start in AI settings.
+      <div class="connection-footer">
+        {#if !connectionStatus && !isTesting}
+          <p class="connection-hint">
+            {#if autoCheckOnOpen}
+              Remote server configured — connection check runs automatically on open.
+            {:else}
+              Localhost is not pinged automatically — run Test Connections or enable auto-start in AI settings.
+            {/if}
+          </p>
         {/if}
-      </p>
-    {/if}
 
-    <div class="btn-row mt-3">
-      <button
-        class="btn btn-secondary"
-        onclick={() => { void runConnectionChecks({ explicit: true }); }}
-        disabled={isTesting || !config.url.trim()}
-      >
-        {isTesting ? connectionActivity.message : "Test Connections"}
-      </button>
-      <button
-        class="btn btn-primary"
-        onclick={handleCreateCollection}
-        disabled={isCreating}
-      >
-        {isCreating ? "Creating..." : "Create Collection"}
-      </button>
-      <button
-        class="btn btn-danger"
-        onclick={handlePurgeCollection}
-        disabled={isPurging}
-      >
-        {isPurging ? "Purging..." : purgeConfirm ? "Confirm Purge" : "Purge Collection"}
-      </button>
-    </div>
-  {/if}
-
-  {#if connectionStatus}
-    <div
-      class="connection-status mt-2"
-      class:success={connectionStatus.success}
-      class:error={!connectionStatus.success}
-    >
-      {#if connectionStatus.success}
-        <div class="status-summary">
-          <span class="indicator success"></span>
-          <span>Qdrant Connected</span>
-        </div>
-        <p class="status-detail">
-          {#if connectionStatus.collection_exists}
-            Collection <strong>{config.collection}</strong> exists with
-            <strong>{connectionStatus.vectors_count?.toLocaleString() ?? 0}</strong> vectors.
-          {:else}
-            Server reachable. Collection <strong>{config.collection}</strong> does not exist yet —
-            click <strong>Create Collection</strong> or start a research sweep (auto-creates on run).
+        <div class="btn-row">
+          <button
+            class="btn btn-secondary"
+            onclick={() => { void runConnectionChecks({ explicit: true }); }}
+            disabled={disabled || isTesting || !config.url.trim()}
+          >
+            {isTesting ? connectionActivity.message : "Test Connections"}
+          </button>
+          {#if !connectionStatus?.collection_exists}
+            <button
+              class="btn btn-primary"
+              onclick={handleCreateCollection}
+              disabled={disabled || isCreating || !connectionStatus?.success}
+            >
+              {isCreating ? "Creating..." : "Create Collection"}
+            </button>
           {/if}
-        </p>
-      {:else}
-        <div class="status-summary">
-          <span class="indicator error"></span>
-          <span>Qdrant Connection Failed</span>
+          <button
+            class="btn btn-danger"
+            onclick={handlePurgeCollection}
+            disabled={disabled || isPurging || !connectionStatus?.collection_exists}
+          >
+            {isPurging ? "Purging..." : purgeConfirm ? "Confirm Purge" : "Purge Collection"}
+          </button>
         </div>
-        <p class="status-detail error-text">
-          {connectionStatus.error || "Unknown error connecting to Qdrant."}
-        </p>
-      {/if}
+
+        {#if connectionStatus}
+          <div
+            class="connection-status"
+            class:success={connectionStatus.success}
+            class:error={!connectionStatus.success}
+          >
+            {#if connectionStatus.success}
+              <div class="status-summary">
+                <span class="indicator success"></span>
+                <span>Qdrant Connected</span>
+              </div>
+              <p class="status-detail">
+                {#if connectionStatus.collection_exists}
+                  Collection <strong>{config.collection}</strong> —
+                  <strong>{connectionStatus.vectors_count?.toLocaleString() ?? 0}</strong> vectors indexed.
+                {:else}
+                  Server reachable. Collection <strong>{config.collection}</strong> missing —
+                  create it before starting a sweep.
+                {/if}
+              </p>
+              {#if ollamaStatus === "live"}
+                <p class="status-detail ollama-ok">Ollama verified — embedding models available.</p>
+              {:else if ollamaStatus === "dead"}
+                <p class="status-detail error-text">Ollama unreachable — fix the embed server before sweeping.</p>
+              {:else if ollamaStatus === "untested"}
+                <p class="status-detail">Ollama not verified — run Test Connections.</p>
+              {/if}
+            {:else}
+              <div class="status-summary">
+                <span class="indicator error"></span>
+                <span>Qdrant Connection Failed</span>
+              </div>
+              <p class="status-detail error-text">
+                {connectionStatus.error || "Unknown error connecting to Qdrant."}
+              </p>
+            {/if}
+          </div>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
-
-<style src="../../styles/components/research-connection-card.css"></style>

@@ -6,7 +6,7 @@
   import VectorResearchCitations from './VectorResearchCitations.svelte';
   import { normalizeImage } from '../../utils/image';
   import { dialogStore } from '../../utils/dialogState.svelte';
-  import type { QdrantHit } from '../../types/research';
+  import type { QdrantHit, EvidenceCard } from '../../types/research';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -23,6 +23,8 @@
     showHistorySidebar: boolean;
     showSettingsDrawer: boolean;
     vectorHits?: QdrantHit[];
+    vectorEvidenceCards?: EvidenceCard[];
+    vectorIndexBrief?: string;
     vectorQuery?: string;
     vectorError?: string;
     useVectorResearch?: boolean;
@@ -65,6 +67,8 @@
     copyToClipboard,
     selectedModel,
     vectorHits = [],
+    vectorEvidenceCards = [],
+    vectorIndexBrief = "",
     vectorQuery = "",
     vectorError = "",
     useVectorResearch = true,
@@ -209,6 +213,8 @@
 
   <VectorResearchCitations
     hits={vectorHits}
+    evidenceCards={vectorEvidenceCards}
+    indexBrief={vectorIndexBrief}
     query={vectorQuery}
     error={vectorError}
     enabled={useVectorResearch}

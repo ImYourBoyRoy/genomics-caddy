@@ -53,6 +53,8 @@ export interface EnrichmentSourcesConfig {
   secondary?: boolean;
   /** Re-run enabled sources on variants already indexed when data was skipped. */
   supplement_missing?: boolean;
+  /** Call GWAS REST API when local row is sparse (default off). */
+  gwas_api_supplement?: boolean;
 }
 
 export interface ResearchScopeConfig {
@@ -69,6 +71,9 @@ export interface ResearchScopeConfig {
 
 export interface PipelineTuningPublic {
   profile: string;
+  cpus: number;
+  ollama_latency_ms?: number | null;
+  qdrant_latency_ms?: number | null;
   prepare_concurrency: number;
   enrich_batch_size: number;
   gwas_api_concurrency: number;
@@ -107,6 +112,47 @@ export interface GwasSyncResult {
   downloaded: boolean;
   file_path: string;
   message: string;
+}
+
+export interface OfflineAssetStatus {
+  asset_id: string;
+  tier: number;
+  label: string;
+  local_present: boolean;
+  local_bytes: number;
+  row_count: number;
+  synced_at: number | null;
+  update_available: boolean;
+  remote_content_length: number | null;
+  version_label: string | null;
+  message: string;
+  display_size: string;
+}
+
+export interface OfflineTierStatus {
+  tier: number;
+  assets: OfflineAssetStatus[];
+  ready: boolean;
+  updates_available: number;
+}
+
+export interface OfflineIndexedSummary {
+  gwas_rows: number;
+  clinvar_rows: number;
+  variant_locus_rows: number;
+}
+
+export interface OfflineUpdateCheck {
+  tiers: OfflineTierStatus[];
+  total_updates_available: number;
+  indexed_summary: OfflineIndexedSummary;
+}
+
+export interface OfflineSyncResult {
+  tier: number;
+  assets_synced: string[];
+  messages: string[];
+  errors: string[];
 }
 
 export type ConnectionActivityPhase =
@@ -187,9 +233,22 @@ export interface ResearchJob {
   current_source?: string;
   started_at: number;    // unix timestamp
   last_updated: number;
+  /** Wall-clock start of the current app-session sweep (resume resets). */
+  session_started_at?: number | null;
   error_message?: string;
   /** True when the Rust sweep task is active in this app session. */
   loop_active?: boolean;
+  /** Live sweep activity from in-memory backend state (poll when events lag). */
+  live_message?: string;
+  activity_phase?: string;
+  batch_prepared?: number;
+  batch_prefetch_done?: number;
+  batch_total?: number;
+  batch_elapsed_secs?: number;
+  /** Sample vectors in Qdrant when this sweep session started. */
+  qdrant_sample_count?: number;
+  /** Seconds since this app-session sweep started. */
+  session_elapsed_secs?: number;
 }
 
 export interface PhaseMetricSnapshot {
@@ -231,6 +290,27 @@ export interface ResearchProgress {
   batch_prefetch_done?: number | null;
   batch_total?: number | null;
   batch_elapsed_secs?: number | null;
+  qdrant_sample_count?: number | null;
+  session_elapsed_secs?: number | null;
+}
+
+export interface ResearchFindingPreview {
+  job_id: string;
+  sample_id: number;
+  rsid: string;
+  gene_symbol?: string;
+  genotype?: string;
+  trait_name?: string;
+  trait_category?: string;
+  personal_direction: string;
+  directionality_label: string;
+  impact_bucket: string;
+  summary: string;
+  wellness_actionability_score: number;
+  clinical_actionability_score: number;
+  data_quality_score: number;
+  source_count: number;
+  source_names: string[];
 }
 
 export interface QdrantHit {
@@ -532,6 +612,42 @@ export interface TraitClusterSummary {
   clinical_actionability_score: number;
   missing_field_count: number;
   verification_ideas: string[];
+}
+
+export interface TraitBucketSummary {
+  trait_category: string;
+  variant_count: number;
+}
+
+export interface EvidenceCorpusSummary {
+  sample_id: number;
+  dashboard: QualityDashboard;
+  trait_buckets: TraitBucketSummary[];
+  top_actionable: ActionabilityPoint[];
+  top_clusters: TraitClusterSummary[];
+  index_brief: string;
+  suggested_questions: string[];
+  enrichment_progress_pct?: number;
+}
+
+export interface BrowseAssociationsParams {
+  sample_id: number;
+  /** actionable | clinical | gwas | unknown | all */
+  preset: string;
+  trait_category?: string;
+  limit: number;
+  offset?: number;
+  sort?: string;
+  min_data_quality?: number;
+  direction_filter?: string;
+  text_filter?: string;
+}
+
+export interface BrowseAssociationsResult {
+  cards: EvidenceCard[];
+  total_count: number;
+  offset: number;
+  limit: number;
 }
 
 export interface CandidateMarkerRow {

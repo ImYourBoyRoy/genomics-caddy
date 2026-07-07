@@ -1,0 +1,1215 @@
+{
+  "name": "Respiratory, Airway & Oxygenation Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_RESPIRATORY_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Respiratory genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents asthma/COPD/apnea overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Respiratory disease requires symptoms, exam, spirometry, oxygen/sleep metrics, imaging, or clinical labs. DNA cannot diagnose asthma, COPD, sleep apnea, or airway disease.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "sleep apnea diagnosis"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "oxygen saturation",
+        "sleep study if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs28929474",
+      "gene": "SERPINA1",
+      "variant_name": "PI*Z / Glu342Lys",
+      "effect_allele": "A",
+      "impact": "Alpha-1 antitrypsin deficiency risk variant",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "SERPINA1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17580",
+      "gene": "SERPINA1",
+      "variant_name": "PI*S / Glu264Val",
+      "effect_allele": "T",
+      "impact": "Alpha-1 antitrypsin deficiency modifier",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "SERPINA1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7216389",
+      "gene": "ORMDL3/GSDMB",
+      "variant_name": "17q21 asthma locus",
+      "effect_allele": "T",
+      "impact": "Asthma/airway inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ORMDL3/GSDMB is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4794820",
+      "gene": "GSDMB",
+      "variant_name": "GSDMB asthma locus",
+      "effect_allele": "A",
+      "impact": "Airway inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GSDMB is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2305480",
+      "gene": "GSDMB",
+      "variant_name": "GSDMB asthma marker",
+      "effect_allele": "G",
+      "impact": "Asthma locus context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GSDMB is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1837253",
+      "gene": "TSLP",
+      "variant_name": "TSLP airway alarmin locus",
+      "effect_allele": "T",
+      "impact": "Asthma/allergic airway context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TSLP is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3771166",
+      "gene": "IL1RL1",
+      "variant_name": "IL33 receptor asthma marker",
+      "effect_allele": "T",
+      "impact": "Airway inflammation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL1RL1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3939286",
+      "gene": "IL33",
+      "variant_name": "IL33 asthma locus",
+      "effect_allele": "A",
+      "impact": "Epithelial alarmin airway context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL33 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs20541",
+      "gene": "IL13",
+      "variant_name": "IL13 Arg130Gln",
+      "effect_allele": "A",
+      "impact": "Allergic asthma/IgE context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL13 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801275",
+      "gene": "IL4R",
+      "variant_name": "IL4R Gln576Arg",
+      "effect_allele": "G",
+      "impact": "Allergic asthma context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL4R is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042713",
+      "gene": "ADRB2",
+      "variant_name": "Arg16Gly",
+      "effect_allele": "G",
+      "impact": "Bronchodilator response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042714",
+      "gene": "ADRB2",
+      "variant_name": "Gln27Glu",
+      "effect_allele": "C",
+      "impact": "Bronchodilator and airway tone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADRB2 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1051730",
+      "gene": "CHRNA3",
+      "variant_name": "15q25 nicotine receptor locus",
+      "effect_allele": "T",
+      "impact": "Smoking behavior/COPD/lung-risk context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CHRNA3 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs16969968",
+      "gene": "CHRNA5",
+      "variant_name": "Asp398Asn nicotine receptor marker",
+      "effect_allele": "A",
+      "impact": "Nicotine dependence and lung exposure context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CHRNA5 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8034191",
+      "gene": "CHRNA5/A3/B4",
+      "variant_name": "15q25 lung/COPD locus",
+      "effect_allele": "C",
+      "impact": "Smoking/lung disease susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CHRNA5/A3/B4 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10516526",
+      "gene": "HHIP",
+      "variant_name": "HHIP COPD/lung function locus",
+      "effect_allele": "T",
+      "impact": "Lung function/COPD context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HHIP is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13118928",
+      "gene": "HHIP",
+      "variant_name": "HHIP lung-function marker",
+      "effect_allele": "C",
+      "impact": "Pulmonary function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HHIP is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070600",
+      "gene": "AGER",
+      "variant_name": "Gly82Ser lung-function marker",
+      "effect_allele": "T",
+      "impact": "Inflammation/lung function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "AGER is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2284746",
+      "gene": "FAM13A",
+      "variant_name": "FAM13A COPD/lung function marker",
+      "effect_allele": "T",
+      "impact": "COPD/lung-function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FAM13A is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7671167",
+      "gene": "FAM13A",
+      "variant_name": "FAM13A marker",
+      "effect_allele": "C",
+      "impact": "Lung function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FAM13A is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2276109",
+      "gene": "MMP12",
+      "variant_name": "MMP12 lung-function marker",
+      "effect_allele": "A",
+      "impact": "Matrix remodeling/COPD context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MMP12 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF inflammatory airway marker",
+      "effect_allele": "A",
+      "impact": "Airway inflammatory context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4880",
+      "gene": "SOD2",
+      "variant_name": "Mitochondrial antioxidant marker",
+      "effect_allele": "G",
+      "impact": "Oxidative lung stress context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SOD2 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1695",
+      "gene": "GSTP1",
+      "variant_name": "GSTP1 Ile105Val",
+      "effect_allele": "G",
+      "impact": "Detox/oxidative airway context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTP1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "GSTM1_NULL",
+      "gene": "GSTM1",
+      "variant_name": "GSTM1 deletion/null callability marker",
+      "effect_allele": "NULL",
+      "impact": "Detox deletion context, CNV required",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTM1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "GSTT1_NULL",
+      "gene": "GSTT1",
+      "variant_name": "GSTT1 deletion/null callability marker",
+      "effect_allele": "NULL",
+      "impact": "Detox deletion context, CNV required",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTT1 is included as respiratory/airway context. Interpret with symptoms, exposures, spirometry, and clinical testing.",
+      "do_not_claim": [
+        "asthma diagnosis",
+        "COPD diagnosis",
+        "safe smoke/vape exposure claim"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "symptom/exposure history",
+        "oxygen/sleep metrics"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Respiratory phenotypes are strongly modified by infections, smoke/vape exposure, allergens, air quality, body composition, and occupational exposures.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_ALPHA1_ANTITRYPSIN_DEFICIENCY",
+      "gene": "SERPINA1",
+      "variant_name": "AATD clinical confirmation panel",
+      "effect_allele": "PI_Z_PI_S_OR_OTHER_PLP",
+      "impact": "Alpha-1 antitrypsin deficiency lung/liver risk",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "SERPINA1 variants require clinical interpretation and serum AAT levels. Smoking dramatically modifies risk.",
+      "do_not_claim": [
+        "COPD diagnosis",
+        "liver disease diagnosis"
+      ],
+      "confirm_with": [
+        "serum AAT level",
+        "SERPINA1 phenotype/genotype",
+        "pulmonology/hepatology review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_SLEEP_APNEA_AIRWAY_CONTEXT",
+      "gene": "FTO/MC4R/TNF/CRANIOFACIAL/MULTI_GENE",
+      "variant_name": "Sleep apnea airway-metabolic context panel",
+      "effect_allele": "N/A",
+      "impact": "OSA airway/body composition/inflammatory context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Obstructive sleep apnea cannot be diagnosed genetically. Use DNA only to prompt snoring/daytime sleepiness/airway/body-composition questions.",
+      "do_not_claim": [
+        "sleep apnea diagnosis"
+      ],
+      "confirm_with": [
+        "home sleep test or PSG",
+        "snoring/witnessed apneas",
+        "neck circumference",
+        "daytime sleepiness"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_LUNG_FUNCTION_COPD_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "Lung function/COPD PRS module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic lung function and COPD susceptibility context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "PRS for lung function/COPD requires ancestry calibration and exposure context, especially smoking history.",
+      "do_not_claim": [
+        "COPD diagnosis"
+      ],
+      "confirm_with": [
+        "spirometry",
+        "smoking/exposure history"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

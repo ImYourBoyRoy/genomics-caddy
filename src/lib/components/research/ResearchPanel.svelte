@@ -1,6 +1,11 @@
 <!-- ./src/lib/components/research/ResearchPanel.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
+  import "$lib/styles/components/research-panel.css";
+  import "$lib/styles/components/research-connection-card.css";
+  import "$lib/styles/components/research-scope-section.css";
+  import "$lib/styles/components/research-job-controls.css";
+  import "$lib/styles/components/research-live-log.css";
   import {
     startResearchEventListeners,
   } from "../../research/researchEvents";
@@ -13,7 +18,16 @@
     resumeResearchJob,
     createQdrantCollection,
     saveResearchScope,
+    testQdrantConnection,
+    getRecentFindingPreviews,
+    scanOllamaModels,
   } from "../../api/tauri";
+  import {
+    shouldAutoCheckConnections,
+    withInvokeTimeout,
+    connectionCheckTimeoutMs,
+  } from "../../utils/researchConnection";
+  import type { OllamaConnectionState } from "../../utils/researchRunReadiness";
   import type {
     QdrantConfigPublic,
     QdrantConnectionStatus,
@@ -25,12 +39,15 @@
   import {
     liveProgress,
     liveDebugLines,
+    liveFindingPreviews,
     researchEventContext,
     resetLiveProgress,
     resetLiveProgressForResume,
+    applyLiveFieldsFromJob,
   } from "../../research/liveProgress.svelte";
   import ResearchConnectionCard from "./ResearchConnectionCard.svelte";
   import ResearchJobControls from "./ResearchJobControls.svelte";
+  import ResearchLiveFindings from "./ResearchLiveFindings.svelte";
   import ResearchLiveLog from "./ResearchLiveLog.svelte";
   import ResearchScopeSection from "./ResearchScopeSection.svelte";
 
@@ -58,16 +75,23 @@
   let liveLog = $state<string[]>([]);
   let researchDebugLog = $state(false);
   let scopePreview = $state<ResearchScopePreview | null>(null);
+  let scopePreviewLoading = $state(false);
+  let ollamaStatus = $state<OllamaConnectionState>("untested");
   let lastFeedPulseAt = $state(0);
   let lastFeedPhaseKey = $state("");
   let lastLoggedActivity = $state("");
   let gnomadSweepReadyState = $state(true);
+  const sweepLoopActive = $derived(
+    job?.status === "running" && job?.loop_active !== false
+  );
+
   const gnomadSweepReady = $derived(
     researchScope.enrichment_sources?.gnomad ? gnomadSweepReadyState : true
   );
 
-  const FEED_PULSE_INTERVAL_MS = 15_000;
-  const JOB_POLL_INTERVAL_MS = 8_000;
+  const FEED_PULSE_INTERVAL_MS = 3_000;
+  const JOB_POLL_INTERVAL_MS = 2_000;
+  let lastPolledEnriched = $state<number | null>(null);
 
   function isHeartbeatMessage(msg: string): boolean {
     return (
@@ -158,11 +182,11 @@
       if (!fresh) return;
 
       const loopStillActive = job?.loop_active === true;
+      const prevEnriched = job?.enriched_count ?? lastPolledEnriched;
+      applyLiveFieldsFromJob(fresh);
+
       job = {
         ...fresh,
-        current_rsid: liveProgress.lastActivityMessage
-          ? fresh.current_rsid ?? job?.current_rsid
-          : fresh.current_rsid,
         loop_active:
           fresh.status === "running"
             ? true
@@ -170,6 +194,18 @@
               ? true
               : fresh.loop_active,
       };
+
+      if (fresh.status === "running") {
+        const msg = fresh.live_message ?? liveProgress.lastActivityMessage;
+        if (msg && fresh.enriched_count !== prevEnriched) {
+          pushLog(
+            `Indexed ${fresh.enriched_count.toLocaleString()} / ${fresh.total_markers.toLocaleString()} — ${msg}`,
+          );
+          lastPolledEnriched = fresh.enriched_count;
+        } else if (msg) {
+          maybeLogActivity(msg, fresh.activity_phase ?? liveProgress.activityPhase, fresh.current_rsid ?? null);
+        }
+      }
     } catch (e) {
       console.warn("Research job poll failed:", e);
     }
@@ -197,6 +233,9 @@
     try {
       const loaded = await getResearchJobStatus(sampleId);
       job = loaded;
+      if (loaded) {
+        applyLiveFieldsFromJob(loaded);
+      }
       if (loaded?.status === "running") {
         pushLog("Monitoring active research sweep.");
       }
@@ -240,7 +279,67 @@
       !s.secondary;
   }
 
-  async function handleStart(options?: { forceReenrich?: boolean }) {
+  async function ensureConnectionsBeforeRun(): Promise<boolean> {
+    const qdrantOk =
+      connectionStatus?.success && connectionStatus.collection_exists;
+    const ollamaOk = ollamaStatus === "live";
+    if (qdrantOk && ollamaOk) {
+      return true;
+    }
+
+    pushLog("Verifying Qdrant and Ollama before sweep…");
+    connectionActivity = { phase: "checking-qdrant", message: "Pinging Qdrant server…" };
+
+    try {
+      const status = await withInvokeTimeout(
+        testQdrantConnection(config.url, undefined, config.collection),
+        connectionCheckTimeoutMs(config.url, true),
+        "Qdrant connection check"
+      );
+      connectionStatus = status;
+      if (!status.success) {
+        pushLog(`Qdrant check failed: ${status.error || "unknown error"}`);
+        connectionActivity = { phase: "error", message: status.error || "Qdrant failed" };
+        return false;
+      }
+      if (!status.collection_exists) {
+        pushLog(
+          `Collection '${config.collection}' not found on Qdrant. Create it or check the collection name in settings.`
+        );
+        connectionActivity = { phase: "ready", message: "Qdrant reachable — collection missing" };
+        return false;
+      }
+      pushLog(
+        `Qdrant ready — ${status.vectors_count?.toLocaleString() ?? 0} vectors in '${config.collection}'.`
+      );
+
+      connectionActivity = { phase: "checking-ollama", message: "Scanning Ollama embedding models…" };
+      ollamaStatus = "testing";
+      const models = await withInvokeTimeout(
+        scanOllamaModels(ollamaUrl, ollamaToken || undefined),
+        connectionCheckTimeoutMs(ollamaUrl, true),
+        "Ollama model scan"
+      );
+      if (!models?.length) {
+        ollamaStatus = "dead";
+        pushLog("Ollama check failed: no models returned.");
+        connectionActivity = { phase: "error", message: "Ollama returned no models" };
+        return false;
+      }
+      ollamaStatus = "live";
+      pushLog(`Ollama ready — ${models.length} models available.`);
+      connectionActivity = { phase: "ready", message: "Connections verified" };
+      return true;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      ollamaStatus = "dead";
+      pushLog(`Connection check failed: ${msg}`);
+      connectionActivity = { phase: "error", message: msg };
+      return false;
+    }
+  }
+
+  async function handleStart(options: { forceReenrich?: boolean } = {}) {
     if (!selectedSample) return;
     isStarting = true;
     syncScopeSourcesBeforeRun();
@@ -249,6 +348,12 @@
     } catch (e: any) {
       pushLog(`Failed to save scope before start: ${e.message || String(e)}`);
     }
+
+    if (!(await ensureConnectionsBeforeRun())) {
+      isStarting = false;
+      return;
+    }
+
     liveLog = [];
     resetLiveProgress();
     lastFeedPulseAt = 0;
@@ -302,6 +407,9 @@
     lastLoggedActivity = "";
     pushLog("Resuming research loop...");
     try {
+      if (!(await ensureConnectionsBeforeRun())) {
+        return;
+      }
       await resumeResearchJob(selectedSample.id, ollamaUrl);
       await loadJob(selectedSample.id);
     } catch (e: any) {
@@ -332,6 +440,32 @@
   }
 
   $effect(() => {
+    const sampleId = selectedSample?.id;
+    const running = job?.status === "running";
+    if (!sampleId || liveFindingPreviews.length > 0) return;
+
+    void getRecentFindingPreviews(sampleId, 12)
+      .then((rows) => {
+        if (rows.length === 0) return;
+        for (const row of rows.reverse()) {
+          if (!liveFindingPreviews.some((f) => f.rsid === row.rsid)) {
+            liveFindingPreviews.unshift(row);
+          }
+        }
+        if (liveFindingPreviews.length > 24) {
+          liveFindingPreviews.length = 24;
+        }
+        liveProgress.tick += 1;
+        if (!running) {
+          pushLog(`Loaded ${rows.length.toLocaleString()} indexed variants from Qdrant for preview.`);
+        }
+      })
+      .catch((e) => {
+        console.warn("Could not load recent finding previews:", e);
+      });
+  });
+
+  $effect(() => {
     if (selectedSample) {
       void loadJob(selectedSample.id);
     } else {
@@ -343,8 +477,7 @@
     const sampleId = selectedSample?.id;
     const shouldPoll =
       sampleId != null &&
-      (job?.status === "running" ||
-        (job?.status === "paused" && job?.loop_active === true));
+      (job?.status === "running" || job?.status === "paused");
 
     if (!shouldPoll || sampleId == null) {
       return;
@@ -365,52 +498,52 @@
 </script>
 
 <div class="research-panel">
-  <div class="panel-header">
-    <div class="header-icon">🔬</div>
-    <div class="header-info">
+  <header class="research-hero">
+    <div class="research-hero-icon">🔬</div>
+    <div>
       <h1>Autonomous Marker Research</h1>
       <p>
-        Crawls GWAS, ClinVar, gnomAD, and PubMed to build a vector knowledge library. Choose sweep
-        scopes below — curated packs, agent discoveries, GWAS hits, and non-reference genotypes —
-        all stored under <strong>./data</strong>, not AppData.
+        Build a vector knowledge library from GWAS, ClinVar, gnomAD, and PubMed. Data stays under
+        <strong>./data</strong>, not AppData.
       </p>
     </div>
-  </div>
+  </header>
 
-  <div class="panel-grid">
-    <div class="grid-col">
-      <ResearchConnectionCard
-        bind:config
-        bind:ollamaUrl
-        bind:ollamaToken
-        bind:connectionStatus
-        bind:connectionActivity
-        selectedSampleId={selectedSample?.id ?? null}
-        {isConfigLoaded}
+  <div class="research-stack">
+    <ResearchConnectionCard
+      bind:config
+      bind:ollamaUrl
+      bind:ollamaToken
+      bind:connectionStatus
+      bind:connectionActivity
+      bind:ollamaStatus
+      selectedSampleId={selectedSample?.id ?? null}
+      {isConfigLoaded}
+      disabled={sweepLoopActive}
+      onLog={pushLog}
+      onConfigUpdated={loadConfig}
+      onJobReset={handleJobReset}
+    />
+
+    {#if !selectedSample}
+      <div class="glass-card empty-state">
+        <div class="empty-icon">🧬</div>
+        <h3>No Genome Loaded</h3>
+        <p>Load a genomic sample in the sidebar to configure sweep scopes and run enrichment.</p>
+      </div>
+    {:else}
+      <ResearchScopeSection
+        {selectedSample}
+        sweepRunning={sweepLoopActive}
+        bind:scope={researchScope}
+        bind:preview={scopePreview}
+        bind:previewLoading={scopePreviewLoading}
         onLog={pushLog}
-        onConfigUpdated={loadConfig}
-        onJobReset={handleJobReset}
+        onGnomadReadyChange={(ready) => {
+          gnomadSweepReadyState = ready;
+        }}
       />
-    </div>
-
-    <div class="grid-col">
-      {#if !selectedSample}
-        <div class="glass-card empty-state">
-          <div class="empty-icon">🧬</div>
-          <h3>No Genome Loaded</h3>
-          <p>Load a genomic sample to run autonomous variant enrichment.</p>
-        </div>
-      {:else}
-        <ResearchScopeSection
-          {selectedSample}
-          sweepRunning={job?.status === "running"}
-          bind:scope={researchScope}
-          bind:preview={scopePreview}
-          onLog={pushLog}
-          onGnomadReadyChange={(ready) => {
-            gnomadSweepReadyState = ready;
-          }}
-        />
+      <div class="research-row-controls">
         <ResearchJobControls
           {selectedSample}
           {job}
@@ -418,6 +551,8 @@
           {connectionStatus}
           {connectionActivity}
           {scopePreview}
+          {scopePreviewLoading}
+          {ollamaStatus}
           {ollamaUrl}
           researchScope={researchScope}
           {gnomadSweepReady}
@@ -431,94 +566,15 @@
         />
         <ResearchLiveLog
           logs={liveLog}
-          sweepRunning={job?.status === "running"}
+          sweepRunning={sweepLoopActive}
           bind:debugLogEnabled={researchDebugLog}
         />
-      {/if}
-    </div>
+      </div>
+      <ResearchLiveFindings
+        findings={liveFindingPreviews}
+        sweepRunning={sweepLoopActive}
+        qdrantSampleCount={liveProgress.qdrantSampleCount ?? job?.qdrant_sample_count ?? null}
+      />
+    {/if}
   </div>
 </div>
-
-<style>
-  .research-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 4px;
-  }
-
-  .panel-header {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  .header-icon {
-    font-size: 2.2rem;
-    background: rgba(139, 92, 246, 0.15);
-    padding: 8px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    color: var(--accent);
-  }
-
-  .header-info h1 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 4px 0;
-  }
-
-  .header-info p {
-    font-size: 0.76rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  .panel-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 768px) {
-    .panel-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .grid-col {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .glass-card.empty-state {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 32px 18px;
-    text-align: center;
-  }
-
-  .empty-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-  }
-
-  .empty-state h3 {
-    margin: 0 0 8px 0;
-    color: var(--text-primary);
-  }
-
-  .empty-state p {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-  }
-</style>

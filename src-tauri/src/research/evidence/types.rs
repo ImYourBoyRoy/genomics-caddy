@@ -267,3 +267,51 @@ pub struct UpdateCandidateStatusRequest {
     pub status: String,
     pub reviewer_note: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TraitBucketSummary {
+    pub trait_category: String,
+    pub variant_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EvidenceCorpusSummary {
+    pub sample_id: i64,
+    pub dashboard: QualityDashboard,
+    pub trait_buckets: Vec<TraitBucketSummary>,
+    pub top_actionable: Vec<ActionabilityPoint>,
+    pub top_clusters: Vec<TraitClusterSummary>,
+    pub index_brief: String,
+    pub suggested_questions: Vec<String>,
+    pub enrichment_progress_pct: Option<f32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowseAssociationsParams {
+    pub sample_id: i64,
+    /// `actionable`, `clinical`, `gwas`, `unknown`, `all`
+    pub preset: String,
+    pub trait_category: Option<String>,
+    pub limit: u32,
+    #[serde(default)]
+    pub offset: u32,
+    /// wellness | clinical | dq | rsid | gene
+    #[serde(default)]
+    pub sort: Option<String>,
+    #[serde(default)]
+    pub min_data_quality: Option<f32>,
+    /// known | unknown
+    #[serde(default)]
+    pub direction_filter: Option<String>,
+    /// rsID prefix or gene symbol (keyword, not semantic)
+    #[serde(default)]
+    pub text_filter: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowseAssociationsResult {
+    pub cards: Vec<EvidenceCard>,
+    pub total_count: u64,
+    pub offset: u32,
+    pub limit: u32,
+}

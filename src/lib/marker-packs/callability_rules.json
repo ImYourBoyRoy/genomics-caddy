@@ -1,0 +1,120 @@
+{
+  "name": "Callability Rules",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "purpose": "Tell the local engine whether a raw DNA source can responsibly interpret a marker or panel.",
+  "rules": [
+    {
+      "id": "SNP_PRESENT",
+      "applies_to_variant_type": [
+        "snp"
+      ],
+      "callability": "callable_if_rsid_present_and_alleles_match",
+      "action": "score_marker_with_strand_and_build_checks",
+      "do_not_claim": [
+        "absence of risk if rsID missing"
+      ]
+    },
+    {
+      "id": "STRAND_AMBIGUOUS",
+      "applies_to_alleles": [
+        "A/T",
+        "C/G"
+      ],
+      "callability": "requires_orientation_verification",
+      "action": "block_or_warn_until_source_build_and_plus_strand_verified",
+      "do_not_claim": [
+        "effect allele match without orientation"
+      ]
+    },
+    {
+      "id": "INDEL_OR_DELETION",
+      "applies_to_variant_type": [
+        "indel",
+        "deletion"
+      ],
+      "callability": "often_unreliable_in_consumer_arrays",
+      "action": "require platform support or clinical confirmation",
+      "do_not_claim": [
+        "negative result excludes variant"
+      ]
+    },
+    {
+      "id": "CNV_REQUIRED",
+      "applies_to_variant_type": [
+        "cnv",
+        "deletion_null",
+        "duplication"
+      ],
+      "callability": "not_callable_from_standard_rsid_raw_dna",
+      "action": "show callability warning and require CNV-aware assay",
+      "examples": [
+        "CYP2D6 copy number",
+        "GSTM1/GSTT1 null",
+        "TPSAB1 copy number"
+      ]
+    },
+    {
+      "id": "HLA_REQUIRED",
+      "applies_to_variant_type": [
+        "hla_panel",
+        "hla_tag"
+      ],
+      "callability": "tag_snps_are_not_clinical_hla_typing",
+      "action": "allow context only; require HLA typing for clinical use"
+    },
+    {
+      "id": "VNTR_STR_REPEAT_REQUIRED",
+      "applies_to_variant_type": [
+        "vntr",
+        "str_repeat"
+      ],
+      "callability": "not_callable_from_standard_snp_array",
+      "action": "require repeat-aware assay",
+      "examples": [
+        "PER3 VNTR",
+        "AR CAG repeat"
+      ]
+    },
+    {
+      "id": "STAR_ALLELE_DIPLOTYPE_REQUIRED",
+      "applies_to_variant_type": [
+        "star_allele",
+        "pgx_panel"
+      ],
+      "callability": "single_snp_is_incomplete",
+      "action": "build diplotype caller or require clinical PGx panel",
+      "examples": [
+        "CYP2D6",
+        "CYP2C19",
+        "TPMT",
+        "NUDT15",
+        "DPYD"
+      ]
+    },
+    {
+      "id": "GENE_PANEL_REQUIRED",
+      "applies_to_variant_type": [
+        "gene_panel"
+      ],
+      "callability": "raw_snp_data_insufficient_for_exclusion",
+      "action": "show panel as red-flag/confirmation-only item"
+    },
+    {
+      "id": "PRS_REQUIRED",
+      "applies_to_variant_type": [
+        "polygenic_panel"
+      ],
+      "callability": "requires weighted SNP model and ancestry/platform calibration",
+      "action": "do not approximate PRS from a few lead SNPs"
+    },
+    {
+      "id": "MISSING_RSID",
+      "applies_to": [
+        "all"
+      ],
+      "callability": "unknown_not_negative",
+      "action": "display not tested/uncallable rather than low risk"
+    }
+  ]
+}

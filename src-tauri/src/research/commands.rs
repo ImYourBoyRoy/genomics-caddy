@@ -12,7 +12,7 @@ Key Outputs: Typed JSON payloads for the Svelte frontend.
 use crate::config;
 use super::references::{self, GwasSyncResult, ReferenceStatus};
 use super::{
-    QdrantConfigPublic, QdrantConfigUpdate, QdrantConnectionStatus, QdrantHit, ResearchJob,
+    QdrantConfigPublic, QdrantConfigUpdate, QdrantConnectionStatus, QdrantHit, ResearchFindingPreview, ResearchJob,
     ResearchScopeConfig, ResearchScopePreview, VectorResearchDiagnostics,
 };
 use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING, clear_stale_running_flag};
@@ -164,7 +164,14 @@ pub async fn get_research_job_status(
 ) -> Result<Option<ResearchJob>, String> {
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        super::get_research_job_from_db(&db_path, sample_id)
+        let mut job = super::get_research_job_from_db(&db_path, sample_id);
+        if let Some(ref mut j) = job {
+            j.loop_active = Some(super::state::RESEARCH_RUNNING.load(std::sync::atomic::Ordering::SeqCst));
+            if j.status == "running" || j.loop_active == Some(true) {
+                super::sweep_metrics::attach_live_job_fields(j);
+            }
+        }
+        job
     })
     .await
     .map_err(|e| format!("Job status worker failed: {}", e))
@@ -223,7 +230,7 @@ pub async fn start_research_job(
             ollama_url,
             cfg,
             effective_scope,
-            app_handle,
+            super::SweepProgressSink::Desktop(app_handle),
             None,
             force_reenrich.unwrap_or(false),
         )
@@ -315,7 +322,7 @@ pub async fn resume_research_job(
             ollama_url,
             cfg,
             scope,
-            app_handle,
+            super::SweepProgressSink::Desktop(app_handle),
             Some(existing),
             false,
         )
@@ -531,8 +538,48 @@ pub async fn get_vector_research_diagnostics(
 }
 
 #[tauri::command]
+pub async fn get_recent_finding_previews(
+    app: AppHandle,
+    sample_id: i64,
+    limit: Option<u32>,
+) -> Result<Vec<ResearchFindingPreview>, String> {
+    let cfg = load_config(&app).await?;
+    let db_path = get_db_path(&app);
+    let lim = limit.unwrap_or(12).clamp(1, 24) as usize;
+    let job_id = tauri::async_runtime::spawn_blocking({
+        let db_path = db_path.clone();
+        move || {
+            super::get_research_job_from_db(&db_path, sample_id)
+                .map(|j| j.job_id)
+                .unwrap_or_else(|| format!("job_{sample_id}_bootstrap"))
+        }
+    })
+    .await
+    .map_err(|e| format!("Job lookup worker failed: {}", e))?;
+
+    let payloads = super::qdrant::scroll_sample_payloads(
+        &cfg.url,
+        cfg.api_key.as_deref(),
+        &cfg.collection,
+        sample_id,
+        lim,
+    )
+    .await?;
+
+    Ok(payloads
+        .into_iter()
+        .map(|payload| super::sweep::finding_preview_from_payload(&job_id, sample_id, &payload))
+        .collect())
+}
+
+#[tauri::command]
 pub fn get_ollama_token() -> Result<Option<String>, String> {
     Ok(config::get_ollama_token())
+}
+
+#[tauri::command]
+pub fn get_ollama_service_config() -> Result<config::OllamaServiceConfig, String> {
+    Ok(config::load_ollama_service_config())
 }
 
 #[tauri::command]
@@ -552,15 +599,18 @@ pub async fn purge_database_cache(app: AppHandle) -> Result<u64, String> {
 }
 
 #[tauri::command]
-pub fn preview_pipeline_tuning(
+pub async fn preview_pipeline_tuning(
     ollama_url: String,
     qdrant_url: String,
     sweep_fast: Option<bool>,
 ) -> super::PipelineTuningPublic {
+    let (o_lat, q_lat) = super::probe_service_latencies(&ollama_url, &qdrant_url).await;
     super::resolve_pipeline_tuning(
         &ollama_url,
         &qdrant_url,
         sweep_fast.unwrap_or(false),
+        o_lat,
+        q_lat,
     )
     .into()
 }

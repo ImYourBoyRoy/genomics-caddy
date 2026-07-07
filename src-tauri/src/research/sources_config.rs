@@ -67,6 +67,10 @@ pub fn enrichment_secondary_enabled() -> bool {
     active_enrichment_sources().secondary
 }
 
+pub fn enrichment_gwas_api_supplement() -> bool {
+    active_enrichment_sources().gwas_api_supplement
+}
+
 pub fn enrichment_supplement_missing() -> bool {
     active_enrichment_sources().supplement_missing
 }

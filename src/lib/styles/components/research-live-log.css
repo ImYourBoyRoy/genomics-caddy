@@ -1,0 +1,114 @@
+/* ./src/lib/styles/components/research-live-log.css */
+
+.log-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.log-card .card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.debug-toggle input {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+}
+
+.log-container {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  flex: 1;
+  min-height: 200px;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-empty {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: auto;
+  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.log-debug-hint {
+  font-style: normal;
+  font-size: 0.74rem;
+  color: #7dd3fc;
+  line-height: 1.4;
+}
+
+.log-live-indicator {
+  font-style: normal;
+  font-weight: 700;
+  color: #93c5fd;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.log-latest {
+  font-style: normal;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.log-entry {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 4px;
+}
+
+.log-entry:first-child {
+  color: var(--text-primary);
+  font-weight: 550;
+}
+
+.log-entry.debug-entry {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}

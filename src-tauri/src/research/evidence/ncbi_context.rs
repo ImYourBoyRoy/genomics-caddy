@@ -104,6 +104,12 @@ pub async fn fetch_clinvar_live(
     ncbi_api_key: Option<&str>,
 ) -> ClinvarLiveContext {
     let rsid_norm = normalize_rsid(rsid).unwrap_or_else(|| rsid.to_uppercase());
+
+    if let Ok(conn) = crate::db::connect(db_path)
+        && let Some(local) = crate::offline::lookup_clinvar_local(&conn, &rsid_norm) {
+            return crate::offline::clinvar_local_to_live_context(&local);
+        }
+
     let mut search_url = format!(
         "{}esearch.fcgi?db=clinvar&term={}&retmode=json",
         EUTILS_BASE, rsid_norm

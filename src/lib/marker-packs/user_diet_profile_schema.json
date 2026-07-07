@@ -1,0 +1,159 @@
+{
+  "name": "User Diet Profile Schema",
+  "version": "1.0.0",
+  "last_updated": "2026-07-06",
+  "type": "support_engine_schema",
+  "purpose": "Suggested local user-profile object for storing food requirements without inferring sensitive values from genetics.",
+  "privacy_note": "Religious, cultural, ethical, allergy, medical, pregnancy and eating-disorder fields are sensitive. Store locally and only with explicit user entry/consent.",
+  "schema": {
+    "hard_exclusions": {
+      "type": "array[string]",
+      "examples": [
+        "pork",
+        "alcohol",
+        "coffee",
+        "shellfish",
+        "gluten"
+      ]
+    },
+    "allergies_confirmed": {
+      "type": "array[string]",
+      "examples": [
+        "peanut",
+        "milk",
+        "shellfish"
+      ]
+    },
+    "allergies_suspected": {
+      "type": "array[string]",
+      "examples": [
+        "egg",
+        "sesame"
+      ]
+    },
+    "religious_cultural_profiles": {
+      "type": "array[string]",
+      "examples": [
+        "halal_compatible",
+        "kosher_style",
+        "lds_word_of_wisdom",
+        "pork_free"
+      ]
+    },
+    "ethical_preference_profiles": {
+      "type": "array[string]",
+      "examples": [
+        "vegetarian",
+        "vegan",
+        "pescatarian"
+      ]
+    },
+    "medical_diet_profiles": {
+      "type": "array[string]",
+      "examples": [
+        "celiac_gluten_free",
+        "renal_cautious",
+        "low_sodium",
+        "diabetes_low_glycemic"
+      ]
+    },
+    "temporary_trials": {
+      "type": "array[object]",
+      "fields": [
+        "trial_id",
+        "start_date",
+        "end_date",
+        "foods_removed",
+        "rechallenge_plan",
+        "symptom_score"
+      ]
+    },
+    "allowed_animal_foods": {
+      "type": "object",
+      "fields": {
+        "fish": "boolean",
+        "shellfish": "boolean",
+        "eggs": "boolean",
+        "dairy": "boolean",
+        "poultry": "boolean",
+        "beef_lamb": "boolean",
+        "pork": "boolean"
+      }
+    },
+    "strictness": {
+      "type": "object",
+      "fields": {
+        "cross_contact": "none/low/strict",
+        "certification_required": "boolean",
+        "gelatin_enzymes_broths_count": "boolean",
+        "restaurant_cross_contact_ok": "boolean"
+      }
+    },
+    "goals": {
+      "type": "array[string]",
+      "examples": [
+        "muscle_gain",
+        "fat_loss",
+        "blood_sugar",
+        "sleep",
+        "histamine",
+        "PMDD_cycle",
+        "ApoB",
+        "gut_symptoms"
+      ]
+    },
+    "labs": {
+      "type": "object",
+      "examples": [
+        "A1c",
+        "fasting_insulin",
+        "ApoB",
+        "Lp(a)",
+        "ferritin",
+        "B12",
+        "MMA",
+        "homocysteine",
+        "25(OH)D",
+        "TSH",
+        "TPOAb",
+        "eGFR",
+        "ALT",
+        "AST",
+        "uric_acid"
+      ]
+    },
+    "symptoms": {
+      "type": "object",
+      "examples": [
+        "bloating",
+        "diarrhea",
+        "constipation",
+        "flushing",
+        "hives",
+        "migraine",
+        "sleep_latency",
+        "PMDD_luteal_symptoms",
+        "reflux"
+      ]
+    },
+    "medications": {
+      "type": "array[string]",
+      "note": "Needed for PGx, tyramine/MAOI, warfarin/vitamin K consistency, kidney/potassium interactions and supplement safety."
+    }
+  },
+  "minimum_required_for_food_advice": [
+    "hard_exclusions",
+    "allergies_confirmed_or_none",
+    "religious_cultural_profiles_or_none",
+    "goal",
+    "medical_diet_profiles_or_none"
+  ],
+  "do_not_infer": [
+    "religion",
+    "ethnicity",
+    "pregnancy status",
+    "eating disorder history",
+    "allergy status",
+    "medical diagnosis"
+  ]
+}

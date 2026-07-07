@@ -17,11 +17,12 @@
 
   interface Props {
     compact?: boolean;
+    disabled?: boolean;
     onLog?: (msg: string) => void;
     onReadyChange?: (ready: boolean, status: GnomadReadinessStatus | null) => void;
   }
 
-  let { compact = false, onLog, onReadyChange }: Props = $props();
+  let { compact = false, disabled = false, onLog, onReadyChange }: Props = $props();
 
   let cfg = $state<GnomadConfig>({ ...DEFAULT_GNOMAD_CONFIG });
   let readiness = $state<GnomadReadinessStatus | null>(null);
@@ -232,6 +233,7 @@
       <input
         type="checkbox"
         checked={cfg.enabled}
+        disabled={disabled}
         onchange={(e) => persistConfig({ enabled: (e.currentTarget as HTMLInputElement).checked })}
       />
       Enable gnomAD during enrichment
@@ -242,6 +244,7 @@
         Mode
         <select
           value={cfg.source_mode}
+          disabled={disabled}
           onchange={(e) =>
             persistConfig({
               source_mode: (e.currentTarget as HTMLSelectElement).value as GnomadConfig["source_mode"],
@@ -256,6 +259,7 @@
         Dataset policy
         <select
           value={cfg.dataset_policy}
+          disabled={disabled}
           onchange={(e) =>
             persistConfig({
               dataset_policy: (e.currentTarget as HTMLSelectElement).value as GnomadConfig["dataset_policy"],
@@ -274,6 +278,7 @@
         Provider
         <select
           value={cfg.provider}
+          disabled={disabled}
           onchange={(e) =>
             persistConfig({
               provider: (e.currentTarget as HTMLSelectElement).value as GnomadConfig["provider"],
@@ -287,6 +292,7 @@
         <input
           type="checkbox"
           checked={cfg.graphql_fallback_enabled}
+          disabled={disabled}
           onchange={(e) =>
             persistConfig({ graphql_fallback_enabled: (e.currentTarget as HTMLInputElement).checked })}
         />
@@ -300,7 +306,7 @@
       <button
         type="button"
         class="btn btn-primary btn-sm"
-        disabled={busy !== "idle"}
+        disabled={disabled || busy !== "idle"}
         onclick={handleQuickSetup}
       >
         {busy === "download" ? "Setting up…" : "One-click setup (recommended)"}
@@ -313,15 +319,13 @@
         class="btn btn-sm"
         class:btn-primary={!needsSetup || cfg.source_mode !== "remote_indexed_vcf_https"}
         class:btn-secondary={needsSetup && cfg.source_mode === "remote_indexed_vcf_https"}
-        disabled={busy !== "idle"}
+        disabled={disabled || busy !== "idle"}
         onclick={handlePrimaryAction}
       >
         {#if busy === "download" && readiness.primary_action.startsWith("Download")}
           Downloading… ({readiness.indexes_cached}/{readiness.indexes_expected})
         {:else if busy === "folder" && readiness.primary_action === "Choose local folder"}
           Opening folder picker…
-        {:else if busy === "check" && readiness.primary_action === "Test source URLs"}
-          Testing URLs…
         {:else}
           {readiness.primary_action}
         {/if}
@@ -329,22 +333,22 @@
     {/if}
 
     {#if cfg.source_mode === "local_indexed_vcf"}
-      <button type="button" class="btn btn-secondary btn-sm" disabled={busy !== "idle"} onclick={handlePickFolder}>
+      <button type="button" class="btn btn-secondary btn-sm" disabled={disabled || busy !== "idle"} onclick={handlePickFolder}>
         {busy === "folder" ? "Opening…" : "Choose local folder"}
       </button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick={openDownloads}>Open gnomAD downloads</button>
+      <button type="button" class="btn btn-secondary btn-sm" disabled={disabled} onclick={openDownloads}>Open gnomAD downloads</button>
     {/if}
 
     {#if readiness && !readiness.remote_urls_ok}
-      <button type="button" class="btn btn-secondary btn-sm" onclick={() => persistConfig({ provider: cfg.provider === "aws" ? "google" : "aws" })}>
+      <button type="button" class="btn btn-secondary btn-sm" disabled={disabled} onclick={() => persistConfig({ provider: cfg.provider === "aws" ? "google" : "aws" })}>
         Try {cfg.provider === "aws" ? "Google" : "AWS"} provider
       </button>
     {/if}
 
-    <button type="button" class="btn btn-secondary btn-sm" disabled={busy !== "idle"} onclick={() => loadAll()}>
+    <button type="button" class="btn btn-secondary btn-sm" disabled={disabled || busy !== "idle"} onclick={() => loadAll()}>
       Refresh status
     </button>
-    <button type="button" class="btn btn-secondary btn-sm" disabled={busy !== "idle"} onclick={handleClearCache}>
+    <button type="button" class="btn btn-secondary btn-sm" disabled={disabled || busy !== "idle"} onclick={handleClearCache}>
       Clear result cache
     </button>
   </div>

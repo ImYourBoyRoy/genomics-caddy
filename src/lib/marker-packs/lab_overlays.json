@@ -1,0 +1,161 @@
+{
+  "name": "Lab Overlay Map",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "principle": "Labs confirm phenotype. Genotype suggests what to check, not what to diagnose.",
+  "overlays": [
+    {
+      "domain": "histamine_allergy",
+      "markers_or_packs": [
+        "core",
+        "allergy_atopy_mast_cell"
+      ],
+      "labs": [
+        "serum specific IgE",
+        "total IgE",
+        "eosinophils",
+        "tryptase when indicated",
+        "DAO activity if used cautiously"
+      ],
+      "notes": "Use exposure-linked symptoms first."
+    },
+    {
+      "domain": "methylation_b12_folate",
+      "markers_or_packs": [
+        "core",
+        "nutrients"
+      ],
+      "labs": [
+        "homocysteine",
+        "serum B12",
+        "methylmalonic acid",
+        "RBC folate",
+        "CBC/MCV"
+      ],
+      "notes": "MTHFR is not actionable without biomarkers."
+    },
+    {
+      "domain": "iron",
+      "markers_or_packs": [
+        "core",
+        "nutrients"
+      ],
+      "labs": [
+        "ferritin",
+        "transferrin saturation",
+        "serum iron",
+        "TIBC",
+        "CBC"
+      ],
+      "notes": "HFE penetrance is incomplete."
+    },
+    {
+      "domain": "thyroid_autoimmune",
+      "markers_or_packs": [
+        "thyroid_autoimmune"
+      ],
+      "labs": [
+        "TSH",
+        "free T4",
+        "free T3",
+        "TPO antibodies",
+        "Tg antibodies",
+        "TRAb if Graves suspected",
+        "ferritin",
+        "selenium if used"
+      ],
+      "notes": "Symptoms can mimic nutrient, sleep, or mood issues."
+    },
+    {
+      "domain": "metabolic",
+      "markers_or_packs": [
+        "metabolic"
+      ],
+      "labs": [
+        "HbA1c",
+        "fasting glucose",
+        "fasting insulin",
+        "C-peptide if indicated",
+        "lipid panel",
+        "ApoB",
+        "ALT/AST/GGT",
+        "uric acid"
+      ],
+      "notes": "Use with waist/body-composition and lifestyle context."
+    },
+    {
+      "domain": "cardiovascular",
+      "markers_or_packs": [
+        "cardiovascular"
+      ],
+      "labs": [
+        "ApoB",
+        "Lp(a)",
+        "lipid panel",
+        "blood pressure",
+        "hs-CRP",
+        "CAC scan if clinically appropriate"
+      ],
+      "notes": "Do not infer events from DNA."
+    },
+    {
+      "domain": "bone",
+      "markers_or_packs": [
+        "bone_growth_mineral_density",
+        "connective_tissue"
+      ],
+      "labs": [
+        "DXA",
+        "25(OH)D",
+        "calcium",
+        "phosphate",
+        "PTH",
+        "alkaline phosphatase",
+        "ferritin"
+      ],
+      "notes": "Imaging and fracture history dominate."
+    },
+    {
+      "domain": "kidney_urate_stones",
+      "markers_or_packs": [
+        "kidney_fluid_electrolytes"
+      ],
+      "labs": [
+        "creatinine/eGFR",
+        "urinalysis",
+        "serum uric acid",
+        "electrolytes",
+        "calcium/PTH",
+        "24-hour urine if stones"
+      ],
+      "notes": "Stone composition matters."
+    },
+    {
+      "domain": "respiratory",
+      "markers_or_packs": [
+        "respiratory_airway"
+      ],
+      "labs_tests": [
+        "spirometry",
+        "peak flow",
+        "sleep study",
+        "pulse oximetry",
+        "serum alpha-1 antitrypsin if indicated"
+      ],
+      "notes": "Symptoms and exposure history dominate."
+    },
+    {
+      "domain": "pgx",
+      "markers_or_packs": [
+        "pgx"
+      ],
+      "confirmations": [
+        "clinical PGx panel",
+        "star allele diplotype",
+        "CNV/HLA typing where needed",
+        "pharmacist/clinician review"
+      ],
+      "notes": "Never change meds from raw DNA alone."
+    }
+  ]
+}

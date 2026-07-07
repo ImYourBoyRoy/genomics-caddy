@@ -100,4 +100,5 @@ export interface ChatMessage {
   isSearching?: boolean;
   searchStatus?: string;
   retrievedSources?: SearchSourceResult[];
+  vectorIndexBrief?: string;
 }

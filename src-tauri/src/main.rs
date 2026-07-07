@@ -29,10 +29,11 @@ fn parse_mcp_auth_token(args: &[String]) -> Option<String> {
 }
 
 fn main() {
+    tauri_app_lib::config::init_env();
     let args: Vec<String> = std::env::args().collect();
     let mcp_write = args.iter().any(|arg| arg == "--mcp-write");
     if args.iter().any(|arg| arg == "--mcp") {
-        let data_dir = tauri_app_lib::paths::resolve_data_dir();
+        let data_dir = tauri_app_lib::paths::resolve_data_dir_info().path;
         tauri_app_lib::paths::ensure_data_layout(&data_dir).ok();
         let db_path = tauri_app_lib::paths::db_path(&data_dir);
         let auth_token = parse_mcp_auth_token(&args);
@@ -40,13 +41,37 @@ fn main() {
         let rt = match tokio::runtime::Runtime::new() {
             Ok(rt) => rt,
             Err(e) => {
-                eprintln!("Failed to start async runtime: {}", e);
+                eprintln!("Failed to start async runtime: {e}");
                 std::process::exit(1);
             }
         };
         rt.block_on(async {
             tauri_app_lib::mcp::run_mcp_server(db_path, mcp_write, auth_token).await;
         });
+    } else if let Some(headless) = tauri_app_lib::research::parse_headless_args(&args) {
+        let data_dir = tauri_app_lib::paths::resolve_data_dir_info().path;
+        tauri_app_lib::paths::ensure_data_layout(&data_dir).ok();
+
+        let rt = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt,
+            Err(e) => {
+                eprintln!("Failed to start async runtime: {e}");
+                std::process::exit(1);
+            }
+        };
+        let code = rt.block_on(async {
+            match tauri_app_lib::research::run_headless_sweep(headless).await {
+                Ok(()) => 0,
+                Err(e) => {
+                    eprintln!("Headless sweep failed: {e}");
+                    1
+                }
+            }
+        });
+        std::process::exit(code);
+    } else if args.iter().any(|a| a == "--headless-sweep") {
+        tauri_app_lib::research::print_headless_usage();
+        std::process::exit(2);
     } else {
         tauri_app_lib::run();
     }

@@ -99,6 +99,20 @@ export function getDirectionInfo(direction: EffectDirection): DirectionInfo {
         description: "This variant is linked to a physical or behavioral characteristic, not a disease risk.",
         colorClass: "direction-trait"
       };
+    case "not_applicable":
+      return {
+        label: "Not Applicable",
+        plainLabel: "Not applicable",
+        description: "An effect direction is not applicable to this marker.",
+        colorClass: "direction-unknown"
+      };
+    case "no_claim":
+      return {
+        label: "No Claim",
+        plainLabel: "No clinical claim",
+        description: "There is no clinical or health claim associated with this variant's direction.",
+        colorClass: "direction-unknown"
+      };
     case "unknown":
     default:
       return {
@@ -136,6 +150,13 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
         emoji: "🟡",
         label: "One risk allele detected",
         description: "One copy carries the risk variant. Effect is typically smaller than two copies."
+      };
+    case "low_risk":
+      return {
+        cssClass: "signal-low-risk",
+        emoji: "🟠",
+        label: "Preliminary risk signal",
+        description: "Limited evidence (Tier D/E research). Treat this as an early hypothesis — not a confirmed finding. Consider discussing with your healthcare provider."
       };
     case "protective":
       return {

@@ -1,0 +1,254 @@
+{
+  "name": "Phenotype Prompt Library",
+  "version": "1.0.0",
+  "last_updated": "2026-07-01",
+  "domains": [
+    {
+      "id": "allergy_atopy_mast_cell",
+      "trigger": [
+        "allergy markers",
+        "histamine markers",
+        "mast cell guardrail"
+      ],
+      "questions": [
+        "Do symptoms follow specific exposures like foods, pollen, dust, mold, animals, NSAIDs, or alcohol?",
+        "Any hives, flushing, wheeze, swelling, throat tightness, or anaphylaxis history?",
+        "Any eczema, asthma, chronic congestion, or seasonal rhinitis?"
+      ],
+      "red_flags": [
+        "throat swelling",
+        "wheezing after exposure",
+        "fainting with allergic symptoms",
+        "recurrent angioedema without hives"
+      ],
+      "confirmations": [
+        "specific IgE",
+        "skin-prick testing",
+        "tryptase when indicated",
+        "allergist review"
+      ]
+    },
+    {
+      "id": "digestive_gut_microbiome",
+      "trigger": [
+        "digestive markers",
+        "celiac HLA",
+        "IBD loci"
+      ],
+      "questions": [
+        "Which foods trigger symptoms, and how quickly?",
+        "Constipation, diarrhea, reflux, bloating, pain, blood, weight loss, or nocturnal symptoms?",
+        "Any family history of celiac, IBD, gallstones, or liver disease?"
+      ],
+      "red_flags": [
+        "blood in stool",
+        "unintentional weight loss",
+        "persistent vomiting",
+        "nocturnal diarrhea",
+        "iron deficiency anemia"
+      ],
+      "confirmations": [
+        "celiac serology",
+        "fecal calprotectin",
+        "breath tests",
+        "liver enzymes",
+        "GI review"
+      ]
+    },
+    {
+      "id": "muscle_performance_recovery",
+      "trigger": [
+        "ACTN3",
+        "AMPD1",
+        "myopathy panel",
+        "recovery panel"
+      ],
+      "questions": [
+        "Power, endurance, or mixed training response history?",
+        "Any recurrent cramps, rhabdomyolysis, dark urine, or severe exercise intolerance?",
+        "How quickly do soreness, sleep, HRV, and performance recover after hard training?"
+      ],
+      "red_flags": [
+        "dark urine after exercise",
+        "recurrent rhabdomyolysis",
+        "exercise syncope",
+        "unexplained severe weakness"
+      ],
+      "confirmations": [
+        "CK during symptoms",
+        "training log",
+        "DXA/body composition",
+        "sports medicine review"
+      ]
+    },
+    {
+      "id": "hormones_reproductive",
+      "trigger": [
+        "PMDD panel",
+        "ESR/PGR markers",
+        "androgen/SHBG markers"
+      ],
+      "questions": [
+        "Are symptoms cyclic and strongest in the luteal phase?",
+        "Do symptoms improve within a few days after bleeding starts?",
+        "Cycle regularity, acne, hair changes, cramps, pelvic pain, libido, or fertility concerns?"
+      ],
+      "red_flags": [
+        "suicidal ideation premenstrually",
+        "severe pelvic pain",
+        "very heavy bleeding",
+        "amenorrhea"
+      ],
+      "confirmations": [
+        "daily symptom tracking across at least 2 cycles",
+        "TSH/ferritin/B12/vitamin D context",
+        "reproductive hormone labs when indicated",
+        "gynecology review"
+      ]
+    },
+    {
+      "id": "skin_hair_dermatology",
+      "trigger": [
+        "MC1R",
+        "FLG panel",
+        "psoriasis loci",
+        "hair-loss loci"
+      ],
+      "questions": [
+        "Sunburn tendency, freckling, mole history, eczema, psoriasis, acne, scarring, hair thinning?",
+        "Triggers: UV, foods, stress, infections, products, hormones?"
+      ],
+      "red_flags": [
+        "changing mole",
+        "non-healing lesion",
+        "rapid hair loss",
+        "infected eczema"
+      ],
+      "confirmations": [
+        "dermatology exam",
+        "skin checks",
+        "photos over time",
+        "vitamin D/iron/thyroid context when relevant"
+      ]
+    },
+    {
+      "id": "bone_growth_mineral_density",
+      "trigger": [
+        "BMD loci",
+        "VDR/GC/CYP2R1",
+        "bone disorder panel"
+      ],
+      "questions": [
+        "Fractures from low trauma, height loss, bone pain, delayed healing, family history of osteoporosis?",
+        "Dietary calcium/protein, vitamin D, resistance training, steroid use?"
+      ],
+      "red_flags": [
+        "multiple low-trauma fractures",
+        "bone pain with low ALP",
+        "childhood recurrent fractures"
+      ],
+      "confirmations": [
+        "DXA",
+        "25(OH)D",
+        "calcium/phosphate/PTH",
+        "alkaline phosphatase"
+      ]
+    },
+    {
+      "id": "kidney_fluid_electrolytes",
+      "trigger": [
+        "urate loci",
+        "stone loci",
+        "salt sensitivity markers"
+      ],
+      "questions": [
+        "Kidney stones, gout attacks, blood pressure salt sensitivity, cramps, unusual thirst/urination?",
+        "Any abnormal creatinine, electrolytes, urinalysis, or family kidney disease?"
+      ],
+      "red_flags": [
+        "blood in urine",
+        "severe flank pain",
+        "very high blood pressure",
+        "recurrent stones"
+      ],
+      "confirmations": [
+        "eGFR",
+        "urinalysis",
+        "uric acid",
+        "electrolytes",
+        "24-hour urine if stones"
+      ]
+    },
+    {
+      "id": "respiratory_airway",
+      "trigger": [
+        "SERPINA1",
+        "asthma loci",
+        "sleep apnea airway panel"
+      ],
+      "questions": [
+        "Wheeze, cough, exercise shortness of breath, snoring, witnessed apneas, daytime sleepiness?",
+        "Smoke/vape, occupational exposures, allergies, recurrent infections?"
+      ],
+      "red_flags": [
+        "resting shortness of breath",
+        "low oxygen",
+        "witnessed apneas",
+        "hemoptysis"
+      ],
+      "confirmations": [
+        "spirometry",
+        "sleep study",
+        "serum AAT if indicated",
+        "pulmonology review"
+      ]
+    },
+    {
+      "id": "immune_autoimmune_general",
+      "trigger": [
+        "HLA tags",
+        "PTPN22",
+        "CTLA4",
+        "autoimmune panels"
+      ],
+      "questions": [
+        "Joint swelling, rashes, mouth ulcers, fevers, gut inflammation, thyroid symptoms, neurologic episodes?",
+        "Family history of autoimmune disease?"
+      ],
+      "red_flags": [
+        "neurologic deficits",
+        "severe joint swelling",
+        "persistent fever",
+        "organ-specific symptoms"
+      ],
+      "confirmations": [
+        "autoantibodies",
+        "CRP/ESR",
+        "organ-specific labs",
+        "specialist review"
+      ]
+    },
+    {
+      "id": "pain_migraine_sensory",
+      "trigger": [
+        "migraine loci",
+        "pain channelopathy panel",
+        "COMT/OPRM1/FAAH"
+      ],
+      "questions": [
+        "Migraine pattern, aura, photophobia, nausea, triggers, pain sensitivity, medication response?",
+        "Taste/smell/sensory sensitivities or neuropathic pain?"
+      ],
+      "red_flags": [
+        "worst headache of life",
+        "new neurologic deficit",
+        "headache with fever/neck stiffness"
+      ],
+      "confirmations": [
+        "headache diary",
+        "neurology review if red flags",
+        "medication history"
+      ]
+    }
+  ]
+}

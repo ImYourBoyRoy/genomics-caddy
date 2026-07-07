@@ -98,28 +98,7 @@
   </div>
 {/if}
 
-<!-- 3. Custom Glassmorphic Dialogue Modal (Replaces browser alert/confirm popups) -->
-{#if dialogStore.state.show}
-  <div class="modal-backdrop dialog-backdrop" onclick={() => dialogStore.close()} role="presentation">
-    <div class="modal-content dialog-content" onclick={(e) => e.stopPropagation()} role="presentation">
-      <div class="modal-header">
-        <h3>{dialogStore.state.title}</h3>
-        <button class="modal-close" onclick={() => dialogStore.close()}>&times;</button>
-      </div>
-      <div class="modal-body dialog-body">
-        <p>{dialogStore.state.message}</p>
-      </div>
-      <div class="modal-footer dialog-footer">
-        {#if dialogStore.state.type === "confirm"}
-          <button class="btn btn-secondary" onclick={() => dialogStore.close()}>Cancel</button>
-          <button class="btn btn-accent" onclick={() => dialogStore.handleConfirm()}>Confirm</button>
-        {:else}
-          <button class="btn btn-accent" onclick={() => dialogStore.close()}>OK</button>
-        {/if}
-      </div>
-    </div>
-  </div>
-{/if}
+
 
 <style>
   /* Modal backdrop & content for inspecting payload / dialogs */

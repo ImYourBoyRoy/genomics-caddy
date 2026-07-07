@@ -128,7 +128,7 @@ pub async fn fetch_api_cached(
     let json_str = serde_json::to_string(&json_val).unwrap_or_default();
     if let Ok(conn) = crate::db::connect(db_path) {
         let _ = conn.execute(
-            "INSERT OR REPLACE INTO api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
+            "INSERT OR REPLACE INTO reference.api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
             params![url, json_str, now],
         );
     }
@@ -231,6 +231,116 @@ pub fn resolve_strand_orientation(
 }
 
 // ---------------------------------------------------------------------------
+// Index-first: reuse vector enrichment when available
+// ---------------------------------------------------------------------------
+
+async fn try_index_backed_evidence(
+    db_path: &Path,
+    sample_id: i64,
+    rsid: &str,
+    user_genotype: Option<String>,
+    user_alleles: Vec<String>,
+) -> Result<Option<VariantEvidence>, String> {
+    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let fact_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM association_facts WHERE sample_id = ? AND rsid = ?",
+            params![sample_id, rsid],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+    if fact_count == 0 {
+        return Ok(None);
+    }
+
+    let cfg = match crate::config::load_qdrant_config(&conn) {
+        Ok(c) => c,
+        Err(_) => return Ok(None),
+    };
+
+    let Some((payload, _point_id)) = crate::research::find_point_payload_by_rsid(
+        &cfg.url,
+        cfg.api_key.as_deref(),
+        &cfg.collection,
+        sample_id,
+        rsid,
+    )
+    .await?
+    else {
+        return Ok(None);
+    };
+
+    let dq = payload["data_quality_score"].as_f64().unwrap_or(0.0) as f32;
+    if dq < 0.25 {
+        return Ok(None);
+    }
+
+    let gene = payload["gene_symbol"]
+        .as_str()
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty());
+    let clinvar_sig = payload["clinvar_significance"].as_str().map(|s| s.to_string());
+    let trait_summary = payload["gwas_traits"]
+        .as_str()
+        .or_else(|| payload["gwas_trait"].as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let mut notes = vec![format!(
+        "Loaded from local vector index ({} association facts, data quality {:.2}). Live NCBI fetch skipped.",
+        fact_count, dq
+    )];
+    if !trait_summary.is_empty() {
+        notes.push(format!("Indexed traits: {}", trait_summary));
+    }
+
+    let has_clinvar = clinvar_sig.is_some();
+    let interpretation = if has_clinvar {
+        "active_research"
+    } else {
+        "mechanism_context_only"
+    };
+
+    let alleles_empty = user_alleles.is_empty();
+    Ok(Some(VariantEvidence {
+        rsid: rsid.to_string(),
+        gene,
+        user_genotype,
+        user_alleles,
+        matched_effect_allele: None,
+        clinically_relevant_allele: None,
+        allele_match_status: if alleles_empty {
+            "no_data".into()
+        } else {
+            "orientation_unverified".into()
+        },
+        orientation_status: "not_required".into(),
+        genome_build: Some("GRCh38".into()),
+        hgvs: None,
+        clinvar_variation_id: None,
+        clinvar_clinical_significance: clinvar_sig,
+        clinvar_review_status: None,
+        clinvar_condition: if trait_summary.is_empty() {
+            None
+        } else {
+            Some(trait_summary.clone())
+        },
+        clinvar_conflict_status: None,
+        evidence_source_ids: vec!["vector_index".into(), "association_facts".into()],
+        interpretation_status: interpretation.into(),
+        allowed_language: "Discuss as research context; cite rsID and indexed sources.".into(),
+        forbidden_language: vec![
+            "diagnosis".into(),
+            "prescribe".into(),
+            "you have the disease".into(),
+        ],
+        requires_clinical_confirmation: has_clinvar,
+        safe_for_ai_context: true,
+        notes,
+    }))
+}
+
+// ---------------------------------------------------------------------------
 // Core Variant Evidence Builder
 // ---------------------------------------------------------------------------
 
@@ -278,6 +388,18 @@ pub async fn get_variant_evidence_core(
         || user_genotype.as_ref().unwrap().contains('-')
         || user_genotype.as_ref().unwrap().contains('?')
         || user_genotype.as_ref().unwrap().contains('0');
+
+    if let Ok(Some(index_evidence)) = try_index_backed_evidence(
+        db_path,
+        sample_id,
+        &rsid_upper,
+        user_genotype.clone(),
+        user_alleles.clone(),
+    )
+    .await
+    {
+        return Ok(index_evidence);
+    }
 
     // Load reference configurations
     let mut clinvar_sig: Option<String> = None;

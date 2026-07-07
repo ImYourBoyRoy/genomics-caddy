@@ -1,0 +1,270 @@
+/* ./src/lib/styles/components/findings-navigator.css */
+
+.findings-navigator {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.fn-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fn-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.fn-header p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  opacity: 0.85;
+  max-width: 52rem;
+}
+
+.fn-audience {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.fn-audience-btn.active {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.fn-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 14px;
+  min-height: 420px;
+}
+
+@media (max-width: 960px) {
+  .fn-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fn-sidebar {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.fn-sidebar-title {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+.fn-trait-btn {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.fn-trait-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fn-trait-btn.active {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.fn-trait-count {
+  opacity: 0.7;
+  font-size: 0.72rem;
+}
+
+.fn-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fn-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.fn-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.fn-toolbar input,
+.fn-toolbar select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font-size: 0.8rem;
+  min-width: 120px;
+}
+
+.fn-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fn-preset-btn.active {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.12);
+}
+
+.fn-preset-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.fn-results-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+.fn-table-wrap {
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  max-height: 360px;
+}
+
+.fn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.fn-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(15, 18, 28, 0.95);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.fn-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: top;
+}
+
+.fn-table tr {
+  cursor: pointer;
+}
+
+.fn-table tr:hover td {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.fn-table tr.selected td {
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.fn-rsid {
+  font-family: monospace;
+  color: var(--accent-color, #38bdf8);
+}
+
+.fn-gene {
+  font-weight: 600;
+}
+
+.fn-trait {
+  max-width: 220px;
+  line-height: 1.35;
+}
+
+.fn-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  text-transform: capitalize;
+}
+
+.fn-badge.dir-risk {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.fn-badge.dir-protect {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.fn-badge.dir-unknown {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+.fn-badge.dir-neutral {
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.fn-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fn-page-info {
+  margin-left: auto;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.fn-detail {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.fn-disclaimer {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+.fn-empty {
+  padding: 24px;
+  text-align: center;
+  opacity: 0.8;
+}

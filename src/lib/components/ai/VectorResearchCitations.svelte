@@ -1,10 +1,12 @@
 <!-- ./src/lib/components/ai/VectorResearchCitations.svelte -->
 <script lang="ts">
-  import type { QdrantHit } from "../../types/research";
+  import type { EvidenceCard, QdrantHit } from "../../types/research";
   import type { VariantNavTarget } from "../../constants/traitCategories";
 
   interface Props {
     hits: QdrantHit[];
+    evidenceCards?: EvidenceCard[];
+    indexBrief?: string;
     query?: string;
     error?: string;
     enabled?: boolean;
@@ -14,6 +16,8 @@
 
   let {
     hits = [],
+    evidenceCards = [],
+    indexBrief = "",
     query = "",
     error = "",
     enabled = true,
@@ -23,6 +27,12 @@
 
   let filterText = $state("");
   let expanded = $state(true);
+
+  let cardByRsid = $derived.by(() => {
+    const map = new Map<string, EvidenceCard>();
+    for (const card of evidenceCards) map.set(card.rsid, card);
+    return map;
+  });
 
   let filteredHits = $derived.by(() => {
     const q = filterText.trim().toLowerCase();
@@ -69,6 +79,9 @@
     </div>
 
     {#if expanded}
+      {#if indexBrief}
+        <p class="index-brief">{indexBrief}</p>
+      {/if}
       <input
         type="search"
         class="filter-input"
@@ -77,6 +90,7 @@
       />
       <div class="hits-grid">
         {#each filteredHits as hit (hit.rsid + hit.score)}
+          {@const card = cardByRsid.get(hit.rsid)}
           <article class="hit-card">
             <header>
               <strong class="rsid">{hit.rsid}</strong>
@@ -88,6 +102,18 @@
               {/if}
               <span class="score" title="Semantic similarity">{Math.round(hit.score * 100)}% match</span>
             </header>
+            {#if card}
+              <div class="card-scores">
+                <span class="score-chip">DQ {Math.round(card.data_quality_score * 100)}%</span>
+                <span class="score-chip">Wellness {Math.round(card.wellness_actionability_score * 100)}%</span>
+                {#if card.personal_direction}
+                  <span class="score-chip direction">{card.personal_direction.replace(/_/g, " ")}</span>
+                {/if}
+              </div>
+              {#if card.synthesis}
+                <p class="synthesis">{card.synthesis.slice(0, 220)}{card.synthesis.length > 220 ? "…" : ""}</p>
+              {/if}
+            {/if}
             {#if hit.trait_categories && hit.trait_categories.length > 0}
               <div class="category-tags">
                 {#each hit.trait_categories as cat}
@@ -190,6 +216,34 @@
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.2);
     color: inherit;
+  }
+  .index-brief {
+    margin: 0 0 8px;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    opacity: 0.88;
+  }
+  .card-scores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .score-chip {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.15);
+  }
+  .score-chip.direction {
+    background: rgba(34, 197, 94, 0.15);
+    text-transform: capitalize;
+  }
+  .synthesis {
+    margin: 0 0 4px;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    opacity: 0.9;
   }
   .hits-grid {
     display: flex;

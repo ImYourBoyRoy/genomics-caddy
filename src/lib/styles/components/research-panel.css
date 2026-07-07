@@ -1,0 +1,246 @@
+/* ./src/lib/styles/components/research-panel.css */
+/* Layout shell for Autonomous Marker Research (Vector Research tab). */
+
+.research-panel {
+  --research-gap: 18px;
+  --research-card-radius: 14px;
+  --research-card-bg: rgba(18, 19, 28, 0.92);
+  --research-card-border: rgba(255, 255, 255, 0.1);
+  --research-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: var(--research-gap);
+  min-width: 0;
+  max-width: 1400px;
+}
+
+.research-hero {
+  background: linear-gradient(135deg, rgba(88, 80, 236, 0.12), rgba(18, 19, 28, 0.6));
+  border: 1px solid var(--research-card-border);
+  border-radius: var(--research-card-radius);
+  padding: 16px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  box-shadow: var(--research-card-shadow);
+}
+
+.research-hero-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  background: rgba(139, 92, 246, 0.2);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  flex-shrink: 0;
+}
+
+.research-hero h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.research-hero p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.research-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--research-gap);
+}
+
+.research-row-controls {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  gap: var(--research-gap);
+  align-items: stretch;
+}
+
+.research-row-controls > * {
+  min-width: 0;
+}
+
+.research-panel .glass-card {
+  background: var(--research-card-bg);
+  border: 1px solid var(--research-card-border);
+  border-radius: var(--research-card-radius);
+  padding: 20px;
+  box-shadow: var(--research-card-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.glass-card.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.live-findings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.live-findings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.live-findings-header .card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.live-findings-header p {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.live-pill {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+}
+
+.live-pill.idle {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.live-findings-empty {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.live-findings-empty strong {
+  color: var(--text-primary);
+}
+
+.live-findings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.live-finding-item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.live-finding-item.bucket-clinical_review {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.2), rgba(0, 0, 0, 0.16));
+}
+
+.live-finding-item.bucket-wellness_relevant {
+  border-color: rgba(52, 211, 153, 0.32);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.2), rgba(0, 0, 0, 0.16));
+}
+
+.live-finding-item.bucket-low_confidence {
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.live-finding-topline,
+.live-finding-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.live-finding-rsid,
+.live-finding-gene,
+.live-finding-genotype,
+.live-finding-meta span {
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.66rem;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.live-finding-rsid {
+  color: var(--accent);
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.live-finding-gene {
+  color: #c4b5fd;
+  font-weight: 700;
+}
+
+.live-finding-item h3 {
+  margin: 9px 0 5px;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.live-finding-summary {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.live-finding-meta span {
+  color: var(--text-secondary);
+}
+
+.live-finding-sources {
+  margin: 8px 0 0;
+  color: var(--text-muted, rgba(255, 255, 255, 0.58));
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 960px) {
+  .research-row-controls {
+    grid-template-columns: 1fr;
+  }
+}

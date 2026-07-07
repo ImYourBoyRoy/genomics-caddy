@@ -1,14 +1,24 @@
 // ./src-tauri/src/research/gnomad/schema.rs
 use rusqlite::{Connection, Result};
 
-fn ensure_column(conn: &Connection, table: &str, column: &str, ddl: &str) -> Result<()> {
-    let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})"))?;
+fn ensure_column(conn: &Connection, schema: &str, table: &str, column: &str, ddl: &str) -> Result<()> {
+    let pragma_sql = if schema.is_empty() {
+        format!("PRAGMA table_info({table})")
+    } else {
+        format!("PRAGMA {schema}.table_info({table})")
+    };
+    let mut stmt = conn.prepare(&pragma_sql)?;
     let cols: Vec<String> = stmt
         .query_map([], |row| row.get::<_, String>(1))?
         .filter_map(|r| r.ok())
         .collect();
     if !cols.iter().any(|c| c == column) {
-        conn.execute(&format!("ALTER TABLE {table} ADD COLUMN {column} {ddl}"), [])?;
+        let alter_sql = if schema.is_empty() {
+            format!("ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+        } else {
+            format!("ALTER TABLE {schema}.{table} ADD COLUMN {column} {ddl}")
+        };
+        conn.execute(&alter_sql, [])?;
     }
     Ok(())
 }
@@ -16,7 +26,7 @@ fn ensure_column(conn: &Connection, table: &str, column: &str, ddl: &str) -> Res
 pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
     conn.execute_batch(
         "
-        CREATE TABLE IF NOT EXISTS gnomad_variant_cache (
+        CREATE TABLE IF NOT EXISTS reference.gnomad_variant_cache (
             cache_id TEXT PRIMARY KEY,
             release TEXT NOT NULL,
             source_mode TEXT NOT NULL,
@@ -55,14 +65,14 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
             parser_version TEXT NOT NULL,
             lookup_status TEXT NOT NULL
         );
-        CREATE INDEX IF NOT EXISTS idx_gnomad_cache_coords
+        CREATE INDEX IF NOT EXISTS reference.idx_gnomad_cache_coords
             ON gnomad_variant_cache(release, dataset, chrom, pos, ref, alt);
-        CREATE INDEX IF NOT EXISTS idx_gnomad_cache_locus
+        CREATE INDEX IF NOT EXISTS reference.idx_gnomad_cache_locus
             ON gnomad_variant_cache(release, pos);
-        CREATE INDEX IF NOT EXISTS idx_gnomad_cache_rsid
+        CREATE INDEX IF NOT EXISTS reference.idx_gnomad_cache_rsid
             ON gnomad_variant_cache(release, rsids_json);
 
-        CREATE TABLE IF NOT EXISTS gnomad_config (
+        CREATE TABLE IF NOT EXISTS reference.gnomad_config (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             enabled INTEGER NOT NULL DEFAULT 1,
             source_mode TEXT NOT NULL DEFAULT 'remote_indexed_vcf_https',
@@ -78,8 +88,8 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
         ",
     )?;
 
-    ensure_column(conn, "gnomad_config", "graphql_fallback_enabled", "INTEGER NOT NULL DEFAULT 1")?;
-    ensure_column(conn, "gnomad_config", "dataset_policy", "TEXT NOT NULL DEFAULT 'auto'")?;
+    ensure_column(conn, "reference", "gnomad_config", "graphql_fallback_enabled", "INTEGER NOT NULL DEFAULT 1")?;
+    ensure_column(conn, "reference", "gnomad_config", "dataset_policy", "TEXT NOT NULL DEFAULT 'auto'")?;
 
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM gnomad_config WHERE id = 1",

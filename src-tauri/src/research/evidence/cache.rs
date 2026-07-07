@@ -33,6 +33,7 @@ pub fn clinvar_cache_key(rsid: &str) -> String {
     format!("clinvar|{}", rsid.to_uppercase())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn fetch_json_post_cached(
     db_path: &Path,
     source_name: &str,
@@ -163,24 +164,27 @@ pub async fn fetch_text_cached(
 }
 
 fn read_fresh_text_cache(db_path: &Path, cache_key: &str, ttl_secs: i64) -> Result<Option<String>, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    let row: Option<(String, i64, String)> = conn
-        .query_row(
-            "SELECT response_body, fetched_at, cache_status FROM api_cache_entries
-             WHERE normalized_cache_key = ?",
-            params![cache_key],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-        )
-        .ok();
-    let Some((body, fetched_at, status)) = row else {
-        return Ok(None);
-    };
-    if status.as_str() != "fresh" || unix_now() - fetched_at > ttl_secs {
-        return Ok(None);
-    }
-    Ok(Some(body))
+    crate::db::with_cached_conn(db_path, |conn| {
+        let row: Option<(String, i64, String)> = conn
+            .query_row(
+                "SELECT response_body, fetched_at, cache_status FROM api_cache_entries
+                 WHERE normalized_cache_key = ?",
+                params![cache_key],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .ok();
+        let Some((body, fetched_at, status)) = row else {
+            return Ok(None);
+        };
+        if status.as_str() != "fresh" || unix_now() - fetched_at > ttl_secs {
+            return Ok(None);
+        }
+        Ok(Some(body))
+    })
+    .map_err(|e| e.to_string())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn write_fresh_text_cache(
     db_path: &Path,
     source_name: &str,
@@ -191,29 +195,30 @@ fn write_fresh_text_cache(
     text: &str,
     ttl_secs: i64,
 ) -> Result<(), String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     let now = unix_now();
     let cache_id = format!("cache_{}", string_to_u64(cache_key));
-    conn.execute(
-        "INSERT OR REPLACE INTO api_cache_entries (
-            cache_id, source_name, endpoint_family, request_method, request_url,
-            normalized_cache_key, response_status, response_body, response_content_type,
-            fetched_at, expires_at, cache_status
-         ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, 'text/plain', ?, ?, 'fresh')",
-        params![
-            cache_id,
-            source_name,
-            endpoint_family,
-            url,
-            cache_key,
-            status,
-            text,
-            now,
-            now + ttl_secs,
-        ],
-    )
-    .map_err(|e| e.to_string())?;
-    Ok(())
+    crate::db::with_cached_conn(db_path, |conn| {
+        conn.execute(
+            "INSERT OR REPLACE INTO reference.api_cache_entries (
+                cache_id, source_name, endpoint_family, request_method, request_url,
+                normalized_cache_key, response_status, response_body, response_content_type,
+                fetched_at, expires_at, cache_status
+             ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, 'text/plain', ?, ?, 'fresh')",
+            params![
+                cache_id,
+                source_name,
+                endpoint_family,
+                url,
+                cache_key,
+                status,
+                text,
+                now,
+                now + ttl_secs,
+            ],
+        )?;
+        Ok(())
+    })
+    .map_err(|e| e.to_string())
 }
 
 pub async fn fetch_json_cached(
@@ -293,31 +298,33 @@ pub async fn fetch_json_cached(
 }
 
 fn read_fresh_cache(db_path: &Path, cache_key: &str, ttl_secs: i64) -> Result<Option<Value>, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    let row: Option<(String, i64, String)> = conn
-        .query_row(
-            "SELECT response_body, fetched_at, cache_status FROM api_cache_entries
-             WHERE normalized_cache_key = ?",
-            params![cache_key],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-        )
-        .ok();
+    crate::db::with_cached_conn(db_path, |conn| {
+        let row: Option<(String, i64, String)> = conn
+            .query_row(
+                "SELECT response_body, fetched_at, cache_status FROM api_cache_entries
+                 WHERE normalized_cache_key = ?",
+                params![cache_key],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .ok();
 
-    let Some((body, fetched_at, status)) = row else {
-        return Ok(None);
-    };
-    if status.as_str() != "fresh" {
-        return Ok(None);
-    }
-    let now = unix_now();
-    if now - fetched_at > ttl_secs {
-        let _ = conn.execute(
-            "UPDATE api_cache_entries SET cache_status = 'stale' WHERE normalized_cache_key = ?",
-            params![cache_key],
-        );
-        return Ok(None);
-    }
-    serde_json::from_str(&body).map(Some).map_err(|e| e.to_string())
+        let Some((body, fetched_at, status)) = row else {
+            return Ok(None);
+        };
+        if status.as_str() != "fresh" {
+            return Ok(None);
+        }
+        let now = unix_now();
+        if now - fetched_at > ttl_secs {
+            let _ = conn.execute(
+                "UPDATE reference.api_cache_entries SET cache_status = 'stale' WHERE normalized_cache_key = ?",
+                params![cache_key],
+            );
+            return Ok(None);
+        }
+        serde_json::from_str(&body).map(Some).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))
+    })
+    .map_err(|e| e.to_string())
 }
 
 fn write_fresh_cache(
@@ -329,30 +336,31 @@ fn write_fresh_cache(
     status: i32,
     body: &Value,
 ) -> Result<(), String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     let now = unix_now();
     let body_str = serde_json::to_string(body).map_err(|e| e.to_string())?;
     let cache_id = format!("cache_{}", string_to_u64(cache_key));
-    conn.execute(
-        "INSERT OR REPLACE INTO api_cache_entries (
-            cache_id, source_name, endpoint_family, request_method, request_url,
-            normalized_cache_key, response_status, response_body, fetched_at, expires_at,
-            cache_status
-         ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, ?, ?, 'fresh')",
-        params![
-            cache_id,
-            source_name,
-            endpoint_family,
-            url,
-            cache_key,
-            status,
-            body_str,
-            now,
-            now + ttl_secs_for(source_name),
-        ],
-    )
-    .map_err(|e| e.to_string())?;
-    Ok(())
+    crate::db::with_cached_conn(db_path, |conn| {
+        conn.execute(
+            "INSERT OR REPLACE INTO reference.api_cache_entries (
+                cache_id, source_name, endpoint_family, request_method, request_url,
+                normalized_cache_key, response_status, response_body, fetched_at, expires_at,
+                cache_status
+             ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, ?, ?, 'fresh')",
+            params![
+                cache_id,
+                source_name,
+                endpoint_family,
+                url,
+                cache_key,
+                status,
+                body_str,
+                now,
+                now + ttl_secs_for(source_name),
+            ],
+        )?;
+        Ok(())
+    })
+    .map_err(|e| e.to_string())
 }
 
 fn write_error_cache(
@@ -363,26 +371,28 @@ fn write_error_cache(
     url: &str,
     status: i32,
 ) -> Result<(), String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     let now = unix_now();
     let cache_id = format!("cache_{}", string_to_u64(cache_key));
-    let _ = conn.execute(
-        "INSERT OR REPLACE INTO api_cache_entries (
-            cache_id, source_name, endpoint_family, request_method, request_url,
-            normalized_cache_key, response_status, fetched_at, cache_status, error_count, last_error
-         ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, 'error', 1, ?)",
-        params![
-            cache_id,
-            source_name,
-            endpoint_family,
-            url,
-            cache_key,
-            status,
-            now,
-            format!("HTTP {}", status),
-        ],
-    );
-    Ok(())
+    crate::db::with_cached_conn(db_path, |conn| {
+        let _ = conn.execute(
+            "INSERT OR REPLACE INTO reference.api_cache_entries (
+                cache_id, source_name, endpoint_family, request_method, request_url,
+                normalized_cache_key, response_status, fetched_at, cache_status, error_count, last_error
+             ) VALUES (?, ?, ?, 'GET', ?, ?, ?, ?, 'error', 1, ?)",
+            params![
+                cache_id,
+                source_name,
+                endpoint_family,
+                url,
+                cache_key,
+                status,
+                now,
+                format!("HTTP {}", status),
+            ],
+        );
+        Ok(())
+    })
+    .map_err(|e| e.to_string())
 }
 
 fn ttl_secs_for(source_name: &str) -> i64 {

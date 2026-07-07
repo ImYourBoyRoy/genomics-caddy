@@ -104,6 +104,7 @@ pub fn parse_site_line(line: &str) -> Option<ParsedSiteRecord> {
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn record_to_context(
     rec: &ParsedSiteRecord,
     alt: &str,

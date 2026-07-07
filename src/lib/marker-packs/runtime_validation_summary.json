@@ -1,0 +1,60 @@
+{
+  "pack_counts": {
+    "core": 35,
+    "pgx": 75,
+    "metabolic": 61,
+    "nutrients": 65,
+    "neuropsych": 78,
+    "sleep": 48,
+    "connective_tissue": 82,
+    "thyroid_autoimmune": 66,
+    "cardiovascular": 79,
+    "cancer_confirmation_only": 97,
+    "allergy_atopy_mast_cell": 43,
+    "digestive_gut_microbiome": 45,
+    "muscle_performance_recovery": 47,
+    "hormones_reproductive": 40,
+    "skin_hair_dermatology": 39,
+    "bone_growth_mineral_density": 32,
+    "kidney_fluid_electrolytes": 32,
+    "respiratory_airway": 30,
+    "immune_autoimmune_general": 38,
+    "pain_migraine_sensory": 31,
+    "dental_oral_health": 25,
+    "longevity_aging_resilience": 35
+  },
+  "discovery_records": 857,
+  "manifest_packs": 22,
+  "duplicate_rsids_skipped_from_discovery_catalog": 266,
+  "validation_errors": [],
+  "support_files": [
+    "callability_rules.json",
+    "phenotype_prompts.json",
+    "lab_overlays.json",
+    "evidence_policy.json",
+    "source_registry.json",
+    "safety_guardrails.json",
+    "prs_registry.json",
+    "dietary_requirements.json",
+    "food_nutrient_matrix.json",
+    "diet_pattern_profiles.json",
+    "meal_planning_rules.json",
+    "food_requirement_prompts.json",
+    "user_diet_profile_schema.json"
+  ],
+  "food_decision_layer": {
+    "added": true,
+    "new_support_files": [
+      "dietary_requirements.json",
+      "food_nutrient_matrix.json",
+      "diet_pattern_profiles.json",
+      "meal_planning_rules.json",
+      "food_requirement_prompts.json",
+      "user_diet_profile_schema.json"
+    ],
+    "rules_count": 28,
+    "food_groups_count": 33,
+    "diet_profiles_count": 16,
+    "note": "Food requirement logic is a support layer, not a genetic marker pack; manifest pack count is unchanged."
+  }
+}

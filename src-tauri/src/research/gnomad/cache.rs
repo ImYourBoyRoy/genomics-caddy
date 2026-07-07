@@ -167,6 +167,7 @@ fn fetch_cache_rows_at_locus(conn: &Connection, release: &str, pos: i64) -> Opti
 }
 
 /// Read cached gnomAD context without requiring ref/alt up front (matches prefetch writes).
+#[allow(clippy::too_many_arguments)]
 pub fn read_cache_for_variant(
     conn: &Connection,
     release: &str,
@@ -297,7 +298,7 @@ pub fn write_cache(conn: &Connection, input: CacheWriteInput) -> Result<(), Stri
     );
     let now = unix_now();
     conn.execute(
-        "INSERT OR REPLACE INTO gnomad_variant_cache (
+        "INSERT OR REPLACE INTO reference.gnomad_variant_cache (
             cache_id, release, source_mode, dataset, chrom, pos, ref, alt,
             variant_id, rsids_json, genotype, user_allele_match_status,
             ac, an, af, ac_exomes, an_exomes, af_exomes, ac_genomes, an_genomes, af_genomes,
@@ -360,7 +361,7 @@ pub fn write_cache(conn: &Connection, input: CacheWriteInput) -> Result<(), Stri
 
 pub fn clear_gnomad_cache(conn: &Connection) -> Result<usize, String> {
     let n = conn
-        .execute("DELETE FROM gnomad_variant_cache", [])
+        .execute("DELETE FROM reference.gnomad_variant_cache", [])
         .map_err(|e| e.to_string())?;
     Ok(n)
 }
@@ -368,7 +369,7 @@ pub fn clear_gnomad_cache(conn: &Connection) -> Result<usize, String> {
 pub fn mark_stale_release(conn: &Connection, old_release: &str) -> Result<usize, String> {
     let n = conn
         .execute(
-            "UPDATE gnomad_variant_cache SET lookup_status = ? WHERE release != ?",
+            "UPDATE reference.gnomad_variant_cache SET lookup_status = ? WHERE release != ?",
             params![GnomadLookupStatus::StaleRelease.as_str(), old_release],
         )
         .map_err(|e| e.to_string())?;
@@ -382,6 +383,55 @@ fn unix_now() -> i64 {
         .unwrap_or(0)
 }
 
+#[allow(clippy::too_many_arguments)]
+pub fn context_to_cache_write(
+    ctx: &GnomadContext,
+    source_mode: GnomadSourceMode,
+    chrom: &str,
+    pos: i64,
+    ref_allele: &str,
+    alt: &str,
+    genotype: Option<String>,
+    raw_hash: String,
+) -> CacheWriteInput {
+    CacheWriteInput {
+        release: ctx.release.clone(),
+        source_mode,
+        dataset: ctx.dataset.clone(),
+        chrom: chrom.to_string(),
+        pos,
+        ref_allele: ref_allele.to_string(),
+        alt: alt.to_string(),
+        variant_id: ctx.variant_id.clone(),
+        rsids: ctx.rsids.clone(),
+        genotype,
+        user_allele_match_status: ctx.user_allele_match_status.clone(),
+        ac: ctx.ac,
+        an: ctx.an,
+        af: ctx.af,
+        ac_exomes: ctx.ac_exomes,
+        an_exomes: ctx.an_exomes,
+        af_exomes: ctx.af_exomes,
+        ac_genomes: ctx.ac_genomes,
+        an_genomes: ctx.an_genomes,
+        af_genomes: ctx.af_genomes,
+        popmax: ctx.popmax,
+        popmax_population: ctx.popmax_population.clone(),
+        faf95_popmax: ctx.faf95_popmax,
+        faf95_popmax_population: ctx.faf95_popmax_population.clone(),
+        homozygote_count: ctx.homozygote_count,
+        hemizygote_count: ctx.hemizygote_count,
+        filters: ctx.filters.clone(),
+        flags: ctx.flags.clone(),
+        info_json: ctx.population_frequencies.clone(),
+        source_url: ctx.source_url.clone(),
+        source_file: None,
+        source_index: None,
+        raw_record_hash: raw_hash,
+        lookup_status: GnomadLookupStatus::from_str_loose(&ctx.lookup_status),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -390,6 +440,7 @@ mod tests {
 
     fn test_conn() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
+        conn.execute("ATTACH DATABASE ':memory:' AS reference", []).unwrap();
         migrate_gnomad_schema(&conn).unwrap();
         conn
     }
@@ -454,53 +505,5 @@ mod tests {
             hit.unwrap().lookup_status,
             GnomadLookupStatus::CacheHit.as_str()
         );
-    }
-}
-
-pub fn context_to_cache_write(
-    ctx: &GnomadContext,
-    source_mode: GnomadSourceMode,
-    chrom: &str,
-    pos: i64,
-    ref_allele: &str,
-    alt: &str,
-    genotype: Option<String>,
-    raw_hash: String,
-) -> CacheWriteInput {
-    CacheWriteInput {
-        release: ctx.release.clone(),
-        source_mode,
-        dataset: ctx.dataset.clone(),
-        chrom: chrom.to_string(),
-        pos,
-        ref_allele: ref_allele.to_string(),
-        alt: alt.to_string(),
-        variant_id: ctx.variant_id.clone(),
-        rsids: ctx.rsids.clone(),
-        genotype,
-        user_allele_match_status: ctx.user_allele_match_status.clone(),
-        ac: ctx.ac,
-        an: ctx.an,
-        af: ctx.af,
-        ac_exomes: ctx.ac_exomes,
-        an_exomes: ctx.an_exomes,
-        af_exomes: ctx.af_exomes,
-        ac_genomes: ctx.ac_genomes,
-        an_genomes: ctx.an_genomes,
-        af_genomes: ctx.af_genomes,
-        popmax: ctx.popmax,
-        popmax_population: ctx.popmax_population.clone(),
-        faf95_popmax: ctx.faf95_popmax,
-        faf95_popmax_population: ctx.faf95_popmax_population.clone(),
-        homozygote_count: ctx.homozygote_count,
-        hemizygote_count: ctx.hemizygote_count,
-        filters: ctx.filters.clone(),
-        flags: ctx.flags.clone(),
-        info_json: ctx.population_frequencies.clone(),
-        source_url: ctx.source_url.clone(),
-        source_file: None,
-        source_index: None,
-        raw_record_hash: raw_hash,
-        lookup_status: GnomadLookupStatus::from_str_loose(&ctx.lookup_status),
     }
 }

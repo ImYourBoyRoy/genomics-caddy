@@ -143,7 +143,7 @@ async fn get_app_bootstrap(app: AppHandle) -> Result<db::AppBootstrapStatus, Str
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
+        let conn = db::open_user_db_with_progress(&db_path, Some(&app)).map_err(|e| e.to_string())?;
         db::get_bootstrap_status(&conn, &data_dir)
     })
     .await

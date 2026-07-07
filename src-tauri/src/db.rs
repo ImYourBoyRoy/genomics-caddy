@@ -181,11 +181,28 @@ fn migrate_to_reference_db(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-/// Opens the user genome database. Runs full schema migrations every time (cheap),
-/// but heavy seed/GWAS bootstrap only once per database file.
 pub fn open_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
+    open_user_db_with_progress(path, None)
+}
+
+pub fn open_user_db_with_progress<P: AsRef<Path>>(
+    path: P,
+    app: Option<&tauri::AppHandle>,
+) -> Result<Connection> {
+    let emit_progress = |msg: &str| {
+        if let Some(handle) = app {
+            use tauri::Emitter;
+            let _ = handle.emit("bootstrap-progress", msg.to_string());
+        }
+    };
+
+    emit_progress("Connecting to local database...");
     let conn = connect(path.as_ref())?;
+
+    emit_progress("Applying schema migrations...");
     ensure_schema(&conn)?;
+
+    emit_progress("Migrating reference schema mappings...");
     migrate_to_reference_db(&conn)?;
 
     if let Err(e) = crate::config::sync_qdrant_sqlite_from_env(&conn) {
@@ -194,7 +211,8 @@ pub fn open_user_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
 
     let app_data_dir = path.as_ref().parent();
     if !is_db_bootstrapped(&conn)? {
-        run_heavy_bootstrap(&conn, app_data_dir).map_err(rusqlite::Error::InvalidParameterName)?;
+        run_heavy_bootstrap_with_progress(&conn, app_data_dir, emit_progress)
+            .map_err(rusqlite::Error::InvalidParameterName)?;
         mark_db_bootstrapped(&conn)?;
     }
 
@@ -240,14 +258,24 @@ fn mark_db_bootstrapped(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-fn run_heavy_bootstrap(conn: &Connection, app_data_dir: Option<&Path>) -> Result<(), String> {
-    seed_evidence_library(conn, app_data_dir)?;
+fn run_heavy_bootstrap_with_progress<F: Fn(&str)>(
+    conn: &Connection,
+    app_data_dir: Option<&Path>,
+    progress: F,
+) -> Result<(), String> {
+    seed_evidence_library_with_progress(conn, app_data_dir, &progress)?;
+
+    progress("Syncing GWAS Catalog references...");
     crate::research::references::seed_gwas_reference_fallback(conn, app_data_dir)
         .map_err(|e| e.to_string())?;
+
+    progress("Normalizing rsIDs and optimizing database...");
     crate::research::references::normalize_gwas_reference_rsids_on_startup(conn)
         .map_err(|e| e.to_string())?;
     Ok(())
 }
+
+
 
 fn ensure_schema(conn: &Connection) -> Result<()> {
     conn.execute(
@@ -1099,6 +1127,14 @@ fn migrate_vector_promoted_findings(conn: &Connection) -> Result<(), rusqlite::E
 }
 
 pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> std::result::Result<(), String> {
+    seed_evidence_library_with_progress(conn, app_data_dir, |_| {})
+}
+
+pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
+    conn: &Connection,
+    app_data_dir: Option<&Path>,
+    progress: F,
+) -> std::result::Result<(), String> {
     let manifest_str = get_manifest_str(app_data_dir);
     let manifest: Manifest = serde_json::from_str(&manifest_str)
         .map_err(|e| format!("Failed to parse manifest: {}", e))?;
@@ -1106,6 +1142,7 @@ pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> 
     let tx = conn.unchecked_transaction().map_err(|e| format!("Failed to start seed transaction: {}", e))?;
 
     for pack_info in manifest.packs {
+        progress(&format!("Seeding evidence library: {}...", pack_info.id));
         let pack_str = get_pack_str(app_data_dir, &pack_info.id);
 
         if let Some(p_str) = pack_str {

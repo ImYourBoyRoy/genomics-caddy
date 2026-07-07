@@ -15,7 +15,13 @@ fn find_col(headers: &[String], candidates: &[&str]) -> Option<usize> {
     })
 }
 
-pub fn import_clinvar_variant_summary(conn: &Connection, path: &Path) -> Result<u64, String> {
+use tauri::Emitter;
+
+pub fn import_clinvar_variant_summary(
+    conn: &Connection,
+    path: &Path,
+    app: Option<&tauri::AppHandle>,
+) -> Result<u64, String> {
     let file = File::open(path).map_err(|e| format!("Open ClinVar summary: {e}"))?;
     let is_gz = path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("gz"));
 
@@ -171,6 +177,16 @@ pub fn import_clinvar_variant_summary(conn: &Connection, path: &Path) -> Result<
         count += 1;
         if count.is_multiple_of(50_000) {
             tx.commit().map_err(|e| e.to_string())?;
+            if let Some(handle) = app {
+                let _ = handle.emit(
+                    "offline:import_progress",
+                    serde_json::json!({
+                        "asset_id": "clinvar_variant_summary",
+                        "rows_processed": count,
+                        "message": format!("Importing ClinVar: processed {} rows...", count)
+                    }),
+                );
+            }
             tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
         }
     }

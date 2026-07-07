@@ -332,12 +332,14 @@ pub async fn sync_offline_tier(
 
     let data_dir_owned = data_dir.to_path_buf();
     let db_path_owned = db_path.to_path_buf();
+    let app_clone = app.cloned();
     let import_out = tauri::async_runtime::spawn_blocking(move || {
         import_assets_sync(
             &data_dir_owned,
             &db_path_owned,
             &pending_imports,
             sample_id,
+            app_clone,
         )
     })
     .await
@@ -364,6 +366,7 @@ fn import_assets_sync(
     db_path: &Path,
     ids: &[OfflineAssetId],
     sample_id: Option<i64>,
+    app: Option<tauri::AppHandle>,
 ) -> Result<ImportBatchResult, String> {
     let mut out = ImportBatchResult {
         synced: Vec::new(),
@@ -372,7 +375,7 @@ fn import_assets_sync(
     };
     with_conn(db_path, |conn| {
         for id in ids {
-            match import_asset_sync(conn, data_dir, db_path, *id, sample_id) {
+            match import_asset_sync(conn, data_dir, db_path, *id, sample_id, app.as_ref()) {
                 Ok(msg) => {
                     out.synced.push(id.as_str().to_string());
                     out.messages.push(msg);
@@ -435,6 +438,7 @@ fn import_asset_sync(
     db_path: &Path,
     id: OfflineAssetId,
     sample_id: Option<i64>,
+    app: Option<&tauri::AppHandle>,
 ) -> Result<String, String> {
     let custom_dir = get_custom_download_dir_from_db(db_path);
     let effective_dir = custom_dir.as_deref().unwrap_or(data_dir);
@@ -490,7 +494,7 @@ fn import_asset_sync(
             } else {
                 return Err("ClinVar file missing — run Tier 1 sync".into());
             };
-            import_clinvar_variant_summary(conn, &eff_path)?
+            import_clinvar_variant_summary(conn, &eff_path, app)?
         }
         OfflineAssetId::PharmgkbClinicalVariants => {
             if !path.exists() {
@@ -524,7 +528,7 @@ fn import_asset_sync(
             } else {
                 return Err("dbSNP merged JSON missing".into());
             };
-            import_dbsnp_merged(conn, &eff_path)?
+            import_dbsnp_merged(conn, &eff_path, app)?
         }
         OfflineAssetId::DbsnpWithdrawnJson => {
             let eff_path = if path.with_extension("").exists() {
@@ -534,7 +538,7 @@ fn import_asset_sync(
             } else {
                 return Err("dbSNP withdrawn JSON missing".into());
             };
-            import_dbsnp_withdrawn(conn, &eff_path)?
+            import_dbsnp_withdrawn(conn, &eff_path, app)?
         }
         OfflineAssetId::Tier2VariantLocus => {
             ensure_tier2_meta(effective_dir)?;

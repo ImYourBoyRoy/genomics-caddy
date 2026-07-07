@@ -230,10 +230,18 @@
       unlistenProgress = unlisten;
     });
 
+    let unlistenBootstrap: (() => void) | null = null;
+    listen<string>("bootstrap-progress", (event) => {
+      bootstrapMessage = event.payload;
+    }).then(unlisten => {
+      unlistenBootstrap = unlisten;
+    });
+
     void startResearchEventListeners();
 
     return () => {
       if (unlistenProgress) unlistenProgress();
+      if (unlistenBootstrap) unlistenBootstrap();
       stopResearchEventListeners();
     };
   });

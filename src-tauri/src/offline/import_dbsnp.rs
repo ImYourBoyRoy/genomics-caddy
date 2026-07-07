@@ -12,7 +12,13 @@ fn normalize_numeric_rsid(val: &str) -> Option<String> {
     clean.parse::<u64>().ok().map(|n| format!("rs{}", n))
 }
 
-pub fn import_dbsnp_merged(conn: &Connection, path: &Path) -> Result<u64, String> {
+use tauri::Emitter;
+
+pub fn import_dbsnp_merged(
+    conn: &Connection,
+    path: &Path,
+    app: Option<&tauri::AppHandle>,
+) -> Result<u64, String> {
     let file = File::open(path).map_err(|e| format!("Open dbSNP file: {e}"))?;
     let is_bz2 = path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("bz2"));
 
@@ -80,6 +86,16 @@ pub fn import_dbsnp_merged(conn: &Connection, path: &Path) -> Result<u64, String
 
         if count > 0 && count.is_multiple_of(50_000) {
             tx.commit().map_err(|e| e.to_string())?;
+            if let Some(handle) = app {
+                let _ = handle.emit(
+                    "offline:import_progress",
+                    serde_json::json!({
+                        "asset_id": "dbsnp_merged_json",
+                        "rows_processed": count,
+                        "message": format!("Importing dbSNP merges: processed {} rows...", count)
+                    }),
+                );
+            }
             tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
         }
     }
@@ -88,7 +104,11 @@ pub fn import_dbsnp_merged(conn: &Connection, path: &Path) -> Result<u64, String
     Ok(count)
 }
 
-pub fn import_dbsnp_withdrawn(conn: &Connection, path: &Path) -> Result<u64, String> {
+pub fn import_dbsnp_withdrawn(
+    conn: &Connection,
+    path: &Path,
+    _app: Option<&tauri::AppHandle>,
+) -> Result<u64, String> {
     // For withdrawn, we can do a simplified streaming or compatibility parsing.
     // If it's a small file we can parse it as a JSON Array.
     let file = File::open(path).map_err(|e| format!("Open dbSNP withdrawn: {e}"))?;

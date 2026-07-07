@@ -94,6 +94,7 @@
   let downloadProgress = $state<Record<string, DownloadProgress>>({});
   /** assetId -> currently syncing */
   let syncingAsset = $state<Record<string, boolean>>({});
+  let importProgress = $state<Record<string, string>>({});
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
 
   // Derive active report rsids
@@ -121,6 +122,7 @@
 
   // Tauri event listener cleanup
   let unlistenProgress: (() => void) | null = null;
+  let unlistenImport: (() => void) | null = null;
 
   async function loadSettingsAndStatus() {
     try {
@@ -159,11 +161,22 @@
           startedAt,
         },
       };
+    unlistenImport = await listen<{
+      asset_id: string;
+      rows_processed: number;
+      message: string;
+    }>('offline:import_progress', (event) => {
+      const { asset_id, message } = event.payload;
+      importProgress = {
+        ...importProgress,
+        [asset_id]: message,
+      };
     });
   });
 
   onDestroy(() => {
     unlistenProgress?.();
+    unlistenImport?.();
   });
 
   async function handleBrowseDir() {
@@ -215,6 +228,9 @@
       syncErrors = { ...syncErrors, [assetId]: String(err) };
     } finally {
       syncingAsset = { ...syncingAsset, [assetId]: false };
+      // Clear import progress
+      const { [assetId]: _, ...restImport } = importProgress;
+      importProgress = restImport;
       // Keep final progress bar at 100% briefly, then clear.
       if (downloadProgress[assetId]) {
         downloadProgress = {
@@ -247,6 +263,7 @@
       syncErrors = { __all__: String(err) };
     } finally {
       syncingAll = false;
+      importProgress = {};
     }
   }
 
@@ -373,9 +390,8 @@
           {#if customDir}
             <button
               onclick={handleResetDir}
+              class="reset-dir-btn"
               style="font-size: 0.65rem; color: var(--danger); background: none; border: none; padding: 0; margin-top: 0.25rem; cursor: pointer; display: block; opacity: 0.85;"
-              onmouseover={(e) => e.currentTarget.style.opacity = '1'}
-              onmouseout={(e) => e.currentTarget.style.opacity = '0.85'}
             >
               Reset to Default
             </button>
@@ -439,18 +455,26 @@
                 </button>
               </div>
 
-              <!-- Per-asset progress bar (shown while downloading) -->
-              {#if isActive && prog}
-                <div class="progress-track">
-                  <div
-                    class="progress-fill"
-                    style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                  ></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.6rem; opacity: 0.7; margin-top: 0.1rem;">
-                  <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
-                  <span>{prog.speedMbps.toFixed(1)} MB/s</span>
-                </div>
+              <!-- Per-asset progress bar (shown while downloading or importing) -->
+              {#if isActive}
+                {#if prog}
+                  <div class="progress-track">
+                    <div
+                      class="progress-fill"
+                      style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                    ></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.6rem; opacity: 0.7; margin-top: 0.1rem;">
+                    <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
+                    <span>{prog.speedMbps.toFixed(1)} MB/s</span>
+                  </div>
+                {/if}
+                {#if importProgress[db.assetId]}
+                  <div style="font-size: 0.65rem; color: #a5b4fc; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
+                    <span class="import-dot"></span>
+                    <span>{importProgress[db.assetId]}</span>
+                  </div>
+                {/if}
               {/if}
 
               <!-- Per-asset error display -->
@@ -597,5 +621,27 @@
   @keyframes indeterminate {
     0% { transform: translateX(-100%); width: 60%; }
     100% { transform: translateX(200%); width: 60%; }
+  }
+
+  .reset-dir-btn {
+    transition: opacity 0.2s ease;
+  }
+  .reset-dir-btn:hover {
+    opacity: 1 !important;
+  }
+
+  .import-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #818cf8;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #818cf8;
+    animation: import-pulse-dot 1.2s ease-in-out infinite;
+  }
+
+  @keyframes import-pulse-dot {
+    0%, 100% { transform: scale(0.85); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 1; }
   }
 </style>

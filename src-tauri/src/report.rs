@@ -419,14 +419,16 @@ pub fn resolve_normalized_rsids(conn: &Connection, rsids: &[String]) -> HashMap<
         return map;
     }
     
-    // SQLite recursive CTE to trace rsID merges up to 10 levels deep
+    // SQLite recursive CTE to trace rsID merges up to 10 levels deep.
+    // Exact case matching is used here (dbSNP entries are normalized to lowercase rsNNN)
+    // to utilize the primary key index on rsid_aliases(rsid).
     let sql = "
         WITH RECURSIVE merge_chain(rsid, depth) AS (
             VALUES(?, 0)
             UNION ALL
             SELECT alias.merged_into, merge_chain.depth + 1
             FROM rsid_aliases alias
-            JOIN merge_chain ON LOWER(alias.rsid) = LOWER(merge_chain.rsid)
+            JOIN merge_chain ON alias.rsid = merge_chain.rsid
             WHERE alias.merged_into IS NOT NULL AND merge_chain.depth < 10
         )
         SELECT rsid FROM merge_chain ORDER BY depth DESC LIMIT 1;
@@ -434,9 +436,10 @@ pub fn resolve_normalized_rsids(conn: &Connection, rsids: &[String]) -> HashMap<
     
     if let Ok(mut stmt) = conn.prepare(sql) {
         for original in rsids {
-            let normalized = stmt.query_row([original], |row| row.get::<_, String>(0))
-                .unwrap_or_else(|_| original.clone());
-            if normalized != *original {
+            let orig_lower = original.to_lowercase();
+            let normalized = stmt.query_row([orig_lower], |row| row.get::<_, String>(0))
+                .unwrap_or_else(|_| original.to_lowercase());
+            if normalized != original.to_lowercase() {
                 map.insert(original.clone(), normalized);
             }
         }

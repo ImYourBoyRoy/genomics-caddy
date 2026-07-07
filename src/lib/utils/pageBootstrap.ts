@@ -28,23 +28,16 @@ export interface BootstrapResult {
 }
 
 export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<BootstrapResult> {
-  callbacks.onPhase("db", DB_TICKER_MESSAGES[0]);
-
-  let tickerIdx = 0;
-  const ticker = setInterval(() => {
-    tickerIdx = (tickerIdx + 1) % DB_TICKER_MESSAGES.length;
-    callbacks.onPhase("db", DB_TICKER_MESSAGES[tickerIdx]);
-  }, 2200);
+  callbacks.onPhase("db", "Opening local database…");
 
   let pendingSample: GenomeSample | null = null;
 
   try {
     await yieldToUi();
-    callbacks.onPhase("db", "Loading marker pack databases…");
+    callbacks.onPhase("db", "Loading marker pack configurations…");
     await markerPacksStore.load();
     await yieldToUi();
     const [status, paths] = await Promise.all([getAppBootstrap(), getAppPaths()]);
-    clearInterval(ticker);
 
     callbacks.onStatus(status);
     callbacks.onPaths(paths);
@@ -77,13 +70,11 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
     await yieldToUi();
     await bootstrapSleep(250);
   } catch (e: unknown) {
-    clearInterval(ticker);
     const message = e instanceof Error ? e.message : String(e);
     callbacks.onPhase("error", "Startup failed");
     callbacks.onError(message);
     console.error("Bootstrap failed", e);
   } finally {
-    clearInterval(ticker);
   }
 
   return { pendingSample };

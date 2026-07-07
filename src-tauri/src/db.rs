@@ -137,7 +137,7 @@ fn table_exists_in_main(conn: &Connection, table_name: &str) -> bool {
     .unwrap_or(false)
 }
 
-fn migrate_to_reference_db(conn: &Connection) -> Result<()> {
+fn migrate_to_reference_db<F: Fn(&str)>(conn: &Connection, progress: F) -> Result<()> {
     let tables_to_migrate = [
         "api_cache",
         "clinvar_reference",
@@ -156,9 +156,10 @@ fn migrate_to_reference_db(conn: &Connection) -> Result<()> {
     ];
 
     let mut migrated_any = false;
-    for t in &tables_to_migrate {
+    let total = tables_to_migrate.len();
+    for (idx, t) in tables_to_migrate.iter().enumerate() {
         if table_exists_in_main(conn, t) {
-            println!("Migrating table {} to genomics_reference.db...", t);
+            progress(&format!("Migrating reference database table: {} ({} of {})...", t, idx + 1, total));
             let copy_sql = format!("INSERT OR IGNORE INTO reference.{} SELECT * FROM main.{}", t, t);
             if let Err(e) = conn.execute(&copy_sql, []) {
                 eprintln!("Failed to copy table {}: {}", t, e);
@@ -174,7 +175,7 @@ fn migrate_to_reference_db(conn: &Connection) -> Result<()> {
     }
 
     if migrated_any {
-        println!("Vacuuming user_genome.db to reclaim disk space...");
+        progress("Vacuuming user database to reclaim disk space...");
         let _ = conn.execute("VACUUM", []);
     }
 
@@ -203,7 +204,7 @@ pub fn open_user_db_with_progress<P: AsRef<Path>>(
     ensure_schema(&conn)?;
 
     emit_progress("Migrating reference schema mappings...");
-    migrate_to_reference_db(&conn)?;
+    migrate_to_reference_db(&conn, emit_progress)?;
 
     if let Err(e) = crate::config::sync_qdrant_sqlite_from_env(&conn) {
         eprintln!("Could not sync Qdrant defaults from environment: {}", e);
@@ -1141,8 +1142,9 @@ pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
 
     let tx = conn.unchecked_transaction().map_err(|e| format!("Failed to start seed transaction: {}", e))?;
 
-    for pack_info in manifest.packs {
-        progress(&format!("Seeding evidence library: {}...", pack_info.id));
+    let total_packs = manifest.packs.len();
+    for (idx, pack_info) in manifest.packs.iter().enumerate() {
+        progress(&format!("Seeding evidence library: {} ({} of {})...", pack_info.id, idx + 1, total_packs));
         let pack_str = get_pack_str(app_data_dir, &pack_info.id);
 
         if let Some(p_str) = pack_str {

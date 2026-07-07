@@ -18,7 +18,7 @@ mod import_mane;
 mod import_pharmgkb;
 mod registry;
 mod sync;
-mod tier2;
+pub mod tier2;
 
 pub use lookup::*;
 pub use manifest::{OfflineAssetId, OfflineAssetStatus, OfflineTierStatus};

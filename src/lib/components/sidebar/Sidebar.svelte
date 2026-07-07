@@ -95,6 +95,7 @@
   /** assetId -> currently syncing */
   let syncingAsset = $state<Record<string, boolean>>({});
   let importProgress = $state<Record<string, string>>({});
+  let isCheckingStatus = $state(false);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
 
   // Derive active report rsids
@@ -103,12 +104,15 @@
   );
 
   async function refreshReferenceDetails() {
+    isCheckingStatus = true;
     try {
       referenceDetails = await getOfflineReferenceStatus(
         reportRsids.length > 0 ? reportRsids : null
       );
     } catch (err) {
       console.error('Failed to get reference status details:', err);
+    } finally {
+      isCheckingStatus = false;
     }
   }
 
@@ -278,7 +282,7 @@
 
   function getAssetStatusLine(tierNum: number, assetId: string): string {
     const asset = findAsset(tierNum, assetId);
-    if (!asset) return 'Checking…';
+    if (!asset || isCheckingStatus) return 'Checking…';
     const prog = downloadProgress[assetId];
     if (prog && syncingAsset[assetId]) {
       const pct = prog.percent >= 0 ? `${prog.percent}%` : `${(prog.bytesDone / 1024 / 1024).toFixed(0)} MB`;
@@ -286,7 +290,11 @@
     }
     if (asset.local_present) {
       if (asset.row_count > 0) return `${asset.row_count.toLocaleString()} rows`;
-      return `${(asset.local_bytes / 1024 / 1024).toFixed(1)} MB on disk`;
+      const mb = asset.local_bytes / 1024 / 1024;
+      if (mb >= 1000) {
+        return `${(mb / 1024).toFixed(1)} GB on disk`;
+      }
+      return `${mb.toFixed(1)} MB on disk`;
     }
     return `Missing · ${asset.display_size ?? ''}`;
   }
@@ -299,7 +307,7 @@
   } {
     if (syncingAsset[assetId]) return { label: 'Syncing…', variant: 'secondary', isForce: false };
     const asset = findAsset(tierNum, assetId);
-    if (!asset) return { label: 'Download', variant: 'primary', isForce: false };
+    if (!asset || isCheckingStatus) return { label: 'Download', variant: 'primary', isForce: false };
 
     if (!asset.local_present) {
       return { label: '⬇ Download', variant: 'primary', isForce: false };
@@ -412,7 +420,7 @@
         <button
           class="btn btn-primary btn-sm"
           onclick={handleSyncAllMissing}
-          disabled={anyActive}
+          disabled={anyActive || syncingAll || !offlineStatus || isCheckingStatus}
           style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
         >
           {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
@@ -450,7 +458,7 @@
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
                   onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={anyActive || (db.assetId === 'dbsnp_merged_json' && !selectedSample)}
+                  disabled={anyActive || !offlineStatus || isCheckingStatus || (db.assetId === 'dbsnp_merged_json' && !selectedSample)}
                   style="font-size: 0.65rem; padding: 4px 8px; min-height: auto; min-width: 72px; white-space: nowrap;"
                 >
                   {btnState.label}
@@ -543,7 +551,13 @@
                   </strong>
                 {/if}
                 <span>Placement index:</span>
-                <strong style="color: #f87171">No</strong>
+                <strong style="color: {referenceDetails.dbsnp_placement_index_available ? '#34d399' : '#f87171'}">
+                  {referenceDetails.dbsnp_placement_index_available ? 'Yes' : 'No'}
+                </strong>
+                <span>Orientation database:</span>
+                <strong style="color: {referenceDetails.orientation_verification_available ? '#34d399' : '#f87171'}">
+                  {referenceDetails.orientation_verification_available ? 'Yes' : 'No'}
+                </strong>
               </div>
             </div>
           </div>

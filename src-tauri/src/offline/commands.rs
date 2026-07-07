@@ -236,6 +236,14 @@ pub async fn get_offline_reference_status(
             }
         }
 
+        let dbsnp_placement_index_available = conn
+            .query_row("SELECT COUNT(*) FROM variant_locus", [], |r| r.get::<_, i64>(0))
+            .unwrap_or(0) > 0;
+
+        let orientation_verification_available = conn
+            .query_row("SELECT COUNT(*) FROM reference.rsid_aliases WHERE withdrawn = 1", [], |r| r.get::<_, i64>(0))
+            .unwrap_or(0) > 0;
+
         Ok(ReferenceStatusDetails {
             clinvar_raw_found,
             clinvar_indexed_rows,
@@ -244,9 +252,9 @@ pub async fn get_offline_reference_status(
             dbsnp_merged_raw_found,
             dbsnp_merge_mappings_indexed,
             dbsnp_rsids_normalized,
-            dbsnp_merge_index_available: true,
-            dbsnp_placement_index_available: false,
-            orientation_verification_available: false,
+            dbsnp_merge_index_available: dbsnp_merge_mappings_indexed > 0,
+            dbsnp_placement_index_available,
+            orientation_verification_available,
         })
     })
     .await

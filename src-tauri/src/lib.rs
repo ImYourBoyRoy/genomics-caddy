@@ -560,7 +560,7 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
         let mut conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
 
         let app_clone = app_handle.clone();
-        db::import_raw_genome(
+        let sample_id = db::import_raw_genome(
             &mut conn,
             &sample_name,
             &records,
@@ -576,7 +576,23 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
                     )
                     .ok();
             },
-        )
+        )?;
+
+        app_handle
+            .emit(
+                "import-progress",
+                ProgressPayload {
+                    percentage: 95,
+                    status: "Building variant placement index...".to_string(),
+                },
+            )
+            .ok();
+
+        if let Err(e) = crate::offline::tier2::build_variant_locus_for_sample(&conn, sample_id) {
+            eprintln!("Warning: failed to build variant locus index for sample {}: {}", sample_id, e);
+        }
+
+        Ok(sample_id)
     })
     .await
     .map_err(|e| format!("Import worker failed: {}", e))?

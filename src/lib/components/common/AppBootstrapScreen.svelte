@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/common/AppBootstrapScreen.svelte -->
 <script lang="ts">
   import type { AppBootstrapStatus } from "../../types/genomics";
-  import type { BootstrapPhase } from "./bootstrap/bootstrapPhases";
+  import { PHASE_ORDER, type BootstrapPhase } from "./bootstrap/bootstrapPhases";
   import BootstrapHelixBackdrop from "./bootstrap/BootstrapHelixBackdrop.svelte";
   import BootstrapPhaseOrb from "./bootstrap/BootstrapPhaseOrb.svelte";
   import BootstrapActivityPulse from "./bootstrap/BootstrapActivityPulse.svelte";
@@ -72,6 +72,73 @@
     const secs = seconds % 60;
     return `${mins}m ${secs}s remaining`;
   }
+
+  interface SubStep {
+    label: string;
+    state: "pending" | "active" | "done";
+    details?: string;
+  }
+
+  let dbSubSteps = $derived.by<SubStep[]>(() => {
+    const steps: SubStep[] = [
+      { label: "Connect to database", state: "pending" },
+      { label: "Apply schema migrations", state: "pending" },
+      { label: "Migrate reference schema mappings", state: "pending" },
+      { label: "Seed evidence library packs", state: "pending" },
+      { label: "Normalize rsIDs & optimize indexes", state: "pending" }
+    ];
+
+    if (phase === "error") {
+      steps[0].state = "error" as any;
+      return steps;
+    }
+
+    const msg = message || "";
+
+    if (msg.includes("Connecting to local database")) {
+      steps[0].state = "active";
+    } else if (msg.includes("Applying schema migrations")) {
+      steps[0].state = "done";
+      steps[1].state = "active";
+    } else if (msg.includes("Migrating reference schema mappings") || msg.includes("Migrating reference database table")) {
+      steps[0].state = "done";
+      steps[1].state = "done";
+      steps[2].state = "active";
+      if (msg.includes("table")) {
+        steps[2].details = msg.replace("Migrating reference database table: ", "");
+      }
+    } else if (msg.includes("Seeding evidence library")) {
+      steps[0].state = "done";
+      steps[1].state = "done";
+      steps[2].state = "done";
+      steps[3].state = "active";
+      steps[3].details = msg.replace("Seeding evidence library: ", "");
+    } else if (msg.includes("Normalizing rsIDs") || msg.includes("Vacuuming") || msg.includes("Syncing GWAS")) {
+      steps[0].state = "done";
+      steps[1].state = "done";
+      steps[2].state = "done";
+      steps[3].state = "done";
+      steps[4].state = "active";
+      if (msg.includes("GWAS")) {
+        steps[4].details = "Syncing GWAS reference catalog…";
+      } else if (msg.includes("Vacuuming")) {
+        steps[4].details = "Vacuuming user database…";
+      } else {
+        steps[4].details = "Normalizing rsIDs…";
+      }
+    } else if (phase === "db") {
+      steps[0].state = "active";
+    }
+
+    // If we've passed the db phase, they are all done
+    const currentPhaseIdx = PHASE_ORDER.indexOf(phase);
+    const dbPhaseIdx = PHASE_ORDER.indexOf("db");
+    if (currentPhaseIdx > dbPhaseIdx) {
+      for (const s of steps) s.state = "done";
+    }
+
+    return steps;
+  });
 </script>
 
 <div
@@ -119,6 +186,30 @@
     {:else if phase !== "ready" && phase !== "error" && elapsedSeconds > 0}
       <div class="inner-progress-stats bootstrap-motion" style="margin: -0.25rem auto 1rem; justify-content: center; width: auto; font-size: 0.72rem; font-family: var(--font-mono), monospace;">
         <span>⏱️ {formatTime(elapsedSeconds)} elapsed</span>
+      </div>
+    {/if}
+
+    {#if phase === "db" || (PHASE_ORDER.indexOf(phase) >= PHASE_ORDER.indexOf("db") && phase !== "ready")}
+      <div class="substep-checklist bootstrap-motion">
+        {#each dbSubSteps as step}
+          <div class="substep-item step-{step.state}">
+            <span class="substep-check">
+              {#if step.state === "done"}
+                ✓
+              {:else if step.state === "active"}
+                ⏳
+              {:else}
+                ○
+              {/if}
+            </span>
+            <span class="substep-label">
+              {step.label}
+              {#if step.details}
+                <span class="substep-details">{step.details}</span>
+              {/if}
+            </span>
+          </div>
+        {/each}
       </div>
     {/if}
 
@@ -205,5 +296,67 @@
     font-size: 0.72rem;
     color: var(--text-secondary);
     font-family: var(--font-mono), monospace;
+  }
+
+  .substep-checklist {
+    width: 100%;
+    max-width: 440px;
+    margin: 0.5rem auto 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+    box-sizing: border-box;
+    animation: bootstrap-fade-up 0.55s ease both;
+  }
+
+  .substep-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .substep-item.step-pending {
+    color: var(--text-secondary);
+    opacity: 0.4;
+  }
+
+  .substep-item.step-active {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .substep-item.step-done {
+    color: var(--success);
+  }
+
+  .substep-check {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8rem;
+    width: 1rem;
+    text-align: center;
+  }
+
+  .substep-label {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .substep-details {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    opacity: 0.75;
+    margin-top: 0.05rem;
+    font-family: var(--font-mono), monospace;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 </style>

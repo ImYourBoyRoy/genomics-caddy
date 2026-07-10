@@ -221,14 +221,14 @@ async fn handle_request(
                     },
                     {
                         "name": "generate_report",
-                        "description": "Generates a full direction-aware trait report for a sample using the built-in marker database. Returns evaluated markers with severity classes, section summaries, and risk-direction-only signal scores.",
+                        "description": "Generates a full trait report for a sample. Prefer omitting template_json to use built-in marker packs. Returns evaluated markers, section summaries, and matched-allele coverage (not a disease probability).",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "sample_id": { "type": "integer", "description": "The target sample ID" },
-                                "template_json": { "type": "string", "description": "JSON string of the report template with sections and markers" }
+                                "template_json": { "type": "string", "description": "Optional JSON string of a custom report template. If omitted, all built-in marker packs are used." }
                             },
-                            "required": ["sample_id", "template_json"]
+                            "required": ["sample_id"]
                         }
                     },
                     {
@@ -709,14 +709,53 @@ async fn execute_tool(
                 .get("sample_id")
                 .and_then(|v| v.as_i64())
                 .ok_or("Missing sample_id")?;
-            let template_json = args
-                .get("template_json")
-                .and_then(|v| v.as_str())
-                .ok_or("Missing template_json")?;
-            crate::config::validate_template_json(template_json)?;
+            let app_data_dir = db_path.parent();
 
-            let template: crate::report::ReportTemplate = serde_json::from_str(template_json)
-                .map_err(|e| format!("Failed to parse template: {}", e))?;
+            let template = if let Some(template_json) = args.get("template_json").and_then(|v| v.as_str())
+            {
+                crate::config::validate_template_json(template_json)?;
+                serde_json::from_str::<crate::report::ReportTemplate>(template_json)
+                    .map_err(|e| format!("Failed to parse template: {}", e))?
+            } else {
+                // Default: all built-in packs (same path as get_report_for_packs with empty pack_ids)
+                #[derive(Debug, Deserialize)]
+                struct ManifestPack {
+                    id: String,
+                }
+                #[derive(Debug, Deserialize)]
+                struct Manifest {
+                    packs: Vec<ManifestPack>,
+                }
+                #[derive(Debug, Deserialize)]
+                struct PackContent {
+                    name: String,
+                    markers: Vec<crate::report::MarkerDefinition>,
+                }
+
+                let manifest_str = crate::db::get_manifest_str(app_data_dir);
+                let manifest: Manifest = serde_json::from_str(&manifest_str)
+                    .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+
+                let mut sections = Vec::new();
+                for pack in &manifest.packs {
+                    crate::config::validate_pack_id(&pack.id)?;
+                    let Some(pack_str) = crate::db::get_pack_str(app_data_dir, &pack.id) else {
+                        continue;
+                    };
+                    let pack_content: PackContent = serde_json::from_str(&pack_str)
+                        .map_err(|e| format!("Failed to parse pack {}: {}", pack.id, e))?;
+                    sections.push(crate::report::SectionDefinition {
+                        name: pack_content.name,
+                        markers: pack_content.markers,
+                    });
+                }
+
+                crate::report::ReportTemplate {
+                    title: "DNA Analysis & Biohacker Profile Report".to_string(),
+                    description: "Personal genomic profile matching candidate markers across multiple health systems.".to_string(),
+                    sections,
+                }
+            };
 
             let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
                 .map_err(|e| e.to_string())?;

@@ -65,6 +65,7 @@ Operational Notes: Manages SQLite database connection pools and executes request
 
 pub mod agent;
 mod agent_commands;
+mod agent_ui;
 pub mod app_log;
 pub mod config;
 pub mod db;
@@ -1717,6 +1718,7 @@ pub fn run() {
             let data_dir = paths::initialize_data_dir(app.handle());
             app_log::init(data_dir.clone());
             db::dump_default_marker_packs_if_missing(&data_dir);
+            agent_ui::start_http_bridge(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -1734,6 +1736,7 @@ pub fn run() {
             query_rsids,
             query_region,
             generate_report,
+            agent_ui::agent_ui_invoke,
             log_js_error,
             delete_sample,
             check_chain_status,

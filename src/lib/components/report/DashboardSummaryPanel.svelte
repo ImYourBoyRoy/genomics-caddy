@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { GeneratedReport, SeverityClass } from '../../types/genomics';
-  import { deriveActionablePlan, type ActionablePlan, type TopFinding, type LabTest, type LabTestGroup, type SupplementItem } from '../../utils/actionabilityEngine';
+  import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
 
   interface Props {
     report: GeneratedReport;
@@ -95,7 +95,7 @@
   <div class="disclaimer-banner">
     <span class="warning-icon">⚠️</span>
     <p>
-      <strong>Educational Information Only:</strong> This dashboard evaluates genetic risk factors based on raw genotype calls and local research registries. It is not medical advice, diagnosis, or a treatment plan. Always review these markers and any suggested testing with a qualified healthcare provider.
+      <strong>Educational Information Only:</strong> This dashboard summarizes curated genetic associations from your raw genotype calls and local research registries. It is not medical advice, diagnosis, or a treatment plan. Always review these markers and any suggested testing with a qualified healthcare provider.
     </p>
   </div>
 
@@ -103,14 +103,14 @@
     <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
     {#if plan.topFindings.length > 0}
       <div class="summary-card card card-top-findings" class:collapsed={collapsed.topFindings}>
-        <div class="card-header" onclick={() => toggle('topFindings')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('topFindings')}>
+        <div class="card-header" onclick={() => toggle('topFindings')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('topFindings'))}>
           <h3>⭐ Top {plan.topFindings.length} Areas of Concern</h3>
           <span class="chevron">{collapsed.topFindings ? '▶' : '▼'}</span>
         </div>
         {#if !collapsed.topFindings}
           <div class="card-body">
             <div class="findings-list">
-              {#each plan.topFindings as f}
+              {#each plan.topFindings as f (f.link_id || `${f.rsid}:${f.gene}`)}
                 <div class="finding-item">
                   <div class="finding-meta">
                     <span class="gene-badge">{f.gene}</span>
@@ -135,7 +135,7 @@
       <!-- Panel 2: Dietary Guidance -->
       {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
-          <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('diet')}>
+          <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('diet'))}>
             <h3>🥗 Dietary Alignment</h3>
             <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
           </div>
@@ -147,7 +147,7 @@
                   <div class="diet-column favor">
                     <h4>👍 Lean Into / Favor</h4>
                     <ul>
-                      {#each plan.diet.favor as item}
+                      {#each plan.diet.favor as item (item)}
                         <li>{item}</li>
                       {/each}
                     </ul>
@@ -158,7 +158,7 @@
                   <div class="diet-column avoid">
                     <h4>👎 Limit / Avoid</h4>
                     <ul>
-                      {#each plan.diet.avoid as item}
+                      {#each plan.diet.avoid as item (item)}
                         <li>{item}</li>
                       {/each}
                     </ul>
@@ -179,7 +179,7 @@
       <!-- Panel 3: Supplements to Discuss -->
       {#if plan.supplements.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
-          <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('supplements')}>
+          <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('supplements'))}>
             <h3>💊 Supplements to Discuss</h3>
             <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
           </div>
@@ -187,7 +187,7 @@
             <div class="card-body">
               <p class="section-hint">Consult your doctor before starting any supplementation, especially if taking medications.</p>
               <div class="supplements-list">
-                {#each plan.supplements as s}
+                {#each plan.supplements as s (`${s.name}:${s.reason}`)}
                   <div class="supplement-item">
                     <span class="supp-name">{s.name}</span>
                     <span class="supp-reason">{s.reason}</span>
@@ -203,7 +203,7 @@
     <!-- Labs: full-width, grouped & compact (collapsed by default) -->
     {#if plan.labTests.length > 0}
       <div class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
-        <div class="card-header" onclick={() => toggle('labTests')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('labTests')}>
+        <div class="card-header" onclick={() => toggle('labTests')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('labTests'))}>
           <h3>🔬 Lab & screening follow-ups ({plan.labTests.length})</h3>
           <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
         </div>
@@ -211,18 +211,18 @@
           <div class="card-body lab-body">
             <p class="section-hint">Grouped by priority — bring to a clinician; none of these imply an emergency workup unless you have acute symptoms.</p>
             <div class="lab-tier-stack">
-              {#each plan.labGroups as group}
+              {#each plan.labGroups as group (group.label)}
                 <section class="lab-tier-block">
                   <div class="lab-tier-header">
                     <span class="lab-tier-title">{group.label}</span>
                     <span class="lab-tier-count">{group.tests.length}</span>
                   </div>
                   <p class="lab-tier-hint">{group.hint}</p>
-                  {#each labsByCategory(group.tests) as { category, tests }}
+                  {#each labsByCategory(group.tests) as { category, tests } (category)}
                     <div class="lab-category">
                       <div class="lab-category-label">{category}</div>
                       <div class="lab-chip-grid">
-                        {#each tests as lt}
+                        {#each tests as lt (labKey(lt))}
                           <div class="lab-chip" class:lab-chip-counselor={lt.tier === 'counselor'}>
                             <button
                               type="button"

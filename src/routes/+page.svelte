@@ -56,6 +56,7 @@
   } from "$lib/utils/pageSampleHandlers";
   import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
   import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
+  import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
@@ -239,6 +240,22 @@
       void logJsError(msg, "unhandled_rejection", null, null, stack || null);
     };
 
+    const uninstallAgentUi = installAgentUiBridge({
+      getActiveTab: () => activeTab,
+      setActiveTab: (tab) => {
+        activeTab = tab;
+      },
+      getSelectedSample: () =>
+        selectedSample
+          ? {
+              id: selectedSample.id,
+              name: selectedSample.name,
+              genetic_sex: selectedSample.genetic_sex,
+            }
+          : null,
+      getReport: () => generatedReport,
+    });
+
     async function init() {
       if (typeof localStorage !== "undefined") {
         aiOllamaUrl = await resolveInitialOllamaUrl();
@@ -265,6 +282,7 @@
     void startResearchEventListeners();
 
     return () => {
+      uninstallAgentUi();
       if (unlistenProgress) unlistenProgress();
       if (unlistenBootstrap) unlistenBootstrap();
       stopResearchEventListeners();

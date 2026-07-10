@@ -214,7 +214,7 @@ function isLabLikeConfirmItem(text: string): boolean {
     'alt',
     'ast',
     'blood pressure',
-    'nmR',
+    'nmr',
     'inflammation',
     'glucose',
     'electrolyte',

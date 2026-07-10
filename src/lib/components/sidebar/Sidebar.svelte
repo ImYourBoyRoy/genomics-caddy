@@ -94,7 +94,14 @@
   let downloadProgress = $state<Record<string, DownloadProgress>>({});
   /** assetId -> currently syncing */
   let syncingAsset = $state<Record<string, boolean>>({});
-  let importProgress = $state<Record<string, string>>({});
+  interface ImportProgressInfo {
+    percent?: number;
+    rows_processed: number;
+    rows_per_second?: number;
+    eta_seconds?: number | null;
+    message: string;
+  }
+  let importProgress = $state<Record<string, ImportProgressInfo>>({});
   let isCheckingStatus = $state(false);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
 
@@ -167,17 +174,16 @@
       };
     });
 
-    unlistenImport = await listen<{
-      asset_id: string;
-      rows_processed: number;
-      message: string;
-    }>('offline:import_progress', (event) => {
-      const { asset_id, message } = event.payload;
-      importProgress = {
-        ...importProgress,
-        [asset_id]: message,
-      };
-    });
+    unlistenImport = await listen<ImportProgressInfo & { asset_id: string }>(
+      'offline:import_progress',
+      (event) => {
+        const { asset_id, ...payload } = event.payload;
+        importProgress = {
+          ...importProgress,
+          [asset_id]: payload,
+        };
+      }
+    );
   });
 
   onDestroy(() => {
@@ -282,21 +288,28 @@
 
   function getAssetStatusLine(tierNum: number, assetId: string): string {
     const asset = findAsset(tierNum, assetId);
-    if (!asset || isCheckingStatus) return 'Checking…';
+    // Only show "Checking…" before the first offline status payload arrives.
+    // Do not flip every row back to Checking while a secondary detail refresh runs.
+    if (!offlineStatus) return 'Checking…';
+    if (!asset) return 'Unavailable';
     const prog = downloadProgress[assetId];
     if (prog && syncingAsset[assetId]) {
       const pct = prog.percent >= 0 ? `${prog.percent}%` : `${(prog.bytesDone / 1024 / 1024).toFixed(0)} MB`;
       return `${pct} · ${prog.speedMbps.toFixed(1)} MB/s`;
     }
     if (asset.local_present) {
-      if (asset.row_count > 0) return `${asset.row_count.toLocaleString()} rows`;
       const mb = asset.local_bytes / 1024 / 1024;
-      if (mb >= 1000) {
-        return `${(mb / 1024).toFixed(1)} GB on disk`;
+      const sizeStr = mb >= 1000 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(0)} MB`;
+      if (asset.row_count > 0) {
+        return `${asset.row_count.toLocaleString()} rows (${sizeStr})`;
       }
-      return `${mb.toFixed(1)} MB on disk`;
+      // Empty placeholder .db files should not look "downloaded".
+      if (asset.local_bytes > 0 && asset.local_bytes < 64 * 1024 && asset.row_count === 0) {
+        return 'Not downloaded';
+      }
+      return `${sizeStr} on disk`;
     }
-    return `Missing · ${asset.display_size ?? ''}`;
+    return asset.display_size ? `Not downloaded · ${asset.display_size}` : 'Not downloaded';
   }
 
   /** Return the button label/variant for an asset. */
@@ -307,7 +320,7 @@
   } {
     if (syncingAsset[assetId]) return { label: 'Syncing…', variant: 'secondary', isForce: false };
     const asset = findAsset(tierNum, assetId);
-    if (!asset || isCheckingStatus) return { label: 'Download', variant: 'primary', isForce: false };
+    if (!offlineStatus || !asset) return { label: 'Download', variant: 'primary', isForce: false };
 
     if (!asset.local_present) {
       return { label: '⬇ Download', variant: 'primary', isForce: false };
@@ -420,7 +433,7 @@
         <button
           class="btn btn-primary btn-sm"
           onclick={handleSyncAllMissing}
-          disabled={anyActive || syncingAll || !offlineStatus || isCheckingStatus}
+          disabled={anyActive || syncingAll || !offlineStatus || isCheckingStatus || sweepRunning}
           style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
         >
           {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
@@ -458,7 +471,7 @@
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
                   onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={anyActive || !offlineStatus || isCheckingStatus || (db.assetId === 'dbsnp_merged_json' && !selectedSample)}
+                  disabled={anyActive || !offlineStatus || isCheckingStatus || sweepRunning || (db.assetId === 'dbsnp_merged_json' && !selectedSample)}
                   style="font-size: 0.65rem; padding: 4px 8px; min-height: auto; min-width: 72px; white-space: nowrap;"
                 >
                   {btnState.label}
@@ -467,7 +480,7 @@
 
               <!-- Per-asset progress bar (shown while downloading or importing) -->
               {#if isActive}
-                {#if prog}
+                {#if prog && !importProgress[db.assetId]}
                   <div class="progress-track">
                     <div
                       class="progress-fill"
@@ -480,9 +493,22 @@
                   </div>
                 {/if}
                 {#if importProgress[db.assetId]}
+                  {@const imp = importProgress[db.assetId]}
+                  <div class="progress-track" style="background: rgba(165, 180, 252, 0.15); margin-top: 0.25rem;">
+                    <div
+                      class="progress-fill"
+                      style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                    ></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.6rem; color: #a5b4fc; margin-top: 0.1rem; font-family: var(--font-mono), monospace;">
+                    <span>{imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
+                    {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
+                      <span>{imp.eta_seconds}s remaining</span>
+                    {/if}
+                  </div>
                   <div style="font-size: 0.65rem; color: #a5b4fc; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
                     <span class="import-dot"></span>
-                    <span>{importProgress[db.assetId]}</span>
+                    <span>{imp.message}</span>
                   </div>
                 {/if}
               {/if}

@@ -93,9 +93,11 @@ pub async fn get_or_build_manifest(
 ) -> GnomadReleaseManifest {
     if !force_refresh
         && let Some(m) = load_manifest(data_dir)
-            && manifest_matches_cfg(&m, cfg) && manifest_fresh(&m) {
-                return m;
-            }
+        && manifest_matches_cfg(&m, cfg)
+        && manifest_fresh(&m)
+    {
+        return m;
+    }
     let manifest = build_manifest(cfg).await;
     let _ = save_manifest(data_dir, &manifest);
     manifest

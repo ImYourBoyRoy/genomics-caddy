@@ -3,11 +3,7 @@
 
 pub fn normalize_chrom_key(chrom: &str) -> String {
     let c = chrom.trim().trim_start_matches("chr").to_uppercase();
-    if c == "MT" {
-        "M".to_string()
-    } else {
-        c
-    }
+    if c == "MT" { "M".to_string() } else { c }
 }
 
 pub fn normalize_allele_token(a: &str) -> String {

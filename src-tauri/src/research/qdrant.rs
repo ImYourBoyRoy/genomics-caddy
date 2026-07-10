@@ -65,7 +65,10 @@ pub async fn test_qdrant_connection(
             vectors_count: None,
             collection_exists: false,
             collections: None,
-            error: Some(format!("Qdrant returned HTTP {} when checking database status", res.status())),
+            error: Some(format!(
+                "Qdrant returned HTTP {} when checking database status",
+                res.status()
+            )),
         };
     }
 
@@ -78,7 +81,10 @@ pub async fn test_qdrant_connection(
                 vectors_count: None,
                 collection_exists: false,
                 collections: None,
-                error: Some(format!("Database is live, but failed to parse /collections response: {}", e)),
+                error: Some(format!(
+                    "Database is live, but failed to parse /collections response: {}",
+                    e
+                )),
             };
         }
     };
@@ -111,18 +117,19 @@ pub async fn test_qdrant_connection(
     match detail_req.send().await {
         Ok(detail_res) => {
             if detail_res.status().is_success()
-                && let Ok(detail_body) = detail_res.json::<serde_json::Value>().await {
-                    let vectors_count = detail_body["result"]["points_count"]
-                        .as_u64()
-                        .or_else(|| detail_body["result"]["vectors_count"].as_u64());
-                    return QdrantConnectionStatus {
-                        success: true,
-                        vectors_count,
-                        collection_exists: true,
-                        collections: Some(collections),
-                        error: None,
-                    };
-                }
+                && let Ok(detail_body) = detail_res.json::<serde_json::Value>().await
+            {
+                let vectors_count = detail_body["result"]["points_count"]
+                    .as_u64()
+                    .or_else(|| detail_body["result"]["vectors_count"].as_u64());
+                return QdrantConnectionStatus {
+                    success: true,
+                    vectors_count,
+                    collection_exists: true,
+                    collections: Some(collections),
+                    error: None,
+                };
+            }
             QdrantConnectionStatus {
                 success: true,
                 vectors_count: None,
@@ -228,7 +235,10 @@ pub async fn ensure_qdrant_collection(
         req = req.header("api-key", key);
     }
 
-    let res = req.send().await.map_err(|e| format!("Qdrant request failed: {}", e))?;
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant request failed: {}", e))?;
     if res.status() == 401 || res.status() == 403 {
         return Err("401 Unauthorized: Qdrant requires a valid API key. Please check your credentials in settings.".to_string());
     }
@@ -236,7 +246,10 @@ pub async fn ensure_qdrant_collection(
     if res.status().is_success() || res.status() == 409 {
         return Ok(());
     }
-    Err(format!("Qdrant returned HTTP {} when creating collection", res.status()))
+    Err(format!(
+        "Qdrant returned HTTP {} when creating collection",
+        res.status()
+    ))
 }
 
 /// Delete a Qdrant collection (testing / reset). Missing collection is treated as success.
@@ -309,7 +322,11 @@ pub async fn check_existing_points(
 ) -> Result<Vec<u64>, String> {
     let client = qdrant_http();
 
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({
         "ids": ids,
         "with_payload": false,
@@ -321,12 +338,18 @@ pub async fn check_existing_points(
         req = req.header("api-key", key);
     }
 
-    let res = req.send().await.map_err(|e| format!("Qdrant points check failed: {}", e))?;
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant points check failed: {}", e))?;
     if res.status() == 401 || res.status() == 403 {
         return Err("401 Unauthorized: Qdrant requires a valid API key. Please check your credentials in settings.".to_string());
     }
     if !res.status().is_success() {
-        return Err(format!("Qdrant points check returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant points check returned HTTP {}",
+            res.status()
+        ));
     }
 
     let val: serde_json::Value = res
@@ -334,7 +357,9 @@ pub async fn check_existing_points(
         .await
         .map_err(|e| format!("Failed to parse Qdrant points response: {}", e))?;
 
-    let result = val["result"].as_array().ok_or("Invalid Qdrant points result format")?;
+    let result = val["result"]
+        .as_array()
+        .ok_or("Invalid Qdrant points result format")?;
     let mut existing_ids = Vec::new();
     for item in result {
         if let Some(id) = item["id"].as_u64() {
@@ -366,7 +391,11 @@ pub async fn classify_points_sweep_state(
 
     let client = qdrant_http();
 
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({
         "ids": ids,
         "with_payload": ["enrichment_version", "sources_provenance"],
@@ -389,7 +418,10 @@ pub async fn classify_points_sweep_state(
         );
     }
     if !res.status().is_success() {
-        return Err(format!("Qdrant points classify returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant points classify returned HTTP {}",
+            res.status()
+        ));
     }
 
     let val: serde_json::Value = res
@@ -433,7 +465,11 @@ pub async fn classify_points_index_state(
 
     let client = qdrant_http();
 
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({
         "ids": ids,
         "with_payload": ["enrichment_version", "gene_symbol", "has_gwas"],
@@ -456,7 +492,10 @@ pub async fn classify_points_index_state(
         );
     }
     if !res.status().is_success() {
-        return Err(format!("Qdrant points classify returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant points classify returned HTTP {}",
+            res.status()
+        ));
     }
 
     let val: serde_json::Value = res
@@ -484,7 +523,6 @@ pub async fn classify_points_index_state(
 // 3. embed_text
 // ---------------------------------------------------------------------------
 
-
 // ---------------------------------------------------------------------------
 // 4. upsert_to_qdrant
 // ---------------------------------------------------------------------------
@@ -500,7 +538,11 @@ pub async fn upsert_to_qdrant(
     let client = qdrant_http();
 
     let numeric_id = string_to_u64(point_id);
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({
         "points": [{
             "id": numeric_id,
@@ -514,7 +556,10 @@ pub async fn upsert_to_qdrant(
         req = req.header("api-key", key);
     }
 
-    let res = req.send().await.map_err(|e| format!("Qdrant upsert failed: {}", e))?;
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant upsert failed: {}", e))?;
     if res.status() == 401 || res.status() == 403 {
         return Err("401 Unauthorized: Qdrant requires a valid API key. Please check your credentials in settings.".to_string());
     }
@@ -548,7 +593,11 @@ pub async fn upsert_points_batch(
         })
         .collect();
 
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({ "points": qdrant_points });
 
     let mut req = client.put(&endpoint).json(&body);
@@ -567,7 +616,10 @@ pub async fn upsert_points_batch(
         );
     }
     if !res.status().is_success() {
-        return Err(format!("Qdrant batch upsert returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant batch upsert returned HTTP {}",
+            res.status()
+        ));
     }
     Ok(())
 }
@@ -576,7 +628,10 @@ pub async fn upsert_points_batch(
 // 5. search_qdrant
 // ---------------------------------------------------------------------------
 
-fn build_payload_filter(sample_id: Option<i64>, trait_category: Option<&str>) -> Option<serde_json::Value> {
+fn build_payload_filter(
+    sample_id: Option<i64>,
+    trait_category: Option<&str>,
+) -> Option<serde_json::Value> {
     let mut must: Vec<serde_json::Value> = Vec::new();
     if let Some(id) = sample_id {
         must.push(serde_json::json!({
@@ -638,7 +693,10 @@ pub async fn search_qdrant(
         req = req.header("api-key", key);
     }
 
-    let res = req.send().await.map_err(|e| format!("Qdrant search failed: {}", e))?;
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant search failed: {}", e))?;
     if res.status() == 401 || res.status() == 403 {
         return Err("401 Unauthorized: Qdrant requires a valid API key. Please check your credentials in settings.".to_string());
     }
@@ -677,13 +735,14 @@ pub async fn scroll_qdrant_points(
         collection
     );
 
-    let filter = build_payload_filter(Some(sample_id), trait_category)
-        .unwrap_or_else(|| serde_json::json!({
+    let filter = build_payload_filter(Some(sample_id), trait_category).unwrap_or_else(|| {
+        serde_json::json!({
             "must": [{
                 "key": "sample_id",
                 "match": { "value": sample_id }
             }]
-        }));
+        })
+    });
 
     let body = serde_json::json!({
         "filter": filter,
@@ -781,7 +840,10 @@ pub async fn scroll_qdrant_vectors_sample(
         .await
         .map_err(|e| format!("Qdrant vector scroll failed: {}", e))?;
     if !res.status().is_success() {
-        return Err(format!("Qdrant vector scroll returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant vector scroll returned HTTP {}",
+            res.status()
+        ));
     }
 
     let val: serde_json::Value = res
@@ -852,7 +914,10 @@ pub async fn scroll_sample_payloads(
         .await
         .map_err(|e| format!("Qdrant payload scroll failed: {}", e))?;
     if !res.status().is_success() {
-        return Err(format!("Qdrant payload scroll returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant payload scroll returned HTTP {}",
+            res.status()
+        ));
     }
     let val: serde_json::Value = res
         .json()
@@ -870,22 +935,36 @@ pub async fn scroll_sample_payloads(
 
 fn extract_default_vector(v: &serde_json::Value) -> Vec<f32> {
     if let Some(arr) = v.as_array() {
-        return arr.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect();
+        return arr
+            .iter()
+            .filter_map(|x| x.as_f64().map(|f| f as f32))
+            .collect();
     }
     if let Some(default) = v.get("")
-        && let Some(arr) = default.as_array() {
-            return arr.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect();
-        }
+        && let Some(arr) = default.as_array()
+    {
+        return arr
+            .iter()
+            .filter_map(|x| x.as_f64().map(|f| f as f32))
+            .collect();
+    }
     if let Some(obj) = v.as_object() {
         for key in ["", "default", "dense"] {
             if let Some(arr) = obj.get(key).and_then(|v| v.as_array()) {
-                return arr.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect();
+                return arr
+                    .iter()
+                    .filter_map(|x| x.as_f64().map(|f| f as f32))
+                    .collect();
             }
         }
         if let Some((_name, val)) = obj.iter().next()
-            && let Some(arr) = val.as_array() {
-                return arr.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect();
-            }
+            && let Some(arr) = val.as_array()
+        {
+            return arr
+                .iter()
+                .filter_map(|x| x.as_f64().map(|f| f as f32))
+                .collect();
+        }
     }
     vec![]
 }
@@ -916,11 +995,17 @@ pub async fn ensure_qdrant_collection_named(
         req = req.header("api-key", key);
     }
 
-    let res = req.send().await.map_err(|e| format!("Qdrant request failed: {}", e))?;
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Qdrant request failed: {}", e))?;
     if res.status().is_success() || res.status() == 409 {
         return update_collection_named_vectors(url, api_key, collection, dims).await;
     }
-    Err(format!("Qdrant returned HTTP {} when creating collection", res.status()))
+    Err(format!(
+        "Qdrant returned HTTP {} when creating collection",
+        res.status()
+    ))
 }
 
 async fn update_collection_named_vectors(
@@ -936,7 +1021,12 @@ async fn update_collection_named_vectors(
         url.trim_end_matches('/'),
         collection
     );
-    for name in ["trait_dense", "gene_mechanism_dense", "evidence_dense", "actionability_dense"] {
+    for name in [
+        "trait_dense",
+        "gene_mechanism_dense",
+        "evidence_dense",
+        "actionability_dense",
+    ] {
         let body = serde_json::json!({
             "vectors": {
                 name: {
@@ -982,7 +1072,11 @@ pub async fn upsert_points_batch_named(
         })
         .collect();
 
-    let endpoint = format!("{}/collections/{}/points", url.trim_end_matches('/'), collection);
+    let endpoint = format!(
+        "{}/collections/{}/points",
+        url.trim_end_matches('/'),
+        collection
+    );
     let body = serde_json::json!({ "points": qdrant_points });
 
     let mut req = client.put(&endpoint).json(&body);
@@ -995,7 +1089,10 @@ pub async fn upsert_points_batch_named(
         .await
         .map_err(|e| format!("Qdrant named batch upsert failed: {}", e))?;
     if !res.status().is_success() {
-        return Err(format!("Qdrant named batch upsert returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant named batch upsert returned HTTP {}",
+            res.status()
+        ));
     }
     Ok(())
 }
@@ -1234,7 +1331,10 @@ pub async fn search_qdrant_filtered(
         .await
         .map_err(|e| format!("Qdrant filtered search failed: {}", e))?;
     if !res.status().is_success() {
-        return Err(format!("Qdrant filtered search returned HTTP {}", res.status()));
+        return Err(format!(
+            "Qdrant filtered search returned HTTP {}",
+            res.status()
+        ));
     }
 
     let val: serde_json::Value = res

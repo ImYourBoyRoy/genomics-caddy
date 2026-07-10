@@ -1,26 +1,28 @@
 // ./src-tauri/src/research/enrich.rs
+use super::crossmap::{build_cross_map_context, lookup_discovery_catalog_gene};
 use super::embed::embed_text;
-use super::tuning::skip_gnomad_in_sweep;
-use super::markers::score_marker_significance;
-use super::qdrant::upsert_to_qdrant;
-use super::sources::{fetch_ensembl_vep_genes, fetch_gtex_eqtls_for_rsid, resolve_gwas_associations};
 use super::gnomad::fetch_gnomad_for_enrichment;
-use super::sweep_metrics::{record_phase, timed_async, SweepPhase};
-use std::time::Instant;
+use super::markers::score_marker_significance;
+use super::promote::maybe_promote_vector_finding;
+use super::qdrant::upsert_to_qdrant;
+use super::sources::{
+    fetch_ensembl_vep_genes, fetch_gtex_eqtls_for_rsid, resolve_gwas_associations,
+};
 use super::state::NCBI_SEMAPHORE;
+use super::sweep_metrics::{SweepPhase, record_phase, timed_async};
+use super::tuning::skip_gnomad_in_sweep;
+use super::tuning::{
+    enrichment_batch_timeout_secs, gnomad_remote_timeout_secs, prepare_concurrency,
+    prepare_variant_timeout_secs,
+};
 use super::types::*;
 use super::util::{
     best_gwas_pvalue, build_enrichment_narrative, build_enrichment_payload, clean_pubmed_abstract,
     collect_gene_candidates, extract_gwas_traits, lookup_variant_locus, resolve_gene_name,
 };
-use super::promote::maybe_promote_vector_finding;
-use super::crossmap::{build_cross_map_context, lookup_discovery_catalog_gene};
-use super::tuning::{
-    prepare_concurrency, prepare_variant_timeout_secs, gnomad_remote_timeout_secs,
-    enrichment_batch_timeout_secs,
-};
 use std::path::Path;
 use std::time::Duration;
+use std::time::Instant;
 use tokio::task::JoinSet;
 
 pub(crate) async fn fetch_pubmed_abstracts(
@@ -35,21 +37,16 @@ pub(crate) async fn fetch_pubmed_abstracts(
         rsid
     );
     if let Some(key) = ncbi_api_key
-        && !key.trim().is_empty() {
-            search_url = format!("{}&api_key={}", search_url, key.trim());
-        }
-
-    let search_val = match crate::agent::fetch_api_cached(
-        db_path,
-        &search_url,
-        ncbi_api_key,
-        86400 * 7,
-    )
-    .await
+        && !key.trim().is_empty()
     {
-        Ok(v) => v,
-        Err(_) => return vec![],
-    };
+        search_url = format!("{}&api_key={}", search_url, key.trim());
+    }
+
+    let search_val =
+        match crate::agent::fetch_api_cached(db_path, &search_url, ncbi_api_key, 86400 * 7).await {
+            Ok(v) => v,
+            Err(_) => return vec![],
+        };
 
     if let Ok(conn) = crate::db::connect(db_path) {
         let _ = crate::research::evidence::source_records::record_pubmed_search(
@@ -79,9 +76,10 @@ pub(crate) async fn fetch_pubmed_abstracts(
             id_list
         );
         if let Some(key) = ncbi_api_key
-            && !key.trim().is_empty() {
-                u = format!("{}&api_key={}", u, key.trim());
-            }
+            && !key.trim().is_empty()
+        {
+            u = format!("{}&api_key={}", u, key.trim());
+        }
         u
     };
 
@@ -201,10 +199,16 @@ pub(crate) async fn prepare_marker_enrichment(
         && (effective_clinvar.is_some() || !gwas_assocs.is_empty());
     let needs_gtex = super::sources_config::enrichment_gtex_enabled() && prefetch_gene.is_some();
 
-    let data_dir = db_path.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| db_path.to_path_buf());
+    let data_dir = db_path
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| db_path.to_path_buf());
     let gnomad_fut = async {
         if skip_gnomad_in_sweep() {
-            (None, super::gnomad::GnomadContext::empty(super::gnomad::GnomadLookupStatus::NotQueried))
+            (
+                None,
+                super::gnomad::GnomadContext::empty(super::gnomad::GnomadLookupStatus::NotQueried),
+            )
         } else {
             let started = Instant::now();
             let result =
@@ -228,8 +232,7 @@ pub(crate) async fn prepare_marker_enrichment(
     let gtex_fut = async {
         if needs_gtex {
             let started = Instant::now();
-            let eqtls =
-                fetch_gtex_eqtls_for_rsid(db_path, rsid, prefetch_gene.as_deref()).await;
+            let eqtls = fetch_gtex_eqtls_for_rsid(db_path, rsid, prefetch_gene.as_deref()).await;
             record_phase(SweepPhase::Gtex, started.elapsed());
             eqtls
         } else {
@@ -307,16 +310,19 @@ pub(crate) async fn prepare_marker_enrichment(
     let mut gene_confidence = gene_confidence_static.to_string();
     let data_dir = db_path.parent();
     if resolved_gene.is_none()
-        && let Some(catalog_gene) = lookup_discovery_catalog_gene(data_dir, rsid) {
-            resolved_gene = Some(catalog_gene);
-            gene_confidence = "discovery_catalog".to_string();
-        }
+        && let Some(catalog_gene) = lookup_discovery_catalog_gene(data_dir, rsid)
+    {
+        resolved_gene = Some(catalog_gene);
+        gene_confidence = "discovery_catalog".to_string();
+    }
     let locus = lookup_variant_locus(db_path, sample_id, rsid);
     let mut chromosome = locus.as_ref().map(|(c, _)| c.clone());
     let mut position = locus.map(|(_, p)| p);
 
     if super::sources_config::enrichment_vep_dbsnp_enabled()
-        && (resolved_gene.is_none() || gene_confidence == "unknown" || gene_confidence == "gwas_reported")
+        && (resolved_gene.is_none()
+            || gene_confidence == "unknown"
+            || gene_confidence == "gwas_reported")
     {
         let vep_started = Instant::now();
         if let Some(ensembl) = fetch_ensembl_vep_genes(db_path, rsid).await {
@@ -338,10 +344,11 @@ pub(crate) async fn prepare_marker_enrichment(
                     gene_confidence = "ensembl_vep".to_string();
                 }
             } else if (gene_confidence == "unknown" || gene_confidence == "gwas_reported")
-                && let Some(symbol) = ensembl.genes.first() {
-                    resolved_gene = Some(symbol.clone());
-                    gene_confidence = "ensembl_vep".to_string();
-                }
+                && let Some(symbol) = ensembl.genes.first()
+            {
+                resolved_gene = Some(symbol.clone());
+                gene_confidence = "ensembl_vep".to_string();
+            }
             if chromosome.is_none() {
                 chromosome = ensembl.chromosome.clone();
             }
@@ -357,7 +364,9 @@ pub(crate) async fn prepare_marker_enrichment(
         }
     }
 
-    if super::sources_config::enrichment_vep_dbsnp_enabled() && (chromosome.is_none() || position.is_none()) {
+    if super::sources_config::enrichment_vep_dbsnp_enabled()
+        && (chromosome.is_none() || position.is_none())
+    {
         let vep_started = Instant::now();
         let dbsnp = super::evidence::ncbi_context::fetch_dbsnp_context(db_path, rsid).await;
         record_phase(SweepPhase::Vep, vep_started.elapsed());
@@ -377,49 +386,54 @@ pub(crate) async fn prepare_marker_enrichment(
 
     let mut gene_candidates = collect_gene_candidates(db_path, rsid, gene, &gwas_assocs);
     if let Some(obj) = sources_provenance.as_object_mut()
-        && let Some(ensembl) = obj.get("ensembl_vep").and_then(|v| v["genes"].as_array()) {
-            for gene_val in ensembl {
-                if let Some(symbol) = gene_val.as_str()
-                    && !gene_candidates.iter().any(|c| {
-                        c["symbol"]
-                            .as_str()
-                            .map(|s| s.eq_ignore_ascii_case(symbol))
-                            .unwrap_or(false)
-                    }) {
-                        gene_candidates.push(serde_json::json!({
-                            "symbol": symbol,
-                            "confidence": "ensembl_vep",
-                            "source": "ensembl_vep",
-                        }));
-                    }
+        && let Some(ensembl) = obj.get("ensembl_vep").and_then(|v| v["genes"].as_array())
+    {
+        for gene_val in ensembl {
+            if let Some(symbol) = gene_val.as_str()
+                && !gene_candidates.iter().any(|c| {
+                    c["symbol"]
+                        .as_str()
+                        .map(|s| s.eq_ignore_ascii_case(symbol))
+                        .unwrap_or(false)
+                })
+            {
+                gene_candidates.push(serde_json::json!({
+                    "symbol": symbol,
+                    "confidence": "ensembl_vep",
+                    "source": "ensembl_vep",
+                }));
             }
         }
+    }
     if resolved_gene.is_none()
-        && let Some(candidate) = gene_candidates.first().and_then(|c| c["symbol"].as_str()) {
-            resolved_gene = Some(candidate.to_string());
-            gene_confidence = gene_candidates[0]["confidence"]
-                .as_str()
-                .unwrap_or("candidate")
-                .to_string();
-        }
+        && let Some(candidate) = gene_candidates.first().and_then(|c| c["symbol"].as_str())
+    {
+        resolved_gene = Some(candidate.to_string());
+        gene_confidence = gene_candidates[0]["confidence"]
+            .as_str()
+            .unwrap_or("candidate")
+            .to_string();
+    }
     let mut eqtls = eqtls;
-    if super::sources_config::enrichment_gtex_enabled() && eqtls.is_none()
+    if super::sources_config::enrichment_gtex_enabled()
+        && eqtls.is_none()
         && let Some(ref resolved) = resolved_gene
-            && prefetch_gene.is_none() {
-                let gtex_started = Instant::now();
-                eqtls = fetch_gtex_eqtls_for_rsid(db_path, rsid, Some(resolved.as_str())).await;
-                record_phase(SweepPhase::Gtex, gtex_started.elapsed());
-                if let Some(obj) = sources_provenance.as_object_mut() {
-                    obj.insert(
-                        "gtex".into(),
-                        serde_json::json!({
-                            "queried": true,
-                            "hits": eqtls.as_ref().map(|v| v.len()).unwrap_or(0),
-                            "resolved_after_gwas_gene_mapping": true,
-                        }),
-                    );
-                }
-            }
+        && prefetch_gene.is_none()
+    {
+        let gtex_started = Instant::now();
+        eqtls = fetch_gtex_eqtls_for_rsid(db_path, rsid, Some(resolved.as_str())).await;
+        record_phase(SweepPhase::Gtex, gtex_started.elapsed());
+        if let Some(obj) = sources_provenance.as_object_mut() {
+            obj.insert(
+                "gtex".into(),
+                serde_json::json!({
+                    "queried": true,
+                    "hits": eqtls.as_ref().map(|v| v.len()).unwrap_or(0),
+                    "resolved_after_gwas_gene_mapping": true,
+                }),
+            );
+        }
+    }
     let genotype = format!("{}/{}", allele1, allele2);
     let gwas_hit_count = gwas_assocs.len() as u32;
     let traits = extract_gwas_traits(&gwas_assocs);
@@ -474,11 +488,12 @@ pub(crate) async fn prepare_marker_enrichment(
     };
 
     if let Some(obj) = sources_provenance.as_object_mut()
-        && let Some(sec) = secondary.provenance.as_object() {
-            for (k, v) in sec {
-                obj.insert(k.clone(), v.clone());
-            }
+        && let Some(sec) = secondary.provenance.as_object()
+    {
+        for (k, v) in sec {
+            obj.insert(k.clone(), v.clone());
         }
+    }
 
     let crossmap = build_cross_map_context(
         data_dir,
@@ -493,10 +508,10 @@ pub(crate) async fn prepare_marker_enrichment(
             .as_ref()
             .and_then(|m| m["gene"].as_str())
             .filter(|g| !g.trim().is_empty())
-        {
-            resolved_gene = Some(catalog_gene.to_string());
-            gene_confidence = "discovery_catalog".to_string();
-        }
+    {
+        resolved_gene = Some(catalog_gene.to_string());
+        gene_confidence = "discovery_catalog".to_string();
+    }
 
     let mut full_text = build_enrichment_narrative(
         rsid,
@@ -578,19 +593,33 @@ pub(crate) async fn prepare_marker_enrichment(
 
     let mut payload_map = payload.as_object().cloned().unwrap_or_default();
 
-    if let Some(mapping) = super::evidence::adapters::best_ontology_mapping(&secondary.ontology_mappings) {
-        payload_map.insert("trait_name_mapped".into(), serde_json::json!(mapping.mapped_label));
-        payload_map.insert("trait_ontology_id".into(), serde_json::json!(mapping.ontology_id));
+    if let Some(mapping) =
+        super::evidence::adapters::best_ontology_mapping(&secondary.ontology_mappings)
+    {
+        payload_map.insert(
+            "trait_name_mapped".into(),
+            serde_json::json!(mapping.mapped_label),
+        );
+        payload_map.insert(
+            "trait_ontology_id".into(),
+            serde_json::json!(mapping.ontology_id),
+        );
         payload_map.insert(
             "trait_mapping_confidence".into(),
             serde_json::json!(mapping.confidence),
         );
     }
     if !secondary.pathway_names.is_empty() {
-        payload_map.insert("pathway_names".into(), serde_json::json!(secondary.pathway_names));
+        payload_map.insert(
+            "pathway_names".into(),
+            serde_json::json!(secondary.pathway_names),
+        );
     }
     if !secondary.pgs_matches.is_empty() {
-        payload_map.insert("pgs_match_summaries".into(), serde_json::json!(secondary.pgs_matches));
+        payload_map.insert(
+            "pgs_match_summaries".into(),
+            serde_json::json!(secondary.pgs_matches),
+        );
     }
     super::evidence::named_vectors::extend_payload_named_vector_meta(
         &mut payload_map,
@@ -619,7 +648,9 @@ pub(crate) async fn prepare_marker_enrichment(
     let payload = serde_json::Value::Object(payload_map);
 
     let dq = payload["data_quality_score"].as_f64().unwrap_or(0.5) as f32;
-    let assoc_strength = payload["association_strength_score"].as_f64().unwrap_or(0.0) as f32;
+    let assoc_strength = payload["association_strength_score"]
+        .as_f64()
+        .unwrap_or(0.0) as f32;
     let primary_trait = payload["trait_name"].as_str().map(String::from);
     let trait_cat = payload["trait_category"].as_str().map(String::from);
     let _ = super::evidence::store::persist_enrichment_evidence(
@@ -674,12 +705,18 @@ pub async fn enrich_marker(
 
     if super::evidence::named_vectors::named_vectors_enabled(config) {
         let texts = super::evidence::named_vectors::build_named_vector_texts(
-            prepared.payload.as_object().unwrap_or(&serde_json::Map::new()),
+            prepared
+                .payload
+                .as_object()
+                .unwrap_or(&serde_json::Map::new()),
             &prepared.full_text,
         );
-        if let Ok(named) =
-            super::evidence::named_vectors::embed_named_vectors(&texts, ollama_url, &config.embedding_model)
-                .await
+        if let Ok(named) = super::evidence::named_vectors::embed_named_vectors(
+            &texts,
+            ollama_url,
+            &config.embedding_model,
+        )
+        .await
         {
             let mut vectors = named;
             vectors.insert(String::new(), vector.clone());
@@ -821,7 +858,11 @@ async fn process_enrichment_batch_inner(
     super::sweep_metrics::set_batch_phase("prepare");
     super::debug_log::log(
         "enrich",
-        format!("prepare starting ({} variants, concurrency={})", batch.len(), prepare_concurrency()),
+        format!(
+            "prepare starting ({} variants, concurrency={})",
+            batch.len(),
+            prepare_concurrency()
+        ),
     );
 
     let concurrency = prepare_concurrency().max(1);

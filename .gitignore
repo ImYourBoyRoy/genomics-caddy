@@ -22,17 +22,20 @@ tmp_error.log
 !/App/Data/
 !/App/.gitkeep
 !/App/Data/.gitkeep
-/App/Data/*.db
-/App/Data/*.db.enc
-/App/Data/*.gz
-/App/Data/gnomad_indexes/
-/App/Data/marker-packs/
-/App/Data/raw_downloads/
-/App/Data/references/
-/App/Data/tier2/
+/App/Data/**
+!/App/Data/.gitkeep
+# Never commit nested mistaken App/App trees or staged binaries
+/App/App/
+/App/DNA-Tools
+/App/DNA-Tools.exe
+/App/Genomics*
+/App/Data/benchmarks/
+/App/Data/samples/
 
 # Personal genomic raw data files & report outputs
 *.txt
+!*README*.txt
+!*COPY*.txt
 *DNA*.txt
 AncestryDNA.txt
 23andMe*.txt
@@ -40,4 +43,10 @@ AncestryDNA.txt
 *.csv
 *report.json
 roy_report.json
+*_report*.json
 
+# Tooling / OS noise
+__pycache__/
+*.pyc
+.idea/
+.vscode/*.log

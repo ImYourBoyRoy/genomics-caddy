@@ -1,25 +1,28 @@
 // ./src-tauri/src/research/sweep.rs
 use super::embed::embed_texts_batch;
-use super::enrich::{is_fatal_enrichment_error, process_enrichment_batch, PreparedEnrichment};
-use super::job::{save_research_job};
+use super::enrich::{PreparedEnrichment, is_fatal_enrichment_error, process_enrichment_batch};
+use super::evidence::named_vectors::{build_named_vector_texts, embed_named_vectors};
+use super::http::enrich_batch_size;
+use super::job::save_research_job;
 use super::markers::{collect_markers_for_scopes, preview_research_scope};
-use super::qdrant::{classify_points_index_state, classify_points_sweep_state, test_qdrant_connection, upsert_points_batch};
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::sync::Arc;
+use super::promote::promote_enrichment_batch;
+use super::qdrant::{
+    classify_points_index_state, classify_points_sweep_state, test_qdrant_connection,
+    upsert_points_batch,
+};
 use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING};
+use super::sweep_metrics::{SweepPhase, set_live_message, timed_async};
+use super::sweep_runtime::SweepProgressSink;
+use super::tuning::{self, SweepTuningGuard, install_sweep_tuning, named_vectors_in_sweep};
 use super::types::*;
 use super::util::{string_to_u64, unix_now};
-use super::promote::promote_enrichment_batch;
-use super::http::enrich_batch_size;
-use super::tuning::{self, install_sweep_tuning, named_vectors_in_sweep, SweepTuningGuard};
-use super::sweep_metrics::{timed_async, SweepPhase, set_live_message};
-use super::evidence::named_vectors::{build_named_vector_texts, embed_named_vectors};
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
-use super::sweep_runtime::SweepProgressSink;
 
 struct ProgressTracker {
     loop_started_at: i64,
@@ -95,7 +98,10 @@ fn batch_activity_payload() -> (
 enum ResumePlan {
     None,
     /// Jump to marker index within priority (0) or background (1) pass.
-    StartInPass { pass_index: usize, marker_index: usize },
+    StartInPass {
+        pass_index: usize,
+        marker_index: usize,
+    },
     /// Saved rsid is no longer in the queue — rely on Qdrant cache checks.
     NotFound,
 }
@@ -151,29 +157,35 @@ fn emit_progress(
     } else {
         None
     };
-    let (activity_phase, batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs, activity_rsid) =
-        batch_activity_payload();
+    let (
+        activity_phase,
+        batch_prepared,
+        batch_prefetch_done,
+        batch_total,
+        batch_elapsed_secs,
+        activity_rsid,
+    ) = batch_activity_payload();
     let display_rsid = activity_rsid.or(current_rsid);
     set_live_message(&message);
     sink.emit_progress(ResearchProgress {
-            job_id: job_id.to_string(),
-            status: status.to_string(),
-            enriched_count,
-            total_markers,
-            current_rsid: display_rsid,
-            current_source,
-            message,
-            variants_per_sec,
-            recent_variants_per_sec,
-            phase_metrics,
-            activity_phase,
-            batch_prepared,
-            batch_prefetch_done,
-            batch_total,
-            batch_elapsed_secs,
-            qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
-            session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
-        });
+        job_id: job_id.to_string(),
+        status: status.to_string(),
+        enriched_count,
+        total_markers,
+        current_rsid: display_rsid,
+        current_source,
+        message,
+        variants_per_sec,
+        recent_variants_per_sec,
+        phase_metrics,
+        activity_phase,
+        batch_prepared,
+        batch_prefetch_done,
+        batch_total,
+        batch_elapsed_secs,
+        qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
+        session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
+    });
 }
 
 fn emit_pulse(
@@ -185,34 +197,47 @@ fn emit_pulse(
     current_source: Option<String>,
     message: String,
 ) {
-    let (activity_phase, batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs, activity_rsid) =
-        batch_activity_payload();
+    let (
+        activity_phase,
+        batch_prepared,
+        batch_prefetch_done,
+        batch_total,
+        batch_elapsed_secs,
+        activity_rsid,
+    ) = batch_activity_payload();
     let display_rsid = activity_rsid.or(current_rsid);
-    let batch_rate = match (batch_prepared, batch_prefetch_done, batch_total, batch_elapsed_secs) {
+    let batch_rate = match (
+        batch_prepared,
+        batch_prefetch_done,
+        batch_total,
+        batch_elapsed_secs,
+    ) {
         (Some(p), _, Some(t), Some(el)) if el >= 5 && p > 0 && t > 0 => Some(p as f64 / el as f64),
-        (_, Some(pref), Some(t), Some(el)) if el >= 5 && pref > 0 && t > 0 => Some(pref as f64 / el as f64),
+        (_, Some(pref), Some(t), Some(el)) if el >= 5 && pref > 0 && t > 0 => {
+            Some(pref as f64 / el as f64)
+        }
         _ => None,
     };
     set_live_message(&message);
     sink.emit_progress(ResearchProgress {
-            job_id: job_id.to_string(),
-            status: "running".to_string(),
-            enriched_count,
-            total_markers,
-            current_rsid: display_rsid,
-            current_source,
-            message,
-            variants_per_sec: batch_rate,
-            recent_variants_per_sec: batch_rate,
-            phase_metrics: None,
-            activity_phase,
-            batch_prepared,
-            batch_prefetch_done,
-            batch_total,
-            batch_elapsed_secs,
-            qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
-            session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
-        });
+        job_id: job_id.to_string(),
+        status: "running".to_string(),
+        enriched_count,
+        total_markers,
+        current_rsid: display_rsid,
+        current_source,
+        message,
+        variants_per_sec: batch_rate,
+        recent_variants_per_sec: batch_rate,
+        phase_metrics: None,
+        activity_phase,
+        batch_prepared,
+        batch_prefetch_done,
+        batch_total,
+        batch_elapsed_secs,
+        qdrant_sample_count: super::sweep_metrics::qdrant_sample_baseline(),
+        session_elapsed_secs: super::sweep_metrics::sweep_session_elapsed_secs(),
+    });
 }
 
 fn payload_string(payload: &serde_json::Value, key: &str) -> Option<String> {
@@ -261,7 +286,8 @@ pub(crate) fn finding_preview_from_payload(
     payload: &serde_json::Value,
 ) -> ResearchFindingPreview {
     let rsid = payload_string(payload, "rsid").unwrap_or_else(|| "unknown".to_string());
-    let gene_symbol = payload_string(payload, "gene_symbol").or_else(|| payload_string(payload, "gene"));
+    let gene_symbol =
+        payload_string(payload, "gene_symbol").or_else(|| payload_string(payload, "gene"));
     let genotype = payload_string(payload, "genotype");
     let trait_name = payload_string(payload, "trait_name")
         .or_else(|| payload_string(payload, "primary_trait"))
@@ -274,12 +300,16 @@ pub(crate) fn finding_preview_from_payload(
             .and_then(|v| v.as_str())
             .map(String::from)
     });
-    let personal_direction = payload_string(payload, "personal_direction")
-        .unwrap_or_else(|| "unknown".to_string());
+    let personal_direction =
+        payload_string(payload, "personal_direction").unwrap_or_else(|| "unknown".to_string());
     let directionality_label = payload_string(payload, "directionality_label")
         .unwrap_or_else(|| personal_direction.replace('_', " "));
-    let wellness = payload["wellness_actionability_score"].as_f64().unwrap_or(0.0) as f32;
-    let clinical = payload["clinical_actionability_score"].as_f64().unwrap_or(0.0) as f32;
+    let wellness = payload["wellness_actionability_score"]
+        .as_f64()
+        .unwrap_or(0.0) as f32;
+    let clinical = payload["clinical_actionability_score"]
+        .as_f64()
+        .unwrap_or(0.0) as f32;
     let data_quality = payload["data_quality_score"].as_f64().unwrap_or(0.5) as f32;
     let source_names = payload_string_array(payload, "source_names")
         .into_iter()
@@ -344,8 +374,10 @@ fn emit_finding_previews(
         .map(|p| finding_preview_from_payload(job_id, sample_id, &p.payload))
         .collect::<Vec<_>>();
     previews.sort_by(|a, b| {
-        let a_score = a.clinical_actionability_score + a.wellness_actionability_score + a.data_quality_score;
-        let b_score = b.clinical_actionability_score + b.wellness_actionability_score + b.data_quality_score;
+        let a_score =
+            a.clinical_actionability_score + a.wellness_actionability_score + a.data_quality_score;
+        let b_score =
+            b.clinical_actionability_score + b.wellness_actionability_score + b.data_quality_score;
         b_score
             .partial_cmp(&a_score)
             .unwrap_or(std::cmp::Ordering::Equal)
@@ -492,7 +524,10 @@ async fn embed_named_vectors_parallel(
         join_set.spawn(async move {
             let _permit = permit;
             let texts = build_named_vector_texts(
-                prepared.payload.as_object().unwrap_or(&serde_json::Map::new()),
+                prepared
+                    .payload
+                    .as_object()
+                    .unwrap_or(&serde_json::Map::new()),
                 &prepared.full_text,
             );
             let mut named = embed_named_vectors(&texts, &ollama, &model_name)
@@ -525,10 +560,7 @@ async fn embed_named_vectors_parallel(
         }
     }
     indexed.sort_by_key(|(idx, _)| *idx);
-    indexed
-        .into_iter()
-        .map(|(_, rest)| rest)
-        .collect()
+    indexed.into_iter().map(|(_, rest)| rest).collect()
 }
 
 /// Parallel Qdrant index scan at sweep start — pre-seeds progress for variants already indexed.
@@ -568,7 +600,11 @@ async fn bootstrap_qdrant_index_cache(
         if RESEARCH_PAUSED.load(Ordering::SeqCst) {
             break;
         }
-        let permit = semaphore.clone().acquire_owned().await.map_err(|e| e.to_string())?;
+        let permit = semaphore
+            .clone()
+            .acquire_owned()
+            .await
+            .map_err(|e| e.to_string())?;
         let chunk_ids: Vec<u64> = chunk
             .iter()
             .map(|m| string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1)))
@@ -578,13 +614,8 @@ async fn bootstrap_qdrant_index_cache(
         let collection = config.collection.clone();
         join_set.spawn(async move {
             let _permit = permit;
-            let ids = classify_points_index_state(
-                &url,
-                api_key.as_deref(),
-                &collection,
-                chunk_ids,
-            )
-            .await?;
+            let ids = classify_points_index_state(&url, api_key.as_deref(), &collection, chunk_ids)
+                .await?;
             Ok(ids)
         });
     }
@@ -620,9 +651,7 @@ async fn bootstrap_qdrant_index_cache(
                         Some("Qdrant bootstrap".to_string()),
                         format!(
                             "Bootstrap scan: {}/{} chunks — {} already indexed in Qdrant",
-                            chunks_done,
-                            total_chunks,
-                            indexed_now
+                            chunks_done, total_chunks, indexed_now
                         ),
                         progress_tracker,
                         false,
@@ -686,9 +715,7 @@ pub async fn run_research_loop(
     let sink = &progress_sink;
 
     let started_at = unix_now();
-    let resume_from_rsid = resume_job
-        .as_ref()
-        .and_then(|j| j.current_rsid.clone());
+    let resume_from_rsid = resume_job.as_ref().and_then(|j| j.current_rsid.clone());
 
     let effective_scope = if let Some(ref existing) = resume_job {
         existing
@@ -702,8 +729,8 @@ pub async fn run_research_loop(
     let scope_json = serde_json::to_string(&effective_scope).ok();
 
     // 1. Load markers for enabled scopes
-    let markers = collect_markers_for_scopes(&db_path, sample_id, &effective_scope)
-        .unwrap_or_default();
+    let markers =
+        collect_markers_for_scopes(&db_path, sample_id, &effective_scope).unwrap_or_default();
     let total_markers = markers.len() as i64;
 
     if total_markers == 0 {
@@ -714,12 +741,19 @@ pub async fn run_research_loop(
     }
 
     // Pre-flight: check connection and collection existence. DO NOT automatically create it!
-    let conn_status = test_qdrant_connection(&config.url, config.api_key.as_deref(), Some(&config.collection)).await;
+    let conn_status = test_qdrant_connection(
+        &config.url,
+        config.api_key.as_deref(),
+        Some(&config.collection),
+    )
+    .await;
     if !conn_status.success {
         RESEARCH_RUNNING.store(false, Ordering::SeqCst);
         return Err(format!(
             "Cannot start research: Qdrant database is not reachable. Error: {}",
-            conn_status.error.unwrap_or_else(|| "Unknown connection error".to_string())
+            conn_status
+                .error
+                .unwrap_or_else(|| "Unknown connection error".to_string())
         ));
     }
     if !conn_status.collection_exists {
@@ -730,10 +764,14 @@ pub async fn run_research_loop(
         ));
     }
 
-    let (ollama_lat, qdrant_lat) =
-        tuning::probe_service_latencies(&ollama_url, &config.url).await;
-    let pipeline_tuning =
-        install_sweep_tuning(&ollama_url, &config.url, &effective_scope, ollama_lat, qdrant_lat);
+    let (ollama_lat, qdrant_lat) = tuning::probe_service_latencies(&ollama_url, &config.url).await;
+    let pipeline_tuning = install_sweep_tuning(
+        &ollama_url,
+        &config.url,
+        &effective_scope,
+        ollama_lat,
+        qdrant_lat,
+    );
     let enrichment_sources = super::sources_config::active_enrichment_sources();
     let _tuning_guard = SweepTuningGuard;
     eprintln!(
@@ -755,10 +793,7 @@ pub async fn run_research_loop(
         sink,
         format!(
             "Loop start sample={} total_markers={} resume={:?} force_reenrich={}",
-            sample_id,
-            total_markers,
-            resume_from_rsid,
-            force_reenrich
+            sample_id, total_markers, resume_from_rsid, force_reenrich
         ),
     );
 
@@ -774,20 +809,18 @@ pub async fn run_research_loop(
             count_markers_needing_enrichment(&markers, sample_id, &config, force_reenrich).await?;
         if needs_work == 0 {
             RESEARCH_RUNNING.store(false, Ordering::SeqCst);
-            let scope_preview =
-                preview_research_scope(&db_path, sample_id, &effective_scope).unwrap_or(
-                    ResearchScopePreview {
-                        curated: 0,
-                        agent_discoveries: 0,
-                        gwas_discovery: 0,
-                        non_reference: 0,
-                        total_unique: total_markers as u64,
-                        genotype_total: 0,
-                        gwas_reference_count: 0,
-                        gwas_genome_overlap: 0,
-                        gwas_beyond_cap: 0,
-                    },
-                );
+            let scope_preview = preview_research_scope(&db_path, sample_id, &effective_scope)
+                .unwrap_or(ResearchScopePreview {
+                    curated: 0,
+                    agent_discoveries: 0,
+                    gwas_discovery: 0,
+                    non_reference: 0,
+                    total_unique: total_markers as u64,
+                    genotype_total: 0,
+                    gwas_reference_count: 0,
+                    gwas_genome_overlap: 0,
+                    gwas_beyond_cap: 0,
+                });
             return Err(format!(
                 "All {} queued markers are already enriched at v{} in Qdrant — nothing new to do.\n\
                  • Increase GWAS cap ({} of {} GWAS rsIDs in your genome are beyond the current cap)\n\
@@ -913,8 +946,14 @@ pub async fn run_research_loop(
     }
 
     // 4. Split into priority (score > 0.15) and background (score <= 0.15)
-    let priority: Vec<&ScoredMarker> = markers.iter().filter(|m| m.significance_score > 0.15).collect();
-    let background: Vec<&ScoredMarker> = markers.iter().filter(|m| m.significance_score <= 0.15).collect();
+    let priority: Vec<&ScoredMarker> = markers
+        .iter()
+        .filter(|m| m.significance_score > 0.15)
+        .collect();
+    let background: Vec<&ScoredMarker> = markers
+        .iter()
+        .filter(|m| m.significance_score <= 0.15)
+        .collect();
 
     let resume_plan = plan_resume(
         priority.as_slice(),
@@ -923,10 +962,8 @@ pub async fn run_research_loop(
     );
     let mut skip_until_resume = matches!(resume_plan, ResumePlan::NotFound);
     let mut resume_chunks_skipped = 0u32;
-    let passes: [(&[&ScoredMarker], bool); 2] = [
-        (priority.as_slice(), false),
-        (background.as_slice(), true),
-    ];
+    let passes: [(&[&ScoredMarker], bool); 2] =
+        [(priority.as_slice(), false), (background.as_slice(), true)];
 
     for (pass_idx, &(pass_markers, is_background)) in passes.iter().enumerate() {
         if is_background {
@@ -934,14 +971,20 @@ pub async fn run_research_loop(
         }
 
         let pass_slice: &[&ScoredMarker] = match &resume_plan {
-            ResumePlan::StartInPass { pass_index, marker_index } if pass_idx < *pass_index => {
+            ResumePlan::StartInPass {
+                pass_index,
+                marker_index,
+            } if pass_idx < *pass_index => {
                 sweep_dbg(
                     sink,
                     format!("Resume: skipping pass {} (already completed)", pass_idx),
                 );
                 continue;
             }
-            ResumePlan::StartInPass { pass_index, marker_index } if pass_idx == *pass_index => {
+            ResumePlan::StartInPass {
+                pass_index,
+                marker_index,
+            } if pass_idx == *pass_index => {
                 let target = resume_from_rsid.as_deref().unwrap_or("?");
                 sweep_dbg(
                     sink,
@@ -1002,37 +1045,36 @@ pub async fn run_research_loop(
             // Resume seek: skip whole chunks until the target rsid appears (legacy path when NotFound).
             if skip_until_resume
                 && let Some(target) = resume_from_rsid.as_deref()
-                    && !chunk.iter().any(|m| m.rsid == target) {
-                        if resume_chunks_skipped.is_multiple_of(5) {
-                            super::sweep_metrics::set_batch_activity(
-                                "resume seek",
-                                target,
-                                pass_markers.len().max(1) as u32,
-                            );
-                            emit_pulse(
-                                sink,
-                                &job_id,
-                                enriched_count,
-                                total_markers,
-                                resume_from_rsid.clone(),
-                                Some("resume seek".to_string()),
-                                format!(
-                                    "Seeking resume point {}… skipped {} chunks ({}/{})",
-                                    target,
-                                    resume_chunks_skipped,
-                                    enriched_count,
-                                    total_markers
-                                ),
-                            );
-                        }
-                        resume_chunks_skipped += 1;
-                        continue;
-                    }
+                && !chunk.iter().any(|m| m.rsid == target)
+            {
+                if resume_chunks_skipped.is_multiple_of(5) {
+                    super::sweep_metrics::set_batch_activity(
+                        "resume seek",
+                        target,
+                        pass_markers.len().max(1) as u32,
+                    );
+                    emit_pulse(
+                        sink,
+                        &job_id,
+                        enriched_count,
+                        total_markers,
+                        resume_from_rsid.clone(),
+                        Some("resume seek".to_string()),
+                        format!(
+                            "Seeking resume point {}… skipped {} chunks ({}/{})",
+                            target, resume_chunks_skipped, enriched_count, total_markers
+                        ),
+                    );
+                }
+                resume_chunks_skipped += 1;
+                continue;
+            }
 
             // 1. Calculate IDs for all markers in this chunk
-            let chunk_ids: Vec<u64> = chunk.iter().map(|m| {
-                string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1))
-            }).collect();
+            let chunk_ids: Vec<u64> = chunk
+                .iter()
+                .map(|m| string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1)))
+                .collect();
 
             // 2. Classify which points are complete vs need enrichment (missing, stale, or supplement)
             let supplement_missing =
@@ -1069,7 +1111,8 @@ pub async fn run_research_loop(
                 let url = config.url.clone();
                 let api_key = config.api_key.clone();
                 let collection = config.collection.clone();
-                let ids_result = run_with_activity_pulse(sink,
+                let ids_result = run_with_activity_pulse(
+                    sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -1120,7 +1163,8 @@ pub async fn run_research_loop(
                 let url = config.url.clone();
                 let api_key = config.api_key.clone();
                 let collection = config.collection.clone();
-                let ids_result = run_with_activity_pulse(sink,
+                let ids_result = run_with_activity_pulse(
+                    sink,
                     &job_id,
                     enriched_count,
                     total_markers,
@@ -1202,7 +1246,8 @@ pub async fn run_research_loop(
                     }
                 }
 
-                let p_id = string_to_u64(&format!("{}_{}_{}", sample_id, marker.rsid, marker.allele1));
+                let p_id =
+                    string_to_u64(&format!("{}_{}_{}", sample_id, marker.rsid, marker.allele1));
                 if !force_reenrich && complete_ids.contains(&p_id) {
                     skipped_count += 1;
                 } else {
@@ -1440,17 +1485,18 @@ pub async fn run_research_loop(
                 super::sweep_metrics::set_batch_phase("embedding");
                 job.current_source = Some("embedding".to_string());
                 if let Some(first) = prepared_ok.first() {
-                    super::sweep_metrics::set_batch_embedding(&first.rsid, prepared_ok.len() as u32);
+                    super::sweep_metrics::set_batch_embedding(
+                        &first.rsid,
+                        prepared_ok.len() as u32,
+                    );
                 }
 
-                let texts: Vec<String> = prepared_ok
-                    .iter()
-                    .map(|p| p.full_text.clone())
-                    .collect();
+                let texts: Vec<String> = prepared_ok.iter().map(|p| p.full_text.clone()).collect();
 
                 let ollama_url_embed = ollama_url.clone();
                 let embed_model = config.embedding_model.clone();
-                let vectors = match run_with_activity_pulse(sink,
+                let vectors = match run_with_activity_pulse(
+                    sink,
                     &job_id,
                     enriched_count,
                     total_markers,

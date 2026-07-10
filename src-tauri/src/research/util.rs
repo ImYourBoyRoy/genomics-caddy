@@ -1,7 +1,7 @@
 // ./src-tauri/src/research/util.rs
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::collections::HashSet;
-use std::hash::{Hash, DefaultHasher, Hasher};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
 pub(crate) fn string_to_u64(s: &str) -> u64 {
     let mut hasher = DefaultHasher::new();
@@ -240,11 +240,7 @@ pub(crate) fn extract_gwas_traits(assocs: &[serde_json::Value]) -> Vec<String> {
             a["trait_name"]
                 .as_str()
                 .map(String::from)
-                .or_else(|| {
-                    a["trait"]["trait"]
-                        .as_str()
-                        .map(String::from)
-                })
+                .or_else(|| a["trait"]["trait"].as_str().map(String::from))
                 .or_else(|| {
                     a["efoTraits"].as_array().and_then(|arr| {
                         arr.first()
@@ -392,9 +388,10 @@ pub(crate) fn resolve_gene_name(
     gwas_assocs: &[serde_json::Value],
 ) -> (Option<String>, &'static str) {
     if let Some(g) = local_gene
-        && !is_placeholder_gene(g) {
-            return (Some(g.trim().to_string()), "curated");
-        }
+        && !is_placeholder_gene(g)
+    {
+        return (Some(g.trim().to_string()), "curated");
+    }
     if let Some(g) = lookup_gene_from_db(db_path, rsid) {
         return (Some(g), "evidence_db");
     }
@@ -413,14 +410,13 @@ pub(crate) fn lookup_variant_locus(
     rsid: &str,
 ) -> Option<(String, i64)> {
     let rsid_key = normalize_rsid(rsid)?.to_lowercase();
-    crate::db::with_cached_conn(db_path, |conn| {
-        conn.query_row(
-            "SELECT chromosome, position_grch38 FROM genotypes
-             WHERE sample_id = ? AND LOWER(rsid) = ? LIMIT 1",
-            params![sample_id, rsid_key],
-            |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)),
-        )
-    })
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id).ok()?;
+    conn.query_row(
+        "SELECT chromosome, position_grch38 FROM genotypes
+         WHERE sample_id = ? AND LOWER(rsid) = ? LIMIT 1",
+        params![sample_id, rsid_key],
+        |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)),
+    )
     .ok()
 }
 
@@ -462,10 +458,7 @@ pub(crate) fn build_enrichment_narrative(
     }
 
     if let Some(g) = gene.filter(|s| !s.is_empty()) {
-        parts.push(format!(
-            "Gene: {} (confidence: {}).",
-            g, gene_confidence
-        ));
+        parts.push(format!("Gene: {} (confidence: {}).", g, gene_confidence));
     } else if !primary_trait.is_empty() {
         parts.push(
             "Gene: not mapped in GWAS catalog for this locus; trait association is still valid at the population level."
@@ -485,7 +478,10 @@ pub(crate) fn build_enrichment_narrative(
     }
 
     if !traits.is_empty() && traits.len() > 1 {
-        parts.push(format!("Additional GWAS traits: {}.", traits[1..].join("; ")));
+        parts.push(format!(
+            "Additional GWAS traits: {}.",
+            traits[1..].join("; ")
+        ));
     }
 
     for assoc in gwas_assocs.iter().take(4) {
@@ -509,7 +505,11 @@ pub(crate) fn build_enrichment_narrative(
                 "GWAS detail: trait={}; mapped_gene={}; reported_genes={}; p={}",
                 trait_name,
                 if mapped.is_empty() { "n/a" } else { mapped },
-                if reported.is_empty() { "n/a" } else { &reported },
+                if reported.is_empty() {
+                    "n/a"
+                } else {
+                    &reported
+                },
                 pvalue
                     .map(|p| format!("{:.2e}", p))
                     .unwrap_or_else(|| "n/a".to_string()),
@@ -584,7 +584,10 @@ pub(crate) fn build_enrichment_payload(
     payload.insert("genotype".into(), serde_json::json!(genotype));
     payload.insert("evidence_tier".into(), serde_json::json!(evidence_tier));
     payload.insert("indexed_by".into(), serde_json::json!("vector_research"));
-    payload.insert("enrichment_version".into(), serde_json::json!(ENRICHMENT_VERSION));
+    payload.insert(
+        "enrichment_version".into(),
+        serde_json::json!(ENRICHMENT_VERSION),
+    );
     payload.insert("sources_provenance".into(), sources_provenance.clone());
     payload.insert(
         "sources_used".into(),
@@ -607,7 +610,12 @@ pub(crate) fn build_enrichment_payload(
     if !gwas_traits.is_empty() {
         payload.insert("gwas_traits".into(), serde_json::json!(gwas_traits));
         payload.insert("gwas_trait".into(), serde_json::json!(gwas_traits));
-        if let Some(primary) = gwas_traits.split(';').next().map(str::trim).filter(|s| !s.is_empty()) {
+        if let Some(primary) = gwas_traits
+            .split(';')
+            .next()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+        {
             payload.insert("primary_trait".into(), serde_json::json!(primary));
         }
     }
@@ -623,10 +631,7 @@ pub(crate) fn build_enrichment_payload(
     }
     if let Some(af) = gnomad_af {
         payload.insert("gnomad_af".into(), serde_json::json!(af));
-        payload.insert(
-            "population_common".into(),
-            serde_json::json!(af >= 0.05),
-        );
+        payload.insert("population_common".into(), serde_json::json!(af >= 0.05));
     }
     payload.insert(
         "significance_score".into(),

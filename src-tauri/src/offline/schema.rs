@@ -1,7 +1,13 @@
 // ./src-tauri/src/offline/schema.rs
 use rusqlite::{Connection, Result};
 
-fn ensure_column(conn: &Connection, schema: &str, table: &str, column: &str, ddl: &str) -> Result<()> {
+fn ensure_column(
+    conn: &Connection,
+    schema: &str,
+    table: &str,
+    column: &str,
+    ddl: &str,
+) -> Result<()> {
     let pragma_sql = if schema.is_empty() {
         format!("PRAGMA table_info({table})")
     } else {
@@ -79,7 +85,7 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
             grch38_coordinates TEXT
         );
 
-        CREATE TABLE IF NOT EXISTS reference.rsid_aliases (
+        CREATE TABLE IF NOT EXISTS dbsnp.rsid_aliases (
             rsid TEXT PRIMARY KEY,
             merged_into TEXT,
             withdrawn INTEGER NOT NULL DEFAULT 0,
@@ -103,21 +109,37 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
         ",
     )?;
 
-    ensure_column(conn, "reference", "clinvar_reference", "review_status", "TEXT NOT NULL DEFAULT ''")?;
-    ensure_column(conn, "reference", "clinvar_reference", "variation_id", "TEXT")?;
-    ensure_column(conn, "reference", "clinvar_reference", "last_evaluated", "TEXT")?;
-    ensure_column(conn, "reference", "clinvar_reference", "assembly", "TEXT NOT NULL DEFAULT 'GRCh38'")?;
-    ensure_column(conn, "reference", "rsid_aliases", "raw_refsnp_id", "TEXT")?;
+    ensure_column(
+        conn,
+        "clinvar",
+        "clinvar_reference",
+        "review_status",
+        "TEXT NOT NULL DEFAULT ''",
+    )?;
+    ensure_column(conn, "clinvar", "clinvar_reference", "variation_id", "TEXT")?;
+    ensure_column(
+        conn,
+        "clinvar",
+        "clinvar_reference",
+        "last_evaluated",
+        "TEXT",
+    )?;
+    ensure_column(
+        conn,
+        "clinvar",
+        "clinvar_reference",
+        "assembly",
+        "TEXT NOT NULL DEFAULT 'GRCh38'",
+    )?;
+    ensure_column(conn, "dbsnp", "rsid_aliases", "raw_refsnp_id", "TEXT")?;
 
     Ok(())
 }
 
 pub fn table_count(conn: &Connection, table: &str) -> u64 {
-    conn.query_row(
-        &format!("SELECT COUNT(*) FROM {table}"),
-        [],
-        |row| row.get::<_, i64>(0),
-    )
+    conn.query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+        row.get::<_, i64>(0)
+    })
     .unwrap_or(0)
     .max(0) as u64
 }

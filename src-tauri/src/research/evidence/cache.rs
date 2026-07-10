@@ -1,7 +1,7 @@
 // ./src-tauri/src/research/evidence/cache.rs
 //! Layered API cache using `api_cache_entries` (cross-sample, keyed by source + entity).
 
-use crate::research::http::{ensure_research_outbound_url, HTTP_CLIENT};
+use crate::research::http::{HTTP_CLIENT, ensure_research_outbound_url};
 use crate::research::sweep_metrics::{phase_for_api_source, record_phase_cache};
 use crate::research::util::{string_to_u64, unix_now};
 use rusqlite::params;
@@ -83,7 +83,14 @@ pub async fn fetch_json_post_cached(
     }
 
     let Some(body) = body else {
-        write_error_cache(db_path, source_name, endpoint_family, &full_key, url, status_code)?;
+        write_error_cache(
+            db_path,
+            source_name,
+            endpoint_family,
+            &full_key,
+            url,
+            status_code,
+        )?;
         return Err(format!("{} returned {}", source_name, last_err));
     };
 
@@ -146,7 +153,14 @@ pub async fn fetch_text_cached(
     }
 
     let Some(text) = text else {
-        write_error_cache(db_path, source_name, endpoint_family, cache_key, url, status_code)?;
+        write_error_cache(
+            db_path,
+            source_name,
+            endpoint_family,
+            cache_key,
+            url,
+            status_code,
+        )?;
         return Err(format!("{} returned {}", source_name, last_err));
     };
 
@@ -163,7 +177,11 @@ pub async fn fetch_text_cached(
     Ok(text)
 }
 
-fn read_fresh_text_cache(db_path: &Path, cache_key: &str, ttl_secs: i64) -> Result<Option<String>, String> {
+fn read_fresh_text_cache(
+    db_path: &Path,
+    cache_key: &str,
+    ttl_secs: i64,
+) -> Result<Option<String>, String> {
     crate::db::with_cached_conn(db_path, |conn| {
         let row: Option<(String, i64, String)> = conn
             .query_row(
@@ -281,7 +299,14 @@ pub async fn fetch_json_cached(
     }
 
     let Some(body) = body else {
-        write_error_cache(db_path, source_name, endpoint_family, cache_key, url, status_code)?;
+        write_error_cache(
+            db_path,
+            source_name,
+            endpoint_family,
+            cache_key,
+            url,
+            status_code,
+        )?;
         return Err(format!("{} returned {}", source_name, last_err));
     };
 
@@ -297,7 +322,11 @@ pub async fn fetch_json_cached(
     Ok(body)
 }
 
-fn read_fresh_cache(db_path: &Path, cache_key: &str, ttl_secs: i64) -> Result<Option<Value>, String> {
+fn read_fresh_cache(
+    db_path: &Path,
+    cache_key: &str,
+    ttl_secs: i64,
+) -> Result<Option<Value>, String> {
     crate::db::with_cached_conn(db_path, |conn| {
         let row: Option<(String, i64, String)> = conn
             .query_row(

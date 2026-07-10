@@ -58,11 +58,12 @@ pub async fn backfill_evidence_payloads(
                 break;
             }
 
-            let schema_ok = payload
-                .get("schema_version")
-                .and_then(|v| v.as_str())
+            let schema_ok = payload.get("schema_version").and_then(|v| v.as_str())
                 == Some(EVIDENCE_SCHEMA_VERSION);
-            let stale = payload.get("stale").and_then(|v| v.as_bool()).unwrap_or(true);
+            let stale = payload
+                .get("stale")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true);
             if schema_ok && !stale {
                 result.skipped_current += 1;
                 continue;
@@ -97,9 +98,7 @@ pub async fn backfill_evidence_payloads(
                 .and_then(|v| v.as_str())
                 .unwrap_or("literature_context")
                 .to_string();
-            let clinvar_sig = payload
-                .get("clinvar_significance")
-                .and_then(|v| v.as_str());
+            let clinvar_sig = payload.get("clinvar_significance").and_then(|v| v.as_str());
             let gnomad_af = payload.get("gnomad_af").and_then(|v| v.as_f64());
             let gwas_associations = payload
                 .get("gwas_associations")
@@ -112,10 +111,7 @@ pub async fn backfill_evidence_payloads(
                 .unwrap_or(Value::Object(Map::new()));
             let crossmap = {
                 let mut cm = CrossMapContext::default();
-                if let Some(cats) = payload
-                    .get("trait_categories")
-                    .and_then(|v| v.as_array())
-                {
+                if let Some(cats) = payload.get("trait_categories").and_then(|v| v.as_array()) {
                     cm.trait_categories = cats
                         .iter()
                         .filter_map(|v| v.as_str().map(String::from))
@@ -127,9 +123,7 @@ pub async fn backfill_evidence_payloads(
                     .unwrap_or(Value::Object(Map::new()));
                 cm
             };
-            let chromosome = payload
-                .get("chromosome")
-                .and_then(|v| v.as_str());
+            let chromosome = payload.get("chromosome").and_then(|v| v.as_str());
             let position = payload.get("position_grch38").and_then(|v| v.as_i64());
             let existing_text = payload
                 .get("text")
@@ -219,7 +213,9 @@ pub async fn reembed_stale_vectors(
 ) -> Result<ReembedResult, String> {
     use crate::research::embed::embed_text;
     use crate::research::evidence::named_vectors;
-    use crate::research::qdrant::{scroll_qdrant_payload_batch, upsert_points_batch_named, upsert_to_qdrant};
+    use crate::research::qdrant::{
+        scroll_qdrant_payload_batch, upsert_points_batch_named, upsert_to_qdrant,
+    };
 
     let mut result = ReembedResult {
         scanned: 0,
@@ -253,10 +249,11 @@ pub async fn reembed_stale_vectors(
                 break;
             }
 
-            let stale = payload.get("stale").and_then(|v| v.as_bool()).unwrap_or(false);
-            let schema_ok = payload
-                .get("schema_version")
-                .and_then(|v| v.as_str())
+            let stale = payload
+                .get("stale")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let schema_ok = payload.get("schema_version").and_then(|v| v.as_str())
                 == Some(EVIDENCE_SCHEMA_VERSION);
             if !stale && schema_ok {
                 result.skipped_fresh += 1;
@@ -295,8 +292,12 @@ pub async fn reembed_stale_vectors(
 
             let upsert_ok = if named_vectors::named_vectors_enabled(config) {
                 let texts = named_vectors::build_named_vector_texts(&payload_map, &text);
-                match named_vectors::embed_named_vectors(&texts, ollama_url, &config.embedding_model)
-                    .await
+                match named_vectors::embed_named_vectors(
+                    &texts,
+                    ollama_url,
+                    &config.embedding_model,
+                )
+                .await
                 {
                     Ok(mut named) => {
                         named.insert(String::new(), vector.clone());

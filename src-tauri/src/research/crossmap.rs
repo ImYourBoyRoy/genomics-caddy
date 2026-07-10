@@ -92,13 +92,28 @@ const TRAIT_RULES: &[TraitRule] = &[
         modes: &["cardiovascular", "general"],
     },
     TraitRule {
-        keywords: &["diabetes", "glucose", "insulin", "hba1c", "metabolic", "obesity", "bmi"],
+        keywords: &[
+            "diabetes",
+            "glucose",
+            "insulin",
+            "hba1c",
+            "metabolic",
+            "obesity",
+            "bmi",
+        ],
         category: "metabolic",
         packs: &["metabolic"],
         modes: &["metabolic"],
     },
     TraitRule {
-        keywords: &["depression", "anxiety", "bipolar", "schizophrenia", "mood", "neuroticism"],
+        keywords: &[
+            "depression",
+            "anxiety",
+            "bipolar",
+            "schizophrenia",
+            "mood",
+            "neuroticism",
+        ],
         category: "neuropsych",
         packs: &["neuropsych"],
         modes: &["brain_mood"],
@@ -116,13 +131,27 @@ const TRAIT_RULES: &[TraitRule] = &[
         modes: &["thyroid_autoimmune"],
     },
     TraitRule {
-        keywords: &["vitamin d", "folate", "b12", "iron", "methylation", "choline"],
+        keywords: &[
+            "vitamin d",
+            "folate",
+            "b12",
+            "iron",
+            "methylation",
+            "choline",
+        ],
         category: "nutrients",
         packs: &["nutrients"],
         modes: &["nutrients"],
     },
     TraitRule {
-        keywords: &["drug", "warfarin", "clopidogrel", "statin", "cyp", "pharmacogen"],
+        keywords: &[
+            "drug",
+            "warfarin",
+            "clopidogrel",
+            "statin",
+            "cyp",
+            "pharmacogen",
+        ],
         category: "pharmacogenomics",
         packs: &["pgx"],
         modes: &["pgx"],
@@ -158,10 +187,7 @@ fn push_unique(out: &mut Vec<String>, value: String) {
     }
 }
 
-pub fn lookup_discovery_catalog(
-    data_dir: Option<&Path>,
-    rsid: &str,
-) -> Option<serde_json::Value> {
+pub fn lookup_discovery_catalog(data_dir: Option<&Path>, rsid: &str) -> Option<serde_json::Value> {
     let catalog_str = get_pack_str(data_dir, "discovery_catalog")?;
     let catalog: serde_json::Value = serde_json::from_str(&catalog_str).ok()?;
     let markers = catalog["markers"].as_array()?;
@@ -222,9 +248,10 @@ pub fn build_searchable_tags(
 ) -> Vec<String> {
     let mut tags = vec![rsid.to_lowercase()];
     if let Some(g) = gene
-        && !g.is_empty() {
-            tags.push(g.to_lowercase());
-        }
+        && !g.is_empty()
+    {
+        tags.push(g.to_lowercase());
+    }
     for t in traits {
         let slug = t
             .to_lowercase()

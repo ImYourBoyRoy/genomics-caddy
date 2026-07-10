@@ -4,7 +4,7 @@
 use super::normalize::build_structured_embedding_text;
 use crate::research::embed::embed_texts_batch;
 use crate::research::types::QdrantConfig;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::HashMap;
 
 pub const NAMED_VECTOR_DEFAULT: &str = "";
@@ -60,9 +60,18 @@ pub fn query_vector_name_for_text(query: &str, config: &QdrantConfig) -> Option<
     None
 }
 
-pub fn build_named_vector_texts(payload: &Map<String, Value>, full_text: &str) -> HashMap<&'static str, String> {
-    let rsid = payload.get("rsid").and_then(|v| v.as_str()).unwrap_or("unknown");
-    let genotype = payload.get("genotype").and_then(|v| v.as_str()).unwrap_or("unknown");
+pub fn build_named_vector_texts(
+    payload: &Map<String, Value>,
+    full_text: &str,
+) -> HashMap<&'static str, String> {
+    let rsid = payload
+        .get("rsid")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    let genotype = payload
+        .get("genotype")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
     let chromosome = payload.get("chromosome").and_then(|v| v.as_str());
     let position = payload.get("position_grch38").and_then(|v| v.as_i64());
     let trait_name = payload
@@ -74,8 +83,14 @@ pub fn build_named_vector_texts(payload: &Map<String, Value>, full_text: &str) -
         .get("gene_symbol")
         .and_then(|v| v.as_str())
         .or_else(|| payload.get("mapped_gene_symbol").and_then(|v| v.as_str()));
-    let gene_confidence = payload.get("gene_confidence").and_then(|v| v.as_str()).unwrap_or("unknown");
-    let evidence_tier = payload.get("evidence_tier").and_then(|v| v.as_str()).unwrap_or("unknown");
+    let gene_confidence = payload
+        .get("gene_confidence")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    let evidence_tier = payload
+        .get("evidence_tier")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
     let association_type = payload
         .get("association_type")
         .and_then(|v| v.as_str())
@@ -85,7 +100,10 @@ pub fn build_named_vector_texts(payload: &Map<String, Value>, full_text: &str) -
         .get("personal_direction")
         .and_then(|v| v.as_str())
         .unwrap_or("unknown");
-    let dq = payload.get("data_quality_score").and_then(|v| v.as_f64()).unwrap_or(0.5) as f32;
+    let dq = payload
+        .get("data_quality_score")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.5) as f32;
     let wellness = payload
         .get("wellness_actionability_score")
         .and_then(|v| v.as_f64())
@@ -147,7 +165,11 @@ pub fn build_named_vector_texts(payload: &Map<String, Value>, full_text: &str) -
         "[GENE_MECHANISM]\nmapped_gene={}\ngene_confidence={}\npathways={}\n",
         gene.unwrap_or("unknown"),
         gene_confidence,
-        if pathways.is_empty() { "unknown" } else { &pathways },
+        if pathways.is_empty() {
+            "unknown"
+        } else {
+            &pathways
+        },
     );
 
     let evidence_text = build_structured_embedding_text(
@@ -212,10 +234,7 @@ pub async fn embed_named_vectors(
         NAMED_EVIDENCE,
         NAMED_ACTIONABILITY,
     ];
-    let batch: Vec<String> = order
-        .iter()
-        .filter_map(|k| texts.get(k).cloned())
-        .collect();
+    let batch: Vec<String> = order.iter().filter_map(|k| texts.get(k).cloned()).collect();
     let keys: Vec<&str> = order
         .iter()
         .copied()

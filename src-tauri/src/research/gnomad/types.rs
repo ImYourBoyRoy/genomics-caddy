@@ -15,7 +15,6 @@ pub enum GnomadSourceMode {
     PythonToolboxSidecar,
 }
 
-
 impl GnomadSourceMode {
     pub fn from_str_loose(s: &str) -> Self {
         match s.trim().to_lowercase().as_str() {
@@ -45,7 +44,6 @@ pub enum GnomadHttpsProvider {
     Google,
 }
 
-
 impl GnomadHttpsProvider {
     pub fn from_str_loose(s: &str) -> Self {
         match s.trim().to_lowercase().as_str() {
@@ -71,7 +69,6 @@ pub enum GnomadDataset {
     #[default]
     Combined,
 }
-
 
 impl GnomadDataset {
     pub fn from_str_loose(s: &str) -> Self {
@@ -160,7 +157,6 @@ pub enum GnomadDatasetPolicy {
     ExomesOnly,
     GenomesOnly,
 }
-
 
 impl GnomadDatasetPolicy {
     pub fn from_str_loose(s: &str) -> Self {

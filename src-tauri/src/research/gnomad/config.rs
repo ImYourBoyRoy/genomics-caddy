@@ -1,6 +1,6 @@
 // ./src-tauri/src/research/gnomad/config.rs
 use super::types::{GnomadConfig, GnomadDatasetPolicy, GnomadHttpsProvider, GnomadSourceMode};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 
 pub fn load_gnomad_config(conn: &Connection) -> Result<GnomadConfig, String> {
     super::schema::migrate_gnomad_schema(conn).map_err(|e| e.to_string())?;
@@ -86,11 +86,7 @@ pub fn index_urls(vcf_url: &str) -> (String, String) {
 pub fn normalize_chrom_for_template(chrom: &str) -> String {
     let c = chrom.trim().trim_start_matches("chr").to_uppercase();
     if c == "X" || c == "Y" || c == "M" || c == "MT" {
-        if c == "MT" {
-            "M".to_string()
-        } else {
-            c
-        }
+        if c == "MT" { "M".to_string() } else { c }
     } else {
         c.trim_start_matches('0').to_string()
     }

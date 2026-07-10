@@ -2,9 +2,9 @@
 //! Export structured evidence packets for MCP / frontier model review.
 
 use super::card::evidence_card_from_payload;
+use super::search::get_similar_associations;
 use super::store::facts_for_rsid;
 use super::types::{EvidencePacket, SimilarSearchParams};
-use super::search::get_similar_associations;
 use crate::research::qdrant::find_point_payload_by_rsid;
 use crate::research::types::QdrantConfig;
 use crate::research::util::unix_now;
@@ -157,7 +157,10 @@ fn default_research_questions(rsid: Option<&str>) -> Vec<String> {
         "What metadata is missing that blocks personal direction?".into(),
     ];
     if let Some(r) = rsid {
-        qs.push(format!("What free public sources should be queried next for {}?", r));
+        qs.push(format!(
+            "What free public sources should be queried next for {}?",
+            r
+        ));
     }
     qs
 }

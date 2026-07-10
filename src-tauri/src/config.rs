@@ -11,8 +11,11 @@ Key Outputs: Resolved QdrantConfig and Ollama token values for backend commands.
 Operational Notes: Plaintext secrets in SQLite are migrated to keyring on first init.
 */
 
-use crate::research::{EnrichmentSourcesConfig, QdrantConfig, QdrantConfigPublic, QdrantConfigUpdate, ResearchScopeConfig};
-use rusqlite::{params, Connection};
+use crate::research::{
+    EnrichmentSourcesConfig, QdrantConfig, QdrantConfigPublic, QdrantConfigUpdate,
+    ResearchScopeConfig,
+};
+use rusqlite::{Connection, params};
 use std::collections::HashSet;
 use std::net::IpAddr;
 use std::path::{Path, PathBuf};
@@ -22,21 +25,21 @@ const KEYRING_SERVICE: &str = "GenomicsCaddy";
 const SECRET_QDRANT_API_KEY: &str = "qdrant_api_key";
 const SECRET_NCBI_API_KEY: &str = "ncbi_api_key";
 const SECRET_OLLAMA_TOKEN: &str = "ollama_token";
-const SECRET_DB_KEY: &str = "sqlite_db_key";
-
 /// Directories searched for `.env` (first existing file wins).
 pub fn app_config_roots() -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent() {
-            roots.push(parent.to_path_buf());
-        }
+        && let Some(parent) = exe.parent()
+    {
+        roots.push(parent.to_path_buf());
+    }
     let project_root = crate::paths::resolve_project_root(None);
     roots.push(crate::paths::app_layout_dir(&project_root));
     if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR")
-        && let Some(project_root) = PathBuf::from(manifest).parent() {
-            roots.push(project_root.to_path_buf());
-        }
+        && let Some(project_root) = PathBuf::from(manifest).parent()
+    {
+        roots.push(project_root.to_path_buf());
+    }
     roots
 }
 
@@ -104,15 +107,17 @@ pub fn migrate_plaintext_secrets(conn: &Connection) -> Result<(), String> {
 
     let mut migrated = false;
     if let Some(ref k) = qdrant_key
-        && !k.trim().is_empty() {
-            set_keyring_secret(SECRET_QDRANT_API_KEY, Some(k))?;
-            migrated = true;
-        }
+        && !k.trim().is_empty()
+    {
+        set_keyring_secret(SECRET_QDRANT_API_KEY, Some(k))?;
+        migrated = true;
+    }
     if let Some(ref k) = ncbi_key
-        && !k.trim().is_empty() {
-            set_keyring_secret(SECRET_NCBI_API_KEY, Some(k))?;
-            migrated = true;
-        }
+        && !k.trim().is_empty()
+    {
+        set_keyring_secret(SECRET_NCBI_API_KEY, Some(k))?;
+        migrated = true;
+    }
 
     if migrated {
         conn.execute(
@@ -391,21 +396,6 @@ pub fn load_ollama_service_config() -> OllamaServiceConfig {
     }
 }
 
-/// 256-bit SQLCipher key (hex), stored in OS keyring.
-pub fn get_or_create_db_encryption_key() -> Result<String, String> {
-    if let Some(existing) = get_keyring_secret(SECRET_DB_KEY) {
-        let trimmed = existing.trim();
-        if trimmed.len() == 64 && trimmed.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Ok(trimmed.to_ascii_lowercase());
-        }
-    }
-    let mut bytes = [0u8; 32];
-    getrandom::fill(&mut bytes).map_err(|e| format!("Failed to generate DB key: {e}"))?;
-    let hex = hex::encode(bytes);
-    set_keyring_secret(SECRET_DB_KEY, Some(&hex))?;
-    Ok(hex)
-}
-
 /// Approved external API hosts for `fetch_external_api` (SSRF protection).
 pub fn validate_external_url(url: &str) -> Result<(), String> {
     let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {}", e))?;
@@ -424,9 +414,10 @@ pub fn validate_external_url(url: &str) -> Result<(), String> {
     }
 
     if let Ok(ip) = host.parse::<IpAddr>()
-        && is_private_or_loopback(ip) {
-            return Err("Private or link-local network addresses are not allowed".to_string());
-        }
+        && is_private_or_loopback(ip)
+    {
+        return Err("Private or link-local network addresses are not allowed".to_string());
+    }
 
     const ALLOWED_HOST_SUFFIXES: &[&str] = &[
         "ncbi.nlm.nih.gov",
@@ -450,7 +441,8 @@ pub fn validate_external_url(url: &str) -> Result<(), String> {
     ];
 
     let allowed = ALLOWED_HOST_SUFFIXES.iter().any(|suffix| {
-        host.eq_ignore_ascii_case(suffix) || host.to_ascii_lowercase().ends_with(&format!(".{suffix}"))
+        host.eq_ignore_ascii_case(suffix)
+            || host.to_ascii_lowercase().ends_with(&format!(".{suffix}"))
     });
 
     if !allowed {
@@ -474,10 +466,7 @@ fn is_private_or_loopback(ip: IpAddr) -> bool {
                 || v4.octets()[0] == 169 && v4.octets()[1] == 254 // link-local
         }
         IpAddr::V6(v6) => {
-            v6.is_loopback()
-                || v6.is_unspecified()
-                || is_ipv6_ula(v6)
-                || is_ipv6_link_local(v6)
+            v6.is_loopback() || v6.is_unspecified() || is_ipv6_ula(v6) || is_ipv6_link_local(v6)
         }
     }
 }
@@ -503,8 +492,8 @@ pub fn register_import_path(path: &str) {
 }
 
 pub fn validate_import_path(path: &str) -> Result<(), String> {
-    let canonical = std::fs::canonicalize(path)
-        .map_err(|e| format!("Invalid import path: {}", e))?;
+    let canonical =
+        std::fs::canonicalize(path).map_err(|e| format!("Invalid import path: {}", e))?;
     if !canonical.is_file() {
         return Err("Import path must be an existing file".into());
     }
@@ -521,9 +510,7 @@ pub fn validate_import_path(path: &str) -> Result<(), String> {
         .lock()
         .map_err(|_| "Import path registry unavailable".to_string())?;
     if !guard.contains(&path_str) {
-        return Err(
-            "Import path was not selected through the file picker in this session".into(),
-        );
+        return Err("Import path was not selected through the file picker in this session".into());
     }
     Ok(())
 }
@@ -572,9 +559,10 @@ pub fn register_export_path(path: &str) {
             guard.insert(canonical.to_string_lossy().to_string());
         } else if let Some(parent) = std::path::Path::new(trimmed).parent()
             && let Ok(parent_canon) = std::fs::canonicalize(parent)
-                && let Some(name) = std::path::Path::new(trimmed).file_name() {
-                    guard.insert(parent_canon.join(name).to_string_lossy().to_string());
-                }
+            && let Some(name) = std::path::Path::new(trimmed).file_name()
+        {
+            guard.insert(parent_canon.join(name).to_string_lossy().to_string());
+        }
     }
 }
 
@@ -589,8 +577,8 @@ fn normalize_export_path(path: &str) -> Result<String, String> {
     let parent = input
         .parent()
         .ok_or_else(|| "Export path must include a parent directory".to_string())?;
-    let parent_canon = std::fs::canonicalize(parent)
-        .map_err(|e| format!("Invalid export path parent: {}", e))?;
+    let parent_canon =
+        std::fs::canonicalize(parent).map_err(|e| format!("Invalid export path parent: {}", e))?;
     let file_name = input
         .file_name()
         .ok_or_else(|| "Export path must include a file name".to_string())?;
@@ -628,7 +616,10 @@ pub fn validate_pack_id(pack_id: &str) -> Result<(), String> {
         .chars()
         .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
     {
-        return Err(format!("Invalid pack_id '{}': use [a-z0-9_]+ only", pack_id));
+        return Err(format!(
+            "Invalid pack_id '{}': use [a-z0-9_]+ only",
+            pack_id
+        ));
     }
     Ok(())
 }
@@ -695,15 +686,14 @@ pub fn validate_service_url(url: &str) -> Result<String, String> {
     let host = parsed
         .host_str()
         .ok_or_else(|| "URL must include a host".to_string())?;
-    if host.eq_ignore_ascii_case("metadata.google.internal")
-        || host == "169.254.169.254"
-    {
+    if host.eq_ignore_ascii_case("metadata.google.internal") || host == "169.254.169.254" {
         return Err("Metadata endpoints are not allowed".into());
     }
     if let Ok(ip) = host.parse::<IpAddr>()
-        && ip.is_unspecified() {
-            return Err("Unspecified network addresses are not allowed".into());
-        }
+        && ip.is_unspecified()
+    {
+        return Err("Unspecified network addresses are not allowed".into());
+    }
     Ok(parsed
         .origin()
         .ascii_serialization()
@@ -781,10 +771,8 @@ mod tests {
 
     #[test]
     fn export_path_requires_save_dialog_registration() {
-        let dir = std::env::temp_dir().join(format!(
-            "dna_tools_export_test_{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("dna_tools_export_test_{}", std::process::id()));
         fs::create_dir_all(&dir).expect("temp dir");
         let export_file = dir.join("findings.json");
         let export_str = export_file.to_string_lossy().to_string();
@@ -798,13 +786,15 @@ mod tests {
 
     #[test]
     fn validate_import_file_size_accepts_small_file() {
-        let dir = std::env::temp_dir().join(format!(
-            "dna_tools_import_size_test_{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("dna_tools_import_size_test_{}", std::process::id()));
         fs::create_dir_all(&dir).expect("temp dir");
         let import_file = dir.join("sample.txt");
-        fs::write(&import_file, b"rsid\tchromosome\tposition\tallele1\tallele2").expect("write");
+        fs::write(
+            &import_file,
+            b"rsid\tchromosome\tposition\tallele1\tallele2",
+        )
+        .expect("write");
         assert!(validate_import_file_size(&import_file).is_ok());
         let _ = fs::remove_dir_all(&dir);
     }
@@ -818,10 +808,8 @@ mod tests {
 
     #[test]
     fn import_path_registry_accepts_registered_file() {
-        let dir = std::env::temp_dir().join(format!(
-            "dna_tools_import_test_{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("dna_tools_import_test_{}", std::process::id()));
         fs::create_dir_all(&dir).expect("temp dir");
         let import_file = dir.join("sample.txt");
         fs::write(&import_file, "test").expect("write sample");
@@ -835,10 +823,7 @@ mod tests {
 
     #[test]
     fn resolve_pack_path_stays_under_marker_packs() {
-        let base = std::env::temp_dir().join(format!(
-            "dna_tools_pack_test_{}",
-            std::process::id()
-        ));
+        let base = std::env::temp_dir().join(format!("dna_tools_pack_test_{}", std::process::id()));
         let packs = base.join("marker-packs");
         fs::create_dir_all(&packs).expect("packs dir");
         fs::write(packs.join("mood.json"), "{}").expect("pack file");

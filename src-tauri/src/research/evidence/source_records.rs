@@ -2,7 +2,7 @@
 //! Persist raw source API responses into `source_records` for provenance and packet export.
 
 use crate::research::util::{string_to_u64, unix_now};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde_json::Value;
 
 pub const PARSER_VERSION: &str = "1.0.0";
@@ -30,7 +30,12 @@ pub fn upsert_source_record(
     let record_id = format!(
         "sr_{}_{}",
         source_name,
-        string_to_u64(&format!("{}|{}|{}", rsid.unwrap_or(""), endpoint_family, hash))
+        string_to_u64(&format!(
+            "{}|{}|{}",
+            rsid.unwrap_or(""),
+            endpoint_family,
+            hash
+        ))
     );
 
     let existing: Option<String> = conn
@@ -47,7 +52,7 @@ pub fn upsert_source_record(
     }
 
     conn.execute(
-        "INSERT OR REPLACE INTO reference.source_records (
+        "INSERT OR REPLACE INTO api_cache_db.source_records (
             source_record_id, source_name, endpoint_family, source_entity_type,
             source_entity_id, rsid, gene_symbol, trait_name, study_accession,
             pubmed_id, source_url, fetched_at, raw_payload_hash, parser_version,
@@ -115,14 +120,12 @@ pub fn record_gwas_api_response(
 
     if let Some(assocs) = body["_embedded"]["associations"].as_array() {
         for assoc in assocs.iter().take(12) {
-            let trait_name = assoc["trait"]["trait"]
-                .as_str()
-                .or_else(|| {
-                    assoc["efoTraits"]
-                        .as_array()
-                        .and_then(|a| a.first())
-                        .and_then(|t| t["trait"].as_str())
-                });
+            let trait_name = assoc["trait"]["trait"].as_str().or_else(|| {
+                assoc["efoTraits"]
+                    .as_array()
+                    .and_then(|a| a.first())
+                    .and_then(|t| t["trait"].as_str())
+            });
             let study = assoc["studyAccession"].as_str();
             let assoc_str = serde_json::to_string(assoc).unwrap_or_default();
             let id = upsert_source_record(

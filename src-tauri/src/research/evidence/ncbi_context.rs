@@ -1,11 +1,11 @@
 // ./src-tauri/src/research/evidence/ncbi_context.rs
 //! dbSNP Variation Service + ClinVar E-utilities for enrichment provenance.
 
-use super::cache::{fetch_json_cached, clinvar_ttl, dbsnp_ttl};
+use super::cache::{clinvar_ttl, dbsnp_ttl, fetch_json_cached};
 use super::source_records;
 use crate::research::state::NCBI_SEMAPHORE;
 use crate::research::util::{normalize_rsid, unix_now};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::Path;
 
 const DBSNP_BASE: &str = "https://api.ncbi.nlm.nih.gov/variation/v0";
@@ -78,7 +78,9 @@ pub async fn fetch_dbsnp_context(db_path: &Path, rsid: &str) -> DbsnpContext {
             "dbSNP {}: chr{} pos {} alleles {}",
             rsid_norm,
             chromosome.as_deref().unwrap_or("?"),
-            position.map(|p| p.to_string()).unwrap_or_else(|| "?".into()),
+            position
+                .map(|p| p.to_string())
+                .unwrap_or_else(|| "?".into()),
             alleles.as_deref().unwrap_or("?")
         ))
     } else {
@@ -106,9 +108,10 @@ pub async fn fetch_clinvar_live(
     let rsid_norm = normalize_rsid(rsid).unwrap_or_else(|| rsid.to_uppercase());
 
     if let Ok(conn) = crate::db::connect(db_path)
-        && let Some(local) = crate::offline::lookup_clinvar_local(&conn, &rsid_norm) {
-            return crate::offline::clinvar_local_to_live_context(&local);
-        }
+        && let Some(local) = crate::offline::lookup_clinvar_local(&conn, &rsid_norm)
+    {
+        return crate::offline::clinvar_local_to_live_context(&local);
+    }
 
     let mut search_url = format!(
         "{}esearch.fcgi?db=clinvar&term={}&retmode=json",
@@ -284,30 +287,34 @@ fn parse_refsnp_placements(body: &Value) -> (Option<String>, Option<i64>, Option
                         position = spdi["position"].as_i64();
                     }
                     if let Some(seq) = spdi["deleted_sequence"].as_str()
-                        && !seq.is_empty() && !alleles.contains(&seq.to_string()) {
-                            alleles.push(seq.to_string());
-                        }
+                        && !seq.is_empty()
+                        && !alleles.contains(&seq.to_string())
+                    {
+                        alleles.push(seq.to_string());
+                    }
                     if let Some(seq) = spdi["inserted_sequence"].as_str()
-                        && !seq.is_empty() && !alleles.contains(&seq.to_string()) {
-                            alleles.push(seq.to_string());
-                        }
+                        && !seq.is_empty()
+                        && !alleles.contains(&seq.to_string())
+                    {
+                        alleles.push(seq.to_string());
+                    }
                 }
                 if let Some(spdi) = allele.get("spdi")
-                    && position.is_none() {
-                        position = spdi["position"].as_i64();
-                    }
+                    && position.is_none()
+                {
+                    position = spdi["position"].as_i64();
+                }
             }
         }
 
-        if placement["placement_annot"].is_object()
-            && position.is_none() {
-                position = placement["placement_annot"]["seq_id_traits_assembly"]
-                    .as_array()
-                    .and_then(|a| a.first())
-                    .and_then(|t| t["seq_id_trait"].as_array())
-                    .and_then(|a| a.first())
-                    .and_then(|t| t["base"].as_i64());
-            }
+        if placement["placement_annot"].is_object() && position.is_none() {
+            position = placement["placement_annot"]["seq_id_traits_assembly"]
+                .as_array()
+                .and_then(|a| a.first())
+                .and_then(|t| t["seq_id_trait"].as_array())
+                .and_then(|a| a.first())
+                .and_then(|t| t["base"].as_i64());
+        }
 
         let allele_str = if alleles.is_empty() {
             placement["allele_string"].as_str().map(String::from)

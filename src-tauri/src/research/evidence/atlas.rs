@@ -4,7 +4,7 @@
 use crate::research::qdrant::scroll_qdrant_vectors_sample;
 use crate::research::types::QdrantConfig;
 use crate::research::util::{string_to_u64, unix_now};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -115,7 +115,11 @@ pub fn load_atlas_points(
         .map_err(|e| e.to_string())
 }
 
-fn persist_atlas_points(db_path: &Path, sample_id: i64, points: &[AtlasPoint]) -> Result<(), String> {
+fn persist_atlas_points(
+    db_path: &Path,
+    sample_id: i64,
+    points: &[AtlasPoint],
+) -> Result<(), String> {
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     let now = unix_now();
     conn.execute(
@@ -237,6 +241,11 @@ fn normalize_2d(points: &[[f64; 2]]) -> Vec<(f32, f32)> {
     let sy = (max_y - min_y).max(1e-6);
     points
         .iter()
-        .map(|p| (((p[0] - min_x) / sx * 2.0 - 1.0) as f32, ((p[1] - min_y) / sy * 2.0 - 1.0) as f32))
+        .map(|p| {
+            (
+                ((p[0] - min_x) / sx * 2.0 - 1.0) as f32,
+                ((p[1] - min_y) / sy * 2.0 - 1.0) as f32,
+            )
+        })
         .collect()
 }

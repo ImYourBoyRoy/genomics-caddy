@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QdrantConfig {
-    pub url: String,               // e.g. "http://192.168.1.5:6333"
+    pub url: String, // e.g. "http://192.168.1.5:6333"
     pub api_key: Option<String>,
-    pub collection: String,        // default: "genomics_evidence"
-    pub embedding_model: String,   // default: "mxbai-embed-large"
-    pub gwas_strict: bool,         // true = p<5e-8, false = p<1e-5
+    pub collection: String,      // default: "genomics_evidence"
+    pub embedding_model: String, // default: "mxbai-embed-large"
+    pub gwas_strict: bool,       // true = p<5e-8, false = p<1e-5
     pub ncbi_api_key: Option<String>,
     pub auto_start: bool,
     #[serde(default)]
@@ -50,7 +50,7 @@ pub struct QdrantConfigUpdate {
 pub struct ResearchJob {
     pub job_id: String,
     pub sample_id: i64,
-    pub status: String,            // "running" | "paused" | "complete" | "error" | "idle"
+    pub status: String, // "running" | "paused" | "complete" | "error" | "idle"
     pub total_markers: i64,
     pub enriched_count: i64,
     pub priority_complete: bool,

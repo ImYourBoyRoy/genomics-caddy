@@ -80,22 +80,6 @@ where
     let head = head_remote(url).await?;
     let total_bytes = head.content_length.unwrap_or(0);
 
-    let client = reqwest::Client::builder()
-        // 4-hour timeout for multi-GB files (dbSNP) on slow connections.
-        .timeout(Duration::from_secs(14_400))
-        .build()
-        .map_err(|e| e.to_string())?;
-
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| format!("GET failed for {url}: {e}"))?;
-
-    if !response.status().is_success() {
-        return Err(format!("GET {} returned HTTP {}", url, response.status()));
-    }
-
     // Ensure destination parent exists.
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent)
@@ -114,11 +98,55 @@ where
         p
     };
 
-    let mut file = std::fs::File::create(&part_path)
-        .map_err(|e| format!("Failed to create temp file {}: {e}", part_path.display()))?;
+    let mut initial_bytes = 0u64;
+    if part_path.is_file() {
+        if let Ok(m) = std::fs::metadata(&part_path) {
+            initial_bytes = m.len();
+        }
+    }
 
+    let client = reqwest::Client::builder()
+        // 4-hour timeout for multi-GB files (dbSNP) on slow connections.
+        .timeout(Duration::from_secs(14_400))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let mut req_builder = client.get(url);
+    if initial_bytes > 0 && initial_bytes < total_bytes {
+        req_builder = req_builder.header("Range", format!("bytes={}-", initial_bytes));
+    } else {
+        initial_bytes = 0; // reset if invalid or full
+    }
+
+    let response = req_builder
+        .send()
+        .await
+        .map_err(|e| format!("GET failed for {url}: {e}"))?;
+
+    let status = response.status();
+    let is_partial = status == reqwest::StatusCode::PARTIAL_CONTENT;
+
+    if !status.is_success() {
+        return Err(format!("GET {} returned HTTP {}", url, status));
+    }
+
+    let mut file = if is_partial && initial_bytes > 0 {
+        std::fs::OpenOptions::new()
+            .append(true)
+            .open(&part_path)
+            .map_err(|e| {
+                format!(
+                    "Failed to open temp file for append {}: {e}",
+                    part_path.display()
+                )
+            })?
+    } else {
+        std::fs::File::create(&part_path)
+            .map_err(|e| format!("Failed to create temp file {}: {e}", part_path.display()))?
+    };
+
+    let mut bytes_written: u64 = if is_partial { initial_bytes } else { 0 };
     let mut stream = response.bytes_stream();
-    let mut bytes_written: u64 = 0;
     let mut last_progress_emit = Instant::now();
 
     while let Some(chunk_result) = stream.next().await {
@@ -147,7 +175,8 @@ where
     }
 
     // Final flush + progress event.
-    file.flush().map_err(|e| format!("Final flush error: {e}"))?;
+    file.flush()
+        .map_err(|e| format!("Final flush error: {e}"))?;
     drop(file);
     on_progress(bytes_written, total_bytes);
 
@@ -155,7 +184,54 @@ where
     std::fs::rename(&part_path, dest)
         .map_err(|e| format!("Failed to finalize download (rename failed): {e}"))?;
 
+    // Verify MD5 checksum if MD5 file exists on server
+    if let Err(e) = verify_remote_md5(url, dest).await {
+        let _ = std::fs::remove_file(dest);
+        return Err(format!("MD5 checksum verification failed: {e}"));
+    }
+
     Ok((bytes_written, head))
+}
+
+pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String> {
+    let md5_url = format!("{}.md5", url);
+    let client = reqwest::Client::new();
+    let res = client.get(&md5_url).send().await;
+    if let Ok(response) = res {
+        if response.status().is_success() {
+            if let Ok(expected_hash_text) = response.text().await {
+                let expected_hash = expected_hash_text
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("")
+                    .trim()
+                    .to_lowercase();
+                if expected_hash.len() == 32 {
+                    // Compute local file MD5 using md5::Context
+                    use std::io::Read;
+                    let mut file = std::fs::File::open(file_path).map_err(|e| e.to_string())?;
+                    let mut context = md5::Context::new();
+                    let mut buf = [0u8; 65536];
+                    loop {
+                        let n = file.read(&mut buf).map_err(|e| e.to_string())?;
+                        if n == 0 {
+                            break;
+                        }
+                        context.consume(&buf[..n]);
+                    }
+                    let digest = context.compute();
+                    let local_hash = format!("{:x}", digest);
+                    if local_hash != expected_hash {
+                        return Err(format!(
+                            "MD5 mismatch: local {} != expected {}",
+                            local_hash, expected_hash
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn remote_changed(

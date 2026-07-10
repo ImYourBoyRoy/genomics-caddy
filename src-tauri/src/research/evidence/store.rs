@@ -1,20 +1,20 @@
 // ./src-tauri/src/research/evidence/store.rs
 //! Persist association facts and candidate markers from enrichment.
 
+use super::adapters::{self, SecondarySourceBundle};
+use super::ontology::TraitOntologyMapping;
+use super::pgs_match::store_pgs_match_cache;
 use super::scoring::{
     clinical_actionability_score, ledger_from_gwas_assoc, novelty_score, pvalue_mlog10,
     wellness_actionability_score,
 };
-use super::adapters::{self, SecondarySourceBundle};
-use super::ontology::TraitOntologyMapping;
-use super::pgs_match::store_pgs_match_cache;
 use super::source_records;
 use super::types::EvidenceLedgerRow;
 use crate::research::promote::is_curated_marker_rsid;
 use crate::research::util::unix_now;
-use rusqlite::{params, Connection};
-use std::path::Path;
+use rusqlite::{Connection, params};
 use serde_json::json;
+use std::path::Path;
 
 const FACTS_FRESH_SECS: i64 = 30 * 24 * 3600;
 
@@ -27,9 +27,9 @@ fn trait_mapping_for_row(
         && let Some(m) = mappings
             .iter()
             .find(|m| m.reported_trait.eq_ignore_ascii_case(reported))
-        {
-            return (Some(m.mapped_label.clone()), Some(m.ontology_id.clone()));
-        }
+    {
+        return (Some(m.mapped_label.clone()), Some(m.ontology_id.clone()));
+    }
     if let Some(best) = adapters::best_ontology_mapping(mappings) {
         return (
             Some(best.mapped_label.clone()),
@@ -187,14 +187,18 @@ pub fn persist_enrichment_evidence(
             0.15
         };
         let wellness = wellness_actionability_score(
-            &trait_category.map(|c| vec![c.to_string()]).unwrap_or_default(),
+            &trait_category
+                .map(|c| vec![c.to_string()])
+                .unwrap_or_default(),
             data_quality_score,
             !gwas_associations.is_empty(),
         );
         let clinical = clinical_actionability_score(clinvar_sig, has_clinvar, conflict_count);
 
-        let (trait_mapped, trait_ontology_id) =
-            trait_mapping_for_row(ledger_row.trait_name.as_deref(), &secondary.ontology_mappings);
+        let (trait_mapped, trait_ontology_id) = trait_mapping_for_row(
+            ledger_row.trait_name.as_deref(),
+            &secondary.ontology_mappings,
+        );
 
         conn.execute(
             "INSERT INTO association_facts (
@@ -478,7 +482,10 @@ fn upsert_candidate(
     Ok(())
 }
 
-pub fn list_candidates(conn: &Connection, limit: u32) -> Result<Vec<super::types::CandidateMarkerRow>, String> {
+pub fn list_candidates(
+    conn: &Connection,
+    limit: u32,
+) -> Result<Vec<super::types::CandidateMarkerRow>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT candidate_id, rsid, gene_symbol, trait_name, trait_category, status,

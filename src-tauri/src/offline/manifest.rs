@@ -182,9 +182,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             id: OfflineAssetId::DbsnpMergedJson,
             tier: 2,
             label: "dbSNP merged rsIDs",
-            url: Some(
-                "https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2",
-            ),
+            url: Some("https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2"),
             category: "dbsnp",
             filename: "refsnp-merged.json.bz2",
             // Compressed .bz2 file can be 1–3 GB; set ceiling at 8 GB to never refuse.
@@ -196,9 +194,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             id: OfflineAssetId::DbsnpWithdrawnJson,
             tier: 2,
             label: "dbSNP withdrawn rsIDs",
-            url: Some(
-                "https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-withdrawn.json.bz2",
-            ),
+            url: Some("https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-withdrawn.json.bz2"),
             category: "dbsnp",
             filename: "refsnp-withdrawn.json.bz2",
             max_bytes: 1024 * 1024 * 1024,
@@ -227,30 +223,32 @@ pub fn assets_for_tier(tier: u8) -> Vec<&'static OfflineAssetDef> {
     all_assets().iter().filter(|a| a.tier == tier).collect()
 }
 
-pub fn local_path(data_dir: &Path, custom_dir: Option<&Path>, def: &OfflineAssetDef) -> std::path::PathBuf {
+pub fn local_path(
+    data_dir: &Path,
+    custom_dir: Option<&Path>,
+    def: &OfflineAssetDef,
+) -> std::path::PathBuf {
     let base = custom_dir.unwrap_or(data_dir);
     match def.id {
-        OfflineAssetId::GwasCatalog => {
-            base.join("references").join(def.filename)
-        }
+        OfflineAssetId::GwasCatalog => base.join("references").join(def.filename),
         OfflineAssetId::LiftoverChain => base.join(def.filename),
-        OfflineAssetId::GnomadIndexManifest => {
-            base.join("gnomad_indexes").join(def.filename)
-        }
+        OfflineAssetId::GnomadIndexManifest => base.join("gnomad_indexes").join(def.filename),
         OfflineAssetId::Tier2VariantLocus => base.join("tier2").join("variant_locus.meta"),
-        _ => base.join("raw_downloads").join(def.category).join(def.filename),
+        _ => base
+            .join("raw_downloads")
+            .join(def.category)
+            .join(def.filename),
     }
 }
 
 pub fn tier_budget_bytes(tier: u8) -> u64 {
     match tier {
-        0 => 2 * 1024 * 1024 * 1024,      // 2 GB
-        1 => 6 * 1024 * 1024 * 1024,      // 6 GB (ClinVar compressed can be 500MB+, but uncompressed is larger)
-        2 => 15 * 1024 * 1024 * 1024,     // 15 GB (dbSNP merged + withdrawn can be several GBs)
+        0 => 2 * 1024 * 1024 * 1024,  // 2 GB
+        1 => 6 * 1024 * 1024 * 1024, // 6 GB (ClinVar compressed can be 500MB+, but uncompressed is larger)
+        2 => 15 * 1024 * 1024 * 1024, // 15 GB (dbSNP merged + withdrawn can be several GBs)
         _ => 0,
     }
 }
-
 
 #[derive(Debug, Clone, Serialize)]
 pub struct OfflineAssetStatus {

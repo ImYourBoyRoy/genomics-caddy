@@ -10,12 +10,12 @@ Key Outputs: VariantEvidence and SafetyCheckResult payloads.
 */
 
 use crate::agent::{
-    append_discovered_findings_to_db, append_discovered_findings_to_path,
-    get_db_discovered_findings as load_discovered_findings, get_variant_evidence_core,
-    run_deterministic_safety_checks, SafetyCheckResult, VariantEvidence,
+    SafetyCheckResult, VariantEvidence, append_discovered_findings_to_db,
+    append_discovered_findings_to_path, get_db_discovered_findings as load_discovered_findings,
+    get_variant_evidence_core, run_deterministic_safety_checks,
 };
 use crate::config;
-use crate::{db, db_runtime, get_db_path};
+use crate::{db, db_runtime, get_data_dir, get_db_path};
 use std::path::Path;
 use tauri::AppHandle;
 
@@ -85,11 +85,13 @@ pub async fn get_discovered_findings_summary(
     app: AppHandle,
     sample_id: i64,
 ) -> Result<Vec<db::DiscoveredFindingSummary>, String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::get_discovered_findings_summary(conn, sample_id)
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        db::get_discovered_findings_summary(&conn, sample_id)
     })
     .await
+    .map_err(|e| format!("Sample database worker failed: {e}"))?
 }
 
 #[tauri::command]
@@ -145,17 +147,18 @@ pub async fn chat_ollama(
     let mut req = client.post(format!("{}/api/chat", clean_url));
 
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            let t_val = t.trim();
-            req = req.header(
-                "Authorization",
-                if t_val.to_lowercase().starts_with("bearer ") {
-                    t_val.to_string()
-                } else {
-                    format!("Bearer {}", t_val)
-                },
-            );
-        }
+        && !t.trim().is_empty()
+    {
+        let t_val = t.trim();
+        req = req.header(
+            "Authorization",
+            if t_val.to_lowercase().starts_with("bearer ") {
+                t_val.to_string()
+            } else {
+                format!("Bearer {}", t_val)
+            },
+        );
+    }
 
     let payload = serde_json::json!({
         "model": model,

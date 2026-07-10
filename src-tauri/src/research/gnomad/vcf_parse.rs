@@ -119,7 +119,10 @@ pub fn record_to_context(
         lookup_status: status.as_str().to_string(),
         release: release.to_string(),
         dataset: dataset.to_string(),
-        variant_id: Some(format!("{}-{}-{}-{}", rec.chrom, rec.pos, rec.ref_allele, alt)),
+        variant_id: Some(format!(
+            "{}-{}-{}-{}",
+            rec.chrom, rec.pos, rec.ref_allele, alt
+        )),
         rsids: rec
             .id_field
             .iter()
@@ -147,9 +150,7 @@ pub fn record_to_context(
         source_url: Some(source_url.to_string()),
         source_mode: source_mode.as_str().to_string(),
         fetched_at: Some(unix_now()),
-        warnings: vec![
-            "Population frequency context only — not clinical significance.".into(),
-        ],
+        warnings: vec!["Population frequency context only — not clinical significance.".into()],
         user_allele_match_status: user_match.map(String::from),
     }
 }
@@ -170,7 +171,10 @@ fn parse_int(map: &std::collections::HashMap<String, String>, key: &str) -> Opti
     map.get(key).and_then(|v| v.parse().ok())
 }
 
-fn parse_int_array_first(map: &std::collections::HashMap<String, String>, key: &str) -> Option<i64> {
+fn parse_int_array_first(
+    map: &std::collections::HashMap<String, String>,
+    key: &str,
+) -> Option<i64> {
     map.get(key)
         .and_then(|v| v.split(',').next())
         .and_then(|v| v.parse().ok())
@@ -182,7 +186,10 @@ fn parse_float_from_map(map: &std::collections::HashMap<String, String>, key: &s
         .and_then(|v| v.parse().ok())
 }
 
-fn parse_float_array_first(map: &std::collections::HashMap<String, String>, key: &str) -> Option<f64> {
+fn parse_float_array_first(
+    map: &std::collections::HashMap<String, String>,
+    key: &str,
+) -> Option<f64> {
     parse_float_from_map(map, key)
 }
 

@@ -111,23 +111,63 @@ To build the static production bundle (frontend only):
 npm run build
 ```
 
-To **purge build caches** (npm + Cargo only — never touches `data/`, downloads, or SQLite) and compile a **production desktop release**:
-```powershell
+To **purge build caches** (npm + Cargo only — never touches `data/`, downloads, or SQLite) and compile a **production desktop release** (Windows, macOS, or Linux):
+```bash
 npm run build:release
 ```
 
-Or directly:
+Or platform-native scripts:
 ```powershell
+# Windows
 pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\purge_and_build.ps1
 ```
+```bash
+# Linux / macOS
+bash ./scripts/purge_and_build.sh
+```
 
-Options:
-- `-PurgeOnly` — clear caches without building (`npm run purge:build`)
-- `-SkipPurge` — build without clearing caches first
-- `-SkipChecks` — skip `npm run check` and `cargo check` before the release build
-- `-DryRun` — show what would be removed
+**Linux one-time prerequisites** (Tauri WebKitGTK 4.1 + GTK headers):
+```bash
+bash ./scripts/setup_linux_deps.sh
+npm run system:check
+```
 
-Release output lands in **`App/`** (portable exe + sidecars) with persistence in **`App/Data/`**. Build caches stay in `src-tauri/target/` and are safe to wipe.
+Options (via `npm run build:release -- …` or the shell/PowerShell scripts):
+- `--purge-only` / `-PurgeOnly` — clear caches without building (`npm run purge:build`)
+- `--skip-purge` / `-SkipPurge` — build without clearing caches first
+- `--skip-checks` / `-SkipChecks` — skip `npm run check` and `cargo check` before the release build
+- `--dry-run` / `-DryRun` — show what would be removed
+
+Release output lands in **`App/`** (portable binary + sidecars) with persistence in **`App/Data/`**. Build caches stay in `src-tauri/target/` and are safe to wipe. On Linux the staged binary is `App/DNA-Tools`; on Windows it is `App/DNA-Tools.exe`.
+
+### Build timing benchmarks (laptop A vs B)
+
+Timed purge / full purge+rebuild (writes reports under `App/Data/benchmarks/`):
+
+```bash
+# Purge caches only (timed)
+npm run bench:purge
+
+# Full purge + production rebuild (timed) — best apples-to-apples comparison
+npm run bench:rebuild
+
+# Same rebuild, skip pre-checks (faster iteration)
+npm run bench:rebuild:fast
+```
+
+Windows-native:
+
+```powershell
+pwsh -File .\scripts\benchmark_build.ps1 -Json
+pwsh -File .\scripts\benchmark_build.ps1 -PurgeOnly -Json
+```
+
+Linux/macOS-native:
+
+```bash
+bash ./scripts/benchmark_build.sh --json
+bash ./scripts/benchmark_build.sh --purge-only --json
+```
 
 One-time migration from legacy `data/`:
 ```powershell
@@ -292,8 +332,16 @@ If the repo was pushed to a remote, follow with `git push --force --all` and rot
 * **`--mcp-write`**: Enables mutating MCP tools (`delete_chat_session`, `backfill_evidence_payloads`, `update_candidate_marker_status`, `enable_named_vectors_collection`). Combine with `--mcp` when an agent must perform writes.
 * **`--mcp-auth-token=<secret>`** (optional): When set (or when `GENOMICS_MCP_TOKEN` is in the environment), every MCP `tools/call` must include `params._meta.authToken` matching that value. `ping` is exempt. Omit the flag for local-only, unauthenticated MCP (default).
 
-### Database encryption at rest
-The genome SQLite file is **AES-256-GCM sealed** when the app or MCP server exits (`user_genome.db.enc`). While running, a plaintext `user_genome.db` is used for normal SQLite access; on startup the sealed file is decrypted automatically. The encryption key is stored in the OS credential manager (Windows Credential Locker / macOS Keychain). SQLCipher was not used on Windows due to OpenSSL build constraints; file-level sealing provides at-rest protection when the process is not running.
+### Database storage (plaintext, per-sample)
+User genomes are stored as **plaintext SQLite** under `App/Data/`:
+- `user_genome.db` — sample registry + app settings only
+- `samples/<id>/genome.db` — that profile’s genotypes, chat, research jobs, and findings
+
+Deleting a sample in the UI removes the registry row and the entire `samples/<id>/` folder. Shared public databases (`clinvar.db`, `dbsnp.db`, `api_cache.db`, `genomics_reference.db`) are unchanged.
+
+App-level AES sealing of `user_genome.db` was removed: genotype source files are already plaintext, and OS keyring sealing broke cross-OS copies. Prefer full-disk encryption (BitLocker / FileVault / LUKS) for at-rest protection.
+
+Large offline raw downloads (uncompressed text/JSON over ~64 MiB) are gzip-compacted after a successful import; readers open `.gz` / `.bz2` transparently.
 
 ---
 

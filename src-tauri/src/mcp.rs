@@ -11,12 +11,12 @@ Key Outputs: Stdout JSON-RPC responses.
 Operational Notes: Enables external LLMs to interact directly with the user's standardized genome.
 */
 
+use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use tokio::io::{AsyncBufReadExt, BufReader};
-use rusqlite::params;
 
 const MCP_WRITE_TOOLS: &[&str] = &[
     "delete_chat_session",
@@ -82,11 +82,10 @@ pub async fn run_mcp_server(db_path: PathBuf, allow_write: bool, auth_token: Opt
                 if let Ok(req) = serde_json::from_str::<JsonRpcRequest>(trimmed) {
                     let is_notification = req.id.is_none();
                     let res = handle_request(req, &db_path, allow_write, &auth_token).await;
-                    if !is_notification
-                        && let Ok(res_str) = serde_json::to_string(&res) {
-                            println!("{}", res_str);
-                            let _ = io::stdout().flush();
-                        }
+                    if !is_notification && let Ok(res_str) = serde_json::to_string(&res) {
+                        println!("{}", res_str);
+                        let _ = io::stdout().flush();
+                    }
                 } else {
                     let err_res = JsonRpcResponse {
                         jsonrpc: "2.0".to_string(),
@@ -141,7 +140,9 @@ async fn handle_request(
         return JsonRpcResponse {
             jsonrpc: "2.0".to_string(),
             result: None,
-            error: Some(json!({ "code": -32600, "message": "Invalid Request: jsonrpc must be '2.0'" })),
+            error: Some(
+                json!({ "code": -32600, "message": "Invalid Request: jsonrpc must be '2.0'" }),
+            ),
             id,
         };
     }
@@ -565,14 +566,15 @@ async fn handle_request(
                 ]
             });
             if !allow_write
-                && let Some(tools) = result.get_mut("tools").and_then(|v| v.as_array_mut()) {
-                    tools.retain(|t| {
-                        t.get("name")
-                            .and_then(|n| n.as_str())
-                            .map(mcp_tool_visible_read_only)
-                            .unwrap_or(true)
-                    });
-                }
+                && let Some(tools) = result.get_mut("tools").and_then(|v| v.as_array_mut())
+            {
+                tools.retain(|t| {
+                    t.get("name")
+                        .and_then(|n| n.as_str())
+                        .map(mcp_tool_visible_read_only)
+                        .unwrap_or(true)
+                });
+            }
             JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
                 result: Some(result),
@@ -581,9 +583,13 @@ async fn handle_request(
             }
         }
         "tools/call" => {
-            let name = req.params.get("name").and_then(|v| v.as_str()).unwrap_or("");
+            let name = req
+                .params
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let arguments = req.params.get("arguments").cloned().unwrap_or(json!({}));
-            
+
             match execute_tool(name, arguments, db_path, allow_write).await {
                 Ok(data) => JsonRpcResponse {
                     jsonrpc: "2.0".to_string(),
@@ -621,7 +627,12 @@ async fn handle_request(
     }
 }
 
-async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: bool) -> Result<Value, String> {
+async fn execute_tool(
+    name: &str,
+    args: Value,
+    db_path: &PathBuf,
+    allow_write: bool,
+) -> Result<Value, String> {
     if mcp_tool_requires_write(name) && !allow_write {
         return Err(format!(
             "Tool '{}' requires --mcp-write (mutating MCP operation)",
@@ -637,7 +648,8 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
         _ => {}
     }
 
-    let conn = crate::db::open_user_db(db_path).map_err(|e| format!("DB connection error: {}", e))?;
+    let conn =
+        crate::db::open_user_db(db_path).map_err(|e| format!("DB connection error: {}", e))?;
 
     match name {
         "list_samples" => {
@@ -646,9 +658,15 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(json!(samples))
         }
         "get_variants_by_rsid" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let rsids_val = args.get("rsids").and_then(|v| v.as_array()).ok_or("Missing rsids array")?;
-            
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let rsids_val = args
+                .get("rsids")
+                .and_then(|v| v.as_array())
+                .ok_or("Missing rsids array")?;
+
             let mut rsids = Vec::new();
             for val in rsids_val {
                 if let Some(s) = val.as_str() {
@@ -656,29 +674,53 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
                 }
             }
 
-            let results = crate::db::query_by_rsids(&conn, sample_id, &rsids)
+            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+                .map_err(|e| e.to_string())?;
+            let results = crate::db::query_by_rsids(&sample_conn, sample_id, &rsids)
                 .map_err(|e| format!("Query failed: {}", e))?;
             Ok(json!(results))
         }
         "get_variants_in_region" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let chromosome = args.get("chromosome").and_then(|v| v.as_str()).ok_or("Missing chromosome")?;
-            let start = args.get("start").and_then(|v| v.as_u64()).ok_or("Missing start position")?;
-            let end = args.get("end").and_then(|v| v.as_u64()).ok_or("Missing end position")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let chromosome = args
+                .get("chromosome")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing chromosome")?;
+            let start = args
+                .get("start")
+                .and_then(|v| v.as_u64())
+                .ok_or("Missing start position")?;
+            let end = args
+                .get("end")
+                .and_then(|v| v.as_u64())
+                .ok_or("Missing end position")?;
 
-            let results = crate::db::query_region(&conn, sample_id, chromosome, start, end)
+            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+                .map_err(|e| e.to_string())?;
+            let results = crate::db::query_region(&sample_conn, sample_id, chromosome, start, end)
                 .map_err(|e| format!("Query failed: {}", e))?;
             Ok(json!(results))
         }
         "generate_report" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let template_json = args.get("template_json").and_then(|v| v.as_str()).ok_or("Missing template_json")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let template_json = args
+                .get("template_json")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing template_json")?;
             crate::config::validate_template_json(template_json)?;
-            
+
             let template: crate::report::ReportTemplate = serde_json::from_str(template_json)
                 .map_err(|e| format!("Failed to parse template: {}", e))?;
-            
-            let report = crate::report::generate_report(&conn, sample_id, &template)?;
+
+            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+                .map_err(|e| e.to_string())?;
+            let report = crate::report::generate_report(&sample_conn, sample_id, &template)?;
             Ok(serde_json::to_value(report).map_err(|e| format!("Serialization error: {}", e))?)
         }
         "list_packs" => {
@@ -689,9 +731,15 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(manifest)
         }
         "get_report_for_packs" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let pack_ids_val = args.get("pack_ids").and_then(|v| v.as_array());
-            let only_active_findings = args.get("only_active_findings").and_then(|v| v.as_bool()).unwrap_or(false);
+            let only_active_findings = args
+                .get("only_active_findings")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
 
             // 1. Resolve pack IDs
             let mut pack_ids = Vec::new();
@@ -737,7 +785,7 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
                     }
                     let pack: PackContent = serde_json::from_str(&pack_str)
                         .map_err(|e| format!("Failed to parse pack {}: {}", pack_id, e))?;
-                    
+
                     sections.push(crate::report::SectionDefinition {
                         name: pack.name,
                         markers: pack.markers,
@@ -754,7 +802,9 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             };
 
             // 3. Generate the report
-            let mut report = crate::report::generate_report(&conn, sample_id, &template)?;
+            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+                .map_err(|e| e.to_string())?;
+            let mut report = crate::report::generate_report(&sample_conn, sample_id, &template)?;
 
             // 4. Optionally filter to only active findings
             if only_active_findings {
@@ -768,7 +818,9 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
                     });
                 }
                 // Filter out sections that are now empty
-                report.sections.retain(|section| !section.link_ids.is_empty());
+                report
+                    .sections
+                    .retain(|section| !section.link_ids.is_empty());
             }
 
             Ok(serde_json::to_value(report).map_err(|e| format!("Serialization error: {}", e))?)
@@ -776,7 +828,8 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
         "list_evidence_sources" => {
             let mut stmt = conn.prepare("SELECT DISTINCT source_citation FROM evidence_library ORDER BY source_citation ASC")
                 .map_err(|e| e.to_string())?;
-            let rows = stmt.query_map([], |row| row.get::<_, String>(0))
+            let rows = stmt
+                .query_map([], |row| row.get::<_, String>(0))
                 .map_err(|e| e.to_string())?;
             let mut sources = Vec::new();
             for s in rows.flatten() {
@@ -785,19 +838,24 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(json!(sources))
         }
         "get_evidence_for_marker" => {
-            let rsid = args.get("rsid").and_then(|v| v.as_str()).ok_or("Missing rsid")?;
+            let rsid = args
+                .get("rsid")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing rsid")?;
             let mut stmt = conn.prepare("SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE rsid = ?")
                 .map_err(|e| e.to_string())?;
-            let rows = stmt.query_map(params![rsid], |row| {
-                let embedding: Option<String> = row.get(4)?;
-                Ok(json!({
-                    "rsid": row.get::<_, String>(0)?,
-                    "gene": row.get::<_, String>(1)?,
-                    "evidence_text": row.get::<_, String>(2)?,
-                    "source_citation": row.get::<_, String>(3)?,
-                    "has_embedding": embedding.as_ref().is_some_and(|e| !e.trim().is_empty()),
-                }))
-            }).map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map(params![rsid], |row| {
+                    let embedding: Option<String> = row.get(4)?;
+                    Ok(json!({
+                        "rsid": row.get::<_, String>(0)?,
+                        "gene": row.get::<_, String>(1)?,
+                        "evidence_text": row.get::<_, String>(2)?,
+                        "source_citation": row.get::<_, String>(3)?,
+                        "has_embedding": embedding.as_ref().is_some_and(|e| !e.trim().is_empty()),
+                    }))
+                })
+                .map_err(|e| e.to_string())?;
             let mut results = Vec::new();
             for r in rows {
                 results.push(r.map_err(|e| e.to_string())?);
@@ -806,45 +864,79 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
         }
         "get_chat_sessions" => {
             let sample_id = args.get("sample_id").and_then(|v| v.as_i64());
-            let sessions = crate::db::get_chat_sessions(&conn, sample_id)
-                .map_err(|e| format!("Failed to read chat sessions: {}", e))?;
+            let sample_ids = match sample_id {
+                Some(id) => vec![id],
+                None => crate::db::get_samples(&conn)
+                    .map_err(|e| format!("Failed to read samples: {e}"))?
+                    .into_iter()
+                    .map(|sample| sample.id)
+                    .collect(),
+            };
+            let mut sessions = Vec::new();
+            for id in sample_ids {
+                let sample_conn = crate::db::connect_sample_from_registry_path(db_path, id)
+                    .map_err(|e| e.to_string())?;
+                sessions.extend(
+                    crate::db::get_chat_sessions(&sample_conn, Some(id))
+                        .map_err(|e| format!("Failed to read chat sessions: {e}"))?,
+                );
+            }
+            sessions.sort_by_key(|b| std::cmp::Reverse(b.timestamp));
             Ok(json!(sessions))
         }
         "delete_chat_session" => {
-            let session_id = args.get("session_id").and_then(|v| v.as_str()).ok_or("Missing session_id")?;
+            let session_id = args
+                .get("session_id")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing session_id")?;
             crate::db::delete_chat_session(&conn, session_id)
                 .map_err(|e| format!("Failed to delete chat session: {}", e))?;
             Ok(json!({ "status": "deleted", "session_id": session_id }))
         }
         "export_chat_history" => {
-            let session_id = args.get("session_id").and_then(|v| v.as_str()).ok_or("Missing session_id")?;
+            let session_id = args
+                .get("session_id")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing session_id")?;
             let session = crate::db::get_chat_session_by_id(&conn, session_id)
                 .map_err(|e| format!("Failed to query session: {}", e))?
                 .ok_or_else(|| format!("Session not found: {}", session_id))?;
-            
+
             let mut md = format!("# Chat Export: {}\n\n", session.title);
-            md.push_str(&format!("* **Timestamp:** {} (Epoch ms)\n", session.timestamp));
+            md.push_str(&format!(
+                "* **Timestamp:** {} (Epoch ms)\n",
+                session.timestamp
+            ));
             md.push_str(&format!("* **Model:** {}\n", session.selected_model));
             md.push_str(&format!("* **Temperature:** {}\n\n", session.temperature));
             md.push_str("---\n\n");
 
             for msg in &session.messages {
-                md.push_str(&format!("### {}\n\n", match msg.role.as_str() {
-                    "user" => "👤 User",
-                    "assistant" => "🤖 Genomics Assistant",
-                    "system" => "⚙️ System",
-                    _ => &msg.role
-                }));
+                md.push_str(&format!(
+                    "### {}\n\n",
+                    match msg.role.as_str() {
+                        "user" => "👤 User",
+                        "assistant" => "🤖 Genomics Assistant",
+                        "system" => "⚙️ System",
+                        _ => &msg.role,
+                    }
+                ));
                 md.push_str(&msg.content);
                 md.push_str("\n\n");
                 if let Some(ref safety) = msg.safety_review {
-                    md.push_str(&format!("> 🛡️ **Safety Review Notes:**\n> {}\n\n", safety.replace('\n', "\n> ")));
+                    md.push_str(&format!(
+                        "> 🛡️ **Safety Review Notes:**\n> {}\n\n",
+                        safety.replace('\n', "\n> ")
+                    ));
                 }
             }
             Ok(json!({ "markdown": md }))
         }
         "get_app_paths" => {
-            let app_data_dir = db_path.parent().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+            let app_data_dir = db_path
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default();
             Ok(json!({
                 "db_path": db_path.to_string_lossy().to_string(),
                 "app_data_dir": app_data_dir,
@@ -868,25 +960,45 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(serde_json::to_value(status).map_err(|e| format!("Serialization error: {}", e))?)
         }
         "get_research_job_status" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let job = crate::research::get_research_job_from_db(db_path, sample_id);
             Ok(json!(job))
         }
         "get_discovered_findings_summary" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let findings = crate::db::get_discovered_findings_summary(&conn, sample_id)?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+                .map_err(|e| e.to_string())?;
+            let findings = crate::db::get_discovered_findings_summary(&sample_conn, sample_id)?;
             Ok(json!(findings))
         }
         "search_vector_associations" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let query = args.get("query").and_then(|v| v.as_str()).ok_or("Missing query")?;
-            let ollama_url = args.get("ollama_url").and_then(|v| v.as_str()).ok_or("Missing ollama_url")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let query = args
+                .get("query")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing query")?;
+            let ollama_url = args
+                .get("ollama_url")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing ollama_url")?;
             let _validated_ollama = crate::config::validate_service_url(ollama_url)?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let params = crate::research::evidence::HybridSearchParams {
                 sample_id,
                 query: query.to_string(),
-                trait_category: args.get("trait_category").and_then(|v| v.as_str()).map(String::from),
+                trait_category: args
+                    .get("trait_category")
+                    .and_then(|v| v.as_str())
+                    .map(String::from),
                 evidence_tier: None,
                 has_direction: None,
                 min_data_quality: Some(0.0),
@@ -920,8 +1032,14 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(json!(explanation))
         }
         "get_variant_evidence_card" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let rsid = args.get("rsid").and_then(|v| v.as_str()).ok_or("Missing rsid")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let rsid = args
+                .get("rsid")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing rsid")?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let payload = crate::research::find_point_payload_by_rsid(
                 &cfg.url,
@@ -932,12 +1050,23 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             )
             .await?;
             Ok(json!(payload.map(|(p, pid)| {
-                crate::research::evidence::card::evidence_card_from_payload(&p, 1.0, None, Some(pid))
+                crate::research::evidence::card::evidence_card_from_payload(
+                    &p,
+                    1.0,
+                    None,
+                    Some(pid),
+                )
             })))
         }
         "get_similar_associations" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
-            let rsid = args.get("rsid").and_then(|v| v.as_str()).ok_or("Missing rsid")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
+            let rsid = args
+                .get("rsid")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing rsid")?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let params = crate::research::evidence::SimilarSearchParams {
                 sample_id,
@@ -951,24 +1080,29 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
                 limit: args.get("limit").and_then(|v| v.as_u64()).unwrap_or(8) as u32,
                 include_self: false,
             };
-            let cards = crate::research::evidence::search::get_similar_associations(&params, &cfg).await?;
+            let cards =
+                crate::research::evidence::search::get_similar_associations(&params, &cfg).await?;
             Ok(json!(cards))
         }
         "get_quality_dashboard" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
-            let status = crate::research::get_research_job_from_db(db_path, sample_id).map(|j| j.status);
+            let status =
+                crate::research::get_research_job_from_db(db_path, sample_id).map(|j| j.status);
             let dash = crate::research::evidence::dashboard::build_quality_dashboard(
-                db_path,
-                sample_id,
-                &cfg,
-                status,
+                db_path, sample_id, &cfg, status,
             )
             .await?;
             Ok(json!(dash))
         }
         "get_trait_clusters" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let trait_category = args.get("trait_category").and_then(|v| v.as_str());
             let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(20) as u32;
             let clusters = crate::research::evidence::dashboard::build_trait_clusters(
@@ -981,7 +1115,10 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(json!(clusters))
         }
         "export_evidence_packet" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let packet = crate::research::evidence::packet::export_evidence_packet(
                 db_path,
@@ -1000,37 +1137,48 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
             Ok(json!(rows))
         }
         "update_candidate_marker_status" => {
-            let candidate_id = args.get("candidate_id").and_then(|v| v.as_str()).ok_or("Missing candidate_id")?;
-            let status = args.get("status").and_then(|v| v.as_str()).ok_or("Missing status")?;
+            let candidate_id = args
+                .get("candidate_id")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing candidate_id")?;
+            let status = args
+                .get("status")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing status")?;
             if status == "curated_core" {
                 return Err("curated_core promotion requires manual review".into());
             }
             let note = args.get("reviewer_note").and_then(|v| v.as_str());
-            crate::research::evidence::store::update_candidate_status(&conn, candidate_id, status, note)?;
+            crate::research::evidence::store::update_candidate_status(
+                &conn,
+                candidate_id,
+                status,
+                note,
+            )?;
             Ok(json!({ "status": "updated", "candidate_id": candidate_id }))
         }
         "backfill_evidence_payloads" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(500) as u32;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let result = crate::research::evidence::backfill::backfill_evidence_payloads(
-                db_path,
-                sample_id,
-                &cfg,
-                limit,
+                db_path, sample_id, &cfg, limit,
             )
             .await?;
             Ok(json!(result))
         }
         "build_vector_atlas" => {
-            let sample_id = args.get("sample_id").and_then(|v| v.as_i64()).ok_or("Missing sample_id")?;
+            let sample_id = args
+                .get("sample_id")
+                .and_then(|v| v.as_i64())
+                .ok_or("Missing sample_id")?;
             let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(1500) as u32;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let result = crate::research::evidence::atlas::build_vector_atlas(
-                db_path,
-                sample_id,
-                &cfg,
-                limit,
+                db_path, sample_id, &cfg, limit,
             )
             .await?;
             Ok(json!(result))
@@ -1041,7 +1189,9 @@ async fn execute_tool(name: &str, args: Value, db_path: &PathBuf, allow_write: b
                 .and_then(|v| v.as_str())
                 .unwrap_or("http://127.0.0.1:11434");
             let cfg = crate::config::load_qdrant_config(&conn)?;
-            let vector = crate::research::embed_text("dimension probe", ollama_url, &cfg.embedding_model).await?;
+            let vector =
+                crate::research::embed_text("dimension probe", ollama_url, &cfg.embedding_model)
+                    .await?;
             let dims = vector.len() as u32;
             crate::research::ensure_qdrant_collection_named(
                 &cfg.url,
@@ -1073,7 +1223,10 @@ async fn mcp_search_evidence(
     args: Value,
     allow_write: bool,
 ) -> Result<Value, String> {
-    let query = args.get("query").and_then(|v| v.as_str()).ok_or("Missing query")?;
+    let query = args
+        .get("query")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing query")?;
     let ollama_url = args.get("ollama_url").and_then(|v| v.as_str());
     let ollama_token = args.get("ollama_token").and_then(|v| v.as_str());
     let query_clean = query.trim().to_string();
@@ -1081,58 +1234,63 @@ async fn mcp_search_evidence(
         return Ok(json!(Value::Null));
     }
 
-    let keyword_hits: Vec<EvidenceHit> = crate::db_runtime::with_connection(db_path.to_path_buf(), {
-        let query_clean = query_clean.clone();
-        move |conn| {
-            let search_pattern = crate::config::sql_like_contains_pattern(&query_clean);
-            let mut stmt = conn
-                .prepare(
-                    "SELECT rsid, gene, evidence_text, source_citation, embedding
+    let keyword_hits: Vec<EvidenceHit> =
+        crate::db_runtime::with_connection(db_path.to_path_buf(), {
+            let query_clean = query_clean.clone();
+            move |conn| {
+                let search_pattern = crate::config::sql_like_contains_pattern(&query_clean);
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT rsid, gene, evidence_text, source_citation, embedding
                      FROM evidence_library
                      WHERE rsid LIKE ? OR gene LIKE ? OR LOWER(evidence_text) LIKE ?",
-                )
-                .map_err(|e| e.to_string())?;
-            let rows = stmt
-                .query_map(params![search_pattern, search_pattern, search_pattern], |row| {
-                    let embedding: Option<String> = row.get(4)?;
-                    Ok((
-                        row.get::<_, String>(0)?,
-                        row.get::<_, String>(1)?,
-                        row.get::<_, String>(2)?,
-                        row.get::<_, String>(3)?,
-                        embedding,
-                    ))
-                })
-                .map_err(|e| e.to_string())?;
-            let mut hits = Vec::new();
-            for r in rows {
-                hits.push(r.map_err(|e| e.to_string())?);
+                    )
+                    .map_err(|e| e.to_string())?;
+                let rows = stmt
+                    .query_map(
+                        params![search_pattern, search_pattern, search_pattern],
+                        |row| {
+                            let embedding: Option<String> = row.get(4)?;
+                            Ok((
+                                row.get::<_, String>(0)?,
+                                row.get::<_, String>(1)?,
+                                row.get::<_, String>(2)?,
+                                row.get::<_, String>(3)?,
+                                embedding,
+                            ))
+                        },
+                    )
+                    .map_err(|e| e.to_string())?;
+                let mut hits = Vec::new();
+                for r in rows {
+                    hits.push(r.map_err(|e| e.to_string())?);
+                }
+                Ok(hits)
             }
-            Ok(hits)
-        }
-    })
-    .await?;
+        })
+        .await?;
 
     if let Some(url) = ollama_url
-        && !url.trim().is_empty() {
-            let clean_url = crate::config::validate_service_url(url)?;
-            if let Some(embed_model) = super::get_embedding_model(&clean_url, ollama_token).await
-                && let Ok(query_embedding) =
-                    super::fetch_embedding(&clean_url, ollama_token, &embed_model, &query_clean).await
+        && !url.trim().is_empty()
+    {
+        let clean_url = crate::config::validate_service_url(url)?;
+        if let Some(embed_model) = super::get_embedding_model(&clean_url, ollama_token).await
+            && let Ok(query_embedding) =
+                super::fetch_embedding(&clean_url, ollama_token, &embed_model, &query_clean).await
+        {
+            let mut new_embeddings = Vec::new();
+            for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
+                if embedding_opt.as_ref().is_none_or(|e| e.trim().is_empty())
+                    && let Ok(emb) =
+                        super::fetch_embedding(&clean_url, ollama_token, &embed_model, text).await
                 {
-                    let mut new_embeddings = Vec::new();
-                    for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
-                        if embedding_opt.as_ref().is_none_or(|e| e.trim().is_empty())
-                            && let Ok(emb) =
-                                super::fetch_embedding(&clean_url, ollama_token, &embed_model, text).await
-                            {
-                                new_embeddings.push((rsid.clone(), citation.clone(), emb));
-                            }
-                    }
+                    new_embeddings.push((rsid.clone(), citation.clone(), emb));
+                }
+            }
 
-                    if allow_write && !new_embeddings.is_empty() {
-                        let writes = new_embeddings.clone();
-                        crate::db_runtime::with_connection(db_path.to_path_buf(), move |conn| {
+            if allow_write && !new_embeddings.is_empty() {
+                let writes = new_embeddings.clone();
+                crate::db_runtime::with_connection(db_path.to_path_buf(), move |conn| {
                             for (rsid, citation, emb) in &writes {
                                 if let Ok(emb_json) = serde_json::to_string(emb) {
                                     let _ = conn.execute(
@@ -1144,9 +1302,9 @@ async fn mcp_search_evidence(
                             Ok(())
                         })
                         .await?;
-                    }
+            }
 
-                    let candidates = crate::db_runtime::with_connection(db_path.to_path_buf(), move |conn| {
+            let candidates = crate::db_runtime::with_connection(db_path.to_path_buf(), move |conn| {
                         let mut stmt = conn.prepare(
                             "SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE embedding IS NOT NULL AND embedding != ''",
                         ).map_err(|e| e.to_string())?;
@@ -1199,9 +1357,9 @@ async fn mcp_search_evidence(
                             .collect::<Vec<Value>>())
                     })
                     .await?;
-                    return Ok(json!(candidates));
-                }
+            return Ok(json!(candidates));
         }
+    }
 
     let results: Vec<Value> = keyword_hits
         .into_iter()
@@ -1220,7 +1378,10 @@ async fn mcp_search_evidence(
 }
 
 async fn mcp_ollama_tool(name: &str, args: Value) -> Result<Value, String> {
-    let url = args.get("url").and_then(|v| v.as_str()).ok_or("Missing url")?;
+    let url = args
+        .get("url")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing url")?;
     let token = args.get("token").and_then(|v| v.as_str());
     let clean_url = crate::config::validate_service_url(url)?;
     let client = reqwest::Client::new();
@@ -1229,19 +1390,26 @@ async fn mcp_ollama_tool(name: &str, args: Value) -> Result<Value, String> {
         "scan_ollama_models" => {
             let mut req = client.get(format!("{}/api/tags", clean_url));
             if let Some(t) = token
-                && !t.trim().is_empty() {
-                    req = req.header(
-                        "Authorization",
-                        if t.to_lowercase().starts_with("bearer ") {
-                            t.to_string()
-                        } else {
-                            format!("Bearer {}", t)
-                        },
-                    );
-                }
-            let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
+                && !t.trim().is_empty()
+            {
+                req = req.header(
+                    "Authorization",
+                    if t.to_lowercase().starts_with("bearer ") {
+                        t.to_string()
+                    } else {
+                        format!("Bearer {}", t)
+                    },
+                );
+            }
+            let res = req
+                .send()
+                .await
+                .map_err(|e| format!("Connection error: {}", e))?;
             if !res.status().is_success() {
-                return Err(format!("Ollama tags API returned HTTP error: {}", res.status()));
+                return Err(format!(
+                    "Ollama tags API returned HTTP error: {}",
+                    res.status()
+                ));
             }
             #[derive(serde::Deserialize)]
             struct OllamaModel {
@@ -1251,51 +1419,76 @@ async fn mcp_ollama_tool(name: &str, args: Value) -> Result<Value, String> {
             struct OllamaTagsResponse {
                 models: Vec<OllamaModel>,
             }
-            let tags: OllamaTagsResponse = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
-            Ok(json!(tags.models.into_iter().map(|m| m.name).collect::<Vec<_>>()))
+            let tags: OllamaTagsResponse = res
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse response: {}", e))?;
+            Ok(json!(
+                tags.models.into_iter().map(|m| m.name).collect::<Vec<_>>()
+            ))
         }
         "show_ollama_model" => {
-            let model_name = args.get("name").and_then(|v| v.as_str()).ok_or("Missing name")?;
+            let model_name = args
+                .get("name")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing name")?;
             let mut req = client.post(format!("{}/api/show", clean_url));
             if let Some(t) = token
-                && !t.trim().is_empty() {
-                    req = req.header(
-                        "Authorization",
-                        if t.to_lowercase().starts_with("bearer ") {
-                            t.to_string()
-                        } else {
-                            format!("Bearer {}", t)
-                        },
-                    );
-                }
+                && !t.trim().is_empty()
+            {
+                req = req.header(
+                    "Authorization",
+                    if t.to_lowercase().starts_with("bearer ") {
+                        t.to_string()
+                    } else {
+                        format!("Bearer {}", t)
+                    },
+                );
+            }
             let res = req
                 .json(&serde_json::json!({ "name": model_name }))
                 .send()
                 .await
                 .map_err(|e| format!("Connection error: {}", e))?;
             if !res.status().is_success() {
-                return Err(format!("Ollama show API returned HTTP error: {}", res.status()));
+                return Err(format!(
+                    "Ollama show API returned HTTP error: {}",
+                    res.status()
+                ));
             }
-            Ok(res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?)
+            Ok(res
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse response: {}", e))?)
         }
         "get_active_ollama_models" => {
             let mut req = client.get(format!("{}/api/ps", clean_url));
             if let Some(t) = token
-                && !t.trim().is_empty() {
-                    req = req.header(
-                        "Authorization",
-                        if t.to_lowercase().starts_with("bearer ") {
-                            t.to_string()
-                        } else {
-                            format!("Bearer {}", t)
-                        },
-                    );
-                }
-            let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
-            if !res.status().is_success() {
-                return Err(format!("Ollama ps API returned HTTP error: {}", res.status()));
+                && !t.trim().is_empty()
+            {
+                req = req.header(
+                    "Authorization",
+                    if t.to_lowercase().starts_with("bearer ") {
+                        t.to_string()
+                    } else {
+                        format!("Bearer {}", t)
+                    },
+                );
             }
-            Ok(res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?)
+            let res = req
+                .send()
+                .await
+                .map_err(|e| format!("Connection error: {}", e))?;
+            if !res.status().is_success() {
+                return Err(format!(
+                    "Ollama ps API returned HTTP error: {}",
+                    res.status()
+                ));
+            }
+            Ok(res
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse response: {}", e))?)
         }
         _ => Err(format!("Unknown Ollama tool: {}", name)),
     }

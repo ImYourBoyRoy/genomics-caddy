@@ -1,17 +1,22 @@
 // ./src-tauri/src/offline/sync.rs
+use super::compress::{
+    DEFAULT_COMPRESSION_THRESHOLD_BYTES, compress_if_large, resolve_local_asset_path,
+};
 use super::download::{download_to_path, head_remote, remote_changed, sha256_file};
-use super::import_clinvar::import_clinvar_variant_summary;
 use super::import_clingen::import_clingen_gene_validity;
+use super::import_clinvar::import_clinvar_variant_summary;
 use super::import_dbsnp::{import_dbsnp_merged, import_dbsnp_withdrawn};
 use super::import_mane::import_mane_summary;
 use super::import_pharmgkb::{import_pharmgkb_clinical_variants, import_pharmgkb_genes};
 use super::manifest::{
-    all_assets, asset_def, local_path, tier_budget_bytes, AssetKind, OfflineAssetDef,
-    OfflineAssetId, OfflineAssetStatus, OfflineTierStatus,
+    AssetKind, OfflineAssetDef, OfflineAssetId, OfflineAssetStatus, OfflineTierStatus, all_assets,
+    asset_def, local_path, tier_budget_bytes,
 };
 use super::registry::{mark_update_available, read_registry, row_count_for_asset, upsert_registry};
 use super::schema::migrate_offline_schema;
-use super::tier2::{build_variant_locus_all_samples, build_variant_locus_for_sample, ensure_tier2_meta};
+use super::tier2::{
+    build_variant_locus_all_samples, build_variant_locus_for_sample, ensure_tier2_meta,
+};
 use crate::paths;
 use crate::research::references::import_gwas_from_local_files;
 use rusqlite::Connection;
@@ -63,13 +68,19 @@ pub struct OfflineSyncResult {
     pub errors: Vec<String>,
 }
 
-fn with_conn<T>(db_path: &Path, f: impl FnOnce(&Connection) -> Result<T, String>) -> Result<T, String> {
+fn with_conn<T>(
+    db_path: &Path,
+    f: impl FnOnce(&Connection) -> Result<T, String>,
+) -> Result<T, String> {
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     migrate_offline_schema(&conn).map_err(|e| e.to_string())?;
     f(&conn)
 }
 
-pub async fn check_offline_updates(data_dir: &Path, db_path: &Path) -> Result<OfflineUpdateCheck, String> {
+pub async fn check_offline_updates(
+    data_dir: &Path,
+    db_path: &Path,
+) -> Result<OfflineUpdateCheck, String> {
     let data_dir = data_dir.to_path_buf();
     let db_path = db_path.to_path_buf();
 
@@ -89,14 +100,10 @@ pub async fn check_offline_updates(data_dir: &Path, db_path: &Path) -> Result<Of
         for def in defs {
             let path = local_path(&data_dir, custom_dir.as_deref(), def);
             let local_present = asset_local_present(&data_dir, custom_dir.as_deref(), def, &path);
-            let uncompressed_path = path.with_extension("");
-            let local_bytes = if uncompressed_path.exists() {
-                std::fs::metadata(&uncompressed_path).map(|m| m.len()).unwrap_or(0)
-            } else if path.exists() {
-                std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0)
-            } else {
-                0
-            };
+            let local_bytes = resolve_local_asset_path(&path)
+                .and_then(|local_path| std::fs::metadata(local_path).ok())
+                .map(|metadata| metadata.len())
+                .unwrap_or(0);
 
             let db = db_path.clone();
             let asset_id = def.id.as_str().to_string();
@@ -105,7 +112,8 @@ pub async fn check_offline_updates(data_dir: &Path, db_path: &Path) -> Result<Of
                     let reg = read_registry(conn, &asset_id);
                     let rows = row_count_for_asset(
                         conn,
-                        OfflineAssetId::from_str_id(&asset_id).unwrap_or(OfflineAssetId::GwasCatalog),
+                        OfflineAssetId::from_str_id(&asset_id)
+                            .unwrap_or(OfflineAssetId::GwasCatalog),
                     );
                     Ok((rows, reg))
                 })
@@ -195,10 +203,10 @@ pub async fn check_offline_updates(data_dir: &Path, db_path: &Path) -> Result<Of
     })
 }
 
-pub async fn sync_offline_tier(
+pub async fn sync_offline_assets_subset(
     data_dir: &Path,
     db_path: &Path,
-    tier: u8,
+    asset_ids: Vec<OfflineAssetId>,
     force: bool,
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
@@ -207,6 +215,12 @@ pub async fn sync_offline_tier(
     let effective_dir = custom_dir.as_deref().unwrap_or(data_dir);
     paths::ensure_data_layout(effective_dir).map_err(|e| e.to_string())?;
 
+    let tier = if let Some(first_id) = asset_ids.first() {
+        asset_def(*first_id).map(|d| d.tier).unwrap_or(0)
+    } else {
+        0
+    };
+
     let mut result = OfflineSyncResult {
         tier,
         assets_synced: Vec::new(),
@@ -214,18 +228,18 @@ pub async fn sync_offline_tier(
         errors: Vec::new(),
     };
 
-    let defs: Vec<&OfflineAssetDef> = all_assets().iter().filter(|a| a.tier == tier).collect();
     let mut bytes_used = 0u64;
     let budget = tier_budget_bytes(tier);
     let mut pending_imports: Vec<OfflineAssetId> = Vec::new();
 
-    for def in defs {
+    for id in asset_ids {
+        let Some(def) = asset_def(id) else { continue };
         match def.kind {
             AssetKind::RemoteFile => {
                 let Some(url) = def.url else { continue };
                 let path = local_path(data_dir, custom_dir.as_deref(), def);
-                if !force && path.exists() {
-                    if let Ok(meta) = std::fs::metadata(&path) {
+                if !force && let Some(local_path) = resolve_local_asset_path(&path) {
+                    if let Ok(meta) = std::fs::metadata(local_path) {
                         bytes_used += meta.len();
                     }
                     pending_imports.push(def.id);
@@ -279,9 +293,13 @@ pub async fn sync_offline_tier(
                             )
                         });
                         pending_imports.push(def.id);
-                        result.messages.push(format!("Downloaded {} ({} bytes)", def.label, n));
+                        result
+                            .messages
+                            .push(format!("Downloaded {} ({} bytes)", def.label, n));
                     }
-                    Err(e) => result.errors.push(format!("{} download failed: {}", def.label, e)),
+                    Err(e) => result
+                        .errors
+                        .push(format!("{} download failed: {}", def.label, e)),
                 }
             }
             AssetKind::GwasSync => {
@@ -290,7 +308,9 @@ pub async fn sync_offline_tier(
                     if (force || !asset_local_present(data_dir, custom_dir.as_deref(), def, &path))
                         && let Some(url) = def.url
                     {
-                        if bytes_used >= budget && !path.exists() {
+                        if bytes_used >= budget
+                            && !asset_local_present(data_dir, custom_dir.as_deref(), def, &path)
+                        {
                             result.errors.push(format!(
                                 "GWAS catalog skipped: tier {} byte budget exhausted",
                                 tier
@@ -315,7 +335,9 @@ pub async fn sync_offline_tier(
                             match download_to_path(url, &path, def.max_bytes, progress_cb).await {
                                 Ok((n, _)) => {
                                     bytes_used += n;
-                                    result.messages.push(format!("Downloaded GWAS catalog ({} bytes)", n));
+                                    result
+                                        .messages
+                                        .push(format!("Downloaded GWAS catalog ({} bytes)", n));
                                 }
                                 Err(e) => result.errors.push(format!("GWAS download: {e}")),
                             }
@@ -353,6 +375,22 @@ pub async fn sync_offline_tier(
     }
     result.assets_synced = import_out.synced;
     Ok(result)
+}
+
+pub async fn sync_offline_tier(
+    data_dir: &Path,
+    db_path: &Path,
+    tier: u8,
+    force: bool,
+    sample_id: Option<i64>,
+    app: Option<&AppHandle>,
+) -> Result<OfflineSyncResult, String> {
+    let ids: Vec<OfflineAssetId> = all_assets()
+        .iter()
+        .filter(|a| a.tier == tier)
+        .map(|a| a.id)
+        .collect();
+    sync_offline_assets_subset(data_dir, db_path, ids, force, sample_id, app).await
 }
 
 struct ImportBatchResult {
@@ -394,7 +432,15 @@ pub async fn build_tier2_for_sample(
     sample_id: i64,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
-    sync_offline_tier(data_dir, db_path, 2, false, Some(sample_id), app).await
+    sync_offline_assets_subset(
+        data_dir,
+        db_path,
+        vec![OfflineAssetId::Tier2VariantLocus],
+        false,
+        Some(sample_id),
+        app,
+    )
+    .await
 }
 
 /// Sync a single asset by id (force controls whether to re-download existing files).
@@ -406,14 +452,24 @@ pub async fn sync_single_asset(
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
-    let id = OfflineAssetId::from_str_id(asset_id)
-        .ok_or_else(|| format!("Unknown asset id: {asset_id}"))?;
-    let def = asset_def(id).ok_or_else(|| format!("No def for: {asset_id}"))?;
-    // Delegate to tier sync but only that tier's budget matters.
-    // For a single-asset sync we just call the tier sync with the matching tier.
-    // This is simple and correct; tier sync will skip all other assets when force=false
-    // and they are already present.
-    sync_offline_tier(data_dir, db_path, def.tier, force, sample_id, app).await
+    let ids = match asset_id {
+        "pharmgkb_clinical_variants" => vec![
+            OfflineAssetId::PharmgkbClinicalVariants,
+            OfflineAssetId::PharmgkbGenes,
+            OfflineAssetId::ClingenGeneValidity,
+            OfflineAssetId::ManeSelectSummary,
+        ],
+        "dbsnp_merged_json" => vec![
+            OfflineAssetId::DbsnpMergedJson,
+            OfflineAssetId::DbsnpWithdrawnJson,
+        ],
+        other => {
+            let id = OfflineAssetId::from_str_id(other)
+                .ok_or_else(|| format!("Unknown asset id: {other}"))?;
+            vec![id]
+        }
+    };
+    sync_offline_assets_subset(data_dir, db_path, ids, force, sample_id, app).await
 }
 
 /// Sync all tiers, downloading only missing or outdated assets. Does not force re-download.
@@ -425,9 +481,7 @@ pub async fn sync_all_missing(
 ) -> Result<Vec<OfflineSyncResult>, String> {
     let mut results = Vec::new();
     for tier in 0u8..=2 {
-        results.push(
-            sync_offline_tier(data_dir, db_path, tier, false, sample_id, app).await?,
-        );
+        results.push(sync_offline_tier(data_dir, db_path, tier, false, sample_id, app).await?);
     }
     Ok(results)
 }
@@ -487,13 +541,14 @@ fn import_asset_sync(
             1
         }
         OfflineAssetId::ClinvarVariantSummary => {
-            let eff_path = if path.with_extension("").exists() {
-                path.with_extension("")
-            } else if path.exists() {
-                path.clone()
-            } else {
-                return Err("ClinVar file missing — run Tier 1 sync".into());
-            };
+            let data_dir = path
+                .parent()
+                .and_then(|p| p.parent())
+                .unwrap_or_else(|| Path::new("."));
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "clinvar")
+                .map_err(|e| e.to_string())?;
+            let eff_path = resolve_local_asset_path(&path)
+                .ok_or_else(|| "ClinVar file missing — run Tier 1 sync".to_string())?;
             import_clinvar_variant_summary(conn, &eff_path, app)?
         }
         OfflineAssetId::PharmgkbClinicalVariants => {
@@ -509,35 +564,35 @@ fn import_asset_sync(
             import_pharmgkb_genes(conn, &path)?
         }
         OfflineAssetId::ClingenGeneValidity => {
-            if !path.exists() {
-                return Err("ClinGen CSV missing".into());
-            }
-            import_clingen_gene_validity(conn, &path)?
+            let eff_path =
+                resolve_local_asset_path(&path).ok_or_else(|| "ClinGen CSV missing".to_string())?;
+            import_clingen_gene_validity(conn, &eff_path)?
         }
         OfflineAssetId::ManeSelectSummary => {
-            if !path.exists() {
-                return Err("MANE summary missing".into());
-            }
-            import_mane_summary(conn, &path)?
+            let eff_path = resolve_local_asset_path(&path)
+                .ok_or_else(|| "MANE summary missing".to_string())?;
+            import_mane_summary(conn, &eff_path)?
         }
         OfflineAssetId::DbsnpMergedJson => {
-            let eff_path = if path.with_extension("").exists() {
-                path.with_extension("")
-            } else if path.exists() {
-                path.clone()
-            } else {
-                return Err("dbSNP merged JSON missing".into());
-            };
+            let data_dir = path
+                .parent()
+                .and_then(|p| p.parent())
+                .unwrap_or_else(|| Path::new("."));
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "dbsnp")
+                .map_err(|e| e.to_string())?;
+            let eff_path = resolve_local_asset_path(&path)
+                .ok_or_else(|| "dbSNP merged JSON missing".to_string())?;
             import_dbsnp_merged(conn, &eff_path, app)?
         }
         OfflineAssetId::DbsnpWithdrawnJson => {
-            let eff_path = if path.with_extension("").exists() {
-                path.with_extension("")
-            } else if path.exists() {
-                path.clone()
-            } else {
-                return Err("dbSNP withdrawn JSON missing".into());
-            };
+            let data_dir = path
+                .parent()
+                .and_then(|p| p.parent())
+                .unwrap_or_else(|| Path::new("."));
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "dbsnp")
+                .map_err(|e| e.to_string())?;
+            let eff_path = resolve_local_asset_path(&path)
+                .ok_or_else(|| "dbSNP withdrawn JSON missing".to_string())?;
             import_dbsnp_withdrawn(conn, &eff_path, app)?
         }
         OfflineAssetId::Tier2VariantLocus => {
@@ -549,38 +604,25 @@ fn import_asset_sync(
                 build_variant_locus_all_samples(conn)?
             };
             upsert_registry(
-                conn,
-                id,
-                def.tier,
-                &meta_path,
-                "derived",
-                None,
-                0,
-                None,
-                count,
-                None,
-                false,
+                conn, id, def.tier, &meta_path, "derived", None, 0, None, count, None, false,
             )?;
             count
         }
     };
 
     if id != OfflineAssetId::Tier2VariantLocus && id != OfflineAssetId::GnomadIndexManifest {
-        let n = if path.exists() {
-            std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0)
+        let final_path = if let Some(local_path) = resolve_local_asset_path(&path) {
+            compress_if_large(&local_path, DEFAULT_COMPRESSION_THRESHOLD_BYTES)?
         } else {
-            0
+            path.clone()
         };
-        let hash = if path.exists() {
-            sha256_file(&path).ok()
-        } else {
-            None
-        };
+        let n = std::fs::metadata(&final_path).map(|m| m.len()).unwrap_or(0);
+        let hash = sha256_file(&final_path).ok();
         let _ = upsert_registry(
             conn,
             id,
             def.tier,
-            &path,
+            &final_path,
             def.url.unwrap_or("derived"),
             None,
             n,
@@ -594,14 +636,27 @@ fn import_asset_sync(
     Ok(format!("{}: {row_count} rows loaded", def.label))
 }
 
-fn asset_local_present(data_dir: &Path, custom_dir: Option<&Path>, def: &OfflineAssetDef, path: &Path) -> bool {
+fn asset_local_present(
+    data_dir: &Path,
+    custom_dir: Option<&Path>,
+    def: &OfflineAssetDef,
+    path: &Path,
+) -> bool {
     let base = custom_dir.unwrap_or(data_dir);
-    path.exists()
-        || path.with_extension("").exists()
+    resolve_local_asset_path(path).is_some()
         || (def.id == OfflineAssetId::GwasCatalog
-            && (base.join("references").join("gwas-catalog-associations_ontology-annotated.tsv").exists()
-                || base.join("references").join("gwas-catalog-associations_ontology-annotated.tsv.gz").exists()
-                || base.join("references").join("gwas-catalog-associations_ontology-annotated-full.zip").exists()))
+            && (base
+                .join("references")
+                .join("gwas-catalog-associations_ontology-annotated.tsv")
+                .exists()
+                || base
+                    .join("references")
+                    .join("gwas-catalog-associations_ontology-annotated.tsv.gz")
+                    .exists()
+                || base
+                    .join("references")
+                    .join("gwas-catalog-associations_ontology-annotated-full.zip")
+                    .exists()))
 }
 
 pub fn offline_status_summary(conn: &Connection) -> (u64, u64, u64) {

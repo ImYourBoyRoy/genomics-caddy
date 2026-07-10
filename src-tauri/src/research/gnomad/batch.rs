@@ -1,9 +1,9 @@
 // ./src-tauri/src/research/gnomad/batch.rs
 use super::config::load_gnomad_config;
-use super::lookup::{lookup_variant_coords, resolve_gnomad_context, VariantCoords};
+use super::lookup::{VariantCoords, lookup_variant_coords, resolve_gnomad_context};
 use super::types::{
-    GnomadBatchProgress, GnomadBatchRequest, GnomadLookupRequest,
-    GnomadLookupStatus, GnomadSourceMode,
+    GnomadBatchProgress, GnomadBatchRequest, GnomadLookupRequest, GnomadLookupStatus,
+    GnomadSourceMode,
 };
 use rusqlite::params;
 use std::collections::HashMap;
@@ -98,7 +98,10 @@ pub async fn batch_enrich_gnomad_context(
     db_path: &Path,
     data_dir: &Path,
     req: GnomadBatchRequest,
-) -> (GnomadBatchProgress, Vec<(String, super::types::GnomadContext)>) {
+) -> (
+    GnomadBatchProgress,
+    Vec<(String, super::types::GnomadContext)>,
+) {
     let limit = req.limit.unwrap_or(500);
     let candidates = collect_candidates(db_path, &req, limit);
     let progress = prefetch_gnomad_batch(db_path, data_dir, req.sample_id, &candidates).await;
@@ -179,7 +182,7 @@ fn collect_candidates(db_path: &Path, req: &GnomadBatchRequest, limit: usize) ->
         return rsids.iter().take(limit).cloned().collect();
     }
 
-    let conn = crate::db::connect(db_path).ok();
+    let conn = crate::db::connect_sample_from_registry_path(db_path, req.sample_id).ok();
     let Some(conn) = conn else {
         return Vec::new();
     };
@@ -192,9 +195,10 @@ fn collect_candidates(db_path: &Path, req: &GnomadBatchRequest, limit: usize) ->
             )
             .ok();
         if let Some(ref mut s) = stmt
-            && let Ok(rows) = s.query_map(params![req.sample_id, limit as i64], |row| row.get(0)) {
-                return rows.filter_map(|r| r.ok()).collect();
-            }
+            && let Ok(rows) = s.query_map(params![req.sample_id, limit as i64], |row| row.get(0))
+        {
+            return rows.filter_map(|r| r.ok()).collect();
+        }
         return Vec::new();
     }
 

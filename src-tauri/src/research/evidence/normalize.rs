@@ -6,10 +6,10 @@ use super::scoring::{
     data_quality_score, default_prohibited_claims, default_verification_ideas,
     personal_direction_label, personal_match_score, pvalue_mlog10, wellness_actionability_score,
 };
-use super::types::{EvidenceLedgerRow, EVIDENCE_SCHEMA_VERSION};
+use super::types::{EVIDENCE_SCHEMA_VERSION, EvidenceLedgerRow};
 use crate::research::crossmap::CrossMapContext;
-use crate::research::util::{best_gwas_pvalue, ENRICHMENT_VERSION, unix_now};
-use serde_json::{json, Map, Value};
+use crate::research::util::{ENRICHMENT_VERSION, best_gwas_pvalue, unix_now};
+use serde_json::{Map, Value, json};
 
 #[allow(clippy::too_many_arguments)]
 pub fn build_structured_embedding_text(
@@ -165,7 +165,10 @@ pub fn extend_payload_normalized(
         .collect();
     quality_flags.sort();
     quality_flags.dedup();
-    if clinvar_sig.map(|s| s.to_lowercase().contains("conflict")).unwrap_or(false) {
+    if clinvar_sig
+        .map(|s| s.to_lowercase().contains("conflict"))
+        .unwrap_or(false)
+    {
         quality_flags.push("source_conflict".into());
     }
     quality_flags.push("gwas_only_not_clinical".into());
@@ -179,10 +182,7 @@ pub fn extend_payload_normalized(
     let best_direction_row = ledger.iter().find(|r| {
         matches!(
             r.personal_direction.as_str(),
-            "increased_trait_value"
-                | "decreased_trait_value"
-                | "increased_odds"
-                | "decreased_odds"
+            "increased_trait_value" | "decreased_trait_value" | "increased_odds" | "decreased_odds"
         )
     });
     let (personal_direction, personal_dosage, _) = if let Some(row) = best_direction_row {
@@ -196,13 +196,12 @@ pub fn extend_payload_normalized(
     };
     let has_direction = matches!(
         personal_direction.as_str(),
-        "increased_trait_value"
-            | "decreased_trait_value"
-            | "increased_odds"
-            | "decreased_odds"
+        "increased_trait_value" | "decreased_trait_value" | "increased_odds" | "decreased_odds"
     );
     let has_effect_allele = ledger.iter().any(|r| r.effect_allele.is_some());
-    let has_effect_size = ledger.iter().any(|r| r.beta.is_some() || r.odds_ratio.is_some());
+    let has_effect_size = ledger
+        .iter()
+        .any(|r| r.beta.is_some() || r.odds_ratio.is_some());
 
     let has_gwas = !gwas_associations.is_empty();
     let has_clinvar = clinvar_sig.map(|s| !s.is_empty()).unwrap_or(false);
@@ -300,10 +299,7 @@ pub fn extend_payload_normalized(
     payload.insert("primary_source".into(), json!(primary_source));
     payload.insert("association_type".into(), json!("gwas_top_association"));
     payload.insert("p_value_min".into(), json!(best_p));
-    payload.insert(
-        "p_value_mlog10_max".into(),
-        json!(pvalue_mlog10(best_p)),
-    );
+    payload.insert("p_value_mlog10_max".into(), json!(pvalue_mlog10(best_p)));
     payload.insert("has_effect_allele".into(), json!(has_effect_allele));
     payload.insert("has_effect_size".into(), json!(has_effect_size));
     payload.insert("has_direction".into(), json!(has_direction));
@@ -322,22 +318,13 @@ pub fn extend_payload_normalized(
     );
     payload.insert("association_strength_score".into(), json!(assoc_strength));
     payload.insert("personal_match_score".into(), json!(personal_match));
-    payload.insert(
-        "clinical_actionability_score".into(),
-        json!(clinical),
-    );
-    payload.insert(
-        "wellness_actionability_score".into(),
-        json!(wellness),
-    );
+    payload.insert("clinical_actionability_score".into(), json!(clinical));
+    payload.insert("wellness_actionability_score".into(), json!(wellness));
     payload.insert("data_quality_score".into(), json!(dq));
     payload.insert("novelty_score".into(), json!(0.5));
     payload.insert("source_count".into(), json!(source_names.len()));
     payload.insert("conflict_count".into(), json!(conflict_count));
-    payload.insert(
-        "missing_field_count".into(),
-        json!(missing_fields.len()),
-    );
+    payload.insert("missing_field_count".into(), json!(missing_fields.len()));
     payload.insert("quality_flags".into(), json!(quality_flags));
     payload.insert("missing_fields".into(), json!(missing_fields));
     payload.insert("embedding_model".into(), json!(embedding_model));
@@ -362,8 +349,7 @@ pub fn extend_payload_normalized(
     if let Some(af) = gnomad_af {
         payload.insert("gnomad_af".into(), json!(af));
     }
-    let raw_hash = super::source_records::payload_hash(
-        &serde_json::to_string(payload).unwrap_or_default(),
-    );
+    let raw_hash =
+        super::source_records::payload_hash(&serde_json::to_string(payload).unwrap_or_default());
     payload.insert("raw_payload_hash".into(), json!(raw_hash));
 }

@@ -4,7 +4,7 @@
 use super::cache::{fetch_text_cached, pgs_file_ttl};
 use super::scoring::compute_personal_direction;
 use crate::research::util::{normalize_rsid, unix_now};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -37,9 +37,7 @@ pub async fn compute_pgs_match_for_score(
     allele2: &str,
     score_meta: &Value,
 ) -> Result<PgsMatchSummary, String> {
-    let trait_reported = score_meta["trait_reported"]
-        .as_str()
-        .map(String::from);
+    let trait_reported = score_meta["trait_reported"].as_str().map(String::from);
     let file_url = score_meta["ftp_scoring_file"]
         .as_str()
         .or_else(|| {
@@ -62,7 +60,11 @@ pub async fn compute_pgs_match_for_score(
         ));
     };
 
-    let file_key = format!("pgs_catalog|file|{}|{}", pgs_id, super::source_records::payload_hash(&file_url));
+    let file_key = format!(
+        "pgs_catalog|file|{}|{}",
+        pgs_id,
+        super::source_records::payload_hash(&file_url)
+    );
     let file_text = fetch_text_cached(
         db_path,
         "pgs_catalog",
@@ -97,7 +99,8 @@ pub async fn compute_pgs_match_for_score(
         ));
     }
 
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let user_genotypes = load_user_genotypes_for_rsids(&conn, sample_id, &rows)?;
 
     let mut matched = 0u32;
@@ -196,9 +199,9 @@ fn parse_scoring_file(text: &str) -> Vec<ScoringRow> {
             .iter()
             .find(|c| c.starts_with("rs") || c.starts_with("RS"))
             .map(|s| s.to_string());
-        let effect_idx = cols.iter().position(|c| {
-            c.len() == 1 && c.chars().all(|ch| ch.is_ascii_alphabetic())
-        });
+        let effect_idx = cols
+            .iter()
+            .position(|c| c.len() == 1 && c.chars().all(|ch| ch.is_ascii_alphabetic()));
         let (effect_allele, weight) = if let Some(idx) = effect_idx {
             let effect = cols.get(idx).map(|s| s.to_string());
             let weight = cols.get(idx + 2).and_then(|s| s.parse::<f64>().ok());
@@ -242,8 +245,7 @@ fn load_user_genotypes_for_rsids(
         for r in chunk {
             params_vec.push(Box::new(r.clone()));
         }
-        let param_refs: Vec<&dyn rusqlite::ToSql> =
-            params_vec.iter().map(|p| p.as_ref()).collect();
+        let param_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
         let rows = stmt
             .query_map(param_refs.as_slice(), |row| {
                 Ok((
@@ -287,7 +289,11 @@ fn variant_only_summary(
     }
 }
 
-pub fn store_pgs_match_cache(conn: &Connection, sample_id: i64, summary: &PgsMatchSummary) -> Result<(), String> {
+pub fn store_pgs_match_cache(
+    conn: &Connection,
+    sample_id: i64,
+    summary: &PgsMatchSummary,
+) -> Result<(), String> {
     let now = unix_now();
     conn.execute(
         "INSERT OR REPLACE INTO pgs_match_cache (

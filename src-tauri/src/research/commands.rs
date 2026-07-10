@@ -9,13 +9,14 @@ Key Inputs: AppHandle, sample IDs, Ollama URL, research scope toggles.
 Key Outputs: Typed JSON payloads for the Svelte frontend.
 */
 
-use crate::config;
 use super::references::{self, GwasSyncResult, ReferenceStatus};
-use super::{
-    QdrantConfigPublic, QdrantConfigUpdate, QdrantConnectionStatus, QdrantHit, ResearchFindingPreview, ResearchJob,
-    ResearchScopeConfig, ResearchScopePreview, VectorResearchDiagnostics,
-};
 use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING, clear_stale_running_flag};
+use super::{
+    QdrantConfigPublic, QdrantConfigUpdate, QdrantConnectionStatus, QdrantHit,
+    ResearchFindingPreview, ResearchJob, ResearchScopeConfig, ResearchScopePreview,
+    VectorResearchDiagnostics,
+};
+use crate::config;
 use crate::{db_runtime, get_data_dir, get_db_path};
 use std::sync::atomic::Ordering;
 use tauri::AppHandle;
@@ -54,7 +55,8 @@ pub async fn test_qdrant_connection(
 
     let clean_url = crate::config::validate_service_url(&url)?;
     Ok(
-        super::test_qdrant_connection(&clean_url, final_key.as_deref(), collection.as_deref()).await,
+        super::test_qdrant_connection(&clean_url, final_key.as_deref(), collection.as_deref())
+            .await,
     )
 }
 
@@ -65,7 +67,10 @@ pub async fn get_qdrant_config(app: AppHandle) -> Result<QdrantConfigPublic, Str
 
 #[tauri::command]
 pub async fn save_qdrant_config(app: AppHandle, update: QdrantConfigUpdate) -> Result<(), String> {
-    with_db(&app, move |conn| crate::config::save_qdrant_config(conn, &update)).await
+    with_db(&app, move |conn| {
+        crate::config::save_qdrant_config(conn, &update)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -95,7 +100,10 @@ pub async fn preview_research_scope(
 #[tauri::command]
 pub async fn get_reference_status(app: AppHandle) -> Result<ReferenceStatus, String> {
     let data_dir = get_data_dir(&app);
-    with_db(&app, move |conn| references::reference_status(&data_dir, conn)).await
+    with_db(&app, move |conn| {
+        references::reference_status(&data_dir, conn)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -166,7 +174,8 @@ pub async fn get_research_job_status(
     tauri::async_runtime::spawn_blocking(move || {
         let mut job = super::get_research_job_from_db(&db_path, sample_id);
         if let Some(ref mut j) = job {
-            j.loop_active = Some(super::state::RESEARCH_RUNNING.load(std::sync::atomic::Ordering::SeqCst));
+            j.loop_active =
+                Some(super::state::RESEARCH_RUNNING.load(std::sync::atomic::Ordering::SeqCst));
             if j.status == "running" || j.loop_active == Some(true) {
                 super::sweep_metrics::attach_live_job_fields(j);
             }
@@ -245,20 +254,30 @@ pub async fn start_research_job(
 }
 
 #[tauri::command]
-pub async fn pause_research_job(app: AppHandle, sample_id: i64) -> Result<Option<ResearchJob>, String> {
+pub async fn pause_research_job(
+    app: AppHandle,
+    sample_id: i64,
+) -> Result<Option<ResearchJob>, String> {
     RESEARCH_PAUSED.store(true, Ordering::SeqCst);
     let db_path = get_db_path(&app);
-    tauri::async_runtime::spawn_blocking(move || super::pause_research_job_in_db(&db_path, sample_id))
-        .await
-        .map_err(|e| format!("Pause worker failed: {}", e))?
+    tauri::async_runtime::spawn_blocking(move || {
+        super::pause_research_job_in_db(&db_path, sample_id)
+    })
+    .await
+    .map_err(|e| format!("Pause worker failed: {}", e))?
 }
 
 #[tauri::command]
-pub async fn cancel_research_job(app: AppHandle, sample_id: i64) -> Result<Option<ResearchJob>, String> {
+pub async fn cancel_research_job(
+    app: AppHandle,
+    sample_id: i64,
+) -> Result<Option<ResearchJob>, String> {
     let db_path = get_db_path(&app);
-    tauri::async_runtime::spawn_blocking(move || super::cancel_research_job_in_db(&db_path, sample_id))
-        .await
-        .map_err(|e| format!("Cancel worker failed: {}", e))?
+    tauri::async_runtime::spawn_blocking(move || {
+        super::cancel_research_job_in_db(&db_path, sample_id)
+    })
+    .await
+    .map_err(|e| format!("Cancel worker failed: {}", e))?
 }
 
 #[tauri::command]
@@ -283,7 +302,10 @@ pub async fn resume_research_job(
     }
 
     if existing.status == "complete" {
-        return Err("This sweep is already complete. Use Expand queue or Force re-enrich to run again.".to_string());
+        return Err(
+            "This sweep is already complete. Use Expand queue or Force re-enrich to run again."
+                .to_string(),
+        );
     }
 
     if existing.status != "paused" {
@@ -415,7 +437,8 @@ pub async fn get_vector_promoted_findings(
 ) -> Result<Vec<crate::db::VectorPromotedFinding>, String> {
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
+        let conn = crate::db::connect_sample_from_registry_path(&db_path, sample_id)
+            .map_err(|e| e.to_string())?;
         crate::db::get_vector_promoted_findings(&conn, sample_id)
     })
     .await
@@ -431,14 +454,13 @@ pub async fn get_vector_research_diagnostics(
     let db_path = get_db_path(&app);
     let sid = sample_id;
 
-    let conn_status = super::test_qdrant_connection(
-        &cfg.url,
-        cfg.api_key.as_deref(),
-        Some(&cfg.collection),
-    )
-    .await;
+    let conn_status =
+        super::test_qdrant_connection(&cfg.url, cfg.api_key.as_deref(), Some(&cfg.collection))
+            .await;
 
-    let scope = with_db(&app, config::load_research_scope).await.unwrap_or_default();
+    let scope = with_db(&app, config::load_research_scope)
+        .await
+        .unwrap_or_default();
 
     let mut diag = VectorResearchDiagnostics {
         connected: conn_status.success,
@@ -509,13 +531,8 @@ pub async fn get_vector_research_diagnostics(
         let q_coll = cfg.collection.clone();
         let q_model = cfg.embedding_model.clone();
 
-        if let Some(index_model) = super::sample_index_embedding_model(
-            &q_url,
-            q_key.as_deref(),
-            &q_coll,
-            id,
-        )
-        .await
+        if let Some(index_model) =
+            super::sample_index_embedding_model(&q_url, q_key.as_deref(), &q_coll, id).await
         {
             diag.embedding_model_mismatch = !index_model.eq_ignore_ascii_case(&q_model);
             diag.index_embedding_model = Some(index_model);

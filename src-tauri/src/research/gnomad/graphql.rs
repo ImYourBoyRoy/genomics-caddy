@@ -49,12 +49,12 @@ async fn post_graphql(body: &serde_json::Value) -> Result<serde_json::Value, Gno
             Ok(resp) => {
                 let status = resp.status();
                 if status.is_success() {
-                    return resp.json().await.map_err(|_| GnomadLookupStatus::ParserError);
+                    return resp
+                        .json()
+                        .await
+                        .map_err(|_| GnomadLookupStatus::ParserError);
                 }
-                if status.as_u16() == 403
-                    || status.as_u16() == 429
-                    || status.is_server_error()
-                {
+                if status.as_u16() == 403 || status.as_u16() == 429 || status.is_server_error() {
                     let backoff = Duration::from_secs(2u64.pow(attempt.min(4)));
                     sleep(backoff).await;
                     continue;
@@ -207,20 +207,21 @@ pub async fn fetch_graphql_context(
     };
 
     if let (Some(ch), Some(p), Some(r), Some(a)) = (chrom, pos, ref_allele, alt_allele)
-        && let Ok(conn) = crate::db::connect(db_path) {
-            let mut input = context_to_cache_write(
-                &ctx,
-                GnomadSourceMode::GraphQlInteractive,
-                ch,
-                p,
-                r,
-                a,
-                genotype.map(String::from),
-                hash_record(&format!("{rsid}|graphql")),
-            );
-            input.lookup_status = GnomadLookupStatus::GraphQlHit;
-            let _ = write_cache(&conn, input);
-        }
+        && let Ok(conn) = crate::db::connect(db_path)
+    {
+        let mut input = context_to_cache_write(
+            &ctx,
+            GnomadSourceMode::GraphQlInteractive,
+            ch,
+            p,
+            r,
+            a,
+            genotype.map(String::from),
+            hash_record(&format!("{rsid}|graphql")),
+        );
+        input.lookup_status = GnomadLookupStatus::GraphQlHit;
+        let _ = write_cache(&conn, input);
+    }
 
     ctx
 }

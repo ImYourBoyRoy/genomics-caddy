@@ -4,10 +4,10 @@
 pub mod adapters;
 pub mod atlas;
 pub mod backfill;
-pub mod card;
 pub mod cache;
-pub mod commands;
+pub mod card;
 pub mod catalog;
+pub mod commands;
 pub mod corpus;
 pub mod dashboard;
 pub mod named_vectors;

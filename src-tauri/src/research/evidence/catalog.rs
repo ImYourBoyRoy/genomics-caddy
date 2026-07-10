@@ -132,14 +132,18 @@ fn build_catalog_sql(
     Ok((sql, binds))
 }
 
-pub fn list_catalog_rsids(conn: &Connection, p: &BrowseAssociationsParams) -> Result<Vec<String>, String> {
+pub fn list_catalog_rsids(
+    conn: &Connection,
+    p: &BrowseAssociationsParams,
+) -> Result<Vec<String>, String> {
     let (sql, binds) = build_catalog_sql(p, false)?;
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let refs: Vec<&dyn rusqlite::ToSql> = binds.iter().map(|v| v as &dyn rusqlite::ToSql).collect();
     let rows = stmt
         .query_map(refs.as_slice(), |row| row.get::<_, String>(0))
         .map_err(|e| e.to_string())?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }
 
 pub fn count_catalog_rsids(conn: &Connection, p: &BrowseAssociationsParams) -> Result<u64, String> {

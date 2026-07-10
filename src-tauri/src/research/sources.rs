@@ -1,10 +1,10 @@
 // ./src-tauri/src/research/sources.rs
 use super::http::HTTP_CLIENT;
+use super::sweep_metrics::{SweepPhase, record_phase_cache};
 use super::tuning::acquire_gwas_permit;
-use super::sweep_metrics::{record_phase_cache, SweepPhase};
 use super::util::{
-    canonical_gwas_association, extract_gene_from_gwas, is_placeholder_gene, normalize_api_gwas_association,
-    normalize_rsid, parse_gene_tokens,
+    canonical_gwas_association, extract_gene_from_gwas, is_placeholder_gene,
+    normalize_api_gwas_association, normalize_rsid, parse_gene_tokens,
 };
 use rusqlite::params;
 use std::path::Path;
@@ -174,10 +174,8 @@ pub async fn resolve_gwas_associations(
     let api = fetch_gwas_associations(db_path, rsid, strict)
         .await
         .unwrap_or_default();
-    let normalized: Vec<serde_json::Value> = api
-        .iter()
-        .map(normalize_api_gwas_association)
-        .collect();
+    let normalized: Vec<serde_json::Value> =
+        api.iter().map(normalize_api_gwas_association).collect();
     let provenance = serde_json::json!({
         "local_gwas_reference": { "queried": true, "hits": 0 },
         "gwas_api": { "queried": true, "hits": normalized.len() }
@@ -241,12 +239,8 @@ pub async fn fetch_ensembl_vep_genes(db_path: &Path, rsid: &str) -> Option<Exter
     .ok()?;
 
     if let Ok(conn) = crate::db::connect(db_path) {
-        let _ = crate::research::evidence::source_records::record_ensembl_vep(
-            &conn,
-            rsid,
-            &url,
-            &val,
-        );
+        let _ =
+            crate::research::evidence::source_records::record_ensembl_vep(&conn, rsid, &url, &val);
     }
 
     let entry = val.as_array()?.first()?;
@@ -255,15 +249,15 @@ pub async fn fetch_ensembl_vep_genes(db_path: &Path, rsid: &str) -> Option<Exter
         for tc in consequences {
             if let Some(symbol) = tc["gene_symbol"].as_str()
                 && !is_placeholder_gene(symbol)
-                    && !genes.iter().any(|g: &String| g.eq_ignore_ascii_case(symbol))
-                {
-                    genes.push(symbol.to_string());
-                }
+                && !genes
+                    .iter()
+                    .any(|g: &String| g.eq_ignore_ascii_case(symbol))
+            {
+                genes.push(symbol.to_string());
+            }
         }
     }
-    let chromosome = entry["seq_region_name"]
-        .as_str()
-        .map(|c| c.to_string());
+    let chromosome = entry["seq_region_name"].as_str().map(|c| c.to_string());
     let position = entry["start"].as_i64();
 
     if genes.is_empty() && chromosome.is_none() {
@@ -319,7 +313,10 @@ pub async fn fetch_gwas_associations(
     let filtered: Vec<serde_json::Value> = assocs
         .into_iter()
         .filter(|a| {
-            a["pvalue"].as_f64().map(|p| p < p_threshold).unwrap_or(false)
+            a["pvalue"]
+                .as_f64()
+                .map(|p| p < p_threshold)
+                .unwrap_or(false)
         })
         .take(12)
         .collect();

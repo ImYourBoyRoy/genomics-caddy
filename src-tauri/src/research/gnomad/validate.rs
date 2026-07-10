@@ -54,10 +54,11 @@ pub fn validate_gnomad_config_paths(cfg: &GnomadConfig) -> Result<(), String> {
     validate_gnomad_template(&cfg.exome_template)?;
     validate_gnomad_template(&cfg.genome_template)?;
     if let Some(ref dir) = cfg.local_vcf_dir
-        && !dir.trim().is_empty() {
-            resolve_local_vcf_path(dir, &cfg.exome_template, "22")?;
-            resolve_local_vcf_path(dir, &cfg.genome_template, "22")?;
-        }
+        && !dir.trim().is_empty()
+    {
+        resolve_local_vcf_path(dir, &cfg.exome_template, "22")?;
+        resolve_local_vcf_path(dir, &cfg.genome_template, "22")?;
+    }
     Ok(())
 }
 
@@ -145,9 +146,7 @@ mod tests {
         let resolved = resolve_local_vcf_path(&dir_str, template, "22").expect("resolve");
         assert!(resolved.starts_with(&dir_canon));
 
-        assert!(
-            resolve_local_vcf_path(&dir_str, "../outside/chr{chrom}.vcf.bgz", "22").is_err()
-        );
+        assert!(resolve_local_vcf_path(&dir_str, "../outside/chr{chrom}.vcf.bgz", "22").is_err());
 
         let _ = fs::remove_dir_all(&dir);
     }

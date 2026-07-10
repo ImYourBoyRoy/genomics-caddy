@@ -2,7 +2,7 @@
 use super::state::{clear_stale_running_flag, force_stop_research_runtime, research_loop_active};
 use super::types::*;
 use super::util::unix_now;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 fn normalize_job_record(conn: &Connection, job: &mut ResearchJob) {
@@ -34,7 +34,7 @@ fn normalize_job_record(conn: &Connection, job: &mut ResearchJob) {
 }
 
 pub fn get_research_job_from_db(db_path: &Path, sample_id: i64) -> Option<ResearchJob> {
-    let conn = crate::db::connect(db_path).ok()?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id).ok()?;
     let mut job = conn
         .query_row(
             "SELECT job_id, sample_id, status, total_markers, enriched_count,
@@ -88,7 +88,8 @@ pub fn reset_research_job_after_purge(
 ) -> Result<Option<ResearchJob>, String> {
     use super::util::unix_now;
 
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let now = unix_now();
     let updated = conn
         .execute(
@@ -112,9 +113,13 @@ pub fn reset_research_job_after_purge(
     Ok(get_research_job_from_db(db_path, sample_id))
 }
 
-pub fn cancel_research_job_in_db(db_path: &Path, sample_id: i64) -> Result<Option<ResearchJob>, String> {
+pub fn cancel_research_job_in_db(
+    db_path: &Path,
+    sample_id: i64,
+) -> Result<Option<ResearchJob>, String> {
     force_stop_research_runtime();
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let now = unix_now();
     let updated = conn
         .execute(
@@ -136,8 +141,12 @@ pub fn cancel_research_job_in_db(db_path: &Path, sample_id: i64) -> Result<Optio
     Ok(get_research_job_from_db(db_path, sample_id))
 }
 
-pub fn pause_research_job_in_db(db_path: &Path, sample_id: i64) -> Result<Option<ResearchJob>, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+pub fn pause_research_job_in_db(
+    db_path: &Path,
+    sample_id: i64,
+) -> Result<Option<ResearchJob>, String> {
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let now = unix_now();
     let _ = conn.execute(
         "UPDATE research_jobs SET status = 'paused', last_updated = ?2
@@ -148,7 +157,8 @@ pub fn pause_research_job_in_db(db_path: &Path, sample_id: i64) -> Result<Option
 }
 
 pub fn save_research_job(db_path: &Path, job: &ResearchJob) -> Result<(), String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, job.sample_id)
+        .map_err(|e| e.to_string())?;
     conn.execute(
         "INSERT OR REPLACE INTO research_jobs (
             job_id, sample_id, status, total_markers, enriched_count,

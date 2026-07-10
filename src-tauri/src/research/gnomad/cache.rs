@@ -1,15 +1,14 @@
 // ./src-tauri/src/research/gnomad/cache.rs
 use super::allele_norm::{cache_alleles, normalize_allele_token, normalize_chrom_key};
-use super::types::{
-    GnomadContext, GnomadLookupStatus, GnomadSourceMode, PARSER_VERSION,
-};
+use super::types::{GnomadContext, GnomadLookupStatus, GnomadSourceMode, PARSER_VERSION};
 use crate::research::sweep_metrics::record_gnomad_cache_lookup;
 use crate::research::util::normalize_rsid;
-use rusqlite::{params, Connection, Row};
+use rusqlite::{Connection, Row, params};
 use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
 
-const CACHE_ROW_SQL: &str = "SELECT release, dataset, chrom, pos, ref, alt, variant_id, rsids_json, ac, an, af,
+const CACHE_ROW_SQL: &str =
+    "SELECT release, dataset, chrom, pos, ref, alt, variant_id, rsids_json, ac, an, af,
                 ac_exomes, an_exomes, af_exomes, ac_genomes, an_genomes, af_genomes,
                 popmax, popmax_population, faf95_popmax, faf95_popmax_population,
                 homozygote_count, hemizygote_count, filters_json, flags_json, info_json,
@@ -25,7 +24,14 @@ struct CacheEntry {
     ctx: GnomadContext,
 }
 
-pub fn cache_key(release: &str, dataset: &str, chrom: &str, pos: i64, ref_allele: &str, alt: &str) -> String {
+pub fn cache_key(
+    release: &str,
+    dataset: &str,
+    chrom: &str,
+    pos: i64,
+    ref_allele: &str,
+    alt: &str,
+) -> String {
     let (r, a) = cache_alleles(ref_allele, alt);
     let ch = normalize_chrom_key(chrom);
     format!("{release}|{dataset}|{ch}|{pos}|{r}|{a}")
@@ -152,12 +158,14 @@ fn merge_cached_entries(entries: &[CacheEntry]) -> GnomadContext {
     merged
 }
 
-fn fetch_cache_rows_at_locus(conn: &Connection, release: &str, pos: i64) -> Option<Vec<CacheEntry>> {
+fn fetch_cache_rows_at_locus(
+    conn: &Connection,
+    release: &str,
+    pos: i64,
+) -> Option<Vec<CacheEntry>> {
     let sql = format!("{CACHE_ROW_SQL} WHERE release = ? AND pos = ? ORDER BY fetched_at DESC");
     let mut stmt = conn.prepare(&sql).ok()?;
-    let rows = stmt
-        .query_map(params![release, pos], map_cache_row)
-        .ok()?;
+    let rows = stmt.query_map(params![release, pos], map_cache_row).ok()?;
     let entries: Vec<CacheEntry> = rows.filter_map(|r| r.ok()).collect();
     if entries.is_empty() {
         None
@@ -207,14 +215,14 @@ pub fn read_cache_for_variant(
             .iter()
             .find(|e| user_alleles_match_row(a1, a2, &e.ref_allele, &e.alt))
             .map(|e| normalize_allele_token(&e.alt))
-        {
-            let same_alt: Vec<CacheEntry> = candidates
-                .into_iter()
-                .filter(|e| normalize_allele_token(&e.alt) == matched)
-                .collect();
-            record_gnomad_cache_lookup(true);
-            return Some(merge_cached_entries(&same_alt));
-        }
+    {
+        let same_alt: Vec<CacheEntry> = candidates
+            .into_iter()
+            .filter(|e| normalize_allele_token(&e.alt) == matched)
+            .collect();
+        record_gnomad_cache_lookup(true);
+        return Some(merge_cached_entries(&same_alt));
+    }
 
     candidates.sort_by(|a, b| {
         b.ctx
@@ -434,13 +442,14 @@ pub fn context_to_cache_write(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::schema::migrate_gnomad_schema;
     use super::super::types::{GnomadLookupStatus, GnomadSourceMode};
+    use super::*;
 
     fn test_conn() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute("ATTACH DATABASE ':memory:' AS reference", []).unwrap();
+        conn.execute("ATTACH DATABASE ':memory:' AS reference", [])
+            .unwrap();
         migrate_gnomad_schema(&conn).unwrap();
         conn
     }

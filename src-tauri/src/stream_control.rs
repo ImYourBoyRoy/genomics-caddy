@@ -3,8 +3,8 @@
 Purpose: Cooperative cancellation and namespaced events for Ollama streaming.
 */
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 static OLLAMA_STREAM_CANCEL: AtomicBool = AtomicBool::new(false);
 static ACTIVE_STREAM_ID: Mutex<Option<String>> = Mutex::new(None);
@@ -14,10 +14,7 @@ pub fn validate_stream_id(stream_id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
         return Err("Invalid stream_id length (1–64 characters required)".into());
     }
-    if !id
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '-')
-    {
+    if !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
         return Err("stream_id may only contain ASCII letters, digits, and hyphens".into());
     }
     Ok(())

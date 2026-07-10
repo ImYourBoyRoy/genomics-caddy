@@ -15,7 +15,7 @@ static LOG_PATH: Mutex<Option<PathBuf>> = Mutex::new(None);
 /// Initialize the logger with the resolved data directory.
 pub fn init(data_dir: PathBuf) {
     let log_file = data_dir.join("genomics_caddy.log");
-    
+
     // Rotate/truncate log if it gets too large (> 10 MB)
     if let Ok(metadata) = std::fs::metadata(&log_file) {
         if metadata.len() > 10 * 1024 * 1024 {
@@ -26,7 +26,7 @@ pub fn init(data_dir: PathBuf) {
     if let Ok(mut guard) = LOG_PATH.lock() {
         *guard = Some(log_file);
     }
-    
+
     log("SYSTEM", "Genomics Caddy application logger initialized.");
 }
 
@@ -50,7 +50,7 @@ pub fn log(tag: &str, message: &str) {
     };
 
     let line = format!("[{}] [{}] {}\n", time_str, tag, message);
-    
+
     // Print to standard error (visible in terminal / console)
     eprint!("{}", line);
 

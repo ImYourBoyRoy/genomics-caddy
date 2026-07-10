@@ -1,6 +1,6 @@
 // ./src-tauri/src/offline/import_pharmgkb.rs
 use crate::research::util::normalize_rsid;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
@@ -40,7 +40,10 @@ fn col_index(headers: &[&str], name: &str) -> Option<usize> {
         .position(|h| h.eq_ignore_ascii_case(name) || h.replace(' ', "") == name.replace(' ', ""))
 }
 
-pub fn import_pharmgkb_clinical_variants(conn: &Connection, zip_path: &Path) -> Result<u64, String> {
+pub fn import_pharmgkb_clinical_variants(
+    conn: &Connection,
+    zip_path: &Path,
+) -> Result<u64, String> {
     let bytes = extract_tsv_from_zip(zip_path, "clinical")?;
     conn.execute("DELETE FROM reference.pharmgkb_clinical_variants", [])
         .map_err(|e| e.to_string())?;
@@ -58,12 +61,11 @@ pub fn import_pharmgkb_clinical_variants(conn: &Connection, zip_path: &Path) -> 
         .or_else(|| col_index(&headers, "RSID"))
         .or_else(|| col_index(&headers, "Variant"));
     let gene_idx = col_index(&headers, "Gene");
-    let drug_idx = col_index(&headers, "Drug(s)")
-        .or_else(|| col_index(&headers, "Chemical"));
-    let pheno_idx = col_index(&headers, "Phenotype Category")
-        .or_else(|| col_index(&headers, "Phenotype"));
-    let level_idx = col_index(&headers, "Level of Evidence")
-        .or_else(|| col_index(&headers, "Evidence Level"));
+    let drug_idx = col_index(&headers, "Drug(s)").or_else(|| col_index(&headers, "Chemical"));
+    let pheno_idx =
+        col_index(&headers, "Phenotype Category").or_else(|| col_index(&headers, "Phenotype"));
+    let level_idx =
+        col_index(&headers, "Level of Evidence").or_else(|| col_index(&headers, "Evidence Level"));
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
     let mut count = 0u64;

@@ -65,13 +65,14 @@ pub fn validate_research_outbound_url(url: &str) -> Result<(), String> {
         return Err("Localhost URLs are not allowed for research outbound requests".into());
     }
     if let Ok(ip) = host.parse::<IpAddr>()
-        && is_private_or_loopback(ip) {
-            return Err("Private or link-local network addresses are not allowed".into());
-        }
+        && is_private_or_loopback(ip)
+    {
+        return Err("Private or link-local network addresses are not allowed".into());
+    }
     let host_lower = host.to_ascii_lowercase();
-    let allowed = RESEARCH_ALLOWED_HOST_SUFFIXES.iter().any(|suffix| {
-        host_lower == *suffix || host_lower.ends_with(&format!(".{suffix}"))
-    });
+    let allowed = RESEARCH_ALLOWED_HOST_SUFFIXES
+        .iter()
+        .any(|suffix| host_lower == *suffix || host_lower.ends_with(&format!(".{suffix}")));
     if !allowed {
         return Err(format!(
             "Host '{host}' is not in the research outbound allowlist"
@@ -182,18 +183,14 @@ mod tests {
 
     #[test]
     fn research_url_allows_known_adapters() {
-        assert!(validate_research_outbound_url(
-            "https://rest.ensembl.org/vep/human/id/rs123"
-        )
-        .is_ok());
+        assert!(
+            validate_research_outbound_url("https://rest.ensembl.org/vep/human/id/rs123").is_ok()
+        );
         assert!(validate_research_outbound_url(
             "https://gnomad-public-us-east-1.s3.amazonaws.com/release/4.1/vcf/exomes/gnomad.exomes.v4.1.sites.chr22.vcf.bgz"
         )
         .is_ok());
-        assert!(validate_research_outbound_url(
-            "https://gnomad.broadinstitute.org/api"
-        )
-        .is_ok());
+        assert!(validate_research_outbound_url("https://gnomad.broadinstitute.org/api").is_ok());
     }
 
     #[test]

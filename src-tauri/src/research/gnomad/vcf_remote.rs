@@ -1,6 +1,6 @@
 // ./src-tauri/src/research/gnomad/vcf_remote.rs
-use super::cache::{hash_record, write_cache};
 use super::allele_norm::cache_alleles;
+use super::cache::{hash_record, write_cache};
 use super::config::{index_urls, tabix_reference_name, vcf_url};
 use super::types::{GnomadConfig, GnomadContext, GnomadLookupStatus, GnomadSourceMode};
 use super::vcf_parse::{match_user_allele, parse_site_line, record_to_context};
@@ -40,30 +40,30 @@ pub async fn query_remote_vcf(
     let result = tokio::time::timeout(
         timeout,
         tokio::task::spawn_blocking({
-        let vcf = vcf.clone();
-        let tbi_url = tbi_url.clone();
-        let csi_url = csi_url.clone();
-        let cache_dir = cache_dir.to_path_buf();
-        let chrom = chrom.to_string();
-        let cfg_release = cfg.release.clone();
-        let allele1 = allele1.to_string();
-        let allele2 = allele2.to_string();
-        let dataset = dataset.to_string();
-        move || {
-            query_remote_sync(
-                &cache_dir,
-                &vcf,
-                &tbi_url,
-                &csi_url,
-                &chrom,
-                pos,
-                &allele1,
-                &allele2,
-                &cfg_release,
-                &dataset,
-            )
-        }
-    }),
+            let vcf = vcf.clone();
+            let tbi_url = tbi_url.clone();
+            let csi_url = csi_url.clone();
+            let cache_dir = cache_dir.to_path_buf();
+            let chrom = chrom.to_string();
+            let cfg_release = cfg.release.clone();
+            let allele1 = allele1.to_string();
+            let allele2 = allele2.to_string();
+            let dataset = dataset.to_string();
+            move || {
+                query_remote_sync(
+                    &cache_dir,
+                    &vcf,
+                    &tbi_url,
+                    &csi_url,
+                    &chrom,
+                    pos,
+                    &allele1,
+                    &allele2,
+                    &cfg_release,
+                    &dataset,
+                )
+            }
+        }),
     )
     .await;
 
@@ -73,47 +73,47 @@ pub async fn query_remote_vcf(
                 let (ref_n, alt_n) = cache_alleles(&ref_a, &alt_a);
                 let _ = write_cache(
                     &conn,
-                super::cache::CacheWriteInput {
-                    release: ctx.release.clone(),
-                    source_mode: GnomadSourceMode::RemoteIndexedVcfHttps,
-                    dataset: ctx.dataset.clone(),
-                    chrom: chrom.to_string(),
-                    pos,
-                    ref_allele: ref_n,
-                    alt: alt_n,
-                    variant_id: ctx.variant_id.clone(),
-                    rsids: if ctx.rsids.is_empty() {
-                        vec![rsid.to_string()]
-                    } else {
-                        ctx.rsids.clone()
+                    super::cache::CacheWriteInput {
+                        release: ctx.release.clone(),
+                        source_mode: GnomadSourceMode::RemoteIndexedVcfHttps,
+                        dataset: ctx.dataset.clone(),
+                        chrom: chrom.to_string(),
+                        pos,
+                        ref_allele: ref_n,
+                        alt: alt_n,
+                        variant_id: ctx.variant_id.clone(),
+                        rsids: if ctx.rsids.is_empty() {
+                            vec![rsid.to_string()]
+                        } else {
+                            ctx.rsids.clone()
+                        },
+                        genotype: genotype.map(String::from),
+                        user_allele_match_status: ctx.user_allele_match_status.clone(),
+                        ac: ctx.ac,
+                        an: ctx.an,
+                        af: ctx.af,
+                        ac_exomes: ctx.ac_exomes,
+                        an_exomes: ctx.an_exomes,
+                        af_exomes: ctx.af_exomes,
+                        ac_genomes: ctx.ac_genomes,
+                        an_genomes: ctx.an_genomes,
+                        af_genomes: ctx.af_genomes,
+                        popmax: ctx.popmax,
+                        popmax_population: ctx.popmax_population.clone(),
+                        faf95_popmax: ctx.faf95_popmax,
+                        faf95_popmax_population: ctx.faf95_popmax_population.clone(),
+                        homozygote_count: ctx.homozygote_count,
+                        hemizygote_count: ctx.hemizygote_count,
+                        filters: ctx.filters.clone(),
+                        flags: ctx.flags.clone(),
+                        info_json: ctx.population_frequencies.clone(),
+                        source_url: ctx.source_url.clone(),
+                        source_file: Some(vcf.clone()),
+                        source_index: Some(tbi_url),
+                        raw_record_hash: raw_hash,
+                        lookup_status: GnomadLookupStatus::from_str_loose(&ctx.lookup_status),
                     },
-                    genotype: genotype.map(String::from),
-                    user_allele_match_status: ctx.user_allele_match_status.clone(),
-                    ac: ctx.ac,
-                    an: ctx.an,
-                    af: ctx.af,
-                    ac_exomes: ctx.ac_exomes,
-                    an_exomes: ctx.an_exomes,
-                    af_exomes: ctx.af_exomes,
-                    ac_genomes: ctx.ac_genomes,
-                    an_genomes: ctx.an_genomes,
-                    af_genomes: ctx.af_genomes,
-                    popmax: ctx.popmax,
-                    popmax_population: ctx.popmax_population.clone(),
-                    faf95_popmax: ctx.faf95_popmax,
-                    faf95_popmax_population: ctx.faf95_popmax_population.clone(),
-                    homozygote_count: ctx.homozygote_count,
-                    hemizygote_count: ctx.hemizygote_count,
-                    filters: ctx.filters.clone(),
-                    flags: ctx.flags.clone(),
-                    info_json: ctx.population_frequencies.clone(),
-                    source_url: ctx.source_url.clone(),
-                    source_file: Some(vcf.clone()),
-                    source_index: Some(tbi_url),
-                    raw_record_hash: raw_hash,
-                    lookup_status: GnomadLookupStatus::from_str_loose(&ctx.lookup_status),
-                },
-            );
+                );
             }
             ctx
         }
@@ -143,9 +143,7 @@ fn query_remote_sync(
     let ref_name = tabix_reference_name(chrom);
     let region = Region::from_str(&format!("{ref_name}:{pos}-{pos}"))
         .map_err(|_| GnomadLookupStatus::ParserError)?;
-    let header = index
-        .header()
-        .ok_or(GnomadLookupStatus::ParserError)?;
+    let header = index.header().ok_or(GnomadLookupStatus::ParserError)?;
     let ref_id = header
         .reference_sequence_names()
         .get_index_of(region.name())
@@ -158,14 +156,8 @@ fn query_remote_sync(
         return Err(GnomadLookupStatus::NoRecordAtPosition);
     }
 
-    let start = chunks
-        .first()
-        .map(|c| c.start().compressed())
-        .unwrap_or(0);
-    let end = chunks
-        .last()
-        .map(|c| c.end().compressed())
-        .unwrap_or(start);
+    let start = chunks.first().map(|c| c.start().compressed()).unwrap_or(0);
+    let end = chunks.last().map(|c| c.end().compressed()).unwrap_or(start);
     let fetch_end = end.saturating_add(65535);
 
     let bytes = http_range_bytes(vcf_url, start, fetch_end)
@@ -177,7 +169,9 @@ fn query_remote_sync(
 
     loop {
         line.clear();
-        let n = reader.read_line(&mut line).map_err(|_| GnomadLookupStatus::ParserError)?;
+        let n = reader
+            .read_line(&mut line)
+            .map_err(|_| GnomadLookupStatus::ParserError)?;
         if n == 0 {
             break;
         }
@@ -190,7 +184,9 @@ fn query_remote_sync(
         if rec.pos != pos {
             continue;
         }
-        if let Some((ref_a, alt_a)) = match_user_allele(&rec.ref_allele, &rec.alt_alleles, allele1, allele2) {
+        if let Some((ref_a, alt_a)) =
+            match_user_allele(&rec.ref_allele, &rec.alt_alleles, allele1, allele2)
+        {
             matched = Some((
                 ParsedMatch {
                     rec,
@@ -268,14 +264,16 @@ fn ensure_index_cached(
         return Ok(tbi_path);
     }
     if let Ok(bytes) = http_get_bytes(tbi_url)
-        && write_bytes(&tbi_path, &bytes).is_ok() {
-            return Ok(tbi_path);
-        }
+        && write_bytes(&tbi_path, &bytes).is_ok()
+    {
+        return Ok(tbi_path);
+    }
     let csi_path = cache_dir.join(format!("{}.csi", hash_record(vcf_url)));
     if let Ok(bytes) = http_get_bytes(csi_url)
-        && write_bytes(&csi_path, &bytes).is_ok() {
-            return Err(GnomadLookupStatus::IndexMissing);
-        }
+        && write_bytes(&csi_path, &bytes).is_ok()
+    {
+        return Err(GnomadLookupStatus::IndexMissing);
+    }
     Err(GnomadLookupStatus::IndexMissing)
 }
 

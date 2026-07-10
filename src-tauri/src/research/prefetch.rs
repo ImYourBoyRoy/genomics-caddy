@@ -3,25 +3,25 @@
 
 use super::enrich::fetch_pubmed_abstracts;
 use super::evidence::ncbi_context::{fetch_clinvar_live, fetch_dbsnp_context};
-use super::sources_config::{
-    enrichment_clinvar_live_enabled, enrichment_fast_index_mode, enrichment_gtex_enabled,
-    enrichment_pubmed_enabled, enrichment_vep_dbsnp_enabled,
-};
-use super::types::ScoredMarker;
 use super::sources::{
     fetch_ensembl_vep_genes, fetch_gtex_eqtls_for_rsid, fetch_gtex_gencode_id_cached,
     fetch_gwas_associations, gwas_needs_api_supplement, load_local_gwas_associations,
 };
-use super::sweep_metrics::{bump_batch_prefetch, set_batch_current_rsid, timed_async, SweepPhase};
-use super::tuning::{
-    prefetch_concurrency, prefetch_batch_timeout_secs, prepare_variant_timeout_secs,
+use super::sources_config::{
+    enrichment_clinvar_live_enabled, enrichment_fast_index_mode, enrichment_gtex_enabled,
+    enrichment_pubmed_enabled, enrichment_vep_dbsnp_enabled,
 };
-use std::time::Duration;
+use super::sweep_metrics::{SweepPhase, bump_batch_prefetch, set_batch_current_rsid, timed_async};
+use super::tuning::{
+    prefetch_batch_timeout_secs, prefetch_concurrency, prepare_variant_timeout_secs,
+};
 use super::types::QdrantConfig;
+use super::types::ScoredMarker;
 use super::util::{is_placeholder_gene, lookup_variant_locus, resolve_gene_name};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 
@@ -72,22 +72,14 @@ fn spawn_marker_prefetch_tasks(
         let db = db.clone();
         let rsid = rsid.clone();
         join_set.spawn(async move {
-            let _ = timed_async(
-                SweepPhase::Gwas,
-                fetch_gwas_associations(&db, &rsid, false),
-            )
-            .await;
+            let _ = timed_async(SweepPhase::Gwas, fetch_gwas_associations(&db, &rsid, false)).await;
         });
     }
 
     let has_local_gwas = load_local_gwas_associations(&db, &rsid)
         .map(|a| !a.is_empty())
         .unwrap_or(false);
-    let needs_pubmed = clinvar_sig
-        .as_deref()
-        .filter(|s| !s.is_empty())
-        .is_some()
-        || has_local_gwas;
+    let needs_pubmed = clinvar_sig.as_deref().filter(|s| !s.is_empty()).is_some() || has_local_gwas;
 
     if enrichment_clinvar_live_enabled()
         && clinvar_sig.as_deref().filter(|s| !s.is_empty()).is_none()
@@ -97,27 +89,30 @@ fn spawn_marker_prefetch_tasks(
             .map(|c| crate::offline::offline_clinvar_available(&c))
             .unwrap_or(false);
         if !skip_live_clinvar {
-        let sem = sem.clone();
-        let db = db.clone();
-        let rsid = rsid.clone();
-        let key = ncbi_key.clone();
-        join_set.spawn(async move {
-            let permit = match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned())
+            let sem = sem.clone();
+            let db = db.clone();
+            let rsid = rsid.clone();
+            let key = ncbi_key.clone();
+            join_set.spawn(async move {
+                let permit = match tokio::time::timeout(
+                    Duration::from_secs(60),
+                    sem.acquire_owned(),
+                )
                 .await
-            {
-                Ok(Ok(p)) => p,
-                _ => return,
-            };
-            let _permit = permit;
-            let _ = tokio::time::timeout(
-                Duration::from_secs(prepare_variant_timeout_secs()),
-                timed_async(
-                    SweepPhase::Clinvar,
-                    fetch_clinvar_live(&db, &rsid, key.as_deref()),
-                ),
-            )
-            .await;
-        });
+                {
+                    Ok(Ok(p)) => p,
+                    _ => return,
+                };
+                let _permit = permit;
+                let _ = tokio::time::timeout(
+                    Duration::from_secs(prepare_variant_timeout_secs()),
+                    timed_async(
+                        SweepPhase::Clinvar,
+                        fetch_clinvar_live(&db, &rsid, key.as_deref()),
+                    ),
+                )
+                .await;
+            });
         }
     }
 
@@ -127,12 +122,11 @@ fn spawn_marker_prefetch_tasks(
         let rsid = rsid.clone();
         let key = ncbi_key.clone();
         join_set.spawn(async move {
-            let permit = match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned())
-                .await
-            {
-                Ok(Ok(p)) => p,
-                _ => return,
-            };
+            let permit =
+                match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned()).await {
+                    Ok(Ok(p)) => p,
+                    _ => return,
+                };
             let _permit = permit;
             let _ = tokio::time::timeout(
                 Duration::from_secs(prepare_variant_timeout_secs()),
@@ -146,44 +140,43 @@ fn spawn_marker_prefetch_tasks(
     }
 
     if enrichment_gtex_enabled()
-        && let Some(g) = gene.as_deref().filter(|g| !is_placeholder_gene(g)) {
-            let sem = sem.clone();
-            let db = db.clone();
-            let rsid = rsid.clone();
-            let gene = g.to_string();
-            join_set.spawn(async move {
-                let permit = match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned())
-                    .await
-                {
+        && let Some(g) = gene.as_deref().filter(|g| !is_placeholder_gene(g))
+    {
+        let sem = sem.clone();
+        let db = db.clone();
+        let rsid = rsid.clone();
+        let gene = g.to_string();
+        join_set.spawn(async move {
+            let permit =
+                match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned()).await {
                     Ok(Ok(p)) => p,
                     _ => return,
                 };
-                let _permit = permit;
-                let _ = tokio::time::timeout(
-                    Duration::from_secs(prepare_variant_timeout_secs()),
-                    timed_async(
-                        SweepPhase::Gtex,
-                        fetch_gtex_eqtls_for_rsid(&db, &rsid, Some(&gene)),
-                    ),
-                )
-                .await;
-            });
-        }
+            let _permit = permit;
+            let _ = tokio::time::timeout(
+                Duration::from_secs(prepare_variant_timeout_secs()),
+                timed_async(
+                    SweepPhase::Gtex,
+                    fetch_gtex_eqtls_for_rsid(&db, &rsid, Some(&gene)),
+                ),
+            )
+            .await;
+        });
+    }
 
     let (resolved_gene, _) = resolve_gene_name(&db, &rsid, gene.as_deref(), &[]);
-    let needs_vep = resolved_gene.is_none()
-        || gene.as_deref().map(is_placeholder_gene).unwrap_or(true);
+    let needs_vep =
+        resolved_gene.is_none() || gene.as_deref().map(is_placeholder_gene).unwrap_or(true);
     if enrichment_vep_dbsnp_enabled() && needs_vep {
         let sem = sem.clone();
         let db = db.clone();
         let rsid = rsid.clone();
         join_set.spawn(async move {
-            let permit = match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned())
-                .await
-            {
-                Ok(Ok(p)) => p,
-                _ => return,
-            };
+            let permit =
+                match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned()).await {
+                    Ok(Ok(p)) => p,
+                    _ => return,
+                };
             let _permit = permit;
             let _ = tokio::time::timeout(
                 Duration::from_secs(prepare_variant_timeout_secs()),
@@ -199,12 +192,11 @@ fn spawn_marker_prefetch_tasks(
         let db = db.clone();
         let rsid = rsid.clone();
         join_set.spawn(async move {
-            let permit = match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned())
-                .await
-            {
-                Ok(Ok(p)) => p,
-                _ => return,
-            };
+            let permit =
+                match tokio::time::timeout(Duration::from_secs(60), sem.acquire_owned()).await {
+                    Ok(Ok(p)) => p,
+                    _ => return,
+                };
             let _permit = permit;
             let _ = tokio::time::timeout(
                 Duration::from_secs(prepare_variant_timeout_secs()),
@@ -260,8 +252,7 @@ async fn prefetch_enrichment_batch_inner(
         {
             continue;
         }
-        let (resolved, _) =
-            resolve_gene_name(&db_path, &marker.rsid, marker.gene.as_deref(), &[]);
+        let (resolved, _) = resolve_gene_name(&db_path, &marker.rsid, marker.gene.as_deref(), &[]);
         if let Some(g) = resolved.filter(|g| !is_placeholder_gene(g)) {
             gtex_genes.insert(g);
         }
@@ -285,10 +276,7 @@ async fn prefetch_enrichment_batch_inner(
                 let _permit = permit;
                 let _ = tokio::time::timeout(
                     Duration::from_secs(prepare_variant_timeout_secs()),
-                    timed_async(
-                        SweepPhase::Gtex,
-                        fetch_gtex_gencode_id_cached(&db, &gene),
-                    ),
+                    timed_async(SweepPhase::Gtex, fetch_gtex_gencode_id_cached(&db, &gene)),
                 )
                 .await;
             });

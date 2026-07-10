@@ -214,13 +214,9 @@ pub fn record_phase_cache(phase: SweepPhase, hit: bool) {
 }
 
 pub fn record_gnomad_cache_lookup(hit: bool) {
-    METRICS
-        .gnomad_cache_lookups
-        .fetch_add(1, Ordering::Relaxed);
+    METRICS.gnomad_cache_lookups.fetch_add(1, Ordering::Relaxed);
     if hit {
-        METRICS
-            .gnomad_cache_hits
-            .fetch_add(1, Ordering::Relaxed);
+        METRICS.gnomad_cache_hits.fetch_add(1, Ordering::Relaxed);
     }
 }
 
@@ -343,38 +339,42 @@ pub fn set_batch_activity(phase: &str, rsid: &str, total: u32) {
 
 pub fn set_batch_phase(phase: &str) {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
-            snap.phase = phase.to_string();
-            if phase == "prepare" {
-                snap.prepared = 0;
-            } else if phase == "embedding" {
-                snap.prepared = snap.total;
-                snap.prefetch_done = snap.total;
-            } else if phase == "qdrant" {
-                snap.prepared = snap.total;
-            }
+        && let Some(ref mut snap) = *guard
+    {
+        snap.phase = phase.to_string();
+        if phase == "prepare" {
+            snap.prepared = 0;
+        } else if phase == "embedding" {
+            snap.prepared = snap.total;
+            snap.prefetch_done = snap.total;
+        } else if phase == "qdrant" {
+            snap.prepared = snap.total;
         }
+    }
 }
 
 pub fn bump_batch_prefetch() {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
-            snap.prefetch_done = snap.prefetch_done.saturating_add(1).min(snap.total);
-        }
+        && let Some(ref mut snap) = *guard
+    {
+        snap.prefetch_done = snap.prefetch_done.saturating_add(1).min(snap.total);
+    }
 }
 
 pub fn set_batch_current_rsid(rsid: &str) {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
-            snap.current_rsid = rsid.to_string();
-        }
+        && let Some(ref mut snap) = *guard
+    {
+        snap.current_rsid = rsid.to_string();
+    }
 }
 
 pub fn bump_batch_prepared() {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
-            snap.prepared = snap.prepared.saturating_add(1);
-        }
+        && let Some(ref mut snap) = *guard
+    {
+        snap.prepared = snap.prepared.saturating_add(1);
+    }
 }
 
 pub fn set_batch_embedding(rsid: &str, total: u32) {
@@ -401,10 +401,11 @@ pub fn set_batch_embedding(rsid: &str, total: u32) {
 
 pub fn set_batch_qdrant() {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock()
-        && let Some(ref mut snap) = *guard {
-            snap.phase = "qdrant upsert".to_string();
-            snap.prepared = snap.total;
-        }
+        && let Some(ref mut snap) = *guard
+    {
+        snap.phase = "qdrant upsert".to_string();
+        snap.prepared = snap.total;
+    }
 }
 
 pub fn clear_batch_activity() {

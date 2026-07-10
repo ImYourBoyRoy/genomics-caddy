@@ -9,7 +9,7 @@ use super::types::{
 };
 use crate::research::qdrant::find_point_payload_by_rsid;
 use crate::research::types::QdrantConfig;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 fn trait_buckets(conn: &Connection, sample_id: i64) -> Result<Vec<TraitBucketSummary>, String> {
@@ -40,10 +40,7 @@ fn build_index_brief(
     buckets: &[TraitBucketSummary],
     top: &[ActionabilityPoint],
 ) -> String {
-    let indexed = dashboard
-        .vectorized_variants
-        .unwrap_or(0)
-        .to_string();
+    let indexed = dashboard.vectorized_variants.unwrap_or(0).to_string();
     let facts = dashboard.association_fact_count;
     let avg_dq = dashboard.avg_data_quality_score;
     let known = dashboard.known_direction_count;
@@ -78,10 +75,7 @@ fn build_index_brief(
     )
 }
 
-fn suggested_questions(
-    buckets: &[TraitBucketSummary],
-    top: &[ActionabilityPoint],
-) -> Vec<String> {
+fn suggested_questions(buckets: &[TraitBucketSummary], top: &[ActionabilityPoint]) -> Vec<String> {
     let mut out = vec![
         "What are my highest wellness-actionability variants and what do they mean?".into(),
         "Summarize unknown-direction variants I should investigate first.".into(),
@@ -122,8 +116,7 @@ pub async fn build_evidence_corpus_summary(
         .flatten()
     };
 
-    let dashboard =
-        build_quality_dashboard(db_path, sample_id, config, enrichment_status).await?;
+    let dashboard = build_quality_dashboard(db_path, sample_id, config, enrichment_status).await?;
 
     let (buckets, top_actionable, top_clusters) = tauri::async_runtime::spawn_blocking({
         let db_path = db_path.to_path_buf();
@@ -131,8 +124,7 @@ pub async fn build_evidence_corpus_summary(
             let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
             let buckets = trait_buckets(&conn, sample_id)?;
             let top_actionable = list_actionability_points(&conn, sample_id, 24)?;
-            let top_clusters =
-                build_trait_clusters(&conn, sample_id, None, Some(0.25), 6)?;
+            let top_clusters = build_trait_clusters(&conn, sample_id, None, Some(0.25), 6)?;
             Ok::<_, String>((buckets, top_actionable, top_clusters))
         }
     })
@@ -170,8 +162,9 @@ fn list_rsids_for_browse(
     let rsids: Vec<String> = match preset {
         "clinical" => {
             if let Some(cat) = trait_category {
-                let mut stmt = conn.prepare(
-                    "SELECT rsid FROM (
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT rsid FROM (
                         SELECT rsid, MAX(clinical_actionability_score) AS score
                         FROM association_facts
                         WHERE sample_id = ? AND trait_category = ?
@@ -180,14 +173,16 @@ fn list_rsids_for_browse(
                         ORDER BY score DESC
                         LIMIT ?
                      )",
-                ).map_err(|e| e.to_string())?;
+                    )
+                    .map_err(|e| e.to_string())?;
                 stmt.query_map(params![sample_id, cat, limit], |row| row.get(0))
                     .map_err(|e| e.to_string())?
                     .filter_map(|r| r.ok())
                     .collect()
             } else {
-                let mut stmt = conn.prepare(
-                    "SELECT rsid FROM (
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT rsid FROM (
                         SELECT rsid, MAX(clinical_actionability_score) AS score
                         FROM association_facts
                         WHERE sample_id = ?
@@ -196,7 +191,8 @@ fn list_rsids_for_browse(
                         ORDER BY score DESC
                         LIMIT ?
                      )",
-                ).map_err(|e| e.to_string())?;
+                    )
+                    .map_err(|e| e.to_string())?;
                 stmt.query_map(params![sample_id, limit], |row| row.get(0))
                     .map_err(|e| e.to_string())?
                     .filter_map(|r| r.ok())
@@ -216,12 +212,14 @@ fn list_rsids_for_browse(
                     .filter_map(|r| r.ok())
                     .collect()
             } else {
-                let mut stmt = conn.prepare(
-                    "SELECT DISTINCT rsid FROM association_facts
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT DISTINCT rsid FROM association_facts
                      WHERE sample_id = ? AND association_type = 'gwas_top_association'
                      ORDER BY data_quality_score DESC
                      LIMIT ?",
-                ).map_err(|e| e.to_string())?;
+                    )
+                    .map_err(|e| e.to_string())?;
                 stmt.query_map(params![sample_id, limit], |row| row.get(0))
                     .map_err(|e| e.to_string())?
                     .filter_map(|r| r.ok())
@@ -257,8 +255,9 @@ fn list_rsids_for_browse(
         }
         _ => {
             if let Some(cat) = trait_category {
-                let mut stmt = conn.prepare(
-                    "SELECT rsid FROM (
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT rsid FROM (
                         SELECT rsid, MAX(wellness_actionability_score) AS score
                         FROM association_facts
                         WHERE sample_id = ? AND trait_category = ?
@@ -267,14 +266,16 @@ fn list_rsids_for_browse(
                         ORDER BY score DESC
                         LIMIT ?
                      )",
-                ).map_err(|e| e.to_string())?;
+                    )
+                    .map_err(|e| e.to_string())?;
                 stmt.query_map(params![sample_id, cat, limit], |row| row.get(0))
                     .map_err(|e| e.to_string())?
                     .filter_map(|r| r.ok())
                     .collect()
             } else {
-                let mut stmt = conn.prepare(
-                    "SELECT rsid FROM (
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT rsid FROM (
                         SELECT rsid, MAX(wellness_actionability_score) AS score
                         FROM association_facts
                         WHERE sample_id = ?
@@ -283,7 +284,8 @@ fn list_rsids_for_browse(
                         ORDER BY score DESC
                         LIMIT ?
                      )",
-                ).map_err(|e| e.to_string())?;
+                    )
+                    .map_err(|e| e.to_string())?;
                 stmt.query_map(params![sample_id, limit], |row| row.get(0))
                     .map_err(|e| e.to_string())?
                     .filter_map(|r| r.ok())
@@ -308,13 +310,7 @@ pub async fn browse_associations(
         let db_path = db_path.to_path_buf();
         tauri::async_runtime::spawn_blocking(move || {
             let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
-            list_rsids_for_browse(
-                &conn,
-                sample_id,
-                &preset,
-                trait_cat.as_deref(),
-                limit,
-            )
+            list_rsids_for_browse(&conn, sample_id, &preset, trait_cat.as_deref(), limit)
         })
         .await
         .map_err(|e| format!("Browse worker failed: {}", e))??

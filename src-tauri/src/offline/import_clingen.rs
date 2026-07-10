@@ -1,7 +1,7 @@
 // ./src-tauri/src/offline/import_clingen.rs
-use rusqlite::{params, Connection};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use super::compress::open_text_auto;
+use rusqlite::{Connection, params};
+use std::io::BufRead;
 use std::path::Path;
 
 fn col(headers: &[&str], names: &[&str]) -> Option<usize> {
@@ -12,8 +12,7 @@ fn col(headers: &[&str], names: &[&str]) -> Option<usize> {
 }
 
 pub fn import_clingen_gene_validity(conn: &Connection, path: &Path) -> Result<u64, String> {
-    let file = File::open(path).map_err(|e| e.to_string())?;
-    let reader = BufReader::new(file);
+    let reader = open_text_auto(path)?;
     let mut lines = reader.lines();
     let header = lines
         .next()
@@ -24,7 +23,14 @@ pub fn import_clingen_gene_validity(conn: &Connection, path: &Path) -> Result<u6
 
     let gene_idx = col(&headers, &["Gene Symbol", "gene_symbol", "Gene"]);
     let disease_idx = col(&headers, &["Disease Label", "disease_label", "Disease"]);
-    let class_idx = col(&headers, &["Classification", "classification", "Gene-Disease Validity Classification"]);
+    let class_idx = col(
+        &headers,
+        &[
+            "Classification",
+            "classification",
+            "Gene-Disease Validity Classification",
+        ],
+    );
     let moi_idx = col(&headers, &["Mode of Inheritance", "moi", "MOI"]);
     let url_idx = col(&headers, &["Report URL", "report_url", "ReportURL"]);
     let hgnc_idx = col(&headers, &["HGNC ID", "hgnc_id", "HGNC"]);
@@ -39,7 +45,10 @@ pub fn import_clingen_gene_validity(conn: &Connection, path: &Path) -> Result<u6
         if line.is_empty() {
             continue;
         }
-        let parts: Vec<&str> = line.split(',').map(|s| s.trim().trim_matches('"')).collect();
+        let parts: Vec<&str> = line
+            .split(',')
+            .map(|s| s.trim().trim_matches('"'))
+            .collect();
         let gene = gene_idx
             .and_then(|i| parts.get(i))
             .map(|s| s.trim().to_string())

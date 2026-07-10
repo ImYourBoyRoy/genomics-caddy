@@ -2,7 +2,7 @@
 use super::cache::read_cache_for_variant;
 use super::config::load_gnomad_config;
 use super::graphql::fetch_graphql_context;
-use super::manifest::{get_or_build_manifest, GnomadReleaseManifest};
+use super::manifest::{GnomadReleaseManifest, get_or_build_manifest};
 use super::types::{
     GnomadConfig, GnomadContext, GnomadDatasetPolicy, GnomadLookupRequest, GnomadLookupStatus,
     GnomadSourceMode,
@@ -29,7 +29,8 @@ pub fn lookup_variant_coords(
     rsid: &str,
 ) -> Result<VariantCoords, GnomadLookupStatus> {
     let rsid_key = normalize_rsid(rsid).ok_or(GnomadLookupStatus::MissingCoordinate)?;
-    let conn = crate::db::connect(db_path).map_err(|_| GnomadLookupStatus::MissingCoordinate)?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|_| GnomadLookupStatus::MissingCoordinate)?;
     conn.query_row(
         "SELECT chromosome, position_grch38, allele1, allele2 FROM genotypes
          WHERE sample_id = ? AND LOWER(rsid) = LOWER(?) LIMIT 1",
@@ -44,7 +45,9 @@ pub fn lookup_variant_coords(
     )
     .map_err(|_| GnomadLookupStatus::MissingCoordinate)
     .and_then(|(chrom, pos, a1, a2)| {
-        let pos = pos.filter(|p| *p > 0).ok_or(GnomadLookupStatus::MissingCoordinate)?;
+        let pos = pos
+            .filter(|p| *p > 0)
+            .ok_or(GnomadLookupStatus::MissingCoordinate)?;
         Ok(VariantCoords {
             chrom,
             pos,
@@ -63,7 +66,7 @@ pub fn is_priority_variant(db_path: &Path, sample_id: i64, rsid: &str) -> bool {
     let Some(rsid_key) = normalize_rsid(rsid) else {
         return false;
     };
-    let Ok(conn) = crate::db::connect(db_path) else {
+    let Ok(conn) = crate::db::connect_sample_from_registry_path(db_path, sample_id) else {
         return false;
     };
     let in_assoc: bool = conn
@@ -147,20 +150,21 @@ pub async fn get_gnomad_context(
 
     if !force
         && let Ok(conn) = crate::db::connect(db_path)
-            && let Some(mut cached) = read_cache_for_variant(
-                &conn,
-                &release,
-                &coords.chrom,
-                coords.pos,
-                Some(&req.rsid),
-                Some(&coords.allele1),
-                Some(&coords.allele2),
-                ref_allele.as_deref(),
-                alt_allele.as_deref(),
-            ) {
-                cached.lookup_status = GnomadLookupStatus::CacheHit.as_str().to_string();
-                return cached;
-            }
+        && let Some(mut cached) = read_cache_for_variant(
+            &conn,
+            &release,
+            &coords.chrom,
+            coords.pos,
+            Some(&req.rsid),
+            Some(&coords.allele1),
+            Some(&coords.allele2),
+            ref_allele.as_deref(),
+            alt_allele.as_deref(),
+        )
+    {
+        cached.lookup_status = GnomadLookupStatus::CacheHit.as_str().to_string();
+        return cached;
+    }
 
     resolve_gnomad_context(
         db_path,
@@ -233,20 +237,21 @@ pub async fn resolve_gnomad_context(
 ) -> GnomadContext {
     if !force
         && let Ok(conn) = crate::db::connect(db_path)
-            && let Some(mut cached) = read_cache_for_variant(
-                &conn,
-                release,
-                &coords.chrom,
-                coords.pos,
-                Some(rsid),
-                Some(&coords.allele1),
-                Some(&coords.allele2),
-                ref_allele,
-                alt_allele,
-            ) {
-                cached.lookup_status = GnomadLookupStatus::CacheHit.as_str().to_string();
-                return cached;
-            }
+        && let Some(mut cached) = read_cache_for_variant(
+            &conn,
+            release,
+            &coords.chrom,
+            coords.pos,
+            Some(rsid),
+            Some(&coords.allele1),
+            Some(&coords.allele2),
+            ref_allele,
+            alt_allele,
+        )
+    {
+        cached.lookup_status = GnomadLookupStatus::CacheHit.as_str().to_string();
+        return cached;
+    }
 
     let manifest = get_or_build_manifest(cfg, data_dir, false).await;
     if !manifest.is_supported_chrom(&coords.chrom) {
@@ -397,7 +402,11 @@ async fn query_datasets_local(
     merged
 }
 
-fn merge_exome_genome(mut exome: GnomadContext, genome: GnomadContext, release: &str) -> GnomadContext {
+fn merge_exome_genome(
+    mut exome: GnomadContext,
+    genome: GnomadContext,
+    release: &str,
+) -> GnomadContext {
     if exome.lookup_status == GnomadLookupStatus::NoRecordAtPosition.as_str()
         && genome.lookup_status != GnomadLookupStatus::NoRecordAtPosition.as_str()
     {
@@ -480,13 +489,28 @@ pub async fn fetch_gnomad_for_enrichment(
     (ctx.best_af(), ctx)
 }
 
-pub fn apply_gnomad_to_payload(payload: &mut serde_json::Map<String, serde_json::Value>, ctx: &GnomadContext) {
-    payload.insert("has_gnomad".into(), serde_json::json!(ctx.best_af().is_some()));
+pub fn apply_gnomad_to_payload(
+    payload: &mut serde_json::Map<String, serde_json::Value>,
+    ctx: &GnomadContext,
+) {
+    payload.insert(
+        "has_gnomad".into(),
+        serde_json::json!(ctx.best_af().is_some()),
+    );
     payload.insert("gnomad_release".into(), serde_json::json!(ctx.release));
     payload.insert("gnomad_dataset".into(), serde_json::json!(ctx.dataset));
-    payload.insert("gnomad_lookup_status".into(), serde_json::json!(ctx.lookup_status));
-    payload.insert("gnomad_source_mode".into(), serde_json::json!(ctx.source_mode));
-    payload.insert("gnomad_last_checked".into(), serde_json::json!(ctx.fetched_at));
+    payload.insert(
+        "gnomad_lookup_status".into(),
+        serde_json::json!(ctx.lookup_status),
+    );
+    payload.insert(
+        "gnomad_source_mode".into(),
+        serde_json::json!(ctx.source_mode),
+    );
+    payload.insert(
+        "gnomad_last_checked".into(),
+        serde_json::json!(ctx.fetched_at),
+    );
     if let Some(af) = ctx.af.or(ctx.best_af()) {
         payload.insert("gnomad_af".into(), serde_json::json!(af));
     }

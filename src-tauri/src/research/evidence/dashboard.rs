@@ -6,8 +6,8 @@ use super::store::association_fact_count;
 use super::types::{QualityDashboard, SourceCoverageSummary, TraitClusterSummary};
 use crate::research::qdrant::{count_qdrant_points, count_qdrant_points_with_filter};
 use crate::research::types::QdrantConfig;
-use crate::research::util::{is_current_enrichment_version, ENRICHMENT_VERSION};
-use rusqlite::{params, Connection};
+use crate::research::util::{ENRICHMENT_VERSION, is_current_enrichment_version};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 pub async fn build_quality_dashboard(
@@ -16,7 +16,8 @@ pub async fn build_quality_dashboard(
     config: &QdrantConfig,
     enrichment_status: Option<String>,
 ) -> Result<QualityDashboard, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
 
     let total_genotypes: i64 = conn
         .query_row(
@@ -222,7 +223,9 @@ pub async fn build_quality_dashboard(
         schema_mismatch_count,
         schema_v1_count: sample_vectors.unwrap_or(0),
         enrichment_v41_count: if is_current_enrichment_version(Some(ENRICHMENT_VERSION)) {
-            sample_vectors.unwrap_or(0).saturating_sub(stale_vector_count)
+            sample_vectors
+                .unwrap_or(0)
+                .saturating_sub(stale_vector_count)
         } else {
             0
         },
@@ -267,56 +270,69 @@ pub fn build_trait_clusters(
 
     let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
     #[allow(clippy::type_complexity)]
-    let rows: Vec<(Option<String>, Option<String>, Option<String>, String, Option<String>, f32, f32, f32)> =
-        if let Some(cat) = trait_category {
-            stmt.query_map(params![sample_id, cat, min_dq], |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get::<_, Option<f64>>(5)?.unwrap_or(0.0) as f32,
-                    row.get::<_, Option<f64>>(6)?.unwrap_or(0.0) as f32,
-                    row.get::<_, Option<f64>>(7)?.unwrap_or(0.0) as f32,
-                ))
-            })
-            .map_err(|e| e.to_string())?
-            .filter_map(|r| r.ok())
-            .collect()
-        } else {
-            stmt.query_map(params![sample_id, min_dq], |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get::<_, Option<f64>>(5)?.unwrap_or(0.0) as f32,
-                    row.get::<_, Option<f64>>(6)?.unwrap_or(0.0) as f32,
-                    row.get::<_, Option<f64>>(7)?.unwrap_or(0.0) as f32,
-                ))
-            })
-            .map_err(|e| e.to_string())?
-            .filter_map(|r| r.ok())
-            .collect()
-        };
+    let rows: Vec<(
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        String,
+        Option<String>,
+        f32,
+        f32,
+        f32,
+    )> = if let Some(cat) = trait_category {
+        stmt.query_map(params![sample_id, cat, min_dq], |row| {
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get::<_, Option<f64>>(5)?.unwrap_or(0.0) as f32,
+                row.get::<_, Option<f64>>(6)?.unwrap_or(0.0) as f32,
+                row.get::<_, Option<f64>>(7)?.unwrap_or(0.0) as f32,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect()
+    } else {
+        stmt.query_map(params![sample_id, min_dq], |row| {
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get::<_, Option<f64>>(5)?.unwrap_or(0.0) as f32,
+                row.get::<_, Option<f64>>(6)?.unwrap_or(0.0) as f32,
+                row.get::<_, Option<f64>>(7)?.unwrap_or(0.0) as f32,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect()
+    };
 
     use std::collections::HashMap;
     #[allow(clippy::type_complexity)]
-    let mut groups: HashMap<String, Vec<(Option<String>, Option<String>, String, Option<String>, f32, f32, f32)>> =
-        HashMap::new();
+    let mut groups: HashMap<
+        String,
+        Vec<(
+            Option<String>,
+            Option<String>,
+            String,
+            Option<String>,
+            f32,
+            f32,
+            f32,
+        )>,
+    > = HashMap::new();
     for (cat, trait_name, gene, rsid, direction, dq, wellness, clinical) in rows {
         let key = cat.clone().unwrap_or_else(|| "uncategorized".into());
-        groups.entry(key).or_default().push((
-            trait_name,
-            gene,
-            rsid,
-            direction,
-            dq,
-            wellness,
-            clinical,
-        ));
+        groups
+            .entry(key)
+            .or_default()
+            .push((trait_name, gene, rsid, direction, dq, wellness, clinical));
     }
 
     let now = crate::research::util::unix_now();

@@ -1,14 +1,11 @@
 // ./src-tauri/src/offline/import_mane.rs
-use flate2::read::GzDecoder;
-use rusqlite::{params, Connection};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use super::compress::open_text_auto;
+use rusqlite::{Connection, params};
+use std::io::BufRead;
 use std::path::Path;
 
 pub fn import_mane_summary(conn: &Connection, path: &Path) -> Result<u64, String> {
-    let file = File::open(path).map_err(|e| e.to_string())?;
-    let decoder = GzDecoder::new(file);
-    let reader = BufReader::new(decoder);
+    let reader = open_text_auto(path)?;
     let mut lines = reader.lines();
 
     let header = lines

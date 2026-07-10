@@ -6,7 +6,7 @@ Writes vector_promoted_findings and syncs discovered_findings for banner/report 
 
 use super::enrich::PreparedEnrichment;
 use super::util::{best_gwas_pvalue, unix_now};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 const PROMOTION_SCORE_MIN: f32 = 0.4;
@@ -49,7 +49,8 @@ pub fn maybe_promote_vector_finding(
         return Ok(false);
     }
 
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     if is_curated_marker_rsid(&conn, &prepared.rsid) {
         return Ok(false);
     }
@@ -66,7 +67,8 @@ pub fn maybe_promote_vector_finding(
         .get("trait_categories")
         .cloned()
         .unwrap_or_else(|| serde_json::json!([]));
-    let categories_json = serde_json::to_string(&trait_categories).unwrap_or_else(|_| "[]".to_string());
+    let categories_json =
+        serde_json::to_string(&trait_categories).unwrap_or_else(|_| "[]".to_string());
     let score = p["significance_score"].as_f64().unwrap_or(0.0) as f32;
     let best_p = best_gwas_pvalue(
         p["gwas_associations"]
@@ -123,7 +125,11 @@ pub fn maybe_promote_vector_finding(
     Ok(true)
 }
 
-pub(crate) fn promote_enrichment_batch(db_path: &Path, sample_id: i64, batch: &[PreparedEnrichment]) -> u32 {
+pub(crate) fn promote_enrichment_batch(
+    db_path: &Path,
+    sample_id: i64,
+    batch: &[PreparedEnrichment],
+) -> u32 {
     let mut promoted = 0u32;
     for prepared in batch {
         if maybe_promote_vector_finding(db_path, sample_id, prepared).unwrap_or(false) {

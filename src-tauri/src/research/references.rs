@@ -11,20 +11,21 @@ Key Outputs: Row counts, sync status payloads for the UI.
 Operational Notes: Large GWAS file is streamed; re-import replaces gwas_reference rows.
 */
 
-use crate::db::get_pack_str;
-use crate::paths::{self, gwas_catalog_file, gwas_catalog_gz_file, gwas_catalog_zip_file};
 use super::util::{normalize_gwas_reference_rsids, normalize_rsid, parse_gene_tokens};
-use flate2::read::GzDecoder;
-use rusqlite::{params, Connection};
+use crate::db::get_pack_str;
+use crate::offline::compress::{
+    DEFAULT_COMPRESSION_THRESHOLD_BYTES, compress_if_large, open_text_auto,
+};
+use crate::paths::{self, gwas_catalog_file, gwas_catalog_gz_file, gwas_catalog_zip_file};
+use rusqlite::{Connection, params};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::io::{copy, BufRead, BufReader};
+use std::io::{BufRead, copy};
 use std::path::Path;
 use zip::ZipArchive;
 
-const GWAS_DOWNLOAD_URL: &str =
-    "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated-full.zip";
+const GWAS_DOWNLOAD_URL: &str = "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated-full.zip";
 const GWAS_DOWNLOAD_URL_LEGACY: &str =
     "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations-full.zip";
 
@@ -46,13 +47,16 @@ pub struct GwasSyncResult {
 
 pub fn reference_status(data_dir: &Path, conn: &Connection) -> Result<ReferenceStatus, String> {
     let count: u64 = conn
-        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| row.get::<_, i64>(0))
+        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| {
+            row.get::<_, i64>(0)
+        })
         .unwrap_or(0) as u64;
     Ok(ReferenceStatus {
         data_dir: data_dir.to_string_lossy().to_string(),
         gwas_rsid_count: count,
         gwas_file_present: gwas_catalog_file(data_dir).exists(),
-        gwas_gz_present: gwas_catalog_gz_file(data_dir).exists() || gwas_catalog_zip_file(data_dir).exists(),
+        gwas_gz_present: gwas_catalog_gz_file(data_dir).exists()
+            || gwas_catalog_zip_file(data_dir).exists(),
     })
 }
 
@@ -60,9 +64,14 @@ pub fn normalize_gwas_reference_rsids_on_startup(conn: &Connection) -> Result<us
     normalize_gwas_reference_rsids(conn)
 }
 
-pub fn seed_gwas_reference_fallback(conn: &Connection, data_dir: Option<&Path>) -> Result<usize, String> {
+pub fn seed_gwas_reference_fallback(
+    conn: &Connection,
+    data_dir: Option<&Path>,
+) -> Result<usize, String> {
     let existing: u64 = conn
-        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| row.get::<_, i64>(0))
+        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| {
+            row.get::<_, i64>(0)
+        })
         .map_err(|e| e.to_string())? as u64;
     if existing > 0 {
         return Ok(0);
@@ -73,8 +82,8 @@ pub fn seed_gwas_reference_fallback(conn: &Connection, data_dir: Option<&Path>) 
         return Ok(0);
     };
 
-    let catalog: serde_json::Value =
-        serde_json::from_str(&catalog_str).map_err(|e| format!("discovery_catalog parse error: {}", e))?;
+    let catalog: serde_json::Value = serde_json::from_str(&catalog_str)
+        .map_err(|e| format!("discovery_catalog parse error: {}", e))?;
     let markers = catalog["markers"].as_array().cloned().unwrap_or_default();
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
@@ -110,19 +119,23 @@ pub fn seed_gwas_reference_fallback(conn: &Connection, data_dir: Option<&Path>) 
     Ok(inserted)
 }
 
-pub async fn sync_gwas_reference(data_dir: &Path, db_path: &Path) -> Result<GwasSyncResult, String> {
+pub async fn sync_gwas_reference(
+    data_dir: &Path,
+    db_path: &Path,
+) -> Result<GwasSyncResult, String> {
     paths::ensure_data_layout(data_dir).map_err(|e| e.to_string())?;
     let (source_path, downloaded) = ensure_gwas_source_file(data_dir).await?;
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     let rsid_count = import_gwas_reference_tsv(&conn, &source_path)?;
+    let final_path = compress_if_large(&source_path, DEFAULT_COMPRESSION_THRESHOLD_BYTES)?;
     Ok(GwasSyncResult {
         rsid_count,
         downloaded,
-        file_path: source_path.to_string_lossy().to_string(),
+        file_path: final_path.to_string_lossy().to_string(),
         message: format!(
             "Loaded {} GWAS-linked rsIDs with gene/trait cross-refs from {}. Re-run enrichment to refresh vectors.",
             rsid_count,
-            source_path.file_name().unwrap_or_default().to_string_lossy()
+            final_path.file_name().unwrap_or_default().to_string_lossy()
         ),
     })
 }
@@ -135,17 +148,18 @@ pub fn import_gwas_from_local_files(data_dir: &Path, db_path: &Path) -> Result<u
     let gz_path = gwas_catalog_gz_file(data_dir);
     let source_path = if tsv_path.exists() {
         tsv_path
+    } else if gz_path.exists() {
+        gz_path
     } else if zip_path.exists() {
         extract_gwas_tsv_from_zip(&zip_path, &tsv_path)?;
-        tsv_path
-    } else if gz_path.exists() {
-        decompress_gz_to_tsv(&gz_path, &tsv_path)?;
         tsv_path
     } else {
         return Err("GWAS catalog file not found — download Tier 0 first.".into());
     };
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    import_gwas_reference_tsv(&conn, &source_path)
+    let row_count = import_gwas_reference_tsv(&conn, &source_path)?;
+    compress_if_large(&source_path, DEFAULT_COMPRESSION_THRESHOLD_BYTES)?;
+    Ok(row_count)
 }
 
 async fn ensure_gwas_source_file(data_dir: &Path) -> Result<(std::path::PathBuf, bool), String> {
@@ -161,11 +175,10 @@ async fn ensure_gwas_source_file(data_dir: &Path) -> Result<(std::path::PathBuf,
 
     let source_path = if tsv_path.exists() {
         tsv_path
+    } else if gz_path.exists() {
+        gz_path
     } else if zip_path.exists() {
         extract_gwas_tsv_from_zip(&zip_path, &tsv_path)?;
-        tsv_path
-    } else if gz_path.exists() {
-        decompress_gz_to_tsv(&gz_path, &tsv_path)?;
         tsv_path
     } else {
         return Err("GWAS catalog file missing after download attempt.".to_string());
@@ -202,7 +215,8 @@ async fn download_gwas_catalog(dest_zip: &Path) -> Result<(), String> {
         if let Some(parent) = dest_zip.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
-        std::fs::write(dest_zip, &bytes).map_err(|e| format!("Failed to write GWAS file: {}", e))?;
+        std::fs::write(dest_zip, &bytes)
+            .map_err(|e| format!("Failed to write GWAS file: {}", e))?;
         return Ok(());
     }
 
@@ -229,15 +243,6 @@ fn extract_gwas_tsv_from_zip(zip_path: &Path, tsv_path: &Path) -> Result<(), Str
     }
 
     Err("GWAS zip did not contain a .tsv file".to_string())
-}
-
-fn decompress_gz_to_tsv(gz_path: &Path, tsv_path: &Path) -> Result<(), String> {
-    let gz = File::open(gz_path).map_err(|e| e.to_string())?;
-    let decoder = GzDecoder::new(gz);
-    let mut reader = BufReader::new(decoder);
-    let mut out = File::create(tsv_path).map_err(|e| e.to_string())?;
-    copy(&mut reader, &mut out).map_err(|e| e.to_string())?;
-    Ok(())
 }
 
 fn find_column(cols: &[&str], candidates: &[&str]) -> Option<usize> {
@@ -287,14 +292,15 @@ impl GwasRsidAggregate {
             self.mapped_genes.insert(gene.to_string());
         }
         if self.associations.len() < 12 {
-            self.associations.push(super::util::canonical_gwas_association(
-                trait_name,
-                pvalue,
-                reported,
-                mapped,
-                study_accession,
-                "gwas_catalog_local",
-            ));
+            self.associations
+                .push(super::util::canonical_gwas_association(
+                    trait_name,
+                    pvalue,
+                    reported,
+                    mapped,
+                    study_accession,
+                    "gwas_catalog_local",
+                ));
         }
     }
 
@@ -309,8 +315,7 @@ impl GwasRsidAggregate {
 }
 
 fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, String> {
-    let file = File::open(path).map_err(|e| format!("Open GWAS TSV failed: {}", e))?;
-    let reader = BufReader::new(file);
+    let reader = open_text_auto(path).map_err(|error| format!("Open GWAS TSV failed: {error}"))?;
     let mut lines = reader.lines();
 
     let header = lines
@@ -320,12 +325,9 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
         .ok_or_else(|| "GWAS TSV is empty".to_string())?;
 
     let cols: Vec<&str> = header.split('\t').collect();
-    let snps_idx = find_column(&cols, &["SNPS"])
-        .ok_or_else(|| "GWAS TSV missing SNPS column".to_string())?;
-    let trait_idx = find_column(
-        &cols,
-        &["DISEASE/TRAIT", "MAPPED_TRAIT", "DISEASE TRAIT"],
-    );
+    let snps_idx =
+        find_column(&cols, &["SNPS"]).ok_or_else(|| "GWAS TSV missing SNPS column".to_string())?;
+    let trait_idx = find_column(&cols, &["DISEASE/TRAIT", "MAPPED_TRAIT", "DISEASE TRAIT"]);
     let reported_idx = find_column(
         &cols,
         &["REPORTED GENE(S)", "REPORTED_GENE(S)", "REPORTED GENES"],
@@ -334,7 +336,11 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
     let pvalue_idx = find_column(&cols, &["P-VALUE", "PVALUE", "P VALUE"]);
     let study_idx = find_column(
         &cols,
-        &["STUDY ACCESSION", "GWAS CATALOG STUDY ACCESSION", "STUDY_ACCESSION"],
+        &[
+            "STUDY ACCESSION",
+            "GWAS CATALOG STUDY ACCESSION",
+            "STUDY_ACCESSION",
+        ],
     );
 
     conn.execute("DELETE FROM reference.gwas_reference", [])
@@ -422,7 +428,9 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
     tx.commit().map_err(|e| e.to_string())?;
     let _ = normalize_gwas_reference_rsids(conn);
     let total: u64 = conn
-        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| row.get::<_, i64>(0))
+        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| {
+            row.get::<_, i64>(0)
+        })
         .map_err(|e| e.to_string())? as u64;
     Ok(total)
 }

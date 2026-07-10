@@ -44,7 +44,10 @@ pub async fn get_gnomad_config_cmd(app: AppHandle) -> Result<GnomadConfig, Strin
 
 #[tauri::command]
 pub async fn save_gnomad_config_cmd(app: AppHandle, config: GnomadConfig) -> Result<(), String> {
-    db_runtime::with_connection(get_db_path(&app), move |conn| save_gnomad_config(conn, &config)).await
+    db_runtime::with_connection(get_db_path(&app), move |conn| {
+        save_gnomad_config(conn, &config)
+    })
+    .await
 }
 
 #[tauri::command]

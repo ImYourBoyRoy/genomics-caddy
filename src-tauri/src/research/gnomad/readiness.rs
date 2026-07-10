@@ -2,7 +2,7 @@
 use super::cache::hash_record;
 use super::config::{index_urls, vcf_url};
 use super::lookup::gnomad_cache_dir;
-use super::manifest::{get_or_build_manifest, GnomadReleaseManifest};
+use super::manifest::{GnomadReleaseManifest, get_or_build_manifest};
 use super::types::{
     GnomadConfig, GnomadHttpsProvider, GnomadIndexSyncResult, GnomadMissingItem,
     GnomadReadinessStatus, GnomadSourceMode,
@@ -25,7 +25,11 @@ fn manifest_fields(manifest: &GnomadReleaseManifest) -> (Vec<String>, Vec<String
     )
 }
 
-fn base_status(cfg: &GnomadConfig, data_dir: &Path, manifest: &GnomadReleaseManifest) -> GnomadReadinessStatus {
+fn base_status(
+    cfg: &GnomadConfig,
+    data_dir: &Path,
+    manifest: &GnomadReleaseManifest,
+) -> GnomadReadinessStatus {
     let (exome, genome, unsupported) = manifest_fields(manifest);
     GnomadReadinessStatus {
         ready: true,
@@ -169,9 +173,7 @@ async fn remote_readiness(
             "{cached}/{expected} tabix indexes cached (manifest-driven). Download {missing_count} small index files.{unsupported_note}"
         )
     } else {
-        format!(
-            "Ready — {cached} tabix indexes match release manifest.{unsupported_note}"
-        )
+        format!("Ready — {cached} tabix indexes match release manifest.{unsupported_note}")
     };
 
     let (exome, genome, unsupported) = manifest_fields(manifest);
@@ -203,7 +205,10 @@ async fn remote_readiness(
     }
 }
 
-async fn local_readiness(cfg: &GnomadConfig, manifest: &GnomadReleaseManifest) -> GnomadReadinessStatus {
+async fn local_readiness(
+    cfg: &GnomadConfig,
+    manifest: &GnomadReleaseManifest,
+) -> GnomadReadinessStatus {
     let Some(dir) = cfg.local_vcf_dir.as_ref().filter(|d| !d.trim().is_empty()) else {
         let (exome, genome, unsupported) = manifest_fields(manifest);
         return GnomadReadinessStatus {
@@ -364,7 +369,13 @@ pub async fn download_missing_gnomad_indexes(
             continue;
         }
         let (tbi_url, _) = index_urls(&vcf);
-        queue_download(&mut handles, semaphore.clone(), tbi_url, path, format!("exomes chr{chrom}"));
+        queue_download(
+            &mut handles,
+            semaphore.clone(),
+            tbi_url,
+            path,
+            format!("exomes chr{chrom}"),
+        );
     }
 
     for chrom in &manifest.genome_contigs {
@@ -375,7 +386,13 @@ pub async fn download_missing_gnomad_indexes(
             continue;
         }
         let (tbi_url, _) = index_urls(&vcf);
-        queue_download(&mut handles, semaphore.clone(), tbi_url, path, format!("genomes chr{chrom}"));
+        queue_download(
+            &mut handles,
+            semaphore.clone(),
+            tbi_url,
+            path,
+            format!("genomes chr{chrom}"),
+        );
     }
 
     for handle in handles {

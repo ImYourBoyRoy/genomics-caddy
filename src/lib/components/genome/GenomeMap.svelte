@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/genome/GenomeMap.svelte -->
 <script lang="ts">
-  import { getChromosomeCounts, queryRsids, getVectorPromotedFindings, getChromosomeTraitOverlay } from "../../api/tauri";
+  import { getChromosomeCounts, queryRsids, getVectorPromotedFindings, getChromosomeTraitOverlay, getSamples } from "../../api/tauri";
   import type { ChromosomeTraitBand } from "../../types/research";
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
   import type { VariantNavTarget } from "../../constants/traitCategories";
@@ -9,13 +9,16 @@
 
   /*
   Module Docstring:
-  Purpose: Live database-backed chromosome visualization.
+  Purpose: Live database-backed chromosome visualization with interactive zoom, overlays, and comparison views.
   Responsibilities:
   - Display all 24 chromosomes with relative SNP density heatbars.
   - Query the local database for SNP density and position coordinates.
   - Map moderate and high-risk variants as pins on their respective chromosomes.
+  - Support horizontal zooming and panning across chromosomes.
+  - Display gene labels directly above pins when zoomed.
+  - Compare risk variant genotypes across all imported samples in a matrix view.
   Key Inputs: selectedSample, generatedReport.
-  Key Outputs: Interactive, fully realized chromosome heat map.
+  Key Outputs: Interactive, fully realized chromosome heat map and comparison grid.
   Operational Notes: Normalizes variant density based on the highest count chromosome.
   */
 
@@ -42,6 +45,20 @@
   let isLoading = $state(false);
   let error = $state("");
 
+  // Zooming
+  let zoomScale = $state(1);
+
+  // Multi-sample comparison
+  let allSamples = $state<GenomeSample[]>([]);
+  interface ComparisonRow {
+    rsid: string;
+    gene: string;
+    severity: string;
+    genotypes: Record<number, string>;
+  }
+  let comparisonData = $state<ComparisonRow[]>([]);
+  let isComparing = $state(false);
+
   interface HoveredPin {
     rsid: string;
     gene: string;
@@ -54,6 +71,42 @@
   let maxCount = $derived(
     Object.values(chromosomeCounts).reduce((max, val) => Math.max(max, val), 1)
   );
+
+  async function loadComparison() {
+    if (riskPins.length === 0) return;
+    try {
+      allSamples = await getSamples();
+      if (allSamples.length <= 1) return;
+
+      const rsids = riskPins.map(p => p.rsid);
+      const tempRows: ComparisonRow[] = riskPins.map(p => ({
+        rsid: p.rsid,
+        gene: p.gene,
+        severity: p.severity,
+        genotypes: {}
+      }));
+
+      for (const sample of allSamples) {
+        const records = await queryRsids(sample.id, rsids);
+        for (const rec of records) {
+          const row = tempRows.find(r => r.rsid.toLowerCase() === rec.rsid.toLowerCase());
+          if (row) {
+            const clean_allele1 = rec.allele1 || "-";
+            const clean_allele2 = rec.allele2 || "-";
+            row.genotypes[sample.id] = `${clean_allele1}${clean_allele2}`;
+          }
+        }
+      }
+      comparisonData = tempRows;
+      isComparing = true;
+    } catch (e) {
+      console.error("Failed to load sample comparisons:", e);
+    }
+  }
+
+  function closeComparison() {
+    isComparing = false;
+  }
 
   async function loadData() {
     if (!selectedSample) return;
@@ -192,6 +245,81 @@
     <span class="legend-item legend-note">⚠️ count = report + vector variants on that chromosome (hover a pin for gene &amp; rsID)</span>
   </div>
 
+  <!-- Interactive Controls (Zoom + Pan + Multi-Sample Comparison) -->
+  <div class="map-controls-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">🔍 Zoom Scale: {zoomScale}x</span>
+      <input
+        type="range"
+        min="1"
+        max="8"
+        step="0.5"
+        bind:value={zoomScale}
+        style="width: 130px; cursor: col-resize; accent-color: #34d399;"
+      />
+      {#if zoomScale > 1}
+        <button
+          class="btn btn-secondary btn-xs"
+          onclick={() => zoomScale = 1}
+          style="padding: 3px 6px; font-size: 0.65rem;"
+        >
+          Reset
+        </button>
+      {/if}
+    </div>
+    
+    <button
+      class="btn btn-secondary btn-xs"
+      onclick={loadComparison}
+      disabled={isLoading}
+      style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; padding: 5px 10px;"
+    >
+      👥 Compare Genotypes
+    </button>
+  </div>
+
+  {#if isComparing}
+    <div class="comparison-overlay" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; animation: fadeIn 0.2s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h4 style="margin: 0; color: #a78bfa; font-size: 0.85rem;">👥 Multi-Sample Variant Comparison</h4>
+        <button class="btn btn-secondary btn-xs" onclick={closeComparison} style="padding: 2px 6px; font-size: 0.65rem;">Close</button>
+      </div>
+      {#if allSamples.length <= 1}
+        <p style="font-size: 0.72rem; opacity: 0.8; margin: 0;">Import multiple samples to compare genotypes across family members.</p>
+      {:else}
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.72rem; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.15);">
+                <th style="padding: 6px;">Variant / rsID</th>
+                <th style="padding: 6px;">Gene</th>
+                {#each allSamples as sample}
+                  <th style="padding: 6px; text-align: center;" class:active-sample={selectedSample && sample.id === selectedSample.id}>
+                    {sample.name} {selectedSample && sample.id === selectedSample.id ? '👤' : ''}
+                  </th>
+                {/each}
+              </tr>
+            </thead>
+            <tbody>
+              {#each comparisonData as row}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);" class="comparison-tr">
+                  <td style="padding: 6px;" class="font-mono">{row.rsid}</td>
+                  <td style="padding: 6px; font-weight: 600;">{row.gene}</td>
+                  {#each allSamples as sample}
+                    {@const gt = row.genotypes[sample.id] || '--'}
+                    <td style="padding: 6px; text-align: center; font-family: var(--font-mono), monospace;" class="genotype-cell {row.severity}">
+                      {gt}
+                    </td>
+                  {/each}
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+    </div>
+  {/if}
+
   {#if isLoading}
     <PanelLoadingState
       message="Mapping chromosome density from your local database…"
@@ -201,6 +329,7 @@
     />
   {:else if error}
     <div class="map-error">Failed to query database: {error}</div>
+    <button class="btn btn-secondary btn-xs" onclick={loadData}>Retry</button>
   {:else}
     <div class="chromosome-list">
       {#each CHR_ORDER as chr}
@@ -212,8 +341,8 @@
           <div class="chr-label font-mono">Chr {chr}</div>
 
           <div class="chr-main">
-            <div class="chr-capsule-wrapper">
-              <div class="chr-capsule">
+            <div class="chr-capsule-wrapper" style="overflow-x: auto; position: relative; width: 100%; border-radius: 999px;">
+              <div class="chr-capsule" style="width: {100 * zoomScale}%; min-width: 100%; position: relative; height: 18px; border-radius: 999px;">
                 <div class="chr-density-fill" style="width: {pct}%"></div>
 
                 {#each chrPins as pin}
@@ -228,6 +357,16 @@
                     onmouseenter={(e) => showTooltip(pin, e)}
                     onmouseleave={hideTooltip}
                   ></button>
+
+                  <!-- Gene Overlay label on zoom -->
+                  {#if zoomScale > 1.5}
+                    <span
+                      class="gene-overlay-label font-mono"
+                      style="left: {pinPosPct}%; position: absolute; top: -14px; transform: translateX(-50%) rotate(-15deg); font-size: 0.58rem; font-weight: 700; color: #818cf8; background: rgba(0,0,0,0.85); border: 1px solid rgba(129,140,248,0.4); padding: 1px 4px; border-radius: 3px; pointer-events: none; z-index: 10; white-space: nowrap;"
+                    >
+                      {pin.gene}
+                    </span>
+                  {/if}
                 {/each}
               </div>
             </div>

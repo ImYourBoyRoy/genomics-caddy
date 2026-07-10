@@ -25,11 +25,7 @@ pub fn clear_enrichment_sources() {
 }
 
 pub fn active_enrichment_sources() -> EnrichmentSourcesConfig {
-    store()
-        .read()
-        .ok()
-        .map(|g| g.clone())
-        .unwrap_or_default()
+    store().read().ok().map(|g| g.clone()).unwrap_or_default()
 }
 
 pub fn effective_sources_from_scope(scope: &ResearchScopeConfig) -> EnrichmentSourcesConfig {
@@ -76,7 +72,10 @@ pub fn enrichment_supplement_missing() -> bool {
 }
 
 /// True when indexed payload still lacks data for any enabled source.
-pub fn payload_needs_source_supplement(provenance: &Value, sources: &EnrichmentSourcesConfig) -> bool {
+pub fn payload_needs_source_supplement(
+    provenance: &Value,
+    sources: &EnrichmentSourcesConfig,
+) -> bool {
     let obj = provenance.as_object();
     if sources.gnomad && source_missing_or_skipped(obj, "gnomad") {
         return true;
@@ -91,7 +90,8 @@ pub fn payload_needs_source_supplement(provenance: &Value, sources: &EnrichmentS
         return true;
     }
     if sources.vep_dbsnp
-        && (source_missing_or_skipped(obj, "ensembl_vep") || source_missing_or_skipped(obj, "dbsnp"))
+        && (source_missing_or_skipped(obj, "ensembl_vep")
+            || source_missing_or_skipped(obj, "dbsnp"))
     {
         return true;
     }

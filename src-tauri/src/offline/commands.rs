@@ -1,7 +1,7 @@
 // ./src-tauri/src/offline/commands.rs
 use super::sync::{
-    build_tier2_for_sample, check_offline_updates, sync_all_missing, sync_offline_tier,
-    sync_single_asset, OfflineSyncResult, OfflineUpdateCheck,
+    OfflineSyncResult, OfflineUpdateCheck, build_tier2_for_sample, check_offline_updates,
+    sync_all_missing, sync_offline_tier, sync_single_asset,
 };
 use crate::{get_data_dir, get_db_path};
 use tauri::AppHandle;
@@ -71,7 +71,10 @@ pub async fn sync_all_offline_data(
 }
 
 #[tauri::command]
-pub async fn build_offline_tier2(app: AppHandle, sample_id: i64) -> Result<OfflineSyncResult, String> {
+pub async fn build_offline_tier2(
+    app: AppHandle,
+    sample_id: i64,
+) -> Result<OfflineSyncResult, String> {
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     build_tier2_for_sample(&data_dir, &db_path, sample_id, Some(&app)).await
@@ -82,7 +85,7 @@ pub async fn get_custom_download_dir(app: AppHandle) -> Result<Option<String>, S
     let db_path = get_db_path(&app);
     let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
     crate::offline::schema::migrate_offline_schema(&conn).map_err(|e| e.to_string())?;
-    
+
     let mut stmt = conn
         .prepare("SELECT value FROM app_metadata WHERE key = 'custom_download_dir'")
         .map_err(|e| e.to_string())?;
@@ -99,7 +102,7 @@ pub async fn set_custom_download_dir(app: AppHandle, path: Option<String>) -> Re
     let db_path = get_db_path(&app);
     let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
     crate::offline::schema::migrate_offline_schema(&conn).map_err(|e| e.to_string())?;
-    
+
     match path {
         Some(p) => {
             let trimmed = p.trim().to_string();
@@ -157,9 +160,9 @@ pub async fn get_offline_reference_status(
         .iter()
         .find(|a| a.id == super::manifest::OfflineAssetId::ClinvarVariantSummary)
         .ok_or_else(|| "ClinVar manifest definition missing".to_string())?;
-    let clinvar_gz_path = super::manifest::local_path(&data_dir, custom_dir.as_deref(), clinvar_def);
-    let clinvar_txt_path = clinvar_gz_path.with_extension("");
-    let clinvar_raw_found = clinvar_gz_path.exists() || clinvar_txt_path.exists();
+    let clinvar_gz_path =
+        super::manifest::local_path(&data_dir, custom_dir.as_deref(), clinvar_def);
+    let clinvar_raw_found = super::compress::resolve_local_asset_path(&clinvar_gz_path).is_some();
 
     // 2. dbSNP merged raw file path check
     let dbsnp_def = super::manifest::all_assets()
@@ -167,18 +170,18 @@ pub async fn get_offline_reference_status(
         .find(|a| a.id == super::manifest::OfflineAssetId::DbsnpMergedJson)
         .ok_or_else(|| "dbSNP manifest definition missing".to_string())?;
     let dbsnp_bz2_path = super::manifest::local_path(&data_dir, custom_dir.as_deref(), dbsnp_def);
-    let dbsnp_json_path = dbsnp_bz2_path.with_extension("");
-    let dbsnp_merged_raw_found = dbsnp_bz2_path.exists() || dbsnp_json_path.exists();
+    let dbsnp_merged_raw_found =
+        super::compress::resolve_local_asset_path(&dbsnp_bz2_path).is_some();
 
     tauri::async_runtime::spawn_blocking(move || {
         let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
 
         let clinvar_indexed_rows = conn
-            .query_row("SELECT COUNT(*) FROM reference.clinvar_reference", [], |r| r.get::<_, i64>(0))
+            .query_row("SELECT COUNT(*) FROM clinvar.clinvar_reference", [], |r| r.get::<_, i64>(0))
             .unwrap_or(0) as u64;
 
         let dbsnp_merge_mappings_indexed = conn
-            .query_row("SELECT COUNT(*) FROM reference.rsid_aliases WHERE source = 'dbsnp_merged'", [], |r| r.get::<_, i64>(0))
+            .query_row("SELECT COUNT(*) FROM dbsnp.rsid_aliases WHERE source = 'dbsnp_merged'", [], |r| r.get::<_, i64>(0))
             .unwrap_or(0) as u64;
 
         let clinvar_last_indexed: Option<i64> = conn.query_row(
@@ -209,20 +212,20 @@ pub async fn get_offline_reference_status(
 
                     // Count ClinVar hits
                     let sql_clinvar = format!(
-                        "SELECT COUNT(DISTINCT LOWER(rsid)) FROM reference.clinvar_reference WHERE LOWER(rsid) IN ({})",
+                        "SELECT COUNT(DISTINCT LOWER(rsid)) FROM clinvar.clinvar_reference WHERE LOWER(rsid) IN ({})",
                         placeholders
                     );
                     let params_clinvar: Vec<&dyn rusqlite::types::ToSql> = normalized_rsids
-                        .iter()
-                        .map(|s| s as &dyn rusqlite::types::ToSql)
-                        .collect();
+                         .iter()
+                         .map(|s| s as &dyn rusqlite::types::ToSql)
+                         .collect();
                     if let Ok(c) = conn.query_row(&sql_clinvar, params_clinvar.as_slice(), |r| r.get::<_, i64>(0)) {
                         clinvar_rsid_hits = c as u64;
                     }
 
                     // Count dbSNP normalized
                     let sql_dbsnp = format!(
-                        "SELECT COUNT(DISTINCT LOWER(rsid)) FROM reference.rsid_aliases WHERE LOWER(rsid) IN ({}) AND merged_into IS NOT NULL",
+                        "SELECT COUNT(DISTINCT LOWER(rsid)) FROM dbsnp.rsid_aliases WHERE LOWER(rsid) IN ({}) AND merged_into IS NOT NULL",
                         placeholders
                     );
                     let params_dbsnp: Vec<&dyn rusqlite::types::ToSql> = normalized_rsids
@@ -241,7 +244,7 @@ pub async fn get_offline_reference_status(
             .unwrap_or(0) > 0;
 
         let orientation_verification_available = conn
-            .query_row("SELECT COUNT(*) FROM reference.rsid_aliases WHERE withdrawn = 1", [], |r| r.get::<_, i64>(0))
+            .query_row("SELECT COUNT(*) FROM dbsnp.rsid_aliases WHERE withdrawn = 1", [], |r| r.get::<_, i64>(0))
             .unwrap_or(0) > 0;
 
         Ok(ReferenceStatusDetails {

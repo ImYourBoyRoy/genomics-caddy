@@ -1,6 +1,6 @@
 // ./src-tauri/src/research/markers.rs
 use super::types::*;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::collections::HashMap;
 use std::path::Path;
 pub fn score_marker_significance(
@@ -42,7 +42,6 @@ pub fn score_marker_significance(
     }
     score.min(1.0)
 }
-
 
 const EVIDENCE_GENE_SUBQUERY: &str = "
     SELECT rsid, MIN(gene) AS gene
@@ -110,10 +109,14 @@ fn load_curated_markers(conn: &Connection, sample_id: i64) -> Result<Vec<ScoredM
             ))
         })
         .map_err(|e| e.to_string())?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }
 
-fn load_agent_discovery_markers(conn: &Connection, sample_id: i64) -> Result<Vec<ScoredMarker>, String> {
+fn load_agent_discovery_markers(
+    conn: &Connection,
+    sample_id: i64,
+) -> Result<Vec<ScoredMarker>, String> {
     let sql = format!(
         "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, c.clinical_significance,
                 COALESCE(NULLIF(TRIM(d.gene), ''), NULLIF(TRIM(c.gene), ''), NULLIF(TRIM(e.gene), '')) AS gene
@@ -136,7 +139,8 @@ fn load_agent_discovery_markers(conn: &Connection, sample_id: i64) -> Result<Vec
             ))
         })
         .map_err(|e| e.to_string())?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }
 
 fn load_gwas_discovery_markers(
@@ -168,7 +172,8 @@ fn load_gwas_discovery_markers(
             ))
         })
         .map_err(|e| e.to_string())?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }
 
 fn load_non_reference_markers(
@@ -203,7 +208,8 @@ fn load_non_reference_markers(
             ))
         })
         .map_err(|e| e.to_string())?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
 }
 
 pub fn collect_markers_for_scopes(
@@ -211,7 +217,8 @@ pub fn collect_markers_for_scopes(
     sample_id: i64,
     scope: &ResearchScopeConfig,
 ) -> Result<Vec<ScoredMarker>, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let mut merged: HashMap<String, ScoredMarker> = HashMap::new();
 
     if scope.curated {
@@ -249,7 +256,8 @@ pub fn preview_research_scope(
     sample_id: i64,
     scope: &ResearchScopeConfig,
 ) -> Result<ResearchScopePreview, String> {
-    let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
+    let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
     let genotype_total: u64 = conn
         .query_row(
             "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
@@ -258,7 +266,9 @@ pub fn preview_research_scope(
         )
         .unwrap_or(0) as u64;
     let gwas_reference_count: u64 = conn
-        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| row.get::<_, i64>(0))
+        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |row| {
+            row.get::<_, i64>(0)
+        })
         .unwrap_or(0) as u64;
 
     let gwas_genome_overlap: u64 = conn
@@ -315,11 +325,15 @@ pub async fn get_all_sample_rsids(
     db_path: &Path,
     sample_id: i64,
 ) -> Result<Vec<ScoredMarker>, String> {
-    collect_markers_for_scopes(db_path, sample_id, &ResearchScopeConfig {
-        curated: true,
-        agent_discoveries: false,
-        gwas_discovery: false,
-        non_reference: false,
-        ..ResearchScopeConfig::default()
-    })
+    collect_markers_for_scopes(
+        db_path,
+        sample_id,
+        &ResearchScopeConfig {
+            curated: true,
+            agent_discoveries: false,
+            gwas_discovery: false,
+            non_reference: false,
+            ..ResearchScopeConfig::default()
+        },
+    )
 }

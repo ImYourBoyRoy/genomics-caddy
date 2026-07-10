@@ -223,6 +223,10 @@ if (-not $SkipChecks) {
     Write-Skip "Pre-build checks skipped (-SkipChecks)"
 }
 
+# Use every logical CPU for the release compile so laptop benchmarks are comparable.
+$env:CARGO_BUILD_JOBS = [string][Environment]::ProcessorCount
+Write-Ok "CARGO_BUILD_JOBS=$($env:CARGO_BUILD_JOBS)"
+
 Invoke-External -Label "Production Tauri build (no installer bundle)" -FilePath "npm" -Arguments @(
     "run", "tauri", "build"
 )

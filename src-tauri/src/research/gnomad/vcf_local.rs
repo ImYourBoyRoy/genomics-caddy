@@ -1,7 +1,7 @@
 // ./src-tauri/src/research/gnomad/vcf_local.rs
-use super::cache::{hash_record, write_cache, CacheWriteInput};
 use super::allele_norm::cache_alleles;
-use super::config::{tabix_reference_name};
+use super::cache::{CacheWriteInput, hash_record, write_cache};
+use super::config::tabix_reference_name;
 use super::types::{GnomadConfig, GnomadContext, GnomadLookupStatus, GnomadSourceMode};
 use super::vcf_parse::{match_user_allele, parse_site_line, record_to_context};
 use crate::research::tuning::gnomad_remote_timeout_secs;
@@ -41,14 +41,18 @@ pub async fn query_local_vcf(
     let result = tokio::time::timeout(
         timeout,
         tokio::task::spawn_blocking({
-        let vcf_path = vcf_path.clone();
-        let release = cfg.release.clone();
-        let allele1 = allele1.to_string();
-        let allele2 = allele2.to_string();
-        let dataset = dataset.to_string();
-        let chrom = chrom.to_string();
-        move || query_local_sync(&vcf_path, &chrom, pos, &allele1, &allele2, &release, &dataset)
-    }),
+            let vcf_path = vcf_path.clone();
+            let release = cfg.release.clone();
+            let allele1 = allele1.to_string();
+            let allele2 = allele2.to_string();
+            let dataset = dataset.to_string();
+            let chrom = chrom.to_string();
+            move || {
+                query_local_sync(
+                    &vcf_path, &chrom, pos, &allele1, &allele2, &release, &dataset,
+                )
+            }
+        }),
     )
     .await;
 

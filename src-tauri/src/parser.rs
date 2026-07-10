@@ -11,10 +11,10 @@ Key Outputs: Vector of SnpRecord structs.
 Operational Notes: Decompresses ZIP archives in-memory without creating temp files.
 */
 
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SnpRecord {
@@ -135,7 +135,13 @@ pub fn parse_reader<R: BufRead>(reader: R, format: FileFormat) -> Result<Vec<Snp
                     let allele1 = cols[3].trim().to_string();
                     let allele2 = cols[4].trim().to_string();
                     if position > 0 {
-                        records.push(SnpRecord { rsid, chromosome, position, allele1, allele2 });
+                        records.push(SnpRecord {
+                            rsid,
+                            chromosome,
+                            position,
+                            allele1,
+                            allele2,
+                        });
                     }
                 } else if cols.len() >= 4 {
                     let rsid = cols[0].trim().to_string();
@@ -143,7 +149,13 @@ pub fn parse_reader<R: BufRead>(reader: R, format: FileFormat) -> Result<Vec<Snp
                     let position = cols[2].trim().parse::<u64>().unwrap_or(0);
                     let (allele1, allele2) = parse_twenty_three_genotype(cols[3].trim());
                     if position > 0 {
-                        records.push(SnpRecord { rsid, chromosome, position, allele1, allele2 });
+                        records.push(SnpRecord {
+                            rsid,
+                            chromosome,
+                            position,
+                            allele1,
+                            allele2,
+                        });
                     }
                 }
             }
@@ -163,7 +175,8 @@ pub fn parse_zip_file<P: AsRef<Path>>(
 
     progress_callback("Unpacking ZIP archive...");
     let file = File::open(path).map_err(|e| format!("Failed to open ZIP file: {}", e))?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Invalid ZIP archive: {}", e))?;
+    let mut archive =
+        zip::ZipArchive::new(file).map_err(|e| format!("Invalid ZIP archive: {}", e))?;
     if archive.len() > MAX_ZIP_ENTRIES {
         return Err(format!(
             "ZIP archive exceeds maximum of {} entries",
@@ -173,8 +186,12 @@ pub fn parse_zip_file<P: AsRef<Path>>(
 
     let mut found_index = None;
     for i in 0..archive.len() {
-        let entry = archive.by_index(i).map_err(|e| format!("ZIP entry error: {}", e))?;
-        let entry_name = entry.name().map_err(|e| format!("ZIP entry name error: {}", e))?;
+        let entry = archive
+            .by_index(i)
+            .map_err(|e| format!("ZIP entry error: {}", e))?;
+        let entry_name = entry
+            .name()
+            .map_err(|e| format!("ZIP entry name error: {}", e))?;
         if entry_name.to_lowercase().ends_with(".txt") {
             found_index = Some(i);
             break;
@@ -184,12 +201,16 @@ pub fn parse_zip_file<P: AsRef<Path>>(
     let idx = found_index.ok_or_else(|| "No .txt file found inside the ZIP archive".to_string())?;
 
     // Open first time to detect format
-    let entry_header = archive.by_index(idx).map_err(|e| format!("Failed to read ZIP entry: {}", e))?;
+    let entry_header = archive
+        .by_index(idx)
+        .map_err(|e| format!("Failed to read ZIP entry: {}", e))?;
     let format = detect_format_from_reader(BufReader::new(entry_header))?;
 
     // Open second time to parse
     progress_callback("Parsing genetic records...");
-    let entry_data = archive.by_index(idx).map_err(|e| format!("Failed to read ZIP entry: {}", e))?;
+    let entry_data = archive
+        .by_index(idx)
+        .map_err(|e| format!("Failed to read ZIP entry: {}", e))?;
     if entry_data.size() > MAX_UNCOMPRESSED_BYTES {
         return Err(format!(
             "ZIP entry exceeds maximum uncompressed size of {} bytes",
@@ -206,17 +227,19 @@ pub fn parse_dna_file<P: AsRef<Path>, F: Fn(&str)>(
     progress_callback: F,
 ) -> Result<Vec<SnpRecord>, String> {
     let path_ref = path.as_ref();
-    let is_zip = path_ref.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip"));
+    let is_zip = path_ref
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("zip"));
 
     if is_zip {
         parse_zip_file(path_ref, &progress_callback)
     } else {
         progress_callback("Reading file...");
         let file = File::open(path_ref).map_err(|e| format!("Failed to open file: {}", e))?;
-        
+
         // Detect format
         let format = detect_format_from_reader(BufReader::new(&file))?;
-        
+
         // Re-open to parse from start
         let file_parse = File::open(path_ref).map_err(|e| format!("Failed to open file: {}", e))?;
         progress_callback("Parsing genetic records...");

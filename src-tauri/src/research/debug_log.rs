@@ -64,16 +64,17 @@ pub fn log(tag: &str, message: impl AsRef<str>) {
     let message = message.as_ref();
     eprintln!("[{}] {}", tag, message);
     if let Ok(guard) = EMIT_APP.lock()
-        && let Some(app) = guard.as_ref() {
-            let _ = app.emit(
-                "research:debug",
-                ResearchDebugEvent {
-                    tag: tag.to_string(),
-                    message: message.to_string(),
-                    ts: crate::research::util::unix_now(),
-                },
-            );
-        }
+        && let Some(app) = guard.as_ref()
+    {
+        let _ = app.emit(
+            "research:debug",
+            ResearchDebugEvent {
+                tag: tag.to_string(),
+                message: message.to_string(),
+                ts: crate::research::util::unix_now(),
+            },
+        );
+    }
 }
 
 /// Terminal + optional UI event when `AppHandle` is available.

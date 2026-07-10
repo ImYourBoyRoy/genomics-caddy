@@ -1,16 +1,18 @@
 // ./src-tauri/src/research/evidence/adapters.rs
 //! Live source adapters: PGS Catalog, Reactome, Open Targets, OLS4/EFO, PharmGKB/CPIC.
 
-use super::cache::{fetch_json_cached, fetch_json_post_cached, pgs_ttl, reactome_ttl, opentargets_ttl, pharmgkb_ttl};
-use super::ontology::{map_trait_via_ols4, TraitOntologyMapping};
-use super::pgs_match::{compute_pgs_match_for_score, PgsMatchSummary};
+use super::cache::{
+    fetch_json_cached, fetch_json_post_cached, opentargets_ttl, pgs_ttl, pharmgkb_ttl, reactome_ttl,
+};
+use super::ontology::{TraitOntologyMapping, map_trait_via_ols4};
+use super::pgs_match::{PgsMatchSummary, compute_pgs_match_for_score};
 use super::source_records;
 use crate::research::http::{
-    acquire_adapter_permit, OLS4_SEMAPHORE, OPENTARGETS_SEMAPHORE, PHARMGKB_SEMAPHORE, PGS_SEMAPHORE,
-    REACTOME_SEMAPHORE,
+    OLS4_SEMAPHORE, OPENTARGETS_SEMAPHORE, PGS_SEMAPHORE, PHARMGKB_SEMAPHORE, REACTOME_SEMAPHORE,
+    acquire_adapter_permit,
 };
 use crate::research::util::{normalize_rsid, unix_now};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::Path;
 
 const PGS_BASE: &str = "https://www.pgscatalog.org/rest";
@@ -161,7 +163,9 @@ async fn fetch_pgs_context(
     let mut matches = Vec::new();
     let mut narrative = Vec::new();
     for score_ref in scores.iter().take(3) {
-        let pgs_id = score_ref["id"].as_str().or_else(|| score_ref["score_id"].as_str());
+        let pgs_id = score_ref["id"]
+            .as_str()
+            .or_else(|| score_ref["score_id"].as_str());
         let Some(pgs_id) = pgs_id else { continue };
 
         let score_url = format!("{}/score/{}", PGS_BASE, pgs_id);
@@ -192,15 +196,26 @@ async fn fetch_pgs_context(
             );
         }
 
-        if let Ok(summary) =
-            compute_pgs_match_for_score(db_path, sample_id, pgs_id, rsid, allele1, allele2, &score_meta)
-                .await
+        if let Ok(summary) = compute_pgs_match_for_score(
+            db_path,
+            sample_id,
+            pgs_id,
+            rsid,
+            allele1,
+            allele2,
+            &score_meta,
+        )
+        .await
         {
             narrative.push(format!(
                 "PGS {} ({}): variant match={}, score match rate {:.0}% ({}/{} variants)",
                 pgs_id,
                 summary.trait_reported.as_deref().unwrap_or("unknown trait"),
-                if summary.variant_allele_match { "yes" } else { "no" },
+                if summary.variant_allele_match {
+                    "yes"
+                } else {
+                    "no"
+                },
                 summary.match_rate_pct,
                 summary.matched_variants,
                 summary.total_variants
@@ -233,8 +248,7 @@ async fn fetch_reactome_context(db_path: &Path, gene: Option<&str>) -> ReactomeS
 
     let url = format!(
         "{}/data/gene/{}/pathways?species=9606",
-        REACTOME_BASE,
-        gene_symbol
+        REACTOME_BASE, gene_symbol
     );
     let cache_key = format!("reactome|gene_pathways|{}", gene_symbol.to_uppercase());
 
@@ -332,7 +346,11 @@ async fn fetch_open_targets_context(
     let variables = json!({ "queryString": gene_symbol });
     let cache_key = format!(
         "opentargets|target_search|{}",
-        super::source_records::payload_hash(&format!("{}|{}", gene_symbol, trait_name.unwrap_or("")))
+        super::source_records::payload_hash(&format!(
+            "{}|{}",
+            gene_symbol,
+            trait_name.unwrap_or("")
+        ))
     );
 
     let body = match fetch_json_post_cached(
@@ -403,14 +421,9 @@ async fn fetch_open_targets_context(
     }
 }
 
-async fn fetch_pharmgkb_context(
-    db_path: &Path,
-    rsid: &str,
-    gene: Option<&str>,
-) -> PharmGkbSlice {
+async fn fetch_pharmgkb_context(db_path: &Path, rsid: &str, gene: Option<&str>) -> PharmGkbSlice {
     if let Ok(conn) = crate::db::connect(db_path) {
-        let (drugs, annotation_count, hit) =
-            crate::offline::lookup_pharmgkb_local(&conn, rsid);
+        let (drugs, annotation_count, hit) = crate::offline::lookup_pharmgkb_local(&conn, rsid);
         if hit {
             let narrative = if drugs.is_empty() {
                 format!(
@@ -438,7 +451,10 @@ async fn fetch_pharmgkb_context(
     }
 
     let _permit = acquire_adapter_permit(&PHARMGKB_SEMAPHORE).await;
-    let url = format!("{}/data/clinicalAnnotation?location.rsId={}", PHARMGKB_BASE, rsid);
+    let url = format!(
+        "{}/data/clinicalAnnotation?location.rsId={}",
+        PHARMGKB_BASE, rsid
+    );
     let cache_key = format!("pharmgkb|clinical_annotation|{}", rsid);
 
     let mut drugs = Vec::new();
@@ -475,9 +491,10 @@ async fn fetch_pharmgkb_context(
                 if let Some(chemicals) = ann["relatedChemicals"].as_array() {
                     for c in chemicals {
                         if let Some(name) = c["name"].as_str()
-                            && !drugs.contains(&name.to_string()) {
-                                drugs.push(name.to_string());
-                            }
+                            && !drugs.contains(&name.to_string())
+                        {
+                            drugs.push(name.to_string());
+                        }
                     }
                 }
             }
@@ -546,7 +563,7 @@ async fn fetch_pharmgkb_context(
 }
 
 async fn fetch_ols4_traits(db_path: &Path, traits: &[String]) -> OlsSlice {
-        let _permit = acquire_adapter_permit(&OLS4_SEMAPHORE).await;
+    let _permit = acquire_adapter_permit(&OLS4_SEMAPHORE).await;
     let mut mappings = Vec::new();
     for trait_name in traits.iter().take(4).filter(|t| !t.trim().is_empty()) {
         if let Some(mapping) = map_trait_via_ols4(db_path, trait_name).await {
@@ -571,9 +588,11 @@ async fn fetch_ols4_traits(db_path: &Path, traits: &[String]) -> OlsSlice {
 }
 
 pub fn best_ontology_mapping(mappings: &[TraitOntologyMapping]) -> Option<&TraitOntologyMapping> {
-    mappings
-        .iter()
-        .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap_or(std::cmp::Ordering::Equal))
+    mappings.iter().max_by(|a, b| {
+        a.confidence
+            .partial_cmp(&b.confidence)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    })
 }
 
 pub fn ledger_from_pgs_match(

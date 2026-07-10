@@ -6,7 +6,7 @@ use rusqlite::{Connection, Result};
 pub fn migrate_evidence_schema(conn: &Connection) -> Result<()> {
     conn.execute_batch(
         "
-        CREATE TABLE IF NOT EXISTS reference.source_records (
+        CREATE TABLE IF NOT EXISTS api_cache_db.source_records (
             source_record_id TEXT PRIMARY KEY,
             source_name TEXT NOT NULL,
             endpoint_family TEXT NOT NULL,
@@ -28,10 +28,10 @@ pub fn migrate_evidence_schema(conn: &Connection) -> Result<()> {
             license_note TEXT,
             record_quality_flags_json TEXT
         );
-        CREATE INDEX IF NOT EXISTS reference.idx_source_records_rsid ON source_records(rsid);
-        CREATE INDEX IF NOT EXISTS reference.idx_source_records_source ON source_records(source_name, rsid);
+        CREATE INDEX IF NOT EXISTS api_cache_db.idx_source_records_rsid ON source_records(rsid);
+        CREATE INDEX IF NOT EXISTS api_cache_db.idx_source_records_source ON source_records(source_name, rsid);
 
-        CREATE TABLE IF NOT EXISTS reference.api_cache_entries (
+        CREATE TABLE IF NOT EXISTS api_cache_db.api_cache_entries (
             cache_id TEXT PRIMARY KEY,
             source_name TEXT NOT NULL,
             endpoint_family TEXT NOT NULL,
@@ -57,8 +57,8 @@ pub fn migrate_evidence_schema(conn: &Connection) -> Result<()> {
             schema_version_seen TEXT,
             cache_status TEXT NOT NULL DEFAULT 'fresh'
         );
-        CREATE INDEX IF NOT EXISTS reference.idx_api_cache_key ON api_cache_entries(normalized_cache_key);
-        CREATE INDEX IF NOT EXISTS reference.idx_api_cache_expires ON api_cache_entries(expires_at);
+        CREATE INDEX IF NOT EXISTS api_cache_db.idx_api_cache_key ON api_cache_entries(normalized_cache_key);
+        CREATE INDEX IF NOT EXISTS api_cache_db.idx_api_cache_expires ON api_cache_entries(expires_at);
 
         CREATE TABLE IF NOT EXISTS association_facts (
             association_id TEXT PRIMARY KEY,

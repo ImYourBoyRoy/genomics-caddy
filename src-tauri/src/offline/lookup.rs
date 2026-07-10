@@ -3,7 +3,7 @@
 
 use crate::research::evidence::ncbi_context::ClinvarLiveContext;
 use crate::research::util::normalize_rsid;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde_json::json;
 
 #[derive(Debug, Clone)]
@@ -47,10 +47,9 @@ pub fn clinvar_local_to_live_context(rec: &ClinvarLocalRecord) -> ClinvarLiveCon
         Some(rec.significance.clone())
     };
     let narrative = match (&sig, &rec.conditions) {
-        (Some(s), c) if !c.is_empty() => Some(format!(
-            "ClinVar (local): {} — {} [{}]",
-            rec.rsid, s, c
-        )),
+        (Some(s), c) if !c.is_empty() => {
+            Some(format!("ClinVar (local): {} — {} [{}]", rec.rsid, s, c))
+        }
         (Some(s), _) => Some(format!("ClinVar (local): {} — {}", rec.rsid, s)),
         _ => None,
     };
@@ -101,9 +100,10 @@ pub fn lookup_pharmgkb_local(conn: &Connection, rsid: &str) -> (Vec<String>, u32
     for row in rows.flatten() {
         count += 1;
         if let Some(d) = row.0
-            && !drugs.contains(&d) {
-                drugs.push(d);
-            }
+            && !drugs.contains(&d)
+        {
+            drugs.push(d);
+        }
     }
     (drugs, count, count > 0)
 }
@@ -181,11 +181,9 @@ pub fn lookup_variant_locus_local(
 }
 
 pub fn offline_clinvar_available(conn: &Connection) -> bool {
-    conn.query_row(
-        "SELECT COUNT(*) FROM clinvar_reference",
-        [],
-        |row| row.get::<_, i64>(0),
-    )
+    conn.query_row("SELECT COUNT(*) FROM clinvar_reference", [], |row| {
+        row.get::<_, i64>(0)
+    })
     .unwrap_or(0)
         > 0
 }

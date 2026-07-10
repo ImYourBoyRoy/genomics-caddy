@@ -32,15 +32,47 @@
   let isDevMode = $state(import.meta.env.DEV); // Default to current env, user can toggle
   let copyStatus = $state("");
 
+  const TARGET_SUFFIXES = [
+    "/src-tauri/target/debug/DNA-Tools.exe",
+    "/src-tauri/target/release/DNA-Tools.exe",
+    "/src-tauri/target/debug/DNA-Tools",
+    "/src-tauri/target/release/DNA-Tools",
+    "/src-tauri/target/debug/tauri-app.exe",
+    "/src-tauri/target/release/tauri-app.exe",
+    "/src-tauri/target/debug/tauri-app",
+    "/src-tauri/target/release/tauri-app",
+    "/App/DNA-Tools.exe",
+    "/App/DNA-Tools",
+  ];
+
+  function deriveProjectDirFromExe(path: string): string {
+    const normalized = path.replace(/\\/g, "/");
+    for (const suffix of TARGET_SUFFIXES) {
+      if (normalized.endsWith(suffix)) {
+        return normalized.slice(0, -suffix.length);
+      }
+    }
+    const appIdx = normalized.lastIndexOf("/App/");
+    if (appIdx >= 0) return normalized.slice(0, appIdx);
+    return normalized;
+  }
+
+  function fallbackExeFromAppPaths(paths: AppPaths): string {
+    const db = paths.db_path.replace(/\\/g, "/");
+    if (db.includes("/App/Data/")) {
+      return db.replace("/App/Data/user_genome.db", "/App/DNA-Tools");
+    }
+    if (db.includes("/data/")) {
+      return db.replace("/data/user_genome.db", "/src-tauri/target/debug/DNA-Tools");
+    }
+    return "";
+  }
+
   // Derived paths
   let projectDir = $derived.by(() => {
-    if (!exePath) return "/path/to/AI/DNA_Tools";
-    // Dev executables reside in src-tauri/target/debug or release
-    return exePath
-      .replace("/src-tauri/target/debug/tauri-app.exe", "")
-      .replace("/src-tauri/target/release/tauri-app.exe", "")
-      .replace("/src-tauri/target/debug/tauri-app", "")
-      .replace("/src-tauri/target/release/tauri-app", "");
+    if (appPaths?.project_root) return appPaths.project_root.replace(/\\/g, "/");
+    if (exePath) return deriveProjectDirFromExe(exePath);
+    return "";
   });
 
   onMount(async () => {
@@ -48,11 +80,8 @@
       exePath = await getCurrentExe();
     } catch (e) {
       console.error("Failed to fetch current executable path:", e);
-      // Fallback
       if (appPaths) {
-        exePath = appPaths.db_path.replace("user_genome.db", "tauri-app.exe").replace(/\\/g, "/");
-      } else {
-        exePath = "src-tauri/target/debug/tauri-app.exe";
+        exePath = fallbackExeFromAppPaths(appPaths);
       }
     }
 

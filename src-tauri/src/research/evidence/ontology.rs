@@ -18,10 +18,7 @@ pub struct TraitOntologyMapping {
     pub synonyms: Vec<String>,
 }
 
-pub async fn map_trait_via_ols4(
-    db_path: &Path,
-    trait_name: &str,
-) -> Option<TraitOntologyMapping> {
+pub async fn map_trait_via_ols4(db_path: &Path, trait_name: &str) -> Option<TraitOntologyMapping> {
     let query = trait_name.trim();
     if query.is_empty() || query.len() < 3 {
         return None;

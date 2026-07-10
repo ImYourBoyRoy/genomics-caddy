@@ -12,10 +12,10 @@ Key Outputs: Query results and transaction success status.
 Operational Notes: Uses prepared statements and explicit transaction blocks for performance.
 */
 
-use rusqlite::{params, Connection, Result};
-use std::path::Path;
-use crate::parser::SnpRecord;
 use crate::liftover::LiftoverEngine;
+use crate::parser::SnpRecord;
+use rusqlite::{Connection, Result, params};
+use std::path::Path;
 
 const DB_BOOTSTRAP_KEY: &str = "db_bootstrapped_v1";
 
@@ -41,46 +41,165 @@ pub struct DbSnpRecord {
 pub fn connect<P: AsRef<Path>>(path: P) -> Result<Connection> {
     let conn = crate::db_crypto::open_encrypted(path.as_ref())?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
-    
-    let ref_db_path = path.as_ref().parent()
-        .map(|p| p.join("genomics_reference.db"))
-        .unwrap_or_else(|| std::path::PathBuf::from("genomics_reference.db"));
-        
-    let attach_query = format!(
-        "ATTACH DATABASE '{}' AS reference",
-        ref_db_path.to_string_lossy().replace('\\', "/")
+    let parent_dir = path.as_ref().parent().unwrap_or_else(|| Path::new("."));
+    attach_public_databases(&conn, parent_dir)?;
+    Ok(conn)
+}
+
+/// Opens an isolated sample database and attaches shared public reference databases.
+pub fn connect_sample(data_dir: &Path, sample_id: i64) -> Result<Connection> {
+    std::fs::create_dir_all(crate::paths::sample_dir(data_dir, sample_id))
+        .map_err(|_| rusqlite::Error::InvalidPath(crate::paths::sample_dir(data_dir, sample_id)))?;
+    let conn =
+        crate::db_crypto::open_encrypted(&crate::paths::sample_db_path(data_dir, sample_id))?;
+    conn.execute("PRAGMA foreign_keys = ON;", [])?;
+    attach_public_databases(&conn, data_dir)?;
+    ensure_sample_schema(&conn)?;
+    Ok(conn)
+}
+
+/// Opens a sample database when only the registry database path is available.
+pub fn connect_sample_from_registry_path(
+    registry_path: &Path,
+    sample_id: i64,
+) -> Result<Connection> {
+    let data_dir = registry_path.parent().unwrap_or_else(|| Path::new("."));
+    connect_sample(data_dir, sample_id)
+}
+
+/// Attach a sidecar DB only when the file already exists.
+/// SQLite `ATTACH` creates empty files otherwise — we refuse that for catalog DBs
+/// (clinvar/dbsnp) so they appear only after a real download/import.
+fn try_attach_existing(conn: &Connection, path: &Path, schema: &str) -> bool {
+    if !path.is_file() {
+        return false;
+    }
+    let sql = format!(
+        "ATTACH DATABASE '{}' AS {schema}",
+        path.to_string_lossy().replace('\\', "/")
     );
-    conn.execute(&attach_query, [])?;
+    match conn.execute(&sql, []) {
+        Ok(_) => true,
+        Err(e) => {
+            eprintln!("Warning: could not ATTACH {} as {schema}: {e}", path.display());
+            false
+        }
+    }
+}
+
+/// Create-and-attach for operational caches that the app itself owns
+/// (reference registry + HTTP cache). Catalog downloads still create clinvar/dbsnp.
+fn attach_or_create(conn: &Connection, path: &Path, schema: &str) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| {
+            rusqlite::Error::InvalidParameterName(format!(
+                "Failed to create DB directory {}: {e}",
+                parent.display()
+            ))
+        })?;
+    }
+    let sql = format!(
+        "ATTACH DATABASE '{}' AS {schema}",
+        path.to_string_lossy().replace('\\', "/")
+    );
+    conn.execute(&sql, [])?;
+    Ok(())
+}
+
+fn attach_public_databases(conn: &Connection, parent_dir: &Path) -> Result<()> {
+    // App-owned sidecars (may be created empty on first launch).
+    attach_or_create(conn, &parent_dir.join("genomics_reference.db"), "reference")?;
+    attach_or_create(conn, &parent_dir.join("api_cache.db"), "api_cache_db")?;
+
+    // Catalog sidecars — only attach when a download/import has created them.
+    let has_clinvar = try_attach_existing(conn, &parent_dir.join("clinvar.db"), "clinvar");
+    let has_dbsnp = try_attach_existing(conn, &parent_dir.join("dbsnp.db"), "dbsnp");
 
     // SQLite does not support persistent cross-database VIEWs, but it fully supports
     // TEMP VIEWs referencing attached databases. Creating temporary views allows unqualified
     // queries like `SELECT * FROM gwas_reference` to transparently route to the attached
-    // database `reference.gwas_reference`. Note: these are read-only (writes must use
-    // the explicit `reference.` schema prefix).
-    let reference_views: &[(&str, &str)] = &[
-        ("gwas_reference",              "SELECT * FROM reference.gwas_reference"),
-        ("clinvar_reference",           "SELECT * FROM reference.clinvar_reference"),
-        ("api_cache",                   "SELECT * FROM reference.api_cache"),
-        ("api_cache_entries",           "SELECT * FROM reference.api_cache_entries"),
-        ("source_records",              "SELECT * FROM reference.source_records"),
-        ("gnomad_variant_cache",        "SELECT * FROM reference.gnomad_variant_cache"),
-        ("gnomad_config",               "SELECT * FROM reference.gnomad_config"),
-        ("offline_asset_registry",      "SELECT * FROM reference.offline_asset_registry"),
-        ("pharmgkb_clinical_variants",  "SELECT * FROM reference.pharmgkb_clinical_variants"),
-        ("pharmgkb_genes",              "SELECT * FROM reference.pharmgkb_genes"),
-        ("clingen_gene_validity",       "SELECT * FROM reference.clingen_gene_validity"),
-        ("mane_transcripts",            "SELECT * FROM reference.mane_transcripts"),
-        ("rsid_aliases",                "SELECT * FROM reference.rsid_aliases"),
-        ("evidence_library",            "SELECT * FROM reference.evidence_library"),
+    // databases. Note: these are read-only (writes must use the explicit schema prefixes).
+    let mut reference_views: Vec<(&str, &str)> = vec![
+        ("gwas_reference", "SELECT * FROM reference.gwas_reference"),
+        ("api_cache", "SELECT * FROM api_cache_db.api_cache"),
+        (
+            "api_cache_entries",
+            "SELECT * FROM api_cache_db.api_cache_entries",
+        ),
+        (
+            "source_records",
+            "SELECT * FROM api_cache_db.source_records",
+        ),
+        (
+            "gnomad_variant_cache",
+            "SELECT * FROM reference.gnomad_variant_cache",
+        ),
+        ("gnomad_config", "SELECT * FROM reference.gnomad_config"),
+        (
+            "offline_asset_registry",
+            "SELECT * FROM reference.offline_asset_registry",
+        ),
+        (
+            "pharmgkb_clinical_variants",
+            "SELECT * FROM reference.pharmgkb_clinical_variants",
+        ),
+        ("pharmgkb_genes", "SELECT * FROM reference.pharmgkb_genes"),
+        (
+            "clingen_gene_validity",
+            "SELECT * FROM reference.clingen_gene_validity",
+        ),
+        (
+            "mane_transcripts",
+            "SELECT * FROM reference.mane_transcripts",
+        ),
+        (
+            "evidence_library",
+            "SELECT * FROM reference.evidence_library",
+        ),
     ];
+    if has_clinvar {
+        reference_views.push((
+            "clinvar_reference",
+            "SELECT * FROM clinvar.clinvar_reference",
+        ));
+    }
+    if has_dbsnp {
+        reference_views.push(("rsid_aliases", "SELECT * FROM dbsnp.rsid_aliases"));
+    }
     for (view_name, select_sql) in reference_views {
         let ddl = format!("CREATE TEMP VIEW IF NOT EXISTS {view_name} AS {select_sql}");
         if let Err(e) = conn.execute(&ddl, []) {
             eprintln!("Warning: could not create temp view {view_name} on connect: {e}");
         }
     }
- 
-    Ok(conn)
+
+    Ok(())
+}
+
+/// Ensure a catalog sidecar exists and is attached (called from offline import).
+pub fn ensure_catalog_db_attached(conn: &Connection, data_dir: &Path, schema: &str) -> Result<()> {
+    let filename = match schema {
+        "clinvar" => "clinvar.db",
+        "dbsnp" => "dbsnp.db",
+        other => {
+            return Err(rusqlite::Error::InvalidParameterName(format!(
+                "Unknown catalog schema: {other}"
+            )));
+        }
+    };
+    let path = data_dir.join(filename);
+    // Already attached?
+    let attached: bool = conn
+        .query_row(
+            "SELECT 1 FROM pragma_database_list WHERE name = ?1",
+            params![schema],
+            |_| Ok(true),
+        )
+        .unwrap_or(false);
+    if attached {
+        return Ok(());
+    }
+    attach_or_create(conn, &path, schema)
 }
 
 thread_local! {
@@ -115,17 +234,17 @@ pub fn clear_cached_conn() {
     });
 }
 
-/// Seal the database file (encrypt at rest). Call on graceful shutdown.
+/// Checkpoint WAL and drop cached handles on graceful shutdown (no encryption).
 pub fn seal<P: AsRef<Path>>(path: P) -> Result<(), String> {
     clear_cached_conn();
     let path = path.as_ref();
-    if path.is_file() {
-        // Checkpoint WAL into main file before sealing.
-        if let Ok(conn) = Connection::open(path) {
-            let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
-        }
+    if path.is_file()
+        && let Ok(conn) = Connection::open(path)
+    {
+        let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
     }
-    crate::db_crypto::seal_encrypted(path)
+    crate::db_crypto::discard_legacy_sealed_db(path);
+    Ok(())
 }
 
 fn table_exists_in_main(conn: &Connection, table_name: &str) -> bool {
@@ -159,8 +278,16 @@ fn migrate_to_reference_db<F: Fn(&str)>(conn: &Connection, progress: F) -> Resul
     let total = tables_to_migrate.len();
     for (idx, t) in tables_to_migrate.iter().enumerate() {
         if table_exists_in_main(conn, t) {
-            progress(&format!("Migrating reference database table: {} ({} of {})...", t, idx + 1, total));
-            let copy_sql = format!("INSERT OR IGNORE INTO reference.{} SELECT * FROM main.{}", t, t);
+            progress(&format!(
+                "Migrating reference database table: {} ({} of {})...",
+                t,
+                idx + 1,
+                total
+            ));
+            let copy_sql = format!(
+                "INSERT OR IGNORE INTO reference.{} SELECT * FROM main.{}",
+                t, t
+            );
             if let Err(e) = conn.execute(&copy_sql, []) {
                 eprintln!("Failed to copy table {}: {}", t, e);
                 return Err(e);
@@ -202,6 +329,9 @@ pub fn open_user_db_with_progress<P: AsRef<Path>>(
 
     emit_progress("Applying schema migrations...");
     ensure_schema(&conn)?;
+    if let Some(data_dir) = path.as_ref().parent() {
+        migrate_legacy_sample_tables(&conn, data_dir)?;
+    }
 
     emit_progress("Migrating reference schema mappings...");
     migrate_to_reference_db(&conn, emit_progress)?;
@@ -276,8 +406,6 @@ fn run_heavy_bootstrap_with_progress<F: Fn(&str)>(
     Ok(())
 }
 
-
-
 fn ensure_schema(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS samples (
@@ -290,27 +418,10 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
     )?;
 
     // Add column if it's an older database schema (migration helper)
-    let _ = conn.execute("ALTER TABLE samples ADD COLUMN genetic_sex TEXT DEFAULT 'Unknown'", []);
-
-    // Create genotypes table
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS genotypes (
-            sample_id INTEGER,
-            rsid TEXT NOT NULL,
-            chromosome TEXT NOT NULL,
-            position_grch37 INTEGER NOT NULL,
-            position_grch38 INTEGER,
-            allele1 TEXT NOT NULL,
-            allele2 TEXT NOT NULL,
-            PRIMARY KEY (sample_id, rsid),
-            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
-        )",
+    let _ = conn.execute(
+        "ALTER TABLE samples ADD COLUMN genetic_sex TEXT DEFAULT 'Unknown'",
         [],
-    )?;
-
-    // Create indexes for fast lookup
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_genotypes_rsid ON genotypes(rsid)", [])?;
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_genotypes_coords ON genotypes(chromosome, position_grch38)", [])?;
+    );
 
     // Create evidence_library table
     conn.execute(
@@ -324,42 +435,14 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
         )",
         [],
     )?;
-    conn.execute("CREATE INDEX IF NOT EXISTS reference.idx_evidence_rsid ON evidence_library(rsid)", [])?;
-    conn.execute("CREATE INDEX IF NOT EXISTS reference.idx_evidence_gene ON evidence_library(gene)", [])?;
-
-    // Create chat_sessions table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS chat_sessions (
-            id TEXT PRIMARY KEY,
-            sample_id INTEGER,
-            title TEXT NOT NULL,
-            timestamp INTEGER NOT NULL,
-            selected_packs TEXT NOT NULL,
-            only_active_findings INTEGER NOT NULL,
-            temperature REAL NOT NULL,
-            selected_model TEXT NOT NULL,
-            max_tokens INTEGER,
-            extended_thinking INTEGER,
-            consultation_mode TEXT,
-            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
-        )",
+        "CREATE INDEX IF NOT EXISTS reference.idx_evidence_rsid ON evidence_library(rsid)",
         [],
     )?;
-
-    // Create chat_messages table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS chat_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT NOT NULL,
-            role TEXT NOT NULL,
-            content TEXT NOT NULL,
-            images TEXT,
-            safety_review TEXT,
-            FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
-        )",
+        "CREATE INDEX IF NOT EXISTS reference.idx_evidence_gene ON evidence_library(gene)",
         [],
     )?;
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)", [])?;
 
     // Qdrant / research settings (secrets live in OS keyring — columns kept for legacy migration)
     conn.execute(
@@ -375,38 +458,19 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
         )",
         [],
     )?;
-    let default_url = std::env::var("QDRANT_URL").unwrap_or_else(|_| "http://localhost:6333".to_string());
-    let default_collection = std::env::var("QDRANT_COLLECTION").unwrap_or_else(|_| "genomics_evidence".to_string());
-    let default_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".to_string());
+    let default_url =
+        std::env::var("QDRANT_URL").unwrap_or_else(|_| "http://localhost:6333".to_string());
+    let default_collection =
+        std::env::var("QDRANT_COLLECTION").unwrap_or_else(|_| "genomics_evidence".to_string());
+    let default_model =
+        std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".to_string());
     conn.execute(
         "INSERT OR IGNORE INTO qdrant_config (id, url, collection, embedding_model) VALUES (1, ?, ?, ?)",
         rusqlite::params![default_url, default_collection, default_model],
     )?;
 
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS research_jobs (
-            job_id TEXT PRIMARY KEY,
-            sample_id INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            total_markers INTEGER NOT NULL DEFAULT 0,
-            enriched_count INTEGER NOT NULL DEFAULT 0,
-            priority_complete INTEGER NOT NULL DEFAULT 0,
-            current_rsid TEXT,
-            current_source TEXT,
-            started_at INTEGER NOT NULL,
-            last_updated INTEGER NOT NULL,
-            error_message TEXT,
-            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
-        )",
-        [],
-    )?;
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_research_jobs_sample ON research_jobs(sample_id, started_at DESC)",
-        [],
-    )?;
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS reference.api_cache (
+        "CREATE TABLE IF NOT EXISTS api_cache_db.api_cache (
             url TEXT PRIMARY KEY,
             response_json TEXT NOT NULL,
             fetched_at INTEGER NOT NULL
@@ -414,25 +478,39 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
         [],
     )?;
 
-    // Drop clinvar_reference if it's the old schema (lacking gene_symbol) or has old single PK
-    let has_new_schema = conn.query_row(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='clinvar_reference' AND sql LIKE '%gene_symbol%'",
-        [],
-        |_| Ok(true)
-    ).unwrap_or(false);
+    // ClinVar catalog schema only when clinvar.db was downloaded/attached.
+    let clinvar_attached: bool = conn
+        .query_row(
+            "SELECT 1 FROM pragma_database_list WHERE name = 'clinvar'",
+            [],
+            |_| Ok(true),
+        )
+        .unwrap_or(false);
 
-    let has_old_pk = conn.query_row(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='clinvar_reference' AND sql LIKE '%PRIMARY KEY (rsid)%'",
-        [],
-        |_| Ok(true)
-    ).unwrap_or(false);
+    if clinvar_attached {
+        // Drop clinvar_reference if it's the old schema (lacking gene_symbol) or has old single PK
+        let has_new_schema = conn
+            .query_row(
+                "SELECT 1 FROM clinvar.sqlite_master WHERE type='table' AND name='clinvar_reference' AND sql LIKE '%gene_symbol%'",
+                [],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
 
-    if !has_new_schema || has_old_pk {
-        let _ = conn.execute("DROP TABLE IF EXISTS reference.clinvar_reference", []);
-    }
+        let has_old_pk = conn
+            .query_row(
+                "SELECT 1 FROM clinvar.sqlite_master WHERE type='table' AND name='clinvar_reference' AND sql LIKE '%PRIMARY KEY (rsid)%'",
+                [],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
 
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS reference.clinvar_reference (
+        if !has_new_schema || has_old_pk {
+            let _ = conn.execute("DROP TABLE IF EXISTS clinvar.clinvar_reference", []);
+        }
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS clinvar.clinvar_reference (
             rsid TEXT NOT NULL,
             allele_id TEXT NOT NULL DEFAULT '',
             variation_id TEXT NOT NULL DEFAULT '',
@@ -462,8 +540,9 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
             relevant_allele TEXT NOT NULL DEFAULT '',
             PRIMARY KEY (rsid, assembly, gene_symbol, variation_id)
         )",
-        [],
-    )?;
+            [],
+        )?;
+    }
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS reference.gwas_reference (
@@ -483,8 +562,142 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
         [],
     )?;
 
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS discovered_findings (
+    let _ = migrate_gwas_reference_columns(conn);
+
+    let _ = migrate_qdrant_scope_columns(conn);
+    let _ = crate::config::migrate_plaintext_secrets(conn);
+    let _ = crate::research::evidence::migrate_evidence_schema(conn);
+    let _ = crate::research::gnomad::migrate_gnomad_schema(conn);
+    let _ = crate::offline::schema::migrate_offline_schema(conn);
+
+    // Legacy Reference DB Data Migration Check
+    let tables_to_migrate = vec![
+        ("api_cache", "api_cache_db", "api_cache"),
+        ("api_cache_entries", "api_cache_db", "api_cache_entries"),
+        ("source_records", "api_cache_db", "source_records"),
+        ("clinvar_reference", "clinvar", "clinvar_reference"),
+        ("rsid_aliases", "dbsnp", "rsid_aliases"),
+    ];
+
+    let mut migrated_any = false;
+    for (old_table, target_schema, target_table) in tables_to_migrate {
+        // Check if old table exists in reference database
+        let old_exists = conn
+            .query_row(
+                "SELECT 1 FROM reference.sqlite_master WHERE type='table' AND name = ?",
+                [old_table],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
+
+        if old_exists {
+            // Check if old table has rows
+            let old_rows: i64 = conn
+                .query_row(
+                    &format!("SELECT COUNT(*) FROM reference.{}", old_table),
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap_or(0);
+
+            if old_rows > 0 {
+                // Check if target table is empty
+                let target_rows: i64 = conn
+                    .query_row(
+                        &format!("SELECT COUNT(*) FROM {}.{}", target_schema, target_table),
+                        [],
+                        |r| r.get(0),
+                    )
+                    .unwrap_or(0);
+
+                if target_rows == 0 {
+                    println!(
+                        "Migrating {} rows from reference.{} to {}.{}",
+                        old_rows, old_table, target_schema, target_table
+                    );
+                    let copy_sql = format!(
+                        "INSERT INTO {}.{} SELECT * FROM reference.{}",
+                        target_schema, target_table, old_table
+                    );
+                    if let Err(e) = conn.execute(&copy_sql, []) {
+                        eprintln!("Warning: failed to copy table {}: {}", old_table, e);
+                    } else {
+                        migrated_any = true;
+                    }
+                }
+            }
+
+            // Drop the old table to clean up
+            let _ = conn.execute(&format!("DROP TABLE IF EXISTS reference.{}", old_table), []);
+        }
+    }
+
+    if migrated_any {
+        println!("Vacuuming legacy reference database to reclaim space...");
+        let _ = conn.execute("VACUUM reference", []);
+    }
+
+    // NOTE: We do not create persistent main views here because SQLite does not support
+    // views referencing attached databases persistently. Read-only views are created
+    // dynamically as TEMP VIEWs on every connection setup in connect().
+
+    Ok(())
+}
+
+fn ensure_sample_schema(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS genotypes (
+            sample_id INTEGER NOT NULL,
+            rsid TEXT NOT NULL,
+            chromosome TEXT NOT NULL,
+            position_grch37 INTEGER NOT NULL,
+            position_grch38 INTEGER,
+            allele1 TEXT NOT NULL,
+            allele2 TEXT NOT NULL,
+            PRIMARY KEY (sample_id, rsid)
+        );
+        CREATE INDEX IF NOT EXISTS idx_genotypes_rsid ON genotypes(rsid);
+        CREATE INDEX IF NOT EXISTS idx_genotypes_coords ON genotypes(chromosome, position_grch38);
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id TEXT PRIMARY KEY,
+            sample_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            selected_packs TEXT NOT NULL,
+            only_active_findings INTEGER NOT NULL,
+            temperature REAL NOT NULL,
+            selected_model TEXT NOT NULL,
+            max_tokens INTEGER,
+            extended_thinking INTEGER,
+            consultation_mode TEXT
+        );
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            images TEXT,
+            safety_review TEXT,
+            FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
+        CREATE TABLE IF NOT EXISTS research_jobs (
+            job_id TEXT PRIMARY KEY,
+            sample_id INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            total_markers INTEGER NOT NULL DEFAULT 0,
+            enriched_count INTEGER NOT NULL DEFAULT 0,
+            priority_complete INTEGER NOT NULL DEFAULT 0,
+            current_rsid TEXT,
+            current_source TEXT,
+            started_at INTEGER NOT NULL,
+            last_updated INTEGER NOT NULL,
+            error_message TEXT,
+            scope_json TEXT,
+            session_started_at INTEGER
+        );
+        CREATE INDEX IF NOT EXISTS idx_research_jobs_sample ON research_jobs(sample_id, started_at DESC);
+        CREATE TABLE IF NOT EXISTS discovered_findings (
             sample_id INTEGER NOT NULL,
             rsid TEXT NOT NULL,
             gene TEXT,
@@ -495,30 +708,104 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
             clinvar_condition TEXT,
             notes TEXT,
             interpretation_status TEXT NOT NULL,
-            PRIMARY KEY (sample_id, rsid),
-            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
-        )",
-        [],
+            PRIMARY KEY (sample_id, rsid)
+        );
+        CREATE TABLE IF NOT EXISTS vector_promoted_findings (
+            sample_id INTEGER NOT NULL,
+            rsid TEXT NOT NULL,
+            gene TEXT,
+            user_genotype TEXT,
+            trait_summary TEXT NOT NULL DEFAULT '',
+            trait_categories TEXT NOT NULL DEFAULT '[]',
+            significance_score REAL NOT NULL DEFAULT 0,
+            gwas_best_pvalue REAL,
+            enrichment_version TEXT NOT NULL DEFAULT '4',
+            promoted_at INTEGER NOT NULL,
+            PRIMARY KEY (sample_id, rsid)
+        );
+        CREATE INDEX IF NOT EXISTS idx_vector_promoted_sample ON vector_promoted_findings(sample_id);",
     )?;
+    Ok(())
+}
 
-    let _ = migrate_gwas_reference_columns(conn);
+fn migrate_legacy_sample_tables(conn: &Connection, data_dir: &Path) -> Result<()> {
+    if !table_exists_in_main(conn, "genotypes")
+        || conn.query_row("SELECT COUNT(*) FROM genotypes", [], |row| {
+            row.get::<_, i64>(0)
+        })? == 0
+    {
+        return Ok(());
+    }
 
-    let _ = migrate_qdrant_scope_columns(conn);
-    let _ = migrate_research_job_scope_column(conn);
-    let _ = migrate_vector_promoted_findings(conn);
-    let _ = crate::config::migrate_plaintext_secrets(conn);
-    let _ = crate::research::evidence::migrate_evidence_schema(conn);
-    let _ = crate::research::gnomad::migrate_gnomad_schema(conn);
-    let _ = crate::offline::schema::migrate_offline_schema(conn);
-    // NOTE: We do not create persistent main views here because SQLite does not support
-    // views referencing attached databases persistently. Read-only views are created
-    // dynamically as TEMP VIEWs on every connection setup in connect().
- 
+    let mut samples = conn.prepare("SELECT id FROM samples")?;
+    let ids = samples
+        .query_map([], |row| row.get::<_, i64>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    for sample_id in ids {
+        let _sample = connect_sample(data_dir, sample_id)?;
+        let target = crate::paths::sample_db_path(data_dir, sample_id);
+        let escaped = target.to_string_lossy().replace('\'', "''");
+        conn.execute(
+            &format!("ATTACH DATABASE '{escaped}' AS sample_migration"),
+            [],
+        )?;
+        let migration = (|| -> Result<()> {
+            conn.execute_batch("BEGIN IMMEDIATE")?;
+            for table in [
+                "genotypes",
+                "research_jobs",
+                "discovered_findings",
+                "vector_promoted_findings",
+            ] {
+                if table_exists_in_main(conn, table) {
+                    conn.execute(
+                        &format!("INSERT OR REPLACE INTO sample_migration.{table} SELECT * FROM main.{table} WHERE sample_id = ?"),
+                        params![sample_id],
+                    )?;
+                }
+            }
+            if table_exists_in_main(conn, "chat_sessions") {
+                conn.execute(
+                    "INSERT OR REPLACE INTO sample_migration.chat_sessions
+                     SELECT * FROM main.chat_sessions WHERE sample_id = ?",
+                    params![sample_id],
+                )?;
+                if table_exists_in_main(conn, "chat_messages") {
+                    conn.execute(
+                        "INSERT OR REPLACE INTO sample_migration.chat_messages
+                         SELECT * FROM main.chat_messages
+                         WHERE session_id IN (SELECT id FROM main.chat_sessions WHERE sample_id = ?)",
+                        params![sample_id],
+                    )?;
+                }
+            }
+            conn.execute_batch("COMMIT")
+        })();
+        if migration.is_err() {
+            let _ = conn.execute_batch("ROLLBACK");
+        }
+        conn.execute("DETACH DATABASE sample_migration", [])?;
+        migration?;
+    }
+
+    for table in [
+        "chat_messages",
+        "chat_sessions",
+        "vector_promoted_findings",
+        "discovered_findings",
+        "research_jobs",
+        "genotypes",
+    ] {
+        if table_exists_in_main(conn, table) {
+            conn.execute(&format!("DROP TABLE main.{table}"), [])?;
+        }
+    }
     Ok(())
 }
 
 pub fn import_raw_genome<F: Fn(u32, &str)>(
     conn: &mut Connection,
+    data_dir: &Path,
     sample_name: &str,
     records: &[SnpRecord],
     liftover_engine: Option<&LiftoverEngine>,
@@ -561,8 +848,10 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
     )
     .map_err(|e| format!("Failed to update genetic sex: {}", e))?;
 
-    // 2. Perform bulk insertion using a transaction
-    let tx = conn
+    // 2. Perform bulk insertion in the isolated sample database.
+    let mut sample_conn = connect_sample(data_dir, sample_id)
+        .map_err(|e| format!("Failed to initialize sample database: {e}"))?;
+    let tx = sample_conn
         .transaction()
         .map_err(|e| format!("Failed to start transaction: {}", e))?;
 
@@ -579,12 +868,14 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
         for (i, record) in records.iter().enumerate() {
             if i % 50_000 == 0 && i > 0 {
                 let percent = 50 + ((i as f32 / total as f32) * 45.0) as u32;
-                progress_callback(percent, &format!("Liftover & Ingesting SNPs: {}/{}...", i, total));
+                progress_callback(
+                    percent,
+                    &format!("Liftover & Ingesting SNPs: {}/{}...", i, total),
+                );
             }
 
-            let pos_grch38 = liftover_engine.and_then(|engine| {
-                engine.liftover(&record.chromosome, record.position)
-            });
+            let pos_grch38 = liftover_engine
+                .and_then(|engine| engine.liftover(&record.chromosome, record.position));
 
             stmt.execute(params![
                 sample_id,
@@ -607,7 +898,7 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
     Ok(sample_id)
 }
 
-/// Retrieves list of all imported samples, auto-repairing genetic sex determination if "Unknown".
+/// Retrieves list of all imported samples from the registry database.
 pub fn get_samples(conn: &Connection) -> Result<Vec<SampleInfo>> {
     let mut stmt = conn.prepare("SELECT id, name, genetic_sex, datetime(imported_at, 'localtime') FROM samples ORDER BY id DESC")?;
     let rows = stmt.query_map([], |row| {
@@ -621,32 +912,7 @@ pub fn get_samples(conn: &Connection) -> Result<Vec<SampleInfo>> {
 
     let mut list = Vec::new();
     for row_res in rows {
-        let (id, name, mut genetic_sex, imported_at) = row_res?;
-        if genetic_sex == "Unknown" {
-            // Count non-missing Y chromosome genotypes for this sample
-            let y_count: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM genotypes 
-                 WHERE sample_id = ? AND chromosome = 'Y' 
-                 AND allele1 != '-' AND allele1 != '0' AND allele1 != '?' AND allele1 != ''",
-                params![id],
-                |r| r.get(0),
-            ).unwrap_or(0);
-            
-            let resolved_sex = if y_count > 20 {
-                "XY (Male)".to_string()
-            } else {
-                "XX (Female)".to_string()
-            };
-            
-            // Persist back to the samples table
-            let _ = conn.execute(
-                "UPDATE samples SET genetic_sex = ? WHERE id = ?",
-                params![resolved_sex, id],
-            );
-            
-            genetic_sex = resolved_sex;
-        }
-
+        let (id, name, genetic_sex, imported_at) = row_res?;
         list.push(SampleInfo {
             id,
             name,
@@ -658,7 +924,11 @@ pub fn get_samples(conn: &Connection) -> Result<Vec<SampleInfo>> {
 }
 
 /// Queries specific variants by rsID (batched IN queries).
-pub fn query_by_rsids(conn: &Connection, sample_id: i64, rsids: &[String]) -> Result<Vec<DbSnpRecord>> {
+pub fn query_by_rsids(
+    conn: &Connection,
+    sample_id: i64,
+    rsids: &[String],
+) -> Result<Vec<DbSnpRecord>> {
     if rsids.is_empty() {
         return Ok(Vec::new());
     }
@@ -729,7 +999,13 @@ pub fn query_region(
     )?;
 
     let rows = stmt.query_map(
-        params![sample_id, chromosome, start as i64, end as i64, MAX_REGION_RESULTS as i64],
+        params![
+            sample_id,
+            chromosome,
+            start as i64,
+            end as i64,
+            MAX_REGION_RESULTS as i64
+        ],
         |row| {
             Ok(DbSnpRecord {
                 sample_id: row.get(0)?,
@@ -756,13 +1032,13 @@ pub fn get_chromosome_counts(
     sample_id: i64,
 ) -> Result<std::collections::HashMap<String, i64>> {
     let mut stmt = conn.prepare(
-        "SELECT chromosome, COUNT(*) FROM genotypes WHERE sample_id = ? GROUP BY chromosome"
+        "SELECT chromosome, COUNT(*) FROM genotypes WHERE sample_id = ? GROUP BY chromosome",
     )?;
-    
+
     let rows = stmt.query_map(params![sample_id], |row| {
         Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
     })?;
-    
+
     let mut results = std::collections::HashMap::new();
     for r in rows {
         let (chr, count) = r?;
@@ -771,13 +1047,14 @@ pub fn get_chromosome_counts(
     Ok(results)
 }
 
-/// Deletes a sample and its genotypes from the database.
-pub fn delete_sample(conn: &Connection, sample_id: i64) -> Result<()> {
-    conn.execute("DELETE FROM genotypes WHERE sample_id = ?", params![sample_id])?;
-    conn.execute("DELETE FROM chat_sessions WHERE sample_id = ?", params![sample_id])?;
-    conn.execute("DELETE FROM research_jobs WHERE sample_id = ?", params![sample_id])?;
-    conn.execute("DELETE FROM discovered_findings WHERE sample_id = ?", params![sample_id])?;
-    conn.execute("DELETE FROM vector_promoted_findings WHERE sample_id = ?", params![sample_id])?;
+/// Deletes the registry row and the complete private database directory for a sample.
+pub fn delete_sample(conn: &Connection, data_dir: &Path, sample_id: i64) -> Result<()> {
+    clear_cached_conn();
+    let sample_dir = crate::paths::sample_dir(data_dir, sample_id);
+    if sample_dir.exists() {
+        std::fs::remove_dir_all(&sample_dir)
+            .map_err(|_| rusqlite::Error::InvalidPath(sample_dir))?;
+    }
     conn.execute("DELETE FROM samples WHERE id = ?", params![sample_id])?;
     Ok(())
 }
@@ -823,32 +1100,104 @@ pub fn dump_default_marker_packs_if_missing(data_dir: &Path) {
     if !packs_dir.exists() {
         let _ = std::fs::create_dir_all(&packs_dir);
     }
-    
+
     let embedded_packs: &[(&str, &str)] = &[
-        ("manifest.json", include_str!("../../src/lib/marker-packs/manifest.json")),
-        ("core.json", include_str!("../../src/lib/marker-packs/core.json")),
-        ("pgx.json", include_str!("../../src/lib/marker-packs/pgx.json")),
-        ("metabolic.json", include_str!("../../src/lib/marker-packs/metabolic.json")),
-        ("nutrients.json", include_str!("../../src/lib/marker-packs/nutrients.json")),
-        ("neuropsych.json", include_str!("../../src/lib/marker-packs/neuropsych.json")),
-        ("sleep.json", include_str!("../../src/lib/marker-packs/sleep.json")),
-        ("connective_tissue.json", include_str!("../../src/lib/marker-packs/connective_tissue.json")),
-        ("thyroid_autoimmune.json", include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json")),
-        ("cardiovascular.json", include_str!("../../src/lib/marker-packs/cardiovascular.json")),
-        ("cancer_confirmation_only.json", include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json")),
-        ("allergy_atopy_mast_cell.json", include_str!("../../src/lib/marker-packs/allergy_atopy_mast_cell.json")),
-        ("digestive_gut_microbiome.json", include_str!("../../src/lib/marker-packs/digestive_gut_microbiome.json")),
-        ("muscle_performance_recovery.json", include_str!("../../src/lib/marker-packs/muscle_performance_recovery.json")),
-        ("hormones_reproductive.json", include_str!("../../src/lib/marker-packs/hormones_reproductive.json")),
-        ("skin_hair_dermatology.json", include_str!("../../src/lib/marker-packs/skin_hair_dermatology.json")),
-        ("bone_growth_mineral_density.json", include_str!("../../src/lib/marker-packs/bone_growth_mineral_density.json")),
-        ("kidney_fluid_electrolytes.json", include_str!("../../src/lib/marker-packs/kidney_fluid_electrolytes.json")),
-        ("respiratory_airway.json", include_str!("../../src/lib/marker-packs/respiratory_airway.json")),
-        ("immune_autoimmune_general.json", include_str!("../../src/lib/marker-packs/immune_autoimmune_general.json")),
-        ("pain_migraine_sensory.json", include_str!("../../src/lib/marker-packs/pain_migraine_sensory.json")),
-        ("dental_oral_health.json", include_str!("../../src/lib/marker-packs/dental_oral_health.json")),
-        ("longevity_aging_resilience.json", include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json")),
-        ("discovery_catalog.json", include_str!("../../src/lib/marker-packs/discovery_catalog.json")),
+        (
+            "manifest.json",
+            include_str!("../../src/lib/marker-packs/manifest.json"),
+        ),
+        (
+            "core.json",
+            include_str!("../../src/lib/marker-packs/core.json"),
+        ),
+        (
+            "pgx.json",
+            include_str!("../../src/lib/marker-packs/pgx.json"),
+        ),
+        (
+            "metabolic.json",
+            include_str!("../../src/lib/marker-packs/metabolic.json"),
+        ),
+        (
+            "nutrients.json",
+            include_str!("../../src/lib/marker-packs/nutrients.json"),
+        ),
+        (
+            "neuropsych.json",
+            include_str!("../../src/lib/marker-packs/neuropsych.json"),
+        ),
+        (
+            "sleep.json",
+            include_str!("../../src/lib/marker-packs/sleep.json"),
+        ),
+        (
+            "connective_tissue.json",
+            include_str!("../../src/lib/marker-packs/connective_tissue.json"),
+        ),
+        (
+            "thyroid_autoimmune.json",
+            include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json"),
+        ),
+        (
+            "cardiovascular.json",
+            include_str!("../../src/lib/marker-packs/cardiovascular.json"),
+        ),
+        (
+            "cancer_confirmation_only.json",
+            include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json"),
+        ),
+        (
+            "allergy_atopy_mast_cell.json",
+            include_str!("../../src/lib/marker-packs/allergy_atopy_mast_cell.json"),
+        ),
+        (
+            "digestive_gut_microbiome.json",
+            include_str!("../../src/lib/marker-packs/digestive_gut_microbiome.json"),
+        ),
+        (
+            "muscle_performance_recovery.json",
+            include_str!("../../src/lib/marker-packs/muscle_performance_recovery.json"),
+        ),
+        (
+            "hormones_reproductive.json",
+            include_str!("../../src/lib/marker-packs/hormones_reproductive.json"),
+        ),
+        (
+            "skin_hair_dermatology.json",
+            include_str!("../../src/lib/marker-packs/skin_hair_dermatology.json"),
+        ),
+        (
+            "bone_growth_mineral_density.json",
+            include_str!("../../src/lib/marker-packs/bone_growth_mineral_density.json"),
+        ),
+        (
+            "kidney_fluid_electrolytes.json",
+            include_str!("../../src/lib/marker-packs/kidney_fluid_electrolytes.json"),
+        ),
+        (
+            "respiratory_airway.json",
+            include_str!("../../src/lib/marker-packs/respiratory_airway.json"),
+        ),
+        (
+            "immune_autoimmune_general.json",
+            include_str!("../../src/lib/marker-packs/immune_autoimmune_general.json"),
+        ),
+        (
+            "pain_migraine_sensory.json",
+            include_str!("../../src/lib/marker-packs/pain_migraine_sensory.json"),
+        ),
+        (
+            "dental_oral_health.json",
+            include_str!("../../src/lib/marker-packs/dental_oral_health.json"),
+        ),
+        (
+            "longevity_aging_resilience.json",
+            include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json"),
+        ),
+        (
+            "discovery_catalog.json",
+            include_str!("../../src/lib/marker-packs/discovery_catalog.json"),
+        ),
     ];
 
     for (filename, content) in embedded_packs {
@@ -861,8 +1210,8 @@ pub fn dump_default_marker_packs_if_missing(data_dir: &Path) {
     }
 }
 
-use std::sync::{Mutex, OnceLock};
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 struct PackRegistryEntry {
     content: String,
@@ -877,10 +1226,12 @@ struct MarkerPackRegistry {
 static REGISTRY: OnceLock<Mutex<MarkerPackRegistry>> = OnceLock::new();
 
 fn get_registry() -> &'static Mutex<MarkerPackRegistry> {
-    REGISTRY.get_or_init(|| Mutex::new(MarkerPackRegistry {
-        packs: HashMap::new(),
-        warnings: HashMap::new(),
-    }))
+    REGISTRY.get_or_init(|| {
+        Mutex::new(MarkerPackRegistry {
+            packs: HashMap::new(),
+            warnings: HashMap::new(),
+        })
+    })
 }
 
 pub fn get_warnings() -> HashMap<String, String> {
@@ -905,8 +1256,8 @@ fn validate_pack_json(content: &str) -> Result<(), String> {
         name: String,
         markers: Vec<ValidateMarker>,
     }
-    let p: ValidatePack = serde_json::from_str(content)
-        .map_err(|e| format!("JSON syntax error: {}", e))?;
+    let p: ValidatePack =
+        serde_json::from_str(content).map_err(|e| format!("JSON syntax error: {}", e))?;
     if p.name.is_empty() {
         return Err("Pack name cannot be empty".to_string());
     }
@@ -934,12 +1285,13 @@ pub fn sync_marker_packs_registry(app_data_dir: Option<&Path>) {
     let manifest_path = dir.join("manifest.json");
     if manifest_path.exists() {
         if let Ok(metadata) = manifest_path.metadata() {
-            let mtime = metadata.modified()
+            let mtime = metadata
+                .modified()
                 .ok()
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
-            
+
             let current_entry = reg.packs.get("manifest");
             let needs_update = current_entry.map(|e| e.mtime != mtime).unwrap_or(true);
             if needs_update {
@@ -951,14 +1303,17 @@ pub fn sync_marker_packs_registry(app_data_dir: Option<&Path>) {
                     }
                     match serde_json::from_str::<ValidateManifest>(&content) {
                         Ok(_) => {
-                            reg.packs.insert("manifest".to_string(), PackRegistryEntry {
-                                content,
-                                mtime,
-                            });
+                            reg.packs.insert(
+                                "manifest".to_string(),
+                                PackRegistryEntry { content, mtime },
+                            );
                             reg.warnings.remove("manifest");
                         }
                         Err(e) => {
-                            reg.warnings.insert("manifest".to_string(), format!("Manifest validation failed: {}", e));
+                            reg.warnings.insert(
+                                "manifest".to_string(),
+                                format!("Manifest validation failed: {}", e),
+                            );
                         }
                     }
                 }
@@ -967,10 +1322,12 @@ pub fn sync_marker_packs_registry(app_data_dir: Option<&Path>) {
     }
 
     // 2. Sync all pack JSONs listed in manifest
-    let manifest_str = reg.packs.get("manifest")
+    let manifest_str = reg
+        .packs
+        .get("manifest")
         .map(|e| e.content.clone())
         .unwrap_or_else(|| include_str!("../../src/lib/marker-packs/manifest.json").to_string());
-    
+
     #[derive(serde::Deserialize)]
     struct ManifestInfo {
         id: String,
@@ -979,33 +1336,37 @@ pub fn sync_marker_packs_registry(app_data_dir: Option<&Path>) {
     struct ManifestPacks {
         packs: Vec<ManifestInfo>,
     }
-    
+
     if let Ok(manifest_data) = serde_json::from_str::<ManifestPacks>(&manifest_str) {
         for pack in manifest_data.packs {
             let filename = format!("{}.json", pack.id);
             let pack_path = dir.join(&filename);
             if pack_path.exists() {
                 if let Ok(metadata) = pack_path.metadata() {
-                    let mtime = metadata.modified()
+                    let mtime = metadata
+                        .modified()
                         .ok()
                         .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                         .map(|d| d.as_secs())
                         .unwrap_or(0);
-                    
+
                     let current_entry = reg.packs.get(&pack.id);
                     let needs_update = current_entry.map(|e| e.mtime != mtime).unwrap_or(true);
                     if needs_update {
                         if let Ok(content) = std::fs::read_to_string(&pack_path) {
                             match validate_pack_json(&content) {
                                 Ok(_) => {
-                                    reg.packs.insert(pack.id.clone(), PackRegistryEntry {
-                                        content,
-                                        mtime,
-                                    });
+                                    reg.packs.insert(
+                                        pack.id.clone(),
+                                        PackRegistryEntry { content, mtime },
+                                    );
                                     reg.warnings.remove(&pack.id);
                                 }
                                 Err(e) => {
-                                    reg.warnings.insert(pack.id.clone(), format!("Pack '{}' validation failed: {}", pack.id, e));
+                                    reg.warnings.insert(
+                                        pack.id.clone(),
+                                        format!("Pack '{}' validation failed: {}", pack.id, e),
+                                    );
                                 }
                             }
                         }
@@ -1040,25 +1401,61 @@ pub fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option<String
         "pgx" => Some(include_str!("../../src/lib/marker-packs/pgx.json").to_string()),
         "metabolic" => Some(include_str!("../../src/lib/marker-packs/metabolic.json").to_string()),
         "nutrients" => Some(include_str!("../../src/lib/marker-packs/nutrients.json").to_string()),
-        "neuropsych" => Some(include_str!("../../src/lib/marker-packs/neuropsych.json").to_string()),
+        "neuropsych" => {
+            Some(include_str!("../../src/lib/marker-packs/neuropsych.json").to_string())
+        }
         "sleep" => Some(include_str!("../../src/lib/marker-packs/sleep.json").to_string()),
-        "connective_tissue" => Some(include_str!("../../src/lib/marker-packs/connective_tissue.json").to_string()),
-        "thyroid_autoimmune" => Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json").to_string()),
-        "cardiovascular" => Some(include_str!("../../src/lib/marker-packs/cardiovascular.json").to_string()),
-        "cancer_confirmation_only" => Some(include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json").to_string()),
-        "allergy_atopy_mast_cell" => Some(include_str!("../../src/lib/marker-packs/allergy_atopy_mast_cell.json").to_string()),
-        "digestive_gut_microbiome" => Some(include_str!("../../src/lib/marker-packs/digestive_gut_microbiome.json").to_string()),
-        "muscle_performance_recovery" => Some(include_str!("../../src/lib/marker-packs/muscle_performance_recovery.json").to_string()),
-        "hormones_reproductive" => Some(include_str!("../../src/lib/marker-packs/hormones_reproductive.json").to_string()),
-        "skin_hair_dermatology" => Some(include_str!("../../src/lib/marker-packs/skin_hair_dermatology.json").to_string()),
-        "bone_growth_mineral_density" => Some(include_str!("../../src/lib/marker-packs/bone_growth_mineral_density.json").to_string()),
-        "kidney_fluid_electrolytes" => Some(include_str!("../../src/lib/marker-packs/kidney_fluid_electrolytes.json").to_string()),
-        "respiratory_airway" => Some(include_str!("../../src/lib/marker-packs/respiratory_airway.json").to_string()),
-        "immune_autoimmune_general" => Some(include_str!("../../src/lib/marker-packs/immune_autoimmune_general.json").to_string()),
-        "pain_migraine_sensory" => Some(include_str!("../../src/lib/marker-packs/pain_migraine_sensory.json").to_string()),
-        "dental_oral_health" => Some(include_str!("../../src/lib/marker-packs/dental_oral_health.json").to_string()),
-        "longevity_aging_resilience" => Some(include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json").to_string()),
-        "discovery_catalog" => Some(include_str!("../../src/lib/marker-packs/discovery_catalog.json").to_string()),
+        "connective_tissue" => {
+            Some(include_str!("../../src/lib/marker-packs/connective_tissue.json").to_string())
+        }
+        "thyroid_autoimmune" => {
+            Some(include_str!("../../src/lib/marker-packs/thyroid_autoimmune.json").to_string())
+        }
+        "cardiovascular" => {
+            Some(include_str!("../../src/lib/marker-packs/cardiovascular.json").to_string())
+        }
+        "cancer_confirmation_only" => Some(
+            include_str!("../../src/lib/marker-packs/cancer_confirmation_only.json").to_string(),
+        ),
+        "allergy_atopy_mast_cell" => Some(
+            include_str!("../../src/lib/marker-packs/allergy_atopy_mast_cell.json").to_string(),
+        ),
+        "digestive_gut_microbiome" => Some(
+            include_str!("../../src/lib/marker-packs/digestive_gut_microbiome.json").to_string(),
+        ),
+        "muscle_performance_recovery" => Some(
+            include_str!("../../src/lib/marker-packs/muscle_performance_recovery.json").to_string(),
+        ),
+        "hormones_reproductive" => {
+            Some(include_str!("../../src/lib/marker-packs/hormones_reproductive.json").to_string())
+        }
+        "skin_hair_dermatology" => {
+            Some(include_str!("../../src/lib/marker-packs/skin_hair_dermatology.json").to_string())
+        }
+        "bone_growth_mineral_density" => Some(
+            include_str!("../../src/lib/marker-packs/bone_growth_mineral_density.json").to_string(),
+        ),
+        "kidney_fluid_electrolytes" => Some(
+            include_str!("../../src/lib/marker-packs/kidney_fluid_electrolytes.json").to_string(),
+        ),
+        "respiratory_airway" => {
+            Some(include_str!("../../src/lib/marker-packs/respiratory_airway.json").to_string())
+        }
+        "immune_autoimmune_general" => Some(
+            include_str!("../../src/lib/marker-packs/immune_autoimmune_general.json").to_string(),
+        ),
+        "pain_migraine_sensory" => {
+            Some(include_str!("../../src/lib/marker-packs/pain_migraine_sensory.json").to_string())
+        }
+        "dental_oral_health" => {
+            Some(include_str!("../../src/lib/marker-packs/dental_oral_health.json").to_string())
+        }
+        "longevity_aging_resilience" => Some(
+            include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json").to_string(),
+        ),
+        "discovery_catalog" => {
+            Some(include_str!("../../src/lib/marker-packs/discovery_catalog.json").to_string())
+        }
         _ => None,
     }
 }
@@ -1080,15 +1477,6 @@ fn migrate_qdrant_scope_columns(conn: &Connection) -> Result<(), rusqlite::Error
     Ok(())
 }
 
-fn migrate_research_job_scope_column(conn: &Connection) -> Result<(), rusqlite::Error> {
-    let _ = conn.execute("ALTER TABLE research_jobs ADD COLUMN scope_json TEXT", []);
-    let _ = conn.execute(
-        "ALTER TABLE research_jobs ADD COLUMN session_started_at INTEGER",
-        [],
-    );
-    Ok(())
-}
-
 fn migrate_gwas_reference_columns(conn: &Connection) -> Result<(), rusqlite::Error> {
     for sql in [
         "ALTER TABLE gwas_reference ADD COLUMN primary_gene TEXT NOT NULL DEFAULT ''",
@@ -1102,32 +1490,10 @@ fn migrate_gwas_reference_columns(conn: &Connection) -> Result<(), rusqlite::Err
     Ok(())
 }
 
-fn migrate_vector_promoted_findings(conn: &Connection) -> Result<(), rusqlite::Error> {
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS vector_promoted_findings (
-            sample_id INTEGER NOT NULL,
-            rsid TEXT NOT NULL,
-            gene TEXT,
-            user_genotype TEXT,
-            trait_summary TEXT NOT NULL DEFAULT '',
-            trait_categories TEXT NOT NULL DEFAULT '[]',
-            significance_score REAL NOT NULL DEFAULT 0,
-            gwas_best_pvalue REAL,
-            enrichment_version TEXT NOT NULL DEFAULT '4',
-            promoted_at INTEGER NOT NULL,
-            PRIMARY KEY (sample_id, rsid),
-            FOREIGN KEY(sample_id) REFERENCES samples(id) ON DELETE CASCADE
-        )",
-        [],
-    )?;
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_vector_promoted_sample ON vector_promoted_findings(sample_id)",
-        [],
-    )?;
-    Ok(())
-}
-
-pub fn seed_evidence_library(conn: &Connection, app_data_dir: Option<&Path>) -> std::result::Result<(), String> {
+pub fn seed_evidence_library(
+    conn: &Connection,
+    app_data_dir: Option<&Path>,
+) -> std::result::Result<(), String> {
     seed_evidence_library_with_progress(conn, app_data_dir, |_| {})
 }
 
@@ -1140,11 +1506,18 @@ pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
     let manifest: Manifest = serde_json::from_str(&manifest_str)
         .map_err(|e| format!("Failed to parse manifest: {}", e))?;
 
-    let tx = conn.unchecked_transaction().map_err(|e| format!("Failed to start seed transaction: {}", e))?;
+    let tx = conn
+        .unchecked_transaction()
+        .map_err(|e| format!("Failed to start seed transaction: {}", e))?;
 
     let total_packs = manifest.packs.len();
     for (idx, pack_info) in manifest.packs.iter().enumerate() {
-        progress(&format!("Seeding evidence library: {} ({} of {})...", pack_info.id, idx + 1, total_packs));
+        progress(&format!(
+            "Seeding evidence library: {} ({} of {})...",
+            pack_info.id,
+            idx + 1,
+            total_packs
+        ));
         let pack_str = get_pack_str(app_data_dir, &pack_info.id);
 
         if let Some(p_str) = pack_str {
@@ -1153,49 +1526,47 @@ pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
 
             for m in pack.markers {
                 if let Some(ref sources) = m.sources
-                    && !sources.is_empty() {
-                        for src in sources {
-                            let citation = format!(
-                                "{} ({})",
-                                src.name,
-                                src.url.as_deref().unwrap_or("No URL")
-                            );
-                            let text = format!(
-                                "Gene: {} | Marker: {} | Impact: {} | Interpretation: {} | Source Notes: {}",
-                                m.gene,
-                                m.rsid,
-                                m.impact,
-                                m.interpretation,
-                                src.notes.as_deref().unwrap_or("N/A")
-                            );
+                    && !sources.is_empty()
+                {
+                    for src in sources {
+                        let citation =
+                            format!("{} ({})", src.name, src.url.as_deref().unwrap_or("No URL"));
+                        let text = format!(
+                            "Gene: {} | Marker: {} | Impact: {} | Interpretation: {} | Source Notes: {}",
+                            m.gene,
+                            m.rsid,
+                            m.impact,
+                            m.interpretation,
+                            src.notes.as_deref().unwrap_or("N/A")
+                        );
 
-                            // Query existing evidence text by exact key using transaction
-                            let existing_text: Option<String> = tx.query_row(
+                        // Query existing evidence text by exact key using transaction
+                        let existing_text: Option<String> = tx.query_row(
                                 "SELECT evidence_text FROM evidence_library WHERE rsid = ? AND source_citation = ?",
                                 params![m.rsid, citation],
                                 |row| row.get(0),
                             ).ok();
 
-                            match existing_text {
-                                None => {
-                                    // Not found, insert new
-                                    let _ = tx.execute(
+                        match existing_text {
+                            None => {
+                                // Not found, insert new
+                                let _ = tx.execute(
                                         "INSERT INTO reference.evidence_library (rsid, gene, evidence_text, source_citation) VALUES (?, ?, ?, ?)",
                                         params![m.rsid, m.gene, text, citation],
                                     );
-                                }
-                                Some(old_text) if old_text != text => {
-                                    // Text updated, reset embedding to force re-vectorization
-                                    let _ = tx.execute(
+                            }
+                            Some(old_text) if old_text != text => {
+                                // Text updated, reset embedding to force re-vectorization
+                                let _ = tx.execute(
                                         "UPDATE reference.evidence_library SET evidence_text = ?, embedding = NULL WHERE rsid = ? AND source_citation = ?",
                                         params![text, m.rsid, citation],
                                     );
-                                }
-                                _ => {} // Identical, skip
                             }
+                            _ => {} // Identical, skip
                         }
-                        continue;
                     }
+                    continue;
+                }
 
                 // Default fallback source when no references are provided in the pack
                 let citation = format!("Genomics Caddy Pack: {}", pack.name);
@@ -1203,7 +1574,7 @@ pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
                     "Gene: {} | Marker: {} | Impact: {} | Interpretation: {}",
                     m.gene, m.rsid, m.impact, m.interpretation
                 );
-                
+
                 let existing_text: Option<String> = tx.query_row(
                     "SELECT evidence_text FROM evidence_library WHERE rsid = ? AND source_citation = ?",
                     params![m.rsid, citation],
@@ -1229,7 +1600,8 @@ pub fn seed_evidence_library_with_progress<F: Fn(&str)>(
         }
     }
 
-    tx.commit().map_err(|e| format!("Failed to commit seed transaction: {}", e))?;
+    tx.commit()
+        .map_err(|e| format!("Failed to commit seed transaction: {}", e))?;
     Ok(())
 }
 
@@ -1297,7 +1669,9 @@ fn load_chat_messages(conn: &Connection, session_id: &str) -> Result<Vec<ChatMes
 }
 
 #[allow(clippy::type_complexity)]
-fn map_chat_session_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<(
+fn map_chat_session_row(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<(
     String,
     Option<i64>,
     String,
@@ -1322,7 +1696,8 @@ fn map_chat_session_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<(
     let extended_thinking_int: Option<i32> = row.get(9)?;
     let consultation_mode: Option<String> = row.get(10)?;
 
-    let selected_packs = serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
+    let selected_packs =
+        serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
     let only_active_findings = only_active_findings_int != 0;
     let extended_thinking = extended_thinking_int.map(|v| v != 0);
 
@@ -1341,11 +1716,14 @@ fn map_chat_session_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<(
     ))
 }
 
-pub fn get_chat_session_by_id(conn: &Connection, session_id: &str) -> Result<Option<DbChatSession>> {
+pub fn get_chat_session_by_id(
+    conn: &Connection,
+    session_id: &str,
+) -> Result<Option<DbChatSession>> {
     let mut stmt = conn.prepare(
         "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
                 temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
-         FROM chat_sessions WHERE id = ?"
+         FROM chat_sessions WHERE id = ?",
     )?;
     let mut rows = stmt.query_map(params![session_id], map_chat_session_row)?;
     let Some(row) = rows.next() else {
@@ -1381,18 +1759,21 @@ pub fn get_chat_session_by_id(conn: &Connection, session_id: &str) -> Result<Opt
     }))
 }
 
-pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Result<Vec<DbChatSession>> {
+pub fn get_chat_sessions(
+    conn: &Connection,
+    sample_id_filter: Option<i64>,
+) -> Result<Vec<DbChatSession>> {
     let mut stmt = if sample_id_filter.is_some() {
         conn.prepare(
             "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
                     temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
-             FROM chat_sessions WHERE sample_id = ? ORDER BY timestamp DESC"
+             FROM chat_sessions WHERE sample_id = ? ORDER BY timestamp DESC",
         )?
     } else {
         conn.prepare(
             "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
                     temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
-             FROM chat_sessions ORDER BY timestamp DESC"
+             FROM chat_sessions ORDER BY timestamp DESC",
         )?
     };
 
@@ -1444,7 +1825,8 @@ pub fn get_chat_sessions(conn: &Connection, sample_id_filter: Option<i64>) -> Re
 pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Result<()> {
     let tx = conn.transaction()?;
 
-    let selected_packs_str = serde_json::to_string(&session.selected_packs).unwrap_or_else(|_| "{}".to_string());
+    let selected_packs_str =
+        serde_json::to_string(&session.selected_packs).unwrap_or_else(|_| "{}".to_string());
     let only_active_findings_int = if session.only_active_findings { 1 } else { 0 };
     let extended_thinking_int = session.extended_thinking.map(|v| if v { 1 } else { 0 });
 
@@ -1469,16 +1851,22 @@ pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Resu
     )?;
 
     // Delete existing messages to prevent duplication
-    tx.execute("DELETE FROM chat_messages WHERE session_id = ?", params![session.id])?;
+    tx.execute(
+        "DELETE FROM chat_messages WHERE session_id = ?",
+        params![session.id],
+    )?;
 
     // Insert new messages
     let mut stmt = tx.prepare(
         "INSERT INTO chat_messages (session_id, role, content, images, safety_review) 
-         VALUES (?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?)",
     )?;
 
     for msg in &session.messages {
-        let images_str = msg.images.as_ref().map(|imgs| serde_json::to_string(imgs).unwrap_or_else(|_| "[]".to_string()));
+        let images_str = msg
+            .images
+            .as_ref()
+            .map(|imgs| serde_json::to_string(imgs).unwrap_or_else(|_| "[]".to_string()));
         stmt.execute(params![
             session.id,
             msg.role,
@@ -1493,9 +1881,11 @@ pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Resu
     Ok(())
 }
 
-pub fn delete_chat_session(conn: &Connection, session_id: &str) -> Result<()> {
-    conn.execute("DELETE FROM chat_sessions WHERE id = ?", params![session_id])?;
-    Ok(())
+pub fn delete_chat_session(conn: &Connection, session_id: &str) -> Result<usize> {
+    conn.execute(
+        "DELETE FROM chat_sessions WHERE id = ?",
+        params![session_id],
+    )
 }
 
 #[derive(Debug, serde::Serialize, Clone)]
@@ -1514,7 +1904,10 @@ pub struct AppBootstrapStatus {
 }
 
 /// Collect database stats after schema init/migrations for the startup splash screen.
-pub fn get_bootstrap_status(conn: &Connection, data_dir: &Path) -> Result<AppBootstrapStatus, String> {
+pub fn get_bootstrap_status(
+    conn: &Connection,
+    data_dir: &Path,
+) -> Result<AppBootstrapStatus, String> {
     let count_query = |sql: &str| -> u64 {
         conn.query_row(sql, [], |row| row.get::<_, i64>(0))
             .unwrap_or(0) as u64
@@ -1522,18 +1915,33 @@ pub fn get_bootstrap_status(conn: &Connection, data_dir: &Path) -> Result<AppBoo
 
     let samples = get_samples(conn).map_err(|e| e.to_string())?;
     let chain_path = crate::paths::chain_path(data_dir);
+    let sample_table_count = |table: &str| {
+        samples
+            .iter()
+            .filter_map(|sample| connect_sample(data_dir, sample.id).ok())
+            .map(|sample_conn| {
+                sample_conn
+                    .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                        row.get::<_, i64>(0)
+                    })
+                    .unwrap_or(0) as u64
+            })
+            .sum()
+    };
 
     Ok(AppBootstrapStatus {
         data_dir: data_dir.to_string_lossy().to_string(),
-        db_path: crate::paths::db_path(data_dir).to_string_lossy().to_string(),
+        db_path: crate::paths::db_path(data_dir)
+            .to_string_lossy()
+            .to_string(),
         chain_path: chain_path.to_string_lossy().to_string(),
         chain_present: chain_path.exists(),
         env_path: crate::config::recommended_env_path()
             .to_string_lossy()
             .to_string(),
         sample_count: samples.len() as u64,
-        genotype_count: count_query("SELECT COUNT(*) FROM genotypes"),
-        discovered_findings_count: count_query("SELECT COUNT(*) FROM discovered_findings"),
+        genotype_count: sample_table_count("genotypes"),
+        discovered_findings_count: sample_table_count("discovered_findings"),
         gwas_reference_count: count_query("SELECT COUNT(*) FROM gwas_reference"),
         evidence_library_count: count_query("SELECT COUNT(*) FROM evidence_library"),
         samples,
@@ -1602,7 +2010,8 @@ pub fn get_vector_promoted_findings(
     let rows = stmt
         .query_map(params![sample_id], |row| {
             let categories_json: String = row.get(4)?;
-            let trait_categories: Vec<String> = serde_json::from_str(&categories_json).unwrap_or_default();
+            let trait_categories: Vec<String> =
+                serde_json::from_str(&categories_json).unwrap_or_default();
             Ok(VectorPromotedFinding {
                 rsid: row.get(0)?,
                 gene: row.get(1)?,

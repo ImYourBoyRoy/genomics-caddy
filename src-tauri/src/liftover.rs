@@ -11,11 +11,11 @@ Key Outputs: Option of mapped GRCh38 position.
 Operational Notes: Implements UCSC liftover block mapping logic.
 */
 
+use flate2::read::GzDecoder;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
-use flate2::read::GzDecoder;
 
 #[derive(Debug, Clone)]
 struct ChainBlock {
@@ -47,7 +47,7 @@ impl LiftoverEngine {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let path_ref = path.as_ref();
         let file = File::open(path_ref).map_err(|e| format!("Failed to open chain file: {}", e))?;
-        
+
         let reader: Box<dyn Read> = if path_ref.extension().is_some_and(|ext| ext == "gz") {
             Box::new(GzDecoder::new(file))
         } else {

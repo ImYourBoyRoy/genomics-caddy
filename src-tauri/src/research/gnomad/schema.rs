@@ -1,7 +1,13 @@
 // ./src-tauri/src/research/gnomad/schema.rs
 use rusqlite::{Connection, Result};
 
-fn ensure_column(conn: &Connection, schema: &str, table: &str, column: &str, ddl: &str) -> Result<()> {
+fn ensure_column(
+    conn: &Connection,
+    schema: &str,
+    table: &str,
+    column: &str,
+    ddl: &str,
+) -> Result<()> {
     let pragma_sql = if schema.is_empty() {
         format!("PRAGMA table_info({table})")
     } else {
@@ -88,8 +94,20 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
         ",
     )?;
 
-    ensure_column(conn, "reference", "gnomad_config", "graphql_fallback_enabled", "INTEGER NOT NULL DEFAULT 1")?;
-    ensure_column(conn, "reference", "gnomad_config", "dataset_policy", "TEXT NOT NULL DEFAULT 'auto'")?;
+    ensure_column(
+        conn,
+        "reference",
+        "gnomad_config",
+        "graphql_fallback_enabled",
+        "INTEGER NOT NULL DEFAULT 1",
+    )?;
+    ensure_column(
+        conn,
+        "reference",
+        "gnomad_config",
+        "dataset_policy",
+        "TEXT NOT NULL DEFAULT 'auto'",
+    )?;
 
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM gnomad_config WHERE id = 1",

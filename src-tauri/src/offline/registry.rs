@@ -1,7 +1,7 @@
 // ./src-tauri/src/offline/registry.rs
 use super::download::RemoteHead;
 use super::manifest::OfflineAssetId;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 #[derive(Debug, Clone, Default)]
@@ -93,7 +93,11 @@ pub fn upsert_registry(
     Ok(())
 }
 
-pub fn mark_update_available(conn: &Connection, asset_id: &str, available: bool) -> Result<(), String> {
+pub fn mark_update_available(
+    conn: &Connection,
+    asset_id: &str,
+    available: bool,
+) -> Result<(), String> {
     conn.execute(
         "UPDATE reference.offline_asset_registry SET update_available = ? WHERE asset_id = ?",
         params![if available { 1 } else { 0 }, asset_id],
@@ -105,7 +109,9 @@ pub fn mark_update_available(conn: &Connection, asset_id: &str, available: bool)
 pub fn row_count_for_asset(conn: &Connection, asset_id: OfflineAssetId) -> u64 {
     match asset_id {
         OfflineAssetId::GwasCatalog => super::schema::table_count(conn, "gwas_reference"),
-        OfflineAssetId::ClinvarVariantSummary => super::schema::table_count(conn, "clinvar_reference"),
+        OfflineAssetId::ClinvarVariantSummary => {
+            super::schema::table_count(conn, "clinvar_reference")
+        }
         OfflineAssetId::PharmgkbClinicalVariants => {
             super::schema::table_count(conn, "pharmgkb_clinical_variants")
         }

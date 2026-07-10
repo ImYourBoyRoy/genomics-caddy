@@ -94,40 +94,61 @@ fn compute_data_dir(app: Option<&AppHandle>) -> ResolvedDataDir {
     }
 }
 
-/// Portable application folder (exe + sidecar files).
-pub fn app_layout_dir(project_root: &Path) -> PathBuf {
-    project_root.join("App")
-}
-
-/// Persistent genome/reference storage beside the staged application.
-pub fn app_data_dir(project_root: &Path) -> PathBuf {
-    app_layout_dir(project_root).join("Data")
-}
-
 pub fn resolve_project_root(app: Option<&AppHandle>) -> PathBuf {
     if let Ok(raw) = std::env::var("GENOMICS_APP_ROOT") {
         let trimmed = raw.trim();
         if !trimmed.is_empty() {
-            return PathBuf::from(trimmed);
+            return normalize_project_root(PathBuf::from(trimmed));
         }
     }
 
     if let Some(exe_dir) = executable_dir(app) {
+        // Staged portable layout: <repo>/App/DNA-Tools → project root is parent of App/.
         if exe_dir
             .file_name()
             .and_then(|n| n.to_str())
             .is_some_and(|n| n.eq_ignore_ascii_case("App"))
         {
-            return exe_dir
-                .parent()
-                .map(|p| p.to_path_buf())
-                .unwrap_or(exe_dir);
+            return normalize_project_root(
+                exe_dir
+                    .parent()
+                    .map(|p| p.to_path_buf())
+                    .unwrap_or_else(|| exe_dir.clone()),
+            );
         }
 
-        let mut dir = exe_dir.clone();
+        // Also treat "exe beside Data/" as the App folder (defensive).
+        if exe_dir.join("Data").is_dir()
+            && exe_dir
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.eq_ignore_ascii_case("App"))
+        {
+            return normalize_project_root(
+                exe_dir
+                    .parent()
+                    .map(|p| p.to_path_buf())
+                    .unwrap_or(exe_dir),
+            );
+        }
+
+        let mut dir = exe_dir;
         for _ in 0..8 {
-            if dir.join("package.json").exists() || dir.join("App").join("Data").exists() {
-                return dir;
+            if dir.join("package.json").exists()
+                || (dir.join("App").join("Data").is_dir() && dir.join("App").join("DNA-Tools").exists())
+                || (dir.join("App").join("Data").is_dir() && dir.join("App").join("DNA-Tools.exe").exists())
+            {
+                return normalize_project_root(dir);
+            }
+            // Stop if we are inside .../App and its parent looks like the repo.
+            if dir
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.eq_ignore_ascii_case("App"))
+            {
+                if let Some(parent) = dir.parent() {
+                    return normalize_project_root(parent.to_path_buf());
+                }
             }
             if !dir.pop() {
                 break;
@@ -138,15 +159,50 @@ pub fn resolve_project_root(app: Option<&AppHandle>) -> PathBuf {
     if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR")
         && let Some(project_root) = PathBuf::from(manifest).parent()
     {
-        return project_root.to_path_buf();
+        return normalize_project_root(project_root.to_path_buf());
     }
 
-    PathBuf::from(".")
+    // Last resort: cwd, but never treat an App/ folder as the project root.
+    normalize_project_root(std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+}
+
+/// Prevent `App/App/Data` nesting when a caller already passed the App directory as "root".
+fn normalize_project_root(path: PathBuf) -> PathBuf {
+    if path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.eq_ignore_ascii_case("App"))
+    {
+        if let Some(parent) = path.parent() {
+            // Only peel App/ when it looks like the portable layout folder.
+            if path.join("Data").exists() || path.join("DNA-Tools").exists() || path.join("DNA-Tools.exe").exists()
+            {
+                return parent.to_path_buf();
+            }
+        }
+    }
+    path
+}
+
+/// Portable application folder (exe + sidecar files).
+pub fn app_layout_dir(project_root: &Path) -> PathBuf {
+    let root = normalize_project_root(project_root.to_path_buf());
+    root.join("App")
+}
+
+/// Persistent genome/reference storage beside the staged application.
+pub fn app_data_dir(project_root: &Path) -> PathBuf {
+    app_layout_dir(project_root).join("Data")
 }
 
 fn data_dir_has_content(dir: &Path) -> bool {
     dir.join("user_genome.db").exists()
         || dir.join("user_genome.db.enc").exists()
+        || samples_dir(dir)
+            .read_dir()
+            .ok()
+            .and_then(|mut entries| entries.next())
+            .is_some()
         || dir.join("references").exists()
         || dir.join("raw_downloads").exists()
         || dir.join("GRCh37_to_GRCh38.chain.gz").exists()
@@ -164,6 +220,7 @@ fn executable_dir(app: Option<&AppHandle>) -> Option<PathBuf> {
 
 pub fn ensure_data_layout(data_dir: &Path) -> std::io::Result<()> {
     fs::create_dir_all(data_dir)?;
+    fs::create_dir_all(samples_dir(data_dir))?;
     fs::create_dir_all(references_dir(data_dir))?;
     fs::create_dir_all(marker_packs_dir(data_dir))?;
     fs::create_dir_all(raw_downloads_dir(data_dir))?;
@@ -184,6 +241,21 @@ pub fn offline_asset_path(data_dir: &Path, category: &str, filename: &str) -> Pa
 
 pub fn db_path(data_dir: &Path) -> PathBuf {
     data_dir.join("user_genome.db")
+}
+
+/// Directory containing isolated private databases, one directory per sample ID.
+pub fn samples_dir(data_dir: &Path) -> PathBuf {
+    data_dir.join("samples")
+}
+
+/// Private storage directory for a single registry sample.
+pub fn sample_dir(data_dir: &Path, sample_id: i64) -> PathBuf {
+    samples_dir(data_dir).join(sample_id.to_string())
+}
+
+/// SQLite database containing one sample's genotypes, chats, and research state.
+pub fn sample_db_path(data_dir: &Path, sample_id: i64) -> PathBuf {
+    sample_dir(data_dir, sample_id).join("genome.db")
 }
 
 pub fn chain_path(data_dir: &Path) -> PathBuf {

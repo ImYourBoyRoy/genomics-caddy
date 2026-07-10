@@ -4,10 +4,10 @@
 use super::card::evidence_card_from_payload;
 use super::types::{EvidenceCard, HybridSearchParams, MatchExplanation, SimilarSearchParams};
 use crate::research::embed::embed_query_cached;
+use crate::research::evidence::named_vectors::query_vector_name_for_text;
 use crate::research::qdrant::{
     find_point_payload_by_rsid, recommend_qdrant_points, search_qdrant_filtered,
 };
-use crate::research::evidence::named_vectors::query_vector_name_for_text;
 use crate::research::types::{QdrantConfig, QdrantHit};
 use crate::research::util::string_to_u64;
 use std::path::Path;
@@ -57,8 +57,14 @@ pub async fn search_associations_hybrid(
         .filter(|(hit, _, _)| !rejected.contains(&hit.rsid.to_uppercase()))
         .map(|(hit, point_id, raw_payload)| {
             let hybrid = rerank_hybrid(&hit, &raw_payload, params);
-            let explanation = build_match_explanation(&hit, &raw_payload, hybrid, None, &params.query);
-            let card = evidence_card_from_payload(&raw_payload, hit.score, Some(explanation), Some(point_id));
+            let explanation =
+                build_match_explanation(&hit, &raw_payload, hybrid, None, &params.query);
+            let card = evidence_card_from_payload(
+                &raw_payload,
+                hit.score,
+                Some(explanation),
+                Some(point_id),
+            );
             (hybrid, card)
         })
         .collect();
@@ -89,11 +95,8 @@ pub async fn get_similar_associations(
     };
 
     let vector_name = similarity_vector_name(&params.similarity_mode, config);
-    let filter = build_similarity_filter(
-        params.sample_id,
-        &params.similarity_mode,
-        &source_payload,
-    );
+    let filter =
+        build_similarity_filter(params.sample_id, &params.similarity_mode, &source_payload);
     let hits = recommend_qdrant_points(
         &config.url,
         config.api_key.as_deref(),
@@ -108,7 +111,9 @@ pub async fn get_similar_associations(
     let source_rsid = params.rsid.clone();
     Ok(hits
         .into_iter()
-        .filter(|(hit, _, _)| params.include_self || source_rsid.as_deref() != Some(hit.rsid.as_str()))
+        .filter(|(hit, _, _)| {
+            params.include_self || source_rsid.as_deref() != Some(hit.rsid.as_str())
+        })
         .map(|(hit, pid, payload)| {
             let explanation = build_match_explanation(
                 &hit,
@@ -168,7 +173,10 @@ pub fn explain_vector_match(
 
 fn rerank_hybrid(hit: &QdrantHit, payload: &serde_json::Value, params: &HybridSearchParams) -> f32 {
     let mut score = hit.score;
-    if payload["personal_genotype_matched"].as_bool().unwrap_or(true) {
+    if payload["personal_genotype_matched"]
+        .as_bool()
+        .unwrap_or(true)
+    {
         score += 0.08;
     }
     if let Some(min_dq) = params.min_data_quality {
@@ -197,7 +205,10 @@ fn build_match_explanation(
     query: &str,
 ) -> MatchExplanation {
     let mut boost_reasons = Vec::new();
-    if payload["personal_genotype_matched"].as_bool().unwrap_or(false) {
+    if payload["personal_genotype_matched"]
+        .as_bool()
+        .unwrap_or(false)
+    {
         boost_reasons.push("Genotype-matched variant in your sample".into());
     }
     if payload["data_quality_score"].as_f64().unwrap_or(0.0) > 0.7 {
@@ -343,11 +354,8 @@ fn build_similarity_filter(
             }));
         }
         "same_trait_different_gene" => {
-            if let Some(trait_name) = payload_str(
-                source_payload,
-                "trait_name",
-            )
-            .or_else(|| payload_str(source_payload, "trait_name_mapped"))
+            if let Some(trait_name) = payload_str(source_payload, "trait_name")
+                .or_else(|| payload_str(source_payload, "trait_name_mapped"))
             {
                 must.push(serde_json::json!({
                     "key": "trait_name",

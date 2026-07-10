@@ -60,29 +60,29 @@ Operational Notes: Manages SQLite database connection pools and executes request
     clippy::ignored_unit_patterns,
     clippy::large_stack_arrays,
     clippy::unnecessary_debug_formatting,
-    clippy::unused_async,
+    clippy::unused_async
 )]
 
-pub mod parser;
-pub mod liftover;
-pub mod research;
-pub mod config;
 pub mod agent;
+mod agent_commands;
+pub mod app_log;
+pub mod config;
 pub mod db;
 pub mod db_crypto;
-pub mod mcp;
-pub mod report;
-pub mod paths;
-pub mod offline;
-pub mod app_log;
-mod agent_commands;
 mod db_runtime;
+pub mod liftover;
+pub mod mcp;
+pub mod offline;
+pub mod parser;
+pub mod paths;
+pub mod report;
+pub mod research;
 mod stream_control;
 
+use db::{DbSnpRecord, SampleInfo};
+use report::GeneratedReport;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter};
-use db::{SampleInfo, DbSnpRecord};
-use report::GeneratedReport;
 
 #[derive(Clone, serde::Serialize)]
 struct ProgressPayload {
@@ -130,8 +130,7 @@ async fn save_report_json(content: String, default_filename: String) -> Result<b
     if let Some(path) = file {
         let path_str = path.to_string_lossy().to_string();
         config::register_export_path(&path_str);
-        std::fs::write(&path, content)
-            .map_err(|e| format!("Failed to write file: {}", e))?;
+        std::fs::write(&path, content).map_err(|e| format!("Failed to write file: {}", e))?;
         Ok(true)
     } else {
         Ok(false)
@@ -143,7 +142,8 @@ async fn get_app_bootstrap(app: AppHandle) -> Result<db::AppBootstrapStatus, Str
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let conn = db::open_user_db_with_progress(&db_path, Some(&app)).map_err(|e| e.to_string())?;
+        let conn =
+            db::open_user_db_with_progress(&db_path, Some(&app)).map_err(|e| e.to_string())?;
         db::get_bootstrap_status(&conn, &data_dir)
     })
     .await
@@ -202,7 +202,9 @@ async fn get_marker_pack_warnings() -> Result<std::collections::HashMap<String, 
 }
 
 #[tauri::command]
-async fn reload_marker_packs(app: AppHandle) -> Result<std::collections::HashMap<String, String>, String> {
+async fn reload_marker_packs(
+    app: AppHandle,
+) -> Result<std::collections::HashMap<String, String>, String> {
     let data_dir = get_data_dir(&app);
     db::clear_marker_packs_registry();
     db::sync_marker_packs_registry(Some(&data_dir));
@@ -501,7 +503,11 @@ async fn query_local_reference_db(
 
 #[allow(clippy::too_many_arguments)]
 #[tauri::command]
-async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -> Result<i64, String> {
+async fn import_genome(
+    app: AppHandle,
+    file_path: String,
+    sample_name: String,
+) -> Result<i64, String> {
     config::validate_import_path(&file_path)?;
     let app_handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -562,6 +568,7 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
         let app_clone = app_handle.clone();
         let sample_id = db::import_raw_genome(
             &mut conn,
+            &data_dir,
             &sample_name,
             &records,
             liftover_engine.as_ref(),
@@ -588,8 +595,14 @@ async fn import_genome(app: AppHandle, file_path: String, sample_name: String) -
             )
             .ok();
 
-        if let Err(e) = crate::offline::tier2::build_variant_locus_for_sample(&conn, sample_id) {
-            eprintln!("Warning: failed to build variant locus index for sample {}: {}", sample_id, e);
+        let sample_conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        if let Err(e) =
+            crate::offline::tier2::build_variant_locus_for_sample(&sample_conn, sample_id)
+        {
+            eprintln!(
+                "Warning: failed to build variant locus index for sample {}: {}",
+                sample_id, e
+            );
         }
 
         Ok(sample_id)
@@ -608,12 +621,18 @@ async fn get_samples(app: AppHandle) -> Result<Vec<SampleInfo>, String> {
 }
 
 #[tauri::command]
-async fn query_rsids(app: AppHandle, sample_id: i64, rsids: Vec<String>) -> Result<Vec<DbSnpRecord>, String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::query_by_rsids(conn, sample_id, &rsids).map_err(|e| e.to_string())
+async fn query_rsids(
+    app: AppHandle,
+    sample_id: i64,
+    rsids: Vec<String>,
+) -> Result<Vec<DbSnpRecord>, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        db::query_by_rsids(&conn, sample_id, &rsids).map_err(|e| e.to_string())
     })
     .await
+    .map_err(|e| format!("Sample database worker failed: {e}"))?
 }
 
 #[tauri::command]
@@ -624,15 +643,23 @@ async fn query_region(
     start: u64,
     end: u64,
 ) -> Result<Vec<DbSnpRecord>, String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::query_region(conn, sample_id, &chromosome, start, end).map_err(|e| e.to_string())
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        db::query_region(&conn, sample_id, &chromosome, start, end).map_err(|e| e.to_string())
     })
     .await
+    .map_err(|e| format!("Sample database worker failed: {e}"))?
 }
 
 #[tauri::command]
-fn log_js_error(message: String, source: Option<String>, line: Option<u32>, col: Option<u32>, stack: Option<String>) {
+fn log_js_error(
+    message: String,
+    source: Option<String>,
+    line: Option<u32>,
+    col: Option<u32>,
+    stack: Option<String>,
+) {
     let details = format!(
         "JS ERROR: {} | Source: {} | Line: {:?} | Col: {:?} | Stack: {:?}",
         message,
@@ -645,20 +672,29 @@ fn log_js_error(message: String, source: Option<String>, line: Option<u32>, col:
 }
 
 #[tauri::command]
-async fn generate_report(app: AppHandle, sample_id: i64, template_json: String) -> Result<GeneratedReport, String> {
-    app_log::log("CMD_GENERATE_REPORT", &format!("Invoked for sample_id = {}", sample_id));
+async fn generate_report(
+    app: AppHandle,
+    sample_id: i64,
+    template_json: String,
+) -> Result<GeneratedReport, String> {
+    app_log::log(
+        "CMD_GENERATE_REPORT",
+        &format!("Invoked for sample_id = {}", sample_id),
+    );
     let res = config::validate_template_json(&template_json);
     if let Err(e) = &res {
         app_log::log("CMD_GENERATE_REPORT", &format!("Validation failed: {}", e));
         return Err(e.clone());
     }
-    let db_path = get_db_path(&app);
-    let result = db_runtime::with_connection(db_path, move |conn| {
+    let data_dir = get_data_dir(&app);
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         let template: report::ReportTemplate = serde_json::from_str(&template_json)
             .map_err(|e| format!("Failed to parse report template JSON: {}", e))?;
-        report::generate_report(conn, sample_id, &template)
+        report::generate_report(&conn, sample_id, &template)
     })
-    .await;
+    .await
+    .map_err(|e| format!("Report worker failed: {e}"))?;
     match &result {
         Ok(_) => app_log::log("CMD_GENERATE_REPORT", "Report generated successfully."),
         Err(e) => app_log::log("CMD_GENERATE_REPORT", &format!("ERROR: {}", e)),
@@ -669,19 +705,25 @@ async fn generate_report(app: AppHandle, sample_id: i64, template_json: String) 
 #[tauri::command]
 async fn delete_sample(app: AppHandle, sample_id: i64) -> Result<(), String> {
     let db_path = get_db_path(&app);
+    let data_dir = get_data_dir(&app);
     db_runtime::with_connection(db_path, move |conn| {
-        db::delete_sample(conn, sample_id).map_err(|e| e.to_string())
+        db::delete_sample(conn, &data_dir, sample_id).map_err(|e| e.to_string())
     })
     .await
 }
 
 #[tauri::command]
-async fn get_chromosome_counts(app: AppHandle, sample_id: i64) -> Result<std::collections::HashMap<String, i64>, String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::get_chromosome_counts(conn, sample_id).map_err(|e| e.to_string())
+async fn get_chromosome_counts(
+    app: AppHandle,
+    sample_id: i64,
+) -> Result<std::collections::HashMap<String, i64>, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        db::get_chromosome_counts(&conn, sample_id).map_err(|e| e.to_string())
     })
     .await
+    .map_err(|e| format!("Sample database worker failed: {e}"))?
 }
 
 #[tauri::command]
@@ -695,11 +737,18 @@ async fn download_chain_file(app: AppHandle) -> Result<(), String> {
     let chain_path = get_chain_path(&app);
     let url = "https://ftp.ensembl.org/pub/assembly_mapping/homo_sapiens/GRCh37_to_GRCh38.chain.gz";
 
-    let response = reqwest::get(url).await.map_err(|e| format!("Failed to download chain file: {}", e))?;
-    let mut file = std::fs::File::create(&chain_path).map_err(|e| format!("Failed to create file: {}", e))?;
-    
-    let content = response.bytes().await.map_err(|e| format!("Failed to read download content: {}", e))?;
-    std::io::copy(&mut &*content, &mut file).map_err(|e| format!("Failed to write to file: {}", e))?;
+    let response = reqwest::get(url)
+        .await
+        .map_err(|e| format!("Failed to download chain file: {}", e))?;
+    let mut file =
+        std::fs::File::create(&chain_path).map_err(|e| format!("Failed to create file: {}", e))?;
+
+    let content = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read download content: {}", e))?;
+    std::io::copy(&mut &*content, &mut file)
+        .map_err(|e| format!("Failed to write to file: {}", e))?;
     Ok(())
 }
 
@@ -735,7 +784,10 @@ async fn list_evidence_sources(app: AppHandle) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-async fn get_evidence_for_marker(app: AppHandle, rsid: String) -> Result<Vec<EvidenceRecord>, String> {
+async fn get_evidence_for_marker(
+    app: AppHandle,
+    rsid: String,
+) -> Result<Vec<EvidenceRecord>, String> {
     let db_path = get_db_path(&app);
     db_runtime::with_connection(db_path, move |conn| {
         let mut stmt = conn
@@ -780,54 +832,67 @@ async fn search_evidence(
     let query_for_db = query_clean.clone();
     let keyword_hits = db_runtime::with_connection(db_path.clone(), move |conn| {
         let search_pattern = config::sql_like_contains_pattern(&query_for_db);
-        let mut stmt = conn.prepare(
-            "SELECT rsid, gene, evidence_text, source_citation, embedding 
+        let mut stmt = conn
+            .prepare(
+                "SELECT rsid, gene, evidence_text, source_citation, embedding 
              FROM evidence_library 
-             WHERE rsid LIKE ? OR gene LIKE ? OR LOWER(evidence_text) LIKE ?"
-        ).map_err(|e| e.to_string())?;
-        
-        let rows = stmt.query_map(rusqlite::params![search_pattern, search_pattern, search_pattern], |row| {
-            let embedding: Option<String> = row.get(4)?;
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                embedding,
-            ))
-        }).map_err(|e| e.to_string())?;
+             WHERE rsid LIKE ? OR gene LIKE ? OR LOWER(evidence_text) LIKE ?",
+            )
+            .map_err(|e| e.to_string())?;
+
+        let rows = stmt
+            .query_map(
+                rusqlite::params![search_pattern, search_pattern, search_pattern],
+                |row| {
+                    let embedding: Option<String> = row.get(4)?;
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, String>(3)?,
+                        embedding,
+                    ))
+                },
+            )
+            .map_err(|e| e.to_string())?;
 
         let mut hits = Vec::new();
         for r in rows {
             hits.push(r.map_err(|e| e.to_string())?);
         }
         Ok(hits)
-    }).await?;
+    })
+    .await?;
 
     // 2. If Ollama URL is provided, try Semantic Vector Search
     if let Some(ref url) = ollama_url
-        && !url.trim().is_empty() {
-            let clean_url = config::validate_service_url(url)?;
-            let token_ref = ollama_token.as_deref();
-            
-            // Try to find an embedding model on the server
-            if let Some(embed_model) = get_embedding_model(&clean_url, token_ref).await {
-                // Fetch query embedding
-                if let Ok(query_embedding) = fetch_embedding(&clean_url, token_ref, &embed_model, &query_clean).await {
-                    
-                    // Generate embeddings on-demand for the top keyword hits (up to 10) to fill the vector cache
-                    let mut new_embeddings = Vec::new();
-                    for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
-                        if (embedding_opt.is_none() || embedding_opt.as_ref().unwrap().trim().is_empty())
-                            && let Ok(emb) = fetch_embedding(&clean_url, token_ref, &embed_model, text).await {
-                                new_embeddings.push((rsid.clone(), citation.clone(), emb));
-                            }
-                    }
+        && !url.trim().is_empty()
+    {
+        let clean_url = config::validate_service_url(url)?;
+        let token_ref = ollama_token.as_deref();
 
-                    // Save new embeddings back to database
-                    if !new_embeddings.is_empty() {
-                        let db_path_save = db_path.clone();
-                        let _ = db_runtime::with_connection_mut(db_path_save, move |conn| {
+        // Try to find an embedding model on the server
+        if let Some(embed_model) = get_embedding_model(&clean_url, token_ref).await {
+            // Fetch query embedding
+            if let Ok(query_embedding) =
+                fetch_embedding(&clean_url, token_ref, &embed_model, &query_clean).await
+            {
+                // Generate embeddings on-demand for the top keyword hits (up to 10) to fill the vector cache
+                let mut new_embeddings = Vec::new();
+                for (rsid, _gene, text, citation, embedding_opt) in keyword_hits.iter().take(10) {
+                    if (embedding_opt.is_none()
+                        || embedding_opt.as_ref().unwrap().trim().is_empty())
+                        && let Ok(emb) =
+                            fetch_embedding(&clean_url, token_ref, &embed_model, text).await
+                    {
+                        new_embeddings.push((rsid.clone(), citation.clone(), emb));
+                    }
+                }
+
+                // Save new embeddings back to database
+                if !new_embeddings.is_empty() {
+                    let db_path_save = db_path.clone();
+                    let _ = db_runtime::with_connection_mut(db_path_save, move |conn| {
                             for (rsid, citation, emb) in new_embeddings {
                                 if let Ok(emb_json) = serde_json::to_string(&emb) {
                                     let _ = conn.execute(
@@ -839,10 +904,10 @@ async fn search_evidence(
                             Ok(())
                         })
                         .await;
-                    }
+                }
 
-                    // Reload all rows with cached embeddings and calculate similarity
-                    let vector_results = db_runtime::with_connection(db_path.clone(), move |conn| {
+                // Reload all rows with cached embeddings and calculate similarity
+                let vector_results = db_runtime::with_connection(db_path.clone(), move |conn| {
                         let mut stmt_all = conn.prepare(
                             "SELECT rsid, gene, evidence_text, source_citation, embedding FROM evidence_library WHERE embedding IS NOT NULL AND embedding != ''"
                         ).map_err(|e| e.to_string())?;
@@ -873,33 +938,37 @@ async fn search_evidence(
                     .await
                     .unwrap_or_default();
 
-                    let mut sorted_results = vector_results;
-                    // Sort by similarity descending
-                    sorted_results.sort_by(|a, b| {
-                        b.similarity.unwrap_or(0.0).partial_cmp(&a.similarity.unwrap_or(0.0)).unwrap()
-                    });
+                let mut sorted_results = vector_results;
+                // Sort by similarity descending
+                sorted_results.sort_by(|a, b| {
+                    b.similarity
+                        .unwrap_or(0.0)
+                        .partial_cmp(&a.similarity.unwrap_or(0.0))
+                        .unwrap()
+                });
 
-                    // Only return results with similarity > 0.35
-                    sorted_results.retain(|r| r.similarity.unwrap_or(0.0) > 0.35);
+                // Only return results with similarity > 0.35
+                sorted_results.retain(|r| r.similarity.unwrap_or(0.0) > 0.35);
 
-                    if !sorted_results.is_empty() {
-                        return Ok(sorted_results);
-                    }
+                if !sorted_results.is_empty() {
+                    return Ok(sorted_results);
                 }
             }
         }
+    }
 
     // Fallback: convert keyword hits to EvidenceRecords
-    let fallback_results = keyword_hits.into_iter().map(|(rsid, gene, text, citation, emb_opt)| {
-        EvidenceRecord {
+    let fallback_results = keyword_hits
+        .into_iter()
+        .map(|(rsid, gene, text, citation, emb_opt)| EvidenceRecord {
             rsid,
             gene,
             evidence_text: text,
             source_citation: citation,
             has_embedding: emb_opt.is_some() && !emb_opt.unwrap().trim().is_empty(),
             similarity: None,
-        }
-    }).collect();
+        })
+        .collect();
 
     Ok(fallback_results)
 }
@@ -926,14 +995,26 @@ async fn get_embedding_model(url: &str, token: Option<&str>) -> Option<String> {
     let client = reqwest::Client::new();
     let mut req = client.get(format!("{}/api/tags", url));
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
-        }
+        && !t.trim().is_empty()
+    {
+        req = req.header(
+            "Authorization",
+            if t.to_lowercase().starts_with("bearer ") {
+                t.to_string()
+            } else {
+                format!("Bearer {}", t)
+            },
+        );
+    }
     let res = req.send().await.ok()?;
     #[derive(serde::Deserialize)]
-    struct OllamaModel { name: String }
+    struct OllamaModel {
+        name: String,
+    }
     #[derive(serde::Deserialize)]
-    struct OllamaTags { models: Vec<OllamaModel> }
+    struct OllamaTags {
+        models: Vec<OllamaModel>,
+    }
     let tags = res.json::<OllamaTags>().await.ok()?;
     for m in &tags.models {
         if m.name.contains("embed") {
@@ -952,9 +1033,17 @@ async fn fetch_embedding(
     let client = reqwest::Client::new();
     let mut req = client.post(format!("{}/api/embeddings", url));
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            req = req.header("Authorization", if t.to_lowercase().starts_with("bearer ") { t.to_string() } else { format!("Bearer {}", t) });
-        }
+        && !t.trim().is_empty()
+    {
+        req = req.header(
+            "Authorization",
+            if t.to_lowercase().starts_with("bearer ") {
+                t.to_string()
+            } else {
+                format!("Bearer {}", t)
+            },
+        );
+    }
     let payload = serde_json::json!({
         "model": model,
         "prompt": prompt,
@@ -967,7 +1056,10 @@ async fn fetch_embedding(
     struct EmbeddingResponse {
         embedding: Vec<f32>,
     }
-    let resp = res.json::<EmbeddingResponse>().await.map_err(|e| e.to_string())?;
+    let resp = res
+        .json::<EmbeddingResponse>()
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(resp.embedding)
 }
 
@@ -977,23 +1069,40 @@ fn cancel_ollama_stream() {
 }
 
 #[tauri::command]
-async fn get_active_ollama_models(url: String, token: Option<String>) -> Result<serde_json::Value, String> {
+async fn get_active_ollama_models(
+    url: String,
+    token: Option<String>,
+) -> Result<serde_json::Value, String> {
     let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
     let mut req = client.get(format!("{}/api/ps", clean_url));
-    
+
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            let t_val = t.trim();
-            req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
-        }
-    
-    let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
+        && !t.trim().is_empty()
+    {
+        let t_val = t.trim();
+        req = req.header(
+            "Authorization",
+            if t_val.to_lowercase().starts_with("bearer ") {
+                t_val.to_string()
+            } else {
+                format!("Bearer {}", t_val)
+            },
+        );
+    }
+
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));
     }
-    
-    let info: serde_json::Value = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    let info: serde_json::Value = res
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
     Ok(info)
 }
 
@@ -1002,18 +1111,29 @@ async fn scan_ollama_models(url: String, token: Option<String>) -> Result<Vec<St
     let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
     let mut req = client.get(format!("{}/api/tags", clean_url));
-    
+
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            let t_val = t.trim();
-            req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
-        }
-    
-    let res = req.send().await.map_err(|e| format!("Connection error: {}", e))?;
+        && !t.trim().is_empty()
+    {
+        let t_val = t.trim();
+        req = req.header(
+            "Authorization",
+            if t_val.to_lowercase().starts_with("bearer ") {
+                t_val.to_string()
+            } else {
+                format!("Bearer {}", t_val)
+            },
+        );
+    }
+
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));
     }
-    
+
     #[derive(serde::Deserialize)]
     struct OllamaModel {
         name: String,
@@ -1022,9 +1142,12 @@ async fn scan_ollama_models(url: String, token: Option<String>) -> Result<Vec<St
     struct OllamaTagsResponse {
         models: Vec<OllamaModel>,
     }
-    
-    let tags: OllamaTagsResponse = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
-        Ok(tags.models.into_iter().map(|m| m.name).collect())
+
+    let tags: OllamaTagsResponse = res
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    Ok(tags.models.into_iter().map(|m| m.name).collect())
 }
 
 #[tauri::command]
@@ -1036,23 +1159,38 @@ async fn show_ollama_model(
     let clean_url = config::validate_service_url(&url)?;
     let client = reqwest::Client::new();
     let mut req = client.post(format!("{}/api/show", clean_url));
-    
+
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            let t_val = t.trim();
-            req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
-        }
-    
+        && !t.trim().is_empty()
+    {
+        let t_val = t.trim();
+        req = req.header(
+            "Authorization",
+            if t_val.to_lowercase().starts_with("bearer ") {
+                t_val.to_string()
+            } else {
+                format!("Bearer {}", t_val)
+            },
+        );
+    }
+
     let payload = serde_json::json!({
         "name": name
     });
-    
-    let res = req.json(&payload).send().await.map_err(|e| format!("Connection error: {}", e))?;
+
+    let res = req
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));
     }
-    
-    let details: serde_json::Value = res.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    let details: serde_json::Value = res
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
     Ok(details)
 }
 
@@ -1076,13 +1214,21 @@ async fn stream_ollama_chat(
 
     let client = reqwest::Client::new();
     let mut req = client.post(format!("{}/api/chat", clean_url));
-    
+
     if let Some(t) = token
-        && !t.trim().is_empty() {
-            let t_val = t.trim();
-            req = req.header("Authorization", if t_val.to_lowercase().starts_with("bearer ") { t_val.to_string() } else { format!("Bearer {}", t_val) });
-        }
-    
+        && !t.trim().is_empty()
+    {
+        let t_val = t.trim();
+        req = req.header(
+            "Authorization",
+            if t_val.to_lowercase().starts_with("bearer ") {
+                t_val.to_string()
+            } else {
+                format!("Bearer {}", t_val)
+            },
+        );
+    }
+
     let payload = serde_json::json!({
         "model": model,
         "messages": messages,
@@ -1092,54 +1238,69 @@ async fn stream_ollama_chat(
             "num_predict": num_predict.unwrap_or(2048)
         }
     });
-    
-    let mut res = req.json(&payload).send().await.map_err(|e| format!("Connection error: {}", e))?;
+
+    let mut res = req
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Connection error: {}", e))?;
     if !res.status().is_success() {
         return Err(format!("Ollama returned HTTP error: {}", res.status()));
     }
-    
+
     let mut prompt_eval_count = None;
     let mut eval_count = None;
     let mut in_thinking = false;
-    
+
     let mut buffer = String::new();
-    while let Some(chunk) = res.chunk().await.map_err(|e| format!("Stream error: {}", e))? {
+    while let Some(chunk) = res
+        .chunk()
+        .await
+        .map_err(|e| format!("Stream error: {}", e))?
+    {
         if stream_control::is_ollama_stream_cancelled() {
-            app.emit(&done_event, serde_json::json!({ "cancelled": true })).ok();
+            app.emit(&done_event, serde_json::json!({ "cancelled": true }))
+                .ok();
             return Ok(());
         }
         let text = String::from_utf8_lossy(&chunk);
         buffer.push_str(&text);
-        
+
         while let Some(pos) = buffer.find('\n') {
             let line = buffer[..pos].trim().to_string();
             buffer = buffer[pos + 1..].to_string();
-            
+
             if line.is_empty() {
                 continue;
             }
-            
+
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) {
                 let message = val.get("message");
-                
-                if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str())
-                    && !reasoning.is_empty() {
-                        if !in_thinking {
-                            app.emit(&chunk_event, "<think>").ok();
-                            in_thinking = true;
-                        }
-                        app.emit(&chunk_event, reasoning).ok();
+
+                if let Some(reasoning) = message
+                    .and_then(|m| m.get("reasoning"))
+                    .and_then(|r| r.as_str())
+                    && !reasoning.is_empty()
+                {
+                    if !in_thinking {
+                        app.emit(&chunk_event, "<think>").ok();
+                        in_thinking = true;
                     }
-                
-                if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str())
-                    && !content.is_empty() {
-                        if in_thinking {
-                            app.emit(&chunk_event, "</think>").ok();
-                            in_thinking = false;
-                        }
-                        app.emit(&chunk_event, content).ok();
+                    app.emit(&chunk_event, reasoning).ok();
+                }
+
+                if let Some(content) = message
+                    .and_then(|m| m.get("content"))
+                    .and_then(|c| c.as_str())
+                    && !content.is_empty()
+                {
+                    if in_thinking {
+                        app.emit(&chunk_event, "</think>").ok();
+                        in_thinking = false;
                     }
-                
+                    app.emit(&chunk_event, content).ok();
+                }
+
                 if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
                     prompt_eval_count = Some(pec);
                 }
@@ -1149,81 +1310,125 @@ async fn stream_ollama_chat(
             }
         }
     }
-    
+
     if !buffer.trim().is_empty()
-        && let Ok(val) = serde_json::from_str::<serde_json::Value>(buffer.trim()) {
-            let message = val.get("message");
-            
-            if let Some(reasoning) = message.and_then(|m| m.get("reasoning")).and_then(|r| r.as_str())
-                && !reasoning.is_empty() {
-                    if !in_thinking {
-                        app.emit(&chunk_event, "<think>").ok();
-                        in_thinking = true;
-                    }
-                    app.emit(&chunk_event, reasoning).ok();
-                }
-            
-            if let Some(content) = message.and_then(|m| m.get("content")).and_then(|c| c.as_str())
-                && !content.is_empty() {
-                    if in_thinking {
-                        app.emit(&chunk_event, "</think>").ok();
-                        in_thinking = false;
-                    }
-                    app.emit(&chunk_event, content).ok();
-                }
-            
-            if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
-                prompt_eval_count = Some(pec);
+        && let Ok(val) = serde_json::from_str::<serde_json::Value>(buffer.trim())
+    {
+        let message = val.get("message");
+
+        if let Some(reasoning) = message
+            .and_then(|m| m.get("reasoning"))
+            .and_then(|r| r.as_str())
+            && !reasoning.is_empty()
+        {
+            if !in_thinking {
+                app.emit(&chunk_event, "<think>").ok();
+                in_thinking = true;
             }
-            if let Some(ec) = val.get("eval_count").and_then(|v| v.as_u64()) {
-                eval_count = Some(ec);
-            }
+            app.emit(&chunk_event, reasoning).ok();
         }
-    
+
+        if let Some(content) = message
+            .and_then(|m| m.get("content"))
+            .and_then(|c| c.as_str())
+            && !content.is_empty()
+        {
+            if in_thinking {
+                app.emit(&chunk_event, "</think>").ok();
+                in_thinking = false;
+            }
+            app.emit(&chunk_event, content).ok();
+        }
+
+        if let Some(pec) = val.get("prompt_eval_count").and_then(|v| v.as_u64()) {
+            prompt_eval_count = Some(pec);
+        }
+        if let Some(ec) = val.get("eval_count").and_then(|v| v.as_u64()) {
+            eval_count = Some(ec);
+        }
+    }
+
     if in_thinking {
         app.emit(&chunk_event, "</think>").ok();
     }
-    
+
     #[derive(serde::Serialize, Clone)]
     struct DonePayload {
         prompt_eval_count: Option<u64>,
         eval_count: Option<u64>,
     }
-    
-    app.emit(&done_event, DonePayload {
-        prompt_eval_count,
-        eval_count,
-    }).ok();
+
+    app.emit(
+        &done_event,
+        DonePayload {
+            prompt_eval_count,
+            eval_count,
+        },
+    )
+    .ok();
     Ok(())
 }
 
 #[tauri::command]
-async fn get_chat_sessions(app: AppHandle, sample_id: Option<i64>) -> Result<Vec<db::DbChatSession>, String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::get_chat_sessions(conn, sample_id).map_err(|e| e.to_string())
+async fn get_chat_sessions(
+    app: AppHandle,
+    sample_id: Option<i64>,
+) -> Result<Vec<db::DbChatSession>, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let sample_ids = if let Some(id) = sample_id {
+            vec![id]
+        } else {
+            let registry =
+                db::open_user_db(paths::db_path(&data_dir)).map_err(|e| e.to_string())?;
+            db::get_samples(&registry)
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(|sample| sample.id)
+                .collect()
+        };
+        let mut sessions = Vec::new();
+        for id in sample_ids {
+            let conn = db::connect_sample(&data_dir, id).map_err(|e| e.to_string())?;
+            sessions.extend(db::get_chat_sessions(&conn, Some(id)).map_err(|e| e.to_string())?);
+        }
+        sessions.sort_by_key(|b| std::cmp::Reverse(b.timestamp));
+        Ok(sessions)
     })
     .await
+    .map_err(|e| format!("Chat database worker failed: {e}"))?
 }
 
 #[tauri::command]
 async fn save_chat_session(app: AppHandle, session: db::DbChatSession) -> Result<(), String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection_mut(db_path, move |conn| {
-        db::save_chat_session(conn, &session).map_err(|e| e.to_string())
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let sample_id = session
+            .sample_id
+            .ok_or("A chat session must belong to a sample")?;
+        let mut conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
+        db::save_chat_session(&mut conn, &session).map_err(|e| e.to_string())
     })
     .await
+    .map_err(|e| format!("Chat database worker failed: {e}"))?
 }
 
 #[tauri::command]
 async fn delete_chat_session(app: AppHandle, session_id: String) -> Result<(), String> {
-    let db_path = get_db_path(&app);
-    db_runtime::with_connection(db_path, move |conn| {
-        db::delete_chat_session(conn, &session_id).map_err(|e| e.to_string())
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let registry = db::open_user_db(paths::db_path(&data_dir)).map_err(|e| e.to_string())?;
+        for sample in db::get_samples(&registry).map_err(|e| e.to_string())? {
+            let conn = db::connect_sample(&data_dir, sample.id).map_err(|e| e.to_string())?;
+            if db::delete_chat_session(&conn, &session_id).map_err(|e| e.to_string())? > 0 {
+                break;
+            }
+        }
+        Ok(())
     })
     .await
+    .map_err(|e| format!("Chat database worker failed: {e}"))?
 }
-
 
 #[tauri::command]
 async fn fetch_external_api(
@@ -1238,7 +1443,7 @@ async fn fetch_external_api(
 
     let cache_hit = db_runtime::with_connection(db_path.clone(), move |conn| {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS reference.api_cache (
+            "CREATE TABLE IF NOT EXISTS api_cache_db.api_cache (
                 url TEXT PRIMARY KEY,
                 response_json TEXT NOT NULL,
                 fetched_at INTEGER NOT NULL
@@ -1260,11 +1465,11 @@ async fn fetch_external_api(
                 let fetched: i64 = row.get(1)?;
                 Ok((json, fetched))
             },
-        )
-            && now - fetched_at < ttl
-                && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&cached_json) {
-                    return Ok(Some(parsed));
-                }
+        ) && now - fetched_at < ttl
+            && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&cached_json)
+        {
+            return Ok(Some(parsed));
+        }
 
         Ok(None)
     })
@@ -1303,12 +1508,14 @@ async fn fetch_external_api(
 
     if url.contains("eutils.ncbi.nlm.nih.gov")
         && let Some(ref key) = effective_api_key
-            && !key.trim().is_empty() {
-                let separator = if url.contains('?') { "&" } else { "?" };
-                target_url = format!("{}{}{}api_key={}", url, separator, "", key.trim());
-            }
+        && !key.trim().is_empty()
+    {
+        let separator = if url.contains('?') { "&" } else { "?" };
+        target_url = format!("{}{}{}api_key={}", url, separator, "", key.trim());
+    }
 
-    let res = client.get(&target_url)
+    let res = client
+        .get(&target_url)
         .header("User-Agent", "GenomicsCaddy/0.1")
         .send()
         .await
@@ -1318,7 +1525,8 @@ async fn fetch_external_api(
         return Err(format!("Server returned HTTP error: {}", res.status()));
     }
 
-    let json_val: serde_json::Value = res.json()
+    let json_val: serde_json::Value = res
+        .json()
         .await
         .map_err(|e| format!("Failed to parse response JSON: {}", e))?;
 
@@ -1330,7 +1538,7 @@ async fn fetch_external_api(
             .unwrap_or_default()
             .as_secs() as i64;
         conn.execute(
-            "INSERT OR REPLACE INTO reference.api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
+            "INSERT OR REPLACE INTO api_cache_db.api_cache (url, response_json, fetched_at) VALUES (?, ?, ?)",
             rusqlite::params![url_write, json_str, now],
         )
         .map_err(|e| e.to_string())?;
@@ -1341,11 +1549,9 @@ async fn fetch_external_api(
     Ok(json_val)
 }
 
-
 #[tauri::command]
 fn get_current_exe() -> Result<String, String> {
-    let p = std::env::current_exe()
-        .map_err(|e| e.to_string())?;
+    let p = std::env::current_exe().map_err(|e| e.to_string())?;
     Ok(p.to_string_lossy().to_string().replace('\\', "/"))
 }
 

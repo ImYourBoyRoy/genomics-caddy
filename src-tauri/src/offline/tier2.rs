@@ -2,7 +2,7 @@
 //! Build variant locus index from imported genotypes (per-sample or all samples).
 
 use crate::research::util::normalize_rsid;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 
 fn variant_key(assembly: &str, chrom: &str, pos: i64, a1: &str, a2: &str) -> String {

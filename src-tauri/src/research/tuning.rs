@@ -81,7 +81,13 @@ pub struct PipelineTuning {
 
 impl Default for PipelineTuning {
     fn default() -> Self {
-        resolve_pipeline_tuning("http://localhost:11434", "http://localhost:6333", false, None, None)
+        resolve_pipeline_tuning(
+            "http://localhost:11434",
+            "http://localhost:6333",
+            false,
+            None,
+            None,
+        )
     }
 }
 
@@ -114,16 +120,10 @@ fn gnomad_sem() -> Arc<Semaphore> {
 }
 
 fn refresh_rate_limiters(tuning: &PipelineTuning) {
-    let gwas = GWAS_SEMAPHORE.get_or_init(|| {
-        RwLock::new(Arc::new(Semaphore::new(
-            tuning.gwas_api_concurrency.max(1),
-        )))
-    });
-    let gnomad = GNOMAD_SEMAPHORE.get_or_init(|| {
-        RwLock::new(Arc::new(Semaphore::new(
-            tuning.gnomad_concurrency.max(1),
-        )))
-    });
+    let gwas = GWAS_SEMAPHORE
+        .get_or_init(|| RwLock::new(Arc::new(Semaphore::new(tuning.gwas_api_concurrency.max(1)))));
+    let gnomad = GNOMAD_SEMAPHORE
+        .get_or_init(|| RwLock::new(Arc::new(Semaphore::new(tuning.gnomad_concurrency.max(1)))));
     if let Ok(mut guard) = gwas.write() {
         *guard = Arc::new(Semaphore::new(tuning.gwas_api_concurrency.max(1)));
     }
@@ -158,8 +158,13 @@ pub fn install_sweep_tuning(
     super::sources_config::install_enrichment_sources(scope);
     let sources = super::sources_config::effective_sources_from_scope(scope);
     let sweep_fast = sources.is_fast_index();
-    let mut tuning =
-        resolve_pipeline_tuning(ollama_url, qdrant_url, sweep_fast, ollama_latency_ms, qdrant_latency_ms);
+    let mut tuning = resolve_pipeline_tuning(
+        ollama_url,
+        qdrant_url,
+        sweep_fast,
+        ollama_latency_ms,
+        qdrant_latency_ms,
+    );
     if !sources.gnomad {
         tuning.skip_gnomad = true;
         tuning.gnomad_concurrency = 0;
@@ -247,12 +252,20 @@ pub fn prefetch_batch_timeout_secs(batch_len: usize) -> u64 {
 fn env_sweep_fast() -> bool {
     std::env::var("GENOMICS_SWEEP_FAST")
         .ok()
-        .map(|v| matches!(v.trim().to_lowercase().as_str(), "1" | "true" | "yes" | "on"))
+        .map(|v| {
+            matches!(
+                v.trim().to_lowercase().as_str(),
+                "1" | "true" | "yes" | "on"
+            )
+        })
         .unwrap_or(false)
 }
 
 pub fn sweep_fast_enabled(scope_fast: bool) -> bool {
-    scope_fast || env_sweep_fast() || active_tuning().fast_sweep || super::sources_config::enrichment_fast_index_mode()
+    scope_fast
+        || env_sweep_fast()
+        || active_tuning().fast_sweep
+        || super::sources_config::enrichment_fast_index_mode()
 }
 
 /// Blocking HTTP GET latency probe (health endpoint). Returns None on failure.
@@ -287,7 +300,10 @@ pub fn probe_url_latency_ms(url: &str) -> Option<u64> {
     }
 }
 
-pub async fn probe_service_latencies(ollama_url: &str, qdrant_url: &str) -> (Option<u64>, Option<u64>) {
+pub async fn probe_service_latencies(
+    ollama_url: &str,
+    qdrant_url: &str,
+) -> (Option<u64>, Option<u64>) {
     let ollama = ollama_url.to_string();
     let qdrant = qdrant_url.to_string();
     let (o_ms, q_ms) = tokio::join!(
@@ -345,54 +361,49 @@ pub fn resolve_pipeline_tuning(
     let penalty = latency_penalty(ollama_latency_ms).max(latency_penalty(qdrant_latency_ms));
     let throughput = (cpus as f64) / penalty;
 
-    let (prepare, batch, gwas, gnomad, embed_par, pipe, prefetch) = if manual.as_deref() == Some("fixed") {
-        (
-            parse_env_usize("GENOMICS_PREPARE_CONCURRENCY", 8),
-            parse_env_usize("GENOMICS_ENRICH_BATCH_SIZE", 16),
-            parse_env_usize("GENOMICS_GWAS_API_CONCURRENCY", 6),
-            if fast { 0 } else { parse_env_usize("GENOMICS_GNOMAD_CONCURRENCY", 4) },
-            parse_env_usize("GENOMICS_EMBED_PARALLEL", 2),
-            parse_env_usize("GENOMICS_PIPELINE_DEPTH", 1),
-            parse_env_usize("GENOMICS_PREFETCH_CONCURRENCY", 4),
-        )
-    } else {
-        let prepare = clamp_usize(
-            (throughput * 1.5).round() as usize,
-            4,
-            96,
-        );
-        let batch = clamp_usize((throughput * 0.75).round() as usize, 8, 64);
-        let gwas = clamp_usize((throughput * 0.35).round() as usize, 4, 24);
-        let gnomad = if fast {
-            0
+    let (prepare, batch, gwas, gnomad, embed_par, pipe, prefetch) =
+        if manual.as_deref() == Some("fixed") {
+            (
+                parse_env_usize("GENOMICS_PREPARE_CONCURRENCY", 8),
+                parse_env_usize("GENOMICS_ENRICH_BATCH_SIZE", 16),
+                parse_env_usize("GENOMICS_GWAS_API_CONCURRENCY", 6),
+                if fast {
+                    0
+                } else {
+                    parse_env_usize("GENOMICS_GNOMAD_CONCURRENCY", 4)
+                },
+                parse_env_usize("GENOMICS_EMBED_PARALLEL", 2),
+                parse_env_usize("GENOMICS_PIPELINE_DEPTH", 1),
+                parse_env_usize("GENOMICS_PREFETCH_CONCURRENCY", 4),
+            )
         } else {
-            clamp_usize((throughput * 0.45).round() as usize, 4, 32)
-        };
-        let embed_par = clamp_usize((throughput / 6.0).round() as usize, 2, 16);
-        let pipe = if penalty <= 1.1 && cpus >= 24 {
-            2
-        } else {
-            1
-        };
-        let prefetch = clamp_usize((throughput / 4.0).round() as usize, 4, 16);
-        (
-            parse_env_usize("GENOMICS_PREPARE_CONCURRENCY", prepare),
-            parse_env_usize("GENOMICS_ENRICH_BATCH_SIZE", batch),
-            parse_env_usize("GENOMICS_GWAS_API_CONCURRENCY", gwas),
-            if fast {
+            let prepare = clamp_usize((throughput * 1.5).round() as usize, 4, 96);
+            let batch = clamp_usize((throughput * 0.75).round() as usize, 8, 64);
+            let gwas = clamp_usize((throughput * 0.35).round() as usize, 4, 24);
+            let gnomad = if fast {
                 0
             } else {
-                parse_env_usize("GENOMICS_GNOMAD_CONCURRENCY", gnomad)
-            },
-            parse_env_usize("GENOMICS_EMBED_PARALLEL", embed_par),
-            parse_env_usize("GENOMICS_PIPELINE_DEPTH", pipe),
-            parse_env_usize("GENOMICS_PREFETCH_CONCURRENCY", prefetch),
-        )
-    };
+                clamp_usize((throughput * 0.45).round() as usize, 4, 32)
+            };
+            let embed_par = clamp_usize((throughput / 6.0).round() as usize, 2, 16);
+            let pipe = if penalty <= 1.1 && cpus >= 24 { 2 } else { 1 };
+            let prefetch = clamp_usize((throughput / 4.0).round() as usize, 4, 16);
+            (
+                parse_env_usize("GENOMICS_PREPARE_CONCURRENCY", prepare),
+                parse_env_usize("GENOMICS_ENRICH_BATCH_SIZE", batch),
+                parse_env_usize("GENOMICS_GWAS_API_CONCURRENCY", gwas),
+                if fast {
+                    0
+                } else {
+                    parse_env_usize("GENOMICS_GNOMAD_CONCURRENCY", gnomad)
+                },
+                parse_env_usize("GENOMICS_EMBED_PARALLEL", embed_par),
+                parse_env_usize("GENOMICS_PIPELINE_DEPTH", pipe),
+                parse_env_usize("GENOMICS_PREFETCH_CONCURRENCY", prefetch),
+            )
+        };
 
-    let skip_gnomad = fast
-        || parse_env_usize("GENOMICS_SKIP_GNOMAD", 0) != 0
-        || gnomad == 0;
+    let skip_gnomad = fast || parse_env_usize("GENOMICS_SKIP_GNOMAD", 0) != 0 || gnomad == 0;
 
     let profile = if manual.is_some() {
         format!("manual ({cpus}c)")

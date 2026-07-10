@@ -130,8 +130,13 @@ async fn embed_via_legacy_api(
 pub async fn embed_text(text: &str, ollama_url: &str, model: &str) -> Result<Vec<f32>, String> {
     let client = &*EMBED_CLIENT;
 
-    match embed_via_api_embed(client, ollama_url, model, serde_json::Value::String(text.to_string()))
-        .await
+    match embed_via_api_embed(
+        client,
+        ollama_url,
+        model,
+        serde_json::Value::String(text.to_string()),
+    )
+    .await
     {
         Ok(mut vectors) if !vectors.is_empty() => Ok(vectors.remove(0)),
         Ok(_) => embed_via_legacy_api(client, ollama_url, model, text).await,
@@ -140,7 +145,11 @@ pub async fn embed_text(text: &str, ollama_url: &str, model: &str) -> Result<Vec
 }
 
 /// Embed a user query with a small in-memory LRU-style cache (consultation + hybrid search).
-pub async fn embed_query_cached(text: &str, ollama_url: &str, model: &str) -> Result<Vec<f32>, String> {
+pub async fn embed_query_cached(
+    text: &str,
+    ollama_url: &str,
+    model: &str,
+) -> Result<Vec<f32>, String> {
     let key = query_cache_key(text, ollama_url, model);
     if let Some(cached) = read_query_cache(&key) {
         return Ok(cached);
@@ -193,12 +202,7 @@ pub async fn embed_texts_batch(
     }
 
     let deadline = Duration::from_secs(embed_batch_timeout_secs(texts.len()));
-    match tokio::time::timeout(
-        deadline,
-        embed_texts_batch_inner(texts, ollama_url, model),
-    )
-    .await
-    {
+    match tokio::time::timeout(deadline, embed_texts_batch_inner(texts, ollama_url, model)).await {
         Ok(result) => result,
         Err(_) => Err(format!(
             "Ollama embed timed out after {}s ({} texts)",

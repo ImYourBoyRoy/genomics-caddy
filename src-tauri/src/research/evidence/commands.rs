@@ -1,8 +1,12 @@
 // ./src-tauri/src/research/evidence/commands.rs
 //! Tauri commands for the evidence workbench.
 
-use super::atlas::{build_vector_atlas, load_atlas_points, VectorAtlasResult};
-use super::backfill::{backfill_evidence_payloads, reembed_stale_vectors, BackfillResult, ReembedResult};
+use super::atlas::{VectorAtlasResult, build_vector_atlas, load_atlas_points};
+use super::backfill::{
+    BackfillResult, ReembedResult, backfill_evidence_payloads, reembed_stale_vectors,
+};
+use super::catalog::browse_catalog;
+use super::corpus::build_evidence_corpus_summary;
 use super::dashboard::{
     build_quality_dashboard, build_trait_clusters, chromosome_trait_overlay,
     list_actionability_points, list_pathway_flow_rows,
@@ -13,17 +17,15 @@ use super::search::{
     search_associations_hybrid as hybrid_search,
 };
 use super::store::{list_candidates, update_candidate_status};
-use super::catalog::browse_catalog;
-use super::corpus::build_evidence_corpus_summary;
 use super::types::{
-    ActionabilityPoint, BrowseAssociationsParams, BrowseAssociationsResult, ChromosomeTraitBand,
-    EvidenceCard, EvidenceCorpusSummary, EvidencePacket, HybridSearchParams, PathwayFlowRow,
-    QualityDashboard, SimilarSearchParams, TraitClusterSummary, UpdateCandidateStatusRequest,
-    CandidateMarkerRow,
+    ActionabilityPoint, BrowseAssociationsParams, BrowseAssociationsResult, CandidateMarkerRow,
+    ChromosomeTraitBand, EvidenceCard, EvidenceCorpusSummary, EvidencePacket, HybridSearchParams,
+    PathwayFlowRow, QualityDashboard, SimilarSearchParams, TraitClusterSummary,
+    UpdateCandidateStatusRequest,
 };
 use crate::config;
 use crate::db_runtime;
-use crate::{get_db_path};
+use crate::get_db_path;
 use tauri::AppHandle;
 
 async fn load_qdrant(app: &AppHandle) -> Result<super::super::QdrantConfig, String> {
@@ -161,12 +163,8 @@ pub async fn update_candidate_marker_status(
 #[tauri::command]
 pub async fn ensure_qdrant_payload_indexes(app: AppHandle) -> Result<Vec<String>, String> {
     let cfg = load_qdrant(&app).await?;
-    super::super::qdrant::ensure_payload_indexes(
-        &cfg.url,
-        cfg.api_key.as_deref(),
-        &cfg.collection,
-    )
-    .await
+    super::super::qdrant::ensure_payload_indexes(&cfg.url, cfg.api_key.as_deref(), &cfg.collection)
+        .await
 }
 
 #[tauri::command]
@@ -184,9 +182,7 @@ pub async fn get_variant_evidence_card(
         &rsid,
     )
     .await?;
-    Ok(payload.map(|(p, pid)| {
-        super::card::evidence_card_from_payload(&p, 1.0, None, Some(pid))
-    }))
+    Ok(payload.map(|(p, pid)| super::card::evidence_card_from_payload(&p, 1.0, None, Some(pid))))
 }
 
 #[tauri::command]
@@ -197,13 +193,7 @@ pub async fn backfill_evidence_payloads_cmd(
 ) -> Result<BackfillResult, String> {
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
-    backfill_evidence_payloads(
-        &db_path,
-        sample_id,
-        &cfg,
-        limit.unwrap_or(500).min(5000),
-    )
-    .await
+    backfill_evidence_payloads(&db_path, sample_id, &cfg, limit.unwrap_or(500).min(5000)).await
 }
 
 #[tauri::command]
@@ -290,7 +280,9 @@ pub async fn enable_named_vectors_collection(
 ) -> Result<String, String> {
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
-    let vector = crate::research::embed::embed_text("dimension probe", &ollama_url, &cfg.embedding_model).await?;
+    let vector =
+        crate::research::embed::embed_text("dimension probe", &ollama_url, &cfg.embedding_model)
+            .await?;
     let dims = vector.len() as u32;
     super::super::qdrant::ensure_qdrant_collection_named(
         &cfg.url,

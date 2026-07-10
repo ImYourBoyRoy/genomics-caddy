@@ -55,7 +55,48 @@ pub fn connect_sample(data_dir: &Path, sample_id: i64) -> Result<Connection> {
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     attach_public_databases(&conn, data_dir)?;
     ensure_sample_schema(&conn)?;
+    // Existing samples created before variant_locus was in the sample schema
+    // get an empty table on first open — backfill once from genotypes.
+    maybe_backfill_variant_locus(&conn, sample_id)?;
     Ok(conn)
+}
+
+fn maybe_backfill_variant_locus(conn: &Connection, sample_id: i64) -> Result<()> {
+    let locus_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM variant_locus WHERE sample_id = ?",
+            params![sample_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+    if locus_count > 0 {
+        return Ok(());
+    }
+    let genotype_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM genotypes WHERE sample_id = ? AND position_grch38 IS NOT NULL AND position_grch38 > 0",
+            params![sample_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+    if genotype_count == 0 {
+        return Ok(());
+    }
+    match crate::offline::tier2::build_variant_locus_for_sample(conn, sample_id) {
+        Ok(n) => {
+            if n > 0 {
+                eprintln!(
+                    "Backfilled variant_locus for sample {sample_id}: {n} rows"
+                );
+            }
+        }
+        Err(e) => {
+            eprintln!(
+                "Warning: failed to backfill variant_locus for sample {sample_id}: {e}"
+            );
+        }
+    }
+    Ok(())
 }
 
 /// Opens a sample database when only the registry database path is available.
@@ -106,21 +147,87 @@ fn attach_or_create(conn: &Connection, path: &Path, schema: &str) -> Result<()> 
     Ok(())
 }
 
+/// Move catalog DBs that were incorrectly written under `raw_downloads/` into `App/Data/`.
+fn migrate_misplaced_catalog_dbs(data_dir: &Path) {
+    for name in [
+        "clinvar.db",
+        "dbsnp.db",
+        "gwas.db",
+        "pharmgkb.db",
+        "clingen.db",
+        "mane.db",
+    ] {
+        let correct = data_dir.join(name);
+        let misplaced = data_dir.join("raw_downloads").join(name);
+        if correct.is_file() || !misplaced.is_file() {
+            continue;
+        }
+        match std::fs::rename(&misplaced, &correct) {
+            Ok(()) => eprintln!(
+                "Migrated misplaced {name} from raw_downloads/ → {}",
+                correct.display()
+            ),
+            Err(e) => {
+                if let Err(copy_err) = std::fs::copy(&misplaced, &correct) {
+                    eprintln!("Failed to migrate {name}: rename={e}; copy={copy_err}");
+                    continue;
+                }
+                let _ = std::fs::remove_file(&misplaced);
+                eprintln!(
+                    "Migrated misplaced {name} (copy) from raw_downloads/ → {}",
+                    correct.display()
+                );
+            }
+        }
+        let staging = data_dir
+            .join("raw_downloads")
+            .join(name.replace(".db", "_staging.db"));
+        let _ = std::fs::remove_file(staging);
+    }
+}
+
 fn attach_public_databases(conn: &Connection, parent_dir: &Path) -> Result<()> {
+    migrate_misplaced_catalog_dbs(parent_dir);
+
     // App-owned sidecars (may be created empty on first launch).
     attach_or_create(conn, &parent_dir.join("genomics_reference.db"), "reference")?;
     attach_or_create(conn, &parent_dir.join("api_cache.db"), "api_cache_db")?;
 
-    // Catalog sidecars — only attach when a download/import has created them.
+    // Catalog sidecars — attach when present under App/Data/.
     let has_clinvar = try_attach_existing(conn, &parent_dir.join("clinvar.db"), "clinvar");
     let has_dbsnp = try_attach_existing(conn, &parent_dir.join("dbsnp.db"), "dbsnp");
+    let has_gwas = try_attach_existing(conn, &parent_dir.join("gwas.db"), "gwas");
+    let has_pharmgkb = try_attach_existing(conn, &parent_dir.join("pharmgkb.db"), "pharmgkb");
+    let has_clingen = try_attach_existing(conn, &parent_dir.join("clingen.db"), "clingen");
+    let has_mane = try_attach_existing(conn, &parent_dir.join("mane.db"), "mane");
 
-    // SQLite does not support persistent cross-database VIEWs, but it fully supports
-    // TEMP VIEWs referencing attached databases. Creating temporary views allows unqualified
-    // queries like `SELECT * FROM gwas_reference` to transparently route to the attached
-    // databases. Note: these are read-only (writes must use the explicit schema prefixes).
+    // One-time: if dedicated DBs are missing but reference still holds the tables, split them out.
+    migrate_reference_catalogs_to_sidecars(conn, parent_dir)?;
+
+    // Re-probe after possible migration (schema may already be attached by the migrator).
+    let schema_is = |name: &str| {
+        conn.query_row(
+            "SELECT 1 FROM pragma_database_list WHERE name = ?1",
+            params![name],
+            |_| Ok(true),
+        )
+        .unwrap_or(false)
+    };
+    let has_gwas = has_gwas
+        || schema_is("gwas")
+        || try_attach_existing(conn, &parent_dir.join("gwas.db"), "gwas");
+    let has_pharmgkb = has_pharmgkb
+        || schema_is("pharmgkb")
+        || try_attach_existing(conn, &parent_dir.join("pharmgkb.db"), "pharmgkb");
+    let has_clingen = has_clingen
+        || schema_is("clingen")
+        || try_attach_existing(conn, &parent_dir.join("clingen.db"), "clingen");
+    let has_mane = has_mane
+        || schema_is("mane")
+        || try_attach_existing(conn, &parent_dir.join("mane.db"), "mane");
+
+    // TEMP VIEWs for unqualified reads.
     let mut reference_views: Vec<(&str, &str)> = vec![
-        ("gwas_reference", "SELECT * FROM reference.gwas_reference"),
         ("api_cache", "SELECT * FROM api_cache_db.api_cache"),
         (
             "api_cache_entries",
@@ -140,23 +247,51 @@ fn attach_public_databases(conn: &Connection, parent_dir: &Path) -> Result<()> {
             "SELECT * FROM reference.offline_asset_registry",
         ),
         (
-            "pharmgkb_clinical_variants",
-            "SELECT * FROM reference.pharmgkb_clinical_variants",
-        ),
-        ("pharmgkb_genes", "SELECT * FROM reference.pharmgkb_genes"),
-        (
-            "clingen_gene_validity",
-            "SELECT * FROM reference.clingen_gene_validity",
-        ),
-        (
-            "mane_transcripts",
-            "SELECT * FROM reference.mane_transcripts",
-        ),
-        (
             "evidence_library",
             "SELECT * FROM reference.evidence_library",
         ),
     ];
+
+    if has_gwas {
+        reference_views.push(("gwas_reference", "SELECT * FROM gwas.gwas_reference"));
+    } else {
+        reference_views.push(("gwas_reference", "SELECT * FROM reference.gwas_reference"));
+    }
+    if has_pharmgkb {
+        reference_views.push((
+            "pharmgkb_clinical_variants",
+            "SELECT * FROM pharmgkb.pharmgkb_clinical_variants",
+        ));
+        reference_views.push(("pharmgkb_genes", "SELECT * FROM pharmgkb.pharmgkb_genes"));
+    } else {
+        reference_views.push((
+            "pharmgkb_clinical_variants",
+            "SELECT * FROM reference.pharmgkb_clinical_variants",
+        ));
+        reference_views.push((
+            "pharmgkb_genes",
+            "SELECT * FROM reference.pharmgkb_genes",
+        ));
+    }
+    if has_clingen {
+        reference_views.push((
+            "clingen_gene_validity",
+            "SELECT * FROM clingen.clingen_gene_validity",
+        ));
+    } else {
+        reference_views.push((
+            "clingen_gene_validity",
+            "SELECT * FROM reference.clingen_gene_validity",
+        ));
+    }
+    if has_mane {
+        reference_views.push(("mane_transcripts", "SELECT * FROM mane.mane_transcripts"));
+    } else {
+        reference_views.push((
+            "mane_transcripts",
+            "SELECT * FROM reference.mane_transcripts",
+        ));
+    }
     if has_clinvar {
         reference_views.push((
             "clinvar_reference",
@@ -176,11 +311,90 @@ fn attach_public_databases(conn: &Connection, parent_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Split GWAS / PharmGKB / ClinGen / MANE out of genomics_reference.db into dedicated files.
+fn migrate_reference_catalogs_to_sidecars(conn: &Connection, data_dir: &Path) -> Result<()> {
+    // (schema, filename, source_table → dest_table pairs)
+    type CatalogPlan = (&'static str, &'static str, &'static [(&'static str, &'static str)]);
+    let plans: &[CatalogPlan] = &[
+        (
+            "gwas",
+            "gwas.db",
+            &[("gwas_reference", "gwas_reference")],
+        ),
+        (
+            "pharmgkb",
+            "pharmgkb.db",
+            &[
+                ("pharmgkb_clinical_variants", "pharmgkb_clinical_variants"),
+                ("pharmgkb_genes", "pharmgkb_genes"),
+            ],
+        ),
+        (
+            "clingen",
+            "clingen.db",
+            &[("clingen_gene_validity", "clingen_gene_validity")],
+        ),
+        ("mane", "mane.db", &[("mane_transcripts", "mane_transcripts")]),
+    ];
+
+    for (schema, filename, tables) in plans {
+        let dest = data_dir.join(filename);
+        let already = conn
+            .query_row(
+                "SELECT 1 FROM pragma_database_list WHERE name = ?1",
+                params![*schema],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
+        if already || dest.is_file() {
+            continue;
+        }
+
+        // Only split if reference still has rows for at least one table.
+        let mut has_rows = false;
+        for (src, _) in *tables {
+            let n: i64 = conn
+                .query_row(
+                    &format!("SELECT COUNT(*) FROM reference.{src}"),
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap_or(0);
+            if n > 0 {
+                has_rows = true;
+                break;
+            }
+        }
+        if !has_rows {
+            continue;
+        }
+
+        eprintln!("Splitting {schema} catalog into {}", dest.display());
+        attach_or_create(conn, &dest, schema)?;
+        ensure_catalog_schema_ddl(conn, schema)?;
+        for (src, dst) in *tables {
+            let sql = format!(
+                "INSERT OR IGNORE INTO {schema}.{dst} SELECT * FROM reference.{src}"
+            );
+            if let Err(e) = conn.execute(&sql, []) {
+                eprintln!("Warning: migrate {src} → {schema}.{dst}: {e}");
+            } else {
+                let _ = conn.execute(&format!("DELETE FROM reference.{src}"), []);
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Ensure a catalog sidecar exists and is attached (called from offline import).
 pub fn ensure_catalog_db_attached(conn: &Connection, data_dir: &Path, schema: &str) -> Result<()> {
     let filename = match schema {
         "clinvar" => "clinvar.db",
         "dbsnp" => "dbsnp.db",
+        "gwas" => "gwas.db",
+        "pharmgkb" => "pharmgkb.db",
+        "clingen" => "clingen.db",
+        "mane" => "mane.db",
         other => {
             return Err(rusqlite::Error::InvalidParameterName(format!(
                 "Unknown catalog schema: {other}"
@@ -188,7 +402,6 @@ pub fn ensure_catalog_db_attached(conn: &Connection, data_dir: &Path, schema: &s
         }
     };
     let path = data_dir.join(filename);
-    // Already attached?
     let attached: bool = conn
         .query_row(
             "SELECT 1 FROM pragma_database_list WHERE name = ?1",
@@ -196,10 +409,95 @@ pub fn ensure_catalog_db_attached(conn: &Connection, data_dir: &Path, schema: &s
             |_| Ok(true),
         )
         .unwrap_or(false);
-    if attached {
-        return Ok(());
+    if !attached {
+        attach_or_create(conn, &path, schema)?;
     }
-    attach_or_create(conn, &path, schema)
+    ensure_catalog_schema_ddl(conn, schema)?;
+    Ok(())
+}
+
+/// Create tables/indexes inside an attached catalog schema.
+pub fn ensure_catalog_schema_ddl(conn: &Connection, schema: &str) -> Result<()> {
+    match schema {
+        "gwas" => {
+            conn.execute_batch(
+                "
+                CREATE TABLE IF NOT EXISTS gwas.gwas_reference (
+                    rsid TEXT PRIMARY KEY,
+                    association_count INTEGER NOT NULL DEFAULT 1,
+                    top_trait TEXT NOT NULL DEFAULT '',
+                    primary_gene TEXT NOT NULL DEFAULT '',
+                    mapped_genes TEXT NOT NULL DEFAULT '',
+                    reported_genes TEXT NOT NULL DEFAULT '',
+                    best_pvalue REAL,
+                    associations_json TEXT NOT NULL DEFAULT '[]'
+                );
+                CREATE INDEX IF NOT EXISTS gwas.idx_gwas_reference_rsid ON gwas_reference(rsid);
+                ",
+            )?;
+        }
+        "pharmgkb" => {
+            conn.execute_batch(
+                "
+                CREATE TABLE IF NOT EXISTS pharmgkb.pharmgkb_clinical_variants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rsid TEXT NOT NULL,
+                    gene TEXT,
+                    drug TEXT,
+                    phenotype TEXT,
+                    evidence_level TEXT,
+                    raw_json TEXT
+                );
+                CREATE INDEX IF NOT EXISTS pharmgkb.idx_pharmgkb_rsid ON pharmgkb_clinical_variants(rsid);
+                CREATE TABLE IF NOT EXISTS pharmgkb.pharmgkb_genes (
+                    pharmgkb_id TEXT PRIMARY KEY,
+                    symbol TEXT NOT NULL,
+                    name TEXT,
+                    raw_json TEXT
+                );
+                CREATE INDEX IF NOT EXISTS pharmgkb.idx_pharmgkb_genes_symbol ON pharmgkb_genes(symbol);
+                ",
+            )?;
+        }
+        "clingen" => {
+            conn.execute_batch(
+                "
+                CREATE TABLE IF NOT EXISTS clingen.clingen_gene_validity (
+                    hgnc_id TEXT,
+                    gene_symbol TEXT NOT NULL,
+                    disease_label TEXT NOT NULL,
+                    classification TEXT,
+                    moi TEXT,
+                    report_url TEXT,
+                    PRIMARY KEY (gene_symbol, disease_label)
+                );
+                CREATE INDEX IF NOT EXISTS clingen.idx_clingen_gene ON clingen_gene_validity(gene_symbol);
+                ",
+            )?;
+        }
+        "mane" => {
+            conn.execute_batch(
+                "
+                CREATE TABLE IF NOT EXISTS mane.mane_transcripts (
+                    gene_symbol TEXT PRIMARY KEY,
+                    ensembl_transcript TEXT,
+                    refseq_transcript TEXT,
+                    mane_status TEXT,
+                    grch38_coordinates TEXT
+                );
+                ",
+            )?;
+        }
+        "clinvar" | "dbsnp" => {
+            // Created by their importers / migrate_offline_schema.
+        }
+        other => {
+            return Err(rusqlite::Error::InvalidParameterName(format!(
+                "Unknown catalog schema DDL: {other}"
+            )));
+        }
+    }
+    Ok(())
 }
 
 thread_local! {
@@ -542,6 +840,15 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
         )",
             [],
         )?;
+        conn.execute_batch(
+            "
+            CREATE INDEX IF NOT EXISTS clinvar.idx_clinvar_reference_rsid ON clinvar_reference(rsid);
+            CREATE INDEX IF NOT EXISTS clinvar.idx_clinvar_reference_gene ON clinvar_reference(gene_symbol);
+            CREATE INDEX IF NOT EXISTS clinvar.idx_clinvar_reference_varid ON clinvar_reference(variation_id);
+            CREATE INDEX IF NOT EXISTS clinvar.idx_clinvar_reference_coords
+                ON clinvar_reference(assembly, chromosome, start);
+            ",
+        )?;
     }
 
     conn.execute(
@@ -658,6 +965,19 @@ fn ensure_sample_schema(conn: &Connection) -> Result<()> {
         );
         CREATE INDEX IF NOT EXISTS idx_genotypes_rsid ON genotypes(rsid);
         CREATE INDEX IF NOT EXISTS idx_genotypes_coords ON genotypes(chromosome, position_grch38);
+        CREATE TABLE IF NOT EXISTS variant_locus (
+            variant_key TEXT PRIMARY KEY,
+            assembly TEXT NOT NULL DEFAULT 'GRCh38',
+            chrom TEXT NOT NULL,
+            pos INTEGER NOT NULL,
+            ref_allele TEXT,
+            alt_allele TEXT,
+            rsid TEXT,
+            sample_id INTEGER,
+            source TEXT NOT NULL DEFAULT 'genotype'
+        );
+        CREATE INDEX IF NOT EXISTS idx_variant_locus_rsid ON variant_locus(rsid);
+        CREATE INDEX IF NOT EXISTS idx_variant_locus_coords ON variant_locus(assembly, chrom, pos);
         CREATE TABLE IF NOT EXISTS chat_sessions (
             id TEXT PRIMARY KEY,
             sample_id INTEGER NOT NULL,

@@ -23,6 +23,8 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, copy};
 use std::path::Path;
+use std::time::Instant;
+use tauri::{AppHandle, Emitter};
 use zip::ZipArchive;
 
 const GWAS_DOWNLOAD_URL: &str = "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated-full.zip";
@@ -88,13 +90,20 @@ pub fn seed_gwas_reference_fallback(
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
     let mut inserted = 0usize;
+    let gwas_table = if crate::offline::schema::schema_attached(conn, "gwas") {
+        "gwas.gwas_reference"
+    } else {
+        "reference.gwas_reference"
+    };
     for marker in markers {
         if let Some(rsid) = marker["rsid"].as_str() {
             let gene = marker["gene"].as_str().unwrap_or("");
             let impact = marker["impact"].as_str().unwrap_or("");
             tx.execute(
-                "INSERT OR IGNORE INTO reference.gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, associations_json)
-                 VALUES (?, 1, ?, ?, ?, ?, ?)",
+                &format!(
+                    "INSERT OR IGNORE INTO {gwas_table} (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, associations_json)
+                     VALUES (?, 1, ?, ?, ?, ?, ?)"
+                ),
                 params![
                     normalize_rsid(rsid).unwrap_or_else(|| rsid.to_lowercase()),
                     format!("{} — {}", gene, impact),
@@ -126,7 +135,7 @@ pub async fn sync_gwas_reference(
     paths::ensure_data_layout(data_dir).map_err(|e| e.to_string())?;
     let (source_path, downloaded) = ensure_gwas_source_file(data_dir).await?;
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    let rsid_count = import_gwas_reference_tsv(&conn, &source_path)?;
+    let rsid_count = import_gwas_reference_tsv(&conn, &source_path, None)?;
     let final_path = compress_if_large(&source_path, DEFAULT_COMPRESSION_THRESHOLD_BYTES)?;
     Ok(GwasSyncResult {
         rsid_count,
@@ -141,23 +150,53 @@ pub async fn sync_gwas_reference(
 }
 
 /// Import GWAS catalog from files already on disk (blocking — safe inside spawn_blocking).
-pub fn import_gwas_from_local_files(data_dir: &Path, db_path: &Path) -> Result<u64, String> {
+pub fn import_gwas_from_local_files(
+    data_dir: &Path,
+    db_path: &Path,
+    app: Option<&AppHandle>,
+) -> Result<u64, String> {
     paths::ensure_data_layout(data_dir).map_err(|e| e.to_string())?;
     let tsv_path = gwas_catalog_file(data_dir);
     let zip_path = gwas_catalog_zip_file(data_dir);
     let gz_path = gwas_catalog_gz_file(data_dir);
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "offline:import_progress",
+            serde_json::json!({
+                "asset_id": "gwas_catalog",
+                "rows_processed": 0,
+                "percent": 0,
+                "rows_per_second": 0,
+                "eta_seconds": null,
+                "message": "Preparing GWAS catalog import…"
+            }),
+        );
+    }
     let source_path = if tsv_path.exists() {
         tsv_path
     } else if gz_path.exists() {
         gz_path
     } else if zip_path.exists() {
+        if let Some(handle) = app {
+            let _ = handle.emit(
+                "offline:import_progress",
+                serde_json::json!({
+                    "asset_id": "gwas_catalog",
+                    "rows_processed": 0,
+                    "percent": 1,
+                    "rows_per_second": 0,
+                    "eta_seconds": null,
+                    "message": "Extracting GWAS catalog zip…"
+                }),
+            );
+        }
         extract_gwas_tsv_from_zip(&zip_path, &tsv_path)?;
         tsv_path
     } else {
         return Err("GWAS catalog file not found — download Tier 0 first.".into());
     };
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
-    let row_count = import_gwas_reference_tsv(&conn, &source_path)?;
+    let row_count = import_gwas_reference_tsv(&conn, &source_path, app)?;
     compress_if_large(&source_path, DEFAULT_COMPRESSION_THRESHOLD_BYTES)?;
     Ok(row_count)
 }
@@ -314,7 +353,12 @@ impl GwasRsidAggregate {
     }
 }
 
-fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, String> {
+fn import_gwas_reference_tsv(
+    conn: &Connection,
+    path: &Path,
+    app: Option<&AppHandle>,
+) -> Result<u64, String> {
+    let total_bytes = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
     let reader = open_text_auto(path).map_err(|error| format!("Open GWAS TSV failed: {error}"))?;
     let mut lines = reader.lines();
 
@@ -343,14 +387,25 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
         ],
     );
 
-    conn.execute("DELETE FROM reference.gwas_reference", [])
+    let gwas_table = if crate::offline::schema::schema_attached(conn, "gwas") {
+        "gwas.gwas_reference"
+    } else {
+        "reference.gwas_reference"
+    };
+    conn.execute(&format!("DELETE FROM {gwas_table}"), [])
         .map_err(|e| e.to_string())?;
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
     let mut seen: HashMap<String, GwasRsidAggregate> = HashMap::new();
+    let start = Instant::now();
+    let mut lines_read = 0u64;
+    let mut bytes_approx = header.len() as u64 + 1;
+    let mut last_emit = Instant::now();
 
     for line in lines {
         let line = line.map_err(|e| e.to_string())?;
+        bytes_approx = bytes_approx.saturating_add(line.len() as u64 + 1);
+        lines_read += 1;
         if line.is_empty() {
             continue;
         }
@@ -391,8 +446,58 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
                 );
             }
         }
+
+        if let Some(handle) = app
+            && last_emit.elapsed().as_millis() >= 400
+        {
+            last_emit = Instant::now();
+            let elapsed = start.elapsed().as_secs_f64().max(0.1);
+            let lines_per_sec = lines_read as f64 / elapsed;
+            let percent = if total_bytes > 0 {
+                ((bytes_approx as f64 / total_bytes as f64) * 70.0).min(70.0) as u64
+            } else {
+                0
+            };
+            let eta_seconds = if lines_per_sec > 0.0 && total_bytes > bytes_approx {
+                let remaining_bytes = (total_bytes - bytes_approx) as f64;
+                let avg_bytes_per_line = bytes_approx as f64 / lines_read.max(1) as f64;
+                Some(((remaining_bytes / avg_bytes_per_line) / lines_per_sec) as u64)
+            } else {
+                None
+            };
+            let _ = handle.emit(
+                "offline:import_progress",
+                serde_json::json!({
+                    "asset_id": "gwas_catalog",
+                    "rows_processed": lines_read,
+                    "percent": percent,
+                    "rows_per_second": lines_per_sec as u64,
+                    "eta_seconds": eta_seconds,
+                    "message": format!(
+                        "Parsing GWAS associations: {} lines ({:.0}/s) · {} unique rsIDs…",
+                        lines_read, lines_per_sec, seen.len()
+                    )
+                }),
+            );
+        }
     }
 
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "offline:import_progress",
+            serde_json::json!({
+                "asset_id": "gwas_catalog",
+                "rows_processed": seen.len() as u64,
+                "percent": 75,
+                "rows_per_second": 0,
+                "eta_seconds": null,
+                "message": format!("Writing {} unique rsIDs to SQLite…", seen.len())
+            }),
+        );
+    }
+
+    let unique_count = seen.len() as u64;
+    let mut written = 0u64;
     for (rsid, agg) in seen {
         let mapped_genes = agg
             .mapped_genes
@@ -409,8 +514,10 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
         let associations_json =
             serde_json::to_string(&agg.associations).unwrap_or_else(|_| "[]".to_string());
         tx.execute(
-            "INSERT INTO reference.gwas_reference (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            &format!(
+                "INSERT INTO {gwas_table} (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            ),
             params![
                 rsid,
                 agg.count as i64,
@@ -423,6 +530,23 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
             ],
         )
         .map_err(|e| e.to_string())?;
+        written += 1;
+        if let Some(handle) = app
+            && written.is_multiple_of(25_000)
+        {
+            let percent = 75 + ((written as f64 / unique_count.max(1) as f64) * 20.0) as u64;
+            let _ = handle.emit(
+                "offline:import_progress",
+                serde_json::json!({
+                    "asset_id": "gwas_catalog",
+                    "rows_processed": written,
+                    "percent": percent.min(95),
+                    "rows_per_second": 0,
+                    "eta_seconds": null,
+                    "message": format!("Writing rsIDs to SQLite: {written}/{unique_count}…")
+                }),
+            );
+        }
     }
 
     tx.commit().map_err(|e| e.to_string())?;
@@ -432,5 +556,18 @@ fn import_gwas_reference_tsv(conn: &Connection, path: &Path) -> Result<u64, Stri
             row.get::<_, i64>(0)
         })
         .map_err(|e| e.to_string())? as u64;
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "offline:import_progress",
+            serde_json::json!({
+                "asset_id": "gwas_catalog",
+                "rows_processed": total,
+                "percent": 100,
+                "rows_per_second": 0,
+                "eta_seconds": 0,
+                "message": format!("GWAS catalog ready — {total} rsIDs indexed")
+            }),
+        );
+    }
     Ok(total)
 }

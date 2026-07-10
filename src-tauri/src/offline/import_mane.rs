@@ -1,4 +1,8 @@
 // ./src-tauri/src/offline/import_mane.rs
+/*
+Purpose: Import MANE Select summary TSV into the mane catalog DB.
+*/
+
 use super::compress::open_text_auto;
 use rusqlite::{Connection, params};
 use std::io::BufRead;
@@ -26,7 +30,12 @@ pub fn import_mane_summary(conn: &Connection, path: &Path) -> Result<u64, String
         .iter()
         .position(|h| h.contains("GRCh38") || h.contains("coordinates"));
 
-    conn.execute("DELETE FROM reference.mane_transcripts", [])
+    let table = if crate::offline::schema::schema_attached(conn, "mane") {
+        "mane.mane_transcripts"
+    } else {
+        "reference.mane_transcripts"
+    };
+    conn.execute(&format!("DELETE FROM {table}"), [])
         .map_err(|e| e.to_string())?;
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
     let mut count = 0u64;
@@ -59,9 +68,11 @@ pub fn import_mane_summary(conn: &Connection, path: &Path) -> Result<u64, String
             .map(|s| s.trim().to_string());
 
         tx.execute(
-            "INSERT OR REPLACE INTO reference.mane_transcripts
-             (gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates)
-             VALUES (?, ?, ?, ?, ?)",
+            &format!(
+                "INSERT OR REPLACE INTO {table}
+                 (gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates)
+                 VALUES (?, ?, ?, ?, ?)"
+            ),
             params![gene, ensembl, refseq, status, coords],
         )
         .map_err(|e| e.to_string())?;

@@ -380,7 +380,8 @@ pub async fn get_variant_evidence_core(
     {
         return Err(format!("Invalid rsID format: {}", rsid));
     }
-    let rsid_upper = clean_rsid.to_uppercase();
+    // Genotypes + ClinVar catalogs store lowercase rsIDs (parser / normalize_rsid).
+    let rsid_key = clean_rsid.clone();
 
     // 1. Query SQLite for user genotype
     let (mut user_genotype, mut user_alleles) = {
@@ -389,7 +390,7 @@ pub async fn get_variant_evidence_core(
         let user_geno = conn
             .query_row(
                 "SELECT allele1, allele2 FROM genotypes WHERE sample_id = ? AND rsid = ?",
-                params![sample_id, rsid_upper],
+                params![sample_id, rsid_key],
                 |row| {
                     let a1: String = row.get(0)?;
                     let a2: String = row.get(1)?;
@@ -417,7 +418,7 @@ pub async fn get_variant_evidence_core(
     if let Ok(Some(index_evidence)) = try_index_backed_evidence(
         db_path,
         sample_id,
-        &rsid_upper,
+        &rsid_key,
         user_genotype.clone(),
         user_alleles.clone(),
     )
@@ -439,7 +440,7 @@ pub async fn get_variant_evidence_core(
         let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
         conn.query_row(
             "SELECT gene, clinical_significance, conditions, relevant_allele FROM clinvar_reference WHERE rsid = ?",
-            params![rsid_upper],
+            params![rsid_key],
             |row| {
                 let g: Option<String> = row.get(0)?;
                 let sig: String = row.get(1)?;
@@ -696,7 +697,7 @@ pub async fn get_variant_evidence_core(
     }
 
     Ok(VariantEvidence {
-        rsid: rsid_upper,
+        rsid: rsid_key,
         gene: resolved_gene,
         user_genotype,
         user_alleles,

@@ -1,0 +1,128 @@
+/* ./src/lib/styles/components/empty-state.css */
+
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 70vh;
+  max-width: 720px;
+  margin: 0 auto;
+  gap: 16px;
+  padding: 24px 12px;
+}
+
+.welcome-logo {
+  height: 112px;
+  width: 112px;
+  object-fit: contain;
+  margin-bottom: 4px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.welcome-screen h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  letter-spacing: -0.02em;
+}
+
+.welcome-lead {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-size: 0.98rem;
+}
+
+.welcome-cta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.welcome-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.welcome-cta:hover {
+  border-color: rgba(129, 140, 248, 0.55);
+  background: rgba(129, 140, 248, 0.08);
+}
+
+.welcome-cta.primary {
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.welcome-cta.primary:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.welcome-cta-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+.welcome-cta strong {
+  font-size: 0.98rem;
+}
+
+.welcome-cta-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.welcome-aside {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+.app-paths-info {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 34rem;
+  text-align: left;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.app-paths-info summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.app-paths-info p {
+  margin: 8px 0 0;
+  word-break: break-all;
+}
+
+.app-paths-info code {
+  font-size: 0.72rem;
+}

@@ -14,8 +14,12 @@
     syncSingleOfflineAsset,
     syncAllOfflineMissing,
     getOfflineReferenceStatus,
+    cancelOfflineImport,
+    exportDiscoveryFindings,
   } from '../../api/tauri';
   import type { ReferenceStatusDetails } from '../../api/tauri';
+  import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
+  import '$lib/styles/components/sidebar.css';
 
   /*
   Module Docstring:
@@ -47,6 +51,13 @@
     selectedSample: GenomeSample | null;
     report: GeneratedReport | null;
     sweepRunning?: boolean;
+    /** Expand the Reference Databases panel (e.g. from main CTA). */
+    expandDatabases?: boolean;
+    onReady?: (api: {
+      syncAllMissing: () => void;
+      expandDatabases: () => void;
+    }) => void;
+    onOfflineStatusChange?: (status: OfflineUpdateCheck | null) => void;
     onDownloadChain: () => void;
     onBrowseFile: () => void;
     onImportGenome: (e: Event) => void;
@@ -68,6 +79,9 @@
     selectedSample,
     report = null,
     sweepRunning = false,
+    expandDatabases = false,
+    onReady,
+    onOfflineStatusChange,
     onDownloadChain,
     onBrowseFile,
     onImportGenome,
@@ -102,8 +116,21 @@
     message: string;
   }
   let importProgress = $state<Record<string, ImportProgressInfo>>({});
+  interface SyncPhaseInfo {
+    phase: string;
+    step: number;
+    total_steps: number;
+    message: string;
+  }
+  let syncPhase = $state<Record<string, SyncPhaseInfo>>({});
   let isCheckingStatus = $state(false);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
+
+  $effect(() => {
+    if (expandDatabases) {
+      isPanelCollapsed = false;
+    }
+  });
 
   // Derive active report rsids
   let reportRsids = $derived(
@@ -111,40 +138,103 @@
   );
 
   async function refreshReferenceDetails() {
-    isCheckingStatus = true;
+    // Detail enrichment only — never gate Download buttons on this.
     try {
       referenceDetails = await getOfflineReferenceStatus(
         reportRsids.length > 0 ? reportRsids : null
       );
     } catch (err) {
       console.error('Failed to get reference status details:', err);
-    } finally {
-      isCheckingStatus = false;
     }
   }
 
-  // Refresh details when reportRsids changes, or when offlineStatus changes
+  // Refresh details when report rsIDs or offline inventory changes.
+  // Keep this off the download enable/disable path.
   $effect(() => {
-    // Register dependencies reactively
     const _ = reportRsids;
     const __ = offlineStatus;
-    refreshReferenceDetails();
+    if (offlineStatus) {
+      void refreshReferenceDetails();
+    }
   });
 
   // Tauri event listener cleanup
   let unlistenProgress: (() => void) | null = null;
   let unlistenImport: (() => void) | null = null;
+  let unlistenPhase: (() => void) | null = null;
 
   async function loadSettingsAndStatus() {
+    isCheckingStatus = true;
     try {
       customDir = await getCustomDownloadDir();
       offlineStatus = await checkOfflineDataUpdates();
     } catch (err) {
       console.error('Failed to load custom download directory / offline status:', err);
+      offlineStatus = null;
+    } finally {
+      isCheckingStatus = false;
     }
   }
 
+  /** Refresh inventory without blocking UI; never await inside sync finally. */
+  function refreshStatusInBackground() {
+    void checkOfflineDataUpdates()
+      .then((status) => {
+        offlineStatus = status;
+      })
+      .catch((err) => {
+        console.error('Background offline status refresh failed:', err);
+      });
+  }
+
+  function clearAssetProgress(assetId: string) {
+    const { [assetId]: _d, ...restD } = downloadProgress;
+    downloadProgress = restD;
+    const { [assetId]: _i, ...restI } = importProgress;
+    importProgress = restI;
+    const { [assetId]: _p, ...restP } = syncPhase;
+    syncPhase = restP;
+  }
+
+  async function handleSyncAllMissing() {
+    if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
+    syncingAll = true;
+    syncErrors = {};
+    syncMessages = {};
+    try {
+      const results = await syncAllOfflineMissing(selectedSample?.id ?? undefined);
+      const allErrors: string[] = [];
+      results.forEach((r) => {
+        if (r.errors?.length) allErrors.push(...r.errors);
+      });
+      if (allErrors.length) {
+        syncErrors = { __all__: allErrors.join('\n') };
+      }
+    } catch (err) {
+      syncErrors = { __all__: String(err) };
+    } finally {
+      syncingAll = false;
+      importProgress = {};
+      syncPhase = {};
+      downloadProgress = {};
+      refreshStatusInBackground();
+    }
+  }
+
+  /** Public entry for main-dashboard CTA. */
+  function startSyncAllMissing() {
+    isPanelCollapsed = false;
+    void handleSyncAllMissing();
+  }
+
   onMount(async () => {
+    onReady?.({
+      syncAllMissing: startSyncAllMissing,
+      expandDatabases: () => {
+        isPanelCollapsed = false;
+      },
+    });
+
     void loadSettingsAndStatus();
 
     // Subscribe to streaming progress events from the backend.
@@ -182,13 +272,33 @@
           ...importProgress,
           [asset_id]: payload,
         };
+        // Clear download bar once import starts.
+        if (downloadProgress[asset_id]) {
+          const { [asset_id]: _, ...rest } = downloadProgress;
+          downloadProgress = rest;
+        }
       }
     );
+
+    unlistenPhase = await listen<{
+      asset_id: string;
+      phase: string;
+      step: number;
+      total_steps: number;
+      message: string;
+    }>('offline:sync_phase', (event) => {
+      const { asset_id, phase, step, total_steps, message } = event.payload;
+      syncPhase = {
+        ...syncPhase,
+        [asset_id]: { phase, step, total_steps, message },
+      };
+    });
   });
 
   onDestroy(() => {
     unlistenProgress?.();
     unlistenImport?.();
+    unlistenPhase?.();
   });
 
   async function handleBrowseDir() {
@@ -197,7 +307,7 @@
       if (selected) {
         await setCustomDownloadDir(selected);
         customDir = selected;
-        offlineStatus = await checkOfflineDataUpdates();
+        refreshStatusInBackground();
       }
     } catch (err) {
       console.error('Browse directory failed:', err);
@@ -208,21 +318,29 @@
     try {
       await setCustomDownloadDir(null);
       customDir = null;
-      offlineStatus = await checkOfflineDataUpdates();
+      refreshStatusInBackground();
     } catch (err) {
       console.error('Reset directory failed:', err);
     }
   }
 
   async function handleSyncAsset(assetId: string, force: boolean) {
+    if (syncingAsset[assetId] || syncingAll) return;
     syncingAsset = { ...syncingAsset, [assetId]: true };
-    // Clear stale progress/errors for this asset.
-    const { [assetId]: _, ...restProgress } = downloadProgress;
-    downloadProgress = { ...restProgress, [assetId]: { percent: 0, bytesDone: 0, totalBytes: 0, speedMbps: 0, startedAt: Date.now() } };
+    clearAssetProgress(assetId);
     const { [assetId]: _e, ...restErrors } = syncErrors;
     syncErrors = restErrors;
     const { [assetId]: _m, ...restMessages } = syncMessages;
     syncMessages = restMessages;
+    syncPhase = {
+      ...syncPhase,
+      [assetId]: {
+        phase: 'prepare',
+        step: 1,
+        total_steps: 2,
+        message: 'Step 1/2 · Starting…',
+      },
+    };
 
     try {
       const result = await syncSingleOfflineAsset(
@@ -235,49 +353,20 @@
       } else if (result.messages?.length) {
         syncMessages = { ...syncMessages, [assetId]: result.messages.join('\n') };
       }
-      offlineStatus = await checkOfflineDataUpdates();
     } catch (err) {
       syncErrors = { ...syncErrors, [assetId]: String(err) };
     } finally {
+      // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
-      // Clear import progress
-      const { [assetId]: _, ...restImport } = importProgress;
-      importProgress = restImport;
-      // Keep final progress bar at 100% briefly, then clear.
-      if (downloadProgress[assetId]) {
-        downloadProgress = {
-          ...downloadProgress,
-          [assetId]: { ...downloadProgress[assetId], percent: 100 },
-        };
-        setTimeout(() => {
-          const { [assetId]: _, ...rest } = downloadProgress;
-          downloadProgress = rest;
-        }, 2000);
-      }
+      clearAssetProgress(assetId);
+      // Inventory refresh is background-only — never block the Syncing… clear.
+      refreshStatusInBackground();
     }
   }
 
-  async function handleSyncAllMissing() {
-    syncingAll = true;
-    syncErrors = {};
-    syncMessages = {};
-    try {
-      const results = await syncAllOfflineMissing(selectedSample?.id ?? undefined);
-      const allErrors: string[] = [];
-      results.forEach((r) => {
-        if (r.errors?.length) allErrors.push(...r.errors);
-      });
-      if (allErrors.length) {
-        syncErrors = { __all__: allErrors.join('\n') };
-      }
-      offlineStatus = await checkOfflineDataUpdates();
-    } catch (err) {
-      syncErrors = { __all__: String(err) };
-    } finally {
-      syncingAll = false;
-      importProgress = {};
-    }
-  }
+  $effect(() => {
+    onOfflineStatusChange?.(offlineStatus);
+  });
 
   function findAsset(tierNum: number, assetId: string): OfflineAssetStatus | null {
     if (!offlineStatus) return null;
@@ -286,33 +375,78 @@
     return tier.assets.find((a: OfflineAssetStatus) => a.asset_id === assetId) || null;
   }
 
+  function formatByteSize(n: number, approx = false): string {
+    const prefix = approx ? '~' : '';
+    const abs = Math.abs(n);
+    if (abs >= 1024 * 1024 * 1024) return `${prefix}${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    if (abs >= 1024 * 1024) return `${prefix}${(n / (1024 * 1024)).toFixed(2)} MB`;
+    if (abs >= 1024) return `${prefix}${(n / 1024).toFixed(2)} KB`;
+    return `${prefix}${Math.round(n)} B`;
+  }
+
+  function formatRemoteSize(n: number): string {
+    return formatByteSize(n, true);
+  }
+
   function getAssetStatusLine(tierNum: number, assetId: string): string {
     const asset = findAsset(tierNum, assetId);
-    // Only show "Checking…" before the first offline status payload arrives.
-    // Do not flip every row back to Checking while a secondary detail refresh runs.
     if (!offlineStatus) return 'Checking…';
     if (!asset) return 'Unavailable';
+    const phase = syncPhase[assetId];
+    const imp = importProgress[assetId];
+    if (imp && syncingAsset[assetId]) {
+      const step = phase ? `Step ${phase.step}/${phase.total_steps} · ` : '';
+      const pct = imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…';
+      return `${step}${pct} · ${imp.message || 'Importing…'}`;
+    }
     const prog = downloadProgress[assetId];
     if (prog && syncingAsset[assetId]) {
-      const pct = prog.percent >= 0 ? `${prog.percent}%` : `${(prog.bytesDone / 1024 / 1024).toFixed(0)} MB`;
-      return `${pct} · ${prog.speedMbps.toFixed(1)} MB/s`;
+      const step = phase ? `Step ${phase.step}/${phase.total_steps} · ` : 'Step 1/2 · ';
+      const pct = prog.percent >= 0 ? `${prog.percent}%` : formatByteSize(prog.bytesDone);
+      return `${step}${pct} · ${prog.speedMbps.toFixed(2)} MB/s`;
+    }
+    if (syncingAsset[assetId]) {
+      return phase?.message || 'Preparing sync…';
+    }
+    if (asset.update_available) {
+      const remote = asset.remote_content_length
+        ? formatRemoteSize(asset.remote_content_length)
+        : asset.display_size;
+      return `Update available${remote ? ` · ${remote}` : ''}`;
     }
     if (asset.local_present) {
-      const mb = asset.local_bytes / 1024 / 1024;
-      const sizeStr = mb >= 1000 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(0)} MB`;
+      const sizeStr = formatByteSize(asset.local_bytes);
       if (asset.row_count > 0) {
         return `${asset.row_count.toLocaleString()} rows (${sizeStr})`;
       }
-      // Empty placeholder .db files should not look "downloaded".
       if (asset.local_bytes > 0 && asset.local_bytes < 64 * 1024 && asset.row_count === 0) {
         return 'Not downloaded';
       }
+      if (asset.row_count === 0 && asset.local_bytes > 0) {
+        return `Downloaded · not indexed yet (${sizeStr})`;
+      }
       return `${sizeStr} on disk`;
     }
-    return asset.display_size ? `Not downloaded · ${asset.display_size}` : 'Not downloaded';
+    const remoteHint = asset.remote_content_length
+      ? formatRemoteSize(asset.remote_content_length)
+      : asset.display_size;
+    return remoteHint ? `Not downloaded · ${remoteHint}` : 'Not downloaded';
   }
 
-  /** Return the button label/variant for an asset. */
+  function assetTooltip(db: (typeof DB_DEFS)[number]): string {
+    const asset = findAsset(db.tierNum, db.assetId);
+    const size = asset?.remote_content_length
+      ? formatRemoteSize(asset.remote_content_length)
+      : asset?.display_size || 'size unknown';
+    const update = asset?.update_available ? ' Update available on server.' : '';
+    return `${db.blurb} Size: ${size}.${update}`;
+  }
+
+  /** Return the button label/variant for an asset.
+   * Update = newer remote file proven (ETag/Last-Modified).
+   * Re-sync = re-import local file into SQLite (no remote update).
+   * Force checkbox alone does not relabel as Update.
+   */
   function assetButtonState(tierNum: number, assetId: string): {
     label: string;
     variant: 'primary' | 'secondary' | 'warning';
@@ -325,8 +459,12 @@
     if (!asset.local_present) {
       return { label: '⬇ Download', variant: 'primary', isForce: false };
     }
-    if (asset.update_available || forceRedownload) {
+    if (asset.update_available) {
+      // Only show Update when the server has a newer identity (not merely force-checked).
       return { label: '🔄 Update', variant: 'warning', isForce: true };
+    }
+    if (forceRedownload) {
+      return { label: '⬇ Re-download', variant: 'warning', isForce: true };
     }
     return { label: '↺ Re-sync', variant: 'secondary', isForce: false };
   }
@@ -334,23 +472,113 @@
   const DB_DEFS = [
     {
       tierNum: 0, assetId: 'gwas_catalog', label: 'GWAS Catalog',
-      tooltip: 'Genome-wide association studies catalog. Size: ~340 MB. Links traits to SNPs.',
+      blurb: 'Genome-wide association studies catalog. Links traits to SNPs.',
     },
     {
       tierNum: 1, assetId: 'clinvar_variant_summary', label: 'ClinVar',
-      tooltip: 'NCBI ClinVar variant annotations. Size: ~300–500 MB. Pathogenicity classifications.',
+      blurb: 'NCBI ClinVar variant annotations. Pathogenicity classifications.',
     },
     {
       tierNum: 1, assetId: 'pharmgkb_clinical_variants', label: 'PharmGKB & ClinGen',
-      tooltip: 'Pharmacogenomics data, ClinGen gene validity, and MANE transcripts. Size: ~50 MB.',
+      blurb: 'Pharmacogenomics data, ClinGen gene validity, and MANE transcripts.',
     },
     {
       tierNum: 2, assetId: 'dbsnp_merged_json', label: 'dbSNP References',
-      tooltip: 'dbSNP merged rsID metadata. Size: ~1–3 GB. Allele orientation and cross-build support.',
+      blurb: 'NCBI RefSNP merge + withdrawn map (old rsIDs → current). Not allele frequencies — those come from gnomAD. Large JSON → compact SQLite alias table is expected.',
     },
   ] as const;
 
-  let anyActive = $derived(syncingAll || Object.values(syncingAsset).some(Boolean));
+  let updatesAvailable = $derived.by(() => {
+    if (!offlineStatus) return 0;
+    let n = 0;
+    for (const tier of offlineStatus.tiers) {
+      for (const asset of tier.assets) {
+        if (
+          (PRIMARY_CATALOG_IDS as readonly string[]).includes(asset.asset_id) &&
+          asset.update_available
+        ) {
+          n += 1;
+        }
+      }
+    }
+    return n;
+  });
+
+  /** Catalogs with no local file yet (not "downloaded but not indexed"). */
+  let notDownloadedPrimary = $derived.by(() => {
+    if (!offlineStatus) return [] as string[];
+    const byId = new Map<string, OfflineAssetStatus>();
+    for (const tier of offlineStatus.tiers) {
+      for (const asset of tier.assets) byId.set(asset.asset_id, asset);
+    }
+    const labels: Record<string, string> = {
+      gwas_catalog: 'GWAS',
+      clinvar_variant_summary: 'ClinVar',
+      pharmgkb_clinical_variants: 'PharmGKB',
+      dbsnp_merged_json: 'dbSNP',
+    };
+    const out: string[] = [];
+    for (const id of PRIMARY_CATALOG_IDS) {
+      const asset = byId.get(id);
+      if (!asset?.local_present) out.push(labels[id] ?? id);
+    }
+    return out;
+  });
+
+  /** Local file present but SQLite has 0 indexed rows. */
+  let notIndexedPrimary = $derived.by(() => {
+    if (!offlineStatus) return [] as string[];
+    const byId = new Map<string, OfflineAssetStatus>();
+    for (const tier of offlineStatus.tiers) {
+      for (const asset of tier.assets) byId.set(asset.asset_id, asset);
+    }
+    const labels: Record<string, string> = {
+      gwas_catalog: 'GWAS',
+      clinvar_variant_summary: 'ClinVar',
+      pharmgkb_clinical_variants: 'PharmGKB',
+      dbsnp_merged_json: 'dbSNP',
+    };
+    const out: string[] = [];
+    for (const id of PRIMARY_CATALOG_IDS) {
+      const asset = byId.get(id);
+      if (!asset?.local_present) continue;
+      if (asset.row_count === 0) out.push(labels[id] ?? id);
+    }
+    return out;
+  });
+
+  let missingPrimaryCount = $derived(notDownloadedPrimary.length + notIndexedPrimary.length);
+
+  let importingAny = $derived(Object.values(syncingAsset).some(Boolean) || syncingAll);
+  let exportBusy = $state(false);
+  let exportMessage = $state('');
+
+  async function handleCancelImport() {
+    try {
+      await cancelOfflineImport();
+    } catch (err) {
+      console.error('Cancel import failed:', err);
+    }
+  }
+
+  async function handleExportDiscovery() {
+    if (!selectedSample?.id || exportBusy) return;
+    exportBusy = true;
+    exportMessage = '';
+    try {
+      const result = await exportDiscoveryFindings(selectedSample.id);
+      exportMessage = `Exported ${result.findings_beyond_packs.toLocaleString()} beyond-pack hits · ${result.findings_in_packs.toLocaleString()} in packs → App/Data/exports/`;
+    } catch (err) {
+      exportMessage = String(err);
+    } finally {
+      exportBusy = false;
+    }
+  }
+
+  let needsAttention = $derived(updatesAvailable > 0 || missingPrimaryCount > 0);
+
+  // Only block the same asset or bulk sync — allow parallel downloads of other DBs.
+  let bulkBusy = $derived(syncingAll);
 </script>
 
 <aside class="sidebar">
@@ -383,12 +611,43 @@
       tabindex="0"
       style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;"
     >
-      <h4>Reference Databases</h4>
+      <h4 style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+        Reference Databases
+        {#if missingPrimaryCount > 0}
+          <span
+            class="missing-pill"
+            title="{[
+              notDownloadedPrimary.length ? `${notDownloadedPrimary.join(', ')} not downloaded` : '',
+              notIndexedPrimary.length ? `${notIndexedPrimary.join(', ')} downloaded but not indexed` : '',
+            ].filter(Boolean).join(' · ')}"
+          >{missingPrimaryCount} need attention</span>
+        {/if}
+        {#if updatesAvailable > 0}
+          <span class="update-pill" title="{updatesAvailable} database update(s) available">{updatesAvailable} update{updatesAvailable === 1 ? '' : 's'}</span>
+        {/if}
+      </h4>
       <span style="font-size: 0.8rem; opacity: 0.7;">{isPanelCollapsed ? '▶' : '▼'}</span>
     </div>
 
     {#if !isPanelCollapsed}
       <div class="card-body" style="margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.75rem;">
+
+        {#if needsAttention || importingAny}
+          <div class="db-attention-banner">
+            {#if importingAny}
+              <div>Import in progress — other catalogs may wait for a SQLite slot (downloads can still run in parallel).</div>
+            {/if}
+            {#if notDownloadedPrimary.length > 0}
+              <div><strong>Not downloaded:</strong> {notDownloadedPrimary.join(', ')}.</div>
+            {/if}
+            {#if notIndexedPrimary.length > 0}
+              <div><strong>Downloaded but not indexed:</strong> {notIndexedPrimary.join(', ')} — use Re-sync (or wait if import is already running).</div>
+            {/if}
+            {#if updatesAvailable > 0}
+              <div><strong>{updatesAvailable}</strong> newer remote file{updatesAvailable === 1 ? '' : 's'} available — use Update to re-download. Re-sync only re-imports the local file.</div>
+            {/if}
+          </div>
+        {/if}
 
         <!-- Custom Directory Row -->
         <div class="dir-setting">
@@ -433,11 +692,34 @@
         <button
           class="btn btn-primary btn-sm"
           onclick={handleSyncAllMissing}
-          disabled={anyActive || syncingAll || !offlineStatus || isCheckingStatus || sweepRunning}
+          disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning}
           style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
         >
           {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
         </button>
+
+        {#if importingAny}
+          <button
+            class="btn btn-secondary btn-sm"
+            onclick={handleCancelImport}
+            style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
+          >
+            ⏹ Cancel import
+          </button>
+        {/if}
+
+        <button
+          class="btn btn-secondary btn-sm"
+          onclick={handleExportDiscovery}
+          disabled={!selectedSample || exportBusy || sweepRunning}
+          style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
+          title="Writes marker_pack_coverage + genome_catalog_findings JSON under App/Data/exports/"
+        >
+          {exportBusy ? 'Exporting…' : '📤 Export pack vs genome findings'}
+        </button>
+        {#if exportMessage}
+          <div style="font-size: 0.65rem; opacity: 0.85; line-height: 1.35;">{exportMessage}</div>
+        {/if}
 
         {#if syncErrors.__all__}
           <div class="sync-error-block">
@@ -459,7 +741,10 @@
                 <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
                   <span style="font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
                     <strong style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{db.label}</strong>
-                    <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;" title={db.tooltip}>ⓘ</span>
+                    {#if findAsset(db.tierNum, db.assetId)?.update_available}
+                      <span class="update-pill" title="Newer file available on server">update</span>
+                    {/if}
+                    <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;" title={assetTooltip(db)}>ⓘ</span>
                   </span>
                   <span style="font-size: 0.65rem; opacity: 0.7; margin-top: 0.1rem;">
                     {getAssetStatusLine(db.tierNum, db.assetId)}
@@ -471,7 +756,7 @@
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
                   onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={anyActive || !offlineStatus || isCheckingStatus || sweepRunning || (db.assetId === 'dbsnp_merged_json' && !selectedSample)}
+                  disabled={!!syncingAsset[db.assetId] || bulkBusy || !offlineStatus || sweepRunning}
                   style="font-size: 0.65rem; padding: 4px 8px; min-height: auto; min-width: 72px; white-space: nowrap;"
                 >
                   {btnState.label}
@@ -491,8 +776,7 @@
                     <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
                     <span>{prog.speedMbps.toFixed(1)} MB/s</span>
                   </div>
-                {/if}
-                {#if importProgress[db.assetId]}
+                {:else if importProgress[db.assetId]}
                   {@const imp = importProgress[db.assetId]}
                   <div class="progress-track" style="background: rgba(165, 180, 252, 0.15); margin-top: 0.25rem;">
                     <div
@@ -509,6 +793,13 @@
                   <div style="font-size: 0.65rem; color: #a5b4fc; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
                     <span class="import-dot"></span>
                     <span>{imp.message}</span>
+                  </div>
+                {:else}
+                  <div class="progress-track" style="margin-top: 0.25rem;">
+                    <div class="progress-fill" style="width: 100%; animation: indeterminate 1.4s ease infinite;"></div>
+                  </div>
+                  <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 0.1rem;">
+                    Preparing import (no download needed)…
                   </div>
                 {/if}
               {/if}
@@ -534,21 +825,24 @@
         {#if referenceDetails}
           <div class="ref-status-details" style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; font-size: 0.7rem; display: flex; flex-direction: column; gap: 0.4rem;">
             <div style="font-weight: bold; font-size: 0.75rem; color: #a5b4fc; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.2rem; margin-bottom: 0.1rem;">
-              🗄️ Ingestion & In-Use Status
+              Catalog readiness
             </div>
 
-            <!-- ClinVar Status Group -->
             <div class="status-group">
-              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">ClinVar Annotations</div>
+              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">ClinVar</div>
               <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
-                <span>Raw file found:</span>
-                <strong style="color: {referenceDetails.clinvar_raw_found ? '#34d399' : '#f87171'}">
-                  {referenceDetails.clinvar_raw_found ? 'Yes' : 'No'}
+                <span>Status:</span>
+                <strong style="color: {referenceDetails.clinvar_indexed_rows > 0 ? '#34d399' : referenceDetails.clinvar_raw_found ? '#fbbf24' : '#f87171'}">
+                  {#if referenceDetails.clinvar_indexed_rows > 0}
+                    Ready · {referenceDetails.clinvar_indexed_rows.toLocaleString()} rows
+                  {:else if referenceDetails.clinvar_raw_found}
+                    Downloaded · not indexed
+                  {:else}
+                    Not downloaded
+                  {/if}
                 </strong>
-                <span>Indexed rows:</span>
-                <strong>{referenceDetails.clinvar_indexed_rows.toLocaleString()}</strong>
                 {#if report}
-                  <span>Report rsID hits:</span>
+                  <span>Hits in current report:</span>
                   <strong style="color: {referenceDetails.clinvar_rsid_hits > 0 ? '#60a5fa' : '#9ca3af'}">
                     {referenceDetails.clinvar_rsid_hits.toLocaleString()}
                   </strong>
@@ -558,33 +852,35 @@
                   <strong>{new Date(referenceDetails.clinvar_last_indexed * 1000).toLocaleDateString()}</strong>
                 {/if}
               </div>
+              {#if referenceDetails.clinvar_raw_found && referenceDetails.clinvar_indexed_rows === 0}
+                <div class="status-warn">Raw ClinVar file is on disk but SQLite has 0 rows — use Re-sync to import (Update only if a newer remote file exists).</div>
+              {/if}
             </div>
 
-            <!-- dbSNP Status Group -->
             <div class="status-group" style="margin-top: 0.25rem;">
-              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">dbSNP Normalizations</div>
+              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">dbSNP (rsID merge map)</div>
               <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
-                <span>Raw file found:</span>
-                <strong style="color: {referenceDetails.dbsnp_merged_raw_found ? '#34d399' : '#f87171'}">
-                  {referenceDetails.dbsnp_merged_raw_found ? 'Yes' : 'No'}
+                <span>Status:</span>
+                <strong style="color: {referenceDetails.dbsnp_merge_mappings_indexed > 0 ? '#34d399' : referenceDetails.dbsnp_merged_raw_found ? '#fbbf24' : '#f87171'}">
+                  {#if referenceDetails.dbsnp_merge_mappings_indexed > 0}
+                    Ready · {referenceDetails.dbsnp_merge_mappings_indexed.toLocaleString()} mappings
+                  {:else if referenceDetails.dbsnp_merged_raw_found}
+                    Downloaded · not indexed
+                  {:else}
+                    Not downloaded
+                  {/if}
                 </strong>
-                <span>Merge mappings:</span>
-                <strong>{referenceDetails.dbsnp_merge_mappings_indexed.toLocaleString()}</strong>
                 {#if report}
-                  <span>Report normalized:</span>
+                  <span>rsIDs remapped in report:</span>
                   <strong style="color: {referenceDetails.dbsnp_rsids_normalized > 0 ? '#60a5fa' : '#9ca3af'}">
                     {referenceDetails.dbsnp_rsids_normalized.toLocaleString()}
                   </strong>
                 {/if}
-                <span>Placement index:</span>
-                <strong style="color: {referenceDetails.dbsnp_placement_index_available ? '#34d399' : '#f87171'}">
-                  {referenceDetails.dbsnp_placement_index_available ? 'Yes' : 'No'}
-                </strong>
-                <span>Orientation database:</span>
-                <strong style="color: {referenceDetails.orientation_verification_available ? '#34d399' : '#f87171'}">
-                  {referenceDetails.orientation_verification_available ? 'Yes' : 'No'}
-                </strong>
               </div>
+              {#if referenceDetails.dbsnp_merged_raw_found && referenceDetails.dbsnp_merge_mappings_indexed === 0}
+                <div class="status-warn">Archive on disk but 0 merge mappings indexed — import still needed (large job).</div>
+              {/if}
+              <div class="status-note">Offline dbSNP here is the NCBI <em>refsnp-merged</em> + withdrawn catalog (rsID merge map + dates/citations). Alleles, placements, and AF live in the huge per-chromosome <em>refsnp-chr*.json</em> files — we do not ingest those yet. Report AF chips use the local gnomAD cache when present (not this merge DB).</div>
             </div>
           </div>
         {/if}
@@ -617,73 +913,7 @@
   />
 </aside>
 
+<!-- Keep an empty style block so Vite/Svelte HMR does not request a stale
+     virtual CSS module after styles were moved to sidebar.css. -->
 <style>
-  .sync-error-block {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 4px;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.68rem;
-    color: #fca5a5;
-  }
-
-  .sync-ok-block {
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.25);
-    border-radius: 4px;
-    padding: 0.25rem 0.5rem;
-    color: #86efac;
-  }
-
-  .progress-track {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 0.35rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #60a5fa, #818cf8);
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  :global(.btn-warning) {
-    background: rgba(217, 119, 6, 0.18) !important;
-    border-color: rgba(251, 191, 36, 0.4) !important;
-    color: #fbbf24 !important;
-  }
-  :global(.btn-warning:hover) {
-    background: rgba(217, 119, 6, 0.3) !important;
-  }
-
-  @keyframes indeterminate {
-    0% { transform: translateX(-100%); width: 60%; }
-    100% { transform: translateX(200%); width: 60%; }
-  }
-
-  .reset-dir-btn {
-    transition: opacity 0.2s ease;
-  }
-  .reset-dir-btn:hover {
-    opacity: 1 !important;
-  }
-
-  .import-dot {
-    width: 6px;
-    height: 6px;
-    background-color: #818cf8;
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 8px #818cf8;
-    animation: import-pulse-dot 1.2s ease-in-out infinite;
-  }
-
-  @keyframes import-pulse-dot {
-    0%, 100% { transform: scale(0.85); opacity: 0.6; }
-    50% { transform: scale(1.15); opacity: 1; }
-  }
 </style>

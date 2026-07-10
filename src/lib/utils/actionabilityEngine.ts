@@ -1,6 +1,17 @@
 // ./src/lib/utils/actionabilityEngine.ts
+/*
+Purpose: Derive dashboard diet / supplement / lab suggestions and top findings from a report.
+Responsibilities:
+- Rank top association findings for the dashboard.
+- Apply pack-authored actionability_guidance.json rules (not hardcoded UI rules).
+- Optionally surface pack `confirm_with` items as lab discussion prompts.
+Key Inputs: GeneratedReport markers; actionability_guidance.json.
+Key Outputs: ActionablePlan for DashboardSummaryPanel.
+Operational Notes: Guidance is educational only. Expand rules in the JSON pack file.
+*/
 
 import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/genomics';
+import guidanceDoc from '../marker-packs/actionability_guidance.json';
 
 export interface TopFinding {
   rsid: string;
@@ -26,8 +37,18 @@ export interface SupplementItem {
 export interface LabTest {
   name: string;
   reason: string;
+  /** Internal sort weight — display uses `tier` labels instead of shouting URGENT. */
   urgency: 'routine' | 'consider' | 'urgent';
+  tier: 'counselor' | 'discuss' | 'optional';
+  category: string;
   requires_counselor?: boolean;
+}
+
+export interface LabTestGroup {
+  tier: LabTest['tier'];
+  label: string;
+  hint: string;
+  tests: LabTest[];
 }
 
 export interface ActionablePlan {
@@ -35,176 +56,251 @@ export interface ActionablePlan {
   diet: DietaryGuidance;
   supplements: SupplementItem[];
   labTests: LabTest[];
+  labGroups: LabTestGroup[];
 }
 
 interface ActionableRule {
+  id?: string;
   genes: string[];
   severity_classes?: SeverityClass[];
   interpretation_contains?: string[];
   favor?: string[];
   avoid?: string[];
   supplements?: string[];
-  lab_tests?: { name: string; urgency: 'routine' | 'consider' | 'urgent'; requires_counselor?: boolean }[];
+  lab_tests?: {
+    name: string;
+    urgency: 'routine' | 'consider' | 'urgent';
+    requires_counselor?: boolean;
+  }[];
   notes?: string;
 }
 
-const ACTIONABLE_RULES: ActionableRule[] = [
-  {
-    genes: ['MTHFR'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Leafy greens (spinach, kale)', 'Lentils & beans', 'Organic eggs'],
-    avoid: ['Folic acid fortified foods', 'Synthetic multivitamins'],
-    supplements: ['Methylfolate (L-5-MTHF)', 'Methylcobalamin (active B12)'],
-    lab_tests: [
-      { name: 'Homocysteine (plasma)', urgency: 'urgent' },
-      { name: 'Serum Folate & Vitamin B12', urgency: 'consider' }
-    ]
+const ACTIONABLE_RULES: ActionableRule[] = Array.isArray(
+  (guidanceDoc as { rules?: ActionableRule[] }).rules
+)
+  ? ((guidanceDoc as { rules: ActionableRule[] }).rules)
+  : [];
+
+const URGENCY_RANK = { routine: 0, consider: 1, urgent: 2 } as const;
+
+const LAB_TIER_META: Record<LabTest['tier'], { label: string; hint: string; order: number }> = {
+  counselor: {
+    label: 'Clinical confirmation',
+    hint: 'High-stakes — discuss with a genetic counselor or specialist before acting.',
+    order: 0,
   },
-  {
-    genes: ['APOE'],
-    interpretation_contains: ['ε4', 'e4', 'APOE4'],
-    favor: ['Wild-caught fatty fish (salmon, sardines)', 'Walnuts', 'Extra virgin olive oil', 'High-fiber vegetables'],
-    avoid: ['Red meat', 'Saturated fats (butter, coconut oil)', 'Trans fats'],
-    supplements: ['High-potency Omega-3 DHA/EPA', 'Vitamin D3 + K2'],
-    lab_tests: [
-      { name: 'ApoB (Apolipoprotein B)', urgency: 'urgent' },
-      { name: 'Lipid Panel (NMR LipoProfile)', urgency: 'consider' },
-      { name: 'hs-CRP (Inflammation marker)', urgency: 'consider' }
-    ]
+  discuss: {
+    label: 'Worth discussing',
+    hint: 'Reasonable follow-up labs to review with your clinician at a routine visit.',
+    order: 1,
   },
-  {
-    genes: ['FADS1', 'FADS2'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Pre-formed DHA/EPA (seafood, fatty fish)', 'Algae oil'],
-    avoid: ['Industrial seed oils (canola, corn, soy)', 'High omega-6 foods'],
-    supplements: ['Algae-derived DHA/EPA or high-quality fish oil'],
-    lab_tests: [
-      { name: 'Omega-3 Index (red blood cell membrane)', urgency: 'consider' }
-    ]
+  optional: {
+    label: 'Optional / if symptomatic',
+    hint: 'Lower priority or symptom-driven — not an emergency workup.',
+    order: 2,
   },
-  {
-    genes: ['HFE'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Green tea or black tea with meals (inhibits iron)', 'Calcium-rich foods'],
-    avoid: ['Red meat', 'Iron-fortified cereals', 'Vitamin C supplements with meals'],
-    supplements: ['Avoid any supplements containing iron'],
-    lab_tests: [
-      { name: 'Ferritin & Transferrin Saturation', urgency: 'urgent' },
-      { name: 'Total Iron Binding Capacity (TIBC)', urgency: 'consider' }
-    ]
-  },
-  {
-    genes: ['LCT', 'MCM6'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Lactose-free alternatives', 'Fermented dairy (kefir, organic Greek yogurt)'],
-    avoid: ['Cow milk', 'Ice cream', 'Soft unaged cheeses'],
-    supplements: ['Lactase enzyme (when consuming dairy)'],
-    lab_tests: [
-      { name: 'Hydrogen Breath Test (if symptomatic)', urgency: 'routine' }
-    ]
-  },
-  {
-    genes: ['ALDH2'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    avoid: ['Alcohol', 'Acetaldehyde exposure'],
-    supplements: ['N-Acetyl Cysteine (NAC)', 'Glutathione precursors'],
-    lab_tests: [
-      { name: 'Liver Enzyme Panel (ALT/AST)', urgency: 'consider' }
-    ],
-    notes: 'Acetaldehyde accumulates rapidly — even minimal alcohol intake elevates esophageal cancer risk'
-  },
-  {
-    genes: ['SLC2A9', 'ABCG2'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Optimal hydration (filtered water)', 'Montmorency tart cherry juice', 'Low-fat organic dairy'],
-    avoid: ['High-purine foods (organ meats, shellfish)', 'Beer', 'High-fructose corn syrup'],
-    supplements: ['Vitamin C (helps promote uric acid excretion)'],
-    lab_tests: [
-      { name: 'Serum Uric Acid', urgency: 'urgent' }
-    ]
-  },
-  {
-    genes: ['VDR'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Wild fish', 'Egg yolks', 'UV-irradiated mushrooms'],
-    supplements: ['Vitamin D3 + Vitamin K2 (to direct calcium to bones)'],
-    lab_tests: [
-      { name: '25-hydroxyvitamin D [25(OH)D]', urgency: 'urgent' },
-      { name: 'Ionized Calcium & PTH', urgency: 'consider' }
-    ]
-  },
-  {
-    genes: ['GSTT1', 'GSTM1'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Cruciferous vegetables (broccoli, brussels sprouts)', 'Allium vegetables (garlic, onions)'],
-    supplements: ['Sulforaphane / Broccoli sprout extract', 'Milk Thistle (Silymarin)'],
-    lab_tests: [
-      { name: 'Comprehensive Liver Panel', urgency: 'routine' }
-    ]
-  },
-  {
-    genes: ['COMT'],
-    interpretation_contains: ['Met/Met', 'slow COMT', 'AA'],
-    favor: ['Magnesium-rich foods (pumpkin seeds, dark chocolate)', 'Cruciferous vegetables'],
-    avoid: ['Excessive caffeine', 'Chronic sleep deprivation', 'High-stress environments'],
-    supplements: ['Magnesium Glycinate', 'L-Theanine (calming support)'],
-    lab_tests: [
-      { name: 'Salivary Cortisol Rhythm (4-point)', urgency: 'consider' }
-    ]
-  },
-  {
-    genes: ['CYP1A2'],
-    interpretation_contains: ['slow metabolizer', 'slow caffeine'],
-    avoid: ['Caffeine after 12:00 PM', 'High-dose caffeine stimulants'],
-    notes: 'Slow caffeine clearance increases arterial stiffness and cardiovascular risk when consuming >200mg daily'
-  },
-  {
-    genes: ['NOS3'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Beetroot / Beet juice', 'Arugula & leafy spinach', 'Pomegranates'],
-    supplements: ['L-Citrulline or L-Arginine', 'Nitric Oxide support'],
-    lab_tests: [
-      { name: 'Cardiovascular Risk Panel / Blood Pressure', urgency: 'consider' }
-    ]
-  },
-  {
-    genes: ['GPX1'],
-    severity_classes: ['high_risk', 'moderate_risk'],
-    favor: ['Brazil nuts (1-2 daily)', 'Seafood', 'Sunflower seeds'],
-    supplements: ['Selenium (L-selenomethionine)'],
-    lab_tests: [
-      { name: 'Selenium level (blood)', urgency: 'routine' }
-    ]
-  },
-  {
-    genes: ['BRCA1', 'BRCA2'],
-    severity_classes: ['high_risk', 'confirmation_required'],
-    lab_tests: [
-      { name: 'Clinical BRCA1/2 NGS Confirmation Panel', urgency: 'urgent', requires_counselor: true },
-      { name: 'Breast MRI / Mammography Referral', urgency: 'urgent', requires_counselor: true }
-    ],
-    notes: 'Requires professional genetic counseling support.'
-  },
-  {
-    genes: ['MLH1', 'MSH2', 'MSH6', 'PMS2'],
-    severity_classes: ['high_risk', 'confirmation_required'],
-    lab_tests: [
-      { name: 'Clinical Lynch Syndrome NGS Confirmation Panel', urgency: 'urgent', requires_counselor: true },
-      { name: 'Colonoscopy Screening Referral', urgency: 'urgent', requires_counselor: true }
-    ],
-    notes: 'Requires professional genetic counseling support.'
+};
+
+function inferLabCategory(name: string): string {
+  const lower = name.toLowerCase();
+  if (/brca|lynch|ngs|confirmation|counselor|mammograph|colonoscop/i.test(lower)) {
+    return 'Clinical confirmation';
   }
-];
+  if (/apob|lipid|crp|cholesterol|cardiovascular|blood pressure|omega-3/i.test(lower)) {
+    return 'Heart & lipids';
+  }
+  if (/homocysteine|folate|b12|vitamin d|25\(oh\)|selenium|methyl/i.test(lower)) {
+    return 'Nutrients & methylation';
+  }
+  if (/ferritin|iron|tibc|transferrin/i.test(lower)) {
+    return 'Iron studies';
+  }
+  if (/uric acid|glucose|insulin|metabolic/i.test(lower)) {
+    return 'Metabolic';
+  }
+  if (/liver|alt|ast|hepatic/i.test(lower)) {
+    return 'Liver';
+  }
+  if (/kidney|egfr|creatinine|urinalysis|electrolyte/i.test(lower)) {
+    return 'Kidney & fluids';
+  }
+  if (/thyroid|tsh|autoantibod/i.test(lower)) {
+    return 'Thyroid & immune';
+  }
+  if (/spirometry|sleep|oxygen/i.test(lower)) {
+    return 'Respiratory & sleep';
+  }
+  if (/dxa|bone|calcium|pth/i.test(lower)) {
+    return 'Bone & minerals';
+  }
+  if (/pgx|pharmacogen/i.test(lower)) {
+    return 'Pharmacogenomics';
+  }
+  return 'Other follow-up';
+}
+
+function deriveLabTier(
+  urgency: LabTest['urgency'],
+  requiresCounselor: boolean
+): LabTest['tier'] {
+  if (requiresCounselor) return 'counselor';
+  if (urgency === 'routine') return 'optional';
+  return 'discuss';
+}
+
+/** Only promote pack `confirm_with` strings that look like named labs or imaging — not history/symptoms. */
+function isLabLikeConfirmItem(text: string): boolean {
+  const lower = text.toLowerCase().trim();
+  if (!lower || lower.length < 4) return false;
+
+  const blocked = [
+    'family history',
+    'personal/family',
+    'symptom diary',
+    'diary',
+    'clinician review',
+    'clinical review',
+    'genetic counseling',
+    'trigger pattern',
+    'visible phenotype',
+    'hygiene',
+    'training log',
+    'body composition',
+    'medication response',
+    'exposure history',
+    'cycle/symptom',
+    'specialist review',
+    'dermatology review',
+    'dental exam',
+    'screening plan',
+    'diet/',
+    'logs',
+    'tracking',
+  ];
+
+  const allowed = [
+    'panel',
+    'sequencing',
+    'genotyp',
+    'mri',
+    'mammograph',
+    'colonoscop',
+    'dxa',
+    'spirometry',
+    'apob',
+    'lipid',
+    'homocysteine',
+    'ferritin',
+    'tibc',
+    'transferrin',
+    'uric acid',
+    'vitamin d',
+    '25(oh)',
+    'pth',
+    'calcium',
+    'crp',
+    'esr',
+    'autoantibod',
+    'breath test',
+    'pgx',
+    'egfr',
+    'creatinine',
+    'urinalysis',
+    'omega-3',
+    'selenium',
+    'folate',
+    'b12',
+    'liver',
+    'alt',
+    'ast',
+    'blood pressure',
+    'nmR',
+    'inflammation',
+    'glucose',
+    'electrolyte',
+    'hormone',
+    'cortisol',
+    'thyroid',
+    'tsh',
+    'sleep study',
+    'polysomn',
+  ];
+
+  if (allowed.some((a) => lower.includes(a))) return true;
+  if (blocked.some((b) => lower.includes(b))) return false;
+  return false;
+}
+
+function buildLabGroups(tests: LabTest[]): LabTestGroup[] {
+  const byTier = new Map<LabTest['tier'], LabTest[]>();
+  for (const test of tests) {
+    const list = byTier.get(test.tier) || [];
+    list.push(test);
+    byTier.set(test.tier, list);
+  }
+
+  return (['counselor', 'discuss', 'optional'] as const)
+    .filter((tier) => (byTier.get(tier)?.length ?? 0) > 0)
+    .map((tier) => {
+      const meta = LAB_TIER_META[tier];
+      const grouped = byTier.get(tier) || [];
+      grouped.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+      return {
+        tier,
+        label: meta.label,
+        hint: meta.hint,
+        tests: grouped,
+      };
+    });
+}
+
+function upsertLab(
+  map: Map<
+    string,
+    {
+      reason: string;
+      urgency: 'routine' | 'consider' | 'urgent';
+      requires_counselor: boolean;
+    }
+  >,
+  name: string,
+  reason: string,
+  urgency: 'routine' | 'consider' | 'urgent',
+  requiresCounselor = false
+) {
+  const existing = map.get(name);
+  if (existing) {
+    if (URGENCY_RANK[urgency] > URGENCY_RANK[existing.urgency]) {
+      existing.urgency = urgency;
+    }
+    existing.requires_counselor = existing.requires_counselor || requiresCounselor;
+    if (!existing.reason.includes(reason)) {
+      existing.reason = `${existing.reason}; ${reason}`;
+    }
+  } else {
+    map.set(name, {
+      reason,
+      urgency,
+      requires_counselor: requiresCounselor,
+    });
+  }
+}
 
 export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const topFindings: TopFinding[] = [];
   const favorSet = new Set<string>();
   const avoidSet = new Set<string>();
-  const supplementsMap = new Map<string, string[]>(); // supplement -> reasons[]
-  const labTestsMap = new Map<string, { reason: string; urgency: 'routine' | 'consider' | 'urgent'; requires_counselor: boolean }>();
+  const supplementsMap = new Map<string, string[]>();
+  const labTestsMap = new Map<
+    string,
+    {
+      reason: string;
+      urgency: 'routine' | 'consider' | 'urgent';
+      requires_counselor: boolean;
+    }
+  >();
   let overallNotes = '';
 
-  // Gather all markers from the report sections
   const allMarkers: { marker: EvaluatedMarker; sectionName: string }[] = [];
   for (const section of report.sections || []) {
     for (const marker of section.markers || []) {
@@ -212,13 +308,6 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     }
   }
 
-  // 1. Extract Top Findings
-  // Rankings:
-  // - High Risk: 100 points
-  // - Confirmation Required (clinical): 90 points
-  // - Moderate Risk: 50 points
-  // - Low Risk / Risk: 20 points
-  // - Protective: 0 points (not a concern)
   const scoredFindings = allMarkers
     .filter(({ marker }) => marker.interpretation_allowed)
     .map(({ marker, sectionName }) => {
@@ -237,14 +326,13 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
           severity_class: marker.severity_class,
           interpretation: marker.interpretation,
           section_name: sectionName,
-          link_id: marker.link_id
-        }
+          link_id: marker.link_id,
+        },
       };
     })
-    .filter(item => item.score > 0)
+    .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  // Keep top 5 unique findings by gene/rsid combo
   const uniqueFindings: typeof scoredFindings = [];
   const seenKeys = new Set<string>();
   for (const item of scoredFindings) {
@@ -252,34 +340,29 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     if (!seenKeys.has(key)) {
       seenKeys.add(key);
       uniqueFindings.push(item);
-      if (uniqueFindings.length >= 5) break;
+      if (uniqueFindings.length >= 10) break;
     }
   }
-  topFindings.push(...uniqueFindings.map(item => item.finding));
+  topFindings.push(...uniqueFindings.map((item) => item.finding));
 
-  // 2. Evaluate Rules for Diet, Supplements, and Lab Tests
+  // Pack-authored guidance rules (actionability_guidance.json)
   for (const rule of ACTIONABLE_RULES) {
-    // Find if the user has an active variant matching this rule
     const matchingMarkers = allMarkers.filter(({ marker }) => {
-      // Must match one of the genes
       if (!rule.genes.includes(marker.gene)) return false;
-
-      // Must be allowed for interpretation
       if (!marker.interpretation_allowed) return false;
 
-      // Check severity match
       if (rule.severity_classes && !rule.severity_classes.includes(marker.severity_class)) {
         return false;
       }
 
-      // Check interpretation contains match
       if (rule.interpretation_contains) {
         const text = (marker.interpretation || '').toLowerCase();
-        const matchesText = rule.interpretation_contains.some(pattern => text.includes(pattern.toLowerCase()));
+        const matchesText = rule.interpretation_contains.some((pattern) =>
+          text.includes(pattern.toLowerCase())
+        );
         if (!matchesText) return false;
       }
 
-      // For rules without specific severity/interpretation constraints, default to requiring some risk effect count > 0
       if (!rule.severity_classes && !rule.interpretation_contains) {
         if (marker.effect_count != null && marker.effect_count === 0) {
           return false;
@@ -292,72 +375,95 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
       return true;
     });
 
-    if (matchingMarkers.length > 0) {
-      // Rule is active! Populate recommendations
-      const reason = `Based on your ${rule.genes.join('/')} variant (${matchingMarkers.map(m => m.marker.rsid).join(', ')})`;
+    if (matchingMarkers.length === 0) continue;
 
-      if (rule.favor) {
-        rule.favor.forEach(f => favorSet.add(f));
-      }
-      if (rule.avoid) {
-        rule.avoid.forEach(a => avoidSet.add(a));
-      }
-      if (rule.supplements) {
-        rule.supplements.forEach(s => {
-          const list = supplementsMap.get(s) || [];
-          list.push(reason);
-          supplementsMap.set(s, list);
-        });
-      }
-      if (rule.lab_tests) {
-        rule.lab_tests.forEach(lt => {
-          const existing = labTestsMap.get(lt.name);
-          if (existing) {
-            // Keep the higher urgency
-            const urgencies = { routine: 0, consider: 1, urgent: 2 };
-            if (urgencies[lt.urgency] > urgencies[existing.urgency]) {
-              existing.urgency = lt.urgency;
-            }
-            existing.requires_counselor = existing.requires_counselor || !!lt.requires_counselor;
-          } else {
-            labTestsMap.set(lt.name, {
-              reason,
-              urgency: lt.urgency,
-              requires_counselor: !!lt.requires_counselor
-            });
-          }
-        });
-      }
-      if (rule.notes) {
-        overallNotes += (overallNotes ? '\n' : '') + `• ${rule.genes.join('/')}: ${rule.notes}`;
-      }
+    const reason = `Based on your ${rule.genes.join('/')} variant (${matchingMarkers
+      .map((m) => m.marker.rsid)
+      .join(', ')})`;
+
+    rule.favor?.forEach((f) => favorSet.add(f));
+    rule.avoid?.forEach((a) => avoidSet.add(a));
+    rule.supplements?.forEach((s) => {
+      const list = supplementsMap.get(s) || [];
+      list.push(reason);
+      supplementsMap.set(s, list);
+    });
+    rule.lab_tests?.forEach((lt) => {
+      upsertLab(labTestsMap, lt.name, reason, lt.urgency, !!lt.requires_counselor);
+    });
+    if (rule.notes) {
+      overallNotes += (overallNotes ? '\n' : '') + `• ${rule.genes.join('/')}: ${rule.notes}`;
     }
   }
 
-  // Map to flat lists
-  const supplements: SupplementItem[] = Array.from(supplementsMap.entries()).map(([name, reasons]) => ({
-    name,
-    reason: `${reasons.join('; ')}`
-  }));
+  // Pack marker confirm_with → lab-like prompts only (strict filter; never auto-urgent)
+  let confirmWithAdded = 0;
+  const CONFIRM_WITH_CAP = 12;
+  for (const { marker } of allMarkers) {
+    if (!marker.interpretation_allowed) continue;
+    if (
+      marker.severity_class !== 'high_risk' &&
+      marker.severity_class !== 'moderate_risk' &&
+      marker.severity_class !== 'confirmation_required'
+    ) {
+      continue;
+    }
+    for (const item of marker.confirm_with || []) {
+      if (confirmWithAdded >= CONFIRM_WITH_CAP) break;
+      const trimmed = String(item || '').trim();
+      if (!trimmed || !isLabLikeConfirmItem(trimmed)) continue;
+      if (labTestsMap.has(trimmed)) continue;
 
-  const labTests: LabTest[] = Array.from(labTestsMap.entries()).map(([name, val]) => ({
-    name,
-    reason: val.reason,
-    urgency: val.urgency,
-    requires_counselor: val.requires_counselor
-  })).sort((a, b) => {
-    const urgencies = { urgent: 2, consider: 1, routine: 0 };
-    return urgencies[b.urgency] - urgencies[a.urgency];
-  });
+      const requiresCounselor =
+        !!marker.clinical_confirmation_required &&
+        marker.severity_class === 'confirmation_required';
+      upsertLab(
+        labTestsMap,
+        trimmed,
+        `Pack marker ${marker.gene} (${marker.rsid})`,
+        requiresCounselor ? 'urgent' : 'consider',
+        requiresCounselor
+      );
+      confirmWithAdded += 1;
+    }
+  }
+
+  const supplements: SupplementItem[] = Array.from(supplementsMap.entries()).map(
+    ([name, reasons]) => ({
+      name,
+      reason: reasons.join('; '),
+    })
+  );
+
+  const labTests: LabTest[] = Array.from(labTestsMap.entries())
+    .map(([name, val]) => {
+      const tier = deriveLabTier(val.urgency, val.requires_counselor);
+      return {
+        name,
+        reason: val.reason,
+        urgency: val.urgency,
+        tier,
+        category: inferLabCategory(name),
+        requires_counselor: val.requires_counselor,
+      };
+    })
+    .sort((a, b) => {
+      const tierOrder = LAB_TIER_META[a.tier].order - LAB_TIER_META[b.tier].order;
+      if (tierOrder !== 0) return tierOrder;
+      return a.name.localeCompare(b.name);
+    });
+
+  const labGroups = buildLabGroups(labTests);
 
   return {
     topFindings,
     diet: {
       favor: Array.from(favorSet),
       avoid: Array.from(avoidSet),
-      notes: overallNotes || undefined
+      notes: overallNotes || undefined,
     },
     supplements,
-    labTests
+    labTests,
+    labGroups,
   };
 }

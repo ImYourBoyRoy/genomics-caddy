@@ -80,6 +80,28 @@ pub async fn build_offline_tier2(
     build_tier2_for_sample(&data_dir, &db_path, sample_id, Some(&app)).await
 }
 
+/// Cancel an in-progress catalog import (cooperative — checked between chunks).
+#[tauri::command]
+pub async fn cancel_offline_import() -> Result<(), String> {
+    super::sync::cancel_offline_import();
+    Ok(())
+}
+
+/// Export marker-pack coverage + genome-wide catalog findings JSON for pack authoring.
+#[tauri::command]
+pub async fn export_discovery_findings(
+    app: AppHandle,
+    sample_id: i64,
+) -> Result<serde_json::Value, String> {
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::discovery_export::export_discovery_jsons(&data_dir, &db_path, sample_id)
+    })
+    .await
+    .map_err(|e| format!("Export worker failed: {e}"))?
+}
+
 #[tauri::command]
 pub async fn get_custom_download_dir(app: AppHandle) -> Result<Option<String>, String> {
     let db_path = get_db_path(&app);

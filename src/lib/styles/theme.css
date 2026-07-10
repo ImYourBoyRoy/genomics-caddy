@@ -319,58 +319,7 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
-.welcome-screen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  height: 80vh;
-  max-width: 600px;
-  margin: 0 auto;
-  gap: 16px;
-}
-.welcome-logo {
-  height: 120px;
-  width: 120px;
-  object-fit: contain;
-  margin-bottom: 12px;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1.5px solid var(--border-color);
-}
-.welcome-screen h1 {
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin: 0;
-}
-.welcome-screen p {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.app-paths-info {
-  text-align: left;
-  width: 100%;
-  margin-top: 12px;
-  font-size: 0.8rem;
-}
-.app-paths-info h4 {
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-.app-paths-info p {
-  margin: 4px 0;
-}
-.app-paths-info code {
-  background: rgba(0, 0, 0, 0.4);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #e5e7eb;
-  word-break: break-all;
-}
+/* Welcome / empty-state layout lives in empty-state.css */
 
 /* Content Header */
 .content-header {
@@ -443,6 +392,26 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   font-size: 0.8rem;
   line-height: 1.4;
+}
+
+.catalog-warnings-banner {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-top: 0.75rem;
+}
+
+.catalog-warnings-banner ul {
+  margin: 0.4rem 0 0 1.1rem;
+  padding: 0;
+}
+
+.catalog-warnings-banner li + li {
+  margin-top: 0.25rem;
 }
 
 /* Trait Report Rendering */
@@ -920,6 +889,13 @@ h1, h2, h3, h4, h5, h6 {
 .export-privacy-note {
   font-size: 0.75rem;
   color: var(--text-secondary);
+  margin-right: auto;
+}
+.export-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: -8px 0 16px;
+  text-align: right;
 }
 .direction-section {
   font-size: 0.75rem;

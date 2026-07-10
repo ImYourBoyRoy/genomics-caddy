@@ -1765,6 +1765,8 @@ pub fn run() {
             offline::commands::sync_all_offline_missing,
             offline::commands::sync_all_offline_data,
             offline::commands::build_offline_tier2,
+            offline::commands::cancel_offline_import,
+            offline::commands::export_discovery_findings,
             offline::commands::get_custom_download_dir,
             offline::commands::set_custom_download_dir,
             offline::commands::get_offline_reference_status,

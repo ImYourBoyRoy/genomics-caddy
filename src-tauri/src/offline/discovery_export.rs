@@ -1,0 +1,393 @@
+// ./src-tauri/src/offline/discovery_export.rs
+/*
+Purpose: Export marker-pack coverage vs genome-wide catalog hits for pack authoring.
+Responsibilities:
+- Collect hardcoded pack rsIDs/genes from marker packs on disk.
+- Intersect a sample's genotypes with ClinVar / GWAS / PharmGKB via temp-table joins.
+- Write two JSON files: pack coverage + full associated findings beyond packs.
+Key Inputs: sample_id, App/Data marker packs, attached catalog DBs, sample genome.db.
+Key Outputs: JSON paths under App/Data/exports/.
+*/
+
+use crate::db;
+use rusqlite::{Connection, params};
+use serde_json::{Value, json};
+use std::collections::BTreeSet;
+use std::fs;
+use std::path::Path;
+
+fn pack_rsids_and_genes(data_dir: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>, Value), String> {
+    let manifest_str = db::get_manifest_str(Some(data_dir));
+    let manifest: Value = serde_json::from_str(&manifest_str)
+        .map_err(|e| format!("Parse marker pack manifest: {e}"))?;
+
+    let mut rsids = BTreeSet::new();
+    let mut genes = BTreeSet::new();
+    let mut packs_out = serde_json::Map::new();
+
+    if let Some(packs_array) = manifest.get("packs").and_then(|v| v.as_array()) {
+        for pack_info in packs_array {
+            let Some(pack_id) = pack_info.get("id").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let Some(pack_str) = db::get_pack_str(Some(data_dir), pack_id) else {
+                continue;
+            };
+            let Ok(pack_json) = serde_json::from_str::<Value>(&pack_str) else {
+                continue;
+            };
+
+            let mut pack_rsids = BTreeSet::new();
+            let mut pack_genes = BTreeSet::new();
+            let mut collect_marker = |m: &Value| {
+                if let Some(rsid) = m.get("rsid").and_then(|v| v.as_str()) {
+                    let r = rsid.trim().to_lowercase();
+                    if r.starts_with("rs") {
+                        pack_rsids.insert(r.clone());
+                        rsids.insert(r);
+                    }
+                }
+                if let Some(gene) = m.get("gene").and_then(|v| v.as_str()) {
+                    let g = gene.trim().to_uppercase();
+                    if !g.is_empty() {
+                        pack_genes.insert(g.clone());
+                        genes.insert(g);
+                    }
+                }
+            };
+            if let Some(sections) = pack_json.get("sections").and_then(|v| v.as_array()) {
+                for sec in sections {
+                    if let Some(markers) = sec.get("markers").and_then(|v| v.as_array()) {
+                        for m in markers {
+                            collect_marker(m);
+                        }
+                    }
+                }
+            }
+            if let Some(markers) = pack_json.get("markers").and_then(|v| v.as_array()) {
+                for m in markers {
+                    collect_marker(m);
+                }
+            }
+
+            packs_out.insert(
+                pack_id.to_string(),
+                json!({
+                    "title": pack_json.get("title").cloned().unwrap_or(json!(pack_id)),
+                    "rsid_count": pack_rsids.len(),
+                    "gene_count": pack_genes.len(),
+                    "rsids": pack_rsids.into_iter().collect::<Vec<_>>(),
+                    "genes": pack_genes.into_iter().collect::<Vec<_>>(),
+                }),
+            );
+        }
+    }
+
+    Ok((
+        rsids,
+        genes,
+        json!({
+            "kind": "marker_pack_coverage",
+            "generated_at": chrono_iso(),
+            "packs": packs_out,
+        }),
+    ))
+}
+
+fn chrono_iso() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    format!("{secs}")
+}
+
+fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value>, String> {
+    // Temp table of this sample's rsIDs for set-based joins (avoids 700k×chunk IN lists).
+    conn.execute_batch(
+        "
+        DROP TABLE IF EXISTS temp.export_rsids;
+        CREATE TEMP TABLE export_rsids (
+            rsid TEXT PRIMARY KEY,
+            allele1 TEXT,
+            allele2 TEXT
+        );
+        ",
+    )
+    .map_err(|e| e.to_string())?;
+
+    conn.execute(
+        "INSERT OR IGNORE INTO temp.export_rsids (rsid, allele1, allele2)
+         SELECT LOWER(rsid), allele1, allele2 FROM genotypes
+         WHERE sample_id = ? AND rsid IS NOT NULL AND TRIM(rsid) != ''",
+        params![sample_id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let geno_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM temp.export_rsids", [], |r| r.get(0))
+        .unwrap_or(0);
+    if geno_count == 0 {
+        return Err(
+            "Sample has no genotypes — import a genome file before exporting catalog findings."
+                .into(),
+        );
+    }
+
+    let mut by_rsid: std::collections::BTreeMap<String, Value> = std::collections::BTreeMap::new();
+
+    let ensure = |map: &mut std::collections::BTreeMap<String, Value>,
+                  rsid: &str,
+                  a1: &str,
+                  a2: &str| {
+        map.entry(rsid.to_string()).or_insert_with(|| {
+            json!({
+                "rsid": rsid,
+                "genotype": format!("{a1}/{a2}"),
+                "clinvar": null,
+                "gwas": null,
+                "pharmgkb": null,
+            })
+        });
+    };
+
+    if crate::offline::schema::schema_attached(conn, "clinvar") {
+        let mut stmt = conn
+            .prepare(
+                "SELECT e.rsid, e.allele1, e.allele2,
+                        c.clinical_significance, c.gene_symbol, c.phenotype_list,
+                        c.review_status, c.variation_id
+                 FROM temp.export_rsids e
+                 JOIN clinvar.clinvar_reference c ON c.rsid = e.rsid
+                 WHERE c.clinical_significance IS NOT NULL
+                   AND TRIM(c.clinical_significance) != ''",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, String>(3)?,
+                    r.get::<_, String>(4)?,
+                    r.get::<_, String>(5)?,
+                    r.get::<_, String>(6)?,
+                    r.get::<_, String>(7)?,
+                ))
+            })
+            .map_err(|e| e.to_string())?;
+        for row in rows.flatten() {
+            ensure(&mut by_rsid, &row.0, &row.1, &row.2);
+            if let Some(entry) = by_rsid.get_mut(&row.0) {
+                entry["clinvar"] = json!({
+                    "clinical_significance": row.3,
+                    "gene": row.4,
+                    "phenotypes": row.5,
+                    "review_status": row.6,
+                    "variation_id": row.7,
+                    "source": "clinvar",
+                });
+            }
+        }
+    }
+
+    {
+        let mut stmt = conn
+            .prepare(
+                "SELECT e.rsid, e.allele1, e.allele2,
+                        g.top_trait, g.best_pvalue, g.association_count, g.primary_gene
+                 FROM temp.export_rsids e
+                 JOIN gwas_reference g ON LOWER(g.rsid) = e.rsid",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, String>(3)?,
+                    r.get::<_, Option<f64>>(4)?,
+                    r.get::<_, i64>(5)?,
+                    r.get::<_, String>(6)?,
+                ))
+            })
+            .map_err(|e| e.to_string())?;
+        for row in rows.flatten() {
+            ensure(&mut by_rsid, &row.0, &row.1, &row.2);
+            if let Some(entry) = by_rsid.get_mut(&row.0) {
+                entry["gwas"] = json!({
+                    "top_trait": row.3,
+                    "best_pvalue": row.4,
+                    "association_count": row.5,
+                    "primary_gene": row.6,
+                    "source": "gwas",
+                });
+            }
+        }
+    }
+
+    {
+        let mut stmt = conn
+            .prepare(
+                "SELECT e.rsid, e.allele1, e.allele2,
+                        p.gene, p.drug, p.phenotype, p.evidence_level
+                 FROM temp.export_rsids e
+                 JOIN pharmgkb_clinical_variants p ON LOWER(p.rsid) = e.rsid",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, Option<String>>(3)?,
+                    r.get::<_, Option<String>>(4)?,
+                    r.get::<_, Option<String>>(5)?,
+                    r.get::<_, Option<String>>(6)?,
+                ))
+            })
+            .map_err(|e| e.to_string())?;
+        for row in rows.flatten() {
+            ensure(&mut by_rsid, &row.0, &row.1, &row.2);
+            if let Some(entry) = by_rsid.get_mut(&row.0) {
+                if entry.get("pharmgkb").and_then(|v| v.as_object()).is_none() {
+                    entry["pharmgkb"] = json!({
+                        "gene": row.3,
+                        "drug": row.4,
+                        "phenotype": row.5,
+                        "evidence_level": row.6,
+                        "source": "pharmgkb",
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(by_rsid.into_values().collect())
+}
+
+/// Export pack coverage JSON + full genome×catalog findings JSON for pack authoring.
+pub fn export_discovery_jsons(
+    data_dir: &Path,
+    db_path: &Path,
+    sample_id: i64,
+) -> Result<Value, String> {
+    let exports_dir = data_dir.join("exports");
+    fs::create_dir_all(&exports_dir).map_err(|e| e.to_string())?;
+
+    let (pack_rsids, pack_genes, mut pack_doc) = pack_rsids_and_genes(data_dir)?;
+    if let Some(obj) = pack_doc.as_object_mut() {
+        obj.insert("unique_rsid_count".into(), json!(pack_rsids.len()));
+        obj.insert("unique_gene_count".into(), json!(pack_genes.len()));
+        obj.insert(
+            "all_pack_rsids".into(),
+            json!(pack_rsids.iter().cloned().collect::<Vec<_>>()),
+        );
+        obj.insert(
+            "all_pack_genes".into(),
+            json!(pack_genes.iter().cloned().collect::<Vec<_>>()),
+        );
+        obj.insert("sample_id".into(), json!(sample_id));
+    }
+
+    let pack_path = exports_dir.join(format!("marker_pack_coverage_sample_{sample_id}.json"));
+    fs::write(
+        &pack_path,
+        serde_json::to_string_pretty(&pack_doc).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Sample DB already attaches public catalogs — run joins there.
+    let sample_conn = db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| format!("Open sample DB: {e}"))?;
+
+    let geno_count: i64 = sample_conn
+        .query_row(
+            "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
+            params![sample_id],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+
+    let findings = load_findings_via_join(&sample_conn, sample_id)?;
+
+    let mut in_pack = Vec::new();
+    let mut beyond_pack = Vec::new();
+    for mut entry in findings {
+        let rsid = entry
+            .get("rsid")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let in_packs = pack_rsids.contains(&rsid);
+        entry
+            .as_object_mut()
+            .map(|o| o.insert("in_marker_packs".into(), json!(in_packs)));
+        if in_packs {
+            in_pack.push(entry);
+        } else {
+            beyond_pack.push(entry);
+        }
+    }
+
+    beyond_pack.sort_by(|a, b| {
+        let score = |v: &Value| -> i32 {
+            let mut s = 0;
+            if let Some(c) = v.get("clinvar") {
+                let sig = c
+                    .get("clinical_significance")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or("")
+                    .to_lowercase();
+                if sig.contains("pathogenic") {
+                    s += 100;
+                } else if sig.contains("risk") || sig.contains("association") {
+                    s += 40;
+                } else if !sig.is_empty() {
+                    s += 10;
+                }
+            }
+            if v.get("pharmgkb").and_then(|x| x.as_object()).is_some() {
+                s += 30;
+            }
+            if v.get("gwas").and_then(|x| x.as_object()).is_some() {
+                s += 5;
+            }
+            s
+        };
+        score(b).cmp(&score(a))
+    });
+
+    let full_doc = json!({
+        "kind": "genome_catalog_findings",
+        "generated_at": chrono_iso(),
+        "sample_id": sample_id,
+        "genotype_rsid_count": geno_count,
+        "pack_rsid_count": pack_rsids.len(),
+        "findings_in_packs": in_pack.len(),
+        "findings_beyond_packs": beyond_pack.len(),
+        "note": "beyond_packs lists genotype×catalog hits not covered by hardcoded marker packs — candidates for new pack entries.",
+        "in_packs": in_pack,
+        "beyond_packs": beyond_pack,
+    });
+
+    let full_path = exports_dir.join(format!("genome_catalog_findings_sample_{sample_id}.json"));
+    fs::write(
+        &full_path,
+        serde_json::to_string_pretty(&full_doc).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(json!({
+        "pack_coverage_path": pack_path.to_string_lossy(),
+        "full_findings_path": full_path.to_string_lossy(),
+        "findings_in_packs": in_pack.len(),
+        "findings_beyond_packs": beyond_pack.len(),
+        "genotype_rsid_count": geno_count,
+        "pack_rsid_count": pack_rsids.len(),
+    }))
+}

@@ -2,7 +2,9 @@
 use super::compress::{
     DEFAULT_COMPRESSION_THRESHOLD_BYTES, compress_if_large, resolve_local_asset_path,
 };
-use super::download::{download_to_path, head_remote, remote_changed, sha256_file};
+use super::download::{
+    download_to_path, head_remote, remote_changed, sha256_file, verify_local_hash_sidecar,
+};
 use super::import_clingen::import_clingen_gene_validity;
 use super::import_clinvar::import_clinvar_variant_summary;
 use super::import_dbsnp::{import_dbsnp_merged, import_dbsnp_withdrawn};
@@ -12,7 +14,10 @@ use super::manifest::{
     AssetKind, OfflineAssetDef, OfflineAssetId, OfflineAssetStatus, OfflineTierStatus, all_assets,
     asset_def, local_path, tier_budget_bytes,
 };
-use super::registry::{mark_update_available, read_registry, row_count_for_asset, upsert_registry};
+use super::registry::{
+    clear_unproven_update_flags, mark_update_available, read_registry, row_count_for_asset,
+    store_remote_content_length, upsert_registry,
+};
 use super::schema::migrate_offline_schema;
 use super::tier2::{
     build_variant_locus_all_samples, build_variant_locus_for_sample, ensure_tier2_meta,
@@ -23,7 +28,55 @@ use rusqlite::Connection;
 use rusqlite::OptionalExtension;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter};
+use tokio::sync::Mutex as AsyncMutex;
+
+/// Cooperative cancel for long catalog imports (dbSNP / ClinVar).
+static IMPORT_CANCEL: AtomicBool = AtomicBool::new(false);
+
+pub fn reset_offline_import_cancel() {
+    IMPORT_CANCEL.store(false, Ordering::SeqCst);
+}
+
+pub fn cancel_offline_import() {
+    IMPORT_CANCEL.store(true, Ordering::SeqCst);
+}
+
+pub fn is_offline_import_cancelled() -> bool {
+    IMPORT_CANCEL.load(Ordering::SeqCst)
+}
+
+/// Serializes SQLite import work so downloads can run in parallel safely.
+fn import_mutex() -> &'static AsyncMutex<()> {
+    static LOCK: OnceLock<AsyncMutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| AsyncMutex::new(()))
+}
+
+/// Sync phases are download (1) then import (2). There is no separate finalize step.
+const SYNC_TOTAL_STEPS: u8 = 2;
+
+fn emit_sync_phase(
+    app: Option<&AppHandle>,
+    asset_id: &str,
+    phase: &str,
+    step: u8,
+    message: &str,
+) {
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "offline:sync_phase",
+            serde_json::json!({
+                "asset_id": asset_id,
+                "phase": phase,
+                "step": step,
+                "total_steps": SYNC_TOTAL_STEPS,
+                "message": message,
+            }),
+        );
+    }
+}
 
 pub(crate) fn get_custom_download_dir_from_db(db_path: &Path) -> Option<PathBuf> {
     let conn = crate::db::connect(db_path).ok()?;
@@ -77,6 +130,138 @@ fn with_conn<T>(
     f(&conn)
 }
 
+fn format_byte_size(n: u64) -> String {
+    const KB: f64 = 1024.0;
+    const MB: f64 = KB * 1024.0;
+    const GB: f64 = MB * 1024.0;
+    let n = n as f64;
+    if n >= GB {
+        format!("{:.2} GB", n / GB)
+    } else if n >= MB {
+        format!("{:.2} MB", n / MB)
+    } else if n >= KB {
+        format!("{:.2} KB", n / KB)
+    } else {
+        format!("{n} B")
+    }
+}
+
+fn display_size_for(def: &OfflineAssetDef, remote_len: Option<u64>) -> String {
+    match remote_len {
+        Some(n) if n > 0 => format!("~{}", format_byte_size(n)),
+        _ => def.display_size.to_string(),
+    }
+}
+
+/// Best-effort parallel HEAD probes for assets missing a stored remote size.
+/// Failures are ignored — UI falls back to the static estimate.
+async fn refresh_missing_remote_sizes(db_path: &Path) {
+    let mut missing: Vec<(OfflineAssetId, u8, String)> = Vec::new();
+    let _ = with_conn(db_path, |conn| {
+        for def in all_assets() {
+            if def.url.is_none() || def.kind == AssetKind::Derived {
+                continue;
+            }
+            let reg = read_registry(conn, def.id.as_str());
+            let has_len = reg
+                .as_ref()
+                .and_then(|r| r.remote_content_length)
+                .is_some_and(|n| n > 0);
+            if !has_len
+                && let Some(url) = def.url
+            {
+                missing.push((def.id, def.tier, url.to_string()));
+            }
+        }
+        Ok(())
+    });
+    if missing.is_empty() {
+        return;
+    }
+
+    let mut handles = Vec::new();
+    for (id, tier, url) in missing {
+        handles.push(tokio::spawn(async move {
+            let head = head_remote(&url).await.ok()?;
+            let len = head.content_length.filter(|n| *n > 0)?;
+            Some((id, tier, url, len))
+        }));
+    }
+
+    let db_path = db_path.to_path_buf();
+    for handle in handles {
+        if let Ok(Some((id, tier, url, len))) = handle.await {
+            let _ = with_conn(&db_path, |conn| {
+                store_remote_content_length(conn, id, tier, &url, len)
+            });
+        }
+    }
+}
+
+/// Compare local registry metadata to remote HEAD for already-downloaded assets.
+async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
+    struct UpdateProbe {
+        id: OfflineAssetId,
+        url: String,
+        etag: Option<String>,
+        last_modified: Option<String>,
+        content_length: Option<i64>,
+    }
+
+    let custom_dir = get_custom_download_dir_from_db(db_path);
+    let mut probes: Vec<UpdateProbe> = Vec::new();
+    let _ = with_conn(db_path, |conn| {
+        for def in all_assets() {
+            let Some(url) = def.url else { continue };
+            let path = local_path(data_dir, custom_dir.as_deref(), def);
+            if !asset_local_present(data_dir, custom_dir.as_deref(), def, &path) {
+                continue;
+            }
+            let reg = read_registry(conn, def.id.as_str());
+            probes.push(UpdateProbe {
+                id: def.id,
+                url: url.to_string(),
+                etag: reg.as_ref().and_then(|r| r.remote_etag.clone()),
+                last_modified: reg.as_ref().and_then(|r| r.remote_last_modified.clone()),
+                content_length: reg.as_ref().and_then(|r| r.remote_content_length),
+            });
+        }
+        Ok(())
+    });
+    if probes.is_empty() {
+        return;
+    }
+
+    let mut handles = Vec::new();
+    for probe in probes {
+        handles.push(tokio::spawn(async move {
+            let head = head_remote(&probe.url).await.ok()?;
+            let newer = remote_changed(
+                &head,
+                probe.etag.as_deref(),
+                probe.last_modified.as_deref(),
+                probe.content_length,
+            );
+            Some((probe.id, newer, head.content_length, probe.url))
+        }));
+    }
+
+    let db_path = db_path.to_path_buf();
+    for handle in handles {
+        if let Ok(Some((id, newer, content_length, url))) = handle.await {
+            let _ = with_conn(&db_path, |conn| {
+                if let Some(len) = content_length.filter(|n| *n > 0)
+                    && let Some(def) = asset_def(id)
+                {
+                    let _ = store_remote_content_length(conn, id, def.tier, &url, len);
+                }
+                // Always write the probe result so stale false-positives clear.
+                mark_update_available(conn, id.as_str(), newer)
+            });
+        }
+    }
+}
+
 pub async fn check_offline_updates(
     data_dir: &Path,
     db_path: &Path,
@@ -84,7 +269,19 @@ pub async fn check_offline_updates(
     let data_dir = data_dir.to_path_buf();
     let db_path = db_path.to_path_buf();
 
-    with_conn(&db_path, |_| Ok(()))?;
+    with_conn(&db_path, |conn| {
+        clear_unproven_update_flags(conn)?;
+        Ok(())
+    })?;
+    // Parallel HEAD probes for missing sizes + update flags (capped).
+    let _ = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        async {
+            refresh_missing_remote_sizes(&db_path).await;
+            probe_remote_updates(&data_dir, &db_path).await;
+        },
+    )
+    .await;
 
     let custom_dir = get_custom_download_dir_from_db(&db_path);
 
@@ -122,25 +319,25 @@ pub async fn check_offline_updates(
             .map_err(|e| format!("Status worker failed: {e}"))??;
 
             let mut update_available = reg.as_ref().map(|r| r.update_available).unwrap_or(false);
-            let mut remote_len = None;
-            if let Some(url) = def.url {
-                if let Ok(head) = head_remote(url).await {
-                    remote_len = head.content_length;
-                    update_available = remote_changed(
-                        &head,
-                        reg.as_ref().and_then(|r| r.remote_etag.as_deref()),
-                        reg.as_ref().and_then(|r| r.remote_last_modified.as_deref()),
-                        reg.as_ref().and_then(|r| r.remote_content_length),
-                    ) && local_present;
-                }
-                let db = db_path.clone();
-                let aid = def.id.as_str().to_string();
-                let flag = update_available;
-                let _ = tauri::async_runtime::spawn_blocking(move || {
-                    with_conn(&db, |conn| mark_update_available(conn, &aid, flag))
-                })
-                .await;
+            // Ignore stale flags that were set from Content-Length-only probes
+            // (no ETag / Last-Modified baseline means we cannot prove an update).
+            let has_identity = reg.as_ref().is_some_and(|r| {
+                r.remote_etag
+                    .as_deref()
+                    .map(str::trim)
+                    .is_some_and(|s| !s.is_empty())
+                    || r.remote_last_modified
+                        .as_deref()
+                        .map(str::trim)
+                        .is_some_and(|s| !s.is_empty())
+            });
+            if update_available && !has_identity {
+                update_available = false;
             }
+            let remote_len = reg.as_ref().and_then(|r| r.remote_content_length.map(|n| n as u64));
+            // Do NOT probe remote servers during sidebar status checks.
+            // Serial HEAD requests (60s timeout each) blocked the UI on "Checking…"
+            // and disabled Download buttons. Update probes happen at sync time.
 
             if local_present && (row_count > 0 || def.kind != AssetKind::Derived) {
                 ready_count += 1;
@@ -171,7 +368,7 @@ pub async fn check_offline_updates(
                 remote_content_length: remote_len,
                 version_label: reg.and_then(|r| r.version_label),
                 message,
-                display_size: def.display_size.to_string(),
+                display_size: display_size_for(def, remote_len),
             });
         }
 
@@ -211,6 +408,7 @@ pub async fn sync_offline_assets_subset(
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
+    reset_offline_import_cancel();
     let custom_dir = get_custom_download_dir_from_db(db_path);
     let effective_dir = custom_dir.as_deref().unwrap_or(data_dir);
     paths::ensure_data_layout(effective_dir).map_err(|e| e.to_string())?;
@@ -238,12 +436,31 @@ pub async fn sync_offline_assets_subset(
             AssetKind::RemoteFile => {
                 let Some(url) = def.url else { continue };
                 let path = local_path(data_dir, custom_dir.as_deref(), def);
-                if !force && let Some(local_path) = resolve_local_asset_path(&path) {
-                    if let Ok(meta) = std::fs::metadata(local_path) {
-                        bytes_used += meta.len();
+                if !force && let Some(existing) = resolve_local_asset_path(&path) {
+                    // Quick sync-time update probe (not used during sidebar status).
+                    let reg = with_conn(db_path, |conn| Ok(read_registry(conn, def.id.as_str()))).ok().flatten();
+                    let remote_is_newer = match head_remote(url).await {
+                        Ok(head) => {
+                            let newer = remote_changed(
+                                &head,
+                                reg.as_ref().and_then(|r| r.remote_etag.as_deref()),
+                                reg.as_ref().and_then(|r| r.remote_last_modified.as_deref()),
+                                reg.as_ref().and_then(|r| r.remote_content_length),
+                            );
+                            let _ = with_conn(db_path, |conn| {
+                                mark_update_available(conn, def.id.as_str(), newer)
+                            });
+                            newer
+                        }
+                        Err(_) => false,
+                    };
+                    if !remote_is_newer {
+                        if let Ok(meta) = std::fs::metadata(existing) {
+                            bytes_used += meta.len();
+                        }
+                        pending_imports.push(def.id);
+                        continue;
                     }
-                    pending_imports.push(def.id);
-                    continue;
                 }
                 if bytes_used >= budget {
                     result.errors.push(format!(
@@ -257,6 +474,13 @@ pub async fn sync_offline_assets_subset(
                 let asset_id_str = def.id.as_str().to_string();
                 let app_clone = app.cloned();
                 let label = def.label.to_string();
+                emit_sync_phase(
+                    app,
+                    def.id.as_str(),
+                    "download",
+                    1,
+                    &format!("Step 1/2 · Downloading {label}…"),
+                );
 
                 let progress_cb = move |bytes_done: u64, total: u64| {
                     if let Some(ref handle) = app_clone {
@@ -319,6 +543,13 @@ pub async fn sync_offline_assets_subset(
                             let asset_id_str = def.id.as_str().to_string();
                             let app_clone = app.cloned();
                             let label = def.label.to_string();
+                            emit_sync_phase(
+                                app,
+                                def.id.as_str(),
+                                "download",
+                                1,
+                                "Step 1/2 · Downloading GWAS catalog…",
+                            );
                             let progress_cb = move |bytes_done: u64, total: u64| {
                                 if let Some(ref handle) = app_clone {
                                     let _ = handle.emit(
@@ -333,8 +564,24 @@ pub async fn sync_offline_assets_subset(
                                 }
                             };
                             match download_to_path(url, &path, def.max_bytes, progress_cb).await {
-                                Ok((n, _)) => {
+                                Ok((n, head)) => {
                                     bytes_used += n;
+                                    let hash = sha256_file(&path).ok();
+                                    let _ = with_conn(db_path, |conn| {
+                                        upsert_registry(
+                                            conn,
+                                            def.id,
+                                            def.tier,
+                                            &path,
+                                            url,
+                                            Some(&head),
+                                            n,
+                                            hash.as_deref(),
+                                            0,
+                                            head.last_modified.as_deref(),
+                                            false,
+                                        )
+                                    });
                                     result
                                         .messages
                                         .push(format!("Downloaded GWAS catalog ({} bytes)", n));
@@ -342,6 +589,26 @@ pub async fn sync_offline_assets_subset(
                                 Err(e) => result.errors.push(format!("GWAS download: {e}")),
                             }
                         }
+                    } else if let Some(handle) = app {
+                        // Import-only re-sync — tell UI immediately (no download bar).
+                        emit_sync_phase(
+                            Some(handle),
+                            "gwas_catalog",
+                            "import",
+                            2,
+                            "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…",
+                        );
+                        let _ = handle.emit(
+                            "offline:import_progress",
+                            serde_json::json!({
+                                "asset_id": "gwas_catalog",
+                                "rows_processed": 0,
+                                "percent": 0,
+                                "rows_per_second": 0,
+                                "eta_seconds": null,
+                                "message": "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…"
+                            }),
+                        );
                     }
                 }
                 pending_imports.push(def.id);
@@ -355,6 +622,22 @@ pub async fn sync_offline_assets_subset(
     let data_dir_owned = data_dir.to_path_buf();
     let db_path_owned = db_path.to_path_buf();
     let app_clone = app.cloned();
+    // Serialize imports so parallel downloads don't contend on SQLite writes.
+    let _import_guard = import_mutex().lock().await;
+    let import_queue_len = pending_imports.len();
+    for (idx, id) in pending_imports.iter().enumerate() {
+        let waiting = if idx == 0 {
+            format!(
+                "Step 2/2 · Indexing {} into SQLite…",
+                asset_def(*id).map(|d| d.label).unwrap_or(id.as_str())
+            )
+        } else {
+            format!(
+                "Step 2/2 · Queued for import ({idx} of {import_queue_len} ahead) — downloads finished; waiting for SQLite slot…"
+            )
+        };
+        emit_sync_phase(app, id.as_str(), "import", 2, &waiting);
+    }
     let import_out = tauri::async_runtime::spawn_blocking(move || {
         import_assets_sync(
             &data_dir_owned,
@@ -412,13 +695,43 @@ fn import_assets_sync(
         errors: Vec::new(),
     };
     with_conn(db_path, |conn| {
-        for id in ids {
+        for (idx, id) in ids.iter().enumerate() {
+            if is_offline_import_cancelled() {
+                out.errors
+                    .push("Import cancelled by user.".to_string());
+                break;
+            }
+            if let Some(ref handle) = app {
+                let label = asset_def(*id).map(|d| d.label).unwrap_or(id.as_str());
+                let remaining = ids.len().saturating_sub(idx + 1);
+                let msg = if remaining == 0 {
+                    format!("Step 2/2 · Indexing {label}…")
+                } else {
+                    format!("Step 2/2 · Indexing {label} ({remaining} more queued)…")
+                };
+                let _ = handle.emit(
+                    "offline:sync_phase",
+                    serde_json::json!({
+                        "asset_id": id.as_str(),
+                        "phase": "import",
+                        "step": 2,
+                        "total_steps": 2,
+                        "message": msg,
+                    }),
+                );
+            }
             match import_asset_sync(conn, data_dir, db_path, *id, sample_id, app.as_ref()) {
                 Ok(msg) => {
                     out.synced.push(id.as_str().to_string());
                     out.messages.push(msg);
                 }
-                Err(e) => out.errors.push(e),
+                Err(e) => {
+                    if e.contains("cancelled") {
+                        out.errors.push(e);
+                        break;
+                    }
+                    out.errors.push(e);
+                }
             }
         }
         Ok(())
@@ -499,8 +812,26 @@ fn import_asset_sync(
     let def = asset_def(id).ok_or_else(|| format!("Unknown asset {:?}", id))?;
     let path = local_path(data_dir, custom_dir.as_deref(), def);
 
+    // Hash-gate large catalog imports: refuse to index when a sibling .md5/.sha256
+    // proves the local file is corrupt (remote .md5 already checked at download).
+    if matches!(
+        id,
+        OfflineAssetId::ClinvarVariantSummary
+            | OfflineAssetId::DbsnpMergedJson
+            | OfflineAssetId::DbsnpWithdrawnJson
+            | OfflineAssetId::GwasCatalog
+    ) {
+        if let Some(local) = resolve_local_asset_path(&path) {
+            verify_local_hash_sidecar(&local)?;
+        }
+    }
+
     let row_count = match id {
-        OfflineAssetId::GwasCatalog => import_gwas_from_local_files(effective_dir, db_path)?,
+        OfflineAssetId::GwasCatalog => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "gwas")
+                .map_err(|e| e.to_string())?;
+            import_gwas_from_local_files(effective_dir, db_path, app)?
+        }
         OfflineAssetId::LiftoverChain => {
             if !path.exists() {
                 return Err("Liftover chain missing — sync Tier 0".into());
@@ -541,10 +872,7 @@ fn import_asset_sync(
             1
         }
         OfflineAssetId::ClinvarVariantSummary => {
-            let data_dir = path
-                .parent()
-                .and_then(|p| p.parent())
-                .unwrap_or_else(|| Path::new("."));
+            // Always attach under App/Data (not raw_downloads/) so status + reports see the same DB.
             crate::db::ensure_catalog_db_attached(conn, data_dir, "clinvar")
                 .map_err(|e| e.to_string())?;
             let eff_path = resolve_local_asset_path(&path)
@@ -552,32 +880,36 @@ fn import_asset_sync(
             import_clinvar_variant_summary(conn, &eff_path, app)?
         }
         OfflineAssetId::PharmgkbClinicalVariants => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "pharmgkb")
+                .map_err(|e| e.to_string())?;
             if !path.exists() {
                 return Err("PharmGKB clinical zip missing".into());
             }
             import_pharmgkb_clinical_variants(conn, &path)?
         }
         OfflineAssetId::PharmgkbGenes => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "pharmgkb")
+                .map_err(|e| e.to_string())?;
             if !path.exists() {
                 return Err("PharmGKB genes zip missing".into());
             }
             import_pharmgkb_genes(conn, &path)?
         }
         OfflineAssetId::ClingenGeneValidity => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "clingen")
+                .map_err(|e| e.to_string())?;
             let eff_path =
                 resolve_local_asset_path(&path).ok_or_else(|| "ClinGen CSV missing".to_string())?;
             import_clingen_gene_validity(conn, &eff_path)?
         }
         OfflineAssetId::ManeSelectSummary => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "mane")
+                .map_err(|e| e.to_string())?;
             let eff_path = resolve_local_asset_path(&path)
                 .ok_or_else(|| "MANE summary missing".to_string())?;
             import_mane_summary(conn, &eff_path)?
         }
         OfflineAssetId::DbsnpMergedJson => {
-            let data_dir = path
-                .parent()
-                .and_then(|p| p.parent())
-                .unwrap_or_else(|| Path::new("."));
             crate::db::ensure_catalog_db_attached(conn, data_dir, "dbsnp")
                 .map_err(|e| e.to_string())?;
             let eff_path = resolve_local_asset_path(&path)
@@ -585,10 +917,6 @@ fn import_asset_sync(
             import_dbsnp_merged(conn, &eff_path, app)?
         }
         OfflineAssetId::DbsnpWithdrawnJson => {
-            let data_dir = path
-                .parent()
-                .and_then(|p| p.parent())
-                .unwrap_or_else(|| Path::new("."));
             crate::db::ensure_catalog_db_attached(conn, data_dir, "dbsnp")
                 .map_err(|e| e.to_string())?;
             let eff_path = resolve_local_asset_path(&path)

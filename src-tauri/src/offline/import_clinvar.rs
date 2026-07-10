@@ -330,6 +330,9 @@ pub fn import_clinvar_variant_summary(
     let mut chunk = Vec::with_capacity(20_000);
 
     for line_res in lines {
+        if crate::offline::sync::is_offline_import_cancelled() {
+            return Err("ClinVar import cancelled by user.".into());
+        }
         let line = line_res.map_err(|e| e.to_string())?;
         let line_len = line.len() as u64 + 1;
         bytes_processed += line_len;
@@ -378,6 +381,7 @@ pub fn import_clinvar_variant_summary(
                 } else {
                     0
                 };
+                // Cap in-flight progress at 99%; emit 100% only after commit/swap.
                 let percent_bounded = percent.min(99);
                 let eta_seconds = if speed > 0.0 && total_bytes > bytes_processed {
                     let remaining_bytes = total_bytes - bytes_processed;
@@ -397,7 +401,7 @@ pub fn import_clinvar_variant_summary(
                         "rows_per_second": speed as u64,
                         "eta_seconds": eta_seconds,
                         "message": format!(
-                            "Importing ClinVar: {}% complete • {} rows ({:.0} rows/s)...",
+                            "Importing ClinVar: {}% · {} rows ({:.0} rows/s)",
                             percent_bounded, count, speed
                         )
                     }),
@@ -437,6 +441,33 @@ pub fn import_clinvar_variant_summary(
         }
     }
     tx.commit().map_err(|e| e.to_string())?;
+
+    // Secondary indexes for report/agent lookups (PK alone is composite).
+    staging_conn
+        .execute_batch(
+            "
+            CREATE INDEX IF NOT EXISTS idx_clinvar_reference_rsid ON clinvar_reference(rsid);
+            CREATE INDEX IF NOT EXISTS idx_clinvar_reference_gene ON clinvar_reference(gene_symbol);
+            CREATE INDEX IF NOT EXISTS idx_clinvar_reference_varid ON clinvar_reference(variation_id);
+            CREATE INDEX IF NOT EXISTS idx_clinvar_reference_coords
+                ON clinvar_reference(assembly, chromosome, start);
+            ",
+        )
+        .map_err(|e| format!("ClinVar index create failed: {e}"))?;
+
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "offline:import_progress",
+            serde_json::json!({
+                "asset_id": "clinvar_variant_summary",
+                "rows_processed": count,
+                "percent": 100,
+                "rows_per_second": 0,
+                "eta_seconds": null,
+                "message": format!("ClinVar import complete · {} rows indexed", count)
+            }),
+        );
+    }
 
     // Drop staging connection to release file lock before swap
     drop(staging_conn);

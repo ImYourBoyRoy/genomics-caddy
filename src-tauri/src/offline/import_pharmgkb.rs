@@ -45,7 +45,12 @@ pub fn import_pharmgkb_clinical_variants(
     zip_path: &Path,
 ) -> Result<u64, String> {
     let bytes = extract_tsv_from_zip(zip_path, "clinical")?;
-    conn.execute("DELETE FROM reference.pharmgkb_clinical_variants", [])
+    let table = if crate::offline::schema::schema_attached(conn, "pharmgkb") {
+        "pharmgkb.pharmgkb_clinical_variants"
+    } else {
+        "reference.pharmgkb_clinical_variants"
+    };
+    conn.execute(&format!("DELETE FROM {table}"), [])
         .map_err(|e| e.to_string())?;
 
     let reader = BufReader::new(bytes.as_slice());
@@ -105,8 +110,10 @@ pub fn import_pharmgkb_clinical_variants(
             .unwrap_or_default();
 
         tx.execute(
-            "INSERT INTO reference.pharmgkb_clinical_variants (rsid, gene, drug, phenotype, evidence_level, raw_json)
-             VALUES (?, ?, ?, ?, ?, ?)",
+            &format!(
+                "INSERT INTO {table} (rsid, gene, drug, phenotype, evidence_level, raw_json)
+                 VALUES (?, ?, ?, ?, ?, ?)"
+            ),
             params![rsid, gene, drug, phenotype, evidence, line],
         )
         .map_err(|e| e.to_string())?;
@@ -118,7 +125,12 @@ pub fn import_pharmgkb_clinical_variants(
 
 pub fn import_pharmgkb_genes(conn: &Connection, zip_path: &Path) -> Result<u64, String> {
     let bytes = extract_tsv_from_zip(zip_path, "genes")?;
-    conn.execute("DELETE FROM reference.pharmgkb_genes", [])
+    let table = if crate::offline::schema::schema_attached(conn, "pharmgkb") {
+        "pharmgkb.pharmgkb_genes"
+    } else {
+        "reference.pharmgkb_genes"
+    };
+    conn.execute(&format!("DELETE FROM {table}"), [])
         .map_err(|e| e.to_string())?;
 
     let reader = BufReader::new(bytes.as_slice());
@@ -156,7 +168,9 @@ pub fn import_pharmgkb_genes(conn: &Connection, zip_path: &Path) -> Result<u64, 
             .map(|s| s.trim().to_string());
         let pgx_id = id.unwrap_or_else(|| symbol.clone());
         tx.execute(
-            "INSERT OR REPLACE INTO reference.pharmgkb_genes (pharmgkb_id, symbol, name, raw_json) VALUES (?, ?, ?, ?)",
+            &format!(
+                "INSERT OR REPLACE INTO {table} (pharmgkb_id, symbol, name, raw_json) VALUES (?, ?, ?, ?)"
+            ),
             params![pgx_id, symbol, name, line],
         )
         .map_err(|e| e.to_string())?;

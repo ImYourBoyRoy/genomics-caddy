@@ -37,11 +37,18 @@ pub(crate) fn normalize_rsid(raw: &str) -> Option<String> {
 }
 
 pub(crate) fn normalize_gwas_reference_rsids(conn: &Connection) -> Result<usize, String> {
+    let table = if crate::offline::schema::schema_attached(conn, "gwas") {
+        "gwas.gwas_reference"
+    } else {
+        "reference.gwas_reference"
+    };
     let updated = conn
         .execute(
-            "UPDATE reference.gwas_reference
-             SET rsid = 'rs' || SUBSTR(UPPER(rsid), 3)
-             WHERE UPPER(rsid) LIKE 'RS%'",
+            &format!(
+                "UPDATE {table}
+                 SET rsid = 'rs' || SUBSTR(UPPER(rsid), 3)
+                 WHERE UPPER(rsid) LIKE 'RS%'"
+            ),
             [],
         )
         .map_err(|e| e.to_string())?;

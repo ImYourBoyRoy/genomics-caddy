@@ -1,5 +1,18 @@
 // ./src-tauri/src/offline/schema.rs
+/*
+Purpose: Offline/reference SQLite schema migrations that are safe when catalog DBs are absent.
+*/
+
 use rusqlite::{Connection, Result};
+
+pub fn schema_attached(conn: &Connection, name: &str) -> bool {
+    conn.query_row(
+        "SELECT 1 FROM pragma_database_list WHERE name = ?1",
+        rusqlite::params![name],
+        |_| Ok(true),
+    )
+    .unwrap_or(false)
+}
 
 fn ensure_column(
     conn: &Connection,
@@ -8,6 +21,9 @@ fn ensure_column(
     column: &str,
     ddl: &str,
 ) -> Result<()> {
+    if !schema.is_empty() && !schema_attached(conn, schema) {
+        return Ok(());
+    }
     let pragma_sql = if schema.is_empty() {
         format!("PRAGMA table_info({table})")
     } else {
@@ -30,6 +46,7 @@ fn ensure_column(
 }
 
 pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
+    // Always-available schemas (attached on every connect).
     conn.execute_batch(
         "
         CREATE TABLE IF NOT EXISTS reference.offline_asset_registry (
@@ -85,14 +102,6 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
             grch38_coordinates TEXT
         );
 
-        CREATE TABLE IF NOT EXISTS dbsnp.rsid_aliases (
-            rsid TEXT PRIMARY KEY,
-            merged_into TEXT,
-            withdrawn INTEGER NOT NULL DEFAULT 0,
-            source TEXT NOT NULL DEFAULT 'dbsnp',
-            raw_refsnp_id TEXT
-        );
-
         CREATE TABLE IF NOT EXISTS variant_locus (
             variant_key TEXT PRIMARY KEY,
             assembly TEXT NOT NULL DEFAULT 'GRCh38',
@@ -109,29 +118,58 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
         ",
     )?;
 
-    ensure_column(
-        conn,
-        "clinvar",
-        "clinvar_reference",
-        "review_status",
-        "TEXT NOT NULL DEFAULT ''",
-    )?;
-    ensure_column(conn, "clinvar", "clinvar_reference", "variation_id", "TEXT")?;
-    ensure_column(
-        conn,
-        "clinvar",
-        "clinvar_reference",
-        "last_evaluated",
-        "TEXT",
-    )?;
-    ensure_column(
-        conn,
-        "clinvar",
-        "clinvar_reference",
-        "assembly",
-        "TEXT NOT NULL DEFAULT 'GRCh38'",
-    )?;
-    ensure_column(conn, "dbsnp", "rsid_aliases", "raw_refsnp_id", "TEXT")?;
+    // Catalog sidecars exist only after download/import — skip DDL until attached.
+    if schema_attached(conn, "dbsnp") {
+        conn.execute_batch(
+            "
+            CREATE TABLE IF NOT EXISTS dbsnp.rsid_aliases (
+                rsid TEXT PRIMARY KEY,
+                merged_into TEXT,
+                withdrawn INTEGER NOT NULL DEFAULT 0,
+                source TEXT NOT NULL DEFAULT 'dbsnp',
+                raw_refsnp_id TEXT
+            );
+            CREATE TABLE IF NOT EXISTS dbsnp.refsnp_meta (
+                refsnp_id TEXT PRIMARY KEY,
+                create_date TEXT,
+                last_update_date TEXT,
+                last_update_build_id TEXT,
+                citation_count INTEGER NOT NULL DEFAULT 0,
+                citations_json TEXT NOT NULL DEFAULT '[]',
+                mane_select_ids_json TEXT NOT NULL DEFAULT '[]'
+            );
+            CREATE INDEX IF NOT EXISTS dbsnp.idx_rsid_aliases_merged_into ON rsid_aliases(merged_into);
+            CREATE INDEX IF NOT EXISTS dbsnp.idx_rsid_aliases_withdrawn ON rsid_aliases(withdrawn);
+            CREATE INDEX IF NOT EXISTS dbsnp.idx_rsid_aliases_source ON rsid_aliases(source);
+            ",
+        )?;
+        ensure_column(conn, "dbsnp", "rsid_aliases", "raw_refsnp_id", "TEXT")?;
+    }
+
+    if schema_attached(conn, "clinvar") {
+        ensure_column(
+            conn,
+            "clinvar",
+            "clinvar_reference",
+            "review_status",
+            "TEXT NOT NULL DEFAULT ''",
+        )?;
+        ensure_column(conn, "clinvar", "clinvar_reference", "variation_id", "TEXT")?;
+        ensure_column(
+            conn,
+            "clinvar",
+            "clinvar_reference",
+            "last_evaluated",
+            "TEXT",
+        )?;
+        ensure_column(
+            conn,
+            "clinvar",
+            "clinvar_reference",
+            "assembly",
+            "TEXT NOT NULL DEFAULT 'GRCh38'",
+        )?;
+    }
 
     Ok(())
 }

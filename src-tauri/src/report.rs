@@ -21,6 +21,8 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::offline::schema::schema_attached;
+
 // ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
@@ -237,8 +239,17 @@ pub struct DbsnpAnnotation {
     pub alt_alleles: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plus_strand_alleles: Option<Vec<String>>,
+    /// Release / build label from the allele source (typically gnomAD, not offline dbSNP).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_build: Option<String>,
+    /// Explicit provenance: offline dbSNP is merge aliases only; allele/AF chips use gnomAD cache.
+    #[serde(default = "default_allele_source")]
+    pub allele_source: String,
+}
+
+#[allow(dead_code)] // referenced by serde `default = "default_allele_source"`
+fn default_allele_source() -> String {
+    "gnomAD".to_string()
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -335,6 +346,9 @@ pub struct GeneratedReport {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub enrichment: HashMap<String, VariantEnrichment>,
     pub sections: Vec<NormalizedSection>,
+    /// Explicit catalog readiness notes (never silent when ClinVar/dbSNP expected but missing).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub catalog_warnings: Vec<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -483,32 +497,39 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
 
-    // Query ClinVar
+    // Query ClinVar (fail loud via catalog_warnings when schema missing — do not silently skip forever)
     let sql_clinvar = format!(
         "SELECT rsid, clinical_significance, conditions, review_status 
          FROM clinvar.clinvar_reference WHERE rsid IN ({})",
         placeholders
     );
     let mut clinvar_data = HashMap::new();
-    if let Ok(mut stmt) = conn.prepare(&sql_clinvar) {
-        if let Ok(rows) = stmt.query_map(params.as_slice(), |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, Option<String>>(1)?,
-                row.get::<_, Option<String>>(2)?,
-                row.get::<_, Option<String>>(3)?,
-            ))
-        }) {
-            for r in rows.flatten() {
-                clinvar_data.insert(r.0.to_lowercase(), r);
+    match conn.prepare(&sql_clinvar) {
+        Ok(mut stmt) => {
+            if let Ok(rows) = stmt.query_map(params.as_slice(), |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                    row.get::<_, Option<String>>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                ))
+            }) {
+                for r in rows.flatten() {
+                    clinvar_data.insert(r.0.to_lowercase(), r);
+                }
             }
+        }
+        Err(e) => {
+            eprintln!(
+                "ClinVar enrichment query failed (catalog missing or not indexed?): {e}"
+            );
         }
     }
 
     // Query GWAS Catalog
     let sql_gwas = format!(
         "SELECT rsid, top_trait, best_pvalue, association_count 
-         FROM reference.gwas_reference WHERE rsid IN ({})",
+         FROM gwas_reference WHERE rsid IN ({})",
         placeholders
     );
     let mut gwas_data = HashMap::new();
@@ -764,9 +785,10 @@ fn fetch_gnomad_dbsnp_metadata(
         return HashMap::new();
     }
     let mut map = HashMap::new();
+    // Offline gnomAD VCF hits use `remote_vcf_hit`; older API paths used `found`.
     let sql = "SELECT chrom, pos, ref, alt, af, release, rsids_json 
                FROM reference.gnomad_variant_cache 
-               WHERE lookup_status = 'found'";
+               WHERE lookup_status IN ('found', 'remote_vcf_hit')";
     if let Ok(mut stmt) = conn.prepare(sql) {
         if let Ok(rows) = stmt.query_map([], |row| {
             Ok((
@@ -874,7 +896,7 @@ fn is_palindromic_alleles(alleles: &[String]) -> bool {
 }
 
 fn is_gene_on_negative_strand(conn: &Connection, gene: &str) -> bool {
-    let sql = "SELECT grch38_coordinates FROM reference.mane_transcripts WHERE UPPER(gene_symbol) = UPPER(?) LIMIT 1";
+    let sql = "SELECT grch38_coordinates FROM mane_transcripts WHERE UPPER(gene_symbol) = UPPER(?) LIMIT 1";
     if let Ok(coords) = conn.query_row(sql, [gene], |r| r.get::<_, String>(0)) {
         return coords.contains("(-)");
     }
@@ -906,7 +928,7 @@ fn fetch_pharmgkb_enrichment(
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(rsid), drug, phenotype, evidence_level FROM reference.pharmgkb_clinical_variants WHERE rsid IN ({})",
+        "SELECT LOWER(rsid), drug, phenotype, evidence_level FROM pharmgkb_clinical_variants WHERE rsid IN ({})",
         placeholders
     );
     let params: Vec<&dyn rusqlite::types::ToSql> = current_rsids
@@ -959,7 +981,7 @@ fn fetch_clingen_enrichment(
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(gene_symbol), disease_label, classification FROM reference.clingen_gene_validity WHERE gene_symbol IN ({})",
+        "SELECT LOWER(gene_symbol), disease_label, classification FROM clingen_gene_validity WHERE gene_symbol IN ({})",
         placeholders
     );
     let params: Vec<&dyn rusqlite::types::ToSql> = genes
@@ -998,7 +1020,7 @@ fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String,
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(gene_symbol), ensembl_transcript, refseq_transcript, mane_status FROM reference.mane_transcripts WHERE gene_symbol IN ({})",
+        "SELECT LOWER(gene_symbol), ensembl_transcript, refseq_transcript, mane_status FROM mane_transcripts WHERE gene_symbol IN ({})",
         placeholders
     );
     let params: Vec<&dyn rusqlite::types::ToSql> = genes
@@ -1034,6 +1056,46 @@ pub fn generate_report(
     sample_id: i64,
     template: &ReportTemplate,
 ) -> Result<GeneratedReport, String> {
+    let mut catalog_warnings = Vec::new();
+    let clinvar_attached = schema_attached(conn, "clinvar");
+    let dbsnp_attached = schema_attached(conn, "dbsnp");
+    if !clinvar_attached {
+        catalog_warnings.push(
+            "ClinVar catalog is not attached (App/Data/clinvar.db missing or empty). Clinical significance enrichment is skipped — download/import ClinVar, then Re-sync."
+                .to_string(),
+        );
+    } else {
+        let clinvar_rows: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM clinvar.clinvar_reference",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
+        if clinvar_rows == 0 {
+            catalog_warnings.push(
+                "ClinVar database is attached but has 0 indexed rows. Raw download may exist — use Re-sync to import."
+                    .to_string(),
+            );
+        }
+    }
+    if !dbsnp_attached {
+        catalog_warnings.push(
+            "dbSNP merge map is not attached (App/Data/dbsnp.db missing). rsID merge remapping is skipped — download/import dbSNP References."
+                .to_string(),
+        );
+    } else {
+        let dbsnp_rows: i64 = conn
+            .query_row("SELECT COUNT(*) FROM dbsnp.rsid_aliases", [], |r| r.get(0))
+            .unwrap_or(0);
+        if dbsnp_rows == 0 {
+            catalog_warnings.push(
+                "dbSNP database is attached but has 0 merge mappings. Use Re-sync on dbSNP References."
+                    .to_string(),
+            );
+        }
+    }
+
     // 1. Collect all rsIDs and genes to query in a single batch
     let mut rsids = Vec::new();
     let mut genes = Vec::new();
@@ -1439,7 +1501,8 @@ pub fn generate_report(
                     ref_allele: db.ref_allele.clone(),
                     alt_alleles: vec![db.alt_allele.clone()],
                     plus_strand_alleles: Some(vec![db.ref_allele.clone(), db.alt_allele.clone()]),
-                    source_build: Some(db.release.clone()),
+                    source_build: Some(format!("gnomAD {}", db.release)),
+                    allele_source: "gnomAD".to_string(),
                 }
             });
 
@@ -1638,6 +1701,7 @@ pub fn generate_report(
         category_links: category_links_map,
         enrichment: enrichment_map_out,
         sections: evaluated_sections,
+        catalog_warnings,
     })
 }
 
@@ -1651,10 +1715,10 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
     md.push_str(&format!("# {}\n\n", report.title));
     md.push_str(&format!(">{}\n\n", report.description));
     md.push_str(&format!(
-        "**Risk-Direction Signal Score**: {:.1}%\n\n",
+        "**Matched allele load**: {:.1}%\n\n",
         report.overall_signal_score
     ));
-    md.push_str("> *This score reflects only risk-direction markers. Protective, trait, and context-dependent markers are tallied separately.*\n\n");
+    md.push_str("> *Share of association-direction alleles among curated pack markers. Not a disease probability. Protective/trait markers are tallied separately.*\n\n");
     md.push_str("---\n\n");
 
     for sec in &report.sections {
@@ -1662,7 +1726,7 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
 
         if sec.summary.show_percent_score {
             md.push_str(&format!(
-                "*Risk Signal Score*: {:.1}%\n\n",
+                "*Matched alleles*: {:.1}%\n\n",
                 sec.section_signal_score
             ));
         } else {
@@ -1671,7 +1735,7 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
 
         let s = &sec.summary;
         md.push_str(&format!(
-            "Summary: {} markers | {} risk alleles/{} possible | {} protective | {} trait | {} context-dependent | {} no-data | {} confirmation-required\n\n",
+            "Summary: {} markers | {} association alleles/{} possible | {} protective | {} trait | {} context-dependent | {} no-data | {} confirmation-required\n\n",
             s.total_markers, s.risk_effect_count, s.risk_possible,
             s.protective_effect_count, s.trait_count,
             s.context_dependent_count, s.no_data_count, s.confirmation_required_count

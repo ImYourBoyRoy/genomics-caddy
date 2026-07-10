@@ -31,10 +31,10 @@
   let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
 
   let bucketLabel = $derived(
-    overallScore <= 15 ? "Low baseline" :
-    overallScore <= 35 ? "Moderate signal" :
-    overallScore <= 60 ? "Elevated signal" :
-    "High signal"
+    overallScore <= 15 ? "Fewer matches" :
+    overallScore <= 35 ? "Some matches" :
+    overallScore <= 60 ? "Many matches" :
+    "Most markers matched"
   );
 
   function computeSummaryLine(report: GeneratedReport): string {
@@ -53,12 +53,12 @@
       }
     }
     const parts = [];
-    if (high > 0) parts.push(`${high} high-priority ${high === 1 ? 'finding' : 'findings'}`);
-    if (mod > 0) parts.push(`${mod} moderate risk ${mod === 1 ? 'marker' : 'markers'}`);
+    if (high > 0) parts.push(`${high} stronger ${high === 1 ? 'association' : 'associations'}`);
+    if (mod > 0) parts.push(`${mod} possible ${mod === 1 ? 'association' : 'associations'}`);
     if (prot > 0) parts.push(`${prot} protective ${prot === 1 ? 'variant' : 'variants'}`);
     
-    if (parts.length === 0) return "No active concerns or protective variants detected.";
-    return parts.join(', ') + ' detected.';
+    if (parts.length === 0) return "No active associations or protective variants detected.";
+    return parts.join(', ') + ' among curated pack markers.';
   }
 
   let summaryLine = $derived(computeSummaryLine(generatedReport));
@@ -70,7 +70,7 @@
       <div class="meter-score">
         {overallScore.toFixed(1)}%
       </div>
-      <div class="meter-label">Risk Signal</div>
+      <div class="meter-label">Matched alleles</div>
       <div class="meter-bucket">{bucketLabel}</div>
     </div>
   </div>
@@ -84,9 +84,9 @@
     <!-- Plain-language explanation of the score -->
     <div class="score-explainer">
       <strong>What does this number mean?</strong>
-      This percentage shows how many risk-direction effect alleles were found across all your tested markers.
-      A higher number means more risk-associated variants were detected — but it is <em>not</em> a diagnosis.
-      Protective, trait, and context-dependent markers are tracked separately and do not inflate this number.
+      Among curated pack markers tagged as association-direction (not protective/trait), this is the share of those alleles you carry.
+      It is a <em>match rate for researched associations</em> — not a disease probability, diagnosis, or “how unhealthy you are.”
+      Protective and context markers are counted separately and do not raise this number.
     </div>
 
     <div class="health-summary-row">

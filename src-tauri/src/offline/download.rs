@@ -16,7 +16,10 @@ pub struct RemoteHead {
 
 pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(60))
+        // Sync-time probe only — keep this short so a dead mirror cannot stall the UI.
+        .timeout(Duration::from_secs(8))
+        .connect_timeout(Duration::from_secs(3))
+        .redirect(reqwest::redirect::Policy::limited(10))
         .build()
         .map_err(|e| e.to_string())?;
     let response = client
@@ -27,8 +30,29 @@ pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
     if !response.status().is_success() {
         return Err(format!("HEAD {} returned HTTP {}", url, response.status()));
     }
+    let mut content_length = response.content_length();
+    // Some CDNs omit Content-Length on HEAD; try a 1-byte ranged GET as fallback.
+    if content_length.is_none() || content_length == Some(0) {
+        if let Ok(probe) = client
+            .get(url)
+            .header("Range", "bytes=0-0")
+            .send()
+            .await
+        {
+            if let Some(cr) = probe.headers().get(reqwest::header::CONTENT_RANGE)
+                && let Ok(s) = cr.to_str()
+                && let Some(total) = s.split('/').nth(1)
+                && let Ok(n) = total.trim().parse::<u64>()
+                && n > 0
+            {
+                content_length = Some(n);
+            } else if let Some(n) = probe.content_length().filter(|n| *n > 0) {
+                content_length = Some(n);
+            }
+        }
+    }
     Ok(RemoteHead {
-        content_length: response.content_length(),
+        content_length,
         etag: response
             .headers()
             .get("etag")
@@ -55,6 +79,66 @@ pub fn sha256_file(path: &Path) -> Result<String, String> {
         hasher.update(&buf[..n]);
     }
     Ok(hex::encode(hasher.finalize()))
+}
+
+/// If a sibling `.md5` or `.sha256` file exists next to `path`, verify the payload matches.
+/// Missing sidecars are OK (many NCBI/EBI mirrors omit them); a present mismatch fails hard.
+pub fn verify_local_hash_sidecar(path: &Path) -> Result<(), String> {
+    use std::io::Read;
+    use std::path::PathBuf;
+
+    let sha_sidecar: PathBuf = PathBuf::from(format!("{}.sha256", path.display()));
+    let md5_sidecar: PathBuf = PathBuf::from(format!("{}.md5", path.display()));
+
+    if sha_sidecar.is_file() {
+        let text = std::fs::read_to_string(&sha_sidecar).map_err(|e| e.to_string())?;
+        let expected = text
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .trim()
+            .to_lowercase();
+        if expected.len() == 64 {
+            let actual = sha256_file(path)?;
+            if actual != expected {
+                return Err(format!(
+                    "SHA-256 mismatch for {}: local {actual} != expected {expected}",
+                    path.display()
+                ));
+            }
+        }
+        return Ok(());
+    }
+
+    if md5_sidecar.is_file() {
+        let text = std::fs::read_to_string(&md5_sidecar).map_err(|e| e.to_string())?;
+        let expected = text
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .trim()
+            .to_lowercase();
+        if expected.len() == 32 {
+            let mut file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+            let mut context = md5::Context::new();
+            let mut buf = [0u8; 65536];
+            loop {
+                let n = file.read(&mut buf).map_err(|e| e.to_string())?;
+                if n == 0 {
+                    break;
+                }
+                context.consume(&buf[..n]);
+            }
+            let local_hash = format!("{:x}", context.compute());
+            if local_hash != expected {
+                return Err(format!(
+                    "MD5 mismatch for {}: local {local_hash} != expected {expected}",
+                    path.display()
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Download `url` to `dest`, streaming in chunks.
@@ -234,26 +318,34 @@ pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String
     Ok(())
 }
 
+/// True only when we have a strong remote identity signal (ETag or Last-Modified)
+/// that differs from what we stored at last successful download.
+///
+/// Content-Length alone is **not** treated as an update — FTP/CDN HEADs often
+/// omit or vary length, which previously caused false "Update" badges.
 pub fn remote_changed(
     head: &RemoteHead,
     stored_etag: Option<&str>,
     stored_last_modified: Option<&str>,
-    stored_length: Option<i64>,
+    _stored_length: Option<i64>,
 ) -> bool {
-    if let (Some(etag), Some(stored)) = (head.etag.as_deref(), stored_etag) {
-        if !stored.is_empty() && etag != stored {
-            return true;
-        }
+    let stored_etag = stored_etag.map(str::trim).filter(|s| !s.is_empty());
+    let stored_lm = stored_last_modified.map(str::trim).filter(|s| !s.is_empty());
+    let remote_etag = head.etag.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let remote_lm = head
+        .last_modified
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+
+    // Prefer ETag when both sides have one.
+    if let (Some(etag), Some(stored)) = (remote_etag, stored_etag) {
+        return etag != stored;
     }
-    if let (Some(lm), Some(stored)) = (head.last_modified.as_deref(), stored_last_modified) {
-        if !stored.is_empty() && lm != stored {
-            return true;
-        }
+    // Fall back to Last-Modified when both sides have one.
+    if let (Some(lm), Some(stored)) = (remote_lm, stored_lm) {
+        return lm != stored;
     }
-    if let (Some(len), Some(stored)) = (head.content_length, stored_length) {
-        if stored > 0 && len as i64 != stored {
-            return true;
-        }
-    }
+    // No comparable identity metadata → do not claim an update.
     false
 }

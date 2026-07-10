@@ -23,20 +23,9 @@
   let isError = $derived(phase === "error");
   let isReady = $derived(phase === "ready");
 
-  let startTime = $state(Date.now());
-  let elapsedSeconds = $state(0);
-
-  $effect(() => {
-    if (phase === "ready" || phase === "error") return;
-    const timer = setInterval(() => {
-      elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-    }, 1000);
-    return () => clearInterval(timer);
-  });
-
+  /** Optional (n of m) progress from status messages — no elapsed timer. */
   interface ProgressEstimate {
     percent: number;
-    etaSeconds: number | null;
     current: number;
     total: number;
   }
@@ -48,30 +37,12 @@
     const current = parseInt(match[1], 10);
     const total = parseInt(match[2], 10);
     if (isNaN(current) || isNaN(total) || total <= 0) return null;
-
-    const percent = Math.round((current / total) * 100);
-    let etaSeconds: number | null = null;
-    if (current > 0 && elapsedSeconds > 0) {
-      const secPerItem = elapsedSeconds / current;
-      etaSeconds = Math.round((total - current) * secPerItem);
-    }
-    return { percent, etaSeconds, current, total };
+    return {
+      percent: Math.round((current / total) * 100),
+      current,
+      total,
+    };
   });
-
-  function formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  }
-
-  function formatEta(seconds: number | null): string {
-    if (seconds === null) return "estimating…";
-    if (seconds <= 0) return "finishing…";
-    if (seconds < 60) return `${seconds}s remaining`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s remaining`;
-  }
 
   interface SubStep {
     label: string;
@@ -180,12 +151,7 @@
         </div>
         <div class="inner-progress-stats">
           <span>{progressInfo.percent}% ({progressInfo.current}/{progressInfo.total})</span>
-          <span>⏱️ {formatTime(elapsedSeconds)} elapsed • {formatEta(progressInfo.etaSeconds)}</span>
         </div>
-      </div>
-    {:else if phase !== "ready" && phase !== "error" && elapsedSeconds > 0}
-      <div class="inner-progress-stats bootstrap-motion" style="margin: -0.25rem auto 1rem; justify-content: center; width: auto; font-size: 0.72rem; font-family: var(--font-mono), monospace;">
-        <span>⏱️ {formatTime(elapsedSeconds)} elapsed</span>
       </div>
     {/if}
 

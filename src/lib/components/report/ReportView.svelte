@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/report/ReportView.svelte -->
 <script lang="ts">
   import type { GeneratedReport, NormalizedReport, GenomeSample } from '../../types/genomics';
-  import { saveReportJson } from '../../api/tauri';
+  import { saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
   import SectionCard from './SectionCard.svelte';
@@ -155,13 +155,18 @@
     }).filter(sec => sec.markers.length > 0) ?? []
   );
 
-  async function exportJson() {
+  let discoveryExportBusy = $state(false);
+  let discoveryExportHint = $state('');
+
+  /** Curated pack report (same shape as roy_ancestrydna_report_v3/v4). */
+  async function exportCuratedJson() {
     const targetReport = rawReport || generatedReport;
     if (!targetReport) return;
     try {
       const envelope = {
         schema_version: "2.0.0",
         app_version: "0.1.0",
+        export_kind: "curated_marker_packs",
         exported_at: new Date().toISOString(),
         sample: {
           name: selectedSample.name,
@@ -173,8 +178,35 @@
       const content = JSON.stringify(envelope, null, 2);
       const defaultFilename = `${selectedSample.name.toLowerCase().replace(/\s+/g, '_')}_report.json`;
       await saveReportJson(content, defaultFilename);
-    } catch (e: any) {
-      dialogStore.alert("Failed to save JSON report: " + e.toString());
+    } catch (e: unknown) {
+      dialogStore.alert("Failed to save curated JSON report: " + String(e));
+    }
+  }
+
+  /**
+   * Full genome × catalog associations (ClinVar/GWAS/PharmGKB hits beyond packs).
+   * Writes under App/Data/exports/ — not the same format as roy_v3/v4.
+   */
+  async function exportFullCatalogJson() {
+    if (!selectedSample?.id || discoveryExportBusy) return;
+    discoveryExportBusy = true;
+    discoveryExportHint = '';
+    try {
+      const result = await exportDiscoveryFindings(selectedSample.id);
+      discoveryExportHint =
+        `Wrote ${result.findings_beyond_packs.toLocaleString()} beyond-pack + ${result.findings_in_packs.toLocaleString()} in-pack hits → App/Data/exports/`;
+      await dialogStore.alert(
+        `Full catalog export complete.\n\n` +
+          `Beyond packs: ${result.findings_beyond_packs.toLocaleString()} associations\n` +
+          `In packs: ${result.findings_in_packs.toLocaleString()}\n\n` +
+          `Pack coverage:\n${result.pack_coverage_path}\n\n` +
+          `Full findings:\n${result.full_findings_path}`
+      );
+    } catch (e: unknown) {
+      discoveryExportHint = String(e);
+      dialogStore.alert("Full catalog export failed: " + String(e));
+    } finally {
+      discoveryExportBusy = false;
     }
   }
 </script>
@@ -204,18 +236,44 @@
     ⚠️ <strong>Important:</strong> This report shows which genetic variants were found in your raw DNA file. It is <strong>not</strong> a medical diagnosis. Variants labeled "risk" show statistical associations — they do not guarantee you will develop a condition. Always consult a healthcare professional for medical decisions.
   </div>
 
+  {#if generatedReport.catalog_warnings?.length}
+    <div class="catalog-warnings-banner" role="status">
+      <strong>Reference catalogs:</strong>
+      <ul>
+        {#each generatedReport.catalog_warnings as warning}
+          <li>{warning}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+
   <!-- Export Actions -->
   <div class="report-actions no-print">
     <span class="export-privacy-note">
       🔒 Everything stays on your computer. No data is uploaded.
     </span>
-    <button class="btn btn-primary btn-sm" onclick={exportJson}>
-      💾 Export JSON
+    <button
+      class="btn btn-primary btn-sm"
+      onclick={exportCuratedJson}
+      title="Same format as roy_ancestrydna_report_v3/v4 — curated marker-pack report only"
+    >
+      💾 Export curated report JSON
+    </button>
+    <button
+      class="btn btn-secondary btn-sm"
+      onclick={exportFullCatalogJson}
+      disabled={discoveryExportBusy}
+      title="Genome × ClinVar/GWAS/PharmGKB associations (in packs + beyond packs) → App/Data/exports/"
+    >
+      {discoveryExportBusy ? 'Exporting…' : '📤 Export full catalog associations'}
     </button>
     <button class="btn btn-primary btn-sm" onclick={() => window.print()}>
       🖨️ Export PDF
     </button>
   </div>
+  {#if discoveryExportHint}
+    <p class="export-hint no-print">{discoveryExportHint}</p>
+  {/if}
 
   <!-- Color Legend (how to read this report) -->
   <div class="report-legend card">
@@ -225,22 +283,22 @@
       <div class="legend-item">
         <span class="legend-swatch signal-high-risk"></span>
         <div>
-          <strong>🔴 Risk (2 copies)</strong>
-          <span>Both copies carry the risk variant. Discuss with a healthcare provider.</span>
+          <strong>🔴 Stronger association (2 copies)</strong>
+          <span>Both copies match the researched association allele. Discuss with a healthcare provider if relevant.</span>
         </div>
       </div>
       <div class="legend-item">
         <span class="legend-swatch signal-moderate-risk"></span>
         <div>
-          <strong>🟡 Risk (1 copy)</strong>
-          <span>One copy carries the risk variant. Effect is usually smaller.</span>
+          <strong>🟡 Possible association (1 copy)</strong>
+          <span>One copy matches the association allele. Effect is usually smaller.</span>
         </div>
       </div>
       <div class="legend-item">
         <span class="legend-swatch signal-protective"></span>
         <div>
           <strong>🟢 Protective</strong>
-          <span>This variant may reduce risk or provide a beneficial effect.</span>
+          <span>This variant may be linked to a beneficial or lower-association effect.</span>
         </div>
       </div>
       <div class="legend-item">

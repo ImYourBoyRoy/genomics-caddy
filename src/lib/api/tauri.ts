@@ -691,6 +691,23 @@ export async function buildOfflineTier2(sampleId: number): Promise<OfflineSyncRe
   return invoke<OfflineSyncResult>('build_offline_tier2', { sampleId });
 }
 
+/** Cancel an in-progress catalog import (cooperative). */
+export async function cancelOfflineImport(): Promise<void> {
+  return invoke<void>('cancel_offline_import');
+}
+
+/** Export pack coverage + genome×catalog findings JSON under App/Data/exports/. */
+export async function exportDiscoveryFindings(sampleId: number): Promise<{
+  pack_coverage_path: string;
+  full_findings_path: string;
+  findings_in_packs: number;
+  findings_beyond_packs: number;
+  genotype_rsid_count: number;
+  pack_rsid_count: number;
+}> {
+  return invoke('export_discovery_findings', { sampleId });
+}
+
 export async function getCustomDownloadDir(): Promise<string | null> {
   return invoke<string | null>('get_custom_download_dir');
 }

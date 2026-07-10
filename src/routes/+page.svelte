@@ -118,9 +118,34 @@
   let highlightRsid = $state("");
   let mapFocusRsid = $state("");
   let activeSampleId = $state<number | null>(null);
+  let expandDatabases = $state(false);
+  let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
+  let sidebarApi = $state<{
+    syncAllMissing: () => void;
+    expandDatabases: () => void;
+  } | null>(null);
 
   $effect(() => {
     activeSampleId = selectedSample?.id ?? null;
+  });
+
+  function handleWelcomeImport() {
+    void browseFile();
+  }
+
+  function handleWelcomeDownloadDatabases() {
+    expandDatabases = true;
+    sidebarApi?.expandDatabases();
+    sidebarApi?.syncAllMissing();
+  }
+
+  $effect(() => {
+    if (expandDatabases) {
+      const t = setTimeout(() => {
+        expandDatabases = false;
+      }, 500);
+      return () => clearTimeout(t);
+    }
   });
 
   function handleExploreResearch(rsid: string) {
@@ -430,6 +455,13 @@
       {selectedSample}
       report={generatedReport}
       sweepRunning={researchJob?.status === "running" && researchJob.loop_active !== false}
+      {expandDatabases}
+      onReady={(api) => {
+        sidebarApi = api;
+      }}
+      onOfflineStatusChange={(status) => {
+        offlineStatusForWelcome = status;
+      }}
       onDownloadChain={downloadChain}
       onBrowseFile={browseFile}
       onImportGenome={importGenome}
@@ -440,7 +472,14 @@
   {#snippet children()}
     <main class="main-content">
       {#if selectedSample === null}
-        <EmptyState {appPaths} />
+        <EmptyState
+          {appPaths}
+          offlineStatus={offlineStatusForWelcome}
+          {isChainDownloaded}
+          onImportGenome={handleWelcomeImport}
+          onDownloadDatabases={handleWelcomeDownloadDatabases}
+          onDownloadChain={downloadChain}
+        />
       {:else}
         <header class="content-header">
           <div class="profile-summary">

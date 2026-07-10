@@ -54,6 +54,13 @@ pub fn upsert_registry(
     let etag = head.and_then(|h| h.etag.as_deref());
     let lm = head.and_then(|h| h.last_modified.as_deref());
     let clen = head.and_then(|h| h.content_length.map(|n| n as i64));
+    // When head is absent (import-only re-sync), keep any previously probed remote size.
+    let existing_clen = if clen.is_none() {
+        read_registry(conn, asset_id.as_str()).and_then(|r| r.remote_content_length)
+    } else {
+        None
+    };
+    let clen = clen.or(existing_clen);
     conn.execute(
         "INSERT INTO reference.offline_asset_registry (
             asset_id, tier, local_path, source_url, remote_etag, remote_last_modified,
@@ -64,13 +71,13 @@ pub fn upsert_registry(
             tier = excluded.tier,
             local_path = excluded.local_path,
             source_url = excluded.source_url,
-            remote_etag = excluded.remote_etag,
-            remote_last_modified = excluded.remote_last_modified,
-            remote_content_length = excluded.remote_content_length,
+            remote_etag = COALESCE(excluded.remote_etag, reference.offline_asset_registry.remote_etag),
+            remote_last_modified = COALESCE(excluded.remote_last_modified, reference.offline_asset_registry.remote_last_modified),
+            remote_content_length = COALESCE(excluded.remote_content_length, reference.offline_asset_registry.remote_content_length),
             local_sha256 = excluded.local_sha256,
             local_bytes = excluded.local_bytes,
             row_count = excluded.row_count,
-            version_label = excluded.version_label,
+            version_label = COALESCE(excluded.version_label, reference.offline_asset_registry.version_label),
             synced_at = excluded.synced_at,
             update_available = excluded.update_available",
         params![
@@ -101,6 +108,50 @@ pub fn mark_update_available(
     conn.execute(
         "UPDATE reference.offline_asset_registry SET update_available = ? WHERE asset_id = ?",
         params![if available { 1 } else { 0 }, asset_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Clear update flags that cannot be proven (no stored ETag / Last-Modified).
+pub fn clear_unproven_update_flags(conn: &Connection) -> Result<(), String> {
+    conn.execute(
+        "UPDATE reference.offline_asset_registry
+         SET update_available = 0
+         WHERE update_available != 0
+           AND (remote_etag IS NULL OR TRIM(remote_etag) = '')
+           AND (remote_last_modified IS NULL OR TRIM(remote_last_modified) = '')",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Persist a remote Content-Length probe without marking the asset synced.
+pub fn store_remote_content_length(
+    conn: &Connection,
+    asset_id: OfflineAssetId,
+    tier: u8,
+    source_url: &str,
+    content_length: u64,
+) -> Result<(), String> {
+    let now = crate::research::util::unix_now();
+    conn.execute(
+        "INSERT INTO reference.offline_asset_registry (
+            asset_id, tier, local_path, source_url, remote_content_length,
+            local_bytes, row_count, synced_at, update_available
+         ) VALUES (?, ?, '', ?, ?, 0, 0, ?, 0)
+         ON CONFLICT(asset_id) DO UPDATE SET
+            remote_content_length = excluded.remote_content_length,
+            source_url = excluded.source_url,
+            tier = excluded.tier",
+        params![
+            asset_id.as_str(),
+            tier as i64,
+            source_url,
+            content_length as i64,
+            now,
+        ],
     )
     .map_err(|e| e.to_string())?;
     Ok(())

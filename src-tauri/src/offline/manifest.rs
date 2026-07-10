@@ -91,7 +91,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "gwas",
             filename: "gwas-catalog-associations_ontology-annotated-full.zip",
             max_bytes: 900 * 1024 * 1024,
-            display_size: "~340 MB",
+            display_size: "~67 MB",
             kind: AssetKind::GwasSync,
         },
         OfflineAssetDef {
@@ -104,7 +104,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "reference",
             filename: "GRCh37_to_GRCh38.chain.gz",
             max_bytes: 50 * 1024 * 1024,
-            display_size: "~270 KB",
+            display_size: "~222 KB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -129,7 +129,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             filename: "variant_summary.txt.gz",
             // The compressed .gz file is typically 250–500 MB; set ceiling at 4 GB to never refuse.
             max_bytes: 4 * 1024 * 1024 * 1024,
-            display_size: "~300–500 MB",
+            display_size: "~420 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -140,7 +140,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "pharmgkb",
             filename: "clinicalVariants.zip",
             max_bytes: 200 * 1024 * 1024,
-            display_size: "~40–80 MB",
+            display_size: "~73 KB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -151,7 +151,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "pharmgkb",
             filename: "genes.zip",
             max_bytes: 100 * 1024 * 1024,
-            display_size: "~10–20 MB",
+            display_size: "~2.8 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -162,7 +162,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "clingen",
             filename: "gene-validity.csv",
             max_bytes: 100 * 1024 * 1024,
-            display_size: "~5–30 MB",
+            display_size: "~1.1 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -175,7 +175,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "mane",
             filename: "MANE.GRCh38.v1.5.summary.txt.gz",
             max_bytes: 50 * 1024 * 1024,
-            display_size: "~5–15 MB",
+            display_size: "~1.1 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -187,7 +187,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             filename: "refsnp-merged.json.bz2",
             // Compressed .bz2 file can be 1–3 GB; set ceiling at 8 GB to never refuse.
             max_bytes: 8 * 1024 * 1024 * 1024,
-            display_size: "~1–3 GB",
+            display_size: "~776 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {
@@ -198,7 +198,7 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
             category: "dbsnp",
             filename: "refsnp-withdrawn.json.bz2",
             max_bytes: 1024 * 1024 * 1024,
-            display_size: "~200–500 MB",
+            display_size: "~70 MB",
             kind: AssetKind::RemoteFile,
         },
         OfflineAssetDef {

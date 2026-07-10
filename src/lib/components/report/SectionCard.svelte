@@ -88,10 +88,10 @@
     <div class="section-score-area">
       {#if showPercent}
         <span class="sec-score">
-          Risk Signal: {section.section_signal_score.toFixed(1)}%
+          Matched alleles: {section.section_signal_score.toFixed(1)}%
         </span>
         <span class="sec-score-hint">
-          (only counts risk-direction markers)
+          (association-direction pack markers only)
         </span>
       {:else if section.summary.all_require_confirmation}
         <span class="sec-score-badge badge-warning" title="High-stakes clinical variants require medical-grade confirmation before assigning raw risk percentages.">

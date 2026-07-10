@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { GeneratedReport, SeverityClass } from '../../types/genomics';
-  import { deriveActionablePlan, type ActionablePlan, type TopFinding, type LabTest, type SupplementItem } from '../../utils/actionabilityEngine';
+  import { deriveActionablePlan, type ActionablePlan, type TopFinding, type LabTest, type LabTestGroup, type SupplementItem } from '../../utils/actionabilityEngine';
 
   interface Props {
     report: GeneratedReport;
@@ -18,8 +18,10 @@
     topFindings: false,
     diet: false,
     supplements: false,
-    labTests: false,
+    labTests: true,
   });
+
+  let expandedLabReasons = $state<Record<string, boolean>>({});
 
   onMount(() => {
     try {
@@ -43,20 +45,49 @@
 
   function getSeverityLabel(sc: SeverityClass): string {
     switch (sc) {
-      case 'high_risk': return 'High Risk';
-      case 'moderate_risk': return 'Moderate Risk';
-      case 'low_risk': return 'Risk (Preliminary)';
-      case 'confirmation_required': return 'Verify Lab';
+      case 'high_risk': return 'Stronger association';
+      case 'moderate_risk': return 'Possible association';
+      case 'low_risk': return 'Preliminary association';
+      case 'confirmation_required': return 'Confirm clinically';
       default: return sc;
     }
   }
 
-  function getUrgencyBadge(urgency: LabTest['urgency']): string {
-    switch (urgency) {
-      case 'urgent': return 'badge-urgent';
-      case 'consider': return 'badge-consider';
-      case 'routine': return 'badge-routine';
+  function getTierBadgeClass(tier: LabTest['tier']): string {
+    switch (tier) {
+      case 'counselor': return 'badge-counselor';
+      case 'discuss': return 'badge-discuss';
+      case 'optional': return 'badge-optional';
     }
+  }
+
+  function getTierChipLabel(tier: LabTest['tier']): string {
+    switch (tier) {
+      case 'counselor': return 'Counselor';
+      case 'discuss': return 'Discuss';
+      case 'optional': return 'Optional';
+    }
+  }
+
+  function labKey(test: LabTest): string {
+    return `${test.tier}:${test.name}`;
+  }
+
+  function toggleLabReason(test: LabTest) {
+    const key = labKey(test);
+    expandedLabReasons = { ...expandedLabReasons, [key]: !expandedLabReasons[key] };
+  }
+
+  function labsByCategory(tests: LabTest[]): { category: string; tests: LabTest[] }[] {
+    const map = new Map<string, LabTest[]>();
+    for (const test of tests) {
+      const list = map.get(test.category) || [];
+      list.push(test);
+      map.set(test.category, list);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([category, categoryTests]) => ({ category, tests: categoryTests }));
   }
 </script>
 
@@ -69,11 +100,11 @@
   </div>
 
   <div class="grid-layout">
-    <!-- Panel 1: Top Concerns / Findings -->
+    <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
     {#if plan.topFindings.length > 0}
-      <div class="summary-card card" class:collapsed={collapsed.topFindings}>
+      <div class="summary-card card card-top-findings" class:collapsed={collapsed.topFindings}>
         <div class="card-header" onclick={() => toggle('topFindings')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('topFindings')}>
-          <h3>⭐ Key Areas of Concern ({plan.topFindings.length})</h3>
+          <h3>⭐ Top {plan.topFindings.length} Areas of Concern</h3>
           <span class="chevron">{collapsed.topFindings ? '▶' : '▼'}</span>
         </div>
         {#if !collapsed.topFindings}
@@ -100,96 +131,120 @@
       </div>
     {/if}
 
-    <!-- Panel 2: Dietary Guidance -->
-    {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0}
-      <div class="summary-card card" class:collapsed={collapsed.diet}>
-        <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('diet')}>
-          <h3>🥗 Dietary Alignment</h3>
-          <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
-        </div>
-        {#if !collapsed.diet}
-          <div class="card-body">
-            <div class="diet-section">
-              {#if plan.diet.favor.length > 0}
-                <div class="diet-column favor">
-                  <h4>👍 Lean Into / Favor</h4>
-                  <ul>
-                    {#each plan.diet.favor as item}
-                      <li>{item}</li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
+    <div class="action-row">
+      <!-- Panel 2: Dietary Guidance -->
+      {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0}
+        <div class="summary-card card" class:collapsed={collapsed.diet}>
+          <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('diet')}>
+            <h3>🥗 Dietary Alignment</h3>
+            <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
+          </div>
+          {#if !collapsed.diet}
+            <div class="card-body">
+              <p class="section-hint">Suggestions come from pack-authored guidance for genes that matched in your report — discuss with a clinician before changing diet.</p>
+              <div class="diet-section">
+                {#if plan.diet.favor.length > 0}
+                  <div class="diet-column favor">
+                    <h4>👍 Lean Into / Favor</h4>
+                    <ul>
+                      {#each plan.diet.favor as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
 
-              {#if plan.diet.avoid.length > 0}
-                <div class="diet-column avoid">
-                  <h4>👎 Limit / Avoid</h4>
-                  <ul>
-                    {#each plan.diet.avoid as item}
-                      <li>{item}</li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
-            </div>
-            {#if plan.diet.notes}
-              <div class="diet-notes">
-                <strong>Notes:</strong>
-                <pre style="white-space: pre-wrap; font-family: inherit; font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.95;">{plan.diet.notes}</pre>
+                {#if plan.diet.avoid.length > 0}
+                  <div class="diet-column avoid">
+                    <h4>👎 Limit / Avoid</h4>
+                    <ul>
+                      {#each plan.diet.avoid as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
               </div>
-            {/if}
-          </div>
-        {/if}
-      </div>
-    {/if}
-
-    <!-- Panel 3: Supplements to Discuss -->
-    {#if plan.supplements.length > 0}
-      <div class="summary-card card" class:collapsed={collapsed.supplements}>
-        <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('supplements')}>
-          <h3>💊 Supplements to Discuss</h3>
-          <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
-        </div>
-        {#if !collapsed.supplements}
-          <div class="card-body">
-            <p class="section-hint">Consult your doctor before starting any supplementation, especially if taking medications.</p>
-            <div class="supplements-list">
-              {#each plan.supplements as s}
-                <div class="supplement-item">
-                  <span class="supp-name">{s.name}</span>
-                  <span class="supp-reason">{s.reason}</span>
+              {#if plan.diet.notes}
+                <div class="diet-notes">
+                  <strong>Notes:</strong>
+                  <pre class="diet-notes-pre">{plan.diet.notes}</pre>
                 </div>
-              {/each}
+              {/if}
             </div>
-          </div>
-        {/if}
-      </div>
-    {/if}
+          {/if}
+        </div>
+      {/if}
 
-    <!-- Panel 4: Suggested Lab Testing -->
+      <!-- Panel 3: Supplements to Discuss -->
+      {#if plan.supplements.length > 0}
+        <div class="summary-card card" class:collapsed={collapsed.supplements}>
+          <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('supplements')}>
+            <h3>💊 Supplements to Discuss</h3>
+            <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
+          </div>
+          {#if !collapsed.supplements}
+            <div class="card-body">
+              <p class="section-hint">Consult your doctor before starting any supplementation, especially if taking medications.</p>
+              <div class="supplements-list">
+                {#each plan.supplements as s}
+                  <div class="supplement-item">
+                    <span class="supp-name">{s.name}</span>
+                    <span class="supp-reason">{s.reason}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
+    <!-- Labs: full-width, grouped & compact (collapsed by default) -->
     {#if plan.labTests.length > 0}
-      <div class="summary-card card" class:collapsed={collapsed.labTests}>
+      <div class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
         <div class="card-header" onclick={() => toggle('labTests')} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && toggle('labTests')}>
-          <h3>🔬 Suggested Lab Panels</h3>
+          <h3>🔬 Lab & screening follow-ups ({plan.labTests.length})</h3>
           <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
         </div>
         {#if !collapsed.labTests}
-          <div class="card-body">
-            <p class="section-hint">Bring these suggestions to your physician to request clinical bloodwork or specialist consults.</p>
-            <div class="lab-list">
-              {#each plan.labTests as lt}
-                <div class="lab-item" class:urgent-row={lt.urgency === 'urgent'}>
-                  <div class="lab-header-row">
-                    <span class="lab-name">{lt.name}</span>
-                    <span class="lab-badge {getUrgencyBadge(lt.urgency)}">
-                      {lt.urgency.toUpperCase()}
-                    </span>
-                    {#if lt.requires_counselor}
-                      <span class="lab-counselor-badge">🧑‍⚕️ Counselor Advised</span>
-                    {/if}
+          <div class="card-body lab-body">
+            <p class="section-hint">Grouped by priority — bring to a clinician; none of these imply an emergency workup unless you have acute symptoms.</p>
+            <div class="lab-tier-stack">
+              {#each plan.labGroups as group}
+                <section class="lab-tier-block">
+                  <div class="lab-tier-header">
+                    <span class="lab-tier-title">{group.label}</span>
+                    <span class="lab-tier-count">{group.tests.length}</span>
                   </div>
-                  <span class="lab-reason">{lt.reason}</span>
-                </div>
+                  <p class="lab-tier-hint">{group.hint}</p>
+                  {#each labsByCategory(group.tests) as { category, tests }}
+                    <div class="lab-category">
+                      <div class="lab-category-label">{category}</div>
+                      <div class="lab-chip-grid">
+                        {#each tests as lt}
+                          <div class="lab-chip" class:lab-chip-counselor={lt.tier === 'counselor'}>
+                            <button
+                              type="button"
+                              class="lab-chip-main"
+                              onclick={() => toggleLabReason(lt)}
+                              aria-expanded={expandedLabReasons[labKey(lt)] ? 'true' : 'false'}
+                            >
+                              <span class="lab-chip-name">{lt.name}</span>
+                              <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
+                              {#if lt.requires_counselor}
+                                <span class="lab-chip-counselor" title="Genetic counselor advised">🧑‍⚕️</span>
+                              {/if}
+                            </button>
+                            {#if expandedLabReasons[labKey(lt)]}
+                              <p class="lab-chip-reason">{lt.reason}</p>
+                            {/if}
+                          </div>
+                        {/each}
+                      </div>
+                    </div>
+                  {/each}
+                </section>
               {/each}
             </div>
           </div>
@@ -227,9 +282,166 @@
   }
 
   .grid-layout {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
+    width: 100%;
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .card-lab-followups {
+    width: 100%;
+  }
+
+  .lab-body {
+    padding-top: 0.65rem;
+  }
+
+  .lab-tier-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .lab-tier-block {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 0.55rem 0.65rem;
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .lab-tier-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .lab-tier-title {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .lab-tier-count {
+    font-size: 0.62rem;
+    font-weight: 700;
+    opacity: 0.65;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .lab-tier-hint {
+    margin: 0.2rem 0 0.45rem;
+    font-size: 0.64rem;
+    opacity: 0.62;
+    line-height: 1.3;
+  }
+
+  .lab-category {
+    margin-top: 0.35rem;
+  }
+
+  .lab-category-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.55;
+    margin-bottom: 0.25rem;
+  }
+
+  .lab-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .lab-chip {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .lab-chip-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    width: 100%;
+    text-align: left;
+    padding: 0.28rem 0.45rem;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .lab-chip-main:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .lab-chip-counselor .lab-chip-main {
+    border-color: rgba(236, 72, 153, 0.25);
+    background: rgba(236, 72, 153, 0.06);
+  }
+
+  .lab-chip-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    line-height: 1.25;
+  }
+
+  .lab-chip-badge {
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 0.04rem 0.28rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .lab-chip-badge.badge-counselor {
+    background: rgba(236, 72, 153, 0.18);
+    color: #f9a8d4;
+  }
+
+  .lab-chip-badge.badge-discuss {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+  }
+
+  .lab-chip-badge.badge-optional {
+    background: rgba(96, 165, 250, 0.15);
+    color: #93c5fd;
+  }
+
+  .lab-chip-counselor {
+    font-size: 0.7rem;
+    line-height: 1;
+  }
+
+  .lab-chip-reason {
+    margin: 0.2rem 0 0 0.15rem;
+    font-size: 0.62rem;
+    opacity: 0.72;
+    line-height: 1.3;
+    max-width: 42rem;
+  }
+
+  .card-top-findings {
+    width: 100%;
   }
 
   .summary-card {
@@ -239,6 +451,7 @@
     overflow: hidden;
     height: fit-content;
     transition: all 0.2s ease;
+    min-width: 0;
   }
   .summary-card:hover {
     border-color: rgba(255, 255, 255, 0.12);
@@ -268,7 +481,7 @@
   }
 
   .card-body {
-    padding: 1rem;
+    padding: 0.85rem 1rem;
   }
 
   .section-hint {
@@ -278,16 +491,15 @@
     font-style: italic;
   }
 
-  /* Key Areas of Concern list */
   .findings-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.85rem;
   }
   .finding-item {
     background: rgba(255, 255, 255, 0.02);
     border-left: 3px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.65rem;
     border-radius: 0 4px 4px 0;
   }
   .finding-meta {
@@ -295,7 +507,7 @@
     align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
   }
   .gene-badge {
     background: rgba(99, 102, 241, 0.15);
@@ -337,11 +549,16 @@
   .finding-desc {
     margin: 0;
     font-size: 0.72rem;
-    line-height: 1.35;
+    line-height: 1.3;
     opacity: 0.9;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .jump-btn {
-    margin-top: 0.3rem;
+    margin-top: 0.2rem;
     padding: 0;
     font-size: 0.65rem;
     opacity: 0.7;
@@ -357,10 +574,9 @@
     text-decoration: underline;
   }
 
-  /* Dietary Alignment */
   .diet-section {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
   .diet-column h4 {
@@ -385,8 +601,14 @@
     font-size: 0.7rem;
     opacity: 0.8;
   }
+  .diet-notes-pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    opacity: 0.95;
+  }
 
-  /* Supplements List */
   .supplements-list {
     display: flex;
     flex-direction: column;
@@ -411,63 +633,15 @@
     margin-top: 0.1rem;
   }
 
-  /* Lab Tests list */
-  .lab-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .lab-item {
-    display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.015);
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    border-left: 2px solid rgba(255, 255, 255, 0.1);
-  }
-  .lab-item.urgent-row {
-    border-left-color: #ef4444;
-  }
-  .lab-header-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-  .lab-name {
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: #e2e8f0;
-  }
-  .lab-badge {
-    font-size: 0.58rem;
-    font-weight: 800;
-    padding: 0.05rem 0.25rem;
-    border-radius: 2px;
-  }
-  .lab-badge.badge-urgent {
-    background: rgba(239, 68, 68, 0.18);
-    color: #f87171;
-  }
-  .lab-badge.badge-consider {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-  }
-  .lab-badge.badge-routine {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-  }
-  .lab-counselor-badge {
-    background: rgba(236, 72, 153, 0.15);
-    color: #f472b6;
-    font-size: 0.58rem;
-    font-weight: 700;
-    padding: 0.05rem 0.25rem;
-    border-radius: 2px;
-  }
-  .lab-reason {
-    font-size: 0.68rem;
-    opacity: 0.75;
-    margin-top: 0.1rem;
+  @media (max-width: 1100px) {
+    .action-row {
+      grid-template-columns: 1fr;
+    }
+    .findings-list {
+      grid-template-columns: 1fr;
+    }
+    .diet-section {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

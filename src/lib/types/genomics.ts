@@ -153,7 +153,10 @@ export interface DbsnpAnnotation {
   ref_allele: string;
   alt_alleles: string[];
   plus_strand_alleles?: string[] | null;
+  /** Release label from allele source (typically gnomAD). */
   source_build?: string | null;
+  /** Explicit provenance — allele/AF chips come from gnomAD cache, not offline dbSNP merge JSON. */
+  allele_source?: string;
 }
 
 export interface PopulationAnnotation {
@@ -294,6 +297,8 @@ export interface GeneratedReport {
   category_links: Record<string, VariantCategoryLink>;
   enrichment: Record<string, VariantEnrichment>;
   sections: EvaluatedSection[];
+  /** Explicit when ClinVar/dbSNP catalogs are missing or empty (never silent). */
+  catalog_warnings?: string[];
 }
 
 export interface ReportPayload {

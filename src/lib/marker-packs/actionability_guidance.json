@@ -1,0 +1,482 @@
+{
+  "name": "Actionability Guidance (Diet, Supplements, Labs)",
+  "version": "1.0.0",
+  "last_updated": "2026-07-10",
+  "type": "support_engine",
+  "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
+  "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. Do not hardcode parallel rules in the UI. Expand by editing this JSON (or adding per-marker lifestyle fields later). Soft genetic context only \u2014 never override allergies, medical diets, or clinician orders (see meal_planning_rules.json).",
+  "disclaimer": "Educational suggestions only. Not medical advice. Confirm with labs and a qualified clinician before changing diet or supplements.",
+  "rules": [
+    {
+      "id": "mthfr_methylation",
+      "genes": [
+        "MTHFR"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients",
+        "core",
+        "metabolic"
+      ],
+      "favor": [
+        "Leafy greens (spinach, kale)",
+        "Lentils & beans",
+        "Organic eggs"
+      ],
+      "avoid": [
+        "Folic acid fortified foods",
+        "Synthetic multivitamins"
+      ],
+      "supplements": [
+        "Methylfolate (L-5-MTHF)",
+        "Methylcobalamin (active B12)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Homocysteine (plasma)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Serum Folate & Vitamin B12",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "apoe_lipid",
+      "genes": [
+        "APOE"
+      ],
+      "interpretation_contains": [
+        "\u03b54",
+        "e4",
+        "APOE4"
+      ],
+      "pack_hints": [
+        "cardiovascular",
+        "longevity_aging_resilience"
+      ],
+      "favor": [
+        "Wild-caught fatty fish (salmon, sardines)",
+        "Walnuts",
+        "Extra virgin olive oil",
+        "High-fiber vegetables"
+      ],
+      "avoid": [
+        "Red meat",
+        "Saturated fats (butter, coconut oil)",
+        "Trans fats"
+      ],
+      "supplements": [
+        "High-potency Omega-3 DHA/EPA",
+        "Vitamin D3 + K2"
+      ],
+      "lab_tests": [
+        {
+          "name": "ApoB (Apolipoprotein B)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Lipid Panel (NMR LipoProfile)",
+          "urgency": "consider"
+        },
+        {
+          "name": "hs-CRP (Inflammation marker)",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "fads_fatty_acids",
+      "genes": [
+        "FADS1",
+        "FADS2"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients",
+        "metabolic"
+      ],
+      "favor": [
+        "Pre-formed DHA/EPA (seafood, fatty fish)",
+        "Algae oil"
+      ],
+      "avoid": [
+        "Industrial seed oils (canola, corn, soy)",
+        "High omega-6 foods"
+      ],
+      "supplements": [
+        "Algae-derived DHA/EPA or high-quality fish oil"
+      ],
+      "lab_tests": [
+        {
+          "name": "Omega-3 Index (red blood cell membrane)",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "hfe_iron",
+      "genes": [
+        "HFE"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients",
+        "core"
+      ],
+      "favor": [
+        "Green tea or black tea with meals (inhibits iron)",
+        "Calcium-rich foods"
+      ],
+      "avoid": [
+        "Red meat",
+        "Iron-fortified cereals",
+        "Vitamin C supplements with meals"
+      ],
+      "supplements": [
+        "Avoid any supplements containing iron"
+      ],
+      "lab_tests": [
+        {
+          "name": "Ferritin & Transferrin Saturation",
+          "urgency": "consider"
+        },
+        {
+          "name": "Total Iron Binding Capacity (TIBC)",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "lactose",
+      "genes": [
+        "LCT",
+        "MCM6"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "core",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "Lactose-free alternatives",
+        "Fermented dairy (kefir, organic Greek yogurt)"
+      ],
+      "avoid": [
+        "Cow milk",
+        "Ice cream",
+        "Soft unaged cheeses"
+      ],
+      "supplements": [
+        "Lactase enzyme (when consuming dairy)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Hydrogen Breath Test (if symptomatic)",
+          "urgency": "routine"
+        }
+      ]
+    },
+    {
+      "id": "aldh2_alcohol",
+      "genes": [
+        "ALDH2"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "core",
+        "metabolic"
+      ],
+      "avoid": [
+        "Alcohol",
+        "Acetaldehyde exposure"
+      ],
+      "supplements": [
+        "N-Acetyl Cysteine (NAC)",
+        "Glutathione precursors"
+      ],
+      "lab_tests": [
+        {
+          "name": "Liver Enzyme Panel (ALT/AST)",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "Acetaldehyde accumulates rapidly \u2014 even minimal alcohol intake elevates esophageal cancer risk"
+    },
+    {
+      "id": "uric_acid",
+      "genes": [
+        "SLC2A9",
+        "ABCG2"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "metabolic",
+        "kidney_fluid_electrolytes"
+      ],
+      "favor": [
+        "Optimal hydration (filtered water)",
+        "Montmorency tart cherry juice",
+        "Low-fat organic dairy"
+      ],
+      "avoid": [
+        "High-purine foods (organ meats, shellfish)",
+        "Beer",
+        "High-fructose corn syrup"
+      ],
+      "supplements": [
+        "Vitamin C (helps promote uric acid excretion)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Serum Uric Acid",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "vdr_vitamin_d",
+      "genes": [
+        "VDR"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients",
+        "bone_growth_mineral_density"
+      ],
+      "favor": [
+        "Wild fish",
+        "Egg yolks",
+        "UV-irradiated mushrooms"
+      ],
+      "supplements": [
+        "Vitamin D3 + Vitamin K2 (to direct calcium to bones)"
+      ],
+      "lab_tests": [
+        {
+          "name": "25-hydroxyvitamin D [25(OH)D]",
+          "urgency": "consider"
+        },
+        {
+          "name": "Ionized Calcium & PTH",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "gst_detox",
+      "genes": [
+        "GSTT1",
+        "GSTM1"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients",
+        "core"
+      ],
+      "favor": [
+        "Cruciferous vegetables (broccoli, brussels sprouts)",
+        "Allium vegetables (garlic, onions)"
+      ],
+      "supplements": [
+        "Sulforaphane / Broccoli sprout extract",
+        "Milk Thistle (Silymarin)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Comprehensive Liver Panel",
+          "urgency": "routine"
+        }
+      ]
+    },
+    {
+      "id": "comt_catechol",
+      "genes": [
+        "COMT"
+      ],
+      "interpretation_contains": [
+        "Met/Met",
+        "slow COMT",
+        "AA"
+      ],
+      "pack_hints": [
+        "neuropsych",
+        "pain_migraine_sensory"
+      ],
+      "favor": [
+        "Magnesium-rich foods (pumpkin seeds, dark chocolate)",
+        "Cruciferous vegetables"
+      ],
+      "avoid": [
+        "Excessive caffeine",
+        "Chronic sleep deprivation",
+        "High-stress environments"
+      ],
+      "supplements": [
+        "Magnesium Glycinate",
+        "L-Theanine (calming support)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Salivary Cortisol Rhythm (4-point)",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "cyp1a2_caffeine",
+      "genes": [
+        "CYP1A2"
+      ],
+      "interpretation_contains": [
+        "slow metabolizer",
+        "slow caffeine"
+      ],
+      "pack_hints": [
+        "core",
+        "pgx"
+      ],
+      "avoid": [
+        "Caffeine after 12:00 PM",
+        "High-dose caffeine stimulants"
+      ],
+      "notes": "Slow caffeine clearance increases arterial stiffness and cardiovascular risk when consuming >200mg daily"
+    },
+    {
+      "id": "nos3_nitric_oxide",
+      "genes": [
+        "NOS3"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "cardiovascular"
+      ],
+      "favor": [
+        "Beetroot / Beet juice",
+        "Arugula & leafy spinach",
+        "Pomegranates"
+      ],
+      "supplements": [
+        "L-Citrulline or L-Arginine",
+        "Nitric Oxide support"
+      ],
+      "lab_tests": [
+        {
+          "name": "Cardiovascular Risk Panel / Blood Pressure",
+          "urgency": "consider"
+        }
+      ]
+    },
+    {
+      "id": "gpx1_selenium",
+      "genes": [
+        "GPX1"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk"
+      ],
+      "pack_hints": [
+        "nutrients"
+      ],
+      "favor": [
+        "Brazil nuts (1-2 daily)",
+        "Seafood",
+        "Sunflower seeds"
+      ],
+      "supplements": [
+        "Selenium (L-selenomethionine)"
+      ],
+      "lab_tests": [
+        {
+          "name": "Selenium level (blood)",
+          "urgency": "routine"
+        }
+      ]
+    },
+    {
+      "id": "brca_confirmation",
+      "genes": [
+        "BRCA1",
+        "BRCA2"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "confirmation_required"
+      ],
+      "pack_hints": [
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical BRCA1/2 NGS Confirmation Panel",
+          "urgency": "urgent",
+          "requires_counselor": true
+        },
+        {
+          "name": "Breast MRI / Mammography Referral",
+          "urgency": "urgent",
+          "requires_counselor": true
+        }
+      ],
+      "notes": "Requires professional genetic counseling support."
+    },
+    {
+      "id": "lynch_confirmation",
+      "genes": [
+        "MLH1",
+        "MSH2",
+        "MSH6",
+        "PMS2"
+      ],
+      "severity_classes": [
+        "high_risk",
+        "confirmation_required"
+      ],
+      "pack_hints": [
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical Lynch Syndrome NGS Confirmation Panel",
+          "urgency": "urgent",
+          "requires_counselor": true
+        },
+        {
+          "name": "Colonoscopy Screening Referral",
+          "urgency": "urgent",
+          "requires_counselor": true
+        }
+      ],
+      "notes": "Requires professional genetic counseling support."
+    }
+  ]
+}

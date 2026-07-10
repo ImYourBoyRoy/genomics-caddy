@@ -7,6 +7,7 @@ and serves lookups before live APIs during enrichment sweeps.
 
 pub mod commands;
 pub mod compress;
+pub mod discovery_export;
 pub mod lookup;
 pub mod manifest;
 pub mod schema;
@@ -25,5 +26,6 @@ pub use lookup::*;
 pub use manifest::{OfflineAssetId, OfflineAssetStatus, OfflineTierStatus};
 pub use sync::{
     OfflineIndexedSummary, OfflineSyncResult, OfflineUpdateCheck, build_tier2_for_sample,
-    check_offline_updates, sync_all_missing, sync_offline_tier, sync_single_asset,
+    cancel_offline_import, check_offline_updates, reset_offline_import_cancel, sync_all_missing,
+    sync_offline_tier, sync_single_asset,
 };

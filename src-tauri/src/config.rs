@@ -252,21 +252,29 @@ pub fn load_qdrant_config_for_ui(conn: &Connection) -> Result<QdrantConfigPublic
         ncbi_api_key_set: full.ncbi_api_key.is_some(),
         research_scope,
         named_vectors_enabled: full.named_vectors_enabled,
+        vector_provider: full.vector_provider,
+        namespace: full.namespace,
     })
 }
 
 /// Load merged Qdrant settings: non-secrets from SQLite, secrets from keyring then `.env`.
 pub fn load_qdrant_config(conn: &Connection) -> Result<QdrantConfig, String> {
-    let (url, collection, embedding_model, gwas_strict, auto_start, named_vectors_enabled): (
-        String,
-        String,
-        String,
-        bool,
-        bool,
-        bool,
-    ) = conn
+    let (
+        url,
+        collection,
+        embedding_model,
+        gwas_strict,
+        auto_start,
+        named_vectors_enabled,
+        vector_provider,
+        namespace,
+    ): (String, String, String, bool, bool, bool, String, String) = conn
         .query_row(
-            "SELECT url, collection, embedding_model, gwas_strict, auto_start, COALESCE(named_vectors_enabled, 0) FROM qdrant_config WHERE id = 1",
+            "SELECT url, collection, embedding_model, gwas_strict, auto_start,
+                    COALESCE(named_vectors_enabled, 0),
+                    COALESCE(vector_provider, 'qdrant'),
+                    COALESCE(namespace, '')
+             FROM qdrant_config WHERE id = 1",
             [],
             |row| {
                 Ok((
@@ -276,6 +284,8 @@ pub fn load_qdrant_config(conn: &Connection) -> Result<QdrantConfig, String> {
                     row.get::<_, i32>(3)? != 0,
                     row.get::<_, i32>(4)? != 0,
                     row.get::<_, i32>(5)? != 0,
+                    row.get(6)?,
+                    row.get(7)?,
                 ))
             },
         )
@@ -294,15 +304,27 @@ pub fn load_qdrant_config(conn: &Connection) -> Result<QdrantConfig, String> {
         collection
     };
 
+    let vector_provider = {
+        let p = vector_provider.trim().to_ascii_lowercase();
+        if p.is_empty() {
+            "qdrant".into()
+        } else {
+            p
+        }
+    };
+
     Ok(QdrantConfig {
         url,
-        api_key: resolve_secret(SECRET_QDRANT_API_KEY, "QDRANT_API_KEY"),
+        api_key: resolve_secret(SECRET_QDRANT_API_KEY, "QDRANT_API_KEY")
+            .or_else(|| resolve_secret(SECRET_QDRANT_API_KEY, "PINECONE_API_KEY")),
         collection,
         embedding_model,
         gwas_strict,
         ncbi_api_key: resolve_secret(SECRET_NCBI_API_KEY, "NCBI_API_KEY"),
         auto_start,
         named_vectors_enabled,
+        vector_provider,
+        namespace,
     })
 }
 
@@ -340,10 +362,59 @@ pub fn save_qdrant_config(conn: &Connection, update: &QdrantConfigUpdate) -> Res
         .unwrap_or(false)
     });
 
+    let provider = if let Some(raw) = update.vector_provider.as_deref() {
+        let p = raw.trim().to_ascii_lowercase();
+        if p.is_empty() {
+            conn.query_row(
+                "SELECT COALESCE(vector_provider, 'qdrant') FROM qdrant_config WHERE id = 1",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .unwrap_or_else(|_| "qdrant".into())
+        } else {
+            p
+        }
+    } else {
+        conn.query_row(
+            "SELECT COALESCE(vector_provider, 'qdrant') FROM qdrant_config WHERE id = 1",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .unwrap_or_else(|_| "qdrant".into())
+    };
+    let allowed = ["qdrant", "pinecone", "chroma", "weaviate"];
+    if !allowed.contains(&provider.as_str()) {
+        return Err(format!(
+            "Unsupported vector provider '{provider}'. Use one of: {}",
+            allowed.join(", ")
+        ));
+    }
+
+    let namespace = if let Some(ns) = update.namespace.as_deref() {
+        ns.trim().to_string()
+    } else {
+        conn.query_row(
+            "SELECT COALESCE(namespace, '') FROM qdrant_config WHERE id = 1",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .unwrap_or_default()
+    };
+
     let qdrant_url = validate_service_url(&update.url)?;
 
+    // Ensure columns exist on older DBs.
+    let _ = conn.execute(
+        "ALTER TABLE qdrant_config ADD COLUMN vector_provider TEXT NOT NULL DEFAULT 'qdrant'",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE qdrant_config ADD COLUMN namespace TEXT NOT NULL DEFAULT ''",
+        [],
+    );
+
     conn.execute(
-        "UPDATE qdrant_config SET url=?1, api_key=NULL, collection=?2, embedding_model=?3, gwas_strict=?4, ncbi_api_key=NULL, auto_start=?5, named_vectors_enabled=?6 WHERE id=1",
+        "UPDATE qdrant_config SET url=?1, api_key=NULL, collection=?2, embedding_model=?3, gwas_strict=?4, ncbi_api_key=NULL, auto_start=?5, named_vectors_enabled=?6, vector_provider=?7, namespace=?8 WHERE id=1",
         params![
             qdrant_url,
             update.collection.trim(),
@@ -351,6 +422,8 @@ pub fn save_qdrant_config(conn: &Connection, update: &QdrantConfigUpdate) -> Res
             update.gwas_strict as i32,
             update.auto_start as i32,
             named_vectors as i32,
+            provider,
+            namespace,
         ],
     )
     .map_err(|e| e.to_string())?;

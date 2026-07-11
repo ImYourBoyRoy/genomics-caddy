@@ -15,11 +15,12 @@ pub const NAMED_ACTIONABILITY: &str = "actionability_dense";
 
 pub fn named_vectors_enabled(config: &QdrantConfig) -> bool {
     config.named_vectors_enabled
+        && config.vector_provider.trim().eq_ignore_ascii_case("qdrant")
 }
 
 /// Route semantic queries to the best named vector space when the collection supports it.
 pub fn query_vector_name_for_text(query: &str, config: &QdrantConfig) -> Option<&'static str> {
-    if !config.named_vectors_enabled {
+    if !named_vectors_enabled(config) {
         return None;
     }
     let q = query.to_lowercase();
@@ -279,6 +280,8 @@ mod tests {
             ncbi_api_key: None,
             auto_start: false,
             named_vectors_enabled: enabled,
+            vector_provider: "qdrant".into(),
+            namespace: String::new(),
         }
     }
 

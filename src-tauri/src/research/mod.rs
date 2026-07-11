@@ -28,6 +28,7 @@ mod sweep_runtime;
 mod tuning;
 mod types;
 pub(crate) mod util;
+pub(crate) mod vector_store;
 
 pub use commands::*;
 pub use types::*;

@@ -1,13 +1,14 @@
 <!-- ./src/lib/components/settings/ConnectionsPanel.svelte -->
 <script lang="ts">
   /*
-  Purpose: Advanced Connections hub for Ollama + vector DB (UI-saved wins over .env).
-  Responsibilities: endpoints, localhost reset, missing-service probes, model pull/delete/update,
-  version checks, experimental non-Qdrant health probes.
+  Purpose: Advanced Connections hub for Ollama + multi-provider vector DB.
+  Responsibilities: endpoints, localhost reset, provider capability matrix,
+  model Install / Update / Update all with progress, Ollama library links.
   */
 
   import { onMount, onDestroy } from "svelte";
   import { listen } from "@tauri-apps/api/event";
+  import { openUrl } from "@tauri-apps/plugin-opener";
   import {
     checkOllamaUpdate,
     checkQdrantUpdate,
@@ -49,6 +50,78 @@
     onOllamaTokenChange?: (token: string) => void;
   }
 
+  type VectorProviderId = "qdrant" | "pinecone" | "chroma" | "weaviate";
+
+  const OLLAMA_LIBRARY_URL = "https://ollama.com/library";
+  const OLLAMA_SEARCH_URL = "https://ollama.com/search";
+  const SUGGESTED_EMBED = ["mxbai-embed-large", "nomic-embed-text", "bge-m3"];
+  const SUGGESTED_CHAT = ["qwen2.5:14b", "llama3.2", "mistral"];
+
+  const PROVIDER_META: Record<
+    VectorProviderId,
+    {
+      label: string;
+      urlLabel: string;
+      urlPlaceholder: string;
+      collectionLabel: string;
+      collectionHint: string;
+      needsCollection: boolean;
+      needsApiKey: boolean;
+      dense: boolean;
+      namedVectors: boolean;
+      hosting: string;
+    }
+  > = {
+    qdrant: {
+      label: "Qdrant",
+      urlLabel: "Qdrant URL",
+      urlPlaceholder: "http://192.168.1.21:6333 or http://127.0.0.1:6333",
+      collectionLabel: "Collection",
+      collectionHint: "Existing collection name (created from Research or Connections).",
+      needsCollection: true,
+      needsApiKey: false,
+      dense: true,
+      namedVectors: true,
+      hosting: "Self-host / LAN / cloud. Full research: dense + named vectors + payload indexes.",
+    },
+    pinecone: {
+      label: "Pinecone",
+      urlLabel: "Pinecone index host",
+      urlPlaceholder: "https://….svc.…pinecone.io",
+      collectionLabel: "Index label (optional)",
+      collectionHint: "Index is selected by the host URL. Optional label for your notes.",
+      needsCollection: false,
+      needsApiKey: true,
+      dense: true,
+      namedVectors: false,
+      hosting: "Managed cloud. Dense research sweeps and semantic search supported.",
+    },
+    chroma: {
+      label: "Chroma",
+      urlLabel: "Chroma URL",
+      urlPlaceholder: "http://127.0.0.1:8000",
+      collectionLabel: "Collection",
+      collectionHint: "Chroma collection name for genomics evidence vectors.",
+      needsCollection: true,
+      needsApiKey: false,
+      dense: true,
+      namedVectors: false,
+      hosting: "Self-host or cloud. Dense research path (no named vectors).",
+    },
+    weaviate: {
+      label: "Weaviate",
+      urlLabel: "Weaviate URL",
+      urlPlaceholder: "http://127.0.0.1:8080",
+      collectionLabel: "Class name",
+      collectionHint: "Weaviate class (e.g. GenomicsEvidence). Created on ensure if missing.",
+      needsCollection: true,
+      needsApiKey: false,
+      dense: true,
+      namedVectors: false,
+      hosting: "Self-host or cloud. Dense research path (no named vectors).",
+    },
+  };
+
   let {
     ollamaUrl = $bindable(""),
     ollamaToken = $bindable(""),
@@ -61,8 +134,9 @@
   let collection = $state("");
   let embedModel = $state("");
   let apiKey = $state("");
+  let namespace = $state("");
   let namedVectors = $state(false);
-  let vectorProvider = $state<"qdrant" | "chroma" | "weaviate" | "milvus">("qdrant");
+  let vectorProvider = $state<VectorProviderId>("qdrant");
 
   let qdrantStatus = $state<QdrantConnectionStatus | null>(null);
   let ollamaStatus = $state<"untested" | "testing" | "live" | "dead">("untested");
@@ -75,15 +149,18 @@
   let errorMsg = $state("");
   let pullName = $state("");
   let pullProgress = $state("");
+  let updateAllProgress = $state<{ current: number; total: number; model: string } | null>(null);
   let ollamaUpdate = $state<ServiceUpdateCheck | null>(null);
   let qdrantUpdate = $state<ServiceUpdateCheck | null>(null);
-  let providerProbe = $state<string>("");
+  let providerProbe = $state("");
   let monitorTimer: ReturnType<typeof setInterval> | null = null;
   let unlistenPull: (() => void) | null = null;
 
+  let providerMeta = $derived(PROVIDER_META[vectorProvider]);
   let embedModels = $derived(models.filter((m) => m.role === "embed" || isEmbedModel(m.name)));
+  let chatModels = $derived(models.filter((m) => m.role !== "embed" && !isEmbedModel(m.name)));
   let needsSetup = $derived(!ollamaUrl.trim() && !qdrantUrl.trim());
-  let researchReady = $derived(vectorProvider === "qdrant");
+  let researchReady = $derived(providerMeta.dense);
   let usingLocalhost = $derived(
     ollamaUrl.trim().includes("127.0.0.1") ||
       ollamaUrl.trim().includes("localhost") ||
@@ -93,7 +170,7 @@
   let showLocalhostMissing = $derived(
     usingLocalhost &&
       !!localhost &&
-      (!localhost.ollama_reachable || !localhost.qdrant_reachable)
+      (!localhost.ollama_reachable || (vectorProvider === "qdrant" && !localhost.qdrant_reachable))
   );
 
   function fmtGiB(bytes?: number | null): string {
@@ -116,6 +193,24 @@
     }
   }
 
+  function parseProvider(raw?: string | null): VectorProviderId {
+    const p = (raw || "qdrant").trim().toLowerCase();
+    if (p === "pinecone" || p === "chroma" || p === "weaviate") return p;
+    return "qdrant";
+  }
+
+  async function openExternal(url: string) {
+    try {
+      await openUrl(url);
+    } catch {
+      try {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
   async function loadSaved() {
     try {
       const [cfg, url, svc] = await Promise.all([
@@ -128,6 +223,8 @@
       collection = cfg.collection || "";
       embedModel = cfg.embedding_model || "";
       namedVectors = !!cfg.named_vectors_enabled;
+      namespace = cfg.namespace || "";
+      vectorProvider = parseProvider(cfg.vector_provider);
       ollamaUrl = url;
       onOllamaUrlChange?.(url);
       envOllamaHint = svc?.env_url?.trim() || null;
@@ -166,40 +263,42 @@
     }
   }
 
-  async function refreshQdrant(explicit = false) {
+  async function refreshVector(explicit = false) {
     const url = qdrantUrl.trim();
     if (!url) {
       qdrantStatus = null;
       return;
     }
-    if (vectorProvider !== "qdrant") {
+    if (vectorProvider === "qdrant") {
       try {
-        const probe = await probeVectorProvider(vectorProvider, url, apiKey.trim() || undefined);
-        providerProbe = probe.note || (probe.reachable ? "Reachable" : "Unreachable");
-        qdrantStatus = {
-          success: !!probe.reachable,
-          collection_exists: false,
-          error: probe.reachable ? undefined : providerProbe,
-        };
+        qdrantStatus = await withInvokeTimeout(
+          testQdrantConnection(url, apiKey.trim() || undefined, collection.trim() || undefined),
+          connectionCheckTimeoutMs(url, explicit),
+          "Qdrant check"
+        );
+        providerProbe = "";
       } catch (e: any) {
-        providerProbe = e?.message || String(e);
-        qdrantStatus = { success: false, collection_exists: false, error: providerProbe };
+        qdrantStatus = {
+          success: false,
+          collection_exists: false,
+          error: e?.message || String(e),
+        };
       }
       return;
     }
     try {
-      qdrantStatus = await withInvokeTimeout(
-        testQdrantConnection(url, apiKey.trim() || undefined, collection.trim() || undefined),
-        connectionCheckTimeoutMs(url, explicit),
-        "Qdrant check"
-      );
-      providerProbe = "";
-    } catch (e: any) {
+      const probe = await probeVectorProvider(vectorProvider, url, apiKey.trim() || undefined);
+      providerProbe = String(probe.note || (probe.reachable ? "Reachable" : "Unreachable"));
       qdrantStatus = {
-        success: false,
-        collection_exists: false,
-        error: e?.message || String(e),
+        success: !!probe.reachable,
+        collection_exists: !!probe.collection_exists,
+        vectors_count: typeof probe.vectors_count === "number" ? probe.vectors_count : undefined,
+        collections: Array.isArray(probe.collections) ? (probe.collections as string[]) : undefined,
+        error: probe.reachable ? undefined : providerProbe,
       };
+    } catch (e: any) {
+      providerProbe = e?.message || String(e);
+      qdrantStatus = { success: false, collection_exists: false, error: providerProbe };
     }
   }
 
@@ -209,7 +308,7 @@
     if (explicit) errorMsg = "";
     try {
       host = await probeInferenceHost(ollamaUrl.trim() || undefined);
-      await Promise.all([refreshOllamaDiscovery(explicit), refreshQdrant(explicit), refreshLocalhost()]);
+      await Promise.all([refreshOllamaDiscovery(explicit), refreshVector(explicit), refreshLocalhost()]);
     } finally {
       busy = false;
     }
@@ -221,20 +320,26 @@
     errorMsg = "";
     try {
       if (!qdrantUrl.trim()) throw new Error("Set a vector DB URL before saving.");
-      if (vectorProvider === "qdrant" && !collection.trim()) {
-        throw new Error("Set a Qdrant collection name before saving.");
+      if (providerMeta.needsCollection && !collection.trim()) {
+        throw new Error(`Set a ${providerMeta.collectionLabel.toLowerCase()} before saving.`);
       }
-      if (vectorProvider === "qdrant") {
-        await saveQdrantConfig({
-          url: qdrantUrl.trim(),
-          collection: collection.trim(),
-          embedding_model: embedModel.trim(),
-          gwas_strict: config.gwas_strict,
-          auto_start: config.auto_start,
-          named_vectors_enabled: namedVectors,
-          ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
-        });
+      if (providerMeta.needsApiKey && !apiKey.trim() && !config.api_key_set) {
+        throw new Error(`${providerMeta.label} requires an API key.`);
       }
+      if (vectorProvider !== "qdrant") {
+        namedVectors = false;
+      }
+      await saveQdrantConfig({
+        url: qdrantUrl.trim(),
+        collection: collection.trim() || "genomics_evidence",
+        embedding_model: embedModel.trim(),
+        gwas_strict: config.gwas_strict,
+        auto_start: config.auto_start,
+        named_vectors_enabled: namedVectors,
+        vector_provider: vectorProvider,
+        namespace: namespace.trim(),
+        ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
+      });
       await persistOllamaUrl(ollamaUrl.trim());
       await saveOllamaToken(ollamaToken.trim() || undefined);
       onOllamaUrlChange?.(ollamaUrl.trim());
@@ -255,6 +360,7 @@
     ollamaUrl = LOCAL_OLLAMA_URL;
     qdrantUrl = LOCAL_QDRANT_URL;
     vectorProvider = "qdrant";
+    namespace = "";
     await refreshLocalhost();
     if (localhost && (!localhost.ollama_reachable || !localhost.qdrant_reachable)) {
       errorMsg = [
@@ -296,6 +402,39 @@
       pullProgress = "";
       busy = false;
     }
+  }
+
+  async function handleUpdateAll() {
+    if (!ollamaUrl.trim() || models.length === 0) return;
+    if (
+      !confirm(
+        `Re-pull all ${models.length} models from the Ollama registry? This can take a while and will stream progress per model.`
+      )
+    ) {
+      return;
+    }
+    busy = true;
+    errorMsg = "";
+    const list = models.map((m) => m.name);
+    let failed = 0;
+    for (let i = 0; i < list.length; i++) {
+      const model = list[i];
+      updateAllProgress = { current: i + 1, total: list.length, model };
+      pullProgress = `Updating ${i + 1}/${list.length}: ${model}`;
+      try {
+        await pullOllamaModel(ollamaUrl.trim(), model, ollamaToken || undefined);
+      } catch (e: any) {
+        failed += 1;
+        errorMsg = `Failed on ${model}: ${e?.message || String(e)}`;
+      }
+    }
+    updateAllProgress = null;
+    pullProgress =
+      failed === 0
+        ? `Updated all ${list.length} models`
+        : `Finished with ${failed} failure(s) of ${list.length}`;
+    busy = false;
+    await refreshOllamaDiscovery(true);
   }
 
   async function handleDelete(name: string) {
@@ -343,13 +482,16 @@
     void (async () => {
       unlistenPull = await listen<Record<string, unknown>>("ollama:pull_progress", (ev) => {
         const s = ev.payload?.status;
+        const model = ev.payload?.model;
         const completed = ev.payload?.completed;
         const total = ev.payload?.total;
+        const modelLabel = typeof model === "string" && model ? `${model}: ` : "";
         if (typeof s === "string") {
-          pullProgress =
+          const pct =
             completed && total
-              ? `${s} (${Math.round((Number(completed) / Number(total)) * 100)}%)`
-              : String(s);
+              ? ` (${Math.round((Number(completed) / Number(total)) * 100)}%)`
+              : "";
+          pullProgress = `${modelLabel}${s}${pct}`;
         }
       });
       await loadSaved();
@@ -370,7 +512,8 @@
       <p class="connections-kicker">Advanced · Connections</p>
       <h3 id="connections-title">Ollama &amp; vector database</h3>
       <p class="connections-lead">
-        Saved settings in the app win over <code>.env</code>. Use localhost reset for a local stack, or point at LAN / Tailscale hosts.
+        Saved settings in the app win over <code>.env</code>. Point Ollama and your vector store at
+        localhost, LAN (e.g. a home server), Tailscale, or cloud — Qdrant is not required.
       </p>
     </div>
     <div class="connections-actions hero-actions">
@@ -394,7 +537,10 @@
 
   {#if envOllamaHint}
     <div class="connections-banner warn">
-      <span><code>.env</code> has a different Ollama URL: <code>{envOllamaHint}</code> (not applied — your saved setting wins).</span>
+      <span
+        ><code>.env</code> has a different Ollama URL: <code>{envOllamaHint}</code> (not applied — your
+        saved setting wins).</span
+      >
       <button type="button" class="btn btn-secondary btn-xs" onclick={adoptEnvOllama}>Adopt .env</button>
     </div>
   {/if}
@@ -404,8 +550,10 @@
       <div>
         <strong>Localhost check:</strong>
         {#if localhost && !localhost.ollama_reachable}Ollama missing on {LOCAL_OLLAMA_URL}. {/if}
-        {#if localhost && !localhost.qdrant_reachable}Qdrant missing on {LOCAL_QDRANT_URL}. {/if}
-        Point Connections at a remote host, or install/start the missing service.
+        {#if vectorProvider === "qdrant" && localhost && !localhost.qdrant_reachable}
+          Qdrant missing on {LOCAL_QDRANT_URL}.
+        {/if}
+        Point Connections at a remote/LAN host, or install/start the missing service.
       </div>
     </div>
   {/if}
@@ -417,7 +565,8 @@
   <div class="conn-status-row">
     <span class="conn-pill {ollamaStatus}">Ollama · {ollamaStatus}</span>
     <span class="conn-pill {qdrantStatus?.success ? 'live' : qdrantStatus ? 'dead' : 'untested'}">
-      {vectorProvider} · {qdrantStatus?.success ? "live" : qdrantStatus ? "dead" : "untested"}
+      {providerMeta.label} · {qdrantStatus?.success ? "live" : qdrantStatus ? "dead" : "untested"}
+      {#if qdrantStatus?.collection_exists} · index ready{/if}
     </span>
     {#if saveMsg}<span class="conn-pill live">{saveMsg}</span>{/if}
     {#if pullProgress}<span class="conn-pill testing">{pullProgress}</span>{/if}
@@ -425,131 +574,238 @@
 
   <div class="connections-grid">
     <div class="connections-card">
-      <h4>Endpoints</h4>
-      <div class="field">
-        <label for="conn-provider">Vector provider</label>
-        <select id="conn-provider" bind:value={vectorProvider}>
-          <option value="qdrant">Qdrant (full research support)</option>
-          <option value="chroma">Chroma (health probe only)</option>
-          <option value="weaviate">Weaviate (health probe only)</option>
-          <option value="milvus">Milvus (experimental)</option>
-        </select>
-        {#if !researchReady}
-          <p class="field-hint">Research sweeps still require Qdrant. Other providers are for connectivity checks while we expand support.</p>
-        {/if}
-      </div>
+      <h4>1 · Inference (Ollama)</h4>
+      <p class="field-hint">
+        Models come from the Ollama registry on the host you point at — not from this app’s install.
+      </p>
       <div class="field">
         <label for="conn-ollama-url">Ollama URL</label>
-        <input id="conn-ollama-url" type="url" bind:value={ollamaUrl} placeholder={OLLAMA_URL_PLACEHOLDER} autocomplete="off" />
+        <input
+          id="conn-ollama-url"
+          type="url"
+          bind:value={ollamaUrl}
+          placeholder={OLLAMA_URL_PLACEHOLDER}
+          autocomplete="off"
+        />
       </div>
       <div class="field">
         <label for="conn-ollama-token">Ollama token (optional)</label>
         <input id="conn-ollama-token" type="password" bind:value={ollamaToken} placeholder="Bearer …" />
       </div>
       <div class="field">
-        <label for="conn-qdrant-url">{vectorProvider === "qdrant" ? "Qdrant URL" : `${vectorProvider} URL`}</label>
-        <input id="conn-qdrant-url" type="url" bind:value={qdrantUrl} placeholder="e.g. http://127.0.0.1:6333" autocomplete="off" />
+        <label for="conn-embed">Default embedding model</label>
+        <select id="conn-embed" bind:value={embedModel}>
+          {#if embedModel && !embedModels.some((m) => m.name === embedModel)}
+            <option value={embedModel}>{embedModel}</option>
+          {/if}
+          {#each embedModels as m}
+            <option value={m.name}>{m.name} · {m.load_hint}</option>
+          {/each}
+        </select>
+        <p class="field-hint">Used for research vector indexing. Pick an embed-capable tag.</p>
+      </div>
+    </div>
+
+    <div class="connections-card">
+      <h4>2 · Vector store</h4>
+      <div class="field">
+        <label for="conn-provider">Provider</label>
+        <select id="conn-provider" bind:value={vectorProvider}>
+          {#each Object.entries(PROVIDER_META) as [id, meta]}
+            <option value={id}>{meta.label}{meta.namedVectors ? " · full" : " · dense"}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div class="capability-row" aria-label="Provider capabilities">
+        <span class="cap-chip {providerMeta.dense ? 'on' : 'off'}">Dense research</span>
+        <span class="cap-chip {providerMeta.namedVectors ? 'on' : 'off'}">Named vectors</span>
+        <span class="cap-chip {vectorProvider === 'qdrant' ? 'on' : 'off'}">Payload indexes</span>
+      </div>
+      <p class="field-hint">{providerMeta.hosting}</p>
+
+      <div class="field">
+        <label for="conn-qdrant-url">{providerMeta.urlLabel}</label>
+        <input
+          id="conn-qdrant-url"
+          type="url"
+          bind:value={qdrantUrl}
+          placeholder={providerMeta.urlPlaceholder}
+          autocomplete="off"
+        />
       </div>
       <div class="field">
-        <label for="conn-qdrant-key">API key (optional)</label>
-        <input id="conn-qdrant-key" type="password" bind:value={apiKey} placeholder={config.api_key_set ? "•••• (keep existing)" : "API key"} />
+        <label for="conn-qdrant-key">API key {providerMeta.needsApiKey ? "(required)" : "(optional)"}</label>
+        <input
+          id="conn-qdrant-key"
+          type="password"
+          bind:value={apiKey}
+          placeholder={config.api_key_set ? "•••• (keep existing)" : "API key"}
+        />
       </div>
-      {#if vectorProvider === "qdrant"}
+      {#if providerMeta.needsCollection || vectorProvider === "pinecone"}
         <div class="field">
-          <label for="conn-collection">Collection</label>
-          <input id="conn-collection" type="text" bind:value={collection} placeholder="collection_name" list="conn-collections" />
+          <label for="conn-collection">{providerMeta.collectionLabel}</label>
+          <input
+            id="conn-collection"
+            type="text"
+            bind:value={collection}
+            placeholder="genomics_evidence"
+            list="conn-collections"
+          />
           <datalist id="conn-collections">
             {#each qdrantStatus?.collections ?? [] as name}
               <option value={name}>{name}</option>
             {/each}
           </datalist>
+          <p class="field-hint">{providerMeta.collectionHint}</p>
         </div>
+      {/if}
+      {#if vectorProvider === "pinecone"}
         <div class="field">
-          <label for="conn-embed">Embedding model</label>
-          <select id="conn-embed" bind:value={embedModel}>
-            {#if embedModel && !embedModels.some((m) => m.name === embedModel)}
-              <option value={embedModel}>{embedModel}</option>
-            {/if}
-            {#each embedModels as m}
-              <option value={m.name}>{m.name} · {m.load_hint}</option>
-            {/each}
-          </select>
+          <label for="conn-namespace">Namespace</label>
+          <input id="conn-namespace" type="text" bind:value={namespace} placeholder="__default__ or sample scope" />
+          <p class="field-hint">Pinecone namespace for upserts/queries. Empty uses <code>__default__</code>.</p>
         </div>
+      {/if}
+      {#if vectorProvider === "qdrant"}
         <label class="check-row">
           <input type="checkbox" bind:checked={namedVectors} />
-          <span>Enable named vectors</span>
+          <span>Enable named vectors (Qdrant-only multi-space indexing)</span>
         </label>
       {/if}
       {#if providerProbe}
         <p class="field-hint">{providerProbe}</p>
       {/if}
-    </div>
-
-    <div class="connections-card">
-      <h4>Host posture</h4>
-      {#if host}
-        <div class="host-meta">
-          <span class="host-chip">{host.platform}/{host.arch}</span>
-          <span class="host-chip">{postureLabel(host.posture)}</span>
-          {#each host.accel_backends as b}
-            <span class="host-chip">{b}</span>
-          {/each}
-          <span class="host-chip">accel {fmtGiB(host.accel_bytes)}</span>
-          <span class="host-chip">VRAM in use {fmtGiB(host.observed_vram_in_use_bytes)}</span>
-        </div>
-        <ul class="host-notes">
-          {#each host.notes.slice(0, 5) as note}
-            <li>{note}</li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="connections-lead">Probe pending…</p>
-      {/if}
-
-      <h4 class="subhead">Service versions</h4>
-      <div class="connections-actions">
-        <button type="button" class="btn btn-secondary btn-sm" onclick={handleCheckUpdates} disabled={busy}>
-          Check for updates
-        </button>
-      </div>
-      {#if ollamaUpdate}
-        <div class="update-box">
-          <strong>
-            Ollama {ollamaUpdate.installed_version || "?"}
-            {#if ollamaUpdate.latest_version}
-              · latest {ollamaUpdate.latest_version}
-              {#if ollamaUpdate.update_available} (update available){/if}
-            {/if}
-          </strong>
-          <ul class="host-notes">
-            {#each ollamaUpdate.notes as n}<li>{n}</li>{/each}
-          </ul>
-        </div>
-      {/if}
-      {#if qdrantUpdate}
-        <div class="update-box">
-          <strong>
-            Qdrant {qdrantUpdate.installed_version || "?"}
-            {#if qdrantUpdate.latest_version}
-              · latest {qdrantUpdate.latest_version}
-              {#if qdrantUpdate.update_available} (update available){/if}
-            {/if}
-          </strong>
-          <ul class="host-notes">
-            {#each qdrantUpdate.notes as n}<li>{n}</li>{/each}
-          </ul>
-        </div>
+      {#if !researchReady}
+        <p class="field-hint warn-text">This provider does not support research sweeps yet.</p>
       {/if}
     </div>
   </div>
 
   <div class="connections-card">
-    <h4>Ollama models</h4>
+    <h4>Host posture &amp; service versions</h4>
+    {#if host}
+      <div class="host-meta">
+        <span class="host-chip">{host.platform}/{host.arch}</span>
+        <span class="host-chip">{postureLabel(host.posture)}</span>
+        {#each host.accel_backends as b}
+          <span class="host-chip">{b}</span>
+        {/each}
+        <span class="host-chip">accel {fmtGiB(host.accel_bytes)}</span>
+        <span class="host-chip">VRAM in use {fmtGiB(host.observed_vram_in_use_bytes)}</span>
+      </div>
+      <ul class="host-notes">
+        {#each host.notes.slice(0, 5) as note}
+          <li>{note}</li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="connections-lead">Probe pending…</p>
+    {/if}
+
+    <div class="connections-actions">
+      <button type="button" class="btn btn-secondary btn-sm" onclick={handleCheckUpdates} disabled={busy}>
+        Check for updates
+      </button>
+    </div>
+    {#if ollamaUpdate}
+      <div class="update-box">
+        <strong>
+          Ollama {ollamaUpdate.installed_version || "?"}
+          {#if ollamaUpdate.latest_version}
+            · latest {ollamaUpdate.latest_version}
+            {#if ollamaUpdate.update_available} (update available){/if}
+          {/if}
+        </strong>
+        <ul class="host-notes">
+          {#each ollamaUpdate.notes as n}<li>{n}</li>{/each}
+        </ul>
+      </div>
+    {/if}
+    {#if qdrantUpdate}
+      <div class="update-box">
+        <strong>
+          Qdrant {qdrantUpdate.installed_version || "?"}
+          {#if qdrantUpdate.latest_version}
+            · latest {qdrantUpdate.latest_version}
+            {#if qdrantUpdate.update_available} (update available){/if}
+          {/if}
+        </strong>
+        <ul class="host-notes">
+          {#each qdrantUpdate.notes as n}<li>{n}</li>{/each}
+        </ul>
+      </div>
+    {/if}
+  </div>
+
+  <div class="connections-card">
+    <div class="models-header">
+      <div>
+        <h4>Ollama models</h4>
+        <p class="field-hint">
+          Find tags on the Ollama library, then install by exact name here. Embed models power research;
+          chat models power the agent.
+        </p>
+      </div>
+      <div class="connections-actions">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          disabled={busy}
+          onclick={() => openExternal(OLLAMA_LIBRARY_URL)}
+        >
+          Browse library
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          disabled={busy}
+          onclick={() => openExternal(OLLAMA_SEARCH_URL)}
+        >
+          Search models
+        </button>
+        <button
+          type="button"
+          class="btn btn-accent btn-sm"
+          disabled={busy || models.length === 0 || !ollamaUrl.trim()}
+          onclick={handleUpdateAll}
+        >
+          Update all
+        </button>
+      </div>
+    </div>
+
+    <div class="suggest-row">
+      <span class="suggest-label">Suggested embed:</span>
+      {#each SUGGESTED_EMBED as tag}
+        <button
+          type="button"
+          class="suggest-chip"
+          disabled={busy}
+          onclick={() => {
+            pullName = tag;
+          }}>{tag}</button
+        >
+      {/each}
+      <span class="suggest-label">Suggested chat:</span>
+      {#each SUGGESTED_CHAT as tag}
+        <button
+          type="button"
+          class="suggest-chip"
+          disabled={busy}
+          onclick={() => {
+            pullName = tag;
+          }}>{tag}</button
+        >
+      {/each}
+    </div>
+
     <div class="pull-row">
       <input
         type="text"
         bind:value={pullName}
-        placeholder="Model to install (e.g. mxbai-embed-large, qwen2.5:14b)"
+        placeholder="Exact Ollama tag (e.g. mxbai-embed-large, qwen2.5:14b)"
         aria-label="Model name to install"
       />
       <button
@@ -561,7 +817,25 @@
         Install
       </button>
     </div>
-    <p class="field-hint">Install uses <code>POST /api/pull</code>. Update re-pulls the same tag. Delete uses <code>/api/delete</code>.</p>
+
+    {#if updateAllProgress}
+      <div class="update-all-bar" role="status" aria-live="polite">
+        <div class="update-all-track">
+          <div
+            class="update-all-fill"
+            style={`width: ${(updateAllProgress.current / updateAllProgress.total) * 100}%`}
+          ></div>
+        </div>
+        <p class="field-hint">
+          {updateAllProgress.current}/{updateAllProgress.total} · {updateAllProgress.model}
+        </p>
+      </div>
+    {/if}
+
+    <p class="field-hint">
+      Install / Update use <code>POST /api/pull</code> on your Ollama host. Update all re-pulls every listed
+      tag sequentially with live progress.
+    </p>
 
     {#if models.length === 0}
       <div class="connections-empty">Connect Ollama and scan to list models.</div>
@@ -583,14 +857,27 @@
                 <td>{m.role}</td>
                 <td class="hint-{m.load_hint}">{m.load_hint}</td>
                 <td class="model-actions">
-                  <button type="button" class="btn btn-link btn-xs" disabled={busy} onclick={() => handlePull(m.name, true)}>Update</button>
-                  <button type="button" class="btn btn-link btn-xs danger" disabled={busy} onclick={() => handleDelete(m.name)}>Remove</button>
+                  <button
+                    type="button"
+                    class="btn btn-link btn-xs"
+                    disabled={busy}
+                    onclick={() => handlePull(m.name, true)}>Update</button
+                  >
+                  <button
+                    type="button"
+                    class="btn btn-link btn-xs danger"
+                    disabled={busy}
+                    onclick={() => handleDelete(m.name)}>Remove</button
+                  >
                 </td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
+      {#if chatModels.length === 0}
+        <p class="field-hint">No chat models detected yet — search the library and Install a chat tag.</p>
+      {/if}
     {/if}
   </div>
 </section>

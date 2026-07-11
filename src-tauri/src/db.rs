@@ -1802,6 +1802,8 @@ fn migrate_qdrant_scope_columns(conn: &Connection) -> Result<(), rusqlite::Error
         "ALTER TABLE qdrant_config ADD COLUMN named_vectors_enabled INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE qdrant_config ADD COLUMN scope_sweep_fast INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE qdrant_config ADD COLUMN scope_sources_json TEXT",
+        "ALTER TABLE qdrant_config ADD COLUMN vector_provider TEXT NOT NULL DEFAULT 'qdrant'",
+        "ALTER TABLE qdrant_config ADD COLUMN namespace TEXT NOT NULL DEFAULT ''",
     ] {
         let _ = conn.execute(sql, []);
     }

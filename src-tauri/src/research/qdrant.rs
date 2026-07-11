@@ -1108,7 +1108,7 @@ fn payload_opt_array(p: &serde_json::Value, key: &str) -> Option<Vec<serde_json:
     p.get(key).and_then(|v| v.as_array()).cloned()
 }
 
-fn map_payload_to_hit(p: &serde_json::Value, score: f32) -> QdrantHit {
+pub(crate) fn map_payload_to_hit(p: &serde_json::Value, score: f32) -> QdrantHit {
     QdrantHit {
         rsid: p["rsid"].as_str().unwrap_or("").to_string(),
         gene: payload_opt_str(p, "gene_symbol").or_else(|| payload_opt_str(p, "gene")),

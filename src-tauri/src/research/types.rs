@@ -3,15 +3,25 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QdrantConfig {
-    pub url: String, // e.g. "http://192.168.1.5:6333"
+    pub url: String, // Vector DB base URL or Pinecone index host
     pub api_key: Option<String>,
-    pub collection: String,      // default: "genomics_evidence"
+    pub collection: String,      // Qdrant collection / Chroma collection / Weaviate class / Pinecone unused (index is host)
     pub embedding_model: String, // default: "mxbai-embed-large"
     pub gwas_strict: bool,       // true = p<5e-8, false = p<1e-5
     pub ncbi_api_key: Option<String>,
     pub auto_start: bool,
     #[serde(default)]
     pub named_vectors_enabled: bool,
+    /// qdrant | pinecone | chroma | weaviate
+    #[serde(default = "default_vector_provider")]
+    pub vector_provider: String,
+    /// Pinecone namespace (optional). Unused for other providers.
+    #[serde(default)]
+    pub namespace: String,
+}
+
+fn default_vector_provider() -> String {
+    "qdrant".into()
 }
 
 /// Settings returned to the UI — never includes raw secret values.
@@ -26,6 +36,8 @@ pub struct QdrantConfigPublic {
     pub ncbi_api_key_set: bool,
     pub research_scope: ResearchScopeConfig,
     pub named_vectors_enabled: bool,
+    pub vector_provider: String,
+    pub namespace: String,
 }
 
 /// Partial update from the UI — omit secret fields to leave keyring values unchanged.
@@ -44,6 +56,10 @@ pub struct QdrantConfigUpdate {
     pub research_scope: Option<ResearchScopeConfig>,
     #[serde(default)]
     pub named_vectors_enabled: Option<bool>,
+    #[serde(default)]
+    pub vector_provider: Option<String>,
+    #[serde(default)]
+    pub namespace: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -119,11 +119,13 @@ pub async fn create_qdrant_collection(
     ollama_url: String,
 ) -> Result<QdrantConnectionStatus, String> {
     let cfg = load_config(&app).await?;
-    super::initialize_qdrant_collection(&ollama_url, &cfg).await?;
-    Ok(
-        super::test_qdrant_connection(&cfg.url, cfg.api_key.as_deref(), Some(&cfg.collection))
-            .await,
-    )
+    let vector = super::embed::embed_text("dimension probe", &ollama_url, &cfg.embedding_model).await?;
+    let dims = vector.len() as u32;
+    if dims == 0 {
+        return Err("Embedding model returned an empty vector".into());
+    }
+    super::vector_store::ensure_collection(&cfg, dims).await?;
+    Ok(super::vector_store::test_connection(&cfg).await)
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -141,7 +143,7 @@ pub async fn purge_qdrant_collection(
     RESEARCH_RUNNING.store(false, Ordering::SeqCst);
 
     let cfg = load_config(&app).await?;
-    super::purge_qdrant_collection(&cfg.url, cfg.api_key.as_deref(), &cfg.collection).await?;
+    super::vector_store::purge_collection(&cfg).await?;
 
     let db_path = get_db_path(&app);
     let job_reset = if let Some(sid) = sample_id {
@@ -371,10 +373,8 @@ pub async fn search_qdrant_evidence(
     let vector =
         super::embed::embed_query_cached(&query, &ollama_url, &cfg.embedding_model).await?;
     let vector_name = super::evidence::named_vectors::query_vector_name_for_text(&query, &cfg);
-    super::search_qdrant(
-        &cfg.url,
-        cfg.api_key.as_deref(),
-        &cfg.collection,
+    super::vector_store::search_dense(
+        &cfg,
         vector,
         sample_id,
         limit.unwrap_or(10),
@@ -402,10 +402,8 @@ pub async fn search_qdrant_trait_discovery(
             super::embed::embed_query_cached(q.trim(), &ollama_url, &cfg.embedding_model).await?;
         let vector_name =
             super::evidence::named_vectors::query_vector_name_for_text(q.trim(), &cfg);
-        return super::search_qdrant(
-            &cfg.url,
-            cfg.api_key.as_deref(),
-            &cfg.collection,
+        return super::vector_store::search_dense(
+            &cfg,
             vector,
             Some(sample_id),
             lim,
@@ -416,6 +414,12 @@ pub async fn search_qdrant_trait_discovery(
     }
 
     if category.is_some() {
+        if super::vector_store::provider_from_config(&cfg).as_str() != "qdrant" {
+            return Err(
+                "Category-only browse without a query is currently Qdrant-only. Enter a semantic query."
+                    .into(),
+            );
+        }
         return super::scroll_qdrant_points(
             &cfg.url,
             cfg.api_key.as_deref(),

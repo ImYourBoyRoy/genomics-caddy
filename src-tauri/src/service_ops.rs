@@ -314,7 +314,10 @@ pub async fn pull_ollama_model(
             if line.is_empty() {
                 continue;
             }
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
+            if let Ok(mut v) = serde_json::from_str::<serde_json::Value>(line) {
+                if v.get("model").is_none() {
+                    v["model"] = serde_json::json!(model);
+                }
                 let _ = app.emit("ollama:pull_progress", &v);
                 last_status = v;
             }
@@ -362,64 +365,51 @@ pub async fn delete_ollama_model(
     ))
 }
 
-/// Lightweight health probe for non-Qdrant vector backends (experimental).
+/// Lightweight health probe + capability report for vector backends.
 pub async fn probe_vector_provider(
     provider: &str,
     url: &str,
     api_key: Option<&str>,
 ) -> Result<serde_json::Value, String> {
     let clean = config::validate_service_url(url)?;
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
-        .build()
-        .map_err(|e| e.to_string())?;
-    let provider = provider.trim().to_ascii_lowercase();
-    match provider.as_str() {
-        "qdrant" => {
-            let info = get_qdrant_version(&clean, api_key).await?;
-            Ok(serde_json::json!({
-                "provider": "qdrant",
-                "reachable": true,
-                "research_supported": true,
-                "info": info
-            }))
+    let provider_kind = crate::research::vector_store::VectorProvider::parse(provider);
+    let cfg = crate::research::QdrantConfig {
+        url: clean,
+        api_key: api_key.map(|s| s.to_string()),
+        collection: "genomics_evidence".into(),
+        embedding_model: "mxbai-embed-large".into(),
+        gwas_strict: true,
+        ncbi_api_key: None,
+        auto_start: false,
+        named_vectors_enabled: false,
+        vector_provider: provider_kind.as_str().into(),
+        namespace: String::new(),
+    };
+    let status = crate::research::vector_store::test_connection(&cfg).await;
+    let caps = crate::research::vector_store::capabilities_json(provider_kind);
+    Ok(serde_json::json!({
+        "provider": provider_kind.as_str(),
+        "reachable": status.success,
+        "collection_exists": status.collection_exists,
+        "vectors_count": status.vectors_count,
+        "collections": status.collections,
+        "research_supported": provider_kind.supports_dense_research(),
+        "capabilities": caps,
+        "error": status.error,
+        "note": if status.success {
+            format!(
+                "{} reachable. Dense research: {}. Named vectors: {}.",
+                provider_kind.as_str(),
+                provider_kind.supports_dense_research(),
+                provider_kind.supports_named_vectors()
+            )
+        } else {
+            status
+                .error
+                .clone()
+                .unwrap_or_else(|| format!("{} unreachable", provider_kind.as_str()))
         }
-        "chroma" => {
-            let mut req = client.get(format!("{}/api/v2/heartbeat", clean.trim_end_matches('/')));
-            if let Some(key) = api_key.map(str::trim).filter(|k| !k.is_empty()) {
-                req = req.header("Authorization", format!("Bearer {key}"));
-            }
-            let res = req.send().await.map_err(|e| e.to_string())?;
-            Ok(serde_json::json!({
-                "provider": "chroma",
-                "reachable": res.status().is_success(),
-                "research_supported": false,
-                "http_status": res.status().as_u16(),
-                "note": "Chroma health probe only — vector research sweeps still require Qdrant."
-            }))
-        }
-        "weaviate" => {
-            let mut req = client.get(format!("{}/v1/meta", clean.trim_end_matches('/')));
-            if let Some(key) = api_key.map(str::trim).filter(|k| !k.is_empty()) {
-                req = req.header("Authorization", format!("Bearer {key}"));
-            }
-            let res = req.send().await.map_err(|e| e.to_string())?;
-            Ok(serde_json::json!({
-                "provider": "weaviate",
-                "reachable": res.status().is_success(),
-                "research_supported": false,
-                "http_status": res.status().as_u16(),
-                "note": "Weaviate health probe only — vector research sweeps still require Qdrant."
-            }))
-        }
-        "milvus" => Ok(serde_json::json!({
-            "provider": "milvus",
-            "reachable": false,
-            "research_supported": false,
-            "note": "Milvus uses gRPC; HTTP health is not standardized here yet. Research sweeps still require Qdrant."
-        })),
-        other => Err(format!("Unknown vector provider '{other}'")),
-    }
+    }))
 }
 
 #[cfg(test)]

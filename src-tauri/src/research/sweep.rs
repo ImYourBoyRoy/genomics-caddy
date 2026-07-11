@@ -6,16 +6,13 @@ use super::http::enrich_batch_size;
 use super::job::save_research_job;
 use super::markers::{collect_markers_for_scopes, preview_research_scope};
 use super::promote::promote_enrichment_batch;
-use super::qdrant::{
-    classify_points_index_state, classify_points_sweep_state, test_qdrant_connection,
-    upsert_points_batch,
-};
 use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING};
 use super::sweep_metrics::{SweepPhase, set_live_message, timed_async};
 use super::sweep_runtime::SweepProgressSink;
 use super::tuning::{self, SweepTuningGuard, install_sweep_tuning, named_vectors_in_sweep};
 use super::types::*;
 use super::util::{string_to_u64, unix_now};
+use super::vector_store::{self, VectorProvider};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -486,13 +483,7 @@ async fn count_markers_needing_enrichment(
             .iter()
             .map(|m| string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1)))
             .collect();
-        let current = classify_points_index_state(
-            &config.url,
-            config.api_key.as_deref(),
-            &config.collection,
-            chunk_ids,
-        )
-        .await?;
+        let current = vector_store::classify_points_index_state(config, chunk_ids).await?;
         let current_set: HashSet<u64> = current.into_iter().collect();
         needs_work += chunk
             .iter()
@@ -609,14 +600,10 @@ async fn bootstrap_qdrant_index_cache(
             .iter()
             .map(|m| string_to_u64(&format!("{}_{}_{}", sample_id, m.rsid, m.allele1)))
             .collect();
-        let url = config.url.clone();
-        let api_key = config.api_key.clone();
-        let collection = config.collection.clone();
+        let cfg = config.clone();
         join_set.spawn(async move {
             let _permit = permit;
-            let ids = classify_points_index_state(&url, api_key.as_deref(), &collection, chunk_ids)
-                .await?;
-            Ok(ids)
+            vector_store::classify_points_index_state(&cfg, chunk_ids).await
         });
     }
 
@@ -740,17 +727,21 @@ pub async fn run_research_loop(
         );
     }
 
-    // Pre-flight: check connection and collection existence. DO NOT automatically create it!
-    let conn_status = test_qdrant_connection(
-        &config.url,
-        config.api_key.as_deref(),
-        Some(&config.collection),
-    )
-    .await;
+    // Pre-flight: check connection and collection/index existence.
+    let provider = vector_store::provider_from_config(&config);
+    if !provider.supports_dense_research() {
+        RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+        return Err(format!(
+            "Vector provider '{}' is not supported for research sweeps.",
+            provider.as_str()
+        ));
+    }
+    let conn_status = vector_store::test_connection(&config).await;
     if !conn_status.success {
         RESEARCH_RUNNING.store(false, Ordering::SeqCst);
         return Err(format!(
-            "Cannot start research: Qdrant database is not reachable. Error: {}",
+            "Cannot start research: {} is not reachable. Error: {}",
+            provider.as_str(),
             conn_status
                 .error
                 .unwrap_or_else(|| "Unknown connection error".to_string())
@@ -758,10 +749,25 @@ pub async fn run_research_loop(
     }
     if !conn_status.collection_exists {
         RESEARCH_RUNNING.store(false, Ordering::SeqCst);
-        return Err(format!(
-            "Cannot start research: Qdrant collection '{}' does not exist. Please create the collection first.",
-            config.collection
-        ));
+        let hint = match provider {
+            VectorProvider::Pinecone => {
+                "Pinecone index host is reachable but stats failed — check API key and index host URL."
+                    .to_string()
+            }
+            VectorProvider::Qdrant => format!(
+                "Qdrant collection '{}' does not exist. Create the collection first.",
+                config.collection
+            ),
+            VectorProvider::Chroma => format!(
+                "Chroma collection '{}' does not exist. Create it from Connections or in Chroma.",
+                config.collection
+            ),
+            VectorProvider::Weaviate => format!(
+                "Weaviate class '{}' does not exist. Create it from Connections or in Weaviate.",
+                config.collection
+            ),
+        };
+        return Err(format!("Cannot start research: {hint}"));
     }
 
     let (ollama_lat, qdrant_lat) = tuning::probe_service_latencies(&ollama_url, &config.url).await;
@@ -797,12 +803,7 @@ pub async fn run_research_loop(
         ),
     );
 
-    let _ = super::qdrant::ensure_payload_indexes(
-        &config.url,
-        config.api_key.as_deref(),
-        &config.collection,
-    )
-    .await;
+    let _ = vector_store::maybe_ensure_payload_indexes(&config).await;
 
     if resume_from_rsid.is_none() {
         let needs_work =
@@ -1108,22 +1109,18 @@ pub async fn run_research_loop(
                     .copied()
                     .collect()
             } else if supplement_missing {
-                let url = config.url.clone();
-                let api_key = config.api_key.clone();
-                let collection = config.collection.clone();
+                let cfg = config.clone();
                 let ids_result = run_with_activity_pulse(
                     sink,
                     &job_id,
                     enriched_count,
                     total_markers,
                     chunk_first_rsid.clone(),
-                    Some("Qdrant sweep check".to_string()),
-                    "Checking Qdrant",
+                    Some(format!("{} sweep check", provider.as_str())),
+                    "Checking vector store",
                     || async move {
-                        classify_points_sweep_state(
-                            &url,
-                            api_key.as_deref(),
-                            &collection,
+                        vector_store::classify_points_sweep_state(
+                            &cfg,
                             chunk_ids,
                             &enrichment_sources,
                             true,
@@ -1160,25 +1157,17 @@ pub async fn run_research_loop(
                     }
                 }
             } else {
-                let url = config.url.clone();
-                let api_key = config.api_key.clone();
-                let collection = config.collection.clone();
+                let cfg = config.clone();
                 let ids_result = run_with_activity_pulse(
                     sink,
                     &job_id,
                     enriched_count,
                     total_markers,
                     chunk_first_rsid.clone(),
-                    Some("Qdrant cache".to_string()),
-                    "Checking Qdrant",
+                    Some(format!("{} cache", provider.as_str())),
+                    "Checking vector store",
                     || async move {
-                        classify_points_index_state(
-                            &url,
-                            api_key.as_deref(),
-                            &collection,
-                            chunk_ids,
-                        )
-                        .await
+                        vector_store::classify_points_index_state(&cfg, chunk_ids).await
                     },
                 )
                 .await;
@@ -1208,7 +1197,7 @@ pub async fn run_research_loop(
                         }
                         sweep_dbg(
                             sink,
-                            format!("Qdrant classify failed (continuing as empty cache): {}", e),
+                            format!("Vector classify failed (continuing as empty cache): {}", e),
                         );
                         HashSet::new()
                     }
@@ -1540,7 +1529,8 @@ pub async fn run_research_loop(
                     }
                 };
 
-                let use_named = super::evidence::named_vectors::named_vectors_enabled(&config)
+                let use_named = provider.supports_named_vectors()
+                    && super::evidence::named_vectors::named_vectors_enabled(&config)
                     && named_vectors_in_sweep();
                 if use_named {
                     let named_points = embed_named_vectors_parallel(
@@ -1588,12 +1578,7 @@ pub async fn run_research_loop(
                     super::sweep_metrics::set_batch_qdrant();
                     if let Err(e) = timed_async(
                         SweepPhase::Qdrant,
-                        upsert_points_batch(
-                            &config.url,
-                            config.api_key.as_deref(),
-                            &config.collection,
-                            points,
-                        ),
+                        vector_store::upsert_dense_batch(&config, points),
                     )
                     .await
                     {

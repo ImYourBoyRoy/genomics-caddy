@@ -680,7 +680,12 @@ export async function probeVectorProvider(
   provider: string;
   reachable: boolean;
   research_supported: boolean;
+  collection_exists?: boolean;
+  vectors_count?: number;
+  collections?: string[];
+  capabilities?: Record<string, unknown>;
   note?: string;
+  error?: string;
   http_status?: number;
   info?: unknown;
 }> {

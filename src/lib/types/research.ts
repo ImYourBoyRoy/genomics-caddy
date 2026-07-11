@@ -23,6 +23,10 @@ export interface QdrantConfigPublic {
   ncbi_api_key_set: boolean;
   research_scope: ResearchScopeConfig;
   named_vectors_enabled: boolean;
+  /** qdrant | pinecone | chroma | weaviate */
+  vector_provider: string;
+  /** Pinecone namespace (optional). */
+  namespace: string;
 }
 
 /** Partial save payload — omit secret fields to keep existing keyring values. */
@@ -36,6 +40,8 @@ export interface QdrantConfigUpdate {
   ncbi_api_key?: string;
   research_scope?: ResearchScopeConfig;
   named_vectors_enabled?: boolean;
+  vector_provider?: string;
+  namespace?: string;
 }
 
 export interface EnrichmentSourcesConfig {
@@ -383,6 +389,8 @@ export const DEFAULT_QDRANT_CONFIG: QdrantConfigPublic = {
   ncbi_api_key_set: false,
   research_scope: { ...DEFAULT_RESEARCH_SCOPE },
   named_vectors_enabled: false,
+  vector_provider: 'qdrant',
+  namespace: '',
 };
 
 /** Soft name hints only — GPU fitness comes from discoverOllamaModels / host probe. */

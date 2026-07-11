@@ -319,7 +319,7 @@ OLLAMA_URL=http://your-ollama-host:11434
 OLLAMA_TOKEN=
 ```
 
-3. Or leave `.env` blank and enter URLs in **Advanced → Connections**, then **Save & Verify**. Use **Reset to localhost** for `127.0.0.1` (warns if Ollama/Qdrant are missing locally). Same tab: **Install / Update / Remove** Ollama models and **Check for updates** (Ollama + Qdrant).
+3. Or leave `.env` blank and enter URLs in **Advanced → Connections**, then **Save & Verify**. Choose a vector provider (**Qdrant**, **Pinecone**, **Chroma**, or **Weaviate**) — dense research sweeps work on all four; named vectors remain Qdrant-only. Use **Reset to localhost** for `127.0.0.1` (warns if Ollama/Qdrant are missing locally). Same tab: **Install / Update / Update all / Remove** Ollama models, **Browse library** / **Search models** links to ollama.com, and **Check for updates** (Ollama + Qdrant when applicable).
 
 4. Run smoke tests:
 
@@ -328,7 +328,7 @@ npm run smoke
 ```
 
 Checks performed:
-- Qdrant auth + target collection exists
+- Vector store reachability for the configured provider (Qdrant collection / Pinecone index / Chroma collection / Weaviate class)
 - NCBI esearch (when `NCBI_API_KEY` is set)
 - Ollama model list (when `OLLAMA_URL` is set)
 

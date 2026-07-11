@@ -102,6 +102,45 @@ pub async fn export_discovery_findings(
     .map_err(|e| format!("Export worker failed: {e}"))?
 }
 
+/// Browse genome×catalog associations in-app (ranked, filterable, paginated).
+#[tauri::command]
+pub async fn query_discovery_findings(
+    app: AppHandle,
+    sample_id: i64,
+    beyond_packs_only: Option<bool>,
+    source_filter: Option<String>,
+    query: Option<String>,
+    limit: Option<u32>,
+    offset: Option<u32>,
+) -> Result<serde_json::Value, String> {
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    let beyond = beyond_packs_only.unwrap_or(true);
+    let limit = limit.unwrap_or(100) as usize;
+    let offset = offset.unwrap_or(0) as usize;
+    tauri::async_runtime::spawn_blocking(move || {
+        super::discovery_export::query_discovery_findings(
+            &data_dir,
+            &db_path,
+            sample_id,
+            beyond,
+            source_filter.as_deref(),
+            query.as_deref(),
+            limit,
+            offset,
+            Some(&app),
+        )
+    })
+    .await
+    .map_err(|e| format!("Discovery query worker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn cancel_discovery_query() -> Result<(), String> {
+    super::discovery_export::cancel_discovery_query();
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn get_custom_download_dir(app: AppHandle) -> Result<Option<String>, String> {
     let db_path = get_db_path(&app);

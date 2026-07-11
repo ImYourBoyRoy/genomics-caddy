@@ -6,20 +6,16 @@
   import type { VariantNavTarget } from "../../constants/traitCategories";
   import { CHR_LENGTHS, CHR_ORDER } from "../../constants/chromosomeLayout";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
+  import "$lib/styles/components/genome-map.css";
 
   /*
-  Module Docstring:
   Purpose: Live database-backed chromosome visualization with interactive zoom, overlays, and comparison views.
   Responsibilities:
-  - Display all 24 chromosomes with relative SNP density heatbars.
-  - Query the local database for SNP density and position coordinates.
-  - Map moderate and high-risk variants as pins on their respective chromosomes.
-  - Support horizontal zooming and panning across chromosomes.
-  - Display gene labels directly above pins when zoomed.
-  - Compare risk variant genotypes across all imported samples in a matrix view.
-  Key Inputs: selectedSample, generatedReport.
-  Key Outputs: Interactive, fully realized chromosome heat map and comparison grid.
-  Operational Notes: Normalizes variant density based on the highest count chromosome.
+  - Display chromosomes scaled to GRCh38 length with SNP-density intensity.
+  - Place curated / vector variant pins at genomic coordinates.
+  - Support zoom, gene labels, and multi-sample genotype comparison.
+  Key Inputs: selectedSample, generatedReport, focusRsid.
+  Key Outputs: Interactive karyotype map.
   */
 
   interface Props {
@@ -44,11 +40,8 @@
   let traitBands = $state<ChromosomeTraitBand[]>([]);
   let isLoading = $state(false);
   let error = $state("");
-
-  // Zooming
   let zoomScale = $state(1);
 
-  // Multi-sample comparison
   let allSamples = $state<GenomeSample[]>([]);
   interface ComparisonRow {
     rsid: string;
@@ -68,32 +61,143 @@
   }
   let hoveredPin = $state<HoveredPin | null>(null);
 
+  const maxChrLen = CHR_LENGTHS["1"];
+
   let maxCount = $derived(
     Object.values(chromosomeCounts).reduce((max, val) => Math.max(max, val), 1)
   );
+
+  let totalSnps = $derived(
+    Object.values(chromosomeCounts).reduce((sum, n) => sum + n, 0)
+  );
+
+  let pinSummary = $derived.by(() => {
+    const counts = { high: 0, moderate: 0, confirm: 0, vector: 0 };
+    for (const p of riskPins) {
+      if (p.severity === "high_risk") counts.high += 1;
+      else if (p.severity === "moderate_risk") counts.moderate += 1;
+      else if (p.severity === "confirmation_required") counts.confirm += 1;
+      else if (p.severity === "vector_promoted") counts.vector += 1;
+    }
+    return counts;
+  });
+
+  /** Confirm + stronger associations — what to review first */
+  let attentionPins = $derived(
+    riskPins
+      .filter((p) => p.severity === "confirmation_required" || p.severity === "high_risk")
+      .slice()
+      .sort((a, b) => {
+        const rank = (s: string) => (s === "confirmation_required" ? 0 : 1);
+        return rank(a.severity) - rank(b.severity) || a.gene.localeCompare(b.gene);
+      })
+  );
+
+  type PinFilter = "all" | "attention" | "high_risk" | "moderate_risk" | "confirmation_required" | "vector_promoted";
+  let pinFilter = $state<PinFilter>("all");
+  let activeChr = $state<string | null>(null);
+
+  function severityLabel(severity: string): string {
+    switch (severity) {
+      case "high_risk":
+        return "Stronger association";
+      case "moderate_risk":
+        return "Possible association";
+      case "confirmation_required":
+        return "Confirm clinically";
+      case "vector_promoted":
+        return "Vector discovery";
+      default:
+        return severity.replace(/_/g, " ");
+    }
+  }
+
+  function pinGlyph(severity: string): string {
+    switch (severity) {
+      case "high_risk":
+        return "!";
+      case "moderate_risk":
+        return "?";
+      case "confirmation_required":
+        return "C";
+      case "vector_promoted":
+        return "V";
+      default:
+        return "·";
+    }
+  }
+
+  function pinMatchesFilter(pin: RiskPin): boolean {
+    if (pinFilter === "all") return true;
+    if (pinFilter === "attention") {
+      return pin.severity === "confirmation_required" || pin.severity === "high_risk";
+    }
+    return pin.severity === pinFilter;
+  }
+
+  function pinsForChr(chr: string): RiskPin[] {
+    return riskPins
+      .filter((p) => p.chr === chr && pinMatchesFilter(p))
+      .slice()
+      .sort((a, b) => a.pos - b.pos);
+  }
+
+  function chrPinBreakdown(chrPins: RiskPin[]): string {
+    const c = { confirm: 0, high: 0, moderate: 0, vector: 0 };
+    for (const p of chrPins) {
+      if (p.severity === "confirmation_required") c.confirm += 1;
+      else if (p.severity === "high_risk") c.high += 1;
+      else if (p.severity === "moderate_risk") c.moderate += 1;
+      else if (p.severity === "vector_promoted") c.vector += 1;
+    }
+    const parts: string[] = [];
+    if (c.confirm) parts.push(`${c.confirm} confirm`);
+    if (c.high) parts.push(`${c.high} stronger`);
+    if (c.moderate) parts.push(`${c.moderate} possible`);
+    if (c.vector) parts.push(`${c.vector} vector`);
+    return parts.join(" · ") || `${chrPins.length} pin${chrPins.length === 1 ? "" : "s"}`;
+  }
+
+  function focusPin(pin: RiskPin) {
+    activeChr = pin.chr;
+    const el = document.querySelector(`[data-rsid="${pin.rsid.toLowerCase()}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (el instanceof HTMLElement) el.focus();
+    onNavigateToVariant?.(pin.rsid, "report");
+  }
+
+  function chrWidthPct(chr: string): number {
+    const len = CHR_LENGTHS[chr] || maxChrLen;
+    return Math.max(8, (len / maxChrLen) * 100);
+  }
+
+  function formatMb(bp: number): string {
+    return `${(bp / 1_000_000).toFixed(0)} Mb`;
+  }
 
   async function loadComparison() {
     if (riskPins.length === 0) return;
     try {
       allSamples = await getSamples();
-      if (allSamples.length <= 1) return;
+      if (allSamples.length <= 1) {
+        isComparing = true;
+        return;
+      }
 
-      const rsids = riskPins.map(p => p.rsid);
-      const tempRows: ComparisonRow[] = riskPins.map(p => ({
+      const rsids = riskPins.map((p) => p.rsid);
+      const tempRows: ComparisonRow[] = riskPins.map((p) => ({
         rsid: p.rsid,
         gene: p.gene,
         severity: p.severity,
-        genotypes: {}
+        genotypes: {},
       }));
 
       for (const sample of allSamples) {
         const records = await queryRsids(sample.id, rsids);
         for (const rec of records) {
-          const row = tempRows.find(r => r.rsid.toLowerCase() === rec.rsid.toLowerCase());
+          const row = tempRows.find((r) => r.rsid.toLowerCase() === rec.rsid.toLowerCase());
           if (row) {
-            const clean_allele1 = rec.allele1 || "-";
-            const clean_allele2 = rec.allele2 || "-";
-            row.genotypes[sample.id] = `${clean_allele1}${clean_allele2}`;
+            row.genotypes[sample.id] = `${rec.allele1 || "-"}${rec.allele2 || "-"}`;
           }
         }
       }
@@ -113,8 +217,7 @@
     isLoading = true;
     error = "";
     try {
-      const counts = await getChromosomeCounts(selectedSample.id);
-      chromosomeCounts = counts;
+      chromosomeCounts = await getChromosomeCounts(selectedSample.id);
       try {
         traitBands = await getChromosomeTraitOverlay(selectedSample.id);
       } catch {
@@ -136,22 +239,20 @@
         }
 
         if (riskMarkers.length > 0) {
-          const rsids = riskMarkers.map(m => m.rsid);
+          const rsids = riskMarkers.map((m) => m.rsid);
           const records = await queryRsids(selectedSample.id, rsids);
-
           const pins: RiskPin[] = [];
           for (const rec of records) {
-            if (rec.position_grch38) {
-              const marker = riskMarkers.find(m => m.rsid === rec.rsid);
-              if (marker) {
-                pins.push({
-                  rsid: rec.rsid,
-                  gene: marker.gene,
-                  severity: marker.severity_class,
-                  chr: rec.chromosome,
-                  pos: rec.position_grch38
-                });
-              }
+            if (!rec.position_grch38) continue;
+            const marker = riskMarkers.find((m) => m.rsid === rec.rsid);
+            if (marker) {
+              pins.push({
+                rsid: rec.rsid,
+                gene: marker.gene,
+                severity: marker.severity_class,
+                chr: rec.chromosome,
+                pos: rec.position_grch38,
+              });
             }
           }
           riskPins = pins;
@@ -185,8 +286,8 @@
           }
         }
       }
-    } catch (e: any) {
-      error = e.toString();
+    } catch (e: unknown) {
+      error = String(e);
     } finally {
       isLoading = false;
     }
@@ -194,7 +295,7 @@
 
   $effect(() => {
     if (selectedSample) {
-      loadData();
+      void loadData();
     }
   });
 
@@ -206,19 +307,20 @@
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
-  function showTooltip(pin: RiskPin, e: MouseEvent) {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  function showTooltip(pin: RiskPin, e: Event) {
+    const el = e.currentTarget as HTMLElement | null;
+    if (!el) return;
     const mapContainer = document.querySelector(".map-container");
-    if (mapContainer) {
-      const parentRect = mapContainer.getBoundingClientRect();
-      hoveredPin = {
-        rsid: pin.rsid,
-        gene: pin.gene,
-        severity: pin.severity,
-        x: rect.left - parentRect.left + rect.width / 2,
-        y: rect.top - parentRect.top - 45
-      };
-    }
+    if (!mapContainer) return;
+    const rect = el.getBoundingClientRect();
+    const parentRect = mapContainer.getBoundingClientRect();
+    hoveredPin = {
+      rsid: pin.rsid,
+      gene: pin.gene,
+      severity: pin.severity,
+      x: rect.left - parentRect.left + rect.width / 2,
+      y: rect.top - parentRect.top - 12,
+    };
   }
 
   function hideTooltip() {
@@ -228,88 +330,183 @@
 
 <div class="card map-container">
   <div class="map-header">
-    <h3>🧬 Chromosome Density & Variant Map</h3>
-    <span class="privacy-pill">Local Database Live Query</span>
+    <div>
+      <span class="map-kicker">GRCh38 karyotype</span>
+      <h3>Chromosome map</h3>
+    </div>
+    <span class="privacy-pill">Local query · on-device</span>
   </div>
 
   <p class="map-intro">
-    This heat map visualizes your imported genetic data. The background fill of each chromosome represents the relative density of parsed SNPs. The highlighted points show the exact positions of risk variants identified in your report.
+    Bars are scaled to real chromosome length. Fill intensity reflects SNP coverage in your import.
   </p>
 
-  <div class="map-legend" aria-label="Map legend">
-    <span class="legend-title">Pin colors</span>
-    <span class="legend-item"><span class="legend-dot high_risk"></span> High risk (curated report)</span>
-    <span class="legend-item"><span class="legend-dot moderate_risk"></span> Moderate risk</span>
-    <span class="legend-item"><span class="legend-dot confirmation_required"></span> Needs confirmation</span>
-    <span class="legend-item"><span class="legend-dot vector_promoted"></span> Vector research discovery</span>
-    <span class="legend-item legend-note">⚠️ count = report + vector variants on that chromosome (hover a pin for gene &amp; rsID)</span>
-  </div>
+  <div class="map-chrome">
+    <aside class="map-pin-insight" aria-labelledby="map-pin-insight-title">
+      <div class="map-pin-insight-head">
+        <span class="map-pin-insight-mark" aria-hidden="true">C</span>
+        <strong id="map-pin-insight-title">What pins are for</strong>
+      </div>
+      <p>
+        Letter badges mark variants already in your Trait Report or vector discovery, placed at their
+        GRCh38 coordinates. They are <em>not</em> a diagnosis — use them to jump into the report.
+        <strong>C</strong> = confirm clinically, <strong>!</strong> = stronger association,
+        <strong>?</strong> = possible, <strong>V</strong> = vector find.
+      </p>
+    </aside>
 
-  <!-- Interactive Controls (Zoom + Pan + Multi-Sample Comparison) -->
-  <div class="map-controls-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">🔍 Zoom Scale: {zoomScale}x</span>
-      <input
-        type="range"
-        min="1"
-        max="8"
-        step="0.5"
-        bind:value={zoomScale}
-        style="width: 130px; cursor: col-resize; accent-color: #34d399;"
-      />
-      {#if zoomScale > 1}
-        <button
-          class="btn btn-secondary btn-xs"
-          onclick={() => zoomScale = 1}
-          style="padding: 3px 6px; font-size: 0.65rem;"
-        >
-          Reset
-        </button>
-      {/if}
+    {#if !isLoading && !error && attentionPins.length > 0}
+      <section class="map-attention" aria-labelledby="map-attention-title">
+        <div class="map-attention-head">
+          <h4 id="map-attention-title">Check these first</h4>
+          <span class="map-attention-count">{attentionPins.length} finding{attentionPins.length === 1 ? "" : "s"}</span>
+        </div>
+        <p class="map-attention-hint">
+          Clinical-confirm and stronger-association hits from your packs. Click a gene to focus it on
+          the map and open the report card.
+        </p>
+        <ul class="map-attention-list">
+          {#each attentionPins as pin (`attn:${pin.rsid}:${pin.pos}`)}
+            <li>
+              <button
+                type="button"
+                class="attn-chip {pin.severity}"
+                onclick={() => focusPin(pin)}
+              >
+                <span class="attn-glyph" aria-hidden="true">{pinGlyph(pin.severity)}</span>
+                <span class="attn-gene">{pin.gene}</span>
+                <span class="attn-meta font-mono">chr{pin.chr} · {pin.rsid}</span>
+                <span class="attn-why">{severityLabel(pin.severity)}</span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
+    {#if !isLoading && !error}
+      <div class="map-summary" aria-label="Map summary">
+        <div class="map-stat">
+          <span class="map-stat-value">{totalSnps.toLocaleString()}</span>
+          <span class="map-stat-label">Genotyped SNPs</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-value">{riskPins.length}</span>
+          <span class="map-stat-label">Mapped pins</span>
+        </div>
+        <div class="map-stat map-stat-warn">
+          <span class="map-stat-value">{pinSummary.confirm}</span>
+          <span class="map-stat-label">Confirm clinically</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-value">{pinSummary.high}</span>
+          <span class="map-stat-label">Stronger assoc.</span>
+        </div>
+      </div>
+    {/if}
+
+    <div class="map-legend" aria-label="Pin type legend">
+      <div class="legend-item">
+        <span class="legend-swatch high_risk" aria-hidden="true">!</span>
+        <span>
+          <strong>Stronger association (!)</strong>
+          <span class="legend-desc">Two matched risk alleles in curated packs</span>
+        </span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch moderate_risk" aria-hidden="true">?</span>
+        <span>
+          <strong>Possible association (?)</strong>
+          <span class="legend-desc">One matched allele or moderate pack signal</span>
+        </span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch confirmation_required" aria-hidden="true">C</span>
+        <span>
+          <strong>Confirm clinically (C)</strong>
+          <span class="legend-desc">Worth verifying with a clinical lab test</span>
+        </span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch vector_promoted" aria-hidden="true">V</span>
+        <span>
+          <strong>Vector discovery (V)</strong>
+          <span class="legend-desc">Promoted from local vector search</span>
+        </span>
+      </div>
     </div>
-    
-    <button
-      class="btn btn-secondary btn-xs"
-      onclick={loadComparison}
-      disabled={isLoading}
-      style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; padding: 5px 10px;"
-    >
-      👥 Compare Genotypes
-    </button>
+
+    <div class="map-controls-row">
+      <div class="map-filter" role="group" aria-label="Filter pins on map">
+        <button type="button" class="filter-chip" class:active={pinFilter === "all"} onclick={() => (pinFilter = "all")}>All</button>
+        <button type="button" class="filter-chip" class:active={pinFilter === "attention"} onclick={() => (pinFilter = "attention")}>Needs check</button>
+        <button type="button" class="filter-chip" class:active={pinFilter === "confirmation_required"} onclick={() => (pinFilter = "confirmation_required")}>Confirm</button>
+        <button type="button" class="filter-chip" class:active={pinFilter === "high_risk"} onclick={() => (pinFilter = "high_risk")}>Stronger</button>
+        <button type="button" class="filter-chip" class:active={pinFilter === "moderate_risk"} onclick={() => (pinFilter = "moderate_risk")}>Possible</button>
+        <button type="button" class="filter-chip" class:active={pinFilter === "vector_promoted"} onclick={() => (pinFilter = "vector_promoted")}>Vector</button>
+      </div>
+
+      <div class="map-zoom">
+        <span class="map-zoom-label">Zoom <strong>{zoomScale}×</strong></span>
+        <input
+          class="map-zoom-range"
+          type="range"
+          min="1"
+          max="8"
+          step="0.5"
+          bind:value={zoomScale}
+          aria-label="Chromosome zoom scale"
+        />
+        {#if zoomScale > 1}
+          <button type="button" class="btn btn-secondary btn-xs" onclick={() => (zoomScale = 1)}>
+            Reset
+          </button>
+        {/if}
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-xs"
+        onclick={loadComparison}
+        disabled={isLoading || riskPins.length === 0}
+      >
+        Compare genotypes
+      </button>
+    </div>
   </div>
 
   {#if isComparing}
-    <div class="comparison-overlay" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; animation: fadeIn 0.2s ease;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-        <h4 style="margin: 0; color: #a78bfa; font-size: 0.85rem;">👥 Multi-Sample Variant Comparison</h4>
-        <button class="btn btn-secondary btn-xs" onclick={closeComparison} style="padding: 2px 6px; font-size: 0.65rem;">Close</button>
+    <div class="comparison-overlay">
+      <div class="comparison-header">
+        <h4>Multi-sample comparison</h4>
+        <button type="button" class="btn btn-secondary btn-xs" onclick={closeComparison}>Close</button>
       </div>
       {#if allSamples.length <= 1}
-        <p style="font-size: 0.72rem; opacity: 0.8; margin: 0;">Import multiple samples to compare genotypes across family members.</p>
+        <p class="comparison-hint">Import multiple samples to compare genotypes across profiles.</p>
       {:else}
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.72rem; text-align: left;">
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
             <thead>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.15);">
-                <th style="padding: 6px;">Variant / rsID</th>
-                <th style="padding: 6px;">Gene</th>
-                {#each allSamples as sample}
-                  <th style="padding: 6px; text-align: center;" class:active-sample={selectedSample && sample.id === selectedSample.id}>
-                    {sample.name} {selectedSample && sample.id === selectedSample.id ? '👤' : ''}
+              <tr>
+                <th scope="col">Variant</th>
+                <th scope="col">Gene</th>
+                {#each allSamples as sample (sample.id)}
+                  <th
+                    scope="col"
+                    class:active-sample={selectedSample && sample.id === selectedSample.id}
+                  >
+                    {sample.name}{selectedSample && sample.id === selectedSample.id ? " · active" : ""}
                   </th>
                 {/each}
               </tr>
             </thead>
             <tbody>
-              {#each comparisonData as row}
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);" class="comparison-tr">
-                  <td style="padding: 6px;" class="font-mono">{row.rsid}</td>
-                  <td style="padding: 6px; font-weight: 600;">{row.gene}</td>
-                  {#each allSamples as sample}
-                    {@const gt = row.genotypes[sample.id] || '--'}
-                    <td style="padding: 6px; text-align: center; font-family: var(--font-mono), monospace;" class="genotype-cell {row.severity}">
-                      {gt}
-                    </td>
+              {#each comparisonData as row (`${row.rsid}:${row.gene}`)}
+                <tr>
+                  <td class="font-mono">{row.rsid}</td>
+                  <td>{row.gene}</td>
+                  {#each allSamples as sample (sample.id)}
+                    <td class="genotype-cell {row.severity}">{row.genotypes[sample.id] || "--"}</td>
                   {/each}
                 </tr>
               {/each}
@@ -324,69 +521,113 @@
     <PanelLoadingState
       message="Mapping chromosome density from your local database…"
       submessage="Counting SNPs per chromosome and placing report variant pins."
-      accent="#34d399"
+      accent="#2dd4bf"
       compact
     />
   {:else if error}
-    <div class="map-error">Failed to query database: {error}</div>
-    <button class="btn btn-secondary btn-xs" onclick={loadData}>Retry</button>
+    <div class="map-error" role="alert">Failed to query database: {error}</div>
+    <button type="button" class="btn btn-secondary btn-xs" onclick={loadData}>Retry</button>
   {:else}
     <div class="chromosome-list">
-      {#each CHR_ORDER as chr}
+      {#each CHR_ORDER as chr, idx (chr)}
         {@const count = chromosomeCounts[chr] || 0}
-        {@const pct = (count / maxCount) * 100}
-        {@const chrPins = riskPins.filter(p => p.chr === chr)}
+        {@const density = count / maxCount}
+        {@const widthPct = chrWidthPct(chr)}
+        {@const chrPins = pinsForChr(chr)}
+        {@const allChrPins = riskPins.filter((p) => p.chr === chr)}
         {@const chrTraits = traitBands.filter((b) => b.chromosome === chr).slice(0, 4)}
-        <div class="chr-row">
-          <div class="chr-label font-mono">Chr {chr}</div>
+        {@const isActive = activeChr === chr}
+        <div
+          class="chr-row"
+          class:chr-row-active={isActive}
+          class:chr-row-has-pins={chrPins.length > 0}
+          style={`animation-delay: ${Math.min(idx, 20) * 18}ms`}
+          role="group"
+          aria-label="Chromosome {chr}"
+          onmouseenter={() => (activeChr = chr)}
+          onfocusin={() => (activeChr = chr)}
+        >
+          <div class="chr-label font-mono">{chr}</div>
 
           <div class="chr-main">
-            <div class="chr-capsule-wrapper" style="overflow-x: auto; position: relative; width: 100%; border-radius: 999px;">
-              <div class="chr-capsule" style="width: {100 * zoomScale}%; min-width: 100%; position: relative; height: 18px; border-radius: 999px;">
-                <div class="chr-density-fill" style="width: {pct}%"></div>
+            <div class="chr-track">
+              <div
+                class="chr-capsule-wrapper"
+                style={`width: ${widthPct}%`}
+                title={`Chr ${chr} · ${formatMb(CHR_LENGTHS[chr])} · ${count.toLocaleString()} SNPs`}
+              >
+                <div
+                  class="chr-capsule"
+                  class:chr-capsule-dim={pinFilter !== "all" && chrPins.length === 0 && allChrPins.length > 0}
+                  style={`width: ${100 * zoomScale}%; min-width: 100%; --density: ${density}`}
+                >
+                  <div class="chr-density-fill"></div>
+                  <div class="chr-ends" aria-hidden="true">
+                    <span class="chr-end-tick start">pter</span>
+                    <span class="chr-end-tick end">{formatMb(CHR_LENGTHS[chr])}</span>
+                  </div>
 
-                {#each chrPins as pin}
-                  {@const pinPosPct = (pin.pos / CHR_LENGTHS[chr]) * 100}
-                  <button
-                    class="variant-pin {pin.severity}"
-                    class:pin-focused={focusRsid && pin.rsid.toLowerCase() === focusRsid.toLowerCase()}
-                    style="left: {pinPosPct}%"
-                    data-rsid={pin.rsid.toLowerCase()}
-                    aria-label="Variant {pin.gene} at {pin.pos}"
-                    onclick={() => onNavigateToVariant?.(pin.rsid, "report")}
-                    onmouseenter={(e) => showTooltip(pin, e)}
-                    onmouseleave={hideTooltip}
-                  ></button>
-
-                  <!-- Gene Overlay label on zoom -->
-                  {#if zoomScale > 1.5}
-                    <span
-                      class="gene-overlay-label font-mono"
-                      style="left: {pinPosPct}%; position: absolute; top: -14px; transform: translateX(-50%) rotate(-15deg); font-size: 0.58rem; font-weight: 700; color: #818cf8; background: rgba(0,0,0,0.85); border: 1px solid rgba(129,140,248,0.4); padding: 1px 4px; border-radius: 3px; pointer-events: none; z-index: 10; white-space: nowrap;"
+                  {#each chrPins as pin (`${pin.rsid}:${pin.pos}`)}
+                    {@const pinPosPct = (pin.pos / CHR_LENGTHS[chr]) * 100}
+                    <button
+                      type="button"
+                      class="variant-pin {pin.severity}"
+                      class:pin-focused={focusRsid && pin.rsid.toLowerCase() === focusRsid.toLowerCase()}
+                      style={`left: ${pinPosPct}%`}
+                      data-rsid={pin.rsid.toLowerCase()}
+                      aria-label="{pin.gene} {pin.rsid} — {severityLabel(pin.severity)}"
+                      onclick={() => focusPin(pin)}
+                      onmouseenter={(e) => showTooltip(pin, e)}
+                      onmouseleave={hideTooltip}
+                      onfocus={(e) => showTooltip(pin, e)}
+                      onblur={hideTooltip}
                     >
-                      {pin.gene}
-                    </span>
-                  {/if}
-                {/each}
+                      <span class="pin-glyph" aria-hidden="true">{pinGlyph(pin.severity)}</span>
+                    </button>
+                  {/each}
+                </div>
               </div>
             </div>
 
-            <div class="chr-stats text-secondary font-mono">
-              <span class="total-snps-val">{count.toLocaleString()} SNPs</span>
-              {#if chrPins.length > 0}
-                <span class="risk-count-pill">
-                  ⚠️ {chrPins.length} {chrPins.length === 1 ? 'variant' : 'variants'}
-                </span>
-              {/if}
-            </div>
+            {#if isActive && chrPins.length > 0}
+              <div class="chr-findings" aria-label="Findings on chromosome {chr}">
+                <span class="chr-findings-label">On chr{chr}</span>
+                {#each chrPins as pin (`find:${pin.rsid}:${pin.pos}`)}
+                  <button
+                    type="button"
+                    class="finding-chip {pin.severity}"
+                    onclick={() => focusPin(pin)}
+                  >
+                    <span class="finding-glyph" aria-hidden="true">{pinGlyph(pin.severity)}</span>
+                    <span class="finding-gene">{pin.gene}</span>
+                    <span class="finding-why">{severityLabel(pin.severity)}</span>
+                  </button>
+                {/each}
+              </div>
+            {:else if chrPins.length > 0}
+              <p class="chr-findings-hint">Hover or focus this row to list {chrPins.length} finding{chrPins.length === 1 ? "" : "s"}.</p>
+            {/if}
+
             {#if chrTraits.length > 0}
               <div class="trait-overlay">
-                {#each chrTraits as band}
-                  <span class="trait-band" title="{band.trait_category}: {band.association_count} associations">
+                {#each chrTraits as band (`${band.trait_category}:${band.association_count}`)}
+                  <span
+                    class="trait-band"
+                    title="{band.trait_category}: {band.association_count} associations"
+                  >
                     {band.trait_category.replace(/_/g, " ")} ({band.association_count})
                   </span>
                 {/each}
               </div>
+            {/if}
+          </div>
+
+          <div class="chr-stats font-mono">
+            <span class="total-snps-val">{count.toLocaleString()} SNPs</span>
+            {#if allChrPins.length > 0}
+              <span class="risk-count-pill" class:has-confirm={allChrPins.some((p) => p.severity === "confirmation_required")}>
+                {chrPinBreakdown(allChrPins)}
+              </span>
             {/if}
           </div>
         </div>
@@ -395,14 +636,13 @@
   {/if}
 
   {#if hoveredPin}
-    <div class="map-tooltip" style="left: {hoveredPin.x}px; top: {hoveredPin.y}px;">
+    <div class="map-tooltip" style={`left: ${hoveredPin.x}px; top: ${hoveredPin.y}px`}>
       <span class="tooltip-title">{hoveredPin.gene}</span>
       <span class="tooltip-sub font-mono">{hoveredPin.rsid}</span>
       <span class="tooltip-badge {hoveredPin.severity}">
-        {hoveredPin.severity.replace('_', ' ')}
+        <span aria-hidden="true">{pinGlyph(hoveredPin.severity)}</span>
+        {severityLabel(hoveredPin.severity)}
       </span>
     </div>
   {/if}
 </div>
-
-<style src="../../styles/components/genome-map.css"></style>

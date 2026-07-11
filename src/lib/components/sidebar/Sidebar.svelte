@@ -16,8 +16,11 @@
     getOfflineReferenceStatus,
     cancelOfflineImport,
     exportDiscoveryFindings,
+    getGnomadReadiness,
+    downloadGnomadIndexes,
   } from '../../api/tauri';
   import type { ReferenceStatusDetails } from '../../api/tauri';
+  import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
   import '$lib/styles/components/sidebar.css';
 
@@ -63,6 +66,7 @@
     onImportGenome: (e: Event) => void;
     onSelectSample: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
+    onOpenConnections?: () => void;
   }
 
   let {
@@ -87,6 +91,7 @@
     onImportGenome,
     onSelectSample,
     onDeleteSample,
+    onOpenConnections,
   }: Props = $props();
 
   interface DownloadProgress {
@@ -125,6 +130,9 @@
   let syncPhase = $state<Record<string, SyncPhaseInfo>>({});
   let isCheckingStatus = $state(false);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
+  let gnomadReadiness = $state<GnomadReadinessStatus | null>(null);
+  let gnomadBusy = $state(false);
+  let gnomadHint = $state('');
 
   $effect(() => {
     if (expandDatabases) {
@@ -145,6 +153,27 @@
       );
     } catch (err) {
       console.error('Failed to get reference status details:', err);
+    }
+    try {
+      gnomadReadiness = await getGnomadReadiness();
+    } catch (err) {
+      console.warn('Failed to get gnomAD readiness:', err);
+      gnomadReadiness = null;
+    }
+  }
+
+  async function handleDownloadGnomadIndexes() {
+    if (gnomadBusy) return;
+    gnomadBusy = true;
+    gnomadHint = 'Downloading gnomAD index files…';
+    try {
+      const result = await downloadGnomadIndexes();
+      gnomadHint = result.message || `Downloaded ${result.downloaded}, skipped ${result.skipped}`;
+      gnomadReadiness = await getGnomadReadiness();
+    } catch (e: unknown) {
+      gnomadHint = String(e);
+    } finally {
+      gnomadBusy = false;
     }
   }
 
@@ -587,6 +616,18 @@
     <h2>Genomics Caddy</h2>
   </div>
 
+  {#if onOpenConnections}
+    <div class="chain-status-card card">
+      <h4>Connections</h4>
+      <p class="card-hint">
+        Set Ollama + vector DB endpoints, monitor health, and see which models are likely GPU vs CPU — no baked-in hosts.
+      </p>
+      <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()}>
+        Open Connections
+      </button>
+    </div>
+  {/if}
+
   <!-- Chain Status Indicator -->
   <div class="chain-status-card card">
     <h4>Liftover Assembly</h4>
@@ -882,6 +923,37 @@
               {/if}
               <div class="status-note">Offline dbSNP here is the NCBI <em>refsnp-merged</em> + withdrawn catalog (rsID merge map + dates/citations). Alleles, placements, and AF live in the huge per-chromosome <em>refsnp-chr*.json</em> files — we do not ingest those yet. Report AF chips use the local gnomAD cache when present (not this merge DB).</div>
             </div>
+
+            <div class="status-group" style="margin-top: 0.45rem;">
+              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">gnomAD allele frequencies</div>
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
+                <span>Status:</span>
+                <strong style="color: {gnomadReadiness?.ready ? '#34d399' : gnomadReadiness?.indexes_cached ? '#fbbf24' : '#f87171'}">
+                  {#if gnomadReadiness?.ready}
+                    Ready · {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes
+                  {:else if gnomadReadiness}
+                    {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes · {gnomadReadiness.summary}
+                  {:else}
+                    Checking…
+                  {/if}
+                </strong>
+              </div>
+              <div class="status-note">Step 3 for AF chips on the report — separate from dbSNP rsID history. Manage Ollama/Qdrant under Advanced → Connections.</div>
+              {#if gnomadReadiness && !gnomadReadiness.ready}
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  style="margin-top: 0.35rem; align-self: start;"
+                  disabled={gnomadBusy || sweepRunning}
+                  onclick={handleDownloadGnomadIndexes}
+                >
+                  {gnomadBusy ? 'Downloading…' : 'Download gnomAD indexes'}
+                </button>
+              {/if}
+              {#if gnomadHint}
+                <div class="status-note">{gnomadHint}</div>
+              {/if}
+            </div>
           </div>
         {/if}
 
@@ -912,8 +984,3 @@
     {onDeleteSample}
   />
 </aside>
-
-<!-- Keep an empty style block so Vite/Svelte HMR does not request a stale
-     virtual CSS module after styles were moved to sidebar.css. -->
-<style>
-</style>

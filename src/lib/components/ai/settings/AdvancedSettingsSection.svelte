@@ -8,6 +8,7 @@
   import type { AppPaths } from "../../../types/genomics";
   import QdrantResearchSettingsDetails from "./QdrantResearchSettingsDetails.svelte";
   import { saveOllamaUrl } from "../../../utils/ollamaSettings";
+  import "$lib/styles/components/advanced-settings-section.css";
 
   interface McpServerConfig {
     name: string;
@@ -20,7 +21,7 @@
   }
 
   let { 
-    ollamaUrl = $bindable("http://localhost:11434"), 
+    ollamaUrl = $bindable(""), 
     ollamaToken = $bindable("") 
   }: Props = $props();
 
@@ -360,5 +361,3 @@
 </details>
 
 <QdrantResearchSettingsDetails bind:ollamaUrl bind:ollamaToken />
-
-<style src="../../styles/components/advanced-settings-section.css"></style>

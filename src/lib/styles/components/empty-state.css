@@ -73,6 +73,16 @@
   background: rgba(59, 130, 246, 0.2);
 }
 
+.welcome-cta-static {
+  cursor: default;
+  opacity: 0.95;
+}
+
+.welcome-cta-static:hover {
+  border-color: var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .welcome-cta-kicker {
   font-size: 0.68rem;
   font-weight: 700;

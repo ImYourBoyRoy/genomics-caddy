@@ -5,8 +5,9 @@ Responsibilities:
 - Collect hardcoded pack rsIDs/genes from marker packs on disk.
 - Intersect a sample's genotypes with ClinVar / GWAS / PharmGKB via temp-table joins.
 - Write two JSON files: pack coverage + full associated findings beyond packs.
+- Power in-app discovery browser with cancel, progress events, and short-lived cache.
 Key Inputs: sample_id, App/Data marker packs, attached catalog DBs, sample genome.db.
-Key Outputs: JSON paths under App/Data/exports/.
+Key Outputs: JSON paths under App/Data/exports/; discovery:query_progress events.
 */
 
 use crate::db;
@@ -15,6 +16,64 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
+use tauri::{AppHandle, Emitter};
+
+static DISCOVERY_CANCEL: AtomicBool = AtomicBool::new(false);
+
+struct DiscoveryJoinCache {
+    sample_id: i64,
+    findings: Vec<Value>,
+    pack_rsids: BTreeSet<String>,
+    geno_count: i64,
+    created: Instant,
+}
+
+fn discovery_cache() -> &'static Mutex<Option<DiscoveryJoinCache>> {
+    static CACHE: OnceLock<Mutex<Option<DiscoveryJoinCache>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(None))
+}
+
+pub fn reset_discovery_cancel() {
+    DISCOVERY_CANCEL.store(false, Ordering::SeqCst);
+}
+
+pub fn cancel_discovery_query() {
+    DISCOVERY_CANCEL.store(true, Ordering::SeqCst);
+}
+
+pub fn is_discovery_cancelled() -> bool {
+    DISCOVERY_CANCEL.load(Ordering::SeqCst)
+}
+
+pub fn invalidate_discovery_cache() {
+    if let Ok(mut guard) = discovery_cache().lock() {
+        *guard = None;
+    }
+}
+
+fn emit_discovery_progress(app: Option<&AppHandle>, percent: u8, message: &str) {
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "discovery:query_progress",
+            json!({
+                "percent": percent,
+                "message": message,
+                "cancelled": is_discovery_cancelled(),
+            }),
+        );
+    }
+}
+
+fn check_discovery_cancel() -> Result<(), String> {
+    if is_discovery_cancelled() {
+        Err("Discovery query cancelled.".into())
+    } else {
+        Ok(())
+    }
+}
 
 fn pack_rsids_and_genes(data_dir: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>, Value), String> {
     let manifest_str = db::get_manifest_str(Some(data_dir));
@@ -103,7 +162,14 @@ fn chrono_iso() -> String {
     format!("{secs}")
 }
 
-fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value>, String> {
+fn load_findings_via_join(
+    conn: &Connection,
+    sample_id: i64,
+    app: Option<&AppHandle>,
+) -> Result<Vec<Value>, String> {
+    check_discovery_cancel()?;
+    emit_discovery_progress(app, 5, "Loading genotype rsIDs…");
+
     // Temp table of this sample's rsIDs for set-based joins (avoids 700k×chunk IN lists).
     conn.execute_batch(
         "
@@ -152,6 +218,9 @@ fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value
         });
     };
 
+    check_discovery_cancel()?;
+    emit_discovery_progress(app, 25, "Joining ClinVar…");
+
     if crate::offline::schema::schema_attached(conn, "clinvar") {
         let mut stmt = conn
             .prepare(
@@ -193,6 +262,9 @@ fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value
         }
     }
 
+    check_discovery_cancel()?;
+    emit_discovery_progress(app, 55, "Joining GWAS…");
+
     {
         let mut stmt = conn
             .prepare(
@@ -228,6 +300,9 @@ fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value
             }
         }
     }
+
+    check_discovery_cancel()?;
+    emit_discovery_progress(app, 80, "Joining PharmGKB…");
 
     {
         let mut stmt = conn
@@ -267,6 +342,8 @@ fn load_findings_via_join(conn: &Connection, sample_id: i64) -> Result<Vec<Value
         }
     }
 
+    check_discovery_cancel()?;
+    emit_discovery_progress(app, 92, "Ranking associations…");
     Ok(by_rsid.into_values().collect())
 }
 
@@ -313,7 +390,7 @@ pub fn export_discovery_jsons(
         )
         .unwrap_or(0);
 
-    let findings = load_findings_via_join(&sample_conn, sample_id)?;
+    let findings = load_findings_via_join(&sample_conn, sample_id, None)?;
 
     let mut in_pack = Vec::new();
     let mut beyond_pack = Vec::new();
@@ -334,33 +411,7 @@ pub fn export_discovery_jsons(
         }
     }
 
-    beyond_pack.sort_by(|a, b| {
-        let score = |v: &Value| -> i32 {
-            let mut s = 0;
-            if let Some(c) = v.get("clinvar") {
-                let sig = c
-                    .get("clinical_significance")
-                    .and_then(|x| x.as_str())
-                    .unwrap_or("")
-                    .to_lowercase();
-                if sig.contains("pathogenic") {
-                    s += 100;
-                } else if sig.contains("risk") || sig.contains("association") {
-                    s += 40;
-                } else if !sig.is_empty() {
-                    s += 10;
-                }
-            }
-            if v.get("pharmgkb").and_then(|x| x.as_object()).is_some() {
-                s += 30;
-            }
-            if v.get("gwas").and_then(|x| x.as_object()).is_some() {
-                s += 5;
-            }
-            s
-        };
-        score(b).cmp(&score(a))
-    });
+    beyond_pack.sort_by_key(|b| std::cmp::Reverse(finding_priority(b)));
 
     let full_doc = json!({
         "kind": "genome_catalog_findings",
@@ -390,4 +441,199 @@ pub fn export_discovery_jsons(
         "genotype_rsid_count": geno_count,
         "pack_rsid_count": pack_rsids.len(),
     }))
+}
+
+fn finding_priority(v: &Value) -> i32 {
+    let mut s = 0;
+    if let Some(c) = v.get("clinvar") {
+        let sig = c
+            .get("clinical_significance")
+            .and_then(|x| x.as_str())
+            .unwrap_or("")
+            .to_lowercase();
+        if sig.contains("pathogenic") {
+            s += 100;
+        } else if sig.contains("risk") || sig.contains("association") {
+            s += 40;
+        } else if !sig.is_empty() {
+            s += 10;
+        }
+    }
+    if v.get("pharmgkb").and_then(|x| x.as_object()).is_some() {
+        s += 30;
+    }
+    if v.get("gwas").and_then(|x| x.as_object()).is_some() {
+        s += 5;
+    }
+    s
+}
+
+fn finding_matches_source(entry: &Value, source: &str) -> bool {
+    match source {
+        "clinvar" => entry.get("clinvar").and_then(|v| v.as_object()).is_some(),
+        "gwas" => entry.get("gwas").and_then(|v| v.as_object()).is_some(),
+        "pharmgkb" => entry.get("pharmgkb").and_then(|v| v.as_object()).is_some(),
+        _ => true,
+    }
+}
+
+fn finding_matches_query(entry: &Value, q: &str) -> bool {
+    if q.is_empty() {
+        return true;
+    }
+    let hay = serde_json::to_string(entry).unwrap_or_default().to_lowercase();
+    hay.contains(q)
+}
+
+const DISCOVERY_CACHE_TTL: Duration = Duration::from_secs(600);
+
+/// In-app discovery browser: ranked beyond-pack (or all) catalog hits with filter/pagination.
+#[allow(clippy::too_many_arguments)]
+pub fn query_discovery_findings(
+    data_dir: &Path,
+    db_path: &Path,
+    sample_id: i64,
+    beyond_packs_only: bool,
+    source_filter: Option<&str>,
+    query: Option<&str>,
+    limit: usize,
+    offset: usize,
+    app: Option<&AppHandle>,
+) -> Result<Value, String> {
+    reset_discovery_cancel();
+    emit_discovery_progress(app, 1, "Starting discovery query…");
+
+    let cache_hit = {
+        let guard = discovery_cache()
+            .lock()
+            .map_err(|_| "Discovery cache lock poisoned".to_string())?;
+        guard.as_ref().and_then(|c| {
+            if c.sample_id == sample_id && c.created.elapsed() < DISCOVERY_CACHE_TTL {
+                Some((c.findings.clone(), c.pack_rsids.clone(), c.geno_count))
+            } else {
+                None
+            }
+        })
+    };
+    let from_cache = cache_hit.is_some();
+
+    let (findings, pack_rsids, geno_count) = if let Some(hit) = cache_hit {
+        emit_discovery_progress(app, 90, "Using cached catalog joins…");
+        hit
+    } else {
+        let (pack_rsids, _pack_genes, _) = pack_rsids_and_genes(data_dir)?;
+        let sample_conn = db::connect_sample_from_registry_path(db_path, sample_id)
+            .map_err(|e| format!("Open sample DB: {e}"))?;
+
+        let geno_count: i64 = sample_conn
+            .query_row(
+                "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
+                params![sample_id],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
+
+        let findings = load_findings_via_join(&sample_conn, sample_id, app)?;
+        if let Ok(mut guard) = discovery_cache().lock() {
+            *guard = Some(DiscoveryJoinCache {
+                sample_id,
+                findings: findings.clone(),
+                pack_rsids: pack_rsids.clone(),
+                geno_count,
+                created: Instant::now(),
+            });
+        }
+        (findings, pack_rsids, geno_count)
+    };
+
+    check_discovery_cancel()?;
+
+    let source = source_filter
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty() && s != "all");
+    let q = query
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_default();
+
+    let mut beyond = Vec::new();
+    let mut in_pack = 0usize;
+    for mut entry in findings {
+        let rsid = entry
+            .get("rsid")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let in_packs = pack_rsids.contains(&rsid);
+        if let Some(obj) = entry.as_object_mut() {
+            obj.insert("in_marker_packs".into(), json!(in_packs));
+        }
+        if in_packs {
+            in_pack += 1;
+            if beyond_packs_only {
+                continue;
+            }
+        }
+        if let Some(ref src) = source {
+            if !finding_matches_source(&entry, src) {
+                continue;
+            }
+        }
+        if !finding_matches_query(&entry, &q) {
+            continue;
+        }
+        beyond.push(entry);
+    }
+
+    beyond.sort_by_key(|b| std::cmp::Reverse(finding_priority(b)));
+    let total_matched = beyond.len();
+    let limit = limit.clamp(1, 500);
+    let page: Vec<Value> = beyond.into_iter().skip(offset).take(limit).collect();
+
+    emit_discovery_progress(app, 100, "Discovery query complete");
+
+    Ok(json!({
+        "sample_id": sample_id,
+        "genotype_rsid_count": geno_count,
+        "pack_rsid_count": pack_rsids.len(),
+        "findings_in_packs": in_pack,
+        "total_matched": total_matched,
+        "beyond_packs_only": beyond_packs_only,
+        "source_filter": source,
+        "query": if q.is_empty() { Value::Null } else { json!(q) },
+        "limit": limit,
+        "offset": offset,
+        "cached": from_cache,
+        "items": page,
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn priority_ranks_pathogenic_above_gwas() {
+        let pathogenic = json!({
+            "clinvar": { "clinical_significance": "Pathogenic" }
+        });
+        let gwas_only = json!({
+            "gwas": { "top_trait": "height" }
+        });
+        assert!(finding_priority(&pathogenic) > finding_priority(&gwas_only));
+    }
+
+    #[test]
+    fn source_and_query_filters() {
+        let entry = json!({
+            "rsid": "rs123",
+            "clinvar": { "clinical_significance": "risk factor", "gene": "MTHFR" },
+            "gwas": null,
+            "pharmgkb": null
+        });
+        assert!(finding_matches_source(&entry, "clinvar"));
+        assert!(!finding_matches_source(&entry, "pharmgkb"));
+        assert!(finding_matches_query(&entry, "mthfr"));
+        assert!(!finding_matches_query(&entry, "cyp2c19"));
+    }
 }

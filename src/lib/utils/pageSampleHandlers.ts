@@ -158,7 +158,10 @@ export async function searchVariants(
   },
 ): Promise<void> {
   e.preventDefault();
-  if (!selectedSample) return;
+  if (!selectedSample) {
+    alert("Import or select a genome profile before searching.");
+    return;
+  }
   onState({ isBrowsing: true });
   try {
     if (searchRsid.trim()) {

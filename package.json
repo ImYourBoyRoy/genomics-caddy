@@ -1,6 +1,6 @@
 {
   "name": "genomics-caddy",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "type": "module",
   "engines": {
@@ -8,31 +8,33 @@
   },
   "scripts": {
     "dev": "vite dev",
-    "build": "tsc && vite build",
+    "build": "node ./scripts/run_tsc.mjs && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
+    "typecheck": "node ./scripts/run_tsc.mjs --noEmit",
+    "lint": "node ./scripts/run_tsc.mjs --noEmit",
     "tauri": "tauri",
-	"tauri:dev": "tauri dev",
-
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-
-	"clean:deep": "node -e \"const fs=require('fs'); for (const p of ['node_modules','package-lock.json','dist','.svelte-kit']) fs.rmSync(p,{recursive:true,force:true});\"",
-	"clean:fresh": "npm run clean:deep && npm install",
-
+    "tauri:dev": "tauri dev",
+    "check": "node ./scripts/run_svelte_check.mjs",
+    "check:watch": "node ./scripts/run_svelte_check.mjs --watch",
+    "clean:deep": "node -e \"const fs=require('fs'); for (const p of ['node_modules','package-lock.json','dist','.svelte-kit']) fs.rmSync(p,{recursive:true,force:true});\"",
+    "clean:fresh": "npm run clean:deep && npm install",
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "python scripts/smoke_test.py",
     "mcp": "tauri dev -- --mcp",
-
     "cargo:check": "cargo check --manifest-path src-tauri/Cargo.toml",
     "cargo:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -W clippy::pedantic -D warnings",
     "cargo:test": "cargo test --manifest-path src-tauri/Cargo.toml",
     "cargo:update": "cargo update --manifest-path src-tauri/Cargo.toml",
-
+    "update:all": "node ./scripts/update_all.mjs",
+    "update:all:dry": "node ./scripts/update_all.mjs --dry-run",
+    "update:toolchains": "node ./scripts/update_all.mjs --skip-npm --skip-cargo --skip-verify",
+    "update:deps": "node ./scripts/update_all.mjs --skip-toolchains",
     "system:check": "bash ./scripts/system_check.sh",
     "setup:linux": "bash ./scripts/setup_linux_deps.sh",
+    "desktop:linux": "bash ./scripts/install_linux_desktop.sh",
+    "verify:css": "node ./scripts/verify_vite_css_load.mjs",
+    "icons:regen": "tauri icon ./static/logo.png",
     "build:release": "node ./scripts/run_release_build.mjs",
     "build:release-fast": "node ./scripts/run_release_build.mjs --skip-purge",
     "purge:build": "node ./scripts/run_release_build.mjs --purge-only",
@@ -48,18 +50,19 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.69.1",
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "@tauri-apps/cli": "^2.11.3",
-    "@types/node": "^26.0.1",
+    "@sveltejs/kit": "^2.69.2",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.1",
+    "@typescript/typescript6": "^6.0.2",
     "svelte": "^5.56.4",
-    "svelte-check": "^4.7.1",
-    "typescript": "^6.0.3",
-    "vite": "^8.1.0",
-    "vitest": "^4.1.9"
+    "svelte-check": "^4.7.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   },
   "overrides": {
-     "cookie": "1.1.1"
+    "cookie": "1.1.1"
   },
   "allowScripts": {
     "esbuild": true

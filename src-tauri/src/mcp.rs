@@ -1226,8 +1226,19 @@ async fn execute_tool(
             let ollama_url = args
                 .get("ollama_url")
                 .and_then(|v| v.as_str())
-                .unwrap_or("http://127.0.0.1:11434");
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .ok_or_else(|| {
+                    "ollama_url is required (configure Advanced → Connections or pass ollama_url)"
+                        .to_string()
+                })?;
             let cfg = crate::config::load_qdrant_config(&conn)?;
+            if cfg.embedding_model.trim().is_empty() {
+                return Err(
+                    "embedding_model is not configured — set it under Advanced → Connections"
+                        .into(),
+                );
+            }
             let vector =
                 crate::research::embed_text("dimension probe", ollama_url, &cfg.embedding_model)
                     .await?;

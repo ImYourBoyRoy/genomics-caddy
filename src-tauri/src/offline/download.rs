@@ -129,7 +129,7 @@ pub fn verify_local_hash_sidecar(path: &Path) -> Result<(), String> {
                 }
                 context.consume(&buf[..n]);
             }
-            let local_hash = format!("{:x}", context.compute());
+            let local_hash = format!("{:x}", context.finalize());
             if local_hash != expected {
                 return Err(format!(
                     "MD5 mismatch for {}: local {local_hash} != expected {expected}",
@@ -303,7 +303,7 @@ pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String
                         }
                         context.consume(&buf[..n]);
                     }
-                    let digest = context.compute();
+                    let digest = context.finalize();
                     let local_hash = format!("{:x}", digest);
                     if local_hash != expected_hash {
                         return Err(format!(

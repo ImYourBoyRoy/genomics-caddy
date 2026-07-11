@@ -22,7 +22,7 @@
     withInvokeTimeout,
     connectionCheckTimeoutMs,
   } from "../../utils/researchConnection";
-  import { saveOllamaUrl } from "../../utils/ollamaSettings";
+  import { persistOllamaUrl } from "../../utils/ollamaSettings";
   import ResearchConnectionEditForm from "./ResearchConnectionEditForm.svelte";
 
   interface Props {
@@ -244,10 +244,7 @@
       }
     } catch (e) {
       console.warn("Failed to scan Ollama models:", e);
-      availableEmbedModels = ["mxbai-embed-large", "nomic-embed-text"];
-      if (editEmbedModel && !availableEmbedModels.includes(editEmbedModel)) {
-        availableEmbedModels = [...availableEmbedModels, editEmbedModel];
-      }
+      availableEmbedModels = editEmbedModel ? [editEmbedModel] : [];
     } finally {
       isScanningModels = false;
     }
@@ -271,7 +268,7 @@
 
       // Save Ollama settings
       ollamaUrl = editOllamaUrl.trim();
-      saveOllamaUrl(ollamaUrl);
+      await persistOllamaUrl(ollamaUrl);
 
       ollamaToken = editOllamaToken.trim();
       await saveOllamaToken(ollamaToken || undefined);

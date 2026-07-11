@@ -10,14 +10,21 @@ import {
   getContextWindow,
   isModelVisionCapable,
 } from "./aiPrompt";
-import { saveOllamaUrl } from "./ollamaSettings";
+import { persistOllamaUrl } from "./ollamaSettings";
 
 export async function scanChatModels(
   ollamaUrl: string,
   ollamaToken: string,
   currentModel: string,
 ): Promise<{ models: string[]; selectedModel: string; scanError: string }> {
-  saveOllamaUrl(ollamaUrl);
+  if (!ollamaUrl.trim()) {
+    return {
+      models: [],
+      selectedModel: currentModel,
+      scanError: "Set an Ollama URL under Advanced → Connections before scanning models.",
+    };
+  }
+  await persistOllamaUrl(ollamaUrl);
   await saveOllamaToken(ollamaToken || undefined);
   try {
     const models = filterChatModels(await scanOllamaModels(ollamaUrl, ollamaToken || undefined));

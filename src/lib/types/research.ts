@@ -374,9 +374,9 @@ export interface QdrantConnectionStatus {
 }
 
 export const DEFAULT_QDRANT_CONFIG: QdrantConfigPublic = {
-  url: 'http://localhost:6333',
-  collection: 'genomics_evidence',
-  embedding_model: 'mxbai-embed-large',
+  url: '',
+  collection: '',
+  embedding_model: '',
   gwas_strict: true,
   auto_start: false,
   api_key_set: false,
@@ -385,7 +385,7 @@ export const DEFAULT_QDRANT_CONFIG: QdrantConfigPublic = {
   named_vectors_enabled: false,
 };
 
-// Known embed-capable model name patterns (for filtering Ollama model list)
+/** Soft name hints only — GPU fitness comes from discoverOllamaModels / host probe. */
 export const EMBED_MODEL_PATTERNS = ['embed', 'nomic', 'bge', 'e5-', 'gte-', 'mxbai', 'qwen3-embedding'];
 
 export function isEmbedModel(name?: string): boolean {

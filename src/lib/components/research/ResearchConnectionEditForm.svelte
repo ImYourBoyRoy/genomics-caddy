@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
   import type { QdrantConfigPublic, QdrantConnectionStatus } from "../../types/research";
+  import "$lib/styles/components/research-connection-card.css";
 
   interface Props {
     editQdrantUrl: string;
@@ -58,7 +59,7 @@
           title="Qdrant status"
         ></span>
       </label>
-      <input id="qdrant-url" type="text" bind:value={editQdrantUrl} placeholder="http://localhost:6333" />
+      <input id="qdrant-url" type="text" bind:value={editQdrantUrl} placeholder="e.g. http://127.0.0.1:6333" />
     </div>
 
     <div class="form-group-custom">
@@ -104,7 +105,7 @@
         type="text"
         bind:value={editOllamaUrl}
         onchange={onOllamaUrlChange}
-        placeholder="http://localhost:11434"
+        placeholder="e.g. http://127.0.0.1:11434"
       />
     </div>
 
@@ -155,5 +156,3 @@
     </button>
   </div>
 </div>
-
-<style src="../../styles/components/research-connection-card.css"></style>

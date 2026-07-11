@@ -1,0 +1,347 @@
+/* ./src/lib/styles/components/connections-panel.css
+ * Advanced → Connections: Ollama + vector DB setup, host probe, model ops.
+ */
+
+.connections-panel {
+  --conn-accent: #2dd4bf;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.25rem 1.35rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+  background:
+    radial-gradient(ellipse 70% 45% at 0% -10%, rgba(45, 212, 191, 0.08), transparent 55%),
+    rgba(255, 255, 255, 0.02);
+}
+
+.connections-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.connections-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+
+.connections-hero h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+  color: #ecfeff;
+}
+
+.connections-lead {
+  margin: 0;
+  max-width: 46rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.connections-lead code,
+.field-hint code,
+.connections-banner code {
+  font-size: 0.85em;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.connections-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1rem;
+}
+
+@media (max-width: 960px) {
+  .connections-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.connections-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.connections-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.connections-card .subhead {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.connections-card .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.connections-card label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.connections-card input,
+.connections-card select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.88rem;
+}
+
+.connections-card select {
+  cursor: pointer;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.connections-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.hero-actions {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.conn-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.conn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.conn-pill.live {
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #86efac;
+}
+
+.conn-pill.dead {
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.conn-pill.testing,
+.conn-pill.untested {
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #7dd3fc;
+}
+
+.connections-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.connections-banner.warn {
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fde68a;
+}
+
+.host-notes {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.host-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.host-chip {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  color: #5eead4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.update-box {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.8rem;
+  color: #e2e8f0;
+}
+
+.pull-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pull-row input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.88rem;
+}
+
+.model-table-wrap {
+  overflow: auto;
+  max-height: 22rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.model-table th,
+.model-table td {
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: top;
+}
+
+.model-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(10, 11, 16, 0.95);
+  color: #94a3b8;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.model-actions {
+  white-space: nowrap;
+}
+
+.connections-panel .btn-xs {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.connections-panel .btn-link {
+  background: none;
+  border: none;
+  color: #5eead4;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  font-weight: 600;
+}
+
+.connections-panel .btn-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.connections-panel .btn-link.danger {
+  color: #fca5a5;
+}
+
+.connections-panel .btn-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hint-on_gpu,
+.hint-fits_unified,
+.hint-likely_gpu {
+  color: #86efac;
+}
+
+.hint-may_spill_cpu,
+.hint-likely_cpu,
+.hint-on_cpu {
+  color: #fbbf24;
+}
+
+.hint-remote_unknown,
+.hint-unknown {
+  color: #94a3b8;
+}
+
+.connections-empty {
+  padding: 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.connections-alert {
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border-left: 3px solid #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+  font-size: 0.82rem;
+}

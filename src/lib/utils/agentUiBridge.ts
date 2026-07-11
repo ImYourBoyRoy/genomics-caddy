@@ -14,6 +14,7 @@ import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
 export type AgentUiTab =
   | 'report'
   | 'map'
+  | 'discovery'
   | 'browser'
   | 'mcp'
   | 'agent'

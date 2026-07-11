@@ -97,7 +97,7 @@
 
     connectionActivity = { phase: "idle", message: "Ready" },
 
-    ollamaUrl = "http://localhost:11434",
+    ollamaUrl = "",
 
     ollamaStatus = "untested",
 

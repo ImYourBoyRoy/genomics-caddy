@@ -1,0 +1,590 @@
+/* ./src/lib/styles/components/discovery-panel.css
+ * Catalog discovery — premium findings browser.
+ */
+
+.discovery-panel {
+  --disc-accent: #2dd4bf;
+  --disc-accent-soft: rgba(45, 212, 191, 0.14);
+  --disc-clinvar: #fb7185;
+  --disc-gwas: #38bdf8;
+  --disc-pgx: #fbbf24;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: 100%;
+  padding: 1.35rem 1.45rem 1.6rem;
+  border-radius: 14px;
+  border: 1px solid rgba(94, 234, 212, 0.12);
+  background:
+    radial-gradient(ellipse 70% 45% at 0% -10%, rgba(45, 212, 191, 0.1), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 0%, rgba(56, 189, 248, 0.07), transparent 50%),
+    rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.discovery-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 70%);
+}
+
+.discovery-hero {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.discovery-kicker {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+
+.discovery-hero h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #ecfeff;
+}
+
+.discovery-lead {
+  margin: 0;
+  max-width: 40rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.discovery-lead em {
+  font-style: normal;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.discovery-stat-grid {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.discovery-stat {
+  min-width: 6.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.discovery-stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+.discovery-stat-label {
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.discovery-stat-cache .discovery-stat-value {
+  color: #5eead4;
+  font-size: 0.9rem;
+}
+
+.discovery-insight {
+  position: relative;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.discovery-insight strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  color: #e0f2fe;
+}
+
+.discovery-insight p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.insight-tag {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: baseline;
+}
+
+.insight-tag.beyond {
+  background: rgba(45, 212, 191, 0.16);
+  color: #99f6e4;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+.insight-tag.pack {
+  background: rgba(148, 163, 184, 0.16);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.discovery-toolbar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(94, 234, 212, 0.14);
+}
+
+.discovery-source-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.seg-btn {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 0.35rem 0.7rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.seg-btn:hover,
+.seg-btn:focus-visible {
+  color: #e2e8f0;
+  outline: none;
+}
+
+.seg-btn.active {
+  background: var(--disc-accent-soft);
+  color: #ccfbf1;
+  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.35);
+}
+
+.discovery-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.discovery-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.toggle-ui {
+  width: 2.1rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  position: relative;
+  transition: background 0.18s ease;
+}
+
+.toggle-ui::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: transform 0.18s ease;
+}
+
+.discovery-toggle input:checked + .toggle-ui {
+  background: rgba(45, 212, 191, 0.35);
+  border-color: rgba(45, 212, 191, 0.55);
+}
+
+.discovery-toggle input:checked + .toggle-ui::after {
+  transform: translateX(0.85rem);
+  background: #ccfbf1;
+}
+
+.discovery-toggle input:focus-visible + .toggle-ui {
+  outline: 2px solid #e0f2fe;
+  outline-offset: 2px;
+}
+
+.toggle-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.discovery-search {
+  flex: 1 1 14rem;
+  min-width: 12rem;
+}
+
+.discovery-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(2, 6, 23, 0.55);
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.discovery-search input::placeholder {
+  color: #64748b;
+}
+
+.discovery-search input:focus {
+  outline: none;
+  border-color: rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+}
+
+.discovery-toolbar-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.discovery-error {
+  position: relative;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fecaca;
+  font-size: 0.82rem;
+}
+
+.discovery-loading {
+  position: relative;
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.discovery-empty {
+  position: relative;
+  padding: 1.5rem 1.25rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  text-align: center;
+}
+
+.discovery-empty strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+}
+
+.discovery-empty p {
+  margin: 0 auto;
+  max-width: 28rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.discovery-skeleton {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.discovery-skeleton-row {
+  height: 4.5rem;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.03)
+  );
+  background-size: 200% 100%;
+  animation: discShimmer 1.2s ease-in-out infinite;
+}
+
+.discovery-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: min(58vh, 680px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
+}
+
+.discovery-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.28);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.discovery-card:hover {
+  border-color: rgba(94, 234, 212, 0.28);
+  background: rgba(45, 212, 191, 0.05);
+}
+
+.discovery-card.beyond {
+  border-left: 3px solid rgba(45, 212, 191, 0.65);
+}
+
+.discovery-card.in-pack {
+  border-left: 3px solid rgba(148, 163, 184, 0.45);
+}
+
+.discovery-card-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.discovery-card-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+}
+
+.discovery-rsid {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.discovery-gene {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #99f6e4;
+}
+
+.discovery-gt {
+  font-size: 0.72rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.discovery-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.src-pill,
+.pack-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.src-pill.clinvar {
+  background: rgba(251, 113, 133, 0.14);
+  color: #fecdd3;
+  border: 1px solid rgba(251, 113, 133, 0.35);
+}
+
+.src-pill.gwas {
+  background: rgba(56, 189, 248, 0.14);
+  color: #bae6fd;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.src-pill.pharmgkb {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.pack-pill {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.pack-pill.beyond {
+  background: rgba(45, 212, 191, 0.12);
+  color: #99f6e4;
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.discovery-assoc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.discovery-assoc li {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.discovery-open {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.discovery-pager {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.15rem 0;
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.discovery-pager-range strong {
+  color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+}
+
+.discovery-progress {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.discovery-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.74rem;
+  color: #94a3b8;
+}
+
+.discovery-progress-pct {
+  font-weight: 700;
+  color: #99f6e4;
+  font-variant-numeric: tabular-nums;
+}
+
+.discovery-progress-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.discovery-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2dd4bf, #38bdf8);
+  transition: width 0.25s ease;
+}
+
+.discovery-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes discShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-skeleton-row,
+  .discovery-card {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .discovery-card {
+    flex-direction: column;
+  }
+
+  .discovery-open {
+    align-self: stretch;
+  }
+}

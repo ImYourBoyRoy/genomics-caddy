@@ -189,38 +189,48 @@ pub fn save_research_scope(conn: &Connection, scope: &ResearchScopeConfig) -> Re
     Ok(())
 }
 
-/// If SQLite still has placeholder defaults, promote `.env` values into the stored row so the UI matches reality.
+/// Seed empty SQLite connection fields from `.env` only — never overwrite UI-saved values.
 pub fn sync_qdrant_sqlite_from_env(conn: &Connection) -> Result<(), String> {
-    let (url, collection): (String, String) = conn
+    let (url, collection, ollama_url): (String, String, String) = conn
         .query_row(
-            "SELECT url, collection FROM qdrant_config WHERE id = 1",
+            "SELECT url, collection, COALESCE(ollama_url, '') FROM qdrant_config WHERE id = 1",
             [],
-            |row| Ok((row.get(0)?, row.get(1)?)),
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )
         .map_err(|e| e.to_string())?;
 
-    let env_url = env_var("QDRANT_URL");
-    let env_collection = env_var("QDRANT_COLLECTION");
+    let mut next_url = url.clone();
+    let mut next_collection = collection.clone();
+    let mut next_ollama = ollama_url.clone();
 
-    let stored_url = url.clone();
-    let stored_collection = collection.clone();
+    if next_url.trim().is_empty() {
+        if let Some(env) = env_var("QDRANT_URL") {
+            next_url = env;
+        }
+    }
+    if next_collection.trim().is_empty() {
+        if let Some(env) = env_var("QDRANT_COLLECTION") {
+            next_collection = env;
+        }
+    }
+    if next_ollama.trim().is_empty() {
+        if let Some(env) = ollama_url_from_env() {
+            next_ollama = env;
+        }
+    }
 
-    let next_url = if let Some(ref env) = env_url {
-        env.clone()
-    } else {
-        url
-    };
-
-    let next_collection = if let Some(ref env) = env_collection {
-        env.clone()
-    } else {
-        collection
-    };
-
-    if next_url != stored_url || next_collection != stored_collection {
+    if next_url != url || next_collection != collection || next_ollama != ollama_url {
+        let _ = conn.execute(
+            "ALTER TABLE qdrant_config ADD COLUMN ollama_url TEXT NOT NULL DEFAULT ''",
+            [],
+        );
         conn.execute(
-            "UPDATE qdrant_config SET url = ?1, collection = ?2 WHERE id = 1",
-            params![next_url.trim(), next_collection.trim()],
+            "UPDATE qdrant_config SET url = ?1, collection = ?2, ollama_url = ?3 WHERE id = 1",
+            params![
+                next_url.trim(),
+                next_collection.trim(),
+                next_ollama.trim()
+            ],
         )
         .map_err(|e| e.to_string())?;
     }
@@ -271,14 +281,15 @@ pub fn load_qdrant_config(conn: &Connection) -> Result<QdrantConfig, String> {
         )
         .map_err(|e| e.to_string())?;
 
-    let url = if let Some(env) = env_var("QDRANT_URL") {
-        env
+    // UI-saved SQLite values win. `.env` only fills blanks (bootstrap).
+    let url = if url.trim().is_empty() {
+        env_var("QDRANT_URL").unwrap_or(url)
     } else {
         url
     };
 
-    let collection = if let Some(env) = env_var("QDRANT_COLLECTION") {
-        env
+    let collection = if collection.trim().is_empty() {
+        env_var("QDRANT_COLLECTION").unwrap_or(collection)
     } else {
         collection
     };
@@ -367,11 +378,25 @@ pub fn save_ollama_token(token: Option<&str>) -> Result<(), String> {
     set_keyring_secret(SECRET_OLLAMA_TOKEN, token)
 }
 
-const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
-
-/// Ollama base URL from `.env` (`GENOMICS_OLLAMA_URL` or `OLLAMA_URL`), else localhost.
+/// Ollama base URL: SQLite (UI-saved) → `.env` bootstrap → empty.
 pub fn resolve_ollama_service_url() -> String {
-    ollama_url_from_env().unwrap_or_else(|| DEFAULT_OLLAMA_URL.to_string())
+    String::new()
+}
+
+pub fn resolve_ollama_service_url_with_db(conn: &Connection) -> String {
+    let stored = conn
+        .query_row(
+            "SELECT COALESCE(ollama_url, '') FROM qdrant_config WHERE id = 1",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !stored.is_empty() {
+        return stored;
+    }
+    ollama_url_from_env().unwrap_or_default()
 }
 
 pub fn ollama_url_from_env() -> Option<String> {
@@ -383,19 +408,67 @@ pub struct OllamaServiceConfig {
     pub url: String,
     pub from_env: bool,
     pub token_set: bool,
+    pub configured: bool,
+    /// Present when `.env` differs from the active (SQLite) URL — UI can offer adopt/keep.
+    pub env_url: Option<String>,
 }
 
 pub fn load_ollama_service_config() -> OllamaServiceConfig {
-    let from_env = ollama_url_from_env();
+    let env = ollama_url_from_env();
+    let url = env.clone().unwrap_or_default();
     OllamaServiceConfig {
-        url: from_env
-            .clone()
-            .unwrap_or_else(|| DEFAULT_OLLAMA_URL.to_string()),
-        from_env: from_env.is_some(),
+        configured: !url.trim().is_empty(),
+        from_env: env.is_some(),
         token_set: get_ollama_token().is_some(),
+        env_url: env,
+        url,
     }
 }
 
+pub fn load_ollama_service_config_with_db(conn: &Connection) -> OllamaServiceConfig {
+    let env = ollama_url_from_env();
+    let url = resolve_ollama_service_url_with_db(conn);
+    let from_env = url.trim().is_empty() == false
+        && env
+            .as_ref()
+            .is_some_and(|e| e.trim() == url.trim())
+        && conn
+            .query_row(
+                "SELECT COALESCE(ollama_url, '') FROM qdrant_config WHERE id = 1",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .map(|s| s.trim().is_empty())
+            .unwrap_or(true);
+    let env_url = env.filter(|e| e.trim() != url.trim());
+    OllamaServiceConfig {
+        configured: !url.trim().is_empty(),
+        from_env,
+        token_set: get_ollama_token().is_some(),
+        env_url,
+        url,
+    }
+}
+
+pub fn save_ollama_url(conn: &Connection, url: &str) -> Result<(), String> {
+    let trimmed = url.trim();
+    let stored = if trimmed.is_empty() {
+        String::new()
+    } else {
+        validate_service_url(trimmed)?
+    };
+    // Ensure column exists on older DBs.
+    let _ = conn.execute(
+        "ALTER TABLE qdrant_config ADD COLUMN ollama_url TEXT NOT NULL DEFAULT ''",
+        [],
+    );
+    conn.execute(
+        "UPDATE qdrant_config SET ollama_url = ?1 WHERE id = 1",
+        params![stored],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
 /// Approved external API hosts for `fetch_external_api` (SSRF protection).
 pub fn validate_external_url(url: &str) -> Result<(), String> {
     let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {}", e))?;

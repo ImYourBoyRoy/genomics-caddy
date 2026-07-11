@@ -36,6 +36,7 @@
     highlightRsid?: string;
     onExploreResearch?: (rsid: string) => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
+    onOpenDiscovery?: () => void;
   }
 
   let {
@@ -49,6 +50,7 @@
     highlightRsid = "",
     onExploreResearch,
     onNavigateToVariant,
+    onOpenDiscovery,
   }: Props = $props();
 
   let showBenign = $state(false);
@@ -228,12 +230,36 @@
     accent="#fbbf24"
   />
 {:else if generatedReport}
+  <header class="report-hero no-print">
+    <div>
+      <span class="report-kicker">Curated packs · on-device</span>
+      <h3 class="report-hero-title">Trait report</h3>
+      <p class="report-hero-lead">
+        Matched alleles from curated marker packs for <strong>{selectedSample.name}</strong>.
+        Letter badges match the Chromosome Map:
+        <span class="report-glyph">C</span> confirm ·
+        <span class="report-glyph">!</span> stronger ·
+        <span class="report-glyph">?</span> possible ·
+        <span class="report-glyph">+</span> protective.
+        Educational only — not a diagnosis.
+      </p>
+      {#if onOpenDiscovery}
+        <p class="report-hero-cta">
+          Looking beyond packs?
+          <button type="button" class="btn btn-link btn-sm" onclick={() => onOpenDiscovery?.()}>
+            Open Discovery
+          </button>
+        </p>
+      {/if}
+    </div>
+  </header>
+
   <!-- Disclaimer Banner -->
   <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
   <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
 
   <div class="disclaimer-banner">
-    ⚠️ <strong>Important:</strong> This report shows which genetic variants were found in your raw DNA file. It is <strong>not</strong> a medical diagnosis. Variants labeled "risk" show statistical associations — they do not guarantee you will develop a condition. Always consult a healthcare professional for medical decisions.
+    <strong>Important:</strong> This report shows curated marker-pack matches from your raw DNA file. It is <strong>not</strong> a medical diagnosis. “Matched alleles” is coverage of association-direction alleles in packs — not a disease probability.
   </div>
 
   {#if generatedReport.catalog_warnings?.length}
@@ -247,97 +273,103 @@
     </div>
   {/if}
 
-  <!-- Export Actions -->
-  <div class="report-actions no-print">
-    <span class="export-privacy-note">
-      🔒 Everything stays on your computer. No data is uploaded.
-    </span>
-    <button
-      class="btn btn-primary btn-sm"
-      onclick={exportCuratedJson}
-      title="Same format as roy_ancestrydna_report_v3/v4 — curated marker-pack report only"
-    >
-      💾 Export curated report JSON
-    </button>
-    <button
-      class="btn btn-secondary btn-sm"
-      onclick={exportFullCatalogJson}
-      disabled={discoveryExportBusy}
-      title="Genome × ClinVar/GWAS/PharmGKB associations (in packs + beyond packs) → App/Data/exports/"
-    >
-      {discoveryExportBusy ? 'Exporting…' : '📤 Export full catalog associations'}
-    </button>
-    <button class="btn btn-primary btn-sm" onclick={() => window.print()}>
-      🖨️ Export PDF
-    </button>
-  </div>
-  {#if discoveryExportHint}
-    <p class="export-hint no-print">{discoveryExportHint}</p>
-  {/if}
+  <details class="report-chrome-details no-print">
+    <summary>Export &amp; print</summary>
+    <div class="report-actions">
+      <span class="export-privacy-note">
+        🔒 Everything stays on your computer. No data is uploaded.
+      </span>
+      <button
+        class="btn btn-primary btn-sm"
+        onclick={exportCuratedJson}
+        title="Same format as roy_ancestrydna_report_v3/v4 — curated marker-pack report only"
+      >
+        Export curated report JSON
+      </button>
+      <button
+        class="btn btn-secondary btn-sm"
+        onclick={exportFullCatalogJson}
+        disabled={discoveryExportBusy}
+        title="Genome × ClinVar/GWAS/PharmGKB associations → App/Data/exports/"
+      >
+        {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
+      </button>
+      <button class="btn btn-primary btn-sm" onclick={() => window.print()}>
+        Export PDF
+      </button>
+    </div>
+    {#if discoveryExportHint}
+      <p class="export-hint">{discoveryExportHint}</p>
+    {/if}
+    <p class="export-hint">
+      Prefer the <strong>Discovery</strong> tab to browse beyond-pack associations in-app.
+    </p>
+  </details>
 
-  <!-- Color Legend (how to read this report) -->
-  <div class="report-legend card">
-    <h4>📖 How to Read This Report</h4>
-    <p class="legend-intro">Each card below represents a single genetic marker. The card's color and icon tell you what was found:</p>
-    <div class="legend-grid">
-      <div class="legend-item">
-        <span class="legend-swatch signal-high-risk"></span>
-        <div>
-          <strong>🔴 Stronger association (2 copies)</strong>
-          <span>Both copies match the researched association allele. Discuss with a healthcare provider if relevant.</span>
+  <details class="report-chrome-details report-legend-details">
+    <summary>How to read this report</summary>
+    <div class="report-legend card">
+      <p class="legend-intro">Each card represents a single genetic marker. Color and icon summarize what was found:</p>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <span class="legend-swatch signal-high-risk"></span>
+          <div>
+            <strong>Stronger association (2 copies)</strong>
+            <span>Both copies match the researched association allele. Discuss with a healthcare provider if relevant.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-moderate-risk"></span>
-        <div>
-          <strong>🟡 Possible association (1 copy)</strong>
-          <span>One copy matches the association allele. Effect is usually smaller.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-moderate-risk"></span>
+          <div>
+            <strong>Possible association (1 copy)</strong>
+            <span>One copy matches the association allele. Effect is usually smaller.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-protective"></span>
-        <div>
-          <strong>🟢 Protective</strong>
-          <span>This variant may be linked to a beneficial or lower-association effect.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-protective"></span>
+          <div>
+            <strong>Protective</strong>
+            <span>This variant may be linked to a beneficial or lower-association effect.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-trait"></span>
-        <div>
-          <strong>🔵 Trait</strong>
-          <span>Describes a personal characteristic (e.g. caffeine metabolism), not a disease.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-trait"></span>
+          <div>
+            <strong>Trait</strong>
+            <span>Describes a personal characteristic (e.g. caffeine metabolism), not a disease.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-context"></span>
-        <div>
-          <strong>🟣 Context-Dependent</strong>
-          <span>The effect depends on other factors like diet, medications, or lifestyle.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-context"></span>
+          <div>
+            <strong>Context-Dependent</strong>
+            <span>The effect depends on other factors like diet, medications, or lifestyle.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-confirm"></span>
-        <div>
-          <strong>⚠️ Needs Confirmation</strong>
-          <span>Consumer DNA chips can report false positives. A clinical lab test is required.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-confirm"></span>
+          <div>
+            <strong>Needs Confirmation</strong>
+            <span>Consumer DNA chips can report false positives. A clinical lab test is required.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-benign"></span>
-        <div>
-          <strong>○ Not Detected</strong>
-          <span>The effect allele was not found at this position. Card is collapsed since no action is needed.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-benign"></span>
+          <div>
+            <strong>Not Detected</strong>
+            <span>The effect allele was not found at this position. Card is collapsed since no action is needed.</span>
+          </div>
         </div>
-      </div>
-      <div class="legend-item">
-        <span class="legend-swatch signal-nodata"></span>
-        <div>
-          <strong>⚪ Not Tested</strong>
-          <span>Your DNA file did not include data for this position.</span>
+        <div class="legend-item">
+          <span class="legend-swatch signal-nodata"></span>
+          <div>
+            <strong>Not Tested</strong>
+            <span>Your DNA file did not include data for this position.</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- Filter Bar -->
   <div class="filter-bar card no-print">
@@ -481,6 +513,14 @@
       </div>
     </div>
   {/if}
+{:else}
+  <div class="report-idle-empty" role="status">
+    <strong>No report loaded yet</strong>
+    <p>
+      Import a genome and ensure reference catalogs are ready. The trait report builds automatically
+      from curated marker packs once your profile is selected.
+    </p>
+  </div>
 {/if}
 
 <style>

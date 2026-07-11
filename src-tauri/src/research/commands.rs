@@ -595,13 +595,18 @@ pub fn get_ollama_token() -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-pub fn get_ollama_service_config() -> Result<config::OllamaServiceConfig, String> {
-    Ok(config::load_ollama_service_config())
+pub async fn get_ollama_service_config(app: AppHandle) -> Result<config::OllamaServiceConfig, String> {
+    with_db(&app, |conn| Ok(config::load_ollama_service_config_with_db(conn))).await
 }
 
 #[tauri::command]
 pub fn save_ollama_token(token: Option<String>) -> Result<(), String> {
     config::save_ollama_token(token.as_deref())
+}
+
+#[tauri::command]
+pub async fn save_ollama_url(app: AppHandle, url: String) -> Result<(), String> {
+    with_db(&app, move |conn| config::save_ollama_url(conn, &url)).await
 }
 
 #[tauri::command]

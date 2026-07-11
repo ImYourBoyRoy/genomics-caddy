@@ -71,6 +71,7 @@ pub mod config;
 pub mod db;
 pub mod db_crypto;
 mod db_runtime;
+pub mod inference_host;
 pub mod liftover;
 pub mod mcp;
 pub mod offline;
@@ -78,12 +79,13 @@ pub mod parser;
 pub mod paths;
 pub mod report;
 pub mod research;
+mod service_ops;
 mod stream_control;
 
 use db::{DbSnpRecord, SampleInfo};
 use report::GeneratedReport;
 use std::path::PathBuf;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[derive(Clone, serde::Serialize)]
 struct ProgressPayload {
@@ -212,6 +214,69 @@ async fn reload_marker_packs(
     Ok(db::get_warnings())
 }
 
+/// Split a keyword query into tokens (max 8). Multi-token queries use AND across
+/// tokens; each token may match any searchable column via LIKE. This is substring /
+/// keyword search — not edit-distance fuzzy matching.
+fn keyword_like_patterns(query: &str) -> Vec<String> {
+    query
+        .split_whitespace()
+        .filter(|t| !t.is_empty())
+        .take(8)
+        .map(|t| format!("%{}%", t.to_lowercase()))
+        .collect()
+}
+
+fn anded_or_where(token_count: usize, column_exprs: &[&str]) -> String {
+    let or_inner = column_exprs
+        .iter()
+        .map(|c| format!("{c} LIKE ?"))
+        .collect::<Vec<_>>()
+        .join(" OR ");
+    (0..token_count)
+        .map(|_| format!("({or_inner})"))
+        .collect::<Vec<_>>()
+        .join(" AND ")
+}
+
+fn expand_like_params(patterns: &[String], columns_per_token: usize) -> Vec<String> {
+    let mut out = Vec::with_capacity(patterns.len() * columns_per_token);
+    for pattern in patterns {
+        for _ in 0..columns_per_token {
+            out.push(pattern.clone());
+        }
+    }
+    out
+}
+
+fn like_params_with_page(
+    patterns: &[String],
+    columns_per_token: usize,
+    limit: u32,
+    offset: u32,
+) -> Vec<rusqlite::types::Value> {
+    let mut out: Vec<rusqlite::types::Value> =
+        Vec::with_capacity(patterns.len() * columns_per_token + 2);
+    for pattern in expand_like_params(patterns, columns_per_token) {
+        out.push(rusqlite::types::Value::Text(pattern));
+    }
+    out.push(rusqlite::types::Value::Integer(i64::from(limit)));
+    out.push(rusqlite::types::Value::Integer(i64::from(offset)));
+    out
+}
+
+fn like_params_only(
+    patterns: &[String],
+    columns_per_token: usize,
+) -> Vec<rusqlite::types::Value> {
+    expand_like_params(patterns, columns_per_token)
+        .into_iter()
+        .map(rusqlite::types::Value::Text)
+        .collect()
+}
+
+const CLINVAR_PHENOTYPE_EXPR: &str =
+    "COALESCE(NULLIF(TRIM(phenotype_list), ''), NULLIF(TRIM(conditions), ''), '')";
+
 #[tauri::command]
 async fn query_local_reference_db(
     app: AppHandle,
@@ -223,61 +288,67 @@ async fn query_local_reference_db(
     let db_path = get_db_path(&app);
     let q_limit = limit.unwrap_or(20).clamp(1, 100);
     let q_offset = offset.unwrap_or(0);
-    let q_search = search_query.as_deref().unwrap_or("").trim().to_lowercase();
+    let patterns = keyword_like_patterns(search_query.as_deref().unwrap_or(""));
+    let has_search = !patterns.is_empty();
 
     db_runtime::with_connection(db_path, move |conn| {
-        let has_search = !q_search.is_empty();
-        let search_pattern = format!("%{}%", q_search);
-
         match table.as_str() {
             "clinvar" => {
+                let select_cols = format!(
+                    "rsid, variation_id, clinical_significance, review_status, {CLINVAR_PHENOTYPE_EXPR}, last_evaluated"
+                );
+                let map_row = |r: &rusqlite::Row<'_>| {
+                    Ok(serde_json::json!({
+                        "rsid": r.get::<_, String>(0)?,
+                        "variation_id": r.get::<_, String>(1)?,
+                        "clinical_significance": r.get::<_, String>(2)?,
+                        "review_status": r.get::<_, String>(3)?,
+                        "phenotype_names": r.get::<_, String>(4)?,
+                        "last_evaluated": r.get::<_, Option<String>>(5)?,
+                    }))
+                };
                 let (rows, total) = if has_search {
-                    let mut stmt_count = conn.prepare(
-                        "SELECT COUNT(*) FROM clinvar_reference 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(phenotype_names) LIKE ? OR LOWER(clinical_significance) LIKE ?"
-                    ).map_err(|e| e.to_string())?;
-                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
-
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, variation_id, clinical_significance, review_status, phenotype_names, last_evaluated 
-                         FROM clinvar_reference 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(phenotype_names) LIKE ? OR LOWER(clinical_significance) LIKE ?
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "variation_id": r.get::<_, String>(1)?,
-                            "clinical_significance": r.get::<_, String>(2)?,
-                            "review_status": r.get::<_, String>(3)?,
-                            "phenotype_names": r.get::<_, String>(4)?,
-                            "last_evaluated": r.get::<_, Option<String>>(5)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let cols = [
+                        "LOWER(rsid)",
+                        "LOWER(COALESCE(NULLIF(TRIM(phenotype_list), ''), conditions, ''))",
+                        "LOWER(clinical_significance)",
+                        "LOWER(COALESCE(gene_symbol, gene, ''))",
+                    ];
+                    let where_sql = anded_or_where(patterns.len(), &cols);
+                    let count_bind = like_params_only(&patterns, cols.len());
+                    let count_sql =
+                        format!("SELECT COUNT(*) FROM clinvar_reference WHERE {where_sql}");
+                    let total: i64 = conn
+                        .query_row(
+                            &count_sql,
+                            rusqlite::params_from_iter(count_bind.iter()),
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!(
+                        "SELECT {select_cols} FROM clinvar_reference WHERE {where_sql} LIMIT ? OFFSET ?"
+                    );
+                    let page_bind = like_params_with_page(&patterns, cols.len(), q_limit, q_offset);
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params_from_iter(page_bind.iter()), map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
                 } else {
-                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM clinvar_reference", [], |r| r.get(0)).map_err(|e| e.to_string())?;
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, variation_id, clinical_significance, review_status, phenotype_names, last_evaluated 
-                         FROM clinvar_reference 
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "variation_id": r.get::<_, String>(1)?,
-                            "clinical_significance": r.get::<_, String>(2)?,
-                            "review_status": r.get::<_, String>(3)?,
-                            "phenotype_names": r.get::<_, String>(4)?,
-                            "last_evaluated": r.get::<_, Option<String>>(5)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let total: i64 = conn
+                        .query_row("SELECT COUNT(*) FROM clinvar_reference", [], |r| r.get(0))
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!("SELECT {select_cols} FROM clinvar_reference LIMIT ? OFFSET ?");
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params![q_limit, q_offset], map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
@@ -285,51 +356,67 @@ async fn query_local_reference_db(
                 Ok(serde_json::json!({ "rows": rows, "total": total }))
             }
             "pharmgkb" => {
+                let map_row = |r: &rusqlite::Row<'_>| {
+                    Ok(serde_json::json!({
+                        "rsid": r.get::<_, String>(0)?,
+                        "gene": r.get::<_, Option<String>>(1)?,
+                        "drug": r.get::<_, Option<String>>(2)?,
+                        "phenotype": r.get::<_, Option<String>>(3)?,
+                        "evidence_level": r.get::<_, Option<String>>(4)?,
+                    }))
+                };
                 let (rows, total) = if has_search {
-                    let mut stmt_count = conn.prepare(
-                        "SELECT COUNT(*) FROM pharmgkb_clinical_variants 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(gene) LIKE ? OR LOWER(drug) LIKE ? OR LOWER(phenotype) LIKE ?"
-                    ).map_err(|e| e.to_string())?;
-                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
-
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, gene, drug, phenotype, evidence_level 
-                         FROM pharmgkb_clinical_variants 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(gene) LIKE ? OR LOWER(drug) LIKE ? OR LOWER(phenotype) LIKE ?
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "gene": r.get::<_, Option<String>>(1)?,
-                            "drug": r.get::<_, Option<String>>(2)?,
-                            "phenotype": r.get::<_, Option<String>>(3)?,
-                            "evidence_level": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let cols = [
+                        "LOWER(rsid)",
+                        "LOWER(COALESCE(gene, ''))",
+                        "LOWER(COALESCE(drug, ''))",
+                        "LOWER(COALESCE(phenotype, ''))",
+                    ];
+                    let where_sql = anded_or_where(patterns.len(), &cols);
+                    let count_bind = like_params_only(&patterns, cols.len());
+                    let total: i64 = conn
+                        .query_row(
+                            &format!(
+                                "SELECT COUNT(*) FROM pharmgkb_clinical_variants WHERE {where_sql}"
+                            ),
+                            rusqlite::params_from_iter(count_bind.iter()),
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!(
+                        "SELECT rsid, gene, drug, phenotype, evidence_level \
+                         FROM pharmgkb_clinical_variants WHERE {where_sql} LIMIT ? OFFSET ?"
+                    );
+                    let page_bind =
+                        like_params_with_page(&patterns, cols.len(), q_limit, q_offset);
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params_from_iter(page_bind.iter()), map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
                 } else {
-                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM pharmgkb_clinical_variants", [], |r| r.get(0)).map_err(|e| e.to_string())?;
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, gene, drug, phenotype, evidence_level 
-                         FROM pharmgkb_clinical_variants 
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "gene": r.get::<_, Option<String>>(1)?,
-                            "drug": r.get::<_, Option<String>>(2)?,
-                            "phenotype": r.get::<_, Option<String>>(3)?,
-                            "evidence_level": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let total: i64 = conn
+                        .query_row(
+                            "SELECT COUNT(*) FROM pharmgkb_clinical_variants",
+                            [],
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let mut stmt = conn
+                        .prepare(
+                            "SELECT rsid, gene, drug, phenotype, evidence_level \
+                             FROM pharmgkb_clinical_variants LIMIT ? OFFSET ?",
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params![q_limit, q_offset], map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
@@ -337,51 +424,64 @@ async fn query_local_reference_db(
                 Ok(serde_json::json!({ "rows": rows, "total": total }))
             }
             "clingen" => {
+                let map_row = |r: &rusqlite::Row<'_>| {
+                    Ok(serde_json::json!({
+                        "gene_symbol": r.get::<_, String>(0)?,
+                        "disease_label": r.get::<_, String>(1)?,
+                        "classification": r.get::<_, Option<String>>(2)?,
+                        "moi": r.get::<_, Option<String>>(3)?,
+                        "report_url": r.get::<_, Option<String>>(4)?,
+                    }))
+                };
                 let (rows, total) = if has_search {
-                    let mut stmt_count = conn.prepare(
-                        "SELECT COUNT(*) FROM clingen_gene_validity 
-                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(disease_label) LIKE ? OR LOWER(classification) LIKE ?"
-                    ).map_err(|e| e.to_string())?;
-                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
-
-                    let mut stmt = conn.prepare(
-                        "SELECT gene_symbol, disease_label, classification, moi, report_url 
-                         FROM clingen_gene_validity 
-                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(disease_label) LIKE ? OR LOWER(classification) LIKE ?
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "gene_symbol": r.get::<_, String>(0)?,
-                            "disease_label": r.get::<_, String>(1)?,
-                            "classification": r.get::<_, Option<String>>(2)?,
-                            "moi": r.get::<_, Option<String>>(3)?,
-                            "report_url": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let cols = [
+                        "LOWER(gene_symbol)",
+                        "LOWER(disease_label)",
+                        "LOWER(COALESCE(classification, ''))",
+                    ];
+                    let where_sql = anded_or_where(patterns.len(), &cols);
+                    let count_bind = like_params_only(&patterns, cols.len());
+                    let total: i64 = conn
+                        .query_row(
+                            &format!(
+                                "SELECT COUNT(*) FROM clingen_gene_validity WHERE {where_sql}"
+                            ),
+                            rusqlite::params_from_iter(count_bind.iter()),
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!(
+                        "SELECT gene_symbol, disease_label, classification, moi, report_url \
+                         FROM clingen_gene_validity WHERE {where_sql} LIMIT ? OFFSET ?"
+                    );
+                    let page_bind =
+                        like_params_with_page(&patterns, cols.len(), q_limit, q_offset);
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params_from_iter(page_bind.iter()), map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
                 } else {
-                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM clingen_gene_validity", [], |r| r.get(0)).map_err(|e| e.to_string())?;
-                    let mut stmt = conn.prepare(
-                        "SELECT gene_symbol, disease_label, classification, moi, report_url 
-                         FROM clingen_gene_validity 
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "gene_symbol": r.get::<_, String>(0)?,
-                            "disease_label": r.get::<_, String>(1)?,
-                            "classification": r.get::<_, Option<String>>(2)?,
-                            "moi": r.get::<_, Option<String>>(3)?,
-                            "report_url": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let total: i64 = conn
+                        .query_row("SELECT COUNT(*) FROM clingen_gene_validity", [], |r| {
+                            r.get(0)
+                        })
+                        .map_err(|e| e.to_string())?;
+                    let mut stmt = conn
+                        .prepare(
+                            "SELECT gene_symbol, disease_label, classification, moi, report_url \
+                             FROM clingen_gene_validity LIMIT ? OFFSET ?",
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params![q_limit, q_offset], map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
@@ -389,55 +489,62 @@ async fn query_local_reference_db(
                 Ok(serde_json::json!({ "rows": rows, "total": total }))
             }
             "gwas" => {
+                let map_row = |r: &rusqlite::Row<'_>| {
+                    Ok(serde_json::json!({
+                        "rsid": r.get::<_, String>(0)?,
+                        "trait_name": r.get::<_, String>(1)?,
+                        "p_value": r.get::<_, f64>(2)?,
+                        "or_or_beta": r.get::<_, Option<String>>(3)?,
+                        "pubmed_id": r.get::<_, Option<String>>(4)?,
+                        "study_title": r.get::<_, Option<String>>(5)?,
+                        "journal": r.get::<_, Option<String>>(6)?,
+                    }))
+                };
                 let (rows, total) = if has_search {
-                    let mut stmt_count = conn.prepare(
-                        "SELECT COUNT(*) FROM gwas_reference 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(trait_name) LIKE ? OR LOWER(study_title) LIKE ?"
-                    ).map_err(|e| e.to_string())?;
-                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
-
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal 
-                         FROM gwas_reference 
-                         WHERE LOWER(rsid) LIKE ? OR LOWER(trait_name) LIKE ? OR LOWER(study_title) LIKE ?
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "trait_name": r.get::<_, String>(1)?,
-                            "p_value": r.get::<_, f64>(2)?,
-                            "or_or_beta": r.get::<_, Option<String>>(3)?,
-                            "pubmed_id": r.get::<_, Option<String>>(4)?,
-                            "study_title": r.get::<_, Option<String>>(5)?,
-                            "journal": r.get::<_, Option<String>>(6)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let cols = [
+                        "LOWER(rsid)",
+                        "LOWER(trait_name)",
+                        "LOWER(COALESCE(study_title, ''))",
+                    ];
+                    let where_sql = anded_or_where(patterns.len(), &cols);
+                    let count_bind = like_params_only(&patterns, cols.len());
+                    let total: i64 = conn
+                        .query_row(
+                            &format!("SELECT COUNT(*) FROM gwas_reference WHERE {where_sql}"),
+                            rusqlite::params_from_iter(count_bind.iter()),
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!(
+                        "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal \
+                         FROM gwas_reference WHERE {where_sql} LIMIT ? OFFSET ?"
+                    );
+                    let page_bind =
+                        like_params_with_page(&patterns, cols.len(), q_limit, q_offset);
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params_from_iter(page_bind.iter()), map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
                 } else {
-                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM gwas_reference", [], |r| r.get(0)).map_err(|e| e.to_string())?;
-                    let mut stmt = conn.prepare(
-                        "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal 
-                         FROM gwas_reference 
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "rsid": r.get::<_, String>(0)?,
-                            "trait_name": r.get::<_, String>(1)?,
-                            "p_value": r.get::<_, f64>(2)?,
-                            "or_or_beta": r.get::<_, Option<String>>(3)?,
-                            "pubmed_id": r.get::<_, Option<String>>(4)?,
-                            "study_title": r.get::<_, Option<String>>(5)?,
-                            "journal": r.get::<_, Option<String>>(6)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let total: i64 = conn
+                        .query_row("SELECT COUNT(*) FROM gwas_reference", [], |r| r.get(0))
+                        .map_err(|e| e.to_string())?;
+                    let mut stmt = conn
+                        .prepare(
+                            "SELECT rsid, trait_name, p_value, or_or_beta, pubmed_id, study_title, journal \
+                             FROM gwas_reference LIMIT ? OFFSET ?",
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params![q_limit, q_offset], map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
@@ -445,51 +552,60 @@ async fn query_local_reference_db(
                 Ok(serde_json::json!({ "rows": rows, "total": total }))
             }
             "mane" => {
+                let map_row = |r: &rusqlite::Row<'_>| {
+                    Ok(serde_json::json!({
+                        "gene_symbol": r.get::<_, String>(0)?,
+                        "ensembl_transcript": r.get::<_, Option<String>>(1)?,
+                        "refseq_transcript": r.get::<_, Option<String>>(2)?,
+                        "mane_status": r.get::<_, Option<String>>(3)?,
+                        "grch38_coordinates": r.get::<_, Option<String>>(4)?,
+                    }))
+                };
                 let (rows, total) = if has_search {
-                    let mut stmt_count = conn.prepare(
-                        "SELECT COUNT(*) FROM mane_transcripts 
-                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(ensembl_transcript) LIKE ? OR LOWER(refseq_transcript) LIKE ?"
-                    ).map_err(|e| e.to_string())?;
-                    let total: i64 = stmt_count.query_row(rusqlite::params![&search_pattern, &search_pattern, &search_pattern], |r| r.get(0)).map_err(|e| e.to_string())?;
-
-                    let mut stmt = conn.prepare(
-                        "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates 
-                         FROM mane_transcripts 
-                         WHERE LOWER(gene_symbol) LIKE ? OR LOWER(ensembl_transcript) LIKE ? OR LOWER(refseq_transcript) LIKE ?
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![&search_pattern, &search_pattern, &search_pattern, q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "gene_symbol": r.get::<_, String>(0)?,
-                            "ensembl_transcript": r.get::<_, Option<String>>(1)?,
-                            "refseq_transcript": r.get::<_, Option<String>>(2)?,
-                            "mane_status": r.get::<_, Option<String>>(3)?,
-                            "grch38_coordinates": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let cols = [
+                        "LOWER(gene_symbol)",
+                        "LOWER(COALESCE(ensembl_transcript, ''))",
+                        "LOWER(COALESCE(refseq_transcript, ''))",
+                    ];
+                    let where_sql = anded_or_where(patterns.len(), &cols);
+                    let count_bind = like_params_only(&patterns, cols.len());
+                    let total: i64 = conn
+                        .query_row(
+                            &format!("SELECT COUNT(*) FROM mane_transcripts WHERE {where_sql}"),
+                            rusqlite::params_from_iter(count_bind.iter()),
+                            |r| r.get(0),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let sql = format!(
+                        "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates \
+                         FROM mane_transcripts WHERE {where_sql} LIMIT ? OFFSET ?"
+                    );
+                    let page_bind =
+                        like_params_with_page(&patterns, cols.len(), q_limit, q_offset);
+                    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params_from_iter(page_bind.iter()), map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
                 } else {
-                    let total: i64 = conn.query_row("SELECT COUNT(*) FROM mane_transcripts", [], |r| r.get(0)).map_err(|e| e.to_string())?;
-                    let mut stmt = conn.prepare(
-                        "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates 
-                         FROM mane_transcripts 
-                         LIMIT ? OFFSET ?"
-                    ).map_err(|e| e.to_string())?;
-                    let rows = stmt.query_map(rusqlite::params![q_limit, q_offset], |r| {
-                        Ok(serde_json::json!({
-                            "gene_symbol": r.get::<_, String>(0)?,
-                            "ensembl_transcript": r.get::<_, Option<String>>(1)?,
-                            "refseq_transcript": r.get::<_, Option<String>>(2)?,
-                            "mane_status": r.get::<_, Option<String>>(3)?,
-                            "grch38_coordinates": r.get::<_, Option<String>>(4)?,
-                        }))
-                    }).map_err(|e| e.to_string())?;
+                    let total: i64 = conn
+                        .query_row("SELECT COUNT(*) FROM mane_transcripts", [], |r| r.get(0))
+                        .map_err(|e| e.to_string())?;
+                    let mut stmt = conn
+                        .prepare(
+                            "SELECT gene_symbol, ensembl_transcript, refseq_transcript, mane_status, grch38_coordinates \
+                             FROM mane_transcripts LIMIT ? OFFSET ?",
+                        )
+                        .map_err(|e| e.to_string())?;
+                    let mapped = stmt
+                        .query_map(rusqlite::params![q_limit, q_offset], map_row)
+                        .map_err(|e| e.to_string())?;
                     let mut vec = Vec::new();
-                    for row in rows {
+                    for row in mapped {
                         vec.push(row.map_err(|e| e.to_string())?);
                     }
                     (vec, total)
@@ -1109,46 +1225,77 @@ async fn get_active_ollama_models(
 
 #[tauri::command]
 async fn scan_ollama_models(url: String, token: Option<String>) -> Result<Vec<String>, String> {
-    let clean_url = config::validate_service_url(&url)?;
-    let client = reqwest::Client::new();
-    let mut req = client.get(format!("{}/api/tags", clean_url));
-
-    if let Some(t) = token
-        && !t.trim().is_empty()
-    {
-        let t_val = t.trim();
-        req = req.header(
-            "Authorization",
-            if t_val.to_lowercase().starts_with("bearer ") {
-                t_val.to_string()
-            } else {
-                format!("Bearer {}", t_val)
-            },
-        );
+    let report = inference_host::discover_ollama_models(&url, token.as_deref()).await?;
+    if let Some(err) = report.error {
+        return Err(err);
     }
+    Ok(report.models.into_iter().map(|m| m.name).collect())
+}
 
-    let res = req
-        .send()
-        .await
-        .map_err(|e| format!("Connection error: {}", e))?;
-    if !res.status().is_success() {
-        return Err(format!("Ollama returned HTTP error: {}", res.status()));
-    }
+#[tauri::command]
+async fn probe_inference_host(ollama_url: Option<String>) -> Result<inference_host::InferenceHostProfile, String> {
+    Ok(inference_host::probe_local_host(ollama_url.as_deref()))
+}
 
-    #[derive(serde::Deserialize)]
-    struct OllamaModel {
-        name: String,
-    }
-    #[derive(serde::Deserialize)]
-    struct OllamaTagsResponse {
-        models: Vec<OllamaModel>,
-    }
+#[tauri::command]
+async fn discover_ollama_models(
+    url: String,
+    token: Option<String>,
+) -> Result<inference_host::OllamaDiscoveryReport, String> {
+    inference_host::discover_ollama_models(&url, token.as_deref()).await
+}
 
-    let tags: OllamaTagsResponse = res
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-    Ok(tags.models.into_iter().map(|m| m.name).collect())
+#[tauri::command]
+async fn probe_localhost_services() -> Result<service_ops::LocalhostServiceStatus, String> {
+    Ok(service_ops::probe_localhost_services().await)
+}
+
+#[tauri::command]
+async fn get_ollama_version(url: String, token: Option<String>) -> Result<serde_json::Value, String> {
+    service_ops::get_ollama_version(&url, token.as_deref()).await
+}
+
+#[tauri::command]
+async fn get_qdrant_version(url: String, api_key: Option<String>) -> Result<serde_json::Value, String> {
+    service_ops::get_qdrant_version(&url, api_key.as_deref()).await
+}
+
+#[tauri::command]
+async fn check_ollama_update(url: String, token: Option<String>) -> Result<service_ops::ServiceUpdateCheck, String> {
+    service_ops::check_ollama_update(&url, token.as_deref()).await
+}
+
+#[tauri::command]
+async fn check_qdrant_update(url: String, api_key: Option<String>) -> Result<service_ops::ServiceUpdateCheck, String> {
+    service_ops::check_qdrant_update(&url, api_key.as_deref()).await
+}
+
+#[tauri::command]
+async fn pull_ollama_model(
+    app: AppHandle,
+    url: String,
+    token: Option<String>,
+    name: String,
+) -> Result<serde_json::Value, String> {
+    service_ops::pull_ollama_model(&app, &url, token.as_deref(), &name).await
+}
+
+#[tauri::command]
+async fn delete_ollama_model(
+    url: String,
+    token: Option<String>,
+    name: String,
+) -> Result<(), String> {
+    service_ops::delete_ollama_model(&url, token.as_deref(), &name).await
+}
+
+#[tauri::command]
+async fn probe_vector_provider(
+    provider: String,
+    url: String,
+    api_key: Option<String>,
+) -> Result<serde_json::Value, String> {
+    service_ops::probe_vector_provider(&provider, &url, api_key.as_deref()).await
 }
 
 #[tauri::command]
@@ -1719,6 +1866,61 @@ pub fn run() {
             app_log::init(data_dir.clone());
             db::dump_default_marker_packs_if_missing(&data_dir);
             agent_ui::start_http_bridge(app.handle().clone());
+            // Apply window icon + ensure Linux/GNOME can match our .desktop (app id = identifier).
+            if let Some(window) = app.get_webview_window("main") {
+                let mut applied = false;
+                if let Some(icon) = app.default_window_icon() {
+                    applied = window.set_icon(icon.clone()).is_ok();
+                }
+                if !applied {
+                    let candidates = [
+                        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/128x128.png"),
+                        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/icon.png"),
+                        app.path()
+                            .resource_dir()
+                            .ok()
+                            .map(|p| p.join("icons/128x128.png"))
+                            .unwrap_or_default(),
+                    ];
+                    for path in candidates {
+                        if path.as_os_str().is_empty() || !path.is_file() {
+                            continue;
+                        }
+                        if let Ok(icon) = tauri::image::Image::from_path(&path) {
+                            if window.set_icon(icon).is_ok() {
+                                applied = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                #[cfg(all(debug_assertions, target_os = "linux"))]
+                {
+                    // Dev webviews keep a WebKit HTTP cache that can replay stale Vite
+                    // `?svelte&type=style` module URLs after CSS pipeline changes.
+                    let data_home = std::env::var_os("XDG_DATA_HOME")
+                        .map(PathBuf::from)
+                        .or_else(|| {
+                            std::env::var_os("HOME")
+                                .map(|h| PathBuf::from(h).join(".local/share"))
+                        });
+                    if let Some(data) = data_home {
+                        let webkit = data.join("com.dna.explorer");
+                        for leaf in ["WebKitCache", "CacheStorage"] {
+                            let p = webkit.join(leaf);
+                            if p.is_dir() {
+                                let _ = std::fs::remove_dir_all(&p);
+                            }
+                        }
+                    }
+                    app_log::log(
+                        "SYSTEM",
+                        &format!(
+                            "Linux window icon applied={applied}; GTK app_id=com.dna.explorer. Expect desktop file ~/.local/share/applications/com.dna.explorer.desktop"
+                        ),
+                    );
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -1742,6 +1944,16 @@ pub fn run() {
             check_chain_status,
             download_chain_file,
             scan_ollama_models,
+            probe_inference_host,
+            discover_ollama_models,
+            probe_localhost_services,
+            get_ollama_version,
+            get_qdrant_version,
+            check_ollama_update,
+            check_qdrant_update,
+            pull_ollama_model,
+            delete_ollama_model,
+            probe_vector_provider,
             stream_ollama_chat,
             cancel_ollama_stream,
             show_ollama_model,
@@ -1770,6 +1982,8 @@ pub fn run() {
             offline::commands::build_offline_tier2,
             offline::commands::cancel_offline_import,
             offline::commands::export_discovery_findings,
+            offline::commands::query_discovery_findings,
+            offline::commands::cancel_discovery_query,
             offline::commands::get_custom_download_dir,
             offline::commands::set_custom_download_dir,
             offline::commands::get_offline_reference_status,
@@ -1793,6 +2007,7 @@ pub fn run() {
             research::commands::get_ollama_token,
             research::commands::get_ollama_service_config,
             research::commands::save_ollama_token,
+            research::commands::save_ollama_url,
             research::commands::purge_database_cache,
             research::commands::select_save_path,
             research::evidence::commands::search_associations_hybrid,

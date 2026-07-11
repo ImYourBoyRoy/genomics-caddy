@@ -120,7 +120,10 @@
         mcpServers: {
           "genomics-caddy": {
             command: exePath,
-            args: ["--mcp"]
+            args: ["--mcp"],
+            env: {
+              GENOMICS_MCP_TOKEN: "replace-with-a-long-random-secret"
+            }
           }
         }
       }, null, 2);
@@ -163,6 +166,9 @@
           "genomics-caddy": {
             command: exePath,
             args: ["--mcp"],
+            env: {
+              GENOMICS_MCP_TOKEN: "replace-with-a-long-random-secret"
+            },
             disabled: false
           }
         }
@@ -214,8 +220,12 @@
 
   <div class="mcp-description">
     <p>
-      Model Context Protocol (MCP) is an open standard that allows Large Language Models (like Claude, Cursor, Cline, or local Antigravity subagents) to safely query external tools.
-      By enabling MCP, you grant your AI assistants read-only access to query DNA variants, analyze allele severity, and run trait pack reports strictly on your local machine.
+      Model Context Protocol (MCP) lets assistants query this app over stdin/stdout — variants, packs, and reports stay on your machine.
+      Default tools are read-only; pass <code>--mcp-write</code> only when an agent must mutate data.
+    </p>
+    <p class="mcp-auth-note">
+      <strong>Recommended:</strong> set <code>GENOMICS_MCP_TOKEN</code> (or <code>--mcp-auth-token=…</code>) and send
+      <code>params._meta.authToken</code> on every <code>tools/call</code>. Without a token, any local process that can spawn the binary can call MCP.
     </p>
   </div>
 
@@ -338,6 +348,20 @@
     line-height: 1.5;
     color: var(--text-secondary);
     margin: 0;
+  }
+
+  .mcp-auth-note {
+    margin-top: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    background: rgba(251, 191, 36, 0.08);
+    color: #fde68a;
+    font-size: 0.8rem;
+  }
+
+  .mcp-auth-note code {
+    font-size: 0.75rem;
   }
 
   .mcp-grid {

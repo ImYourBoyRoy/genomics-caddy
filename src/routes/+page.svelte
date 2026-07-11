@@ -35,11 +35,13 @@
   } from "$lib/components/common/bootstrap/bootstrapPhases";
   import ReportView from "$lib/components/report/ReportView.svelte";
   import GenomeMap from "$lib/components/genome/GenomeMap.svelte";
+  import DiscoveryPanel from "$lib/components/discovery/DiscoveryPanel.svelte";
   import VariantSearchPanel from "$lib/components/search/VariantSearchPanel.svelte";
   import McpPanel from "$lib/components/mcp/McpPanel.svelte";
   import AiAssistantPanel from "$lib/components/ai/AiAssistantPanel.svelte";
   import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
   import ResearchPanel from "$lib/components/research/ResearchPanel.svelte";
+  import ConnectionsPanel from "$lib/components/settings/ConnectionsPanel.svelte";
   import { dialogStore } from "$lib/utils/dialogState.svelte";
   import GlobalDialogs from "$lib/components/common/GlobalDialogs.svelte";
   import { runPageBootstrap } from "$lib/utils/pageBootstrap";
@@ -89,7 +91,62 @@
   let importError = $state("");
   let importSuccess = $state("");
 
-  let activeTab = $state("report"); // "report", "map", "browser", "mcp", "agent", "research", "ai"
+  let activeTab = $state("report"); // report | map | discovery | browser | mcp | agent | research | ai | connections
+  const ADVANCED_TAB_KEY = "genomics_caddy_last_advanced_tab";
+
+  const PRIMARY_TABS = [
+    { id: "report", label: "Trait Report" },
+    { id: "map", label: "Chromosome Map" },
+    { id: "discovery", label: "Discovery" },
+  ] as const;
+
+  const ADVANCED_TABS = [
+    { id: "connections", label: "Connections" },
+    { id: "browser", label: "Raw Browser" },
+    { id: "mcp", label: "MCP Integration" },
+    { id: "agent", label: "Research Agent" },
+    { id: "research", label: "Vector Research" },
+    { id: "ai", label: "AI Consultation" },
+  ] as const;
+
+  let advancedActive = $derived(ADVANCED_TABS.some((t) => t.id === activeTab));
+
+  function selectTab(tab: string) {
+    activeTab = tab;
+    if (ADVANCED_TABS.some((t) => t.id === tab)) {
+      try {
+        localStorage.setItem(ADVANCED_TAB_KEY, tab);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  function onTabKeydown(e: KeyboardEvent, tabIds: string[]) {
+    const i = tabIds.indexOf(activeTab);
+    if (i < 0) return;
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      selectTab(tabIds[(i + 1) % tabIds.length]);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      selectTab(tabIds[(i - 1 + tabIds.length) % tabIds.length]);
+    }
+  }
+
+  function openAdvancedArea() {
+    if (advancedActive) return;
+    try {
+      const last = localStorage.getItem(ADVANCED_TAB_KEY);
+      if (last && ADVANCED_TABS.some((t) => t.id === last)) {
+        selectTab(last);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    selectTab(ADVANCED_TABS[0].id);
+  }
 
   let generatedReport = $state<GeneratedReport | null>(null);
   let rawReport = $state<NormalizedReport | null>(null);
@@ -104,7 +161,7 @@
   let isBrowsing = $state(false);
 
   // Persistent AI Consultation State (Lifts state from AiAssistantPanel to survive tab unmounts)
-  let aiOllamaUrl = $state("http://localhost:11434");
+  let aiOllamaUrl = $state("");
   let aiOllamaToken = $state("");
   let aiSelectedModel = $state("");
   let aiMessages = $state<ChatMessage[]>([]);
@@ -485,6 +542,7 @@
       onImportGenome={importGenome}
       onSelectSample={selectSample}
       onDeleteSample={deleteSample}
+      onOpenConnections={() => selectTab("connections")}
     />
   {/snippet}
   {#snippet children()}
@@ -500,32 +558,83 @@
         />
       {:else}
         <header class="content-header">
-          <div class="profile-summary">
-            <h2>Profile: {selectedSample.name}</h2>
-            <span class="pill font-mono">Sex: {selectedSample.genetic_sex}</span>
-            <span class="pill">Sample ID: {selectedSample.id}</span>
+          <div class="content-header-top">
+            <div class="profile-summary">
+              <h2>Profile: {selectedSample.name}</h2>
+              <span class="pill font-mono">Sex: {selectedSample.genetic_sex}</span>
+              <span class="pill">Sample ID: {selectedSample.id}</span>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Primary views">
+              {#each PRIMARY_TABS as tab (tab.id)}
+                <button
+                  type="button"
+                  class="tab-btn"
+                  class:active={activeTab === tab.id}
+                  role="tab"
+                  id="tab-{tab.id}"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls="panel-{tab.id}"
+                  tabindex={activeTab === tab.id ? 0 : -1}
+                  onclick={() => selectTab(tab.id)}
+                  onkeydown={(e) => onTabKeydown(e, PRIMARY_TABS.map((t) => t.id))}
+                >
+                  {tab.label}
+                </button>
+              {/each}
+
+              <div class="tabs-advanced">
+                <button
+                  type="button"
+                  class="tab-btn tab-btn-advanced"
+                  class:active={advancedActive}
+                  aria-expanded={advancedActive}
+                  aria-controls={advancedActive ? "advanced-subtabs" : undefined}
+                  onclick={openAdvancedArea}
+                >
+                  Advanced
+                  <span class="tabs-advanced-caret" aria-hidden="true">{advancedActive ? '▴' : '▾'}</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <nav class="tabs">
-            <button class="tab-btn" class:active={activeTab === "report"} onclick={() => activeTab = "report"}>📊 Trait Report</button>
-            <button class="tab-btn" class:active={activeTab === "map"} onclick={() => activeTab = "map"}>🎨 Chromosome Map</button>
-            <button class="tab-btn" class:active={activeTab === "browser"} onclick={() => activeTab = "browser"}>🔍 Raw Browser</button>
-            <button class="tab-btn" class:active={activeTab === "mcp"} onclick={() => activeTab = "mcp"}>🤖 MCP Integration</button>
-            <button class="tab-btn" class:active={activeTab === "agent"} onclick={() => activeTab = "agent"}>🕵️ Research Agent</button>
-            <button class="tab-btn" class:active={activeTab === "research"} onclick={() => activeTab = "research"}>
-              🔬 Vector Research
-              {#if researchJob?.status === "running" && researchJob.loop_active !== false}
-                <span class="tab-status-pill running" title="Enrichment sweep in progress">{researchJob.enriched_count}/{researchJob.total_markers}</span>
-              {:else if researchJob?.status === "running"}
-                <span class="tab-status-pill paused" title="Sweep interrupted — resume on Vector Research tab">interrupted</span>
-              {:else if researchJob?.status === "paused"}
-                <span class="tab-status-pill paused" title="Sweep paused">paused</span>
-              {/if}
-            </button>
-            <button class="tab-btn" class:active={activeTab === "ai"} onclick={() => activeTab = "ai"}>💬 AI Consultation</button>
-          </nav>
+
+          {#if advancedActive}
+            <div
+              class="tabs-advanced-strip"
+              id="advanced-subtabs"
+              role="tablist"
+              aria-label="Advanced views"
+            >
+              {#each ADVANCED_TABS as tab (tab.id)}
+                <button
+                  type="button"
+                  class="tabs-advanced-chip"
+                  class:active={activeTab === tab.id}
+                  role="tab"
+                  id="tab-{tab.id}"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls="panel-{tab.id}"
+                  tabindex={activeTab === tab.id ? 0 : -1}
+                  onclick={() => selectTab(tab.id)}
+                  onkeydown={(e) => onTabKeydown(e, ADVANCED_TABS.map((t) => t.id))}
+                >
+                  {tab.label}
+                  {#if tab.id === "research"}
+                    {#if researchJob?.status === "running" && researchJob.loop_active !== false}
+                      <span class="tab-status-pill running">{researchJob.enriched_count}/{researchJob.total_markers}</span>
+                    {:else if researchJob?.status === "running"}
+                      <span class="tab-status-pill paused">interrupted</span>
+                    {:else if researchJob?.status === "paused"}
+                      <span class="tab-status-pill paused">paused</span>
+                    {/if}
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
         </header>
 
-        <div class="tab-content">
+        <div class="tab-content" role="tabpanel" id="panel-{activeTab}" aria-labelledby="tab-{activeTab}">
           {#if activeTab === "report"}
             <ReportView
               {generatedReport}
@@ -538,18 +647,32 @@
               {highlightRsid}
               onExploreResearch={handleExploreResearch}
               onNavigateToVariant={navigateToVariant}
+              onOpenDiscovery={() => selectTab("discovery")}
             />
           {:else if activeTab === "map"}
             <GenomeMap {selectedSample} {generatedReport} focusRsid={mapFocusRsid} onNavigateToVariant={navigateToVariant} />
+          {:else if activeTab === "discovery"}
+            <DiscoveryPanel
+              {selectedSample}
+              onNavigate={(rsid) => navigateToVariant(rsid, "report")}
+            />
+          {:else if activeTab === "connections"}
+            <ConnectionsPanel
+              bind:ollamaUrl={aiOllamaUrl}
+              bind:ollamaToken={aiOllamaToken}
+            />
           {:else if activeTab === "browser"}
             <VariantSearchPanel
+              {selectedSample}
               bind:searchRsid
               bind:browseChr
               bind:browseStart
               bind:browseEnd
               {browserResults}
               {isBrowsing}
+              {highlightRsid}
               onSearch={searchVariant}
+              onNavigateToVariant={navigateToVariant}
             />
           {:else if activeTab === "mcp"}
             <McpPanel {appPaths} />

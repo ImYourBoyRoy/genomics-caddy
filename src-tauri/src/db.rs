@@ -743,30 +743,41 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
     )?;
 
     // Qdrant / research settings (secrets live in OS keyring — columns kept for legacy migration)
+    // Network URLs default empty: users configure them under Advanced → Connections (or via .env).
     conn.execute(
         "CREATE TABLE IF NOT EXISTS qdrant_config (
             id INTEGER PRIMARY KEY CHECK (id = 1),
-            url TEXT NOT NULL DEFAULT 'http://localhost:6333',
+            url TEXT NOT NULL DEFAULT '',
             api_key TEXT,
-            collection TEXT NOT NULL DEFAULT 'genomics_evidence',
-            embedding_model TEXT NOT NULL DEFAULT 'mxbai-embed-large',
+            collection TEXT NOT NULL DEFAULT '',
+            embedding_model TEXT NOT NULL DEFAULT '',
             gwas_strict INTEGER NOT NULL DEFAULT 1,
             ncbi_api_key TEXT,
             auto_start INTEGER NOT NULL DEFAULT 0
         )",
         [],
     )?;
-    let default_url =
-        std::env::var("QDRANT_URL").unwrap_or_else(|_| "http://localhost:6333".to_string());
-    let default_collection =
-        std::env::var("QDRANT_COLLECTION").unwrap_or_else(|_| "genomics_evidence".to_string());
-    let default_model =
-        std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".to_string());
+    let _ = conn.execute(
+        "ALTER TABLE qdrant_config ADD COLUMN ollama_url TEXT NOT NULL DEFAULT ''",
+        [],
+    );
+    let default_url = std::env::var("QDRANT_URL").unwrap_or_default();
+    let default_collection = std::env::var("QDRANT_COLLECTION").unwrap_or_default();
+    let default_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_default();
+    let default_ollama = std::env::var("GENOMICS_OLLAMA_URL")
+        .or_else(|_| std::env::var("OLLAMA_URL"))
+        .unwrap_or_default();
     conn.execute(
-        "INSERT OR IGNORE INTO qdrant_config (id, url, collection, embedding_model) VALUES (1, ?, ?, ?)",
-        rusqlite::params![default_url, default_collection, default_model],
+        "INSERT OR IGNORE INTO qdrant_config (id, url, collection, embedding_model, ollama_url) VALUES (1, ?, ?, ?, ?)",
+        rusqlite::params![default_url, default_collection, default_model, default_ollama],
     )?;
-
+    // Backfill ollama_url from env when the column is still empty.
+    if !default_ollama.is_empty() {
+        let _ = conn.execute(
+            "UPDATE qdrant_config SET ollama_url = ?1 WHERE id = 1 AND (ollama_url IS NULL OR TRIM(ollama_url) = '')",
+            rusqlite::params![default_ollama],
+        );
+    }
     conn.execute(
         "CREATE TABLE IF NOT EXISTS api_cache_db.api_cache (
             url TEXT PRIMARY KEY,

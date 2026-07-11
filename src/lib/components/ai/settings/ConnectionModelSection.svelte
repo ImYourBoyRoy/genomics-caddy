@@ -1,8 +1,14 @@
 <!-- ./src/lib/components/ai/settings/ConnectionModelSection.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getActiveOllamaModels } from "../../../api/tauri";
+  import {
+    discoverOllamaModels,
+    getActiveOllamaModels,
+    type InferenceHostProfile,
+    type OllamaModelInsight,
+  } from "../../../api/tauri";
   import { isReasoningModel, isModelVisionCapable } from "../../../utils/aiPrompt";
+  import { OLLAMA_URL_PLACEHOLDER } from "../../../utils/ollamaSettings";
 
   interface Props {
     ollamaUrl: string;
@@ -34,22 +40,52 @@
     twoModelReview = $bindable()
   }: Props = $props();
 
-  // Telemetry state
   let activeModels = $state<any[]>([]);
   let activeModelsError = $state<string>("");
   let isPollingActive = $state<boolean>(false);
+  let host = $state<InferenceHostProfile | null>(null);
+  let insights = $state<OllamaModelInsight[]>([]);
+
   let totalVramBytes = $derived(
     activeModels.reduce((sum, m) => sum + (m.size_vram || 0), 0)
   );
   let totalVramGb = $derived((totalVramBytes / 1e9).toFixed(1));
+  let capacityBytes = $derived(
+    host?.accel_bytes ||
+      (host?.unified_memory ? host.system_ram_bytes : null) ||
+      (totalVramBytes > 0 ? totalVramBytes : null)
+  );
+  let capacityLabel = $derived(
+    capacityBytes
+      ? `${(capacityBytes / 1e9).toFixed(1)} GiB ${host?.unified_memory ? "unified/shared" : "observed accel"}`
+      : "capacity unknown — load a model to observe"
+  );
+  let barPct = $derived(
+    capacityBytes && capacityBytes > 0
+      ? Math.min(100, (totalVramBytes / capacityBytes) * 100)
+      : totalVramBytes > 0
+        ? 35
+        : 0
+  );
+
+  function hintFor(name: string): string {
+    return insights.find((m) => m.name === name)?.load_hint || "";
+  }
 
   async function refreshActiveModels() {
-    if (!ollamaUrl) return;
+    if (!ollamaUrl.trim()) return;
     isPollingActive = true;
     try {
-      const res = await getActiveOllamaModels(ollamaUrl, ollamaToken || undefined);
+      const [res, report] = await Promise.all([
+        getActiveOllamaModels(ollamaUrl, ollamaToken || undefined),
+        discoverOllamaModels(ollamaUrl, ollamaToken || undefined).catch(() => null),
+      ]);
       activeModels = res.models || [];
       activeModelsError = "";
+      if (report) {
+        host = report.host;
+        insights = report.models;
+      }
     } catch (e: any) {
       activeModelsError = e.message || String(e);
       activeModels = [];
@@ -58,7 +94,6 @@
     }
   }
 
-  // Reactively poll whenever the url/token is updated or scanned
   $effect(() => {
     if (ollamaUrl) {
       refreshActiveModels();
@@ -74,15 +109,18 @@
 <details class="settings-details-group" open>
   <summary class="settings-details-summary">🔌 Connection &amp; Model</summary>
   <div class="settings-details-content">
+    <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px; line-height: 1.4;">
+      Prefer <strong>Advanced → Connections</strong> for full Ollama/Qdrant setup, host posture, and GPU vs CPU model ranking.
+    </p>
     <div class="input-row">
       <label for="ollama-url">API Endpoint URL</label>
-      <input id="ollama-url" type="text" bind:value={ollamaUrl} placeholder="http://localhost:11434" />
+      <input id="ollama-url" type="text" bind:value={ollamaUrl} placeholder={OLLAMA_URL_PLACEHOLDER} />
     </div>
     <div class="input-row">
       <label for="ollama-token">Auth Token / Bearer (Optional)</label>
       <input id="ollama-token" type="password" bind:value={ollamaToken} placeholder="Bearer ..." />
     </div>
-    <button class="btn btn-secondary w-full" onclick={scanModels} disabled={isScanning}>
+    <button class="btn btn-secondary w-full" onclick={scanModels} disabled={isScanning || !ollamaUrl.trim()}>
       {isScanning ? "Scanning..." : "🔌 Connect & Poll Models"}
     </button>
 
@@ -90,12 +128,30 @@
       <div class="error-msg">{scanError}</div>
     {/if}
 
+    {#if host}
+      <div class="telemetry-box mt-2">
+        <div class="telemetry-header">
+          <span class="telemetry-title">Host posture: {host.posture}</span>
+        </div>
+        <div class="telemetry-empty" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+          <span>backends: {host.accel_backends.join(", ") || "none"} · unified={host.unified_memory ? "yes" : "no"}</span>
+          {#each host.notes.slice(0, 3) as note}
+            <span style="opacity: 0.85;">{note}</span>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     {#if models.length > 0}
       <div class="input-row mt-2">
         <label for="model-selector">Primary LLM Model</label>
         <select id="model-selector" bind:value={selectedModel} class="w-full">
           {#each models as m}
-            <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}</option>
+            <option value={m}>
+              {m}
+              {hintFor(m) ? ` · ${hintFor(m)}` : ""}
+              {isReasoningModel(m) ? " 🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}
+            </option>
           {/each}
         </select>
         
@@ -110,11 +166,13 @@
             {#if isReasoningModel(selectedModel)}
               <span class="capability-badge reasoning-badge">🧠 Reasoning</span>
             {/if}
+            {#if hintFor(selectedModel)}
+              <span class="capability-badge context-badge">{hintFor(selectedModel)}</span>
+            {/if}
           </div>
         {/if}
       </div>
 
-      <!-- Two-model Review Toggle -->
       <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; gap: 8px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem;">
           <input type="checkbox" bind:checked={twoModelReview} style="cursor: pointer;" />
@@ -126,20 +184,19 @@
             <label for="review-model-selector">Secondary Review Model</label>
             <select id="review-model-selector" bind:value={reviewModel} class="w-full">
               {#each models as m}
-                <option value={m}>{m} {isReasoningModel(m) ? "🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}</option>
+                <option value={m}>{m} {hintFor(m) ? `· ${hintFor(m)}` : ""} {isReasoningModel(m) ? "🧠" : ""}{isModelVisionCapable(m, null) ? " 👁️" : ""}</option>
               {/each}
             </select>
             <p style="font-size: 0.68rem; color: var(--text-secondary); line-height: 1.3; margin: 0;">
-              🤖 Automatically cross-checks primary model drafts for clinical claims, dosages, or diagnoses.
+              Prefer two models with on_gpu / likely_gpu / fits_unified hints.
             </p>
           </div>
         {/if}
       </div>
 
-      <!-- Telemetry and VRAM advice -->
       <div class="telemetry-box mt-2">
         <div class="telemetry-header">
-          <span class="telemetry-title">⚡ VRAM &amp; Active Models Telemetry</span>
+          <span class="telemetry-title">VRAM &amp; Active Models Telemetry</span>
           <button class="btn-refresh" onclick={refreshActiveModels} disabled={isPollingActive} type="button" title="Refresh active models">
             {isPollingActive ? "..." : "🔄"}
           </button>
@@ -155,17 +212,19 @@
         {:else}
           <div class="telemetry-stats">
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-secondary);">
-              <span class="vram-total font-mono font-bold" style="color: var(--accent);">{totalVramGb} GB VRAM used</span>
-              <span class="vram-capacity font-mono">/ 48 GB (Dual P40 Capacity)</span>
+              <span class="vram-total font-mono font-bold" style="color: var(--accent);">{totalVramGb} GB in use</span>
+              <span class="vram-capacity font-mono">/ {capacityLabel}</span>
             </div>
             <div class="vram-bar-bg">
-              <div class="vram-bar-fill" style="width: {Math.min(100, (Number(totalVramGb) / 48.0) * 100)}%"></div>
+              <div class="vram-bar-fill" style="width: {barPct}%"></div>
             </div>
             <div class="active-models-list mt-1">
               {#each activeModels as m}
                 <div class="active-model-item">
                   <span class="active-model-name font-mono">{m.name}</span>
-                  <span class="active-model-size font-mono">{(m.size_vram / 1e9).toFixed(1)} GB VRAM</span>
+                  <span class="active-model-size font-mono">
+                    {m.size_vram > 0 ? `${(m.size_vram / 1e9).toFixed(1)} GB VRAM` : "CPU / system RAM"}
+                  </span>
                 </div>
               {/each}
             </div>
@@ -173,16 +232,16 @@
         {/if}
       </div>
 
-      <!-- Educational Guidance Note -->
       <details class="guidance-details mt-2">
-        <summary class="guidance-summary">💡 About Model Reasoning &amp; VRAM</summary>
+        <summary class="guidance-summary">About GPU vs CPU model placement</summary>
         <div class="guidance-content">
           <p class="guidance-text">
-            Standard chat models (like <strong>Qwen</strong>) stream answers directly without a "thinking" phase. Only reasoning models (like <strong>DeepSeek-R1</strong> or distilled models, and <strong>MedGemma</strong> in reasoning mode) output step-by-step thinking processes.
+            Load hints come from live Ollama telemetry and host discovery (CUDA/ROCm/Metal, Apple Silicon unified memory,
+            AMD AI-class APU signals) — not a fixed GPU model list. If size_vram is 0 while loaded, it is on the CPU path.
           </p>
           {#if twoModelReview}
             <p class="guidance-text warning-text mt-1">
-              ⚠️ <strong>VRAM Warning:</strong> Running primary and safety review models concurrently requires sufficient VRAM. If Ollama crashes with <em>HTTP 500</em>, reduce model sizes or context windows.
+              Two-model review needs accelerator headroom. Prefer likely_gpu / fits_unified / on_gpu models.
             </p>
           {/if}
         </div>

@@ -60,7 +60,7 @@
 
   let {
     selectedSample = null,
-    ollamaUrl = $bindable("http://localhost:11434"),
+    ollamaUrl = $bindable(""),
     ollamaToken = $bindable(""),
     job = $bindable(null)
   }: Props = $props();

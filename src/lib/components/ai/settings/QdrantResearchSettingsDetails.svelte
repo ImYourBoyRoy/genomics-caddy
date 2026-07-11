@@ -17,7 +17,7 @@
   }
 
   let {
-    ollamaUrl = $bindable("http://localhost:11434"),
+    ollamaUrl = $bindable(""),
     ollamaToken = $bindable(""),
   }: Props = $props();
 
@@ -125,7 +125,7 @@
 
       <div class="mt-1">
         <label class="help-text" for="qdrant-url">Server URL</label>
-        <input id="qdrant-url" type="text" placeholder="http://localhost:6333" bind:value={qdrantUrl} onblur={saveQdrantSettings} class="mcp-input" />
+        <input id="qdrant-url" type="text" placeholder="e.g. http://127.0.0.1:6333" bind:value={qdrantUrl} onblur={saveQdrantSettings} class="mcp-input" />
       </div>
 
       <div class="mt-1">
@@ -152,7 +152,7 @@
 
       <div class="mt-1">
         <label class="help-text" for="ollama-url-input">Ollama Server URL</label>
-        <input id="ollama-url-input" type="text" placeholder="http://localhost:11434" bind:value={ollamaUrl} class="mcp-input" />
+        <input id="ollama-url-input" type="text" placeholder="e.g. http://127.0.0.1:11434" bind:value={ollamaUrl} class="mcp-input" />
       </div>
 
       <div class="mt-1">

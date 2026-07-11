@@ -64,7 +64,8 @@
   <img src="/logo.png" alt="Genomics Caddy Logo" class="welcome-logo" />
   <h1>Genomics Caddy</h1>
   <p class="welcome-lead">
-    Import your AncestryDNA or 23andMe export, then enrich it with local ClinVar, GWAS, PharmGKB, and dbSNP references — all offline on your machine.
+    Import your AncestryDNA or 23andMe export, then enrich it with local ClinVar, GWAS, PharmGKB, and dbSNP
+    <em>rsID history</em> — all offline on your machine. Allele frequencies come from the local gnomAD cache when available (not from dbSNP).
   </p>
 
   <div class="welcome-cta-grid">
@@ -76,10 +77,10 @@
 
     <button type="button" class="welcome-cta" onclick={() => onDownloadDatabases?.()}>
       <span class="welcome-cta-kicker">Step 2</span>
-      <strong>Download reference databases</strong>
+      <strong>Download reference catalogs</strong>
       <span class="welcome-cta-hint">
         {#if catalogSummary === null}
-          Opens the sidebar downloader (GWAS, ClinVar, PharmGKB, dbSNP)
+          GWAS, ClinVar, PharmGKB, and dbSNP (rsID merge/withdrawn history — not alleles/AF)
         {:else if catalogSummary.missing > 0}
           {catalogSummary.ready}/{catalogSummary.total} catalogs ready · {catalogSummary.missing} still missing
         {:else if catalogSummary.updates > 0}
@@ -89,6 +90,14 @@
         {/if}
       </span>
     </button>
+
+    <div class="welcome-cta welcome-cta-static" role="note">
+      <span class="welcome-cta-kicker">Step 3</span>
+      <strong>Allele frequencies (gnomAD)</strong>
+      <span class="welcome-cta-hint">
+        Report AF chips use the local gnomAD variant cache / VCF indexes from Vector Research — not the dbSNP merge map.
+      </span>
+    </div>
 
     {#if !isChainDownloaded}
       <button type="button" class="welcome-cta" onclick={() => onDownloadChain?.()}>

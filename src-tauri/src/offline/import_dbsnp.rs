@@ -16,11 +16,45 @@ use super::compress::open_text_auto;
 use crate::research::util::normalize_rsid;
 use rayon::prelude::*;
 use rusqlite::{Connection, params};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use tauri::Emitter;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct DbsnpCheckpoint {
+    source_path: String,
+    source_size: u64,
+    lines_processed: u64,
+    alias_count: u64,
+    meta_count: u64,
+}
+
+fn checkpoint_path(staging_path: &Path) -> PathBuf {
+    staging_path.with_extension("checkpoint.json")
+}
+
+fn read_checkpoint(staging_path: &Path, source: &Path, source_size: u64) -> Option<DbsnpCheckpoint> {
+    let path = checkpoint_path(staging_path);
+    let raw = std::fs::read_to_string(path).ok()?;
+    let cp: DbsnpCheckpoint = serde_json::from_str(&raw).ok()?;
+    if cp.source_path == source.to_string_lossy() && cp.source_size == source_size {
+        Some(cp)
+    } else {
+        None
+    }
+}
+
+fn write_checkpoint(staging_path: &Path, cp: &DbsnpCheckpoint) -> Result<(), String> {
+    let path = checkpoint_path(staging_path);
+    let raw = serde_json::to_string_pretty(cp).map_err(|e| e.to_string())?;
+    std::fs::write(path, raw).map_err(|e| format!("Write dbSNP checkpoint: {e}"))
+}
+
+fn clear_checkpoint(staging_path: &Path) {
+    let _ = std::fs::remove_file(checkpoint_path(staging_path));
+}
 
 fn normalize_numeric_rsid(val: &str) -> Option<String> {
     let clean = val.trim().trim_start_matches("rs").trim_start_matches("RS");
@@ -190,13 +224,21 @@ pub fn import_dbsnp_merged(
     let dbsnp_path = PathBuf::from(&dbsnp_path_str);
     let dbsnp_dir = dbsnp_path.parent().unwrap_or_else(|| Path::new("."));
     let staging_path = dbsnp_dir.join("dbsnp_staging.db");
+    let total_bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+    let resume = read_checkpoint(&staging_path, &path, total_bytes);
 
-    if staging_path.is_file() {
-        let _ = std::fs::remove_file(&staging_path);
+    if resume.is_none() {
+        if staging_path.is_file() {
+            let _ = std::fs::remove_file(&staging_path);
+        }
+        clear_checkpoint(&staging_path);
     }
 
-    let staging_conn =
-        Connection::open(&staging_path).map_err(|e| format!("Open staging DB: {e}"))?;
+    let staging_conn = if resume.is_some() && staging_path.is_file() {
+        Connection::open(&staging_path).map_err(|e| format!("Open staging DB (resume): {e}"))?
+    } else {
+        Connection::open(&staging_path).map_err(|e| format!("Open staging DB: {e}"))?
+    };
 
     staging_conn.execute("PRAGMA synchronous = OFF", []).ok();
     staging_conn
@@ -206,8 +248,26 @@ pub fn import_dbsnp_merged(
     create_dbsnp_staging_schema(&staging_conn)?;
 
     let start_time = std::time::Instant::now();
-    let total_bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
     let mut bytes_processed = 0u64;
+    let mut lines_processed = 0u64;
+    let mut count = resume.as_ref().map(|c| c.alias_count).unwrap_or(0);
+    let mut meta_count = resume.as_ref().map(|c| c.meta_count).unwrap_or(0);
+    let skip_lines = resume.as_ref().map(|c| c.lines_processed).unwrap_or(0);
+
+    if let Some(ref cp) = resume {
+        emit_import_progress(
+            app,
+            "dbsnp_merged_json",
+            count,
+            progress_percent(0, total_bytes.max(1)),
+            0.0,
+            None,
+            format!(
+                "Resuming dbSNP merge from line {} ({} aliases already staged)…",
+                cp.lines_processed, cp.alias_count
+            ),
+        );
+    }
 
     let parse_dbsnp_line = |line: &str| -> (Vec<AliasInsert>, Option<MetaInsert>) {
         let trimmed = line.trim();
@@ -271,17 +331,44 @@ pub fn import_dbsnp_merged(
     let mut tx = staging_conn
         .unchecked_transaction()
         .map_err(|e| e.to_string())?;
-    let mut count = 0u64;
-    let mut meta_count = 0u64;
     let mut chunk = Vec::with_capacity(20_000);
 
     for line_res in reader.lines() {
         if crate::offline::sync::is_offline_import_cancelled() {
-            return Err("dbSNP merge import cancelled by user.".into());
+            let _ = tx.commit();
+            write_checkpoint(
+                &staging_path,
+                &DbsnpCheckpoint {
+                    source_path: path.to_string_lossy().to_string(),
+                    source_size: total_bytes,
+                    lines_processed,
+                    alias_count: count,
+                    meta_count,
+                },
+            )?;
+            emit_import_progress(
+                app,
+                "dbsnp_merged_json",
+                count,
+                progress_percent(bytes_processed, total_bytes.max(1)),
+                0.0,
+                None,
+                format!(
+                    "Paused — progress saved at line {lines_processed}. Re-sync to resume."
+                ),
+            );
+            return Err(
+                "dbSNP merge import cancelled — progress saved; Re-sync to resume.".into(),
+            );
         }
         let line = line_res.map_err(|e| e.to_string())?;
         let line_len = line.len() as u64 + 1;
         bytes_processed += line_len;
+        lines_processed += 1;
+
+        if lines_processed <= skip_lines {
+            continue;
+        }
 
         let trimmed = line.trim();
         if trimmed.is_empty() {
@@ -358,6 +445,16 @@ pub fn import_dbsnp_merged(
                     speed
                 ),
             );
+            let _ = write_checkpoint(
+                &staging_path,
+                &DbsnpCheckpoint {
+                    source_path: path.to_string_lossy().to_string(),
+                    source_size: total_bytes,
+                    lines_processed,
+                    alias_count: count,
+                    meta_count,
+                },
+            );
             tx = staging_conn
                 .unchecked_transaction()
                 .map_err(|e| e.to_string())?;
@@ -428,6 +525,7 @@ pub fn import_dbsnp_merged(
     }
     std::fs::rename(&staging_path, &dbsnp_path)
         .map_err(|e| format!("Staging swap rename failed: {e}"))?;
+    clear_checkpoint(&staging_path);
 
     let attach_dbsnp = format!(
         "ATTACH DATABASE '{}' AS dbsnp",
@@ -436,6 +534,7 @@ pub fn import_dbsnp_merged(
     conn.execute(&attach_dbsnp, [])
         .map_err(|e| format!("Re-attach dbsnp failed: {e}"))?;
 
+    crate::offline::discovery_export::invalidate_discovery_cache();
     Ok(count)
 }
 

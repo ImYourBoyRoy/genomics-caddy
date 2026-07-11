@@ -28,6 +28,7 @@
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
+  import "$lib/styles/components/ai-assistant-panel.css";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
   import ChatSettingsDrawer from "./ChatSettingsDrawer.svelte";
@@ -50,7 +51,7 @@
   }
   let {
     selectedSample, generatedReport,
-    ollamaUrl = $bindable("http://localhost:11434"),
+    ollamaUrl = $bindable(""),
     ollamaToken = $bindable(""),
     selectedModel = $bindable(""),
     messages = $bindable([]),
@@ -481,5 +482,3 @@
   bind:showExportModal={showExportModal}
   exportConversation={exportConversation}
 />
-
-<style src="../../styles/components/ai-assistant-panel.css"></style>

@@ -128,8 +128,15 @@ bash ./scripts/purge_and_build.sh
 
 **Linux one-time prerequisites** (Tauri WebKitGTK 4.1 + GTK headers):
 ```bash
-bash ./scripts/setup_linux_deps.sh
-npm run system:check
+npm run setup:linux
+# or: bash ./scripts/setup_linux_deps.sh && npm run system:check
+```
+
+**Linux desktop logo / launcher** (DNA icon instead of a generic gear in the dock):
+```bash
+npm run desktop:linux
+# or regenerate icons from static/logo.png then reinstall:
+npm run icons:regen && npm run desktop:linux
 ```
 
 Options (via `npm run build:release -- …` or the shell/PowerShell scripts):
@@ -286,27 +293,35 @@ Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cro
 
 ### NPM Build and Execution Scripts
 * **`npm run dev`**: Spawns Vite development web server.
-* **`npm run tauri dev`**: Starts Vite server and mounts the Tauri desktop window.
+* **`npm run tauri:dev`**: Starts Vite server and mounts the Tauri desktop window.
 * **`npm run build`**: Compiles static production web assets into `/build`.
 * **`npm run check`**: Runs Svelte compiler and TypeScript diagnostics.
 * **`npm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
 * **`npm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.
+* **`npm run update:all`**: Full refresh — npm itself, rustup stable (+ sync `rust-version`), bump **all** npm deps to latest (including TypeScript majors), Cargo upgrade/update, then verify. TypeScript **7** is primary (`tsc` via `scripts/run_tsc.mjs`). `npm run check` shims the TS6 API for Svelte tooling (`@typescript/typescript6` + preload). `.npmrc` sets `legacy-peer-deps=true` so Kit’s outdated TS peerOptional range does not block installs. Flags: `--dry-run`, `--skip-toolchains`, `--skip-npm`, `--skip-cargo`, `--skip-verify`, `--update-node`.
+* **`npm run update:all:dry`**: Same plan as Update All without writing anything.
+* **`npm run update:deps`**: Packages only (npm + Cargo); skip toolchain self-updates.
+* **`npm run update:toolchains`**: Toolchains only (npm global + rustup); skip project deps and verify.
 
 ### Local `.env` and smoke tests
 
+Connection hosts are configured in-app under **Advanced → Connections** (also **Open Connections** in the left sidebar). **SQLite (UI-saved) overrides `.env`**; `.env` only fills empty fields as bootstrap.
+
 1. Copy the template: `copy .env.example .env` (Windows) or `cp .env.example .env`.
-2. Set your secrets in `.env` (never commit this file):
+2. Optionally set secrets / bootstrap URLs in `.env` (never commit this file):
 
 ```env
 QDRANT_URL=http://your-host:6333
 QDRANT_API_KEY=your-key
-QDRANT_COLLECTION=genomics_evidence
+QDRANT_COLLECTION=your_collection
 NCBI_API_KEY=
-OLLAMA_URL=http://localhost:11434
+OLLAMA_URL=http://your-ollama-host:11434
 OLLAMA_TOKEN=
 ```
 
-3. Run smoke tests:
+3. Or leave `.env` blank and enter URLs in **Advanced → Connections**, then **Save & Verify**. Use **Reset to localhost** for `127.0.0.1` (warns if Ollama/Qdrant are missing locally). Same tab: **Install / Update / Remove** Ollama models and **Check for updates** (Ollama + Qdrant).
+
+4. Run smoke tests:
 
 ```bash
 npm run smoke

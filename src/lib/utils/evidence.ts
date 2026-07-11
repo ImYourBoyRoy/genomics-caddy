@@ -131,6 +131,7 @@ export function getDirectionInfo(direction: EffectDirection): DirectionInfo {
 export interface SeverityInfo {
   cssClass: string;
   emoji: string;
+  glyph: string;
   label: string;
   description: string;
 }
@@ -141,6 +142,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-high-risk",
         emoji: "🔴",
+        glyph: "!",
         label: "Two risk alleles detected",
         description: "Both copies of this gene carry the variant associated with increased risk."
       };
@@ -148,6 +150,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-moderate-risk",
         emoji: "🟡",
+        glyph: "?",
         label: "One risk allele detected",
         description: "One copy carries the risk variant. Effect is typically smaller than two copies."
       };
@@ -155,6 +158,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-low-risk",
         emoji: "🟠",
+        glyph: "?",
         label: "Preliminary risk signal",
         description: "Limited evidence (Tier D/E research). Treat this as an early hypothesis — not a confirmed finding. Consider discussing with your healthcare provider."
       };
@@ -162,6 +166,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-protective",
         emoji: "🟢",
+        glyph: "+",
         label: "Protective variant detected",
         description: "This variant is associated with a beneficial or protective effect."
       };
@@ -169,6 +174,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-trait",
         emoji: "🔵",
+        glyph: "T",
         label: "Trait variant detected",
         description: "This variant describes a characteristic, not a health risk."
       };
@@ -176,6 +182,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-context",
         emoji: "🟣",
+        glyph: "~",
         label: "Context-dependent variant",
         description: "This variant's effect depends on other factors like medications, diet, or environment."
       };
@@ -183,6 +190,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-confirm",
         emoji: "⚠️",
+        glyph: "C",
         label: "Clinical confirmation needed",
         description: "Consumer DNA tests can produce false positives on rare variants. A clinical lab test is needed to confirm."
       };
@@ -190,6 +198,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-nodata",
         emoji: "⚪",
+        glyph: "·",
         label: "No data available",
         description: "Your DNA test did not include or could not read this position."
       };
@@ -198,6 +207,7 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
       return {
         cssClass: "signal-benign",
         emoji: "○",
+        glyph: "·",
         label: "Variant not detected",
         description: "Your genotype at this position matches the standard reference. The effect allele being tested was not found."
       };

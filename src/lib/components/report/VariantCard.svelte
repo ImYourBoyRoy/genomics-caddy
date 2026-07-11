@@ -119,7 +119,8 @@
       {/if}
     </span>
     <span class="marker-severity-label">
-      {severity.emoji} {viewMode === 'simple' ? getSimpleLabel(marker.severity_class) : severity.label}
+      <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
+      {viewMode === 'simple' ? getSimpleLabel(marker.severity_class) : severity.label}
       {#if effectCount > 0 && isActiveFindings}
         <span class="allele-detail">
           {#if viewMode === 'simple'}

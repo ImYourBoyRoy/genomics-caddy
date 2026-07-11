@@ -559,6 +559,8 @@ export interface OllamaServiceConfig {
   url: string;
   from_env: boolean;
   token_set: boolean;
+  configured: boolean;
+  env_url?: string | null;
 }
 
 export async function getOllamaServiceConfig(): Promise<OllamaServiceConfig> {
@@ -567,6 +569,126 @@ export async function getOllamaServiceConfig(): Promise<OllamaServiceConfig> {
 
 export async function saveOllamaToken(token?: string): Promise<void> {
   return invoke<void>("save_ollama_token", { token: token || undefined });
+}
+
+export async function saveOllamaUrl(url: string): Promise<void> {
+  return invoke<void>("save_ollama_url", { url });
+}
+
+export interface InferenceHostProfile {
+  platform: string;
+  arch: string;
+  is_local_url: boolean;
+  unified_memory: boolean;
+  accel_backends: string[];
+  accel_bytes?: number | null;
+  system_ram_bytes?: number | null;
+  observed_vram_in_use_bytes?: number | null;
+  posture: string;
+  notes: string[];
+}
+
+export interface OllamaModelInsight {
+  name: string;
+  role: string;
+  size_bytes?: number | null;
+  parameter_size?: string | null;
+  quantization?: string | null;
+  family?: string | null;
+  currently_loaded: boolean;
+  size_vram_bytes?: number | null;
+  load_hint: string;
+  rationale: string;
+}
+
+export interface OllamaDiscoveryReport {
+  host: InferenceHostProfile;
+  models: OllamaModelInsight[];
+  ollama_reachable: boolean;
+  error?: string | null;
+}
+
+export async function probeInferenceHost(ollamaUrl?: string): Promise<InferenceHostProfile> {
+  return invoke<InferenceHostProfile>("probe_inference_host", {
+    ollamaUrl: ollamaUrl || undefined,
+  });
+}
+
+export async function discoverOllamaModels(
+  url: string,
+  token?: string
+): Promise<OllamaDiscoveryReport> {
+  return invoke<OllamaDiscoveryReport>("discover_ollama_models", {
+    url,
+    token: token || undefined,
+  });
+}
+
+export interface LocalhostServiceStatus {
+  ollama_url: string;
+  qdrant_url: string;
+  ollama_reachable: boolean;
+  qdrant_reachable: boolean;
+  ollama_version?: string | null;
+  qdrant_version?: string | null;
+  ollama_error?: string | null;
+  qdrant_error?: string | null;
+  notes: string[];
+}
+
+export interface ServiceUpdateCheck {
+  service: string;
+  installed_version?: string | null;
+  latest_version?: string | null;
+  update_available?: boolean | null;
+  notes: string[];
+}
+
+export async function probeLocalhostServices(): Promise<LocalhostServiceStatus> {
+  return invoke<LocalhostServiceStatus>("probe_localhost_services");
+}
+
+export async function getOllamaVersion(url: string, token?: string): Promise<{ version?: string }> {
+  return invoke("get_ollama_version", { url, token: token || undefined });
+}
+
+export async function getQdrantVersion(url: string, apiKey?: string): Promise<{ version?: string; title?: string }> {
+  return invoke("get_qdrant_version", { url, apiKey: apiKey || undefined });
+}
+
+export async function checkOllamaUpdate(url: string, token?: string): Promise<ServiceUpdateCheck> {
+  return invoke<ServiceUpdateCheck>("check_ollama_update", { url, token: token || undefined });
+}
+
+export async function checkQdrantUpdate(url: string, apiKey?: string): Promise<ServiceUpdateCheck> {
+  return invoke<ServiceUpdateCheck>("check_qdrant_update", { url, apiKey: apiKey || undefined });
+}
+
+export async function pullOllamaModel(url: string, name: string, token?: string): Promise<unknown> {
+  return invoke("pull_ollama_model", { url, name, token: token || undefined });
+}
+
+export async function deleteOllamaModel(url: string, name: string, token?: string): Promise<void> {
+  return invoke("delete_ollama_model", { url, name, token: token || undefined });
+}
+
+export async function probeVectorProvider(
+  provider: string,
+  url: string,
+  apiKey?: string
+): Promise<{
+  provider: string;
+  reachable: boolean;
+  research_supported: boolean;
+  note?: string;
+  http_status?: number;
+  info?: unknown;
+}> {
+  return invoke("probe_vector_provider", {
+    provider,
+    url,
+    apiKey: apiKey || undefined,
+  });
 }
 
 export async function purgeDatabaseCache(): Promise<number> {
@@ -706,6 +828,69 @@ export async function exportDiscoveryFindings(sampleId: number): Promise<{
   pack_rsid_count: number;
 }> {
   return invoke('export_discovery_findings', { sampleId });
+}
+
+export interface DiscoveryFindingItem {
+  rsid: string;
+  genotype?: string;
+  in_marker_packs?: boolean;
+  clinvar?: {
+    clinical_significance?: string;
+    gene?: string;
+    phenotypes?: string;
+    review_status?: string;
+  } | null;
+  gwas?: {
+    top_trait?: string;
+    best_pvalue?: number | null;
+    primary_gene?: string;
+  } | null;
+  pharmgkb?: {
+    gene?: string;
+    drug?: string;
+    phenotype?: string;
+    evidence_level?: string;
+  } | null;
+}
+
+export interface DiscoveryQueryResult {
+  sample_id: number;
+  genotype_rsid_count: number;
+  pack_rsid_count: number;
+  findings_in_packs: number;
+  total_matched: number;
+  beyond_packs_only: boolean;
+  source_filter: string | null;
+  query: string | null;
+  limit: number;
+  offset: number;
+  cached?: boolean;
+  items: DiscoveryFindingItem[];
+}
+
+/** Browse ranked genome×catalog associations (default: beyond marker packs). */
+export async function queryDiscoveryFindings(
+  sampleId: number,
+  opts?: {
+    beyondPacksOnly?: boolean;
+    sourceFilter?: string | null;
+    query?: string | null;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<DiscoveryQueryResult> {
+  return invoke('query_discovery_findings', {
+    sampleId,
+    beyondPacksOnly: opts?.beyondPacksOnly ?? true,
+    sourceFilter: opts?.sourceFilter ?? null,
+    query: opts?.query ?? null,
+    limit: opts?.limit ?? 100,
+    offset: opts?.offset ?? 0,
+  });
+}
+
+export async function cancelDiscoveryQuery(): Promise<void> {
+  return invoke('cancel_discovery_query');
 }
 
 export async function getCustomDownloadDir(): Promise<string | null> {

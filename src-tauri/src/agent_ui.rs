@@ -6,7 +6,10 @@ Responsibilities:
 - Serve a localhost-only HTTP control plane for external agents (GUI must be running).
 Key Inputs: method name + optional JSON args; HTTP on 127.0.0.1:17321.
 Key Outputs: JSON result from window.__GENOMICS_CADDY_UI__.
-Operational Notes: Bind is loopback-only. Requires the frontend bridge in +page.svelte.
+Operational Notes:
+- Loopback-only bind.
+- Enabled in debug builds by default; release requires GENOMICS_AGENT_UI=1.
+- When GENOMICS_AGENT_UI_TOKEN is set, /ui paths require Bearer or X-Genomics-Agent-Ui-Token.
 */
 
 use serde_json::{Value, json};
@@ -38,6 +41,63 @@ fn next_request_id() -> String {
             .unwrap_or(0),
         COUNTER.fetch_add(1, Ordering::Relaxed)
     )
+}
+
+fn agent_ui_enabled() -> bool {
+    if cfg!(debug_assertions) {
+        return true;
+    }
+    matches!(
+        std::env::var("GENOMICS_AGENT_UI")
+            .ok()
+            .as_deref()
+            .map(str::trim),
+        Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
+    )
+}
+
+fn configured_token() -> Option<String> {
+    std::env::var("GENOMICS_AGENT_UI_TOKEN")
+        .ok()
+        .map(|t| t.trim().to_string())
+        .filter(|t| !t.is_empty())
+}
+
+fn extract_request_token(req: &str) -> Option<String> {
+    for line in req.lines() {
+        let Some((name, value)) = line.split_once(':') else {
+            continue;
+        };
+        let name = name.trim().to_ascii_lowercase();
+        let value = value.trim();
+        if name == "authorization" {
+            if let Some(token) = value
+                .strip_prefix("Bearer ")
+                .or_else(|| value.strip_prefix("bearer "))
+            {
+                return Some(token.trim().to_string());
+            }
+            return Some(value.to_string());
+        }
+        if name == "x-genomics-agent-ui-token" {
+            return Some(value.to_string());
+        }
+    }
+    None
+}
+
+fn authorize_ui(req: &str) -> Result<(), String> {
+    let Some(expected) = configured_token() else {
+        return Ok(());
+    };
+    match extract_request_token(req) {
+        Some(got) if got == expected => Ok(()),
+        Some(_) => Err("Invalid agent UI token".into()),
+        None => Err(
+            "Agent UI token required (Authorization: Bearer … or X-Genomics-Agent-Ui-Token)"
+                .into(),
+        ),
+    }
 }
 
 fn ensure_response_listener(app: &AppHandle) {
@@ -78,7 +138,6 @@ pub async fn invoke_ui(
 ) -> Result<Value, String> {
     ensure_response_listener(app);
 
-    // Ensure at least one webview window exists.
     if app.webview_windows().is_empty() {
         return Err("No Genomics Caddy window is open".to_string());
     }
@@ -128,6 +187,13 @@ pub async fn agent_ui_invoke(
 
 /// Start loopback HTTP control plane: GET /health, GET /ui/snapshot, POST /ui/{method}.
 pub fn start_http_bridge(app: AppHandle) {
+    if !agent_ui_enabled() {
+        eprintln!(
+            "Agent UI HTTP bridge disabled (release build). Set GENOMICS_AGENT_UI=1 to enable; optional GENOMICS_AGENT_UI_TOKEN for auth."
+        );
+        return;
+    }
+
     tauri::async_runtime::spawn(async move {
         let addr = format!("127.0.0.1:{AGENT_UI_PORT}");
         let listener = match TcpListener::bind(&addr).await {
@@ -137,7 +203,12 @@ pub fn start_http_bridge(app: AppHandle) {
                 return;
             }
         };
-        eprintln!("Agent UI HTTP bridge listening on http://{addr}");
+        let auth_note = if configured_token().is_some() {
+            " (token required for /ui/*)"
+        } else {
+            " (no token configured — any local process can drive the UI)"
+        };
+        eprintln!("Agent UI HTTP bridge listening on http://{addr}{auth_note}");
 
         loop {
             let Ok((mut socket, _)) = listener.accept().await else {
@@ -180,9 +251,16 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "service": "genomics-caddy-agent-ui",
                 "port": AGENT_UI_PORT,
                 "windows": app.webview_windows().len(),
+                "auth_required": configured_token().is_some(),
             })
             .to_string(),
         );
+    }
+
+    if path.starts_with("/ui/") {
+        if let Err(e) = authorize_ui(req) {
+            return (401, json!({"ok": false, "error": e}).to_string());
+        }
     }
 
     if method == "GET" && path == "/ui/snapshot" {
@@ -197,7 +275,6 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
         let body = req.split("\r\n\r\n").nth(1).unwrap_or("{}").trim();
         let args: Value = serde_json::from_str(if body.is_empty() { "{}" } else { body })
             .unwrap_or_else(|_| json!({}));
-        // Convenience: POST /ui/setTab {"tab":"map"} or {"arg":"map"}
         let args = if ui_method == "setTab" {
             if let Some(tab) = args.get("tab").cloned() {
                 tab

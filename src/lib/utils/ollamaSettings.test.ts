@@ -1,7 +1,6 @@
 // ./src/lib/utils/ollamaSettings.test.ts
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
-  DEFAULT_OLLAMA_URL,
   loadOllamaUrl,
   OLLAMA_URL_STORAGE_KEY,
   saveOllamaUrl,
@@ -29,8 +28,8 @@ describe("ollamaSettings", () => {
     mockLocalStorage();
   });
 
-  it("returns default when storage is empty", () => {
-    expect(loadOllamaUrl()).toBe(DEFAULT_OLLAMA_URL);
+  it("returns empty when storage is empty (no hardcoded host)", () => {
+    expect(loadOllamaUrl()).toBe("");
   });
 
   it("persists and reloads URL", () => {
@@ -40,7 +39,13 @@ describe("ollamaSettings", () => {
   });
 
   it("trims whitespace on save", () => {
-    saveOllamaUrl("  http://localhost:11434  ");
-    expect(loadOllamaUrl()).toBe("http://localhost:11434");
+    saveOllamaUrl("  http://127.0.0.1:11434  ");
+    expect(loadOllamaUrl()).toBe("http://127.0.0.1:11434");
+  });
+
+  it("clears storage when saving empty", () => {
+    saveOllamaUrl("http://127.0.0.1:11434");
+    saveOllamaUrl("  ");
+    expect(localStorage.getItem(OLLAMA_URL_STORAGE_KEY)).toBeNull();
   });
 });

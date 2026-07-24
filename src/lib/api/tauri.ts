@@ -398,6 +398,138 @@ export async function getRecentFindingPreviews(
   return invoke("get_recent_finding_previews", { sampleId, limit });
 }
 
+export interface VectorBrowsePage {
+  provider: string;
+  points: import("../types/research").QdrantHit[];
+  next_offset?: unknown | null;
+  total_hint?: number | null;
+  note?: string | null;
+}
+
+export async function browseVectorStore(
+  sampleId: number,
+  ollamaUrl: string,
+  limit?: number,
+  offset?: unknown,
+  rsid?: string
+): Promise<VectorBrowsePage> {
+  return invoke<VectorBrowsePage>("browse_vector_store", {
+    sampleId,
+    ollamaUrl,
+    limit,
+    offset: offset ?? null,
+    rsid: rsid || null,
+  });
+}
+
+export interface PackDraftExportResult {
+  path: string;
+  candidate_count: number;
+  already_in_packs: number;
+  from_promoted: number;
+  from_vector_browse: number;
+  message: string;
+}
+
+export async function exportPackDraftFromVectors(
+  sampleId: number,
+  sampleName: string,
+  ollamaUrl: string,
+  minScore?: number
+): Promise<PackDraftExportResult> {
+  return invoke<PackDraftExportResult>("export_pack_draft_from_vectors", {
+    sampleId,
+    sampleName,
+    ollamaUrl,
+    minScore: minScore ?? null,
+  });
+}
+
+export async function listPackDraftExports(): Promise<string[]> {
+  return invoke<string[]>("list_pack_draft_exports");
+}
+
+export async function listRuntimeMarkerPackIds(): Promise<string[]> {
+  return invoke<string[]>("list_runtime_marker_pack_ids");
+}
+
+export interface PackMergeResult {
+  target_pack_id: string;
+  target_pack_path: string;
+  added: number;
+  skipped_existing: number;
+  skipped_incomplete: number;
+  backup_path?: string | null;
+  message: string;
+}
+
+export async function mergePackDraftIntoPack(
+  draftPath: string,
+  targetPackId: string,
+  onlyRsids?: string[],
+  requireComplete?: boolean
+): Promise<PackMergeResult> {
+  return invoke<PackMergeResult>("merge_pack_draft_into_pack", {
+    draftPath,
+    targetPackId,
+    onlyRsids: onlyRsids ?? null,
+    requireComplete: requireComplete ?? false,
+  });
+}
+
+export async function reloadMarkerPacks(): Promise<Record<string, string>> {
+  return invoke<Record<string, string>>("reload_marker_packs");
+}
+
+export interface ResearchFoundPackView {
+  name: string;
+  markers: Array<Record<string, unknown>>;
+  enabled_in_report: boolean;
+  path: string;
+}
+
+export interface AlleleFillResult {
+  updated: number;
+  unchanged: number;
+  message: string;
+}
+
+export interface ResearchFoundMarkerPatch {
+  rsid: string;
+  gene?: string | null;
+  effect_allele?: string | null;
+  effect_direction?: string | null;
+  evidence_tier?: string | null;
+  impact?: string | null;
+  interpretation?: string | null;
+  variant_name?: string | null;
+  clinical_confirmation_required?: boolean | null;
+}
+
+export async function getResearchFoundPack(): Promise<ResearchFoundPackView> {
+  return invoke<ResearchFoundPackView>("get_research_found_pack");
+}
+
+export async function fillResearchFoundAlleles(): Promise<AlleleFillResult> {
+  return invoke<AlleleFillResult>("fill_research_found_alleles");
+}
+
+export async function setResearchFoundEnabled(enabled: boolean): Promise<boolean> {
+  return invoke<boolean>("set_research_found_enabled", { enabled });
+}
+
+export async function updateResearchFoundMarker(
+  patch: ResearchFoundMarkerPatch
+): Promise<ResearchFoundPackView> {
+  return invoke<ResearchFoundPackView>("update_research_found_marker", { patch });
+}
+
+export async function deleteResearchFoundMarkers(
+  rsids: string[]
+): Promise<ResearchFoundPackView> {
+  return invoke<ResearchFoundPackView>("delete_research_found_markers", { rsids });
+}
+
 // ── Evidence workbench ──────────────────────────────────────────────────────
 
 export async function searchAssociationsHybrid(

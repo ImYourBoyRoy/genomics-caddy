@@ -81,13 +81,19 @@ export function computeRunReadiness(input: RunReadinessInput): RunReadiness {
 
   const ollamaReady = ollamaStatus === "live";
 
-  const scopeHasMarkers =
-    !scopePreviewLoading && (scopePreview?.total_unique ?? 0) > 0;
+  const scopeHasMarkers = (scopePreview?.total_unique ?? 0) > 0;
 
-  const sweepActive = job?.status === "running" && job.loop_active !== false;
+  const sweepActive =
+    job?.loop_active === true ||
+    (job?.status === "running" && job.loop_active !== false);
   const sweepPausing = job?.status === "paused" && job.loop_active === true;
   const sweepInterrupted = job?.status === "running" && job.loop_active === false;
   const fullyPaused = job?.status === "paused" && job.loop_active !== true;
+  // Cancel persists idle immediately while the cooperative loop may still be winding down.
+  const sweepWindingDown =
+    job?.status === "idle" &&
+    job.loop_active === true &&
+    (job.error_message ?? "").toLowerCase().includes("cancel");
 
   const infrastructureReady =
     !!configUrl?.trim() &&
@@ -96,15 +102,18 @@ export function computeRunReadiness(input: RunReadinessInput): RunReadiness {
     ollamaReady &&
     !embeddingModelMismatch &&
     (!gnomadSourceEnabled || gnomadSweepReady) &&
+    // Allow Start during a recount when we already have a non-empty preview.
+    // First load still waits until preview returns (total_unique stays 0 until then).
     scopeHasMarkers;
 
-  const canStart = infrastructureReady && !sweepActive && !sweepPausing;
+  const canStart = infrastructureReady && !sweepActive && !sweepPausing && !sweepWindingDown;
 
   const canResume =
-    infrastructureReady && (fullyPaused || sweepInterrupted) && !sweepActive;
+    infrastructureReady && (fullyPaused || sweepInterrupted) && !sweepActive && !sweepWindingDown;
 
-  const canPause = sweepActive;
-  const canCancel = sweepActive || sweepPausing || fullyPaused || sweepInterrupted;
+  const canPause = sweepActive && !sweepWindingDown;
+  const canCancel =
+    sweepActive || sweepPausing || fullyPaused || sweepInterrupted || sweepWindingDown;
 
   let primaryHint: string | null = null;
   let secondaryHint: string | null = null;
@@ -113,7 +122,7 @@ export function computeRunReadiness(input: RunReadinessInput): RunReadiness {
     primaryHint = "Checking Qdrant server…";
   } else if (connectionActivity.phase === "checking-ollama" || ollamaStatus === "testing") {
     primaryHint = "Checking Ollama embedding models…";
-  } else if (scopePreviewLoading) {
+  } else if (scopePreviewLoading && !scopeHasMarkers) {
     primaryHint = "Counting sweep scope markers…";
   } else if (isConnectionPending) {
     primaryHint = "Verifying connections…";
@@ -139,6 +148,8 @@ export function computeRunReadiness(input: RunReadinessInput): RunReadiness {
   } else if (scopePreview && scopePreview.total_unique === 0) {
     secondaryHint =
       "No variants match the selected scopes — enable at least one queue or sync GWAS reference data.";
+  } else if (sweepWindingDown) {
+    primaryHint = "Cancelling sweep — waiting for the worker to stop…";
   } else if (sweepInterrupted) {
     primaryHint =
       "Sweep was interrupted (app closed or backend stopped). Resume to continue from the last checkpoint.";

@@ -241,14 +241,30 @@ async function main() {
       }
     }
 
-    if (which("rustup")) {
-      run("rustup", ["update", "stable"]);
-      run("rustup", ["default", "stable"], { allowFail: true });
-      const rustcVer = versionLine("rustc");
+    const homeDir = process.env.HOME || "";
+    const cargoBinDir = path.join(homeDir, ".cargo", "bin");
+    const cargoBinRustup = path.join(cargoBinDir, "rustup");
+    const cargoBinCargo = path.join(cargoBinDir, "cargo");
+    const cargoBinRustc = path.join(cargoBinDir, "rustc");
+
+    // If the official rustup is not present in ~/.cargo/bin, install it
+    if (!fs.existsSync(cargoBinRustup)) {
+      log("  Official rustup not found in ~/.cargo/bin. Installing official non-sandboxed rustup...");
+      run(
+        "sh",
+        ["-c", "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path"],
+        { allowFail: false }
+      );
+    }
+
+    if (fs.existsSync(cargoBinRustup)) {
+      run(cargoBinRustup, ["update", "stable"]);
+      run(cargoBinRustup, ["default", "stable"], { allowFail: true });
+      const rustcVer = versionLine(cargoBinRustc);
       if (rustcVer) syncRustVersionField(rustcVer);
     } else {
-      log("  rustup not found — skip Rust toolchain update (install rustup to enable).");
-      report.steps.push({ name: "rustup update stable", ok: true, detail: "skipped" });
+      log("  Failed to configure rustup in ~/.cargo/bin — skipping toolchain update.");
+      report.steps.push({ name: "rustup update stable", ok: false, detail: "not found" });
     }
   } else {
     step("1) Toolchains — skipped");

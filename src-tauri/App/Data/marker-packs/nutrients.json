@@ -1,0 +1,2069 @@
+{
+  "name": "Nutrients & One-Carbon Methylation",
+  "markers": [
+    {
+      "rsid": "rs1801133",
+      "gene": "MTHFR",
+      "variant_name": "C677T",
+      "effect_allele": "T",
+      "impact": "Reduced folate conversion efficiency (MTHFR)",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTHFR C677T converts 5,10-methylenetetrahydrofolate to 5-methyltetrahydrofolate (active folate). Homozygous T/T reduces pathway efficiency by up to 70%, which can lead to elevated homocysteine if folate intake is inadequate.",
+      "do_not_claim": [
+        "thrombophilia diagnosis",
+        "methylation failure certainty",
+        "folic acid toxicity"
+      ],
+      "confirm_with": [
+        "serum homocysteine",
+        "serum/red blood cell folate",
+        "vitamin B12",
+        "methylmalonic acid (MMA)"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Enzymatic reduction is easily bypassed with dietary folate or methylfolate; genotype does not dictate clinical status if cofactor intake is optimal.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Homocysteine and MTHFR C677T Meta-Analysis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15722444/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Establishes quantitative impact of C677T on serum homocysteine concentrations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801131",
+      "gene": "MTHFR",
+      "variant_name": "A1298C",
+      "effect_allele": "G",
+      "impact": "Secondary folate conversion pathway reduction",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTHFR A1298C (G allele) causes a minor decrease in enzyme activity. Heterozygous C677T combined with A1298C (compound heterozygosity) decreases folate conversion by 40-50%, affecting one-carbon metabolism.",
+      "do_not_claim": [
+        "routine thrombophilia testing requirement",
+        "folate deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "serum homocysteine",
+        "folate levels",
+        "complete blood count (CBC)"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "A1298C has minimal clinical impact on its own unless paired with a C677T allele.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MTHFR A1298C and disease association studies",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15147484/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Determines that A1298C is not a risk factor for neural tube defects unless present in compound heterozygosity."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL-6",
+      "variant_name": "-174G>C",
+      "effect_allele": "G",
+      "impact": "Elevated baseline Interleukin-6 expression",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "IL-6 is a key inflammatory cytokine. The G allele is linked to elevated baseline IL-6 secretion, which can influence systemic inflammatory tone and transient mood/cognitive sensitivity during immune activation.",
+      "do_not_claim": [
+        "chronic inflammatory disease diagnosis",
+        "Hashimoto's flare prediction"
+      ],
+      "confirm_with": [
+        "high-sensitivity CRP (hs-CRP)",
+        "serum IL-6",
+        "joint stiffness/fatigue levels"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Cytokine expression is dynamic and highly dependent on body composition, physical fitness, sleep, and chronic infectious loads.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "IL-6 promoter polymorphism and baseline inflammation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11207261/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Details transcription rate differences of -174G vs C promoter variants."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "-308A>G promoter",
+      "effect_allele": "A",
+      "impact": "Increased Tumor Necrosis Factor-alpha expression",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "TNF-alpha is a master inflammatory cytokine. The rs1800629 A allele increases promoter transcription activity, linked to elevated TNF-alpha production and systemic baseline inflammatory susceptibility.",
+      "do_not_claim": [
+        "autoimmune disease diagnosis",
+        "inflammatory bowel disease"
+      ],
+      "confirm_with": [
+        "hs-CRP",
+        "erythrocyte sedimentation rate (ESR)",
+        "autoimmune antibody screens"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Baseline inflammatory markers are driven by diet, visceral fat volume, dental health, and gut barrier integrity.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TNF-alpha promoter polymorphism and transcriptional activation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9285934/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Shows elevated transcription levels of the -308A variant in reporter gene assays."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800562",
+      "gene": "HFE",
+      "variant_name": "C282Y",
+      "effect_allele": "A",
+      "impact": "Impaired iron clearance / elevated ferritin (Hemochromatosis risk)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The HFE C282Y A allele prevents proper cell-surface expression of HFE, leading to unrestrained iron absorption. Homozygotes are at high risk of hereditary hemochromatosis, characterized by iron overload in organs.",
+      "do_not_claim": [
+        "hemochromatosis diagnosis"
+      ],
+      "confirm_with": [
+        "serum ferritin",
+        "transferrin saturation",
+        "total iron binding capacity (TIBC)"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Clinical penetrance is low; many homozygotes do not develop clinical symptoms of iron overload without secondary factors.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "EASL Guidelines on Hemochromatosis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20439207/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "Recommends genetic testing for individuals with unexplained iron overload."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799945",
+      "gene": "HFE",
+      "variant_name": "H63D",
+      "effect_allele": "G",
+      "impact": "Impaired iron clearance / elevated ferritin (Hemochromatosis risk)",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "H63D (G allele) is a milder modifier than C282Y. Compound heterozygosity (C282Y/H63D) can cause minor to moderate iron overload, while homozygous H63D/H63D rarely leads to severe clinical symptoms on its own.",
+      "do_not_claim": [
+        "hemochromatosis diagnosis"
+      ],
+      "confirm_with": [
+        "serum ferritin",
+        "serum iron"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Array assays read this variant reliably, but actual iron toxicity is diagnostic-lab based.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "HFE H63D mutation and clinical penetrance",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11754477/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Establishes that H63D homozygosity has very low clinical penetrance."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805087",
+      "gene": "MTR",
+      "variant_name": "Asp919Gly / A2756G",
+      "effect_allele": "G",
+      "impact": "Altered methionine synthase activity / one-carbon methylation",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MTR encodes methionine synthase, which transfers a methyl group from folate to B12, then to homocysteine. The G allele is linked to minor enzyme velocity changes; verify B12/homocysteine status before supplementing.",
+      "do_not_claim": [
+        "methylation failure",
+        "B12 deficiency"
+      ],
+      "confirm_with": [
+        "serum B12",
+        "serum homocysteine"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "MTR operates in close feedback loops with MTRR; single-gene status is non-predictive.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MTR A2756G polymorphism and homocysteine levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11545695/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Examines interaction of MTR genotypes with B12 levels."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801394",
+      "gene": "MTRR",
+      "variant_name": "Ile22Met / A66G",
+      "effect_allele": "G",
+      "impact": "Altered methionine synthase reductase activity / B12 recycling",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MTRR is responsible for maintaining MTR in its active cob(I)alamin state. The G allele reduces recycling efficiency, slightly raising cobalamin demands.",
+      "do_not_claim": [
+        "B12 deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "methylmalonic acid",
+        "serum B12"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Modest effect size; easily countered with adequate dietary cobalamin.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MTRR A66G polymorphism and neural tube defect risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9718328/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Details MTRR-B12 biochemical interactions in one-carbon loops."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801198",
+      "gene": "TCN2",
+      "variant_name": "Pro259Arg",
+      "effect_allele": "G",
+      "impact": "Altered transcobalamin-2 transport / B12 cellular uptake",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "TCN2 is the primary transport protein for B12 from blood into tissues. The G (Arg) allele reduces binding affinity, which can lead to lower cellular delivery of B12 despite normal serum B12 levels.",
+      "do_not_claim": [
+        "cellular B12 deficiency"
+      ],
+      "confirm_with": [
+        "holotranscobalamin (active B12) test",
+        "serum MMA"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Serum B12 tests can hide cellular deficiency in G/G carriers.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TCN2 Pro259Arg and serum transcobalamin levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11470741/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Shows reduction in active B12 transport capacity of the Arg isoform."
+        }
+      ]
+    },
+    {
+      "rsid": "rs602662",
+      "gene": "FUT2",
+      "variant_name": "rs602662 secretor variant",
+      "effect_allele": "A",
+      "impact": "Non-secretor status / lower serum vitamin B12 levels",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FUT2 controls the secretion of ABH blood group antigens into body fluids. Homozygous A/A results in 'non-secretor' status, which alters gut microbiome composition and is strongly linked to lower circulating serum B12 levels.",
+      "do_not_claim": [
+        "B12 deficiency diagnosis",
+        "Crohn's disease diagnosis"
+      ],
+      "confirm_with": [
+        "serum B12",
+        "secretor status salivary test"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Lower serum B12 in non-secretors does not always reflect intracellular deficiency.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "GWAS showing FUT2 locus is a major contributor to serum B12 variance."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7946",
+      "gene": "PEMT",
+      "variant_name": "Val175Met",
+      "effect_allele": "T",
+      "impact": "Reduced phosphatidylcholine synthesis / elevated choline demand",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "PEMT synthesizes phosphatidylcholine in the liver. The T (Met) allele reduces enzyme activity, making carriers highly susceptible to choline deficiency, fatty liver (NAFLD), and muscle damage on low-choline diets.",
+      "do_not_claim": [
+        "fatty liver diagnosis"
+      ],
+      "confirm_with": [
+        "ALT/AST liver enzymes",
+        "dietary choline tracking"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Estrogens stimulate PEMT; premenopausal females have some protection unless they also carry MTHFR/MTHFD1 modifiers.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PEMT polymorphisms and choline dietary requirements",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16815999/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Seminal nutritional genomics paper detailing dietary choline starvation responses."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2236225",
+      "gene": "MTHFD1",
+      "variant_name": "Arg134His",
+      "effect_allele": "A",
+      "impact": "Altered folate pathway enzymes / elevated choline requirement",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "MTHFD1 rs2236225 regulates a trifunctional folate enzyme. The A (His) allele impairs folate-mediated one-carbon flow, increasing dependence on the alternative choline-dependent (BHMT) pathway in the liver.",
+      "do_not_claim": [
+        "folate deficiency"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "choline intake"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Works synergistically with PEMT and MTHFR variants to compound choline demand.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MTHFD1 variants and choline/folate requirements",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19448003/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Replicates elevated fatty liver susceptibility on low-choline diets."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2228570",
+      "gene": "VDR",
+      "variant_name": "FokI polymorphism",
+      "effect_allele": "T",
+      "impact": "Altered Vitamin D receptor structural transcription",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "The FokI T (f) allele creates a longer, slightly less active VDR protein isoform. T-carriers may require slightly higher vitamin D3 levels to achieve comparable transcription of downstream target genes.",
+      "do_not_claim": [
+        "rickets diagnosis",
+        "vitamin D deficiency"
+      ],
+      "confirm_with": [
+        "serum 25-hydroxyvitamin D [25(OH)D]"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "VDR function requires binding of active calcitriol and partner RXR receptors; cofactor status is critical.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "VDR FokI and bone mineral density",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9090146/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Shows structural differences in VDR protein isoforms."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1544410",
+      "gene": "VDR",
+      "variant_name": "BsmI polymorphism",
+      "effect_allele": "A",
+      "impact": "Altered Vitamin D receptor levels",
+      "evidence_tier": "C_biohacker_hypothesis",
+      "interpretation": "BsmI is an intronic polymorphism that acts as a proxy for VDR expression level variations. The A (b) allele is frequently linked in association studies to lower VDR density.",
+      "do_not_claim": [
+        "vitamin D deficiency"
+      ],
+      "confirm_with": [
+        "serum 25(OH)D",
+        "DEXA bone density"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Strongly in linkage disequilibrium with TaqI and ApaI; haplotype analyses are more informative.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "VDR intronic polymorphisms and VDR expression",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8505504/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Examines expression markers associated with BsmI alleles."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2282679",
+      "gene": "GC",
+      "variant_name": "rs2282679 UTR variant",
+      "effect_allele": "C",
+      "impact": "Reduced Vitamin D-binding protein / lower circulating D3",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GC encodes Vitamin D-binding protein (DBP). The C allele is associated with lower DBP levels and is the most robust GWAS locus driving reduced circulating serum 25(OH)D levels in the population.",
+      "do_not_claim": [
+        "vitamin D deficiency"
+      ],
+      "confirm_with": [
+        "serum 25(OH)D"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Free (unbound) Vitamin D levels can remain stable even when total DBP-bound Vitamin D drops.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GWAS of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies GC, DHCR7, and CYP2R1 as primary circulating vitamin D regulators."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10741657",
+      "gene": "CYP2R1",
+      "variant_name": "rs10741657 promoter variant",
+      "effect_allele": "A",
+      "impact": "Impaired Vitamin D 25-hydroxylation efficiency",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CYP2R1 is the primary liver enzyme that converts Vitamin D3 into circulating 25(OH)D. The A allele reduces enzyme activity, leading to less efficient conversion of dietary or sun-derived D3.",
+      "do_not_claim": [
+        "vitamin D deficiency"
+      ],
+      "confirm_with": [
+        "serum 25-hydroxyvitamin D"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Easily countered with direct Vitamin D3 oral supplementation.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GWAS of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Details the CYP2R1 liver conversion enzyme locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12785878",
+      "gene": "DHCR7",
+      "variant_name": "rs12785878 intron variant",
+      "effect_allele": "T",
+      "impact": "Impaired skin synthesis of pre-vitamin D3",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "DHCR7 converts 7-dehydrocholesterol to cholesterol, regulating the precursor pool for Vitamin D3 synthesis in the skin. The T allele is linked to reduced efficiency in synthesizing vitamin D3 from UVB light.",
+      "do_not_claim": [
+        "vitamin D deficiency"
+      ],
+      "confirm_with": [
+        "serum 25-hydroxyvitamin D",
+        "sunlight exposure records"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Irrelevant for individuals who obtain their Vitamin D from direct supplementation.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GWAS of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Examines the DHCR7/NADSYN1 gene locus on chromosome 11."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_NUTRIENT_RAW_DNA_NON_DIAGNOSTIC",
+      "gene": "MULTI_GENE",
+      "variant_name": "Nutrient raw-DNA non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents nutrient deficiency/toxicity claims from genotype alone",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Nutrient-related variants can suggest altered requirements or transport/metabolism tendencies, but deficiency, toxicity, and supplementation need labs, diet context, medications, symptoms, and clinician input for high-stakes cases.",
+      "do_not_claim": [
+        "vitamin deficiency diagnosis",
+        "mineral toxicity diagnosis",
+        "supplement prescription from genotype",
+        "megadose recommendation"
+      ],
+      "confirm_with": [
+        "serum/RBC nutrient labs",
+        "dietary intake",
+        "medication review",
+        "clinical symptoms"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Raw DNA cannot measure nutrient intake, absorption, inflammatory redistribution, renal/liver handling, or tissue status.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        },
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        },
+        {
+          "name": "HFE-Related Hemochromatosis - GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",
+          "accessed": "2026-07-01",
+          "evidence_type": "GeneReviews",
+          "conflict_of_interest": "NIH/NCBI Bookshelf expert-authored clinical review",
+          "notes": "Clinical review of HFE-related hemochromatosis, penetrance, and laboratory confirmation."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_MTHFR_FOLIC_ACID_OVERCLAIM",
+      "gene": "MTHFR",
+      "variant_name": "MTHFR folic-acid overclaim guardrail",
+      "effect_allele": "N/A",
+      "impact": "Blocks unsupported MTHFR claims",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "MTHFR variants do not mean folic acid is toxic or unusable. Folate status and homocysteine are phenotype/lab questions; genotype is only context.",
+      "do_not_claim": [
+        "folic acid toxicity",
+        "thrombophilia diagnosis",
+        "methylation failure certainty",
+        "avoid folic acid directive"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "RBC folate",
+        "B12/MMA",
+        "dietary folate"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "CDC guidance explicitly cautions against common MTHFR misinformation.",
+      "clinical_confirmation_required": false,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1051266",
+      "gene": "SLC19A1",
+      "variant_name": "Reduced folate carrier 80G>A",
+      "effect_allele": "A",
+      "impact": "Altered cellular folate transport",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC19A1 transports reduced folates into cells. rs1051266 may influence folate availability and homocysteine response, but effects are modest and diet-dependent.",
+      "do_not_claim": [
+        "folate deficiency diagnosis",
+        "methylation failure"
+      ],
+      "confirm_with": [
+        "RBC folate",
+        "homocysteine",
+        "B12 status"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1979277",
+      "gene": "SHMT1",
+      "variant_name": "Serine hydroxymethyltransferase C1420T",
+      "effect_allele": "T",
+      "impact": "Folate one-carbon partitioning / thymidylate synthesis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SHMT1 helps partition one-carbon units between methylation and nucleotide synthesis. The T allele is a modest folate-pathway context marker.",
+      "do_not_claim": [
+        "folate deficiency",
+        "cancer risk claim"
+      ],
+      "confirm_with": [
+        "folate/homocysteine",
+        "dietary folate"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3733890",
+      "gene": "BHMT",
+      "variant_name": "Arg239Gln",
+      "effect_allele": "A",
+      "impact": "Betaine-homocysteine remethylation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BHMT uses betaine/choline to remethylate homocysteine in the liver. rs3733890 can contextualize choline/betaine dependence but is not diagnostic.",
+      "do_not_claim": [
+        "methylation failure",
+        "choline deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "choline intake",
+        "liver enzymes"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PEMT polymorphisms and choline dietary requirements",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16815999/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Nutritional genomics study linking PEMT genotype to susceptibility to organ dysfunction on low-choline diets."
+        }
+      ]
+    },
+    {
+      "rsid": "rs234706",
+      "gene": "CBS",
+      "variant_name": "CBS 699C>T",
+      "effect_allele": "T",
+      "impact": "Transsulfuration pathway candidate",
+      "evidence_tier": "D_candidate_low_confidence",
+      "interpretation": "CBS variation can affect homocysteine-to-cystathionine flux in rare disease, but common SNPs like rs234706 should not be overinterpreted.",
+      "do_not_claim": [
+        "CBS upregulation diagnosis",
+        "sulfur intolerance diagnosis"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "cystathionine if clinically indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common CBS SNPs are heavily overclaimed in biohacker contexts.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801181",
+      "gene": "CBS",
+      "variant_name": "CBS 1080C>T",
+      "effect_allele": "T",
+      "impact": "Transsulfuration pathway candidate",
+      "evidence_tier": "D_candidate_low_confidence",
+      "interpretation": "CBS rs1801181 is a common pathway marker with weak individual interpretability. Use only as context with homocysteine and sulfur-amino-acid labs.",
+      "do_not_claim": [
+        "CBS disorder diagnosis",
+        "supplement restriction directive"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "clinical metabolic context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "CBS_844INS68",
+      "gene": "CBS",
+      "variant_name": "CBS 844ins68 insertion",
+      "effect_allele": "insertion",
+      "impact": "Transsulfuration structural variant context",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "CBS 844ins68 is a structural insertion sometimes discussed in homocysteine studies. Consumer raw DNA usually does not call it reliably.",
+      "do_not_claim": [
+        "CBS disease diagnosis",
+        "homocysteine prediction"
+      ],
+      "confirm_with": [
+        "clinical assay if needed",
+        "homocysteine"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Indel detection in consumer raw DNA is unreliable.",
+      "clinical_confirmation_required": false,
+      "variant_type": "indel",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4920037",
+      "gene": "MTHFD1L",
+      "variant_name": "MTHFD1L one-carbon metabolism locus",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Mitochondrial folate cycle context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MTHFD1L participates in mitochondrial one-carbon metabolism. Common variants are context markers for folate/homocysteine biology, not deficiency tests.",
+      "do_not_claim": [
+        "folate deficiency diagnosis",
+        "methylation failure"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "folate/B12"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs651852",
+      "gene": "MTHFR/MTRR region",
+      "variant_name": "One-carbon GWAS/context marker",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Homocysteine/one-carbon pathway context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "This marker can contextualize one-carbon metabolism in multi-SNP models, but has no standalone clinical interpretation.",
+      "do_not_claim": [
+        "methylation status certainty"
+      ],
+      "confirm_with": [
+        "homocysteine",
+        "B-vitamin labs"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        }
+      ]
+    },
+    {
+      "rsid": "rs601338",
+      "gene": "FUT2",
+      "variant_name": "FUT2 W143X non-secretor",
+      "effect_allele": "A",
+      "impact": "Secretor status / B12 and mucosal-gut context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FUT2 rs601338 is a functional non-secretor allele in many ancestries. Non-secretor status can affect mucosal glycans, microbiome ecology, norovirus susceptibility, and B12 associations.",
+      "do_not_claim": [
+        "B12 deficiency diagnosis",
+        "IBD diagnosis",
+        "norovirus immunity guarantee for all strains"
+      ],
+      "confirm_with": [
+        "B12",
+        "MMA",
+        "secretor phenotyping if needed"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Secretor genetics differs by ancestry and pathogen strain.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum vitamin B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS linking FUT2 secretor locus to serum B12 variation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11254363",
+      "gene": "CUBN",
+      "variant_name": "Cubilin B12 absorption locus",
+      "effect_allele": "study_reported_B12_lowering_allele",
+      "impact": "Intestinal B12 absorption/transport context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CUBN encodes cubilin, part of the intrinsic-factor/B12 absorption system. Common variants are associated with circulating B12 levels but do not diagnose B12 deficiency.",
+      "do_not_claim": [
+        "B12 deficiency diagnosis",
+        "pernicious anemia diagnosis"
+      ],
+      "confirm_with": [
+        "B12",
+        "MMA",
+        "holotranscobalamin",
+        "intrinsic factor antibodies if indicated"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum vitamin B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS linking FUT2 secretor locus to serum B12 variation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801222",
+      "gene": "CUBN",
+      "variant_name": "CUBN Ser253Phe",
+      "effect_allele": "T",
+      "impact": "B12 absorption and albuminuria context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CUBN coding variation can affect cubilin function. Interpret only with B12/MMA and renal context.",
+      "do_not_claim": [
+        "B12 deficiency diagnosis",
+        "kidney disease diagnosis"
+      ],
+      "confirm_with": [
+        "B12",
+        "MMA",
+        "urinalysis if clinically relevant"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum vitamin B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS linking FUT2 secretor locus to serum B12 variation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801223",
+      "gene": "AMN",
+      "variant_name": "Amnionless B12 absorption candidate",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Intrinsic factor-B12 receptor complex context",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "AMN is part of the intestinal B12 absorption complex. Common variants are weak context markers; rare pathogenic variants require clinical diagnosis.",
+      "do_not_claim": [
+        "Imerslund-Gräsbeck diagnosis",
+        "B12 deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "B12",
+        "MMA",
+        "clinical genetics if severe/early onset"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum vitamin B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS linking FUT2 secretor locus to serum B12 variation."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_INTRINSIC_FACTOR_B12_MALABSORPTION",
+      "gene": "GIF/CUBN/AMN",
+      "variant_name": "Inherited B12 malabsorption clinical panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare high-effect B12 malabsorption syndromes",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Rare pathogenic variants can cause severe B12 malabsorption syndromes. These are not consumer-SNP findings and need clinical genetics/lab confirmation.",
+      "do_not_claim": [
+        "B12 malabsorption diagnosis from raw DNA",
+        "negative raw DNA rules out disorder"
+      ],
+      "confirm_with": [
+        "clinical sequencing",
+        "B12/MMA",
+        "CBC",
+        "gastroenterology/genetics evaluation"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Consumer arrays miss rare private variants and structural changes.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "FUT2 secretor status and serum vitamin B12 levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18311140/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "GWAS linking FUT2 secretor locus to serum B12 variation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs731236",
+      "gene": "VDR",
+      "variant_name": "TaqI polymorphism",
+      "effect_allele": "C",
+      "impact": "Vitamin D receptor haplotype context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR TaqI is commonly evaluated with BsmI/ApaI/FokI haplotypes. It may contextualize vitamin D receptor signaling but does not measure vitamin D status.",
+      "do_not_claim": [
+        "vitamin D deficiency",
+        "bone disease diagnosis"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "calcium/PTH if indicated"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "VDR variants do not replace serum 25(OH)D testing.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7975232",
+      "gene": "VDR",
+      "variant_name": "ApaI polymorphism",
+      "effect_allele": "A",
+      "impact": "Vitamin D receptor haplotype context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "VDR ApaI contributes to common VDR haplotypes studied in bone and immune traits. Standalone effect is weak.",
+      "do_not_claim": [
+        "vitamin D deficiency",
+        "autoimmune disease prediction"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "clinical context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6013897",
+      "gene": "CYP24A1",
+      "variant_name": "Vitamin D catabolism GWAS locus",
+      "effect_allele": "A",
+      "impact": "Altered vitamin D breakdown / circulating 25(OH)D context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CYP24A1 helps degrade vitamin D metabolites. rs6013897 is associated with circulating vitamin D levels in GWAS but does not diagnose deficiency.",
+      "do_not_claim": [
+        "vitamin D deficiency",
+        "supplement dose requirement"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "calcium/PTH if high-dose supplementation"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10877012",
+      "gene": "CYP27B1",
+      "variant_name": "-1260 promoter variant",
+      "effect_allele": "A",
+      "impact": "Vitamin D activation enzyme expression candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP27B1 converts 25(OH)D to active calcitriol. Promoter variation may modify activation context but labs dominate interpretation.",
+      "do_not_claim": [
+        "calcitriol deficiency diagnosis",
+        "autoimmune prediction"
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "1,25(OH)2D if clinically warranted",
+        "PTH/calcium"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12934922",
+      "gene": "BCMO1",
+      "variant_name": "BCMO1 beta-carotene conversion variant",
+      "effect_allele": "T",
+      "impact": "Reduced beta-carotene to retinol conversion",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "BCMO1 rs12934922 reduces conversion of beta-carotene into retinol. Carriers may rely more on preformed vitamin A if dietary retinol is low.",
+      "do_not_claim": [
+        "vitamin A deficiency diagnosis",
+        "retinol supplement requirement"
+      ],
+      "confirm_with": [
+        "dietary vitamin A intake",
+        "serum retinol if clinically indicated"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Vitamin A status is also affected by fat absorption, liver stores, thyroid status, and infection.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "BCMO1 variants and beta-carotene conversion",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19103647/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Functional BCMO1 variants reduce beta-carotene conversion efficiency."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7501331",
+      "gene": "BCMO1",
+      "variant_name": "BCMO1 R267S",
+      "effect_allele": "T",
+      "impact": "Reduced beta-carotene conversion efficiency",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "BCMO1 rs7501331 is a functional beta-carotene conversion marker. Use with rs12934922 and diet context.",
+      "do_not_claim": [
+        "vitamin A deficiency diagnosis",
+        "supplement directive"
+      ],
+      "confirm_with": [
+        "dietary retinol/carotenoid intake",
+        "clinical nutrition context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "BCMO1 variants and beta-carotene conversion",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19103647/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Functional BCMO1 variants reduce beta-carotene conversion efficiency."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2115763",
+      "gene": "BCO2",
+      "variant_name": "Beta-carotene oxygenase 2 variant",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Carotenoid cleavage/tissue carotenoid context",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "BCO2 variation may modify carotenoid metabolism and tissue accumulation, but human nutrition interpretation is weak.",
+      "do_not_claim": [
+        "vitamin A status prediction",
+        "carotenoid toxicity"
+      ],
+      "confirm_with": [
+        "dietary carotenoid intake",
+        "clinical context"
+      ],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "BCMO1/BCO2 carotenoid metabolism review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/21196427/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "None declared",
+          "notes": "Reviews carotenoid cleavage enzymes and vitamin A metabolism."
+        }
+      ]
+    },
+    {
+      "rsid": "rs33972313",
+      "gene": "SLC23A1",
+      "variant_name": "Vitamin C transporter variant",
+      "effect_allele": "T",
+      "impact": "Reduced vitamin C transport / lower circulating ascorbate",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC23A1 encodes a sodium-dependent vitamin C transporter. rs33972313 is associated with lower circulating ascorbate in population studies.",
+      "do_not_claim": [
+        "scurvy diagnosis",
+        "vitamin C deficiency"
+      ],
+      "confirm_with": [
+        "plasma vitamin C if needed",
+        "dietary intake",
+        "smoking/inflammation context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Vitamin C status is strongly affected by intake, smoking, illness, and oxidative burden.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SLC23A1 genetic variation and circulating vitamin C",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20418483/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates SLC23A1 variation with circulating ascorbic acid."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6139591",
+      "gene": "SLC23A2",
+      "variant_name": "Vitamin C transporter 2 candidate",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Tissue vitamin C transport candidate",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "SLC23A2 transports vitamin C into tissues. Common variants are weak nutritional context markers and not deficiency tests.",
+      "do_not_claim": [
+        "vitamin C deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "dietary intake",
+        "plasma vitamin C if clinically needed"
+      ],
+      "effect_direction": "trait",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Vitamin C transporter genetics review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20573860/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "None declared",
+          "notes": "Reviews SLC23 transporters and vitamin C biology."
+        }
+      ]
+    },
+    {
+      "rsid": "rs855791",
+      "gene": "TMPRSS6",
+      "variant_name": "Val736Ala",
+      "effect_allele": "T",
+      "impact": "Hepcidin regulation / lower iron tendency",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TMPRSS6 rs855791 affects hepcidin regulation and is associated with iron status and hemoglobin variation. It may contextualize low iron tendency.",
+      "do_not_claim": [
+        "iron deficiency diagnosis",
+        "anemia diagnosis"
+      ],
+      "confirm_with": [
+        "ferritin",
+        "transferrin saturation",
+        "CBC"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Menstrual loss, diet, inflammation, and gut absorption dominate iron phenotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TMPRSS6 variant and iron status GWAS",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18408718/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "TMPRSS6 variants influence iron parameters and hemoglobin-related traits."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3811647",
+      "gene": "TF",
+      "variant_name": "Transferrin GWAS marker",
+      "effect_allele": "A",
+      "impact": "Transferrin/iron transport context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TF variation influences transferrin and iron parameters. Interpret with iron labs only.",
+      "do_not_claim": [
+        "iron deficiency diagnosis",
+        "hemochromatosis diagnosis"
+      ],
+      "confirm_with": [
+        "serum iron",
+        "TIBC/transferrin",
+        "ferritin"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TMPRSS6 variant and iron status GWAS",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18408718/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "TMPRSS6 variants influence iron parameters and hemoglobin-related traits."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7385804",
+      "gene": "TFR2",
+      "variant_name": "Transferrin receptor 2 marker",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Iron sensing/hepcidin regulation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TFR2 participates in iron sensing and hepcidin regulation. Common variants are only contextual; rare pathogenic variants require clinical evaluation.",
+      "do_not_claim": [
+        "iron overload diagnosis",
+        "iron deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "ferritin",
+        "transferrin saturation",
+        "clinical genetics if severe"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "HFE-Related Hemochromatosis - GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",
+          "accessed": "2026-07-01",
+          "evidence_type": "GeneReviews",
+          "conflict_of_interest": "NIH/NCBI Bookshelf expert-authored clinical review",
+          "notes": "Clinical review of HFE-related hemochromatosis, penetrance, and laboratory confirmation."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_NON_HFE_IRON_OVERLOAD",
+      "gene": "HAMP/HJV/TFR2/SLC40A1",
+      "variant_name": "Non-HFE hereditary iron overload panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare iron overload/ferroportin disease domain",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Rare pathogenic variants in non-HFE iron genes can cause iron overload syndromes. Do not infer from common SNPs; confirm clinically.",
+      "do_not_claim": [
+        "iron overload diagnosis from raw DNA",
+        "negative raw DNA rules out iron disorder"
+      ],
+      "confirm_with": [
+        "ferritin",
+        "transferrin saturation",
+        "clinical sequencing if indicated"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Consumer SNP chips miss most rare pathogenic non-HFE variants.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "HFE-Related Hemochromatosis - GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",
+          "accessed": "2026-07-01",
+          "evidence_type": "GeneReviews",
+          "conflict_of_interest": "NIH/NCBI Bookshelf expert-authored clinical review",
+          "notes": "Clinical review of HFE-related hemochromatosis, penetrance, and laboratory confirmation."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_WILSON_DISEASE",
+      "gene": "ATP7B",
+      "variant_name": "Wilson disease clinical gene panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Copper transport disorder confirmation domain",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Pathogenic ATP7B variants can cause Wilson disease, but consumer raw DNA is not an adequate diagnostic test.",
+      "do_not_claim": [
+        "Wilson disease diagnosis",
+        "copper toxicity prediction"
+      ],
+      "confirm_with": [
+        "ceruloplasmin",
+        "serum/urine copper",
+        "clinical sequencing",
+        "hepatology/genetics evaluation"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Many ATP7B pathogenic variants are rare and not present on consumer arrays.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "Wilson Disease - GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1512/",
+          "accessed": "2026-07-01",
+          "evidence_type": "GeneReviews",
+          "conflict_of_interest": "NIH/NCBI Bookshelf expert-authored clinical review",
+          "notes": "Clinical reference for ATP7B-related Wilson disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1050450",
+      "gene": "GPX1",
+      "variant_name": "Pro198Leu",
+      "effect_allele": "T",
+      "impact": "Glutathione peroxidase activity / selenium-antioxidant context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GPX1 requires selenium and reduces peroxides. rs1050450 has been studied for altered enzyme activity and oxidative-stress susceptibility.",
+      "do_not_claim": [
+        "selenium deficiency",
+        "oxidative stress diagnosis"
+      ],
+      "confirm_with": [
+        "selenium status if indicated",
+        "oxidative stress/inflammation context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GPX1 Pro198Leu and enzyme activity",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12716690/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Studies GPX1 Pro198Leu function and disease associations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3877899",
+      "gene": "SELENOP",
+      "variant_name": "SEPP1/SELENOP Ala234Thr",
+      "effect_allele": "A",
+      "impact": "Selenium transport/protein distribution context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SELENOP transports selenium. rs3877899 has been studied for selenium status and response to supplementation.",
+      "do_not_claim": [
+        "selenium deficiency diagnosis",
+        "supplement dose requirement"
+      ],
+      "confirm_with": [
+        "plasma selenium",
+        "dietary selenium intake"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SELENOP variants and selenium status",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18945797/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates SELENOP variants with selenium biomarkers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7579",
+      "gene": "SELENOP",
+      "variant_name": "SEPP1/SELENOP 3UTR variant",
+      "effect_allele": "A",
+      "impact": "Selenium transport expression context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SELENOP rs7579 may affect selenium biomarker response. Use only with measured selenium context.",
+      "do_not_claim": [
+        "selenium deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "selenium biomarkers",
+        "dietary intake"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SELENOP variants and selenium status",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18945797/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates SELENOP variants with selenium biomarkers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4880",
+      "gene": "SOD2",
+      "variant_name": "Ala16Val / mitochondrial targeting",
+      "effect_allele": "G",
+      "impact": "Mitochondrial superoxide dismutase import/activity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SOD2 rs4880 alters mitochondrial targeting efficiency in some studies. It is an oxidative-stress pathway marker, not a disease result.",
+      "do_not_claim": [
+        "mitochondrial disease diagnosis",
+        "antioxidant requirement certainty"
+      ],
+      "confirm_with": [
+        "oxidative stress context",
+        "exercise recovery",
+        "diet"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SOD2 Ala16Val functional review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/15150014/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Discusses SOD2 Ala16Val effects on mitochondrial import/activity."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1001179",
+      "gene": "CAT",
+      "variant_name": "Catalase -262C>T",
+      "effect_allele": "T",
+      "impact": "Catalase expression / peroxide clearance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CAT promoter variation can influence catalase expression. Interpret only as antioxidant pathway context.",
+      "do_not_claim": [
+        "oxidative stress diagnosis",
+        "supplement requirement"
+      ],
+      "confirm_with": [
+        "metabolic/inflammatory context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CAT -262C>T and catalase expression",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9463323/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Reports catalase promoter functional differences."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800566",
+      "gene": "NQO1",
+      "variant_name": "Pro187Ser",
+      "effect_allele": "T",
+      "impact": "Reduced NQO1 quinone detoxification activity",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "NQO1 Pro187Ser T allele reduces enzyme activity. It can contextualize quinone/oxidative stress handling but is not a detox diagnosis.",
+      "do_not_claim": [
+        "detox impairment diagnosis",
+        "cancer risk certainty"
+      ],
+      "confirm_with": [
+        "exposure context",
+        "clinical history"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Detox enzyme phenotype depends on exposure, liver function, and other phase II enzymes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NQO1 Pro187Ser functional effect",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/7567994/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Functional studies of NQO1 Pro187Ser enzyme activity."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1695",
+      "gene": "GSTP1",
+      "variant_name": "Ile105Val",
+      "effect_allele": "G",
+      "impact": "Glutathione S-transferase P1 activity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTP1 Ile105Val affects substrate-specific conjugation activity. Interpret as exposure/detox context only.",
+      "do_not_claim": [
+        "detox failure",
+        "cancer prediction"
+      ],
+      "confirm_with": [
+        "exposure context",
+        "liver markers"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GSTP1 Ile105Val functional effect",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10597244/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Studies GSTP1 polymorphism effects on enzyme function."
+        }
+      ]
+    },
+    {
+      "rsid": "GSTM1_NULL",
+      "gene": "GSTM1",
+      "variant_name": "GSTM1 deletion/null genotype",
+      "effect_allele": "null/deletion",
+      "impact": "Reduced glutathione S-transferase M1 activity",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTM1 null genotype removes GSTM1 activity and may modify response to smoke/solvent/oxidative exposures. It is not a disease result.",
+      "do_not_claim": [
+        "detox failure",
+        "cancer prediction"
+      ],
+      "confirm_with": [
+        "exposure history",
+        "clinical context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Deletion/CNV calling is not reliable in many consumer raw DNA files.",
+      "clinical_confirmation_required": false,
+      "variant_type": "copy_number_variant",
+      "sources": [
+        {
+          "name": "GSTM1/GSTT1 null genotype review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10598782/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "None declared",
+          "notes": "Reviews GST deletion polymorphisms and exposure interactions."
+        }
+      ]
+    },
+    {
+      "rsid": "GSTT1_NULL",
+      "gene": "GSTT1",
+      "variant_name": "GSTT1 deletion/null genotype",
+      "effect_allele": "null/deletion",
+      "impact": "Reduced glutathione S-transferase T1 activity",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GSTT1 null genotype removes GSTT1 activity and can modify exposure response. It is not diagnostic.",
+      "do_not_claim": [
+        "detox failure",
+        "disease prediction"
+      ],
+      "confirm_with": [
+        "exposure history",
+        "clinical context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Deletion/CNV calling is not reliable in many consumer raw DNA files.",
+      "clinical_confirmation_required": false,
+      "variant_type": "copy_number_variant",
+      "sources": [
+        {
+          "name": "GSTM1/GSTT1 null genotype review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10598782/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "None declared",
+          "notes": "Reviews GST deletion polymorphisms and exposure interactions."
+        }
+      ]
+    },
+    {
+      "rsid": "rs174547",
+      "gene": "FADS1",
+      "variant_name": "FADS1 fatty-acid desaturase marker",
+      "effect_allele": "C",
+      "impact": "Omega-3/omega-6 PUFA conversion efficiency context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FADS1 variation strongly affects circulating polyunsaturated fatty acid composition. It may contextualize conversion of ALA/LA into longer-chain PUFAs.",
+      "do_not_claim": [
+        "omega-3 deficiency diagnosis",
+        "supplement requirement"
+      ],
+      "confirm_with": [
+        "omega-3 index",
+        "dietary EPA/DHA intake",
+        "lipid panel"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Direct EPA/DHA intake can bypass conversion bottlenecks.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FADS1/FADS2 variants and fatty acid levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17603471/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates FADS cluster variation with polyunsaturated fatty acid composition."
+        }
+      ]
+    },
+    {
+      "rsid": "rs174575",
+      "gene": "FADS2",
+      "variant_name": "FADS2 fatty-acid desaturase marker",
+      "effect_allele": "G",
+      "impact": "PUFA desaturation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FADS2 variants influence PUFA desaturation and may modify response to plant-based omega-3 intake.",
+      "do_not_claim": [
+        "omega-3 deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "omega-3 index",
+        "dietary intake"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FADS1/FADS2 variants and fatty acid levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17603471/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates FADS cluster variation with polyunsaturated fatty acid composition."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1535",
+      "gene": "FADS2",
+      "variant_name": "FADS cluster PUFA marker",
+      "effect_allele": "A",
+      "impact": "PUFA conversion context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "rs1535 is a common FADS-cluster marker associated with PUFA levels. Interpret with diet and omega-3 index.",
+      "do_not_claim": [
+        "essential fatty acid deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "omega-3 index",
+        "dietary fat intake"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FADS1/FADS2 variants and fatty acid levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17603471/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates FADS cluster variation with polyunsaturated fatty acid composition."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801725",
+      "gene": "CASR",
+      "variant_name": "A986S calcium-sensing receptor",
+      "effect_allele": "T",
+      "impact": "Calcium/PTH set-point context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CASR rs1801725 can influence serum calcium/PTH set point. It does not diagnose calcium disorders.",
+      "do_not_claim": [
+        "hypercalcemia diagnosis",
+        "hypocalcemia diagnosis"
+      ],
+      "confirm_with": [
+        "serum calcium",
+        "PTH",
+        "vitamin D"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CASR A986S and serum calcium",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11704342/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "CASR A986S has been associated with calcium regulation traits."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3750425",
+      "gene": "TRPM6",
+      "variant_name": "TRPM6 magnesium transporter variant",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Magnesium transport candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TRPM6 participates in magnesium transport. Common variants may contextualize magnesium status but labs/symptoms dominate.",
+      "do_not_claim": [
+        "magnesium deficiency diagnosis",
+        "supplement requirement"
+      ],
+      "confirm_with": [
+        "serum/RBC magnesium if clinically used",
+        "diet/medications"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TRPM6 magnesium transport genetics",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16533638/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "TRPM6 variants have been studied in magnesium homeostasis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3740393",
+      "gene": "CNNM2",
+      "variant_name": "Serum magnesium GWAS locus",
+      "effect_allele": "study_reported_trait_allele",
+      "impact": "Magnesium homeostasis GWAS context",
+      "evidence_tier": "B_replicated_locus",
+      "interpretation": "CNNM2 is a replicated serum magnesium locus. Use as context only; it does not diagnose magnesium deficiency.",
+      "do_not_claim": [
+        "magnesium deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "magnesium status",
+        "diet/medications"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association study of serum magnesium",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20700443/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified common loci associated with serum magnesium levels."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13266634",
+      "gene": "SLC30A8",
+      "variant_name": "Zinc transporter 8 Arg325Trp",
+      "effect_allele": "C",
+      "impact": "Pancreatic zinc transport / insulin storage context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC30A8 rs13266634 affects beta-cell zinc transport and insulin storage; it is metabolic/nutrient context, not a zinc deficiency test.",
+      "do_not_claim": [
+        "zinc deficiency diagnosis",
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "fasting glucose/insulin",
+        "dietary zinc if relevant"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8052394",
+      "gene": "MT1A",
+      "variant_name": "Metallothionein 1A variant",
+      "effect_allele": "G",
+      "impact": "Metal-binding/oxidative stress candidate",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "MT1A binds metals such as zinc/copper and participates in oxidative-stress response. Common variant interpretation is low-confidence.",
+      "do_not_claim": [
+        "zinc deficiency",
+        "heavy metal toxicity diagnosis"
+      ],
+      "confirm_with": [
+        "exposure/lab context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Metallothionein genetics and metal handling review",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17984734/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "None declared",
+          "notes": "Reviews metallothioneins in metal metabolism and oxidative stress."
+        }
+      ]
+    },
+    {
+      "rsid": "rs225014",
+      "gene": "DIO2",
+      "variant_name": "Thr92Ala",
+      "effect_allele": "A",
+      "impact": "Local T4-to-T3 conversion context / selenium-thyroid axis",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "DIO2 converts T4 to T3 in tissues. rs225014 is a thyroid-conversion context marker; selenium/iodine/thyroid labs and symptoms dominate.",
+      "do_not_claim": [
+        "hypothyroidism diagnosis",
+        "levothyroxine failure prediction"
+      ],
+      "confirm_with": [
+        "TSH/free T4/free T3",
+        "thyroid antibodies",
+        "symptoms"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "DIO2 Thr92Ala and thyroid hormone metabolism",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/14602759/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Examines DIO2 Thr92Ala effects in thyroid hormone metabolism research."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_RARE_NUTRIENT_TRANSPORT_DISORDERS",
+      "gene": "SLC19A2/SLC19A3/SLC46A1/SLC52A2/SLC52A3",
+      "variant_name": "Rare vitamin transporter disorder panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare high-effect vitamin transporter disorders",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Rare pathogenic variants in vitamin transporter genes can cause serious disorders, but they require clinical genetics and are not ordinary SNP findings.",
+      "do_not_claim": [
+        "diagnosis from raw DNA",
+        "negative raw DNA rules out rare disorder"
+      ],
+      "confirm_with": [
+        "clinical sequencing",
+        "specialist evaluation",
+        "relevant nutrient labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Most clinically important rare variants are absent from consumer arrays.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "CDC MTHFR Gene Variant and Folic Acid Facts",
+          "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
+          "accessed": "2026-07-01",
+          "evidence_type": "Public Health Guidance",
+          "conflict_of_interest": "U.S. CDC",
+          "notes": "States that people with MTHFR variants can process folic acid and that folic acid intake matters more for folate levels than MTHFR genotype alone."
+        },
+        {
+          "name": "Genome-wide association study of vitamin D insufficiency",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20453842/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Identified GC, DHCR7/NADSYN1, CYP2R1, and CYP24A1 as vitamin D status loci."
+        },
+        {
+          "name": "HFE-Related Hemochromatosis - GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",
+          "accessed": "2026-07-01",
+          "evidence_type": "GeneReviews",
+          "conflict_of_interest": "NIH/NCBI Bookshelf expert-authored clinical review",
+          "notes": "Clinical review of HFE-related hemochromatosis, penetrance, and laboratory confirmation."
+        }
+      ]
+    }
+  ]
+}

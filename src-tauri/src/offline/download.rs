@@ -12,6 +12,88 @@ pub struct RemoteHead {
     pub content_length: Option<u64>,
     pub etag: Option<String>,
     pub last_modified: Option<String>,
+    /// Filename from Content-Disposition when the server provides one
+    /// (e.g. ClinGen `Clingen-Gene-Disease-Summary-2026-07-11.csv`).
+    pub content_filename: Option<String>,
+}
+
+/// Parse `attachment; filename=…` / `filename*=UTF-8''…` into a bare filename.
+pub fn content_filename_from_headers(headers: &reqwest::header::HeaderMap) -> Option<String> {
+    let raw = headers
+        .get(reqwest::header::CONTENT_DISPOSITION)?
+        .to_str()
+        .ok()?;
+    parse_content_disposition_filename(raw)
+}
+
+fn parse_content_disposition_filename(raw: &str) -> Option<String> {
+    // Prefer RFC 5987 filename*=charset''value
+    for part in raw.split(';') {
+        let part = part.trim();
+        if !part.to_ascii_lowercase().starts_with("filename*=") {
+            continue;
+        }
+        let value = part.split_once('=')?.1.trim().trim_matches('"');
+        let decoded = value
+            .split_once("''")
+            .map(|(_, rest)| percent_decode_simple(rest))
+            .unwrap_or_else(|| value.to_string());
+        if !decoded.is_empty() {
+            return Some(decoded);
+        }
+    }
+    for part in raw.split(';') {
+        let part = part.trim();
+        if !part.to_ascii_lowercase().starts_with("filename=")
+            || part.to_ascii_lowercase().starts_with("filename*=")
+        {
+            continue;
+        }
+        let value = part.split_once('=')?.1.trim().trim_matches('"').trim();
+        if !value.is_empty() {
+            return Some(value.to_string());
+        }
+    }
+    None
+}
+
+fn percent_decode_simple(input: &str) -> String {
+    let bytes = input.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let (Some(h), Some(l)) = (
+                (bytes[i + 1] as char).to_digit(16),
+                (bytes[i + 2] as char).to_digit(16),
+            ) {
+                out.push(((h << 4) | l) as u8);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+fn remote_head_from_headers(
+    headers: &reqwest::header::HeaderMap,
+    content_length: Option<u64>,
+) -> RemoteHead {
+    RemoteHead {
+        content_length,
+        etag: headers
+            .get(reqwest::header::ETAG)
+            .and_then(|v| v.to_str().ok())
+            .map(String::from),
+        last_modified: headers
+            .get(reqwest::header::LAST_MODIFIED)
+            .and_then(|v| v.to_str().ok())
+            .map(String::from),
+        content_filename: content_filename_from_headers(headers),
+    }
 }
 
 pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
@@ -31,6 +113,7 @@ pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
         return Err(format!("HEAD {} returned HTTP {}", url, response.status()));
     }
     let mut content_length = response.content_length();
+    let mut head = remote_head_from_headers(response.headers(), content_length);
     // Some CDNs omit Content-Length on HEAD; try a 1-byte ranged GET as fallback.
     if content_length.is_none() || content_length == Some(0) {
         if let Ok(probe) = client
@@ -49,21 +132,28 @@ pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
             } else if let Some(n) = probe.content_length().filter(|n| *n > 0) {
                 content_length = Some(n);
             }
+            // Prefer Content-Disposition from the ranged GET when HEAD omitted it.
+            if head.content_filename.is_none() {
+                head.content_filename = content_filename_from_headers(probe.headers());
+            }
+            if head.etag.is_none() {
+                head.etag = probe
+                    .headers()
+                    .get(reqwest::header::ETAG)
+                    .and_then(|v| v.to_str().ok())
+                    .map(String::from);
+            }
+            if head.last_modified.is_none() {
+                head.last_modified = probe
+                    .headers()
+                    .get(reqwest::header::LAST_MODIFIED)
+                    .and_then(|v| v.to_str().ok())
+                    .map(String::from);
+            }
         }
     }
-    Ok(RemoteHead {
-        content_length,
-        etag: response
-            .headers()
-            .get("etag")
-            .and_then(|v| v.to_str().ok())
-            .map(String::from),
-        last_modified: response
-            .headers()
-            .get("last-modified")
-            .and_then(|v| v.to_str().ok())
-            .map(String::from),
-    })
+    head.content_length = content_length;
+    Ok(head)
 }
 
 pub fn sha256_file(path: &Path) -> Result<String, String> {
@@ -214,6 +304,23 @@ where
         return Err(format!("GET {} returned HTTP {}", url, status));
     }
 
+    // Prefer identity headers from the actual GET (ClinGen stamps LM on every request;
+    // Content-Disposition filename is the stable daily export id).
+    let mut head = head;
+    let get_meta = remote_head_from_headers(response.headers(), response.content_length());
+    if get_meta.content_filename.is_some() {
+        head.content_filename = get_meta.content_filename;
+    }
+    if get_meta.etag.is_some() {
+        head.etag = get_meta.etag;
+    }
+    if get_meta.last_modified.is_some() {
+        head.last_modified = get_meta.last_modified;
+    }
+    if let Some(n) = get_meta.content_length.filter(|n| *n > 0) {
+        head.content_length = Some(n);
+    }
+
     let mut file = if is_partial && initial_bytes > 0 {
         std::fs::OpenOptions::new()
             .append(true)
@@ -318,34 +425,132 @@ pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String
     Ok(())
 }
 
-/// True only when we have a strong remote identity signal (ETag or Last-Modified)
-/// that differs from what we stored at last successful download.
+/// True only when we have a strong remote identity signal that differs from
+/// what we stored at last successful download.
 ///
-/// Content-Length alone is **not** treated as an update — FTP/CDN HEADs often
-/// omit or vary length, which previously caused false "Update" badges.
+/// Priority: Content-Disposition filename → ETag → Last-Modified.
+/// Content-Length alone is **not** an update signal (FTP/CDN HEADs thrash).
+///
+/// ClinGen (and similar) stamp `Last-Modified` to request time on every HEAD
+/// while keeping the same daily export bytes. When LM differs but remote and
+/// stored Content-Length both match, treat as unchanged unless a disposition
+/// filename or ETag proves otherwise.
 pub fn remote_changed(
     head: &RemoteHead,
     stored_etag: Option<&str>,
     stored_last_modified: Option<&str>,
-    _stored_length: Option<i64>,
+    stored_length: Option<i64>,
+    stored_content_filename: Option<&str>,
 ) -> bool {
     let stored_etag = stored_etag.map(str::trim).filter(|s| !s.is_empty());
     let stored_lm = stored_last_modified.map(str::trim).filter(|s| !s.is_empty());
+    let stored_name = stored_content_filename
+        .map(str::trim)
+        .filter(|s| !s.is_empty() && looks_like_download_filename(s));
     let remote_etag = head.etag.as_deref().map(str::trim).filter(|s| !s.is_empty());
     let remote_lm = head
         .last_modified
         .as_deref()
         .map(str::trim)
         .filter(|s| !s.is_empty());
+    let remote_name = head
+        .content_filename
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+
+    // Stable export filename (ClinGen daily CSV) beats volatile Last-Modified.
+    if let (Some(remote), Some(stored)) = (remote_name, stored_name) {
+        return remote != stored;
+    }
 
     // Prefer ETag when both sides have one.
     if let (Some(etag), Some(stored)) = (remote_etag, stored_etag) {
         return etag != stored;
     }
-    // Fall back to Last-Modified when both sides have one.
+
+    // Fall back to Last-Modified — but ignore LM-only thrash when length is stable.
     if let (Some(lm), Some(stored)) = (remote_lm, stored_lm) {
-        return lm != stored;
+        if lm == stored {
+            return false;
+        }
+        if let (Some(remote_len), Some(stored_len)) = (head.content_length, stored_length) {
+            if remote_len > 0 && stored_len > 0 && remote_len as i64 == stored_len {
+                return false;
+            }
+        }
+        return true;
     }
+
     // No comparable identity metadata → do not claim an update.
     false
+}
+
+fn looks_like_download_filename(s: &str) -> bool {
+    // version_label historically stored Last-Modified HTTP dates; only treat
+    // values that look like real attachment names as content identity.
+    s.contains('.') && !s.contains(',') && !s.contains(' ')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_clingen_disposition_filename() {
+        let name = parse_content_disposition_filename(
+            "attachment; filename=Clingen-Gene-Disease-Summary-2026-07-11.csv",
+        );
+        assert_eq!(
+            name.as_deref(),
+            Some("Clingen-Gene-Disease-Summary-2026-07-11.csv")
+        );
+    }
+
+    #[test]
+    fn clingen_lm_thrash_same_length_is_not_update() {
+        let head = RemoteHead {
+            content_length: Some(1_112_373),
+            etag: None,
+            last_modified: Some("Sat, 11 Jul 2026 21:00:00 GMT".into()),
+            content_filename: Some("Clingen-Gene-Disease-Summary-2026-07-11.csv".into()),
+        };
+        // Stored version_label is still an old LM string (pre-fix installs).
+        assert!(!remote_changed(
+            &head,
+            None,
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            Some(1_112_373),
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+        ));
+    }
+
+    #[test]
+    fn clingen_filename_date_change_is_update() {
+        let head = RemoteHead {
+            content_length: Some(1_112_373),
+            etag: None,
+            last_modified: Some("Sun, 12 Jul 2026 01:00:00 GMT".into()),
+            content_filename: Some("Clingen-Gene-Disease-Summary-2026-07-12.csv".into()),
+        };
+        assert!(remote_changed(
+            &head,
+            None,
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            Some(1_112_373),
+            Some("Clingen-Gene-Disease-Summary-2026-07-11.csv"),
+        ));
+    }
+
+    #[test]
+    fn etag_change_still_wins() {
+        let head = RemoteHead {
+            content_length: Some(100),
+            etag: Some("\"b\"".into()),
+            last_modified: None,
+            content_filename: None,
+        };
+        assert!(remote_changed(&head, Some("\"a\""), None, Some(100), None));
+        assert!(!remote_changed(&head, Some("\"b\""), None, Some(100), None));
+    }
 }

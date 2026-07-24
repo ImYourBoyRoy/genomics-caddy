@@ -343,3 +343,130 @@ pub async fn fetch_payloads(
     }
     Ok(out)
 }
+
+/// GraphQL list with offset pagination.
+pub async fn browse_page(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: u32,
+    offset: Option<&serde_json::Value>,
+) -> Result<(Vec<QdrantHit>, Option<serde_json::Value>, Option<u64>), String> {
+    let class = class_name(config);
+    let lim = limit.clamp(1, 200);
+    let skip = offset.and_then(|v| v.as_u64()).unwrap_or(0);
+    let gql = format!(
+        "{{ Get {{ {class}(where: {{ path: [\"sample_id\"], operator: Equal, valueInt: {sample_id} }}, limit: {lim}, offset: {skip}) {{ rsid text sample_id enrichment_version gene_symbol sources_provenance payload_json }} }} }}"
+    );
+    let endpoint = format!("{}/v1/graphql", base(config));
+    let body = serde_json::json!({ "query": gql });
+    let res = auth(http().post(&endpoint).json(&body), config.api_key.as_deref())
+        .send()
+        .await
+        .map_err(|e| format!("Weaviate browse failed: {e}"))?;
+    if !res.status().is_success() {
+        return Err(format!("Weaviate browse HTTP {}", res.status()));
+    }
+    let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+    let items = val
+        .pointer(&format!("/data/Get/{class}"))
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+    let mut points = Vec::new();
+    for item in &items {
+        let mut meta = if let Some(s) = item.get("payload_json").and_then(|v| v.as_str()) {
+            serde_json::from_str(s).unwrap_or_else(|_| item.clone())
+        } else {
+            item.clone()
+        };
+        if let Some(obj) = meta.as_object_mut() {
+            for key in ["rsid", "text", "enrichment_version", "gene_symbol"] {
+                if obj.get(key).is_none() {
+                    if let Some(v) = item.get(key) {
+                        obj.insert(key.into(), v.clone());
+                    }
+                }
+            }
+        }
+        points.push(hit_from_metadata(&meta, 1.0));
+    }
+    let next = if items.len() as u32 >= lim {
+        Some(serde_json::json!(skip + u64::from(lim)))
+    } else {
+        None
+    };
+    Ok((points, next, None))
+}
+
+pub async fn sample_vectors(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: usize,
+) -> Result<Vec<crate::research::qdrant::ScrollVectorItem>, String> {
+    let class = class_name(config);
+    let lim = limit.min(2500);
+    let gql = format!(
+        "{{ Get {{ {class}(where: {{ path: [\"sample_id\"], operator: Equal, valueInt: {sample_id} }}, limit: {lim}) {{ rsid gene_symbol payload_json _additional {{ id vector }} }} }} }}"
+    );
+    let endpoint = format!("{}/v1/graphql", base(config));
+    let body = serde_json::json!({ "query": gql });
+    let res = auth(http().post(&endpoint).json(&body), config.api_key.as_deref())
+        .send()
+        .await
+        .map_err(|e| format!("Weaviate sample failed: {e}"))?;
+    if !res.status().is_success() {
+        return Err(format!("Weaviate sample HTTP {}", res.status()));
+    }
+    let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+    let items = val
+        .pointer(&format!("/data/Get/{class}"))
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+    let mut out = Vec::new();
+    for item in items {
+        let vector = item
+            .pointer("/_additional/vector")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|x| x.as_f64().map(|f| f as f32))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        if vector.is_empty() {
+            continue;
+        }
+        let meta = if let Some(s) = item.get("payload_json").and_then(|v| v.as_str()) {
+            serde_json::from_str::<serde_json::Value>(s).unwrap_or_default()
+        } else {
+            serde_json::json!({})
+        };
+        out.push(crate::research::qdrant::ScrollVectorItem {
+            point_id: item
+                .pointer("/_additional/id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            rsid: item
+                .get("rsid")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            vector,
+            trait_category: meta
+                .get("trait_category")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            gene_symbol: item
+                .get("gene_symbol")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            data_quality_score: meta
+                .get("data_quality_score")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0) as f32,
+        });
+    }
+    Ok(out)
+}

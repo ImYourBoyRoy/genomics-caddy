@@ -1217,7 +1217,7 @@ async fn execute_tool(
             let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(1500) as u32;
             let cfg = crate::config::load_qdrant_config(&conn)?;
             let result = crate::research::evidence::atlas::build_vector_atlas(
-                db_path, sample_id, &cfg, limit,
+                db_path, sample_id, &cfg, limit, None,
             )
             .await?;
             Ok(json!(result))

@@ -1,0 +1,1317 @@
+{
+  "name": "Pain, Migraine & Sensory Processing",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_PAIN_MIGRAINE_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Pain/migraine/sensory genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents pain and migraine overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Pain, migraine, sensory sensitivity, and medication response require phenotype and clinical context. Genetics can suggest pathway context only.",
+      "do_not_claim": [
+        "migraine diagnosis",
+        "fibromyalgia diagnosis",
+        "opioid dosing guidance",
+        "pain tolerance prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern",
+        "migraine criteria",
+        "medication response history",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10166942",
+      "gene": "TRPM8",
+      "variant_name": "Cold/migraine TRPM8 locus",
+      "effect_allele": "T",
+      "impact": "Migraine and cold-pain sensory context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TRPM8 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11172113",
+      "gene": "LRP1",
+      "variant_name": "Migraine GWAS locus",
+      "effect_allele": "T",
+      "impact": "Migraine susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LRP1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2651899",
+      "gene": "PRDM16",
+      "variant_name": "Migraine GWAS locus",
+      "effect_allele": "C",
+      "impact": "Migraine susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PRDM16 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9349379",
+      "gene": "PHACTR1",
+      "variant_name": "Migraine/vascular locus",
+      "effect_allele": "G",
+      "impact": "Migraine vascular context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PHACTR1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6790925",
+      "gene": "TGFBR2",
+      "variant_name": "Migraine-associated locus",
+      "effect_allele": "A",
+      "impact": "Migraine/vascular signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TGFBR2 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4379368",
+      "gene": "C7orf10",
+      "variant_name": "Migraine GWAS marker",
+      "effect_allele": "T",
+      "impact": "Migraine susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "C7orf10 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13208321",
+      "gene": "FHL5",
+      "variant_name": "Migraine locus",
+      "effect_allele": "T",
+      "impact": "Migraine context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FHL5 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799971",
+      "gene": "OPRM1",
+      "variant_name": "A118G mu-opioid receptor",
+      "effect_allele": "G",
+      "impact": "Pain/reward/opioid response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "OPRM1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4680",
+      "gene": "COMT",
+      "variant_name": "Val158Met pain-catechol context",
+      "effect_allele": "A",
+      "impact": "Pain sensitivity and catecholamine clearance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6269",
+      "gene": "COMT",
+      "variant_name": "COMT haplotype marker",
+      "effect_allele": "G",
+      "impact": "Pain/catecholamine context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4633",
+      "gene": "COMT",
+      "variant_name": "COMT synonymous marker",
+      "effect_allele": "T",
+      "impact": "Pain/catecholamine haplotype context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4818",
+      "gene": "COMT",
+      "variant_name": "COMT haplotype marker",
+      "effect_allele": "C",
+      "impact": "Pain/catecholamine context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs324420",
+      "gene": "FAAH",
+      "variant_name": "Pro129Thr anandamide marker",
+      "effect_allele": "A",
+      "impact": "Pain, fear extinction and endocannabinoid tone context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FAAH is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs806368",
+      "gene": "CNR1",
+      "variant_name": "Cannabinoid receptor marker",
+      "effect_allele": "T",
+      "impact": "Pain/endocannabinoid context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CNR1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs222747",
+      "gene": "TRPV1",
+      "variant_name": "TRPV1 pain/heat marker",
+      "effect_allele": "G",
+      "impact": "Heat/pain sensitivity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TRPV1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8065080",
+      "gene": "TRPV1",
+      "variant_name": "Ile585Val TRPV1 marker",
+      "effect_allele": "C",
+      "impact": "Thermal pain context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TRPV1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6746030",
+      "gene": "SCN9A",
+      "variant_name": "Nav1.7 pain marker",
+      "effect_allele": "A",
+      "impact": "Pain sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SCN9A is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs41268673",
+      "gene": "SCN10A",
+      "variant_name": "Pain/sodium channel marker",
+      "effect_allele": "T",
+      "impact": "Pain sensory neuron context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SCN10A is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2952768",
+      "gene": "CREB1",
+      "variant_name": "Opioid sensitivity locus marker",
+      "effect_allele": "T",
+      "impact": "Opioid analgesic response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CREB1 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801133",
+      "gene": "MTHFR",
+      "variant_name": "C677T migraine/folate context",
+      "effect_allele": "T",
+      "impact": "Migraine with aura/folate context marker",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "MTHFR is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6311",
+      "gene": "HTR2A",
+      "variant_name": "Serotonin 2A receptor marker",
+      "effect_allele": "A",
+      "impact": "Serotonin/migraine/sensory context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "HTR2A is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6295",
+      "gene": "HTR1A",
+      "variant_name": "Serotonin 1A promoter marker",
+      "effect_allele": "G",
+      "impact": "Serotonin pain/anxiety context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "HTR1A is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5443",
+      "gene": "GNB3",
+      "variant_name": "C825T G-protein marker",
+      "effect_allele": "T",
+      "impact": "Migraine/pain signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "GNB3 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1611115",
+      "gene": "DBH",
+      "variant_name": "Dopamine beta-hydroxylase marker",
+      "effect_allele": "T",
+      "impact": "Autonomic and pain/stress context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "DBH is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs713598",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "G",
+      "impact": "Taste sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1726866",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "T",
+      "impact": "Taste sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10246939",
+      "gene": "TAS2R38",
+      "variant_name": "Bitter taste marker",
+      "effect_allele": "T",
+      "impact": "Taste sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TAS2R38 is included as pain/migraine/sensory context. Interpret with symptom pattern, triggers, medication response, and clinical history.",
+      "do_not_claim": [
+        "pain diagnosis",
+        "migraine diagnosis",
+        "opioid dose guidance",
+        "sensory disorder diagnosis"
+      ],
+      "confirm_with": [
+        "symptom diary",
+        "trigger pattern",
+        "medication response",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Pain and sensory phenotypes are strongly modified by sleep, inflammation, injury, hormones, stress, medication exposure, and central sensitization.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PharmGKB",
+          "url": "https://www.pharmgkb.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Pharmacogenomics knowledgebase",
+          "conflict_of_interest": "NIH-funded pharmacogenomics resource",
+          "notes": "Use for drug-gene annotations and PGx evidence summaries. Clinical use still requires guideline and clinician context."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MONOGENIC_MIGRAINE_RED_FLAGS",
+      "gene": "CACNA1A/ATP1A2/SCN1A/PRRT2",
+      "variant_name": "Familial hemiplegic migraine and severe migraine red-flag panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare neurologic migraine syndrome context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Hemiplegic migraine, seizures, severe neurologic symptoms, or unusual migraine syndromes require clinical neurologic evaluation and sequencing.",
+      "do_not_claim": [
+        "migraine subtype diagnosis from raw DNA"
+      ],
+      "confirm_with": [
+        "neurology review",
+        "clinical sequencing",
+        "red-flag symptom screen"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_PAIN_CHANNELopathy_RED_FLAGS",
+      "gene": "SCN9A/SCN10A/SCN11A/TRPA1/TRPV1",
+      "variant_name": "Pain channelopathy red-flag panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare inherited pain disorder context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Extreme pain insensitivity, erythromelalgia, or severe neuropathic pain can involve rare channel variants. Consumer arrays cannot rule these out.",
+      "do_not_claim": [
+        "channelopathy diagnosis"
+      ],
+      "confirm_with": [
+        "neurology/pain specialist",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_MIGRAINE_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "Migraine PRS module",
+      "effect_allele": "N/A",
+      "impact": "Polygenic migraine susceptibility context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Migraine is polygenic and trigger-dependent. PRS can support context only with headache phenotype and trigger pattern.",
+      "do_not_claim": [
+        "migraine diagnosis"
+      ],
+      "confirm_with": [
+        "headache diary",
+        "aura symptoms",
+        "neurology review if severe"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

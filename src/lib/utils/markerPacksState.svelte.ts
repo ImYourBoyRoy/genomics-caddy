@@ -46,11 +46,17 @@ class MarkerPacksStore {
 
   async load() {
     if (this.isLoaded) return;
+    await this.reload();
+  }
+
+  /** Force re-read packs from App/Data after merge. */
+  async reload() {
     try {
       const data = await invoke<AllPacksPayload>("get_all_marker_packs");
       this.manifest = data.manifest;
       this.packs = data.packs;
       this.isLoaded = true;
+      this.error = "";
     } catch (e: any) {
       this.error = String(e.message || e);
       console.error("Failed to load marker packs dynamically:", e);

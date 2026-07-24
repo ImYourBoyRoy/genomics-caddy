@@ -1,0 +1,1140 @@
+{
+  "name": "Kidney, Fluid Balance & Electrolytes",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_KIDNEY_ELECTROLYTE_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Kidney/electrolyte genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents renal/electrolyte overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Kidney function, electrolyte handling, stones, gout, and blood pressure require labs and clinical context. Raw DNA cannot diagnose kidney disease or prescribe electrolytes.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "stone diagnosis",
+        "electrolyte prescription"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "urinalysis",
+        "electrolytes",
+        "uric acid",
+        "stone analysis if relevant"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2231142",
+      "gene": "ABCG2",
+      "variant_name": "Q141K urate transporter marker",
+      "effect_allele": "T",
+      "impact": "Reduced urate export / gout and drug transport context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "ABCG2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs16890979",
+      "gene": "SLC2A9",
+      "variant_name": "Val253Ile urate transporter marker",
+      "effect_allele": "T",
+      "impact": "Serum uric acid and gout context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC2A9 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12498742",
+      "gene": "SLC2A9",
+      "variant_name": "SLC2A9 urate locus",
+      "effect_allele": "G",
+      "impact": "Uric acid handling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC2A9 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs429358_APOE_KIDNEY_CONTEXT",
+      "gene": "APOE",
+      "variant_name": "APOE kidney/lipid vascular context",
+      "effect_allele": "C",
+      "impact": "Renal vascular/lipid context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "APOE is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12917707",
+      "gene": "UMOD",
+      "variant_name": "UMOD kidney function marker",
+      "effect_allele": "T",
+      "impact": "eGFR, urate, and kidney function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "UMOD is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4293393",
+      "gene": "UMOD",
+      "variant_name": "UMOD promoter marker",
+      "effect_allele": "A",
+      "impact": "Uromodulin expression and kidney function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "UMOD is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs219780",
+      "gene": "SLC34A1",
+      "variant_name": "Phosphate transporter kidney stone locus",
+      "effect_allele": "T",
+      "impact": "Phosphate handling and stone context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC34A1 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17251221",
+      "gene": "CASR",
+      "variant_name": "Calcium-sensing receptor marker",
+      "effect_allele": "G",
+      "impact": "Serum calcium and stone context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CASR is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs219778",
+      "gene": "CLDN14",
+      "variant_name": "Claudin-14 kidney stone locus",
+      "effect_allele": "C",
+      "impact": "Calcium stone susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CLDN14 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3752472",
+      "gene": "CLDN14",
+      "variant_name": "CLDN14 stone locus",
+      "effect_allele": "T",
+      "impact": "Kidney stone context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CLDN14 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs699",
+      "gene": "AGT",
+      "variant_name": "Met235Thr",
+      "effect_allele": "T",
+      "impact": "RAAS blood pressure / salt sensitivity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AGT is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4343",
+      "gene": "ACE",
+      "variant_name": "ACE I/D proxy",
+      "effect_allele": "G",
+      "impact": "RAAS blood pressure/salt response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ACE is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4961",
+      "gene": "ADD1",
+      "variant_name": "Gly460Trp",
+      "effect_allele": "T",
+      "impact": "Sodium handling / salt-sensitive blood pressure context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADD1 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799998",
+      "gene": "CYP11B2",
+      "variant_name": "Aldosterone synthase -344C>T",
+      "effect_allele": "T",
+      "impact": "Aldosterone/sodium-retention context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP11B2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5186",
+      "gene": "AGTR1",
+      "variant_name": "A1166C",
+      "effect_allele": "C",
+      "impact": "Angiotensin II receptor blood pressure context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AGTR1 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs880054",
+      "gene": "SCNN1G",
+      "variant_name": "ENaC sodium channel locus",
+      "effect_allele": "T",
+      "impact": "Sodium channel / salt response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SCNN1G is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799983",
+      "gene": "NOS3",
+      "variant_name": "Glu298Asp",
+      "effect_allele": "T",
+      "impact": "Endothelial nitric oxide / blood pressure context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NOS3 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2070744",
+      "gene": "NOS3",
+      "variant_name": "NOS3 promoter",
+      "effect_allele": "C",
+      "impact": "Nitric oxide and blood-pressure context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "NOS3 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2681472",
+      "gene": "ATP2B1",
+      "variant_name": "ATP2B1 blood pressure locus",
+      "effect_allele": "A",
+      "impact": "Calcium transport and blood pressure context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ATP2B1 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13107325",
+      "gene": "SLC39A8",
+      "variant_name": "A391T mineral transporter",
+      "effect_allele": "T",
+      "impact": "Manganese/zinc transporter and BP/metabolic context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC39A8 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs780094",
+      "gene": "GCKR",
+      "variant_name": "GCKR urate/metabolic marker",
+      "effect_allele": "T",
+      "impact": "Uric acid, triglyceride and glucose context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GCKR is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1260326",
+      "gene": "GCKR",
+      "variant_name": "GCKR P446L proxy",
+      "effect_allele": "T",
+      "impact": "Glucose-triglyceride-urate partitioning context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GCKR is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1047891",
+      "gene": "CPS1",
+      "variant_name": "Carbamoyl phosphate synthetase marker",
+      "effect_allele": "A",
+      "impact": "Nitric oxide/urea cycle context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CPS1 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17300741",
+      "gene": "DAB2",
+      "variant_name": "Kidney function locus",
+      "effect_allele": "A",
+      "impact": "eGFR/kidney function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "DAB2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs653178",
+      "gene": "SH2B3/ATXN2",
+      "variant_name": "Kidney/BP immune-metabolic locus",
+      "effect_allele": "T",
+      "impact": "BP, kidney and immune-metabolic context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SH2B3/ATXN2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13038305",
+      "gene": "DCDC2",
+      "variant_name": "eGFR creatinine locus",
+      "effect_allele": "T",
+      "impact": "Creatinine/eGFR biomarker context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "DCDC2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs837763",
+      "gene": "SLC22A2",
+      "variant_name": "Organic cation transporter marker",
+      "effect_allele": "T",
+      "impact": "Renal drug transport context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC22A2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs316019",
+      "gene": "SLC22A2",
+      "variant_name": "OCT2 Ala270Ser",
+      "effect_allele": "T",
+      "impact": "Renal drug/metformin transport context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC22A2 is included as kidney/fluid/electrolyte context. Interpret with renal labs, uric acid, blood pressure, and clinical history.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "gout diagnosis",
+        "electrolyte dosing advice"
+      ],
+      "confirm_with": [
+        "eGFR/creatinine",
+        "electrolytes",
+        "uric acid",
+        "blood pressure",
+        "urinalysis"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Kidney and electrolyte phenotypes are strongly modified by hydration, diet, medications, muscle mass, blood pressure, diabetes, and kidney function.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_APOL1_KIDNEY_RISK",
+      "gene": "APOL1",
+      "variant_name": "APOL1 G1/G2 kidney-risk callability panel",
+      "effect_allele": "G1_OR_G2",
+      "impact": "Ancestry-specific kidney disease risk context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "APOL1 high-risk genotypes matter mainly in individuals with recent African ancestry and require careful clinical interpretation. Do not use without ancestry and kidney phenotype context.",
+      "do_not_claim": [
+        "kidney disease diagnosis",
+        "ancestry inference as identity"
+      ],
+      "confirm_with": [
+        "ancestry context",
+        "eGFR",
+        "urinalysis",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "variant_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_KIDNEY_STONE_CONTEXT",
+      "gene": "CASR/CLDN14/SLC34A1/ABCG2/SLC2A9",
+      "variant_name": "Kidney stone susceptibility context panel",
+      "effect_allele": "N/A",
+      "impact": "Calcium, phosphate, urate stone context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Stone risk depends on urine chemistry and stone composition. Genetics is only a triage layer.",
+      "do_not_claim": [
+        "stone diagnosis"
+      ],
+      "confirm_with": [
+        "stone analysis",
+        "24-hour urine",
+        "serum calcium/PTH/uric acid"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MONOGENIC_RENAL_TUBULOPATHY",
+      "gene": "SLC12A3/SLC12A1/KCNJ1/CLCNKB/WNK1/WNK4",
+      "variant_name": "Renal tubulopathy red-flag panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "Rare electrolyte-wasting/salt-handling disorder context",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Persistent unexplained electrolyte abnormalities need clinical evaluation. Consumer raw DNA cannot rule out renal tubulopathies.",
+      "do_not_claim": [
+        "tubulopathy diagnosis"
+      ],
+      "confirm_with": [
+        "electrolytes",
+        "renin/aldosterone",
+        "nephrology review",
+        "clinical sequencing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    }
+  ]
+}

@@ -1865,6 +1865,7 @@ pub fn run() {
             let data_dir = paths::initialize_data_dir(app.handle());
             app_log::init(data_dir.clone());
             db::dump_default_marker_packs_if_missing(&data_dir);
+            let _ = research::pack_draft::ensure_research_found_pack(&data_dir);
             agent_ui::start_http_bridge(app.handle().clone());
             // Apply window icon + ensure Linux/GNOME can match our .desktop (app id = identifier).
             if let Some(window) = app.get_webview_window("main") {
@@ -1888,7 +1889,6 @@ pub fn run() {
                         }
                         if let Ok(icon) = tauri::image::Image::from_path(&path) {
                             if window.set_icon(icon).is_ok() {
-                                applied = true;
                                 break;
                             }
                         }
@@ -2004,6 +2004,16 @@ pub fn run() {
             research::commands::get_vector_promoted_findings,
             research::commands::get_vector_research_diagnostics,
             research::commands::get_recent_finding_previews,
+            research::commands::browse_vector_store,
+            research::commands::export_pack_draft_from_vectors,
+            research::commands::list_pack_draft_exports,
+            research::commands::list_runtime_marker_pack_ids,
+            research::commands::merge_pack_draft_into_pack,
+            research::commands::get_research_found_pack,
+            research::commands::fill_research_found_alleles,
+            research::commands::set_research_found_enabled,
+            research::commands::update_research_found_marker,
+            research::commands::delete_research_found_markers,
             research::commands::get_ollama_token,
             research::commands::get_ollama_service_config,
             research::commands::save_ollama_token,

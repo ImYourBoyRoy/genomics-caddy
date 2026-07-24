@@ -255,7 +255,14 @@ pub async fn build_vector_atlas_cmd(
 ) -> Result<VectorAtlasResult, String> {
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
-    build_vector_atlas(&db_path, sample_id, &cfg, limit.unwrap_or(1500).min(2500)).await
+    build_vector_atlas(
+        &db_path,
+        sample_id,
+        &cfg,
+        limit.unwrap_or(1500).min(2500),
+        Some(&app),
+    )
+    .await
 }
 
 #[tauri::command]

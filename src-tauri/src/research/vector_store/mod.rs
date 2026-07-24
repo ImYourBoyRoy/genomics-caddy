@@ -15,12 +15,14 @@ mod weaviate;
 
 use super::qdrant::{
     classify_points_index_state as qdrant_classify_index,
-    classify_points_sweep_state as qdrant_classify_sweep, ensure_payload_indexes,
-    ensure_qdrant_collection, map_payload_to_hit, purge_qdrant_collection, search_qdrant,
+    classify_points_sweep_state as qdrant_classify_sweep, count_qdrant_points,
+    ensure_payload_indexes, ensure_qdrant_collection, find_point_payload_by_rsid,
+    map_payload_to_hit, purge_qdrant_collection, scroll_qdrant_payload_batch, search_qdrant,
     test_qdrant_connection, upsert_points_batch, SweepPointClassifyResult,
 };
 use super::types::{QdrantConfig, QdrantConnectionStatus, QdrantHit};
 use super::util::is_current_enrichment_version;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VectorProvider {
@@ -374,6 +376,182 @@ pub(crate) fn flatten_metadata(payload: &serde_json::Value) -> serde_json::Map<S
         }
     }
     out
+}
+
+#[derive(Debug, Serialize)]
+pub struct VectorBrowsePage {
+    pub provider: String,
+    pub points: Vec<QdrantHit>,
+    pub next_offset: Option<serde_json::Value>,
+    pub total_hint: Option<u64>,
+    pub note: Option<String>,
+}
+
+/// Page through sample payloads with provider-native pagination.
+pub async fn browse_sample_points(
+    config: &QdrantConfig,
+    ollama_url: &str,
+    sample_id: i64,
+    limit: u32,
+    offset: Option<serde_json::Value>,
+    rsid_query: Option<&str>,
+) -> Result<VectorBrowsePage, String> {
+    let lim = limit.clamp(1, 200);
+    let provider = provider_from_config(config);
+    if let Some(rsid) = rsid_query.map(str::trim).filter(|s| !s.is_empty()) {
+        return browse_by_rsid(config, provider, ollama_url, sample_id, rsid).await;
+    }
+    match provider {
+        VectorProvider::Qdrant => {
+            let batch = scroll_qdrant_payload_batch(
+                &config.url,
+                config.api_key.as_deref(),
+                &config.collection,
+                sample_id,
+                lim,
+                offset,
+            )
+            .await?;
+            let total_hint = count_qdrant_points(
+                &config.url,
+                config.api_key.as_deref(),
+                &config.collection,
+                Some(sample_id),
+            )
+            .await
+            .ok();
+            let points = batch
+                .points
+                .into_iter()
+                .map(|(_, payload)| map_payload_to_hit(&payload, 1.0))
+                .collect();
+            Ok(VectorBrowsePage {
+                provider: provider.as_str().into(),
+                points,
+                next_offset: batch.next_offset,
+                total_hint,
+                note: None,
+            })
+        }
+        VectorProvider::Pinecone => {
+            let (points, next, total) =
+                pinecone::browse_page(config, sample_id, lim, offset.as_ref()).await?;
+            Ok(VectorBrowsePage {
+                provider: "pinecone".into(),
+                points,
+                next_offset: next,
+                total_hint: total,
+                note: Some(
+                    "Pinecone serverless list+fetch. Sample filter applied on metadata when present."
+                        .into(),
+                ),
+            })
+        }
+        VectorProvider::Chroma => {
+            let (points, next, total) =
+                chroma::browse_page(config, sample_id, lim, offset.as_ref()).await?;
+            Ok(VectorBrowsePage {
+                provider: "chroma".into(),
+                points,
+                next_offset: next,
+                total_hint: total,
+                note: None,
+            })
+        }
+        VectorProvider::Weaviate => {
+            let (points, next, total) =
+                weaviate::browse_page(config, sample_id, lim, offset.as_ref()).await?;
+            Ok(VectorBrowsePage {
+                provider: "weaviate".into(),
+                points,
+                next_offset: next,
+                total_hint: total,
+                note: None,
+            })
+        }
+    }
+}
+
+/// Dense vectors + light payload for atlas projection (all providers).
+pub async fn sample_vectors_for_atlas(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: usize,
+) -> Result<Vec<super::qdrant::ScrollVectorItem>, String> {
+    let cap = limit.min(2500);
+    match provider_from_config(config) {
+        VectorProvider::Qdrant => {
+            super::qdrant::scroll_qdrant_vectors_sample(
+                &config.url,
+                config.api_key.as_deref(),
+                &config.collection,
+                sample_id,
+                cap,
+                "",
+            )
+            .await
+        }
+        VectorProvider::Pinecone => pinecone::sample_vectors(config, sample_id, cap).await,
+        VectorProvider::Chroma => chroma::sample_vectors(config, sample_id, cap).await,
+        VectorProvider::Weaviate => weaviate::sample_vectors(config, sample_id, cap).await,
+    }
+}
+
+async fn browse_by_rsid(
+    config: &QdrantConfig,
+    provider: VectorProvider,
+    ollama_url: &str,
+    sample_id: i64,
+    rsid: &str,
+) -> Result<VectorBrowsePage, String> {
+    match provider {
+        VectorProvider::Qdrant => {
+            let payload = find_point_payload_by_rsid(
+                &config.url,
+                config.api_key.as_deref(),
+                &config.collection,
+                sample_id,
+                rsid,
+            )
+            .await?;
+            let points = match payload {
+                Some((p, _)) => vec![map_payload_to_hit(&p, 1.0)],
+                None => Vec::new(),
+            };
+            let n = points.len() as u64;
+            Ok(VectorBrowsePage {
+                provider: "qdrant".into(),
+                points,
+                next_offset: None,
+                total_hint: Some(n),
+                note: None,
+            })
+        }
+        other => {
+            let ollama = ollama_url.trim();
+            if ollama.is_empty() {
+                return Err("Ollama URL required for rsID lookup on non-Qdrant providers.".into());
+            }
+            let vector =
+                crate::research::embed::embed_text(rsid, ollama, &config.embedding_model).await?;
+            let points: Vec<QdrantHit> = search_dense(config, vector, Some(sample_id), 20, None, None)
+                .await?
+                .into_iter()
+                .filter(|h| h.rsid.eq_ignore_ascii_case(rsid))
+                .collect();
+            let n = points.len() as u64;
+            Ok(VectorBrowsePage {
+                provider: other.as_str().into(),
+                points,
+                next_offset: None,
+                total_hint: Some(n),
+                note: Some(format!(
+                    "Exact scroll is Qdrant-only; rsID lookup on {} uses embed+filter.",
+                    other.as_str()
+                )),
+            })
+        }
+    }
 }
 
 pub(crate) fn hit_from_metadata(meta: &serde_json::Value, score: f32) -> QdrantHit {

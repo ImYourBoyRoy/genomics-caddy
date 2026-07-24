@@ -1,0 +1,1653 @@
+{
+  "name": "Hormones, Reproductive Biology & PMDD Context",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_HORMONE_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Hormone/reproductive genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents PMDD/PCOS/endometriosis/fertility overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Hormone-related symptoms require cycle timing, labs, clinical history, and sometimes imaging. Raw DNA cannot diagnose PMDD, PCOS, endometriosis, infertility, hypogonadism, or hormone imbalance.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "infertility diagnosis",
+        "hormone prescription guidance"
+      ],
+      "confirm_with": [
+        "cycle tracking",
+        "symptom timing",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        },
+        {
+          "name": "Human Phenotype Ontology",
+          "url": "https://hpo.jax.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Phenotype ontology",
+          "conflict_of_interest": "Academic phenotype resource",
+          "notes": "Use to standardize symptom prompts and phenotype tags."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2234693",
+      "gene": "ESR1",
+      "variant_name": "PvuII estrogen receptor alpha marker",
+      "effect_allele": "T",
+      "impact": "Estrogen receptor signaling and hormone-sensitivity context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9340799",
+      "gene": "ESR1",
+      "variant_name": "XbaI estrogen receptor alpha marker",
+      "effect_allele": "G",
+      "impact": "Estrogen receptor signaling context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801132",
+      "gene": "ESR1",
+      "variant_name": "ESR1 coding/regulatory marker",
+      "effect_allele": "G",
+      "impact": "Estrogen receptor alpha transcription sensitivity context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4986938",
+      "gene": "ESR2",
+      "variant_name": "ESR2 3UTR marker",
+      "effect_allele": "A",
+      "impact": "Estrogen receptor beta signaling context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR2 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1256049",
+      "gene": "ESR2",
+      "variant_name": "ESR2 marker",
+      "effect_allele": "A",
+      "impact": "Estrogen receptor beta sensitivity context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESR2 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1042838",
+      "gene": "PGR",
+      "variant_name": "PROGINS progesterone receptor marker",
+      "effect_allele": "T",
+      "impact": "Progesterone receptor signaling context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "PGR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10895068",
+      "gene": "PGR",
+      "variant_name": "PGR hormone-sensitivity marker",
+      "effect_allele": "A",
+      "impact": "Progesterone receptor expression context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "PGR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs8079626",
+      "gene": "PGR",
+      "variant_name": "Progesterone receptor mood-sensitivity marker",
+      "effect_allele": "A",
+      "impact": "Progesterone receptor expression and luteal sensitivity context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "PGR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4680",
+      "gene": "COMT",
+      "variant_name": "Val158Met estrogen-catechol clearance context",
+      "effect_allele": "A",
+      "impact": "Catechol estrogen and dopamine clearance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10046",
+      "gene": "CYP19A1",
+      "variant_name": "Aromatase 3UTR marker",
+      "effect_allele": "T",
+      "impact": "Aromatase/estrogen synthesis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP19A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs700519",
+      "gene": "CYP19A1",
+      "variant_name": "Aromatase Arg264Cys marker",
+      "effect_allele": "T",
+      "impact": "Estrogen synthesis context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP19A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs743572",
+      "gene": "CYP17A1",
+      "variant_name": "CYP17 promoter marker",
+      "effect_allele": "C",
+      "impact": "Steroidogenesis/androgen-estrogen precursor context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP17A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6259",
+      "gene": "SHBG",
+      "variant_name": "SHBG Asp327Asn",
+      "effect_allele": "A",
+      "impact": "Sex hormone-binding globulin and free hormone context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SHBG is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799941",
+      "gene": "SHBG",
+      "variant_name": "SHBG promoter marker",
+      "effect_allele": "A",
+      "impact": "SHBG/free testosterone/free estrogen context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SHBG is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6166",
+      "gene": "FSHR",
+      "variant_name": "FSHR Asn680Ser",
+      "effect_allele": "G",
+      "impact": "FSH receptor ovarian response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FSHR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6165",
+      "gene": "FSHR",
+      "variant_name": "FSHR Thr307Ala",
+      "effect_allele": "G",
+      "impact": "FSH receptor response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FSHR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2293275",
+      "gene": "LHCGR",
+      "variant_name": "LH/CG receptor marker",
+      "effect_allele": "G",
+      "impact": "LH receptor ovarian/testicular signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "LHCGR is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs523349",
+      "gene": "SRD5A2",
+      "variant_name": "Val89Leu 5-alpha reductase marker",
+      "effect_allele": "G",
+      "impact": "DHT conversion/androgen context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SRD5A2 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9282858",
+      "gene": "SRD5A2",
+      "variant_name": "A49T 5-alpha reductase marker",
+      "effect_allele": "T",
+      "impact": "Androgen/DHT conversion context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SRD5A2 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs523349_AR_CONTEXT",
+      "gene": "AR/SRD5A2",
+      "variant_name": "Androgen sensitivity context marker",
+      "effect_allele": "study_reported_allele",
+      "impact": "Androgen signaling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AR/SRD5A2 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4646903",
+      "gene": "CYP1A1",
+      "variant_name": "MspI estrogen/xenobiotic metabolism marker",
+      "effect_allele": "C",
+      "impact": "Phase I estrogen/xenobiotic metabolism context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP1A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1056836",
+      "gene": "CYP1B1",
+      "variant_name": "Leu432Val catechol estrogen marker",
+      "effect_allele": "G",
+      "impact": "Catechol estrogen and oxidative estrogen metabolite context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP1B1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800440",
+      "gene": "CYP1B1",
+      "variant_name": "Asn453Ser marker",
+      "effect_allele": "A",
+      "impact": "Estrogen metabolite pathway context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP1B1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1048943",
+      "gene": "CYP1A1",
+      "variant_name": "Ile462Val marker",
+      "effect_allele": "G",
+      "impact": "Estrogen/xenobiotic metabolism context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CYP1A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs887829",
+      "gene": "UGT1A1",
+      "variant_name": "UGT1A1 bilirubin/estrogen glucuronidation marker",
+      "effect_allele": "T",
+      "impact": "Glucuronidation and bilirubin/estrogen clearance context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "UGT1A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4148323",
+      "gene": "UGT1A1",
+      "variant_name": "UGT1A1*6 marker",
+      "effect_allele": "A",
+      "impact": "UGT1A1 glucuronidation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "UGT1A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9282861",
+      "gene": "SULT1A1",
+      "variant_name": "Arg213His sulfation marker",
+      "effect_allele": "T",
+      "impact": "Phenol/estrogen sulfation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SULT1A1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6258",
+      "gene": "SHBG",
+      "variant_name": "SHBG binding affinity marker",
+      "effect_allele": "A",
+      "impact": "Free sex-hormone fraction context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SHBG is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10830963",
+      "gene": "MTNR1B",
+      "variant_name": "Melatonin receptor / reproductive-metabolic context",
+      "effect_allele": "G",
+      "impact": "Circadian glucose and reproductive-metabolic timing context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTNR1B is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1799971",
+      "gene": "OPRM1",
+      "variant_name": "Mu-opioid receptor reward/pain/hormone context",
+      "effect_allele": "G",
+      "impact": "Pain/reward/attachment hormone-context overlay",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "OPRM1 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs324420",
+      "gene": "FAAH",
+      "variant_name": "Anandamide degradation marker",
+      "effect_allele": "A",
+      "impact": "Endocannabinoid stress/pain/reproductive context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FAAH is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6265",
+      "gene": "BDNF",
+      "variant_name": "Val66Met neuroplasticity/hormone sensitivity context",
+      "effect_allele": "A",
+      "impact": "Neuroplasticity and hormone mood sensitivity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BDNF is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1360780",
+      "gene": "FKBP5",
+      "variant_name": "Stress-hormone receptor co-chaperone marker",
+      "effect_allele": "T",
+      "impact": "HPA-axis stress-hormone sensitivity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "FKBP5 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4757144",
+      "gene": "RGS7",
+      "variant_name": "PMDD candidate locus context",
+      "effect_allele": "study_reported_allele",
+      "impact": "GABA/neurosteroid pathway research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "RGS7 is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs114741500",
+      "gene": "ESC_EZ_COMPLEX",
+      "variant_name": "ESC/E(Z) PMDD cellular response marker placeholder",
+      "effect_allele": "N/A",
+      "impact": "PMDD cellular hormone-response research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ESC_EZ_COMPLEX is included for hormone/reproductive context. Use with cycle timing, labs, symptoms, and clinical history. It is not diagnostic.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "PCOS diagnosis",
+        "fertility prediction",
+        "hormone treatment from genotype"
+      ],
+      "confirm_with": [
+        "cycle/symptom tracking",
+        "reproductive hormone labs if indicated",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Hormone traits are dynamic, cycle-dependent, age-dependent, and strongly affected by medications, body composition, thyroid status, and stress.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY",
+      "gene": "ESR1/ESR2/PGR/ALLO_GABAA/ESC_EZ",
+      "variant_name": "PMDD ovarian steroid sensitivity panel",
+      "effect_allele": "N/A",
+      "impact": "Cyclic luteal-phase mood and somatic symptom sensitivity context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "PMDD is best handled as cyclic hormone-sensitivity context. Genetics should only prompt cycle tracking and clinician discussion, not diagnosis.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "psychiatric diagnosis"
+      ],
+      "confirm_with": [
+        "daily symptom tracking across 2+ cycles",
+        "luteal timing",
+        "symptom remission after menses",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "PMDD neuroactive steroid sensitivity review",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10176022/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "None declared in accessible article metadata; verify article disclosures when using clinically",
+          "notes": "Use for PMDD framing as hormone-sensitivity/neurosteroid/GABA-related biology, not as a single-SNP diagnosis."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_PCOS_REPRODUCTIVE_METABOLIC_CONTEXT",
+      "gene": "FSHR/LHCGR/SHBG/CYP17A1/INSR/METABOLIC",
+      "variant_name": "PCOS reproductive-metabolic context panel",
+      "effect_allele": "N/A",
+      "impact": "Androgen, ovulatory, and insulin-resistance context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "PCOS is diagnosed clinically/laboratorily, not genetically. This panel links reproductive hormone and metabolic risk context.",
+      "do_not_claim": [
+        "PCOS diagnosis"
+      ],
+      "confirm_with": [
+        "cycle regularity",
+        "androgens",
+        "ovulatory history",
+        "ultrasound if indicated",
+        "fasting insulin/A1c"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_ENDOMETRIOSIS_CONTEXT",
+      "gene": "WNT4/VEZT/IL1A/ESR1/MULTI_GENE",
+      "variant_name": "Endometriosis susceptibility context panel",
+      "effect_allele": "N/A",
+      "impact": "Endometriosis polygenic/inflammatory context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Endometriosis requires clinical evaluation and sometimes surgical confirmation. Use genetics only as plausibility context with symptoms.",
+      "do_not_claim": [
+        "endometriosis diagnosis"
+      ],
+      "confirm_with": [
+        "pelvic pain pattern",
+        "imaging when indicated",
+        "gynecologist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_AR_CAG_REPEAT_CALLOUT",
+      "gene": "AR",
+      "variant_name": "Androgen receptor CAG repeat callability rule",
+      "effect_allele": "CAG_REPEAT",
+      "impact": "Androgen receptor repeat-length sensitivity context",
+      "evidence_tier": "C_research_only",
+      "interpretation": "AR CAG repeat length affects androgen receptor transactivation but is not usually available in consumer SNP files. Requires repeat-aware testing.",
+      "do_not_claim": [
+        "androgen sensitivity certainty"
+      ],
+      "confirm_with": [
+        "validated repeat assay",
+        "clinical phenotype"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "str_repeat",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    }
+  ]
+}

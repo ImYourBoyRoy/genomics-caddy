@@ -343,7 +343,9 @@
       ollamaToken = (await getOllamaToken()) || ollamaToken;
     })();
     if (Object.keys(selectedPacks).length === 0) {
-      selectedPacks = Object.fromEntries(markerPacksStore.manifest.packs.map(p => [p.id, true]));
+      selectedPacks = Object.fromEntries(
+        markerPacksStore.manifest.packs.map((p) => [p.id, p.default_enabled !== false])
+      );
     }
     const prefs = loadAiAssistantPreferences(userProfile);
     showThinkingProcess = prefs.showThinkingProcess;

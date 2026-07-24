@@ -96,6 +96,7 @@
       <strong>Allele frequencies (gnomAD)</strong>
       <span class="welcome-cta-hint">
         Report AF chips use the local gnomAD variant cache / VCF indexes from Vector Research — not the dbSNP merge map.
+        Offline dbSNP is rsID history only; NCBI <code>refsnp-chr*</code> allele JSON is not ingested yet.
       </span>
     </div>
 

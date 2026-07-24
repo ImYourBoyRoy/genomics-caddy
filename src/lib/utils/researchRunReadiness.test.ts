@@ -111,7 +111,7 @@ describe("computeRunReadiness", () => {
     const r = computeRunReadiness({
       configUrl: "http://localhost:6333",
       connectionStatus: readyConnection,
-      connectionActivity: { phase: "loading-scope", message: "…" },
+      connectionActivity: { phase: "idle", message: "" },
       ollamaStatus: "live",
       gnomadSweepReady: true,
       gnomadSourceEnabled: false,
@@ -121,5 +121,20 @@ describe("computeRunReadiness", () => {
     });
     expect(r.canStart).toBe(false);
     expect(r.primaryHint).toMatch(/Counting sweep scope/);
+  });
+
+  it("allows start during recount when a non-empty preview already exists", () => {
+    const r = computeRunReadiness({
+      configUrl: "http://localhost:6333",
+      connectionStatus: readyConnection,
+      connectionActivity: { phase: "idle", message: "" },
+      ollamaStatus: "live",
+      gnomadSweepReady: true,
+      gnomadSourceEnabled: false,
+      scopePreview,
+      scopePreviewLoading: true,
+      job: baseJob,
+    });
+    expect(r.canStart).toBe(true);
   });
 });

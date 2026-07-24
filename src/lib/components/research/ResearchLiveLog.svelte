@@ -55,7 +55,7 @@
 
 <div class="glass-card log-card">
   <div class="log-header">
-    <h2 class="card-title">Live System Feed</h2>
+    <h2 class="card-title">Sweep activity</h2>
     <label class="debug-toggle" title="Verbose sweep logs in this feed and the terminal (DNA_RESEARCH_DEBUG=1 also works)">
       <input
         type="checkbox"
@@ -63,7 +63,7 @@
         disabled={togglingDebug}
         onchange={toggleDebugLog}
       />
-      <span>Verbose sweep log</span>
+      <span>Detailed log</span>
     </label>
   </div>
 

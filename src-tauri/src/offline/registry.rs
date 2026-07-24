@@ -174,7 +174,22 @@ pub fn row_count_for_asset(conn: &Connection, asset_id: OfflineAssetId) -> u64 {
         OfflineAssetId::DbsnpMergedJson | OfflineAssetId::DbsnpWithdrawnJson => {
             super::schema::table_count(conn, "rsid_aliases")
         }
-        OfflineAssetId::Tier2VariantLocus => super::schema::table_count(conn, "variant_locus"),
+        OfflineAssetId::Tier2VariantLocus => {
+            // Locus rows live in per-sample DBs; prefer last synced registry count.
+            conn.query_row(
+                "SELECT COALESCE(row_count, 0) FROM offline_asset_registry WHERE asset_id = ?",
+                params![asset_id.as_str()],
+                |row| row.get::<_, i64>(0),
+            )
+            .or_else(|_| {
+                conn.query_row(
+                    "SELECT COALESCE(row_count, 0) FROM reference.offline_asset_registry WHERE asset_id = ?",
+                    params![asset_id.as_str()],
+                    |row| row.get::<_, i64>(0),
+                )
+            })
+            .unwrap_or(0) as u64
+        }
         OfflineAssetId::LiftoverChain => {
             if read_registry(conn, asset_id.as_str())
                 .map(|r| r.local_bytes > 0)

@@ -15,6 +15,8 @@ mod headless;
 mod http;
 mod job;
 mod markers;
+pub(crate) mod pack_draft;
+pub(crate) mod research_found_pack;
 mod prefetch;
 mod promote;
 mod qdrant;
@@ -54,7 +56,7 @@ pub use sources::{
     fetch_gnomad_frequency, fetch_gtex_eqtls_for_rsid, fetch_gtex_gencode_id,
     fetch_gtex_median_expression, fetch_gwas_associations,
 };
-pub use state::{RESEARCH_PAUSED, RESEARCH_RUNNING};
+pub use state::{RESEARCH_CANCELLED, RESEARCH_PAUSED, RESEARCH_RUNNING};
 pub use sweep::run_research_loop;
 
 pub use headless::{

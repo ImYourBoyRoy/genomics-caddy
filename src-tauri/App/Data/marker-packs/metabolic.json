@@ -1,0 +1,2626 @@
+{
+  "name": "Metabolic Health & T2D",
+  "markers": [
+    {
+      "rsid": "rs9939609",
+      "gene": "FTO",
+      "variant_name": "FTO intron variant",
+      "effect_allele": "A",
+      "impact": "Altered satiety signaling / increased appetite susceptibility",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FTO rs9939609 is the most robust common obesity-risk locus. The A allele affects FTO expression, altering hypothalamus satiety signaling and increasing baseline appetite and food intake. Strongly modifiable by exercise and protein intake.",
+      "do_not_claim": [
+        "obesity diagnosis",
+        "inevitable weight gain"
+      ],
+      "confirm_with": [
+        "satiety levels after meals",
+        "body fat percentage",
+        "leptin/insulin resistance panels"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "The risk effect is completely abolished in individuals with high physical activity or high-protein diet regimes.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FTO gene variants and obesity association",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17431174/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Large-scale genome-wide association study identifying FTO as a primary locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1801282",
+      "gene": "PPARG",
+      "variant_name": "Pro12Ala",
+      "effect_allele": "G",
+      "impact": "Altered peroxisome proliferator-activated receptor-gamma activity",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PPARG is a master regulator of fat cell development and insulin sensitivity. The G allele (Ala) is associated with improved insulin sensitivity and lower type 2 diabetes risk compared to the Pro/Pro genotype. A robust metabolic marker.",
+      "do_not_claim": [
+        "diabetes diagnosis",
+        "metabolic syndrome certainty"
+      ],
+      "confirm_with": [
+        "fasting blood glucose",
+        "HbA1c",
+        "fasting insulin (HOMA-IR)"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Though protective, metabolic health is ultimately determined by caloric balance, fiber intake, and skeletal muscle insulin action.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "PPARG Pro12Ala and Type 2 Diabetes Risk Meta-Analysis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10986435/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Confirms a highly replicated, modest protective effect of the Ala allele against type 2 diabetes."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2237897",
+      "gene": "KCNQ1",
+      "variant_name": "KCNQ1 intron variant",
+      "effect_allele": "A",
+      "impact": "Reduced glucose-stimulated insulin secretion",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "KCNQ1 regulates potassium channels in pancreatic beta cells. The rs2237897 A allele is a robust marker associated with impaired insulin secretion following glucose loads, carrying a modest risk signal for type 2 diabetes.",
+      "do_not_claim": [
+        "diabetes diagnosis",
+        "insulin deficiency"
+      ],
+      "confirm_with": [
+        "oral glucose tolerance test (OGTT)",
+        "HbA1c"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common risk SNP; actual insulin secretion and glucose disposal are highly responsive to cardiovascular fitness and carbohydrate load.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "KCNQ1 variants and Type 2 Diabetes susceptibility in East Asian populations",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18711367/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Seminal study identifying KCNQ1 as a key diabetes locus in Asian and European cohorts."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7903146",
+      "gene": "TCF7L2",
+      "variant_name": "rs7903146 intron variant",
+      "effect_allele": "T",
+      "impact": "Impaired GLP-1 secretion / elevated type 2 diabetes risk",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TCF7L2 rs7903146 is the most significant common genetic risk locus for Type 2 Diabetes. The T allele is linked to reduced insulin secretion and impaired beta-cell response to GLP-1. Modifiable via low-glycemic index diets and exercise.",
+      "do_not_claim": [
+        "T2D diagnosis",
+        "insulin therapy requirements prediction"
+      ],
+      "confirm_with": [
+        "fasting blood glucose",
+        "HbA1c",
+        "oral glucose tolerance test"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common risk SNP; dietary composition and physical training mitigate the risk completely.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "TCF7L2 polymorphism and T2D risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16415884/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Replicated association of TCF7L2 with beta-cell function impairment."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13266634",
+      "gene": "SLC30A8",
+      "variant_name": "Trp325Arg",
+      "effect_allele": "C",
+      "impact": "Impaired zinc transport / reduced beta-cell insulin crystallization",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC30A8 is a zinc transporter in pancreatic beta cells. The C allele (Arg325) affects insulin storage and secretion kinetics, slightly increasing diabetes risk.",
+      "do_not_claim": [
+        "pancreatitis diagnosis"
+      ],
+      "confirm_with": [
+        "fasting insulin",
+        "blood zinc levels"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Dietary zinc status can influence the manifestation of this transporter phenotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "SLC30A8 Arg325 variant and diabetes risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17435754/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies SLC30A8 as a highly replicated beta-cell GWAS locus."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5219",
+      "gene": "KCNJ11",
+      "variant_name": "Glu23Lys",
+      "effect_allele": "T",
+      "impact": "Altered ATP-sensitive potassium channel activation",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "KCNJ11 rs5219 (E23K variant, T allele) keeps the pancreatic beta-cell potassium channel open longer, decreasing insulin secretion in response to glucose.",
+      "do_not_claim": [
+        "neonatal diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "postprandial blood glucose",
+        "c-peptide level"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "ATP-sensitive potassium channels are drug targets for sulfonylureas; clinical PGx requires full panel curation.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "KCNJ11 Glu23Lys and diabetes susceptibility",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12844117/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Meta-analysis confirming modest risk elevation of E23K."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1260326",
+      "gene": "GCKR",
+      "variant_name": "GCKR intron variant",
+      "effect_allele": "T",
+      "impact": "Altered glucokinase activity / triglyceride-glucose balance shift",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GCKR regulates glucokinase in the liver. The T allele is associated with lower fasting glucose but higher fasting triglycerides, illustrating a metabolic lipid-glucose partition tradeoff.",
+      "do_not_claim": [
+        "hypertriglyceridemia diagnosis",
+        "fatty liver diagnosis"
+      ],
+      "confirm_with": [
+        "fasting triglycerides",
+        "fasting glucose",
+        "AST/ALT liver enzymes"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Substrate partitioning is highly modified by fructose/alcohol intake and cardiovascular training.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "GCKR and lipid-glucose phenotypes",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19043547/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "GWAS showing GCKR's dual effects on glucose and plasma lipids."
+        }
+      ]
+    },
+    {
+      "rsid": "rs662799",
+      "gene": "APOA5",
+      "variant_name": "-1131T>C",
+      "effect_allele": "C",
+      "impact": "Reduced APOA5 expression / elevated fasting triglycerides",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "APOA5 rs662799 C allele is strongly associated with elevated serum triglycerides due to reduced clearing of triglyceride-rich lipoproteins.",
+      "do_not_claim": [
+        "cardiac event prediction",
+        "statins requirement indicator"
+      ],
+      "confirm_with": [
+        "lipid panel (triglycerides)",
+        "ApoB"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Fasting triglycerides are highly responsive to dietary refined carbohydrate levels and omega-3 intake.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "APOA5 -1131T>C and hypertriglyceridemia",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/12181513/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large cohort study mapping APOA5 variants to triglyceride clearance."
+        }
+      ]
+    },
+    {
+      "rsid": "rs328",
+      "gene": "LPL",
+      "variant_name": "Ser447Ter",
+      "effect_allele": "G",
+      "impact": "Altered Lipoprotein Lipase activity / triglyceride clearance",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPL rs328 G-allele (Ser44Ter) causes premature truncation, resulting in increased LPL activity, leading to lower triglycerides and higher HDL.",
+      "do_not_claim": [
+        "hyperlipidemia exclusion"
+      ],
+      "confirm_with": [
+        "basal lipid panel",
+        "HDL levels"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Protective variant; clearance rates are also regulated by insulin levels (metabolic health).",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPL Ser447Ter meta-analysis",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/9851778/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large scale consensus mapping of LPL protective variations."
+        }
+      ]
+    },
+    {
+      "rsid": "rs708272",
+      "gene": "CETP",
+      "variant_name": "TaqIB polymorphism",
+      "effect_allele": "A",
+      "impact": "Altered cholesteryl ester transfer protein activity",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The A (TaqIB B2) allele of rs708272 is linked to decreased CETP expression, which increases protective HDL cholesterol levels.",
+      "do_not_claim": [
+        "cardioprotection guarantee"
+      ],
+      "confirm_with": [
+        "HDL-C",
+        "ApoA-I levels"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "High HDL levels do not always translate to cardiac protection if particles are dysfunctional.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "CETP TaqIB and coronary heart disease risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16280332/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large cohort study confirming increased HDL in B2 carriers."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10455872",
+      "gene": "LPA",
+      "variant_name": "rs10455872 promoter variant",
+      "effect_allele": "G",
+      "impact": "Elevated Lipoprotein(a) expression / atherosclerosis risk",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "LPA rs10455872 is a robust promoter-associated SNP driving elevated levels of Lipoprotein(a). High Lp(a) levels are an independent, highly genetically determined risk factor for cardiovascular disease.",
+      "do_not_claim": [
+        "cardiovascular disease diagnosis",
+        "atherosclerosis certainty"
+      ],
+      "confirm_with": [
+        "serum Lipoprotein(a) [Lp(a)]",
+        "CAC heart scan"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Microarray analysis only captures specific alleles; direct measurement of serum Lp(a) is required to determine absolute risk.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPA variants and coronary disease risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20032320/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Highlights rs10455872 as a major risk driver for cardiovascular events."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3798220",
+      "gene": "LPA",
+      "variant_name": "Ile4399Met",
+      "effect_allele": "C",
+      "impact": "APO(a) isoform reduction / elevated Lipoprotein(a)",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "The rs3798220 C-allele is associated with smaller apolipoprotein(a) size isoforms, which are cleared slower, leading to elevated Lp(a) levels.",
+      "do_not_claim": [
+        "cardiovascular disease diagnosis"
+      ],
+      "confirm_with": [
+        "serum Lipoprotein(a) concentration",
+        "ApoB"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Variant frequency varies widely by geographic ancestry.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "LPA Ile4399Met and coronary risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20032320/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Identifies the smaller isoform-associated Met4399 variant as a genetic risk marker."
+        }
+      ]
+    },
+    {
+      "rsid": "rs17782313",
+      "gene": "MC4R",
+      "variant_name": "MC4R downstream variant",
+      "effect_allele": "C",
+      "impact": "Altered melanocortin-4 receptor expression / satiety regulation",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MC4R is a master hypothalamic regulator of energy homeostasis. The C allele is associated with minor satiety signaling impairments and higher baseline caloric intake.",
+      "do_not_claim": [
+        "bipolar eating disorder diagnosis",
+        "inevitable obesity"
+      ],
+      "confirm_with": [
+        "satiety logs",
+        "hormone profile (leptin)"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with small phenotypic impact compared to rare monogenic MC4R mutations.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "MC4R variants and obesity risk",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18454148/",
+          "accessed": "2026-06-07",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None",
+          "notes": "Large GWAS detailing common MC4R modifier effects."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_METABOLIC_RAW_DNA_NON_DIAGNOSTIC",
+      "gene": "MULTI_GENE",
+      "variant_name": "Metabolic raw-DNA non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents diabetes/obesity/fatty-liver diagnosis from SNPs",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Common metabolic variants are small-effect modifiers. Diabetes, insulin resistance, obesity, dyslipidemia, gout, and fatty liver require labs, phenotype, medications, diet, body composition, and clinician interpretation.",
+      "do_not_claim": [
+        "T2D diagnosis",
+        "obesity diagnosis",
+        "fatty liver diagnosis",
+        "insulin resistance diagnosis"
+      ],
+      "confirm_with": [
+        "HbA1c",
+        "fasting glucose/insulin",
+        "lipid panel",
+        "ALT/AST/GGT",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Metabolic traits are strongly environment- and behavior-responsive and highly polygenic.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_TYPE2_DIABETES_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "Type 2 diabetes PRS module",
+      "effect_allele": "VALIDATED_PRS_ONLY",
+      "impact": "Polygenic beta-cell/insulin-resistance liability context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "T2D genetics involves hundreds of loci and multiple mechanistic clusters. Use only validated PRS with ancestry/platform calibration and lab context.",
+      "do_not_claim": [
+        "T2D diagnosis",
+        "medication need prediction"
+      ],
+      "confirm_with": [
+        "validated PRS",
+        "HbA1c",
+        "fasting glucose",
+        "OGTT if indicated"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "PRS has ancestry and calibration limitations.",
+      "clinical_confirmation_required": true,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "PRS_OBESITY_BMI_CONTEXT",
+      "gene": "MULTI_GENE",
+      "variant_name": "BMI/obesity PRS module",
+      "effect_allele": "VALIDATED_PRS_ONLY",
+      "impact": "Polygenic appetite/adiposity liability context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "Common obesity genetics strongly involves CNS appetite/energy regulation, but PRS does not determine body weight or individual behavior.",
+      "do_not_claim": [
+        "obesity diagnosis",
+        "weight gain inevitability"
+      ],
+      "confirm_with": [
+        "body composition",
+        "diet/activity/sleep context",
+        "validated PRS"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Environment and interventions can substantially modify genetic liability.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10830963",
+      "gene": "MTNR1B",
+      "variant_name": "MTNR1B intron variant",
+      "effect_allele": "G",
+      "impact": "Melatonin receptor / fasting glucose and insulin secretion context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MTNR1B rs10830963 G is associated with higher fasting glucose and altered insulin secretion, especially with circadian-melatonin timing context.",
+      "do_not_claim": [
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "fasting glucose",
+        "HbA1c",
+        "meal timing/sleep context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7754840",
+      "gene": "CDKAL1",
+      "variant_name": "CDKAL1 T2D locus",
+      "effect_allele": "C",
+      "impact": "Beta-cell insulin secretion risk locus",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CDKAL1 variants are replicated T2D loci affecting beta-cell insulin secretion context.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "HbA1c",
+        "OGTT",
+        "fasting insulin"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10811661",
+      "gene": "CDKN2A/B",
+      "variant_name": "9p21 T2D locus",
+      "effect_allele": "T",
+      "impact": "Beta-cell proliferation/insulin secretion risk locus",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CDKN2A/B rs10811661 is a replicated T2D locus, likely affecting beta-cell cell-cycle/proliferation biology.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "HbA1c",
+        "fasting glucose"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4402960",
+      "gene": "IGF2BP2",
+      "variant_name": "IGF2BP2 intron variant",
+      "effect_allele": "T",
+      "impact": "Insulin secretion/growth factor signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IGF2BP2 variants are replicated T2D susceptibility loci related to beta-cell function and growth-factor signaling.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "glucose labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1111875",
+      "gene": "HHEX/IDE",
+      "variant_name": "HHEX/IDE T2D locus",
+      "effect_allele": "C",
+      "impact": "Pancreatic development / insulin processing context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HHEX/IDE region variants are replicated T2D loci linked to pancreatic development and insulin biology.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "glucose labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs864745",
+      "gene": "JAZF1",
+      "variant_name": "JAZF1 T2D locus",
+      "effect_allele": "T",
+      "impact": "Beta-cell/metabolic risk context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "JAZF1 is a replicated T2D locus with modest effects on metabolic risk.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "HbA1c",
+        "fasting glucose"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11708067",
+      "gene": "ADCY5",
+      "variant_name": "ADCY5 glucose locus",
+      "effect_allele": "A",
+      "impact": "Fasting glucose / insulin secretion context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ADCY5 variants are associated with fasting glucose and beta-cell insulin secretion traits.",
+      "do_not_claim": [
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "fasting glucose",
+        "OGTT"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs340874",
+      "gene": "PROX1",
+      "variant_name": "PROX1 fasting glucose/T2D locus",
+      "effect_allele": "C",
+      "impact": "Beta-cell and glucose regulation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PROX1 rs340874 is associated with fasting glucose and T2D risk in GWAS.",
+      "do_not_claim": [
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "fasting glucose",
+        "HbA1c"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10010131",
+      "gene": "WFS1",
+      "variant_name": "WFS1 T2D locus",
+      "effect_allele": "G",
+      "impact": "Beta-cell ER stress/insulin secretion context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "WFS1 common variants influence T2D susceptibility through beta-cell stress pathways; rare WFS1 disease is separate.",
+      "do_not_claim": [
+        "Wolfram syndrome diagnosis",
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "glucose labs",
+        "clinical context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Do not confuse common WFS1 markers with rare Wolfram syndrome mutations.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2943641",
+      "gene": "IRS1",
+      "variant_name": "IRS1 insulin resistance locus",
+      "effect_allele": "C",
+      "impact": "Insulin signaling/adipose distribution context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IRS1 rs2943641 is linked to insulin resistance and adiposity distribution in GWAS.",
+      "do_not_claim": [
+        "insulin resistance diagnosis"
+      ],
+      "confirm_with": [
+        "fasting insulin/HOMA-IR",
+        "waist circumference"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs266729",
+      "gene": "ADIPOQ",
+      "variant_name": "ADIPOQ -11377C>G",
+      "effect_allele": "G",
+      "impact": "Adiponectin expression / insulin sensitivity context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADIPOQ promoter variation can affect adiponectin levels and insulin-sensitivity context; labs and phenotype dominate.",
+      "do_not_claim": [
+        "metabolic syndrome diagnosis"
+      ],
+      "confirm_with": [
+        "adiponectin if measured",
+        "fasting insulin"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2241766",
+      "gene": "ADIPOQ",
+      "variant_name": "ADIPOQ +45T>G",
+      "effect_allele": "G",
+      "impact": "Adiponectin/metabolic syndrome candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "ADIPOQ rs2241766 is a candidate metabolic marker with heterogeneous association evidence.",
+      "do_not_claim": [
+        "metabolic syndrome diagnosis"
+      ],
+      "confirm_with": [
+        "metabolic labs"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1137101",
+      "gene": "LEPR",
+      "variant_name": "Q223R",
+      "effect_allele": "G",
+      "impact": "Leptin receptor signaling/satiety context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "LEPR Q223R may modify leptin signaling and appetite/adiposity context, but effect is modest and non-diagnostic.",
+      "do_not_claim": [
+        "leptin resistance diagnosis",
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "satiety logs",
+        "leptin/insulin if measured"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7799039",
+      "gene": "LEP",
+      "variant_name": "LEP -2548G>A",
+      "effect_allele": "A",
+      "impact": "Leptin expression/appetite context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "LEP promoter variation has candidate evidence for leptin levels and adiposity context. Use cautiously.",
+      "do_not_claim": [
+        "leptin deficiency",
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "leptin if clinically measured",
+        "body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7498665",
+      "gene": "SH2B1",
+      "variant_name": "SH2B1 obesity/insulin locus",
+      "effect_allele": "G",
+      "impact": "Leptin/insulin signaling and BMI context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SH2B1 is a replicated obesity/T2D locus involved in leptin and insulin signaling.",
+      "do_not_claim": [
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "body composition",
+        "glucose/insulin labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10913469",
+      "gene": "SEC16B",
+      "variant_name": "SEC16B BMI locus",
+      "effect_allele": "C",
+      "impact": "Energy balance/adiposity GWAS locus",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SEC16B is a replicated BMI/adiposity locus with small effect.",
+      "do_not_claim": [
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "body composition"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6265",
+      "gene": "BDNF",
+      "variant_name": "Val66Met",
+      "effect_allele": "A",
+      "impact": "Neuroplasticity/appetite-energy regulation context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "BDNF Val66Met can contextualize appetite/reward and exercise response, but it is not a weight predictor.",
+      "do_not_claim": [
+        "obesity diagnosis",
+        "depression diagnosis"
+      ],
+      "confirm_with": [
+        "exercise response",
+        "satiety context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "AMY1_COPY_NUMBER",
+      "gene": "AMY1",
+      "variant_name": "Salivary amylase copy number",
+      "effect_allele": "low_copy_number",
+      "impact": "Starch digestion/satiety glycemic-response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "AMY1 copy number can affect salivary amylase and starch digestion context. Consumer SNP files usually cannot measure it.",
+      "do_not_claim": [
+        "carbohydrate intolerance diagnosis"
+      ],
+      "confirm_with": [
+        "CGM response",
+        "diet context",
+        "copy-number assay"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Requires copy-number measurement, not SNP-only data.",
+      "clinical_confirmation_required": false,
+      "variant_type": "copy_number_variant",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5082",
+      "gene": "APOA2",
+      "variant_name": "APOA2 -265T>C",
+      "effect_allele": "C",
+      "impact": "Saturated fat/BMI interaction candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "APOA2 rs5082 has been studied for saturated-fat interaction with BMI. Use as diet-response research context only.",
+      "do_not_claim": [
+        "diet prescription",
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "diet tracking",
+        "lipids/body composition"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Gene-diet interaction evidence is heterogeneous.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800592",
+      "gene": "UCP1",
+      "variant_name": "-3826A>G",
+      "effect_allele": "G",
+      "impact": "Thermogenesis/brown-fat activity candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "UCP1 variation may affect thermogenesis and cold-induced energy expenditure in some contexts. Evidence is modest.",
+      "do_not_claim": [
+        "metabolic rate prediction",
+        "obesity diagnosis"
+      ],
+      "confirm_with": [
+        "resting metabolic rate if measured",
+        "cold tolerance"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs659366",
+      "gene": "UCP2",
+      "variant_name": "UCP2 -866G>A",
+      "effect_allele": "A",
+      "impact": "Mitochondrial uncoupling/insulin secretion candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "UCP2 variation can affect mitochondrial coupling and insulin secretion context. Not diagnostic.",
+      "do_not_claim": [
+        "diabetes diagnosis",
+        "metabolic rate prediction"
+      ],
+      "confirm_with": [
+        "glucose labs",
+        "exercise context"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs738409",
+      "gene": "PNPLA3",
+      "variant_name": "I148M",
+      "effect_allele": "G",
+      "impact": "Fatty liver susceptibility / hepatic triglyceride remodeling",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PNPLA3 I148M G is one of the strongest common genetic modifiers of fatty liver and steatohepatitis susceptibility. It still requires labs/imaging.",
+      "do_not_claim": [
+        "fatty liver diagnosis",
+        "cirrhosis prediction"
+      ],
+      "confirm_with": [
+        "ALT/AST/GGT",
+        "liver ultrasound/FibroScan if indicated",
+        "alcohol/fructose context"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs58542926",
+      "gene": "TM6SF2",
+      "variant_name": "E167K",
+      "effect_allele": "T",
+      "impact": "Hepatic VLDL export/fatty-liver context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TM6SF2 E167K increases hepatic fat susceptibility while often lowering circulating lipids. Interpret with liver and lipid labs.",
+      "do_not_claim": [
+        "fatty liver diagnosis"
+      ],
+      "confirm_with": [
+        "ALT/AST",
+        "lipids",
+        "liver imaging if indicated"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs641738",
+      "gene": "MBOAT7",
+      "variant_name": "MBOAT7/TMC4 liver fat locus",
+      "effect_allele": "T",
+      "impact": "Phospholipid remodeling / fatty-liver context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "MBOAT7 rs641738 is associated with fatty liver susceptibility in multiple cohorts, with modest effect.",
+      "do_not_claim": [
+        "fatty liver diagnosis"
+      ],
+      "confirm_with": [
+        "liver enzymes/imaging"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs72613567",
+      "gene": "HSD17B13",
+      "variant_name": "HSD17B13 splice/protective indel",
+      "effect_allele": "TA insertion",
+      "impact": "Protective liver-disease modifier",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HSD17B13 loss-of-function/splice variation can be protective against chronic liver injury progression. It does not rule out liver disease.",
+      "do_not_claim": [
+        "liver disease protection guarantee"
+      ],
+      "confirm_with": [
+        "liver labs",
+        "alcohol/metabolic context"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Indel calls may be unreliable in raw SNP files.",
+      "clinical_confirmation_required": false,
+      "variant_type": "indel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4841132",
+      "gene": "PPP1R3B",
+      "variant_name": "PPP1R3B liver glycogen/lipid locus",
+      "effect_allele": "A",
+      "impact": "Hepatic glycogen/lipid partitioning context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PPP1R3B rs4841132 is associated with liver enzyme/lipid traits and hepatic metabolism context.",
+      "do_not_claim": [
+        "fatty liver diagnosis"
+      ],
+      "confirm_with": [
+        "liver enzymes",
+        "lipids"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2231142",
+      "gene": "ABCG2",
+      "variant_name": "Gln141Lys",
+      "effect_allele": "T",
+      "impact": "Uric acid export / gout-metabolic overlap",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ABCG2 Gln141Lys reduces urate transport and increases gout susceptibility. It is also relevant in PGx/statin context.",
+      "do_not_claim": [
+        "gout diagnosis"
+      ],
+      "confirm_with": [
+        "serum uric acid",
+        "gout history",
+        "kidney function"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs16890979",
+      "gene": "SLC2A9",
+      "variant_name": "SLC2A9 urate transporter variant",
+      "effect_allele": "T",
+      "impact": "Lower uric acid / gout protection context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "SLC2A9 rs16890979 is associated with lower serum urate and reduced gout risk in many cohorts.",
+      "do_not_claim": [
+        "gout exclusion",
+        "urate disorder diagnosis"
+      ],
+      "confirm_with": [
+        "serum uric acid",
+        "clinical history"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1805097",
+      "gene": "IRS2",
+      "variant_name": "Gly1057Asp",
+      "effect_allele": "A",
+      "impact": "Insulin signaling candidate",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IRS2 variation can contextualize insulin signaling and T2D susceptibility, but evidence is weaker than major GWAS loci.",
+      "do_not_claim": [
+        "insulin resistance diagnosis"
+      ],
+      "confirm_with": [
+        "glucose/insulin labs"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3792267",
+      "gene": "CAPN10",
+      "variant_name": "CAPN10 UCSNP-43 context",
+      "effect_allele": "G",
+      "impact": "Insulin secretion/resistance candidate",
+      "evidence_tier": "D_candidate_contextual",
+      "interpretation": "CAPN10 was an early T2D candidate gene. Use only as low-confidence historical context.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "glucose labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Candidate-gene findings are less reliable than modern GWAS loci.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs972283",
+      "gene": "KLF14",
+      "variant_name": "KLF14 metabolic locus",
+      "effect_allele": "G",
+      "impact": "Adipose gene regulation/insulin sensitivity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "KLF14 is a replicated metabolic locus affecting adipose gene regulation and insulin sensitivity traits.",
+      "do_not_claim": [
+        "T2D diagnosis"
+      ],
+      "confirm_with": [
+        "glucose/insulin labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1169288",
+      "gene": "HNF1A",
+      "variant_name": "I27L common variant",
+      "effect_allele": "C",
+      "impact": "Glycemic/lipid trait context; rare MODY gene distinction",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "HNF1A common variants can modify glycemic traits, but pathogenic HNF1A variants cause MODY and require clinical sequencing.",
+      "do_not_claim": [
+        "MODY diagnosis",
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "family history",
+        "C-peptide/autoantibodies",
+        "clinical genetics if MODY suspected"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7034200",
+      "gene": "GLIS3",
+      "variant_name": "GLIS3 T2D/beta-cell locus",
+      "effect_allele": "A",
+      "impact": "Beta-cell development/function context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "GLIS3 is a replicated T2D and beta-cell function locus.",
+      "do_not_claim": [
+        "diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "glucose labs"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs174547",
+      "gene": "FADS1",
+      "variant_name": "FADS1 fatty acid desaturase marker",
+      "effect_allele": "C",
+      "impact": "PUFA metabolism / triglyceride-metabolic context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "FADS1 variation affects PUFA composition and can contextualize lipid/inflammatory metabolism.",
+      "do_not_claim": [
+        "omega-3 deficiency diagnosis"
+      ],
+      "confirm_with": [
+        "omega-3 index",
+        "lipid panel",
+        "dietary intake"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "FADS1/FADS2 variants and fatty acid levels",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17603471/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "None declared",
+          "notes": "Associates FADS cluster variation with polyunsaturated fatty acid composition."
+        }
+      ]
+    },
+    {
+      "rsid": "rs116843064",
+      "gene": "ANGPTL4",
+      "variant_name": "E40K",
+      "effect_allele": "A",
+      "impact": "Lower triglyceride/protective lipid metabolism context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ANGPTL4 E40K is associated with lower triglycerides and altered lipoprotein lipase regulation.",
+      "do_not_claim": [
+        "cardioprotection guarantee"
+      ],
+      "confirm_with": [
+        "lipid panel",
+        "ApoB"
+      ],
+      "effect_direction": "protective",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2854116",
+      "gene": "APOC3",
+      "variant_name": "APOC3 promoter variant",
+      "effect_allele": "G",
+      "impact": "Triglyceride-rich lipoprotein metabolism context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "APOC3 promoter variants can affect triglyceride metabolism. Interpret with fasting triglycerides.",
+      "do_not_claim": [
+        "hypertriglyceridemia diagnosis"
+      ],
+      "confirm_with": [
+        "fasting triglycerides",
+        "ApoB"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800588",
+      "gene": "LIPC",
+      "variant_name": "Hepatic lipase -514C>T",
+      "effect_allele": "T",
+      "impact": "HDL/triglyceride remodeling context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "LIPC rs1800588 can influence hepatic lipase activity and HDL/triglyceride traits. Not a cardiovascular diagnosis.",
+      "do_not_claim": [
+        "cardioprotection guarantee"
+      ],
+      "confirm_with": [
+        "lipid panel",
+        "ApoB"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11212617",
+      "gene": "ATM",
+      "variant_name": "ATM metformin response GWAS marker",
+      "effect_allele": "C",
+      "impact": "Metformin glycemic response context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ATM rs11212617 has been associated with metformin glycemic response in some studies. It is not a medication-selection rule.",
+      "do_not_claim": [
+        "metformin success/failure prediction"
+      ],
+      "confirm_with": [
+        "actual metformin response",
+        "HbA1c change",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Metformin response depends on adherence, renal function, dose, gut effects, and baseline physiology.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs622342",
+      "gene": "SLC22A1",
+      "variant_name": "OCT1 metformin transporter marker",
+      "effect_allele": "C",
+      "impact": "Metformin hepatic uptake context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC22A1/OCT1 variants can influence metformin transport and tolerability/response. Use as PGx-metabolic context only.",
+      "do_not_claim": [
+        "metformin dosing decision"
+      ],
+      "confirm_with": [
+        "clinical response",
+        "tolerability",
+        "renal function"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs72552763",
+      "gene": "SLC22A1",
+      "variant_name": "OCT1 M420del",
+      "effect_allele": "del",
+      "impact": "Reduced OCT1 transport / metformin response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC22A1 M420del can reduce OCT1 transporter function and may influence metformin response/tolerability.",
+      "do_not_claim": [
+        "metformin dosing decision"
+      ],
+      "confirm_with": [
+        "clinical response",
+        "PGx confirmation"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Indel calls in raw DNA can be unreliable.",
+      "clinical_confirmation_required": true,
+      "variant_type": "indel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2289669",
+      "gene": "SLC47A1",
+      "variant_name": "MATE1 metformin transporter marker",
+      "effect_allele": "A",
+      "impact": "Metformin transport/response context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC47A1/MATE1 variation has been studied for metformin response and renal/hepatic transport.",
+      "do_not_claim": [
+        "metformin dosing decision"
+      ],
+      "confirm_with": [
+        "clinical response",
+        "renal function"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "rs316019",
+      "gene": "SLC22A2",
+      "variant_name": "OCT2 Ala270Ser",
+      "effect_allele": "T",
+      "impact": "Renal drug/metformin transporter context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "SLC22A2/OCT2 variants can affect renal handling of metformin and other cationic drugs. Clinical utility is context-dependent.",
+      "do_not_claim": [
+        "metformin dosing decision"
+      ],
+      "confirm_with": [
+        "renal function",
+        "medication response"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common variant with modest effect size; phenotype, environment, medications, and lab data usually dominate raw genotype.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MODY_MONOGENIC_DIABETES",
+      "gene": "GCK/HNF1A/HNF4A/HNF1B/INS/PDX1/NEUROD1",
+      "variant_name": "MODY/monogenic diabetes clinical panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "High-effect monogenic diabetes domain",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "MODY/monogenic diabetes is caused by rare pathogenic variants, not common T2D SNPs. Suspect from phenotype/family history and confirm clinically.",
+      "do_not_claim": [
+        "MODY diagnosis from raw DNA",
+        "negative raw DNA rules out MODY"
+      ],
+      "confirm_with": [
+        "clinical sequencing",
+        "C-peptide",
+        "autoantibodies",
+        "family history"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Consumer chips miss most pathogenic MODY variants.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_NEONATAL_DIABETES",
+      "gene": "KCNJ11/ABCC8/INS/GCK",
+      "variant_name": "Neonatal diabetes clinical panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "High-effect neonatal diabetes domain",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Pathogenic variants in neonatal diabetes genes can change therapy, but this requires clinical genetics.",
+      "do_not_claim": [
+        "neonatal diabetes diagnosis from raw DNA"
+      ],
+      "confirm_with": [
+        "clinical sequencing",
+        "endocrinology review"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "High-stakes rare variants require clinical confirmation.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_MONOGENIC_OBESITY",
+      "gene": "MC4R/LEP/LEPR/POMC/PCSK1/SIM1/BDNF/NTRK2",
+      "variant_name": "Severe early-onset monogenic obesity panel",
+      "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
+      "impact": "High-effect appetite pathway disorder domain",
+      "evidence_tier": "A_clinically_actionable_gene_panel",
+      "interpretation": "Severe early-onset hyperphagic obesity can rarely be monogenic. Common obesity SNPs do not diagnose this; clinical genetics is required when phenotype fits.",
+      "do_not_claim": [
+        "monogenic obesity diagnosis from raw DNA",
+        "obesity inevitability"
+      ],
+      "confirm_with": [
+        "clinical genetics",
+        "childhood-onset phenotype",
+        "endocrinology review"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "Consumer arrays miss rare pathogenic variants and CNVs.",
+      "clinical_confirmation_required": true,
+      "variant_type": "gene_panel",
+      "sources": [
+        {
+          "name": "T2D genetic discovery and mechanistic clusters",
+          "url": "https://www.nature.com/articles/s41586-024-07019-6",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Paper",
+          "conflict_of_interest": "Unknown from abstract/snippet",
+          "notes": "Large 2024 T2D genetics study describing hundreds of loci and mechanistic clustering."
+        },
+        {
+          "name": "Genetics of obesity review",
+          "url": "https://www.nature.com/articles/s41576-021-00414-z",
+          "accessed": "2026-07-01",
+          "evidence_type": "Peer-reviewed Review",
+          "conflict_of_interest": "Unknown from snippet",
+          "notes": "Reviews common and monogenic obesity genetics with strong central nervous system/appetite regulation signal."
+        },
+        {
+          "name": "PNPLA3 gene record and metabolic liver relevance",
+          "url": "https://www.ncbi.nlm.nih.gov/gene/80339",
+          "accessed": "2026-07-01",
+          "evidence_type": "NCBI Gene",
+          "conflict_of_interest": "NIH/NCBI gene record",
+          "notes": "PNPLA3 is a major genetic modifier of fatty liver susceptibility; genotype does not diagnose liver disease."
+        }
+      ]
+    }
+  ]
+}

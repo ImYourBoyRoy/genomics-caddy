@@ -16,8 +16,34 @@ use crate::liftover::LiftoverEngine;
 use crate::parser::SnpRecord;
 use rusqlite::{Connection, Result, params};
 use std::path::Path;
+use std::time::Duration;
 
 const DB_BOOTSTRAP_KEY: &str = "db_bootstrapped_v1";
+/// Wait for locks instead of failing immediately when registry/sample/sidecar
+/// connections contend (sweep start, offline sync, cache writes).
+const SQLITE_BUSY_TIMEOUT: Duration = Duration::from_millis(8_000);
+
+/// Per-connection pragmas that reduce SQLITE_BUSY under concurrent opens.
+fn apply_runtime_pragmas(conn: &Connection) -> Result<()> {
+    conn.busy_timeout(SQLITE_BUSY_TIMEOUT)?;
+    // WAL allows readers during writes; NORMAL sync is safe enough for local app DBs.
+    let _ = conn.query_row("PRAGMA journal_mode = WAL;", [], |row| row.get::<_, String>(0));
+    conn.execute_batch(
+        "PRAGMA synchronous = NORMAL;
+         PRAGMA temp_store = MEMORY;",
+    )?;
+    Ok(())
+}
+
+/// Enable WAL on ATTACHed sidecar schemas when possible (best-effort).
+fn apply_wal_on_attached(conn: &Connection, schemas: &[&str]) {
+    for schema in schemas {
+        let sql = format!("PRAGMA {schema}.journal_mode = WAL;");
+        let _ = conn.query_row(&sql, [], |row| row.get::<_, String>(0));
+        let sync = format!("PRAGMA {schema}.synchronous = NORMAL;");
+        let _ = conn.execute(&sync, []);
+    }
+}
 
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct SampleInfo {
@@ -40,9 +66,23 @@ pub struct DbSnpRecord {
 
 pub fn connect<P: AsRef<Path>>(path: P) -> Result<Connection> {
     let conn = crate::db_crypto::open_encrypted(path.as_ref())?;
+    apply_runtime_pragmas(&conn)?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     let parent_dir = path.as_ref().parent().unwrap_or_else(|| Path::new("."));
     attach_public_databases(&conn, parent_dir)?;
+    apply_wal_on_attached(
+        &conn,
+        &[
+            "reference",
+            "api_cache_db",
+            "clinvar",
+            "dbsnp",
+            "gwas",
+            "pharmgkb",
+            "clingen",
+            "mane",
+        ],
+    );
     Ok(conn)
 }
 
@@ -52,8 +92,22 @@ pub fn connect_sample(data_dir: &Path, sample_id: i64) -> Result<Connection> {
         .map_err(|_| rusqlite::Error::InvalidPath(crate::paths::sample_dir(data_dir, sample_id)))?;
     let conn =
         crate::db_crypto::open_encrypted(&crate::paths::sample_db_path(data_dir, sample_id))?;
+    apply_runtime_pragmas(&conn)?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     attach_public_databases(&conn, data_dir)?;
+    apply_wal_on_attached(
+        &conn,
+        &[
+            "reference",
+            "api_cache_db",
+            "clinvar",
+            "dbsnp",
+            "gwas",
+            "pharmgkb",
+            "clingen",
+            "mane",
+        ],
+    );
     ensure_sample_schema(&conn)?;
     // Existing samples created before variant_locus was in the sample schema
     // get an empty table on first open — backfill once from genotypes.
@@ -1526,6 +1580,10 @@ pub fn dump_default_marker_packs_if_missing(data_dir: &Path) {
             include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json"),
         ),
         (
+            "research_found.json",
+            include_str!("../../src/lib/marker-packs/research_found.json"),
+        ),
+        (
             "discovery_catalog.json",
             include_str!("../../src/lib/marker-packs/discovery_catalog.json"),
         ),
@@ -1784,6 +1842,9 @@ pub fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option<String
         "longevity_aging_resilience" => Some(
             include_str!("../../src/lib/marker-packs/longevity_aging_resilience.json").to_string(),
         ),
+        "research_found" => {
+            Some(include_str!("../../src/lib/marker-packs/research_found.json").to_string())
+        }
         "discovery_catalog" => {
             Some(include_str!("../../src/lib/marker-packs/discovery_catalog.json").to_string())
         }

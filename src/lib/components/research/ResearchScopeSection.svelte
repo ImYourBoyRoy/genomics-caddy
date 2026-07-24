@@ -67,7 +67,12 @@
   }
 
   async function refreshPreview() {
-    if (sweepRunning) return;
+    if (sweepRunning) {
+      // Never leave the parent readiness gate stuck on "Counting…" after a sweep starts.
+      isPreviewLoading = false;
+      previewLoading = false;
+      return;
+    }
     if (!selectedSample) {
       preview = null;
       previewLoading = false;

@@ -6,7 +6,7 @@ use super::http::enrich_batch_size;
 use super::job::save_research_job;
 use super::markers::{collect_markers_for_scopes, preview_research_scope};
 use super::promote::promote_enrichment_batch;
-use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING};
+use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING, SweepStopKind, pending_sweep_stop};
 use super::sweep_metrics::{SweepPhase, set_live_message, timed_async};
 use super::sweep_runtime::SweepProgressSink;
 use super::tuning::{self, SweepTuningGuard, install_sweep_tuning, named_vectors_in_sweep};
@@ -134,6 +134,103 @@ fn sweep_dbg(sink: &SweepProgressSink, msg: impl Into<String>) {
     sink.debug_log("sweep", msg);
 }
 
+/// Apply cooperative cancel/pause. Returns true when the loop must exit.
+#[allow(clippy::too_many_arguments)]
+fn apply_pending_stop(
+    job: &mut ResearchJob,
+    db_path: &Path,
+    sink: &SweepProgressSink,
+    job_id: &str,
+    enriched_count: i64,
+    newly_enriched_count: i64,
+    total_markers: i64,
+    progress_tracker: &mut ProgressTracker,
+) -> bool {
+    match pending_sweep_stop() {
+        Some(SweepStopKind::Cancel) => {
+            job.status = "idle".to_string();
+            job.error_message = Some("Sweep cancelled by user.".to_string());
+            job.current_rsid = None;
+            job.current_source = None;
+            job.last_updated = unix_now();
+            let _ = save_research_job(db_path, job);
+            emit_progress(
+                sink,
+                job_id,
+                "idle",
+                enriched_count,
+                newly_enriched_count,
+                total_markers,
+                None,
+                None,
+                "Sweep cancelled by user.".to_string(),
+                progress_tracker,
+                false,
+            );
+            RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+            // Drop the pause latch so a later Start→Pause is not treated as cancel residue.
+            // Keep RESEARCH_CANCELLED until the next start/resume so late saves cannot resurrect.
+            RESEARCH_PAUSED.store(false, Ordering::SeqCst);
+            true
+        }
+        Some(SweepStopKind::Pause) => {
+            // Re-check cancel: force_stop sets both flags; prefer cancel if it landed mid-pause.
+            if super::state::is_research_cancelled() {
+                job.status = "idle".to_string();
+                job.error_message = Some("Sweep cancelled by user.".to_string());
+                job.current_rsid = None;
+                job.current_source = None;
+                job.last_updated = unix_now();
+                let _ = save_research_job(db_path, job);
+                emit_progress(
+                    sink,
+                    job_id,
+                    "idle",
+                    enriched_count,
+                    newly_enriched_count,
+                    total_markers,
+                    None,
+                    None,
+                    "Sweep cancelled by user.".to_string(),
+                    progress_tracker,
+                    false,
+                );
+                RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+                return true;
+            }
+            // If cancel already persisted idle, do not overwrite with paused.
+            if job.status == "idle"
+                && job
+                    .error_message
+                    .as_deref()
+                    .is_some_and(|m| m.to_lowercase().contains("cancel"))
+            {
+                RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+                return true;
+            }
+            job.status = "paused".to_string();
+            job.last_updated = unix_now();
+            let _ = save_research_job(db_path, job);
+            emit_progress(
+                sink,
+                job_id,
+                "paused",
+                enriched_count,
+                newly_enriched_count,
+                total_markers,
+                job.current_rsid.clone(),
+                None,
+                "Research job paused by user.".to_string(),
+                progress_tracker,
+                false,
+            );
+            RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+            true
+        }
+        None => false,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn emit_progress(
     sink: &SweepProgressSink,
@@ -148,6 +245,15 @@ fn emit_progress(
     progress: &mut ProgressTracker,
     include_phase_metrics: bool,
 ) {
+    // Drop late running/paused emits after cancel so the UI cannot resurrect.
+    if pending_sweep_stop() == Some(SweepStopKind::Cancel)
+        && (status == "running" || status == "paused")
+    {
+        return;
+    }
+    if status == "running" && pending_sweep_stop().is_some() {
+        return;
+    }
     let (variants_per_sec, recent_variants_per_sec) = progress.speeds(status, newly_enriched);
     let phase_metrics = if include_phase_metrics {
         Some(super::sweep_metrics::snapshot_sweep_metrics())
@@ -194,6 +300,10 @@ fn emit_pulse(
     current_source: Option<String>,
     message: String,
 ) {
+    // Never emit a "running" pulse after cancel/pause was requested — UI would resurrect.
+    if pending_sweep_stop().is_some() {
+        return;
+    }
     let (
         activity_phase,
         batch_prepared,
@@ -588,7 +698,7 @@ async fn bootstrap_qdrant_index_cache(
     );
 
     for chunk in chunks {
-        if RESEARCH_PAUSED.load(Ordering::SeqCst) {
+        if pending_sweep_stop().is_some() {
             break;
         }
         let permit = semaphore
@@ -609,11 +719,29 @@ async fn bootstrap_qdrant_index_cache(
 
     let mut complete = HashSet::new();
     let mut chunks_done = 0usize;
+    // Overall sweep % must not follow partial scan discoveries (climbs from 0 and
+    // contradicts the known Qdrant sample baseline). Keep the caller's floor.
+    let progress_floor = (*enriched_count).max(0);
     while let Some(joined) = join_set.join_next().await {
+        if apply_pending_stop(
+            job,
+            db_path,
+            sink,
+            job_id,
+            *enriched_count,
+            newly_enriched_count,
+            total_markers,
+            progress_tracker,
+        ) {
+            join_set.abort_all();
+            while join_set.join_next().await.is_some() {}
+            return Ok(complete);
+        }
         match joined {
             Ok(Ok(ids)) => {
                 complete.extend(ids);
                 chunks_done += 1;
+                super::sweep_metrics::set_batch_prepared_count(chunks_done as u32);
                 if chunks_done.is_multiple_of(4) || chunks_done == total_chunks {
                     let indexed_now = markers
                         .iter()
@@ -623,22 +751,24 @@ async fn bootstrap_qdrant_index_cache(
                             complete.contains(&id)
                         })
                         .count() as i64;
-                    *enriched_count = indexed_now;
-                    job.enriched_count = indexed_now;
+                    // Keep overall progress at the known Qdrant floor until the full scan finishes.
+                    // Partial chunk discoveries climb from 0 and must not drive the hero %.
+                    *enriched_count = progress_floor;
+                    job.enriched_count = progress_floor;
                     job.last_updated = unix_now();
                     let _ = save_research_job(db_path, job);
                     emit_progress(
                         sink,
                         job_id,
                         "running",
-                        indexed_now,
+                        progress_floor,
                         newly_enriched_count,
                         total_markers,
                         None,
                         Some("Qdrant bootstrap".to_string()),
                         format!(
-                            "Bootstrap scan: {}/{} chunks — {} already indexed in Qdrant",
-                            chunks_done, total_chunks, indexed_now
+                            "Bootstrap scan: {}/{} chunks — {} confirmed in scanned chunks (holding overall at {} already in Qdrant)",
+                            chunks_done, total_chunks, indexed_now, progress_floor
                         ),
                         progress_tracker,
                         false,
@@ -653,6 +783,19 @@ async fn bootstrap_qdrant_index_cache(
             }
             Err(e) => sweep_dbg(sink, format!("Bootstrap task join failed: {}", e)),
         }
+    }
+
+    if apply_pending_stop(
+        job,
+        db_path,
+        sink,
+        job_id,
+        *enriched_count,
+        newly_enriched_count,
+        total_markers,
+        progress_tracker,
+    ) {
+        return Ok(complete);
     }
 
     let final_indexed = markers
@@ -703,6 +846,38 @@ pub async fn run_research_loop(
 
     let started_at = unix_now();
     let resume_from_rsid = resume_job.as_ref().and_then(|j| j.current_rsid.clone());
+
+    // Mark resume jobs running immediately so the UI does not sit on "paused" through
+    // long preflight (marker collect / Qdrant probes), and so Start cannot race with
+    // a still-running worker that looks paused in SQLite.
+    if let Some(ref existing) = resume_job {
+        if pending_sweep_stop() == Some(SweepStopKind::Cancel) {
+            RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+            return Ok(());
+        }
+        let mut early = existing.clone();
+        early.status = "running".to_string();
+        early.last_updated = started_at;
+        early.session_started_at = Some(started_at);
+        early.error_message = None;
+        let _ = save_research_job(&db_path, &early);
+        emit_progress(
+            sink,
+            &early.job_id,
+            "running",
+            early.enriched_count,
+            0,
+            early.total_markers,
+            resume_from_rsid.clone(),
+            None,
+            format!(
+                "Resuming research job — preparing markers ({}/{})…",
+                early.enriched_count, early.total_markers
+            ),
+            &mut ProgressTracker::new(started_at),
+            false,
+        );
+    }
 
     let effective_scope = if let Some(ref existing) = resume_job {
         existing
@@ -805,9 +980,19 @@ pub async fn run_research_loop(
 
     let _ = vector_store::maybe_ensure_payload_indexes(&config).await;
 
+    // Honor cancel during long preflight (marker collect / Qdrant probes) before a job row exists.
+    if pending_sweep_stop() == Some(SweepStopKind::Cancel) {
+        RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+        return Ok(());
+    }
+
     if resume_from_rsid.is_none() {
         let needs_work =
             count_markers_needing_enrichment(&markers, sample_id, &config, force_reenrich).await?;
+        if pending_sweep_stop() == Some(SweepStopKind::Cancel) {
+            RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+            return Ok(());
+        }
         if needs_work == 0 {
             RESEARCH_RUNNING.store(false, Ordering::SeqCst);
             let scope_preview = preview_research_scope(&db_path, sample_id, &effective_scope)
@@ -884,9 +1069,33 @@ pub async fn run_research_loop(
     .await
     .unwrap_or(0);
     super::sweep_metrics::set_qdrant_sample_baseline(qdrant_baseline);
+    // Seed overall progress from the live collection count so the hero % matches the
+    // "already in Qdrant" banner instead of starting at 0% during bootstrap.
+    if !force_reenrich {
+        let seeded = (qdrant_baseline as i64).clamp(0, total_markers);
+        if seeded > enriched_count {
+            enriched_count = seeded;
+            job.enriched_count = seeded;
+        }
+    }
     let sweep_started_at = unix_now();
     let mut progress_tracker = ProgressTracker::new(sweep_started_at);
     let mut newly_enriched_count = 0i64;
+
+    // Cancel may have landed during preflight — persist idle and exit before emitting "running".
+    if apply_pending_stop(
+        &mut job,
+        &db_path,
+        sink,
+        &job_id,
+        enriched_count,
+        newly_enriched_count,
+        total_markers,
+        &mut progress_tracker,
+    ) {
+        return Ok(());
+    }
+
     let _ = save_research_job(&db_path, &job);
 
     // 3. Emit initial progress
@@ -943,6 +1152,18 @@ pub async fn run_research_loop(
         {
             Ok(cache) => bootstrap_cache = Some(cache),
             Err(e) => sweep_dbg(sink, format!("Bootstrap skipped: {}", e)),
+        }
+        if apply_pending_stop(
+            &mut job,
+            &db_path,
+            sink,
+            &job_id,
+            enriched_count,
+            newly_enriched_count,
+            total_markers,
+            &mut progress_tracker,
+        ) {
+            return Ok(());
         }
     }
 
@@ -1018,28 +1239,17 @@ pub async fn run_research_loop(
         };
 
         for chunk in pass_slice.chunks(200) {
-            // Check pause signal
-            if RESEARCH_PAUSED.load(Ordering::SeqCst) {
-                job.status = "paused".to_string();
-                job.last_updated = unix_now();
-                if let Some(first) = chunk.first() {
-                    job.current_rsid = Some(first.rsid.clone());
-                }
-                let _ = save_research_job(&db_path, &job);
-                emit_progress(
-                    sink,
-                    &job_id,
-                    "paused",
-                    enriched_count,
-                    newly_enriched_count,
-                    total_markers,
-                    job.current_rsid.clone(),
-                    None,
-                    "Research job paused by user.".to_string(),
-                    &mut progress_tracker,
-                    false,
-                );
-                RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+            // Cooperative cancel (must win over pause — same flag used to be shared).
+            if apply_pending_stop(
+                &mut job,
+                &db_path,
+                sink,
+                &job_id,
+                enriched_count,
+                newly_enriched_count,
+                total_markers,
+                &mut progress_tracker,
+            ) {
                 return Ok(());
             }
 
@@ -1288,27 +1498,19 @@ pub async fn run_research_loop(
             > = None;
 
             for (batch_idx, sub_batch) in sub_batches.iter().enumerate() {
-                if RESEARCH_PAUSED.load(Ordering::SeqCst) {
-                    job.status = "paused".to_string();
-                    job.last_updated = unix_now();
-                    if let Some(first) = sub_batch.first() {
-                        job.current_rsid = Some(first.rsid.clone());
-                    }
-                    let _ = save_research_job(&db_path, &job);
-                    emit_progress(
-                        sink,
-                        &job_id,
-                        "paused",
-                        enriched_count,
-                        newly_enriched_count,
-                        total_markers,
-                        job.current_rsid.clone(),
-                        None,
-                        "Research job paused by user.".to_string(),
-                        &mut progress_tracker,
-                        false,
-                    );
-                    RESEARCH_RUNNING.store(false, Ordering::SeqCst);
+                if let Some(first) = sub_batch.first() {
+                    job.current_rsid = Some(first.rsid.clone());
+                }
+                if apply_pending_stop(
+                    &mut job,
+                    &db_path,
+                    sink,
+                    &job_id,
+                    enriched_count,
+                    newly_enriched_count,
+                    total_markers,
+                    &mut progress_tracker,
+                ) {
                     return Ok(());
                 }
 

@@ -1,12 +1,13 @@
 // ./src-tauri/src/research/evidence/atlas.rs
-//! 2D vector atlas — UMAP-style projection over sample embeddings stored in SQLite.
+//! 2D vector atlas — UMAP-style projection over sample embeddings.
 
-use crate::research::qdrant::scroll_qdrant_vectors_sample;
 use crate::research::types::QdrantConfig;
 use crate::research::util::{string_to_u64, unix_now};
+use crate::research::vector_store;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use tauri::{AppHandle, Emitter};
 
 const MAX_ATLAS_POINTS: usize = 2500;
 const UMAP_NEIGHBORS: usize = 15;
@@ -36,30 +37,51 @@ pub async fn build_vector_atlas(
     sample_id: i64,
     config: &QdrantConfig,
     limit: u32,
+    app: Option<&AppHandle>,
 ) -> Result<VectorAtlasResult, String> {
     let cap = limit.min(MAX_ATLAS_POINTS as u32) as usize;
-    let scrolled = scroll_qdrant_vectors_sample(
-        &config.url,
-        config.api_key.as_deref(),
-        &config.collection,
-        sample_id,
-        cap,
-        "",
-    )
-    .await?;
+    let provider = vector_store::provider_from_config(config);
+    emit_atlas_progress(
+        app,
+        "fetch",
+        5,
+        &format!("Fetching up to {cap} vectors from {}…", provider.as_str()),
+    );
+    let scrolled = vector_store::sample_vectors_for_atlas(config, sample_id, cap).await?;
 
     if scrolled.is_empty() {
+        emit_atlas_progress(app, "done", 100, "No vectors to project");
         return Ok(VectorAtlasResult {
             sample_id,
             point_count: 0,
             projection_method: "none".into(),
             points: vec![],
-            warning: "No vectors found for this sample. Run research enrichment first.".into(),
+            warning: format!(
+                "No vectors found for this sample on {}. Run research enrichment first.",
+                provider.as_str()
+            ),
         });
     }
 
+    emit_atlas_progress(
+        app,
+        "fetch",
+        35,
+        &format!("Loaded {} vectors — starting 2D projection…", scrolled.len()),
+    );
+
     let vectors: Vec<Vec<f32>> = scrolled.iter().map(|p| p.vector.clone()).collect();
-    let coords = project_umap_2d(&vectors);
+    let coords = project_umap_2d(&vectors, |epoch, total| {
+        let pct = 35 + ((epoch as f32 / total.max(1) as f32) * 50.0) as u8;
+        emit_atlas_progress(
+            app,
+            "project",
+            pct.min(85),
+            &format!("Projecting layout… epoch {epoch}/{total}"),
+        );
+    });
+
+    emit_atlas_progress(app, "persist", 90, "Saving atlas points…");
 
     let points: Vec<AtlasPoint> = scrolled
         .iter()
@@ -76,15 +98,36 @@ pub async fn build_vector_atlas(
         .collect();
 
     persist_atlas_points(db_path, sample_id, &points)?;
+    emit_atlas_progress(
+        app,
+        "done",
+        100,
+        &format!("Atlas ready — {} points", points.len()),
+    );
 
     Ok(VectorAtlasResult {
         sample_id,
         point_count: points.len() as u32,
-        projection_method: "umap".into(),
+        projection_method: format!("umap+{}", provider.as_str()),
         points,
-        warning: "Semantic proximity means related language/evidence context, not causality."
-            .into(),
+        warning: format!(
+            "Projected from {} index. Semantic proximity means related language/evidence context, not causality.",
+            provider.as_str()
+        ),
     })
+}
+
+fn emit_atlas_progress(app: Option<&AppHandle>, phase: &str, percent: u8, message: &str) {
+    if let Some(handle) = app {
+        let _ = handle.emit(
+            "vector:atlas_progress",
+            serde_json::json!({
+                "phase": phase,
+                "percent": percent,
+                "message": message,
+            }),
+        );
+    }
 }
 
 pub fn load_atlas_points(
@@ -152,7 +195,10 @@ fn persist_atlas_points(
     Ok(())
 }
 
-fn project_umap_2d(vectors: &[Vec<f32>]) -> Vec<(f32, f32)> {
+fn project_umap_2d(
+    vectors: &[Vec<f32>],
+    mut on_epoch: impl FnMut(usize, usize),
+) -> Vec<(f32, f32)> {
     let n = vectors.len();
     if n == 0 {
         return vec![];
@@ -185,7 +231,7 @@ fn project_umap_2d(vectors: &[Vec<f32>]) -> Vec<(f32, f32)> {
     let epochs = 50usize;
     let lr = 1.0;
     let min_dist = 0.1f64;
-    for _ in 0..epochs {
+    for epoch in 1..=epochs {
         for i in 0..n {
             let mut grad = [0.0f64; 2];
             for &(j, dist_high) in &neighbors[i] {
@@ -203,6 +249,9 @@ fn project_umap_2d(vectors: &[Vec<f32>]) -> Vec<(f32, f32)> {
             }
             embedding[i][0] -= lr * grad[0] / k as f64;
             embedding[i][1] -= lr * grad[1] / k as f64;
+        }
+        if epoch == 1 || epoch == epochs || epoch % 5 == 0 {
+            on_epoch(epoch, epochs);
         }
     }
 

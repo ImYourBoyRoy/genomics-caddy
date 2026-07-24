@@ -377,6 +377,15 @@ pub fn bump_batch_prepared() {
     }
 }
 
+/// Set absolute prepared count (e.g. bootstrap chunks completed).
+pub fn set_batch_prepared_count(prepared: u32) {
+    if let Ok(mut guard) = BATCH_ACTIVITY.lock()
+        && let Some(ref mut snap) = *guard
+    {
+        snap.prepared = prepared.min(snap.total);
+    }
+}
+
 pub fn set_batch_embedding(rsid: &str, total: u32) {
     if let Ok(mut guard) = BATCH_ACTIVITY.lock() {
         let total = total.max(1);

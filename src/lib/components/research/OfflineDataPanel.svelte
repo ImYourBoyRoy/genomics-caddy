@@ -5,9 +5,12 @@
     checkOfflineDataUpdates,
     syncOfflineDataTier,
     syncAllOfflineData,
+    syncSingleOfflineAsset,
     buildOfflineTier2,
   } from "../../api/tauri";
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
+  import { listOfflineUpdates } from "../../utils/offlineUpdates";
+  import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
 
   interface Props {
     selectedSample: { id: number; name: string } | null;
@@ -20,7 +23,10 @@
   let status = $state<OfflineUpdateCheck | null>(null);
   let loading = $state(false);
   let syncingTier = $state<number | null>(null);
+  let syncingAsset = $state<string | null>(null);
   let forceSync = $state(false);
+
+  let updateAssets = $derived(listOfflineUpdates(status));
 
   function formatBytes(n: number): string {
     if (n < 1024) return `${n} B`;
@@ -71,6 +77,46 @@
       await refresh();
     } catch (e: unknown) {
       onLog?.(`Full offline sync failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      syncingTier = null;
+    }
+  }
+
+  async function updateOne(assetId: string) {
+    if (syncingAsset || syncingTier !== null) return;
+    syncingAsset = assetId;
+    onLog?.(`Updating ${assetId}${forceSync ? " (force)" : ""}…`);
+    try {
+      const result = await syncSingleOfflineAsset(
+        assetId,
+        forceSync,
+        assetId === "tier2_variant_locus" ? selectedSample?.id : undefined
+      );
+      reportResult(result);
+      await refresh();
+    } catch (e: unknown) {
+      onLog?.(`Update ${assetId} failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      syncingAsset = null;
+    }
+  }
+
+  async function updateAllOutdated() {
+    if (syncingAsset || syncingTier !== null || updateAssets.length === 0) return;
+    syncingTier = -2;
+    onLog?.(`Updating ${updateAssets.length} outdated asset(s)…`);
+    try {
+      for (const u of updateAssets) {
+        const result = await syncSingleOfflineAsset(
+          u.asset_id,
+          forceSync,
+          u.asset_id === "tier2_variant_locus" ? selectedSample?.id : undefined
+        );
+        reportResult(result);
+      }
+      await refresh();
+    } catch (e: unknown) {
+      onLog?.(`Update-all failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       syncingTier = null;
     }
@@ -129,12 +175,45 @@
   <p class="offline-help">
   Tier 0: GWAS catalog, liftover chain, gnomAD manifest. Tier 1: ClinVar, PharmGKB, ClinGen, MANE.
   Tier 2: dbSNP lifecycle JSON + variant locus index from your genotypes. Downloads check remote size before fetching.
+  Update badges here match the sidebar (all tier assets, not only the four primary catalogs).
   {#if status?.indexed_summary}
     Indexed: {status.indexed_summary.gwas_rows.toLocaleString()} GWAS ·
     {status.indexed_summary.clinvar_rows.toLocaleString()} ClinVar ·
     {status.indexed_summary.variant_locus_rows.toLocaleString()} locus rows.
   {/if}
   </p>
+
+  {#if updateAssets.length > 0}
+    <div class="offline-update-list" role="status">
+      <strong>Named updates ready:</strong>
+      <ul class="offline-update-ul">
+        {#each updateAssets as u (u.asset_id)}
+          <li>
+            <span>
+              <strong>{u.label}</strong>
+              <small>Tier {u.tier} · {u.primary ? "primary" : "supporting"} · {u.asset_id}</small>
+            </span>
+            <button
+              type="button"
+              class="btn btn-warning btn-xs"
+              disabled={disabled || syncingTier !== null || syncingAsset !== null}
+              onclick={() => updateOne(u.asset_id)}
+            >
+              {syncingAsset === u.asset_id ? "Updating…" : "Update"}
+            </button>
+          </li>
+        {/each}
+      </ul>
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        disabled={disabled || syncingTier !== null || syncingAsset !== null}
+        onclick={updateAllOutdated}
+      >
+        {syncingTier === -2 ? "Updating all…" : `Update all ${updateAssets.length} outdated`}
+      </button>
+    </div>
+  {/if}
 
   <label class="scope-option force-option">
     <input type="checkbox" bind:checked={forceSync} disabled={disabled} />
@@ -148,7 +227,7 @@
     <button
       type="button"
       class="btn btn-secondary btn-sm"
-      disabled={disabled || syncingTier !== null}
+      disabled={disabled || syncingTier !== null || syncingAsset !== null}
       onclick={() => runTier(0)}
     >
       {syncingTier === 0 ? "Syncing…" : "Sync Tier 0"}
@@ -156,7 +235,7 @@
     <button
       type="button"
       class="btn btn-secondary btn-sm"
-      disabled={disabled || syncingTier !== null}
+      disabled={disabled || syncingTier !== null || syncingAsset !== null}
       onclick={() => runTier(1)}
     >
       {syncingTier === 1 ? "Syncing…" : "Sync Tier 1"}
@@ -164,7 +243,7 @@
     <button
       type="button"
       class="btn btn-secondary btn-sm"
-      disabled={disabled || syncingTier !== null || !selectedSample}
+      disabled={disabled || syncingTier !== null || syncingAsset !== null || !selectedSample}
       onclick={() => runTier(2)}
     >
       {syncingTier === 2 ? "Syncing…" : "Sync Tier 2"}
@@ -172,7 +251,7 @@
     <button
       type="button"
       class="btn btn-primary btn-sm"
-      disabled={disabled || syncingTier !== null}
+      disabled={disabled || syncingTier !== null || syncingAsset !== null}
       onclick={runAll}
     >
       {syncingTier === -1 ? "Syncing all…" : "Sync all tiers"}
@@ -180,7 +259,7 @@
     <button
       type="button"
       class="btn btn-secondary btn-sm"
-      disabled={disabled || syncingTier !== null || !selectedSample}
+      disabled={disabled || syncingTier !== null || syncingAsset !== null || !selectedSample}
       onclick={rebuildTier2}
       title="Rebuild variant locus index from imported genotypes only"
     >
@@ -199,7 +278,12 @@
           <ul class="asset-list">
             {#each tier.assets as asset}
               <li class:update={asset.update_available}>
-                <span class="asset-label">{asset.label}</span>
+                <span class="asset-label">
+                  {asset.label}
+                  {#if isPrimaryCatalogId(asset.asset_id)}
+                    <em class="primary-tag">primary</em>
+                  {/if}
+                </span>
                 <span class="asset-meta">
                   {#if asset.row_count > 0}
                     {asset.row_count.toLocaleString()} rows
@@ -210,6 +294,14 @@
                   {/if}
                   {#if asset.update_available}
                     · <em>update</em>
+                    <button
+                      type="button"
+                      class="btn btn-warning btn-xs inline-update"
+                      disabled={disabled || syncingTier !== null || syncingAsset !== null}
+                      onclick={() => updateOne(asset.asset_id)}
+                    >
+                      {syncingAsset === asset.asset_id ? "…" : "Update"}
+                    </button>
                   {/if}
                 </span>
               </li>
@@ -248,6 +340,41 @@
   .update-badge.has-updates {
     background: rgba(251, 191, 36, 0.15);
     color: #fbbf24;
+  }
+  .offline-update-list {
+    margin: 0 0 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    background: rgba(251, 191, 36, 0.08);
+  }
+  .offline-update-ul {
+    list-style: none;
+    margin: 0.4rem 0 0.6rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .offline-update-ul li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .offline-update-ul small {
+    display: block;
+    opacity: 0.75;
+    font-size: 0.72rem;
+  }
+  .primary-tag {
+    font-size: 0.65rem;
+    font-style: normal;
+    margin-left: 0.35rem;
+    opacity: 0.7;
+  }
+  .inline-update {
+    margin-left: 0.35rem;
   }
   .force-option {
     margin-bottom: 0.75rem;

@@ -10,7 +10,10 @@ Key Outputs: Typed JSON payloads for the Svelte frontend.
 */
 
 use super::references::{self, GwasSyncResult, ReferenceStatus};
-use super::state::{RESEARCH_PAUSED, RESEARCH_RUNNING, clear_stale_running_flag};
+use super::state::{
+    RESEARCH_CANCELLED, RESEARCH_PAUSED, RESEARCH_RUNNING, clear_research_control_flags,
+    clear_stale_running_flag, force_stop_research_runtime,
+};
 use super::{
     QdrantConfigPublic, QdrantConfigUpdate, QdrantConnectionStatus, QdrantHit,
     ResearchFindingPreview, ResearchJob, ResearchScopeConfig, ResearchScopePreview,
@@ -139,7 +142,8 @@ pub async fn purge_qdrant_collection(
     app: AppHandle,
     sample_id: Option<i64>,
 ) -> Result<PurgeCollectionResult, String> {
-    RESEARCH_PAUSED.store(true, Ordering::SeqCst);
+    // Stop any in-flight sweep before wiping the collection.
+    force_stop_research_runtime();
     RESEARCH_RUNNING.store(false, Ordering::SeqCst);
 
     let cfg = load_config(&app).await?;
@@ -212,7 +216,7 @@ pub async fn start_research_job(
         return Err("A research job is already running.".to_string());
     }
 
-    RESEARCH_PAUSED.store(false, Ordering::SeqCst);
+    clear_research_control_flags();
     RESEARCH_RUNNING.store(true, Ordering::SeqCst);
 
     with_db(&app, |conn| {
@@ -260,6 +264,10 @@ pub async fn pause_research_job(
     app: AppHandle,
     sample_id: i64,
 ) -> Result<Option<ResearchJob>, String> {
+    // An intentional pause on a live loop must not be poisoned by a prior cancel latch.
+    if RESEARCH_RUNNING.load(Ordering::SeqCst) {
+        RESEARCH_CANCELLED.store(false, Ordering::SeqCst);
+    }
     RESEARCH_PAUSED.store(true, Ordering::SeqCst);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
@@ -274,6 +282,8 @@ pub async fn cancel_research_job(
     app: AppHandle,
     sample_id: i64,
 ) -> Result<Option<ResearchJob>, String> {
+    // Signal the loop immediately — do not wait for the blocking DB worker to start.
+    force_stop_research_runtime();
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         super::cancel_research_job_in_db(&db_path, sample_id)
@@ -317,7 +327,7 @@ pub async fn resume_research_job(
         ));
     }
 
-    RESEARCH_PAUSED.store(false, Ordering::SeqCst);
+    clear_research_control_flags();
     RESEARCH_RUNNING.store(true, Ordering::SeqCst);
 
     with_db(&app, |conn| {
@@ -671,4 +681,203 @@ pub async fn select_save_path(default_filename: String) -> Result<Option<String>
         config::register_export_path(&path_str);
         path_str
     }))
+}
+
+#[tauri::command]
+pub async fn browse_vector_store(
+    app: AppHandle,
+    sample_id: i64,
+    ollama_url: String,
+    limit: Option<u32>,
+    offset: Option<serde_json::Value>,
+    rsid: Option<String>,
+) -> Result<super::vector_store::VectorBrowsePage, String> {
+    let cfg = load_config(&app).await?;
+    super::vector_store::browse_sample_points(
+        &cfg,
+        &ollama_url,
+        sample_id,
+        limit.unwrap_or(50),
+        offset,
+        rsid.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn export_pack_draft_from_vectors(
+    app: AppHandle,
+    sample_id: i64,
+    sample_name: String,
+    ollama_url: String,
+    min_score: Option<f32>,
+) -> Result<super::pack_draft::PackDraftExportResult, String> {
+    let cfg = load_config(&app).await?;
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    let min = min_score.unwrap_or(0.35);
+
+    let promoted = tauri::async_runtime::spawn_blocking({
+        let db_path = db_path.clone();
+        move || super::pack_draft::load_promoted_for_sample(&db_path, sample_id)
+    })
+    .await
+    .map_err(|e| format!("Promoted load worker failed: {e}"))??;
+
+    let mut browsed_points = Vec::new();
+    let mut offset: Option<serde_json::Value> = None;
+    // Paginate fully — multi-day sweeps can accumulate large indexes; hard stop at 100k points.
+    const PAGE: u32 = 200;
+    const MAX_POINTS: usize = 100_000;
+    loop {
+        let page = match super::vector_store::browse_sample_points(
+            &cfg,
+            &ollama_url,
+            sample_id,
+            PAGE,
+            offset.clone(),
+            None,
+        )
+        .await
+        {
+            Ok(p) => p,
+            Err(e) if browsed_points.is_empty() => {
+                eprintln!("Pack draft browse failed ({e}); exporting promoted findings only.");
+                break;
+            }
+            Err(e) => {
+                eprintln!("Pack draft browse stopped early: {e}");
+                break;
+            }
+        };
+        if page.points.is_empty() {
+            break;
+        }
+        browsed_points.extend(page.points);
+        if browsed_points.len() >= MAX_POINTS {
+            browsed_points.truncate(MAX_POINTS);
+            break;
+        }
+        match page.next_offset {
+            Some(next) => offset = Some(next),
+            None => break,
+        }
+    }
+
+    tauri::async_runtime::spawn_blocking(move || {
+        super::pack_draft::export_pack_draft(
+            &data_dir,
+            sample_id,
+            &sample_name,
+            &promoted,
+            &browsed_points,
+            min,
+        )
+    })
+    .await
+    .map_err(|e| format!("Pack draft worker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn list_pack_draft_exports(app: AppHandle) -> Result<Vec<String>, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || super::pack_draft::list_pack_drafts(&data_dir))
+        .await
+        .map_err(|e| format!("List drafts worker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn list_runtime_marker_pack_ids(app: AppHandle) -> Result<Vec<String>, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::pack_draft::list_runtime_pack_ids(&data_dir)
+    })
+    .await
+    .map_err(|e| format!("List packs worker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn merge_pack_draft_into_pack(
+    app: AppHandle,
+    draft_path: String,
+    target_pack_id: String,
+    only_rsids: Option<Vec<String>>,
+    require_complete: Option<bool>,
+) -> Result<super::pack_draft::PackMergeResult, String> {
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    let _ = target_pack_id;
+    tauri::async_runtime::spawn_blocking(move || {
+        super::pack_draft::merge_draft_into_pack_with_db(
+            &data_dir,
+            Some(&db_path),
+            &draft_path,
+            super::pack_draft::RESEARCH_FOUND_PACK_ID,
+            only_rsids.as_deref(),
+            require_complete.unwrap_or(false),
+        )
+    })
+    .await
+    .map_err(|e| format!("Merge pack worker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn get_research_found_pack(
+    app: AppHandle,
+) -> Result<super::research_found_pack::ResearchFoundPackView, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::research_found_pack::get_research_found_pack(&data_dir)
+    })
+    .await
+    .map_err(|e| format!("Load research_found failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn fill_research_found_alleles(
+    app: AppHandle,
+) -> Result<super::research_found_pack::AlleleFillResult, String> {
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::research_found_pack::fill_research_found_alleles(&data_dir, &db_path)
+    })
+    .await
+    .map_err(|e| format!("Allele fill failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn set_research_found_enabled(app: AppHandle, enabled: bool) -> Result<bool, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::research_found_pack::set_research_found_enabled(&data_dir, enabled)
+    })
+    .await
+    .map_err(|e| format!("Enable toggle failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn update_research_found_marker(
+    app: AppHandle,
+    patch: super::research_found_pack::ResearchFoundMarkerPatch,
+) -> Result<super::research_found_pack::ResearchFoundPackView, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::research_found_pack::update_research_found_marker(&data_dir, patch)
+    })
+    .await
+    .map_err(|e| format!("Update marker failed: {e}"))?
+}
+
+#[tauri::command]
+pub async fn delete_research_found_markers(
+    app: AppHandle,
+    rsids: Vec<String>,
+) -> Result<super::research_found_pack::ResearchFoundPackView, String> {
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::research_found_pack::delete_research_found_markers(&data_dir, &rsids)
+    })
+    .await
+    .map_err(|e| format!("Delete markers failed: {e}"))?
 }

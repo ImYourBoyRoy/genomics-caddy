@@ -1,19 +1,58 @@
 // ./src-tauri/src/research/job.rs
-use super::state::{clear_stale_running_flag, force_stop_research_runtime, research_loop_active};
+use super::state::{
+    clear_stale_running_flag, force_stop_research_runtime, is_research_cancelled,
+    research_loop_active,
+};
 use super::types::*;
 use super::util::unix_now;
 use rusqlite::{Connection, params};
 use std::path::Path;
 
+fn persist_cancelled_idle(conn: &Connection, job: &mut ResearchJob) {
+    job.status = "idle".to_string();
+    job.error_message = Some("Sweep cancelled by user.".to_string());
+    job.current_rsid = None;
+    job.current_source = None;
+    let _ = conn.execute(
+        "UPDATE research_jobs SET
+            status = 'idle',
+            current_rsid = NULL,
+            current_source = NULL,
+            error_message = 'Sweep cancelled by user.',
+            last_updated = ?2
+         WHERE job_id = ?1",
+        params![job.job_id, unix_now()],
+    );
+}
+
 fn normalize_job_record(conn: &Connection, job: &mut ResearchJob) {
     clear_stale_running_flag(&job.status);
 
+    let cancel_inflight = is_research_cancelled()
+        || super::state::pending_sweep_stop() == Some(super::state::SweepStopKind::Cancel);
+
+    // Cancel always wins over a racing pause write — but only when the loop is
+    // not actively running. A live loop after Start has cleared the cancel latch;
+    // if CANCELLED is somehow still set while RUNNING, prefer the live loop.
+    if cancel_inflight
+        && !research_loop_active()
+        && matches!(job.status.as_str(), "running" | "paused")
+    {
+        persist_cancelled_idle(conn, job);
+        return;
+    }
+
+    // If the in-memory loop stopped while the DB still says running, treat it as
+    // an interruption (paused) — unless a cooperative pause/cancel is already in flight.
+    // Cancel is handled above; an in-flight pause leaves status as running until the loop ACKs.
     if job.status == "running" && !research_loop_active() {
-        job.status = "paused".to_string();
-        let _ = conn.execute(
-            "UPDATE research_jobs SET status = 'paused', last_updated = ?2 WHERE job_id = ?1",
-            params![job.job_id, unix_now()],
-        );
+        if super::state::pending_sweep_stop() != Some(super::state::SweepStopKind::Pause) {
+            job.status = "paused".to_string();
+            let _ = conn.execute(
+                "UPDATE research_jobs SET status = 'paused', last_updated = ?2 WHERE job_id = ?1",
+                params![job.job_id, unix_now()],
+            );
+        }
     }
 
     if job.total_markers > 0 && job.enriched_count >= job.total_markers {
@@ -117,26 +156,41 @@ pub fn cancel_research_job_in_db(
     db_path: &Path,
     sample_id: i64,
 ) -> Result<Option<ResearchJob>, String> {
+    // Flags may already be set by the async command; keep idempotent.
     force_stop_research_runtime();
     let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
         .map_err(|e| e.to_string())?;
     let now = unix_now();
-    let updated = conn
-        .execute(
-            "UPDATE research_jobs SET
-                status = 'idle',
-                current_rsid = NULL,
-                current_source = NULL,
-                error_message = 'Sweep cancelled by user.',
-                last_updated = ?2
-             WHERE sample_id = ?1 AND status IN ('running', 'paused')",
-            params![sample_id, now],
+    let latest_job_id: Option<String> = conn
+        .query_row(
+            "SELECT job_id FROM research_jobs
+             WHERE sample_id = ?1
+             ORDER BY started_at DESC LIMIT 1",
+            params![sample_id],
+            |row| row.get(0),
         )
-        .map_err(|e| e.to_string())?;
+        .ok();
 
-    if updated == 0 {
-        return Ok(get_research_job_from_db(db_path, sample_id));
+    if let Some(job_id) = latest_job_id {
+        // Unconditionally force the latest job to idle — cancel must win over a
+        // racing pause normalize/write in the same window.
+        let _ = conn
+            .execute(
+                "UPDATE research_jobs SET
+                    status = 'idle',
+                    current_rsid = NULL,
+                    current_source = NULL,
+                    error_message = 'Sweep cancelled by user.',
+                    last_updated = ?2
+                 WHERE job_id = ?1",
+                params![job_id, now],
+            )
+            .map_err(|e| e.to_string())?;
     }
+
+    // Drop pause latch immediately; keep CANCELLED until next start/resume so
+    // in-flight loop saves cannot resurrect running/paused.
+    super::state::RESEARCH_PAUSED.store(false, std::sync::atomic::Ordering::SeqCst);
 
     Ok(get_research_job_from_db(db_path, sample_id))
 }
@@ -145,6 +199,11 @@ pub fn pause_research_job_in_db(
     db_path: &Path,
     sample_id: i64,
 ) -> Result<Option<ResearchJob>, String> {
+    // Only treat cancel as authoritative when the loop is already stopped.
+    // If the loop is alive, an intentional pause must win over a stale cancel latch.
+    if is_research_cancelled() && !research_loop_active() {
+        return cancel_research_job_in_db(db_path, sample_id);
+    }
     let conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
         .map_err(|e| e.to_string())?;
     let now = unix_now();
@@ -157,6 +216,19 @@ pub fn pause_research_job_in_db(
 }
 
 pub fn save_research_job(db_path: &Path, job: &ResearchJob) -> Result<(), String> {
+    // Never resurrect a cancelled sweep as running/paused — cancel wins the race.
+    if is_research_cancelled() && matches!(job.status.as_str(), "running" | "paused") {
+        let mut cancelled = job.clone();
+        cancelled.status = "idle".to_string();
+        cancelled.error_message = Some("Sweep cancelled by user.".to_string());
+        cancelled.current_rsid = None;
+        cancelled.current_source = None;
+        return save_research_job_raw(db_path, &cancelled);
+    }
+    save_research_job_raw(db_path, job)
+}
+
+fn save_research_job_raw(db_path: &Path, job: &ResearchJob) -> Result<(), String> {
     let conn = crate::db::connect_sample_from_registry_path(db_path, job.sample_id)
         .map_err(|e| e.to_string())?;
     conn.execute(

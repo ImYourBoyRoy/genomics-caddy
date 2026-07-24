@@ -42,6 +42,11 @@ export type SweepPhaseMetrics = {
   qdrant: PhaseMetricSnap;
 };
 
+export function isBootstrapPhase(phase: string | null | undefined): boolean {
+  if (!phase) return false;
+  return phase.toLowerCase().includes("bootstrap");
+}
+
 export function isResumeOrCheckPhase(phase: string | null | undefined): boolean {
   if (!phase) return false;
   const p = phase.toLowerCase();
@@ -61,6 +66,7 @@ export function formatActivityPhase(phase: string | null | undefined): string {
 export function pipelineStepIndex(phase: string | null | undefined): number {
   if (!phase) return -1;
   const p = phase.toLowerCase();
+  if (p.includes("bootstrap")) return -1;
   const idx = PIPELINE_STEPS.findIndex((s) => p.includes(s.match));
   return idx >= 0 ? idx : -1;
 }
@@ -125,6 +131,7 @@ export function batchCounterDone(
   batchTotal: number | null | undefined
 ): number {
   if (isResumeOrCheckPhase(activityPhase)) return 0;
+  if (isBootstrapPhase(activityPhase)) return batchPrepared ?? 0;
   if (isPrefetchPhase(activityPhase)) return batchPrefetchDone ?? 0;
   const p = activityPhase?.toLowerCase() ?? "";
   if (p.includes("embedding") || p.includes("qdrant")) return batchTotal ?? 0;
@@ -133,6 +140,7 @@ export function batchCounterDone(
 
 export function batchCounterLabel(activityPhase: string | null | undefined): string {
   if (isResumeOrCheckPhase(activityPhase)) return "waiting";
+  if (isBootstrapPhase(activityPhase)) return "chunks scanned";
   if (isPrefetchPhase(activityPhase)) return "prefetched";
   const p = activityPhase?.toLowerCase() ?? "";
   if (p.includes("embedding")) return "embedded";

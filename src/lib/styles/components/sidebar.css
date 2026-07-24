@@ -143,3 +143,130 @@
     opacity: 1;
   }
 }
+
+.update-hint {
+  margin-top: 0.45rem;
+  color: #fde68a;
+}
+
+.updates-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.updates-named-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.updates-named-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.update-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.update-item-kind,
+.update-item-msg {
+  font-size: 0.62rem;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+
+.updates-all-btn {
+  width: 100%;
+  font-size: 0.72rem;
+  padding: 6px 10px;
+}
+
+.update-footnote {
+  font-size: 0.62rem;
+  opacity: 0.8;
+  line-height: 1.35;
+}
+
+.db-companions {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0 0 0.55rem;
+  border-left: 2px solid rgba(148, 163, 184, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.db-companion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.db-companion-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 0.05rem;
+}
+
+.db-companion-label {
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.db-companion-status {
+  font-size: 0.6rem;
+  opacity: 0.7;
+  line-height: 1.3;
+}
+
+.db-companion-progress {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.15rem 0;
+}
+
+.bulk-sync-panel {
+  margin-top: 0.45rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.bulk-sync-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  opacity: 0.8;
+  margin-top: 0.15rem;
+  font-family: var(--font-mono), monospace;
+}
+
+.bulk-sync-summary {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  opacity: 0.85;
+  line-height: 1.35;
+}

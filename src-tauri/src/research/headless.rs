@@ -42,7 +42,7 @@ pub async fn run_headless_sweep(args: HeadlessSweepArgs) -> Result<(), String> {
         None
     };
 
-    super::state::RESEARCH_PAUSED.store(false, Ordering::SeqCst);
+    super::state::clear_research_control_flags();
     super::state::RESEARCH_RUNNING.store(true, Ordering::SeqCst);
 
     eprintln!(

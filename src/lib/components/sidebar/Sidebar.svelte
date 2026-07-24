@@ -22,6 +22,8 @@
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
+  import { formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
+  import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import '$lib/styles/components/sidebar.css';
 
   /*
@@ -105,6 +107,9 @@
   let customDir = $state<string | null>(null);
   let offlineStatus = $state<OfflineUpdateCheck | null>(null);
   let syncingAll = $state(false);
+  /** Latest bulk Sync All status line (from `__bulk__` or active asset phases). */
+  let bulkSyncMessage = $state('');
+  let bulkActiveAssetId = $state<string | null>(null);
   let isPanelCollapsed = $state(true);
   let forceRedownload = $state(false);
   let syncErrors = $state<Record<string, string>>({});
@@ -197,6 +202,10 @@
     try {
       customDir = await getCustomDownloadDir();
       offlineStatus = await checkOfflineDataUpdates();
+      // The backend fires network probes in the background after returning
+      // the local inventory. Re-poll after 3 s to pick up accurate remote
+      // sizes and update badges without making the user wait for them.
+      setTimeout(refreshStatusInBackground, 3000);
     } catch (err) {
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
@@ -228,21 +237,39 @@
   async function handleSyncAllMissing() {
     if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
     syncingAll = true;
+    bulkSyncMessage = 'Sync All Missing · starting…';
+    bulkActiveAssetId = null;
     syncErrors = {};
     syncMessages = {};
+    downloadProgress = {};
+    importProgress = {};
+    syncPhase = {};
     try {
       const results = await syncAllOfflineMissing(selectedSample?.id ?? undefined);
       const allErrors: string[] = [];
+      const allMessages: string[] = [];
       results.forEach((r) => {
         if (r.errors?.length) allErrors.push(...r.errors);
+        if (r.messages?.length) allMessages.push(...r.messages);
       });
       if (allErrors.length) {
         syncErrors = { __all__: allErrors.join('\n') };
+      }
+      if (allMessages.length) {
+        const skipped = allMessages.filter((m) => m.includes('up to date') || m.includes('already')).length;
+        const worked = allMessages.length - skipped;
+        syncMessages = {
+          __all__: worked > 0
+            ? `Synced/imported ${worked} · skipped ${skipped} already current`
+            : `Nothing missing — ${skipped} asset(s) already current`,
+        };
       }
     } catch (err) {
       syncErrors = { __all__: String(err) };
     } finally {
       syncingAll = false;
+      bulkSyncMessage = '';
+      bulkActiveAssetId = null;
       importProgress = {};
       syncPhase = {};
       downloadProgress = {};
@@ -291,6 +318,10 @@
           startedAt,
         },
       };
+      if (syncingAll || updatingAllOutdated) {
+        bulkActiveAssetId = asset_id;
+        bulkSyncMessage = `Downloading ${asset_id}…`;
+      }
     });
 
     unlistenImport = await listen<ImportProgressInfo & { asset_id: string }>(
@@ -305,6 +336,10 @@
         if (downloadProgress[asset_id]) {
           const { [asset_id]: _, ...rest } = downloadProgress;
           downloadProgress = rest;
+        }
+        if (syncingAll || updatingAllOutdated) {
+          bulkActiveAssetId = asset_id;
+          if (payload.message) bulkSyncMessage = payload.message;
         }
       }
     );
@@ -321,6 +356,12 @@
         ...syncPhase,
         [asset_id]: { phase, step, total_steps, message },
       };
+      if (syncingAll || updatingAllOutdated) {
+        bulkSyncMessage = message;
+        if (asset_id !== '__bulk__' && phase !== 'skip') {
+          bulkActiveAssetId = asset_id;
+        }
+      }
     });
   });
 
@@ -402,6 +443,30 @@
     const tier = offlineStatus.tiers.find((t: OfflineTierStatus) => t.tier === tierNum);
     if (!tier) return null;
     return tier.assets.find((a: OfflineAssetStatus) => a.asset_id === assetId) || null;
+  }
+
+  function findAssetById(assetId: string): OfflineAssetStatus | null {
+    if (!offlineStatus) return null;
+    for (const tier of offlineStatus.tiers) {
+      const hit = tier.assets.find((a: OfflineAssetStatus) => a.asset_id === assetId);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  function companionNeedsUpdate(db: (typeof DB_DEFS)[number]): boolean {
+    if (!('companions' in db)) return false;
+    return db.companions.some((c) => !!findAssetById(c.assetId)?.update_available);
+  }
+
+  /** Show per-asset progress during single sync OR bulk Sync All / Update all. */
+  function assetIsShowingProgress(assetId: string): boolean {
+    if (syncingAsset[assetId]) return true;
+    if (!syncingAll && !updatingAllOutdated) return false;
+    if (downloadProgress[assetId] || importProgress[assetId]) return true;
+    if (bulkActiveAssetId !== assetId) return false;
+    const phase = syncPhase[assetId]?.phase;
+    return phase === 'download' || phase === 'import' || phase === 'check';
   }
 
   function formatByteSize(n: number, approx = false): string {
@@ -508,31 +573,53 @@
       blurb: 'NCBI ClinVar variant annotations. Pathogenicity classifications.',
     },
     {
-      tierNum: 1, assetId: 'pharmgkb_clinical_variants', label: 'PharmGKB & ClinGen',
-      blurb: 'Pharmacogenomics data, ClinGen gene validity, and MANE transcripts.',
+      tierNum: 1, assetId: 'pharmgkb_clinical_variants', label: 'PharmGKB (+ ClinGen, MANE)',
+      blurb: 'Primary: PharmGKB clinical variants. Also syncs PharmGKB genes, ClinGen gene validity, and MANE transcripts as companions (listed under this row).',
+      companions: [
+        { assetId: 'pharmgkb_genes', label: 'PharmGKB genes' },
+        { assetId: 'clingen_gene_validity', label: 'ClinGen gene validity' },
+        { assetId: 'mane_select_summary', label: 'MANE Select summary' },
+      ],
     },
     {
       tierNum: 2, assetId: 'dbsnp_merged_json', label: 'dbSNP References',
       blurb: 'NCBI RefSNP merge + withdrawn map (old rsIDs → current). Not allele frequencies — those come from gnomAD. Large JSON → compact SQLite alias table is expected.',
+      companions: [
+        { assetId: 'dbsnp_withdrawn_json', label: 'dbSNP withdrawn rsIDs' },
+      ],
     },
   ] as const;
 
   let updatesAvailable = $derived.by(() => {
-    if (!offlineStatus) return 0;
-    let n = 0;
-    for (const tier of offlineStatus.tiers) {
-      for (const asset of tier.assets) {
-        if (
-          (PRIMARY_CATALOG_IDS as readonly string[]).includes(asset.asset_id) &&
-          asset.update_available
-        ) {
-          n += 1;
-        }
-      }
-    }
-    return n;
+    // Match Offline Reference Data: count every asset with a proven remote update.
+    return offlineStatus?.total_updates_available ?? 0;
   });
 
+  let pendingUpdates = $derived.by(() => listOfflineUpdates(offlineStatus));
+
+  let primaryUpdatesAvailable = $derived(
+    pendingUpdates.filter((u) => u.primary).length
+  );
+
+  let updateBadgeTitle = $derived.by(() => formatUpdateSummary(pendingUpdates));
+
+  let updatingAllOutdated = $state(false);
+
+  async function handleUpdateAllOutdated() {
+    if (updatingAllOutdated || syncingAll || Object.values(syncingAsset).some(Boolean)) return;
+    const items = listOfflineUpdates(offlineStatus);
+    if (items.length === 0) return;
+    updatingAllOutdated = true;
+    isPanelCollapsed = false;
+    try {
+      for (const item of items) {
+        await handleSyncAsset(item.asset_id, forceRedownload);
+      }
+    } finally {
+      updatingAllOutdated = false;
+      refreshStatusInBackground();
+    }
+  }
   /** Catalogs with no local file yet (not "downloaded but not indexed"). */
   let notDownloadedPrimary = $derived.by(() => {
     if (!offlineStatus) return [] as string[];
@@ -607,7 +694,7 @@
   let needsAttention = $derived(updatesAvailable > 0 || missingPrimaryCount > 0);
 
   // Only block the same asset or bulk sync — allow parallel downloads of other DBs.
-  let bulkBusy = $derived(syncingAll);
+  let bulkBusy = $derived(syncingAll || updatingAllOutdated);
 </script>
 
 <aside class="sidebar">
@@ -640,6 +727,18 @@
         {isDownloadingChain ? 'Downloading…' : 'Download Chain'}
       </button>
     {/if}
+    {#if pendingUpdates.some((u) => u.asset_id === 'liftover_chain')}
+      <p class="card-hint update-hint">
+        Newer <strong>UCSC GRCh37→GRCh38 chain</strong> is available (this is the “1 update” when primary catalogs are current).
+      </p>
+      <button
+        class="btn btn-warning btn-sm"
+        disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated}
+        onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
+      >
+        {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update liftover chain'}
+      </button>
+    {/if}
   </div>
 
   <!-- Reference Databases Card -->
@@ -664,7 +763,15 @@
           >{missingPrimaryCount} need attention</span>
         {/if}
         {#if updatesAvailable > 0}
-          <span class="update-pill" title="{updatesAvailable} database update(s) available">{updatesAvailable} update{updatesAvailable === 1 ? '' : 's'}</span>
+          <span
+            class="update-pill"
+            title={updateBadgeTitle || `${updatesAvailable} database update(s) available`}
+          >
+            {updatesAvailable} update{updatesAvailable === 1 ? '' : 's'}
+            {#if pendingUpdates.length === 1}
+              · {pendingUpdates[0].label}
+            {/if}
+          </span>
         {/if}
       </h4>
       <span style="font-size: 0.8rem; opacity: 0.7;">{isPanelCollapsed ? '▶' : '▼'}</span>
@@ -684,8 +791,54 @@
             {#if notIndexedPrimary.length > 0}
               <div><strong>Downloaded but not indexed:</strong> {notIndexedPrimary.join(', ')} — use Re-sync (or wait if import is already running).</div>
             {/if}
-            {#if updatesAvailable > 0}
-              <div><strong>{updatesAvailable}</strong> newer remote file{updatesAvailable === 1 ? '' : 's'} available — use Update to re-download. Re-sync only re-imports the local file.</div>
+            {#if pendingUpdates.length > 0}
+              <div class="updates-panel">
+                <div>
+                  <strong>{pendingUpdates.length} newer remote file{pendingUpdates.length === 1 ? '' : 's'}</strong>
+                  {#if primaryUpdatesAvailable === 0}
+                    — supporting asset(s) only (not GWAS/ClinVar/PharmGKB/dbSNP)
+                  {:else if primaryUpdatesAvailable < pendingUpdates.length}
+                    — {primaryUpdatesAvailable} primary · {pendingUpdates.length - primaryUpdatesAvailable} supporting
+                  {/if}
+                </div>
+                <ul class="updates-named-list">
+                  {#each pendingUpdates as u (u.asset_id)}
+                    <li>
+                      <div class="update-item-meta">
+                        <strong>{u.label}</strong>
+                        <span class="update-item-kind">
+                          Tier {u.tier} · {u.primary ? 'primary catalog' : 'supporting asset'}
+                          {#if u.display_size}
+                            · {u.display_size}
+                          {/if}
+                        </span>
+                        {#if u.message}
+                          <span class="update-item-msg">{u.message}</span>
+                        {/if}
+                      </div>
+                      <button
+                        type="button"
+                        class="btn btn-warning btn-xs"
+                        disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated}
+                        onclick={() => handleSyncAsset(u.asset_id, forceRedownload)}
+                      >
+                        {syncingAsset[u.asset_id] ? 'Updating…' : 'Update'}
+                      </button>
+                    </li>
+                  {/each}
+                </ul>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm updates-all-btn"
+                  disabled={bulkBusy || updatingAllOutdated || Object.values(syncingAsset).some(Boolean) || sweepRunning}
+                  onclick={handleUpdateAllOutdated}
+                >
+                  {updatingAllOutdated ? 'Updating all…' : `Update all ${pendingUpdates.length} outdated`}
+                </button>
+                <div class="update-footnote">
+                  Update downloads the newer remote file then re-imports. Re-sync only re-imports the local file you already have.
+                </div>
+              </div>
             {/if}
           </div>
         {/if}
@@ -739,6 +892,43 @@
           {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
         </button>
 
+        {#if syncingAll}
+          <div class="bulk-sync-panel" role="status" aria-live="polite">
+            <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="#34d399" />
+            {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
+              {@const prog = downloadProgress[bulkActiveAssetId]}
+              <div class="progress-track" style="margin-top: 0.4rem;">
+                <div
+                  class="progress-fill"
+                  style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                ></div>
+              </div>
+              <div class="bulk-sync-meta">
+                <span>{prog.percent >= 0 ? `${prog.percent}%` : 'streaming…'}</span>
+                <span>{prog.speedMbps.toFixed(1)} MB/s</span>
+              </div>
+            {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
+              {@const imp = importProgress[bulkActiveAssetId]}
+              <div class="progress-track" style="background: rgba(165, 180, 252, 0.15); margin-top: 0.4rem;">
+                <div
+                  class="progress-fill"
+                  style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                ></div>
+              </div>
+              <div class="bulk-sync-meta" style="color: #a5b4fc;">
+                <span>{imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
+                {#if imp.eta_seconds != null}
+                  <span>{imp.eta_seconds}s remaining</span>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {/if}
+
+        {#if syncMessages.__all__ && !syncingAll}
+          <div class="bulk-sync-summary">{syncMessages.__all__}</div>
+        {/if}
+
         {#if importingAny}
           <button
             class="btn btn-secondary btn-sm"
@@ -776,14 +966,14 @@
           {#each DB_DEFS as db}
             {@const btnState = assetButtonState(db.tierNum, db.assetId)}
             {@const prog = downloadProgress[db.assetId]}
-            {@const isActive = !!syncingAsset[db.assetId]}
+            {@const isActive = assetIsShowingProgress(db.assetId)}
             <div class="db-item-wrap">
               <div class="db-item" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
                 <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
                   <span style="font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
                     <strong style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{db.label}</strong>
-                    {#if findAsset(db.tierNum, db.assetId)?.update_available}
-                      <span class="update-pill" title="Newer file available on server">update</span>
+                    {#if findAsset(db.tierNum, db.assetId)?.update_available || companionNeedsUpdate(db)}
+                      <span class="update-pill" title="Newer file available on server (primary and/or companion assets)">update</span>
                     {/if}
                     <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;" title={assetTooltip(db)}>ⓘ</span>
                   </span>
@@ -843,6 +1033,79 @@
                     Preparing import (no download needed)…
                   </div>
                 {/if}
+              {/if}
+
+              {#if 'companions' in db}
+                <ul class="db-companions">
+                  {#each db.companions as c (c.assetId)}
+                    {@const companion = findAssetById(c.assetId)}
+                    {@const cBusy = assetIsShowingProgress(c.assetId)}
+                    <li class="db-companion">
+                      <div class="db-companion-meta">
+                        <span class="db-companion-label">
+                          {c.label}
+                          {#if companion?.update_available}
+                            <span class="update-pill" title="Newer remote file for this companion">update</span>
+                          {/if}
+                        </span>
+                        <span class="db-companion-status">
+                          {#if !companion}
+                            Checking…
+                          {:else if cBusy}
+                            {syncPhase[c.assetId]?.message || importProgress[c.assetId]?.message || 'Updating…'}
+                          {:else if companion.update_available}
+                            Update available · {companion.display_size || companion.message}
+                          {:else if companion.row_count > 0}
+                            {companion.row_count.toLocaleString()} rows
+                          {:else if companion.local_present}
+                            On disk · not indexed
+                          {:else}
+                            Not downloaded
+                          {/if}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn btn-xs"
+                        class:btn-warning={!!companion?.update_available || forceRedownload}
+                        class:btn-secondary={!companion?.update_available && !forceRedownload}
+                        disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated}
+                        onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
+                      >
+                        {#if cBusy}
+                          …
+                        {:else if !companion?.local_present}
+                          Download
+                        {:else if companion?.update_available || forceRedownload}
+                          Update
+                        {:else}
+                          Re-sync
+                        {/if}
+                      </button>
+                    </li>
+                    {#if cBusy && (downloadProgress[c.assetId] || importProgress[c.assetId])}
+                      <li class="db-companion-progress">
+                        {#if downloadProgress[c.assetId] && !importProgress[c.assetId]}
+                          {@const cprog = downloadProgress[c.assetId]}
+                          <div class="progress-track">
+                            <div
+                              class="progress-fill"
+                              style="width: {cprog.percent >= 0 ? cprog.percent + '%' : '100%'}; animation: {cprog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                            ></div>
+                          </div>
+                        {:else if importProgress[c.assetId]}
+                          {@const cimp = importProgress[c.assetId]}
+                          <div class="progress-track" style="background: rgba(165, 180, 252, 0.15);">
+                            <div
+                              class="progress-fill"
+                              style="width: {cimp.percent !== undefined && cimp.percent >= 0 ? cimp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {cimp.percent === undefined || cimp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                            ></div>
+                          </div>
+                        {/if}
+                      </li>
+                    {/if}
+                  {/each}
+                </ul>
               {/if}
 
               <!-- Per-asset error display -->

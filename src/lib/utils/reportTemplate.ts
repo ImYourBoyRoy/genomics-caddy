@@ -21,12 +21,14 @@ export function buildMergedReportTemplate(): ReportTemplate {
 
   for (const pack of manifest.packs) {
     const packContent = packs[pack.id];
-    if (packContent?.markers) {
-      sections.push({
-        name: packContent.name || pack.label,
-        markers: packContent.markers,
-      });
-    }
+    // Skip empty packs.
+    if (!packContent?.markers?.length) continue;
+    // research_found is opt-in via manifest.default_enabled (Review panel toggle).
+    if (pack.id === "research_found" && pack.default_enabled === false) continue;
+    sections.push({
+      name: packContent.name || pack.label,
+      markers: packContent.markers,
+    });
   }
   return {
     title: "DNA Analysis & Biohacker Profile Report",

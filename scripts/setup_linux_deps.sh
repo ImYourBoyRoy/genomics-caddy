@@ -76,6 +76,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
   wget \
   file \
   pkg-config \
+  libdbus-1-dev \
   libssl-dev \
   libxdo-dev \
   libgtk-3-dev \

@@ -10,6 +10,9 @@ import type {
   ResearchFindingPreview,
   SweepPhaseMetricsSnapshot,
 } from "../types/research";
+import { mergeJobFromProgress } from "./mergeJobFromProgress";
+
+export { mergeJobFromProgress } from "./mergeJobFromProgress";
 
 /** Updated by +page / ResearchPanel — avoids stale closures in Tauri listeners. */
 export const researchEventContext = $state({
@@ -107,39 +110,6 @@ export function resetLiveProgressForResume() {
   liveProgress.batchElapsedSecs = null;
   liveProgress.progressSpeed = null;
   liveProgress.recentProgressSpeed = null;
-}
-
-export function mergeJobFromProgress(
-  job: ResearchJob | null,
-  payload: ResearchProgress,
-  sampleId: number
-): ResearchJob {
-  const base: ResearchJob = job ?? {
-    job_id: payload.job_id,
-    sample_id: sampleId,
-    status: "idle",
-    total_markers: payload.total_markers,
-    enriched_count: payload.enriched_count,
-    priority_complete: false,
-    started_at: Math.floor(Date.now() / 1000),
-    last_updated: Math.floor(Date.now() / 1000),
-  };
-
-  return {
-    ...base,
-    status: payload.status as ResearchJob["status"],
-    enriched_count: payload.enriched_count,
-    total_markers: payload.total_markers,
-    current_rsid: payload.current_rsid ?? base.current_rsid,
-    current_source: payload.current_source ?? base.current_source,
-    last_updated: Math.floor(Date.now() / 1000),
-    loop_active:
-      payload.status === "running"
-        ? true
-        : payload.status === "paused" || payload.status === "complete" || payload.status === "error"
-          ? false
-          : base.loop_active,
-  };
 }
 
 export function applyLiveProgressFields(payload: ResearchProgress) {

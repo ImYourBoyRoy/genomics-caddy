@@ -83,14 +83,27 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   const candidates = Array.from(
     document.querySelectorAll<HTMLElement>('button, a, [role="button"], .tab-btn, .card-header')
   );
-  for (const el of candidates) {
-    const label = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-    if (label.includes(needle)) {
-      el.click();
-      return { ok: true, detail: `clicked: ${label.slice(0, 80)}` };
-    }
+  // Prefer enabled matches so automation does not "click" disabled Start/Cancel shells.
+  const ranked = candidates
+    .map((el) => {
+      const label = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (!label.includes(needle)) return null;
+      const disabled =
+        (el as HTMLButtonElement).disabled === true ||
+        el.getAttribute('aria-disabled') === 'true' ||
+        el.hasAttribute('disabled');
+      return { el, label, disabled };
+    })
+    .filter((x): x is { el: HTMLElement; label: string; disabled: boolean } => !!x)
+    .sort((a, b) => Number(a.disabled) - Number(b.disabled));
+
+  const hit = ranked[0];
+  if (!hit) return { ok: false, detail: `no clickable element containing "${text}"` };
+  if (hit.disabled) {
+    return { ok: false, detail: `matched disabled control: ${hit.label.slice(0, 80)}` };
   }
-  return { ok: false, detail: `no clickable element containing "${text}"` };
+  hit.el.click();
+  return { ok: true, detail: `clicked: ${hit.label.slice(0, 80)}` };
 }
 
 export function installAgentUiBridge(controllers: AgentUiControllers): () => void {

@@ -13,7 +13,9 @@ Operational notes: Remote Ollama URLs are treated as opaque accelerators; local 
 
 use crate::config;
 use serde::Serialize;
+#[allow(unused_imports)]
 use std::path::Path;
+#[allow(unused_imports)]
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize)]
@@ -64,14 +66,16 @@ fn is_loopback_or_local_host(host: &str) -> bool {
 fn url_is_local(url: &str) -> bool {
     url::Url::parse(url.trim())
         .ok()
-        .and_then(|u| u.host_str().map(|h| is_loopback_or_local_host(h)))
+        .and_then(|u| u.host_str().map(is_loopback_or_local_host))
         .unwrap_or(false)
 }
 
+#[cfg(target_os = "linux")]
 fn read_to_string_lossy(path: &Path) -> Option<String> {
     std::fs::read_to_string(path).ok().map(|s| s.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn parse_u64_digits(s: &str) -> Option<u64> {
     let digits: String = s.chars().filter(|c| c.is_ascii_digit()).collect();
     digits.parse().ok()
@@ -109,7 +113,6 @@ fn system_ram_bytes() -> Option<u64> {
 }
 
 fn detect_apple_unified() -> (bool, Vec<String>) {
-    let notes = Vec::new();
     #[cfg(target_os = "macos")]
     {
         let mut notes = Vec::new();
@@ -122,11 +125,15 @@ fn detect_apple_unified() -> (bool, Vec<String>) {
             return (true, notes);
         }
         notes.push("macOS on non-ARM: Metal may still accelerate, but memory is not Apple-unified.".into());
-        return (false, notes);
+        (false, notes)
     }
-    (false, notes)
+    #[cfg(not(target_os = "macos"))]
+    {
+        (false, Vec::new())
+    }
 }
 
+#[cfg(target_os = "linux")]
 fn detect_linux_accel() -> (Vec<String>, Option<u64>, bool, Vec<String>) {
     let mut backends = Vec::new();
     let mut notes = Vec::new();

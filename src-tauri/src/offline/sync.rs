@@ -20,7 +20,7 @@ use super::registry::{
 };
 use super::schema::migrate_offline_schema;
 use super::tier2::{
-    build_variant_locus_all_samples, build_variant_locus_for_sample, ensure_tier2_meta,
+    build_variant_locus_all_samples, build_variant_locus_for_sample_in_data_dir, ensure_tier2_meta,
 };
 use crate::paths;
 use crate::research::references::import_gwas_from_local_files;
@@ -206,6 +206,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
         etag: Option<String>,
         last_modified: Option<String>,
         content_length: Option<i64>,
+        version_label: Option<String>,
     }
 
     let custom_dir = get_custom_download_dir_from_db(db_path);
@@ -224,6 +225,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
                 etag: reg.as_ref().and_then(|r| r.remote_etag.clone()),
                 last_modified: reg.as_ref().and_then(|r| r.remote_last_modified.clone()),
                 content_length: reg.as_ref().and_then(|r| r.remote_content_length),
+                version_label: reg.as_ref().and_then(|r| r.version_label.clone()),
             });
         }
         Ok(())
@@ -241,6 +243,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
                 probe.etag.as_deref(),
                 probe.last_modified.as_deref(),
                 probe.content_length,
+                probe.version_label.as_deref(),
             );
             Some((probe.id, newer, head.content_length, probe.url))
         }));
@@ -273,22 +276,75 @@ pub async fn check_offline_updates(
         clear_unproven_update_flags(conn)?;
         Ok(())
     })?;
-    // Parallel HEAD probes for missing sizes + update flags (capped).
-    let _ = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        async {
-            refresh_missing_remote_sizes(&db_path).await;
-            probe_remote_updates(&data_dir, &db_path).await;
-        },
-    )
-    .await;
+
+    // Fire network probes in the background so they never block the sidebar render.
+    // Results are written to DB; the frontend does a silent re-poll at +3 s to pick
+    // them up for accurate sizes and update badges.
+    {
+        let data_dir2 = data_dir.clone();
+        let db_path2 = db_path.clone();
+        tokio::spawn(async move {
+            let _ = tokio::time::timeout(
+                std::time::Duration::from_secs(8),
+                async {
+                    refresh_missing_remote_sizes(&db_path2).await;
+                    probe_remote_updates(&data_dir2, &db_path2).await;
+                },
+            )
+            .await;
+        });
+    }
 
     let custom_dir = get_custom_download_dir_from_db(&db_path);
+
+    // --- Batch all per-asset DB reads into a single spawn_blocking call ---
+    // Previously N serial spawn_blocking awaits (one per asset); now one call
+    // that reads all registry rows and row counts in a single SQLite transaction.
+    struct AssetDbRow {
+        #[allow(dead_code)]
+        asset_id: String,
+        asset_enum: OfflineAssetId,
+        #[allow(dead_code)]
+        tier: u8,
+        row_count: u64,
+        reg: Option<crate::offline::registry::RegistryRow>,
+    }
+
+    let db = db_path.clone();
+    let data_dir_for_count = data_dir.clone();
+    let all_defs_snapshot: Vec<(String, OfflineAssetId, u8)> = all_assets()
+        .iter()
+        .map(|d| (d.id.as_str().to_string(), d.id, d.tier))
+        .collect();
+
+    let db_rows: Vec<AssetDbRow> = tauri::async_runtime::spawn_blocking(move || {
+        with_conn(&db, |conn| {
+            let mut rows = Vec::new();
+            for (asset_id, asset_enum, tier) in &all_defs_snapshot {
+                let reg = read_registry(conn, asset_id);
+                let row_count = if *asset_enum == OfflineAssetId::Tier2VariantLocus {
+                    crate::offline::tier2::count_variant_locus_rows(&data_dir_for_count, conn)
+                } else {
+                    row_count_for_asset(conn, *asset_enum)
+                };
+                rows.push(AssetDbRow {
+                    asset_id: asset_id.clone(),
+                    asset_enum: *asset_enum,
+                    tier: *tier,
+                    row_count,
+                    reg,
+                });
+            }
+            Ok(rows)
+        })
+    })
+    .await
+    .map_err(|e| format!("Status batch worker failed: {e}"))??;
 
     let mut tiers: Vec<OfflineTierStatus> = Vec::new();
     let mut total_updates = 0u32;
 
-    for tier in 0..=2 {
+    for tier in 0..=2u8 {
         let mut assets = Vec::new();
         let mut updates = 0u32;
         let mut ready_count = 0u32;
@@ -302,21 +358,11 @@ pub async fn check_offline_updates(
                 .map(|metadata| metadata.len())
                 .unwrap_or(0);
 
-            let db = db_path.clone();
-            let asset_id = def.id.as_str().to_string();
-            let (row_count, reg) = tauri::async_runtime::spawn_blocking(move || {
-                with_conn(&db, |conn| {
-                    let reg = read_registry(conn, &asset_id);
-                    let rows = row_count_for_asset(
-                        conn,
-                        OfflineAssetId::from_str_id(&asset_id)
-                            .unwrap_or(OfflineAssetId::GwasCatalog),
-                    );
-                    Ok((rows, reg))
-                })
-            })
-            .await
-            .map_err(|e| format!("Status worker failed: {e}"))??;
+            // Retrieve the pre-fetched row from the batch read.
+            let db_row = db_rows.iter().find(|r| r.asset_enum == def.id);
+            let (row_count, reg) = db_row
+                .map(|r| (r.row_count, r.reg.clone()))
+                .unwrap_or((0, None));
 
             let mut update_available = reg.as_ref().map(|r| r.update_available).unwrap_or(false);
             // Ignore stale flags that were set from Content-Length-only probes
@@ -335,9 +381,6 @@ pub async fn check_offline_updates(
                 update_available = false;
             }
             let remote_len = reg.as_ref().and_then(|r| r.remote_content_length.map(|n| n as u64));
-            // Do NOT probe remote servers during sidebar status checks.
-            // Serial HEAD requests (60s timeout each) blocked the UI on "Checking…"
-            // and disabled Download buttons. Update probes happen at sync time.
 
             if local_present && (row_count > 0 || def.kind != AssetKind::Derived) {
                 ready_count += 1;
@@ -383,8 +426,9 @@ pub async fn check_offline_updates(
     }
 
     let db = db_path.clone();
+    let data_dir_for_summary = data_dir.clone();
     let indexed_summary = tauri::async_runtime::spawn_blocking(move || {
-        with_conn(&db, |conn| Ok(offline_status_summary(conn)))
+        with_conn(&db, |conn| Ok(offline_status_summary(conn, &data_dir_for_summary)))
     })
     .await
     .map_err(|e| format!("Summary worker failed: {e}"))??;
@@ -405,6 +449,10 @@ pub async fn sync_offline_assets_subset(
     db_path: &Path,
     asset_ids: Vec<OfflineAssetId>,
     force: bool,
+    // When true (Sync All Missing / Sync Tier without force), skip assets that
+    // are already on disk, not outdated, and indexed. Single-asset Re-sync
+    // passes false so local re-import still runs.
+    skip_if_current: bool,
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
@@ -430,8 +478,23 @@ pub async fn sync_offline_assets_subset(
     let budget = tier_budget_bytes(tier);
     let mut pending_imports: Vec<OfflineAssetId> = Vec::new();
 
+    emit_sync_phase(
+        app,
+        "__bulk__",
+        "bulk",
+        1,
+        &format!("Sync · preparing tier {tier} ({} asset(s))…", asset_ids.len()),
+    );
+
     for id in asset_ids {
         let Some(def) = asset_def(id) else { continue };
+        emit_sync_phase(
+            app,
+            def.id.as_str(),
+            "check",
+            1,
+            &format!("Checking {}…", def.label),
+        );
         match def.kind {
             AssetKind::RemoteFile => {
                 let Some(url) = def.url else { continue };
@@ -446,6 +509,7 @@ pub async fn sync_offline_assets_subset(
                                 reg.as_ref().and_then(|r| r.remote_etag.as_deref()),
                                 reg.as_ref().and_then(|r| r.remote_last_modified.as_deref()),
                                 reg.as_ref().and_then(|r| r.remote_content_length),
+                                reg.as_ref().and_then(|r| r.version_label.as_deref()),
                             );
                             let _ = with_conn(db_path, |conn| {
                                 mark_update_available(conn, def.id.as_str(), newer)
@@ -458,6 +522,38 @@ pub async fn sync_offline_assets_subset(
                         if let Ok(meta) = std::fs::metadata(existing) {
                             bytes_used += meta.len();
                         }
+                        let indexed_rows = with_conn(db_path, |conn| {
+                            Ok(row_count_for_asset(conn, def.id))
+                        })
+                        .unwrap_or(0);
+                        // File-only assets (chain / manifest) are done once present + not newer.
+                        let file_only = matches!(
+                            def.id,
+                            OfflineAssetId::LiftoverChain | OfflineAssetId::GnomadIndexManifest
+                        );
+                        if skip_if_current && (file_only || indexed_rows > 0) {
+                            emit_sync_phase(
+                                app,
+                                def.id.as_str(),
+                                "skip",
+                                2,
+                                &format!("{} up to date — skipping", def.label),
+                            );
+                            result
+                                .messages
+                                .push(format!("{} already up to date", def.label));
+                            continue;
+                        }
+                        emit_sync_phase(
+                            app,
+                            def.id.as_str(),
+                            "import",
+                            2,
+                            &format!(
+                                "Step 2/2 · Indexing local {}…",
+                                def.label
+                            ),
+                        );
                         pending_imports.push(def.id);
                         continue;
                     }
@@ -512,7 +608,10 @@ pub async fn sync_offline_assets_subset(
                                 n,
                                 hash.as_deref(),
                                 row_count,
-                                head.last_modified.as_deref(),
+                                head
+                                    .content_filename
+                                    .as_deref()
+                                    .or(head.last_modified.as_deref()),
                                 false,
                             )
                         });
@@ -529,12 +628,11 @@ pub async fn sync_offline_assets_subset(
             AssetKind::GwasSync => {
                 if def.id == OfflineAssetId::GwasCatalog {
                     let path = local_path(data_dir, custom_dir.as_deref(), def);
-                    if (force || !asset_local_present(data_dir, custom_dir.as_deref(), def, &path))
+                    let present = asset_local_present(data_dir, custom_dir.as_deref(), def, &path);
+                    if (force || !present)
                         && let Some(url) = def.url
                     {
-                        if bytes_used >= budget
-                            && !asset_local_present(data_dir, custom_dir.as_deref(), def, &path)
-                        {
+                        if bytes_used >= budget && !present {
                             result.errors.push(format!(
                                 "GWAS catalog skipped: tier {} byte budget exhausted",
                                 tier
@@ -578,43 +676,94 @@ pub async fn sync_offline_assets_subset(
                                             n,
                                             hash.as_deref(),
                                             0,
-                                            head.last_modified.as_deref(),
+                                            head
+                                                .content_filename
+                                                .as_deref()
+                                                .or(head.last_modified.as_deref()),
                                             false,
                                         )
                                     });
                                     result
                                         .messages
                                         .push(format!("Downloaded GWAS catalog ({} bytes)", n));
+                                    pending_imports.push(def.id);
                                 }
                                 Err(e) => result.errors.push(format!("GWAS download: {e}")),
                             }
                         }
-                    } else if let Some(handle) = app {
-                        // Import-only re-sync — tell UI immediately (no download bar).
-                        emit_sync_phase(
-                            Some(handle),
-                            "gwas_catalog",
-                            "import",
-                            2,
-                            "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…",
-                        );
-                        let _ = handle.emit(
-                            "offline:import_progress",
-                            serde_json::json!({
-                                "asset_id": "gwas_catalog",
-                                "rows_processed": 0,
-                                "percent": 0,
-                                "rows_per_second": 0,
-                                "eta_seconds": null,
-                                "message": "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…"
-                            }),
-                        );
+                    } else if present {
+                        let indexed_rows = with_conn(db_path, |conn| {
+                            Ok(row_count_for_asset(conn, OfflineAssetId::GwasCatalog))
+                        })
+                        .unwrap_or(0);
+                        if skip_if_current && indexed_rows > 0 {
+                            emit_sync_phase(
+                                app,
+                                "gwas_catalog",
+                                "skip",
+                                2,
+                                "GWAS catalog up to date — skipping",
+                            );
+                            result
+                                .messages
+                                .push("GWAS catalog already up to date".to_string());
+                        } else if let Some(handle) = app {
+                            // Import-only — tell UI immediately (no download bar).
+                            emit_sync_phase(
+                                Some(handle),
+                                "gwas_catalog",
+                                "import",
+                                2,
+                                "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…",
+                            );
+                            let _ = handle.emit(
+                                "offline:import_progress",
+                                serde_json::json!({
+                                    "asset_id": "gwas_catalog",
+                                    "rows_processed": 0,
+                                    "percent": 0,
+                                    "rows_per_second": 0,
+                                    "eta_seconds": null,
+                                    "message": "Step 2/2 · Re-indexing local GWAS catalog (CPU-bound)…"
+                                }),
+                            );
+                            pending_imports.push(def.id);
+                        } else {
+                            pending_imports.push(def.id);
+                        }
                     }
                 }
-                pending_imports.push(def.id);
             }
             AssetKind::Derived => {
-                pending_imports.push(def.id);
+                let indexed_rows = with_conn(db_path, |conn| {
+                    if def.id == OfflineAssetId::Tier2VariantLocus {
+                        Ok(crate::offline::tier2::count_variant_locus_rows(data_dir, conn))
+                    } else {
+                        Ok(row_count_for_asset(conn, def.id))
+                    }
+                })
+                .unwrap_or(0);
+                if skip_if_current && indexed_rows > 0 && sample_id.is_none() {
+                    emit_sync_phase(
+                        app,
+                        def.id.as_str(),
+                        "skip",
+                        2,
+                        &format!("{} already built — skipping", def.label),
+                    );
+                    result
+                        .messages
+                        .push(format!("{} already built", def.label));
+                } else {
+                    emit_sync_phase(
+                        app,
+                        def.id.as_str(),
+                        "import",
+                        2,
+                        &format!("Building {}…", def.label),
+                    );
+                    pending_imports.push(def.id);
+                }
             }
         }
     }
@@ -673,7 +822,7 @@ pub async fn sync_offline_tier(
         .filter(|a| a.tier == tier)
         .map(|a| a.id)
         .collect();
-    sync_offline_assets_subset(data_dir, db_path, ids, force, sample_id, app).await
+    sync_offline_assets_subset(data_dir, db_path, ids, force, !force, sample_id, app).await
 }
 
 struct ImportBatchResult {
@@ -750,6 +899,7 @@ pub async fn build_tier2_for_sample(
         db_path,
         vec![OfflineAssetId::Tier2VariantLocus],
         false,
+        false,
         Some(sample_id),
         app,
     )
@@ -782,7 +932,8 @@ pub async fn sync_single_asset(
             vec![id]
         }
     };
-    sync_offline_assets_subset(data_dir, db_path, ids, force, sample_id, app).await
+    // Re-sync must re-import even when the remote file is unchanged.
+    sync_offline_assets_subset(data_dir, db_path, ids, force, false, sample_id, app).await
 }
 
 /// Sync all tiers, downloading only missing or outdated assets. Does not force re-download.
@@ -793,9 +944,24 @@ pub async fn sync_all_missing(
     app: Option<&AppHandle>,
 ) -> Result<Vec<OfflineSyncResult>, String> {
     let mut results = Vec::new();
+    emit_sync_phase(
+        app,
+        "__bulk__",
+        "bulk",
+        1,
+        "Sync All Missing · scanning tiers 0–2…",
+    );
     for tier in 0u8..=2 {
+        emit_sync_phase(
+            app,
+            "__bulk__",
+            "bulk",
+            1,
+            &format!("Sync All Missing · tier {tier}…"),
+        );
         results.push(sync_offline_tier(data_dir, db_path, tier, false, sample_id, app).await?);
     }
+    emit_sync_phase(app, "__bulk__", "bulk", 2, "Sync All Missing · complete");
     Ok(results)
 }
 
@@ -926,10 +1092,11 @@ fn import_asset_sync(
         OfflineAssetId::Tier2VariantLocus => {
             ensure_tier2_meta(effective_dir)?;
             let meta_path = local_path(data_dir, custom_dir.as_deref(), def);
+            // Genotypes live in per-sample DBs — never query them on the registry conn.
             let count = if let Some(sid) = sample_id {
-                build_variant_locus_for_sample(conn, sid)?
+                build_variant_locus_for_sample_in_data_dir(data_dir, sid)?
             } else {
-                build_variant_locus_all_samples(conn)?
+                build_variant_locus_all_samples(data_dir, conn)?
             };
             upsert_registry(
                 conn, id, def.tier, &meta_path, "derived", None, 0, None, count, None, false,
@@ -987,9 +1154,9 @@ fn asset_local_present(
                     .exists()))
 }
 
-pub fn offline_status_summary(conn: &Connection) -> (u64, u64, u64) {
+pub fn offline_status_summary(conn: &Connection, data_dir: &Path) -> (u64, u64, u64) {
     let clinvar = row_count_for_asset(conn, OfflineAssetId::ClinvarVariantSummary);
     let gwas = row_count_for_asset(conn, OfflineAssetId::GwasCatalog);
-    let locus = row_count_for_asset(conn, OfflineAssetId::Tier2VariantLocus);
+    let locus = crate::offline::tier2::count_variant_locus_rows(data_dir, conn);
     (gwas, clinvar, locus)
 }

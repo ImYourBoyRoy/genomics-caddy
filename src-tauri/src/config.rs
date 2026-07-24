@@ -501,7 +501,7 @@ pub fn load_ollama_service_config() -> OllamaServiceConfig {
 pub fn load_ollama_service_config_with_db(conn: &Connection) -> OllamaServiceConfig {
     let env = ollama_url_from_env();
     let url = resolve_ollama_service_url_with_db(conn);
-    let from_env = url.trim().is_empty() == false
+    let from_env = !url.trim().is_empty()
         && env
             .as_ref()
             .is_some_and(|e| e.trim() == url.trim())

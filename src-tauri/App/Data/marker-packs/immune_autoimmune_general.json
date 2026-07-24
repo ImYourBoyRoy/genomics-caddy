@@ -1,0 +1,1574 @@
+{
+  "name": "Immune & Autoimmune General Susceptibility",
+  "markers": [
+    {
+      "rsid": "GUARDRAIL_AUTOIMMUNE_GENOTYPE_NOT_DIAGNOSIS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Autoimmune genotype non-diagnostic rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents autoimmune disease overcalling",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Autoimmune diseases require symptoms, exam, labs, antibodies, imaging, and specialist context. Genetic predisposition is not diagnosis and negative raw DNA is not reassurance.",
+      "do_not_claim": [
+        "autoimmune disease diagnosis",
+        "absence of autoimmune risk",
+        "immune treatment plan"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "inflammatory markers",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "ClinGen Gene-Disease Validity and Actionability",
+          "url": "https://clinicalgenome.org/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical gene curation resource",
+          "conflict_of_interest": "NIH-funded clinical genetics resource; expert panel curation",
+          "notes": "Use for clinical gene-disease validity, actionability, and expert-panel interpretation frameworks."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2476601",
+      "gene": "PTPN22",
+      "variant_name": "Arg620Trp",
+      "effect_allele": "T",
+      "impact": "Broad autoimmunity risk modifier",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PTPN22 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs231775",
+      "gene": "CTLA4",
+      "variant_name": "Thr17Ala",
+      "effect_allele": "G",
+      "impact": "T-cell checkpoint autoimmune context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CTLA4 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3087243",
+      "gene": "CTLA4",
+      "variant_name": "CT60 CTLA4 marker",
+      "effect_allele": "G",
+      "impact": "Autoimmune thyroid/T-cell regulation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "CTLA4 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1883832",
+      "gene": "CD40",
+      "variant_name": "CD40 -1C>T",
+      "effect_allele": "C",
+      "impact": "B-cell activation/thyroid-autoimmune context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "CD40 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2104286",
+      "gene": "IL2RA",
+      "variant_name": "IL2RA autoimmunity locus",
+      "effect_allele": "A",
+      "impact": "T-regulatory immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL2RA is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs61839660",
+      "gene": "IL2RA",
+      "variant_name": "IL2RA immune marker",
+      "effect_allele": "T",
+      "impact": "Immune regulatory context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL2RA is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11209026",
+      "gene": "IL23R",
+      "variant_name": "Arg381Gln",
+      "effect_allele": "A",
+      "impact": "Th17/IBD/psoriasis immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL23R is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2201841",
+      "gene": "IL23R",
+      "variant_name": "IL23R immune marker",
+      "effect_allele": "C",
+      "impact": "Th17 immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL23R is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2066844",
+      "gene": "NOD2",
+      "variant_name": "NOD2 Arg702Trp",
+      "effect_allele": "T",
+      "impact": "Crohn/innate immunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "NOD2 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2241880",
+      "gene": "ATG16L1",
+      "variant_name": "ATG16L1 Thr300Ala",
+      "effect_allele": "G",
+      "impact": "Autophagy/IBD immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ATG16L1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1990760",
+      "gene": "IFIH1",
+      "variant_name": "A946T viral sensing autoimmunity marker",
+      "effect_allele": "T",
+      "impact": "Viral sensing and autoimmune susceptibility context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IFIH1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7574865",
+      "gene": "STAT4",
+      "variant_name": "STAT4 autoimmune locus",
+      "effect_allele": "T",
+      "impact": "Th1/Th17 autoimmune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "STAT4 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7574865_SLE_RA_CONTEXT",
+      "gene": "STAT4",
+      "variant_name": "STAT4 lupus/RA context marker",
+      "effect_allele": "T",
+      "impact": "Systemic autoimmunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "STAT4 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2304256",
+      "gene": "TYK2",
+      "variant_name": "TYK2 immune signaling marker",
+      "effect_allele": "C",
+      "impact": "Cytokine signaling autoimmunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TYK2 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs34536443",
+      "gene": "TYK2",
+      "variant_name": "P1104A TYK2 variant",
+      "effect_allele": "C",
+      "impact": "Immune cytokine signaling context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TYK2 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6920220",
+      "gene": "TNFAIP3",
+      "variant_name": "A20 autoimmune locus",
+      "effect_allele": "A",
+      "impact": "NF-kB autoimmune regulation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TNFAIP3 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2230926",
+      "gene": "TNFAIP3",
+      "variant_name": "Phe127Cys",
+      "effect_allele": "G",
+      "impact": "Autoimmune inflammatory regulation context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "TNFAIP3 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800629",
+      "gene": "TNF",
+      "variant_name": "TNF -308A",
+      "effect_allele": "A",
+      "impact": "Inflammatory cytokine context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "TNF is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1800795",
+      "gene": "IL6",
+      "variant_name": "IL6 -174G>C",
+      "effect_allele": "G",
+      "impact": "Inflammatory cytokine context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "IL6 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3024505",
+      "gene": "IL10",
+      "variant_name": "IL10 locus",
+      "effect_allele": "T",
+      "impact": "Immune regulatory cytokine context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "IL10 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9273363",
+      "gene": "HLA-DQB1",
+      "variant_name": "HLA-DQ autoimmune tag",
+      "effect_allele": "A",
+      "impact": "HLA autoimmune context, true HLA typing preferred",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-DQB1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2187668",
+      "gene": "HLA-DQA1",
+      "variant_name": "Celiac HLA-DQ2.5 tag",
+      "effect_allele": "T",
+      "impact": "Celiac HLA tag, not full HLA typing",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-DQA1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7454108",
+      "gene": "HLA-DQB1",
+      "variant_name": "HLA-DQ8 tag",
+      "effect_allele": "T",
+      "impact": "Celiac/T1D HLA tag, true typing preferred",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-DQB1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs660895",
+      "gene": "HLA-DRB1",
+      "variant_name": "HLA-DRB1 rheumatoid arthritis tag",
+      "effect_allele": "G",
+      "impact": "HLA shared-epitope context, not direct typing",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-DRB1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs3135388",
+      "gene": "HLA-DRB1",
+      "variant_name": "MS HLA-DRB1*15:01 tag",
+      "effect_allele": "A",
+      "impact": "Multiple sclerosis HLA context tag",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-DRB1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2395029",
+      "gene": "HLA-B/HCP5",
+      "variant_name": "HLA-B*57:01 tag",
+      "effect_allele": "G",
+      "impact": "HLA drug/immune context tag",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-B/HCP5 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs11650354",
+      "gene": "HLA-C",
+      "variant_name": "Psoriasis HLA-C context tag",
+      "effect_allele": "T",
+      "impact": "Psoriasis HLA context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-C is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12191877",
+      "gene": "HLA-C",
+      "variant_name": "HLA-C psoriasis locus",
+      "effect_allele": "T",
+      "impact": "Psoriasis HLA-C context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "HLA-C is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1143679",
+      "gene": "ITGAM",
+      "variant_name": "R77H lupus marker",
+      "effect_allele": "A",
+      "impact": "Lupus innate immune/complement context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "ITGAM is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2233287",
+      "gene": "BANK1",
+      "variant_name": "BANK1 B-cell autoimmune marker",
+      "effect_allele": "A",
+      "impact": "B-cell systemic autoimmunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "BANK1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10516487",
+      "gene": "BANK1",
+      "variant_name": "BANK1 marker",
+      "effect_allele": "T",
+      "impact": "B-cell autoimmunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "BANK1 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13277113",
+      "gene": "BLK",
+      "variant_name": "B-cell kinase autoimmune locus",
+      "effect_allele": "A",
+      "impact": "B-cell autoimmunity context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "BLK is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "rs548234",
+      "gene": "PRDM1/ATG5",
+      "variant_name": "Systemic autoimmunity locus",
+      "effect_allele": "G",
+      "impact": "Autophagy/immune context",
+      "evidence_tier": "B_replicated_common_marker",
+      "interpretation": "PRDM1/ATG5 is included as broad autoimmune/immune context. Interpret with symptoms, autoantibodies, inflammatory markers, and specialist context.",
+      "do_not_claim": [
+        "autoimmune diagnosis",
+        "immune treatment plan",
+        "absence of disease if negative"
+      ],
+      "confirm_with": [
+        "symptoms",
+        "autoantibodies",
+        "CRP/ESR",
+        "specialist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Autoimmune expression depends on sex, age, infections, microbiome, smoking, vitamin D, hormones, medications, and family history.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_HLA_TRUE_TYPING_REQUIRED",
+      "gene": "HLA-A/HLA-B/HLA-C/HLA-DQA1/HLA-DQB1/HLA-DRB1",
+      "variant_name": "HLA true-typing callability rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents over-reliance on tag SNPs",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Many autoimmune and drug-hypersensitivity findings are HLA allele based. Tag SNPs are imperfect and should not replace HLA typing for clinical decisions.",
+      "do_not_claim": [
+        "clinical HLA result from tag SNP",
+        "drug safety decision"
+      ],
+      "confirm_with": [
+        "validated HLA typing",
+        "clinical lab report"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "hla_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "Clinical Pharmacogenetics Implementation Consortium (CPIC)",
+          "url": "https://cpicpgx.org/guidelines/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical PGx guideline",
+          "conflict_of_interest": "Professional pharmacogenomics guideline consortium",
+          "notes": "Use only for how to interpret already-available PGx results. Does not mean raw DNA is sufficient for medication changes."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_CELIAC_AUTOIMMUNE_CONTEXT",
+      "gene": "HLA-DQ2/HLA-DQ8/IL2/IL21/SH2B3",
+      "variant_name": "Celiac autoimmune context panel",
+      "effect_allele": "N/A",
+      "impact": "Celiac disease genetic permissiveness and immune context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "Celiac disease requires serology and clinical context. HLA is permissive, not diagnostic.",
+      "do_not_claim": [
+        "celiac diagnosis"
+      ],
+      "confirm_with": [
+        "tTG-IgA",
+        "total IgA",
+        "endomysial antibody",
+        "clinical review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "hla_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_TYPE1_DIABETES_AUTOIMMUNE_CONTEXT",
+      "gene": "HLA/INS/PTPN22/IFIH1/IL2RA",
+      "variant_name": "Type 1 diabetes autoimmune context panel",
+      "effect_allele": "N/A",
+      "impact": "Autoimmune beta-cell risk context",
+      "evidence_tier": "B_polygenic_trait",
+      "interpretation": "T1D risk is HLA-heavy and polygenic. Use with autoantibodies and glucose phenotype only.",
+      "do_not_claim": [
+        "type 1 diabetes diagnosis"
+      ],
+      "confirm_with": [
+        "islet autoantibodies",
+        "glucose/A1c",
+        "endocrinology review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": false,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_HLA_B27_SPONDYLOARTHRITIS",
+      "gene": "HLA-B",
+      "variant_name": "HLA-B27 spondyloarthritis context",
+      "effect_allele": "HLA_B27",
+      "impact": "Axial spondyloarthritis genetic context",
+      "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
+      "interpretation": "HLA-B27 raises plausibility in the right phenotype but is not diagnostic. Consumer SNP data is not HLA-B27 typing.",
+      "do_not_claim": [
+        "ankylosing spondylitis diagnosis"
+      ],
+      "confirm_with": [
+        "clinical HLA-B27",
+        "inflammatory back pain pattern",
+        "rheumatology review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "clinical_confirmation_required": true,
+      "variant_type": "hla_panel",
+      "sources": [
+        {
+          "name": "NCBI ClinVar",
+          "url": "https://www.ncbi.nlm.nih.gov/clinvar/",
+          "accessed": "2026-07-01",
+          "evidence_type": "ClinVar",
+          "conflict_of_interest": "Public NIH variant archive with external submitter classifications",
+          "notes": "Use for clinical variant classification. Always check current review status, submitter conflicts, and clinical assertion date."
+        },
+        {
+          "name": "GeneReviews",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK1116/",
+          "accessed": "2026-07-01",
+          "evidence_type": "Clinical genetics review resource",
+          "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+          "notes": "Use for monogenic disease clinical context, inheritance, testing limits, and management overview."
+        }
+      ]
+    }
+  ]
+}

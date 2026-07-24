@@ -40,7 +40,14 @@
     "purge:build": "node ./scripts/run_release_build.mjs --purge-only",
     "bench:purge": "node ./scripts/run_benchmark_build.mjs --purge-only --json",
     "bench:rebuild": "node ./scripts/run_benchmark_build.mjs --json",
-    "bench:rebuild:fast": "node ./scripts/run_benchmark_build.mjs --skip-checks --json"
+    "bench:rebuild:fast": "node ./scripts/run_benchmark_build.mjs --skip-checks --json",
+    "build:remote:mac": "python scripts/build.py --target mac",
+    "build:remote:linux": "python scripts/build.py --target linux",
+    "build:remote:windows": "python scripts/build.py --target windows",
+    "build:remote:all": "python scripts/build.py --target all",
+    "build:remote:mac:clean": "python scripts/build.py --target mac --clean",
+    "build:remote:linux:clean": "python scripts/build.py --target linux --clean",
+    "build:remote:lint": "python scripts/build.py --target mac linux --lint-only"
   },
   "license": "MIT",
   "dependencies": {
@@ -50,13 +57,13 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.69.2",
+    "@sveltejs/kit": "^2.69.3",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@tauri-apps/cli": "^2.11.4",
     "@types/node": "^26.1.1",
     "@typescript/typescript6": "^6.0.2",
-    "svelte": "^5.56.4",
-    "svelte-check": "^4.7.2",
+    "svelte": "^5.56.5",
+    "svelte-check": "^4.7.3",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"
@@ -65,6 +72,7 @@
     "cookie": "1.1.1"
   },
   "allowScripts": {
-    "esbuild": true
+    "esbuild": true,
+    "fsevents": true
   }
 }

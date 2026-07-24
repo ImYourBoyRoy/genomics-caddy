@@ -1502,7 +1502,7 @@ pub fn generate_report(
                     alt_alleles: vec![db.alt_allele.clone()],
                     plus_strand_alleles: Some(vec![db.ref_allele.clone(), db.alt_allele.clone()]),
                     source_build: Some(format!("gnomAD {}", db.release)),
-                    allele_source: "gnomAD".to_string(),
+                    allele_source: "gnomAD cache (not offline dbSNP alleles)".to_string(),
                 }
             });
 

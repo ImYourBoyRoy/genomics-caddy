@@ -81,6 +81,51 @@ fn compute_data_dir(app: Option<&AppHandle>) -> ResolvedDataDir {
     let app_data = app_data_dir(&project_root);
     let legacy_data = project_root.join("data");
 
+    // Verify if app_data path is writable (fails on read-only system files or DMG mounts)
+    let is_writable = if app_data.exists() {
+        let temp_file = app_data.join(".write_test");
+        if fs::write(&temp_file, "").is_ok() {
+            let _ = fs::remove_file(temp_file);
+            true
+        } else {
+            false
+        }
+    } else {
+        fs::create_dir_all(&app_data).is_ok()
+    };
+
+    if !is_writable {
+        let fallback_path = if let Some(app_handle) = app {
+            app_handle.path().app_data_dir().ok()
+        } else {
+            None
+        }.unwrap_or_else(|| {
+            #[cfg(target_os = "windows")]
+            {
+                std::env::var_os("APPDATA")
+                    .map(|p| PathBuf::from(p).join("Genomics Caddy"))
+                    .unwrap_or_else(|| PathBuf::from("C:\\GenomicsCaddyData"))
+            }
+            #[cfg(target_os = "macos")]
+            {
+                std::env::var_os("HOME")
+                    .map(|p| PathBuf::from(p).join("Library/Application Support/Genomics Caddy"))
+                    .unwrap_or_else(|| PathBuf::from("/tmp/GenomicsCaddyData"))
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+            {
+                std::env::var_os("HOME")
+                    .map(|p| PathBuf::from(p).join(".local/share/genomics-caddy"))
+                    .unwrap_or_else(|| PathBuf::from("/tmp/genomics-caddy"))
+            }
+        });
+
+        return ResolvedDataDir {
+            path: fallback_path,
+            mode: DataDirMode::AppLayout,
+        };
+    }
+
     if data_dir_has_content(&app_data) || !data_dir_has_content(&legacy_data) {
         return ResolvedDataDir {
             path: app_data,

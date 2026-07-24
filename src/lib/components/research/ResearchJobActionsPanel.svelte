@@ -9,6 +9,7 @@
     connectionStatus?: QdrantConnectionStatus | null;
     readiness: RunReadiness;
     isStarting?: boolean;
+    isCancelling?: boolean;
     isCreatingCollection?: boolean;
     onStart?: (options?: { forceReenrich?: boolean }) => void;
     onPause?: () => void;
@@ -23,6 +24,7 @@
     connectionStatus = null,
     readiness,
     isStarting = false,
+    isCancelling = false,
     isCreatingCollection = false,
     onStart,
     onPause,
@@ -35,7 +37,7 @@
     connectionStatus?.success === true && !connectionStatus.collection_exists
   );
 
-  let busy = $derived(isStarting || readiness.isConnectionPending);
+  let busy = $derived(isStarting || isCancelling || readiness.isConnectionPending);
 
   async function handleCreateCollection() {
     if (onCreateCollection) await onCreateCollection();
@@ -69,32 +71,32 @@
         onclick={() => onStart?.()}
         disabled={busy || !readiness.canStart}
       >
-        {isStarting ? "Initializing..." : "Start Autonomous Sweep"}
+        {isStarting ? "Starting sweep…" : "Start Autonomous Sweep"}
       </button>
     {/if}
   {:else if readiness.sweepActive}
     <button
       class="btn btn-secondary w-full"
       onclick={() => onPause?.()}
-      disabled={!readiness.canPause || readiness.sweepPausing}
+      disabled={!readiness.canPause || readiness.sweepPausing || isCancelling}
     >
       {readiness.sweepPausing ? "Pausing…" : "Pause Sweep"}
     </button>
     <button
       class="btn btn-danger w-full mt-2"
       onclick={() => onCancel?.()}
-      disabled={!readiness.canCancel}
+      disabled={!readiness.canCancel || isCancelling}
     >
-      Cancel Sweep
+      {isCancelling ? "Cancelling…" : "Cancel Sweep"}
     </button>
   {:else if readiness.sweepPausing}
     <button class="btn btn-secondary w-full" disabled>Pausing sweep…</button>
     <button
       class="btn btn-danger w-full mt-2"
       onclick={() => onCancel?.()}
-      disabled={!readiness.canCancel}
+      disabled={!readiness.canCancel || isCancelling}
     >
-      Cancel Sweep
+      {isCancelling ? "Cancelling…" : "Cancel Sweep"}
     </button>
   {:else if readiness.fullyPaused || readiness.sweepInterrupted}
     {#if showCreateCollection}
@@ -123,26 +125,24 @@
         </button>
         <button
           class="btn btn-secondary"
-          onclick={() => onStart?.()}
-          disabled={busy || !readiness.canStart}
-        >
-          Expand queue
-        </button>
-        <button
-          class="btn btn-secondary"
           onclick={() => onStart?.({ forceReenrich: true })}
           disabled={busy || !readiness.canStart}
+          title="Rebuilds enrichment for already-indexed vectors. Prefer Resume for multi-day runs."
         >
           Force re-enrich
         </button>
       </div>
+      <p class="hint sweep-hint">
+        <strong>Resume</strong> continues from the checkpoint and skips vectors already indexed in Qdrant.
+        <strong>Expand queue</strong> is available after Cancel or Complete — it starts a new job row.
+      </p>
       {#if readiness.sweepInterrupted || readiness.fullyPaused}
         <button
           class="btn btn-danger w-full mt-2"
           onclick={() => onCancel?.()}
-          disabled={!readiness.canCancel}
+          disabled={!readiness.canCancel || isCancelling}
         >
-          Cancel Sweep
+          {isCancelling ? "Cancelling…" : "Cancel Sweep"}
         </button>
       {/if}
     {/if}

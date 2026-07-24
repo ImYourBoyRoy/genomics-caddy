@@ -356,3 +356,150 @@ pub async fn fetch_payloads(
     }
     Ok(out)
 }
+
+/// Paginated get with sample_id where-filter. `offset` = numeric skip as JSON number.
+pub async fn browse_page(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: u32,
+    offset: Option<&serde_json::Value>,
+) -> Result<(Vec<QdrantHit>, Option<serde_json::Value>, Option<u64>), String> {
+    let coll = collection_id(config).await?;
+    let lim = limit.clamp(1, 200);
+    let skip = offset.and_then(|v| v.as_u64()).unwrap_or(0);
+    let body = serde_json::json!({
+        "where": { "sample_id": { "$eq": sample_id } },
+        "limit": lim,
+        "offset": skip,
+        "include": ["metadatas", "documents"],
+    });
+    for path in [
+        format!("/api/v2/collections/{coll}/get"),
+        format!("/api/v1/collections/{coll}/get"),
+    ] {
+        let endpoint = format!("{}{path}", base(config));
+        let res = auth(http().post(&endpoint).json(&body), config.api_key.as_deref())
+            .send()
+            .await
+            .map_err(|e| format!("Chroma get failed: {e}"))?;
+        if !res.status().is_success() {
+            continue;
+        }
+        let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+        let metas = val
+            .get("metadatas")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let docs = val
+            .get("documents")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let mut points = Vec::new();
+        for (i, mut meta) in metas.into_iter().enumerate() {
+            if meta.get("text").is_none() {
+                if let Some(doc) = docs.get(i).and_then(|d| d.as_str()) {
+                    if let Some(obj) = meta.as_object_mut() {
+                        obj.insert("text".into(), serde_json::json!(doc));
+                    }
+                }
+            }
+            points.push(hit_from_metadata(&meta, 1.0));
+        }
+        let next = if points.len() as u32 >= lim {
+            Some(serde_json::json!(skip + u64::from(lim)))
+        } else {
+            None
+        };
+        return Ok((points, next, None));
+    }
+    Err("Chroma browse get failed on v1/v2".into())
+}
+
+pub async fn sample_vectors(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: usize,
+) -> Result<Vec<crate::research::qdrant::ScrollVectorItem>, String> {
+    let coll = collection_id(config).await?;
+    let body = serde_json::json!({
+        "where": { "sample_id": { "$eq": sample_id } },
+        "limit": limit.min(2500),
+        "include": ["metadatas", "embeddings"],
+    });
+    for path in [
+        format!("/api/v2/collections/{coll}/get"),
+        format!("/api/v1/collections/{coll}/get"),
+    ] {
+        let endpoint = format!("{}{path}", base(config));
+        let res = auth(http().post(&endpoint).json(&body), config.api_key.as_deref())
+            .send()
+            .await
+            .map_err(|e| format!("Chroma sample failed: {e}"))?;
+        if !res.status().is_success() {
+            continue;
+        }
+        let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+        let ids = val
+            .get("ids")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let metas = val
+            .get("metadatas")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let embeds = val
+            .get("embeddings")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let mut out = Vec::new();
+        for (i, id_val) in ids.into_iter().enumerate() {
+            let id = id_val
+                .as_str()
+                .map(str::to_string)
+                .or_else(|| id_val.as_u64().map(|u| u.to_string()))
+                .unwrap_or_default();
+            let meta = metas.get(i).cloned().unwrap_or_default();
+            let vector = embeds
+                .get(i)
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|x| x.as_f64().map(|f| f as f32))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            if vector.is_empty() {
+                continue;
+            }
+            out.push(crate::research::qdrant::ScrollVectorItem {
+                point_id: id,
+                rsid: meta
+                    .get("rsid")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                vector,
+                trait_category: meta
+                    .get("trait_category")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string),
+                gene_symbol: meta
+                    .get("gene_symbol")
+                    .or_else(|| meta.get("gene"))
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string),
+                data_quality_score: meta
+                    .get("data_quality_score")
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(0.0) as f32,
+            });
+        }
+        return Ok(out);
+    }
+    Err("Chroma vector sample failed".into())
+}

@@ -242,3 +242,212 @@ pub async fn fetch_payloads(
     }
     Ok(out)
 }
+
+/// List IDs then fetch payloads (serverless). `offset` = pagination token string.
+pub async fn browse_page(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: u32,
+    offset: Option<&serde_json::Value>,
+) -> Result<(Vec<QdrantHit>, Option<serde_json::Value>, Option<u64>), String> {
+    let lim = limit.clamp(1, 100);
+    let mut url = reqwest::Url::parse(&format!("{}/vectors/list", base(config)))
+        .map_err(|e| e.to_string())?;
+    {
+        let mut q = url.query_pairs_mut();
+        q.append_pair("namespace", &ns(config));
+        q.append_pair("limit", &lim.to_string());
+        if let Some(tok) = offset.and_then(|v| v.as_str()).filter(|s| !s.is_empty()) {
+            q.append_pair("paginationToken", tok);
+        }
+    }
+    let req = apply_key(http().get(url), config.api_key.as_deref());
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Pinecone list failed: {e}"))?;
+    if !res.status().is_success() {
+        let status = res.status();
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!(
+            "Pinecone list HTTP {status} (serverless list required for browse): {body}"
+        ));
+    }
+    let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+    let ids: Vec<String> = val
+        .get("vectors")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|item| {
+            item.get("id")
+                .and_then(|v| v.as_str())
+                .map(str::to_string)
+                .or_else(|| item.as_str().map(str::to_string))
+        })
+        .collect();
+    let next = val
+        .pointer("/pagination/next")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .map(|s| serde_json::Value::String(s.to_string()));
+
+    if ids.is_empty() {
+        return Ok((Vec::new(), next, None));
+    }
+
+    // Fetch full records
+    let mut fetch_url = reqwest::Url::parse(&format!("{}/vectors/fetch", base(config)))
+        .map_err(|e| e.to_string())?;
+    {
+        let mut q = fetch_url.query_pairs_mut();
+        for id in &ids {
+            q.append_pair("ids", id);
+        }
+        q.append_pair("namespace", &ns(config));
+    }
+    let fetch_req = apply_key(http().get(fetch_url), config.api_key.as_deref());
+    let fetch_res = fetch_req
+        .send()
+        .await
+        .map_err(|e| format!("Pinecone fetch failed: {e}"))?;
+    if !fetch_res.status().is_success() {
+        return Err(format!("Pinecone fetch HTTP {}", fetch_res.status()));
+    }
+    let fetched: serde_json::Value = fetch_res.json().await.map_err(|e| e.to_string())?;
+    let mut points = Vec::new();
+    if let Some(vectors) = fetched.get("vectors").and_then(|v| v.as_object()) {
+        for (_id, rec) in vectors {
+            let meta = rec
+                .get("metadata")
+                .cloned()
+                .unwrap_or(serde_json::json!({}));
+            let sid = meta.get("sample_id").and_then(|v| v.as_i64());
+            if sid.is_some_and(|s| s != sample_id) {
+                continue;
+            }
+            // If sample_id missing in meta, still include (namespace may be sample-scoped).
+            if sid.is_none() {
+                // keep — user may store sample elsewhere
+            }
+            points.push(hit_from_metadata(&meta, 1.0));
+        }
+    }
+    let stats = test_connection(config).await;
+    Ok((points, next, stats.vectors_count))
+}
+
+/// Sample dense vectors for atlas (list → fetch with values).
+pub async fn sample_vectors(
+    config: &QdrantConfig,
+    sample_id: i64,
+    limit: usize,
+) -> Result<Vec<crate::research::qdrant::ScrollVectorItem>, String> {
+    let mut out = Vec::new();
+    let mut token: Option<String> = None;
+    let mut pages = 0usize;
+    while out.len() < limit && pages < 40 {
+        pages += 1;
+        let mut url = reqwest::Url::parse(&format!("{}/vectors/list", base(config)))
+            .map_err(|e| e.to_string())?;
+        {
+            let mut q = url.query_pairs_mut();
+            q.append_pair("namespace", &ns(config));
+            q.append_pair("limit", "100");
+            if let Some(t) = &token {
+                q.append_pair("paginationToken", t);
+            }
+        }
+        let req = apply_key(http().get(url), config.api_key.as_deref());
+        let res = req.send().await.map_err(|e| e.to_string())?;
+        if !res.status().is_success() {
+            break;
+        }
+        let val: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+        let ids: Vec<String> = val
+            .get("vectors")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|item| {
+                item.get("id")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+            })
+            .collect();
+        token = val
+            .pointer("/pagination/next")
+            .and_then(|v| v.as_str())
+            .map(str::to_string);
+        if ids.is_empty() {
+            break;
+        }
+        let mut fetch_url = reqwest::Url::parse(&format!("{}/vectors/fetch", base(config)))
+            .map_err(|e| e.to_string())?;
+        {
+            let mut q = fetch_url.query_pairs_mut();
+            for id in &ids {
+                q.append_pair("ids", id);
+            }
+            q.append_pair("namespace", &ns(config));
+        }
+        let fetch_req = apply_key(http().get(fetch_url), config.api_key.as_deref());
+        let fetch_res = fetch_req.send().await.map_err(|e| e.to_string())?;
+        if !fetch_res.status().is_success() {
+            break;
+        }
+        let fetched: serde_json::Value = fetch_res.json().await.map_err(|e| e.to_string())?;
+        if let Some(vectors) = fetched.get("vectors").and_then(|v| v.as_object()) {
+            for (id, rec) in vectors {
+                let meta = rec.get("metadata").cloned().unwrap_or_default();
+                let sid = meta.get("sample_id").and_then(|v| v.as_i64());
+                if sid.is_some_and(|s| s != sample_id) {
+                    continue;
+                }
+                let values = rec
+                    .get("values")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|x| x.as_f64().map(|f| f as f32))
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                if values.is_empty() {
+                    continue;
+                }
+                out.push(crate::research::qdrant::ScrollVectorItem {
+                    point_id: id.clone(),
+                    rsid: meta
+                        .get("rsid")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    vector: values,
+                    trait_category: meta
+                        .get("trait_category")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string),
+                    gene_symbol: meta
+                        .get("gene_symbol")
+                        .or_else(|| meta.get("gene"))
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string),
+                    data_quality_score: meta
+                        .get("data_quality_score")
+                        .and_then(|v| v.as_f64())
+                        .unwrap_or(0.0) as f32,
+                });
+                if out.len() >= limit {
+                    break;
+                }
+            }
+        }
+        if token.is_none() {
+            break;
+        }
+    }
+    Ok(out)
+}

@@ -147,6 +147,23 @@ Options (via `npm run build:release -- …` or the shell/PowerShell scripts):
 
 Release output lands in **`App/`** (portable binary + sidecars) with persistence in **`App/Data/`**. Build caches stay in `src-tauri/target/` and are safe to wipe. On Linux the staged binary is `App/DNA-Tools`; on Windows it is `App/DNA-Tools.exe`.
 
+### Remote Cross-Compilation (Ubuntu Builder)
+
+If you have configured the `Remote_Build` infrastructure, you can orchestrate builds across macOS, Linux, and Windows from a single machine without needing native toolchains locally:
+
+```bash
+# Build for all platforms (produces raw executables by default for fast testing)
+npm run build:remote:all
+
+# Or explicitly create the full packaged installers (.dmg, .msi, .nsis, .deb)
+python scripts/build.py --target all --create-bundle
+
+# Or target a specific OS
+npm run build:remote:windows
+```
+
+*Note: The Windows build is natively cross-compiled on the Ubuntu host using `mingw-w64`.*
+
 ### Build timing benchmarks (laptop A vs B)
 
 Timed purge / full purge+rebuild (writes reports under `App/Data/benchmarks/`):

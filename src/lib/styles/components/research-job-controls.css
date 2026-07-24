@@ -32,10 +32,11 @@
   .tuning-banner {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 12px;
+    gap: 6px 8px;
+    align-items: center;
     margin-bottom: 10px;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: 10px;
     background: rgba(56, 189, 248, 0.06);
     border: 1px solid rgba(56, 189, 248, 0.15);
     font-size: 0.72rem;
@@ -48,9 +49,166 @@
     text-transform: capitalize;
   }
 
+  .tuning-pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .tuning-latency {
+    opacity: 0.85;
+  }
+
   .tuning-fast {
     color: #34d399;
     font-weight: 600;
+  }
+
+  .starting-panel {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(14, 165, 233, 0.05));
+  }
+
+  .starting-pulse {
+    width: 12px;
+    height: 12px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background: #60a5fa;
+    box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.55);
+    animation: start-pulse 1.4s ease-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes start-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.55);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(96, 165, 250, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(96, 165, 250, 0);
+    }
+  }
+
+  .starting-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
+  .starting-copy strong {
+    color: #93c5fd;
+    font-size: 0.84rem;
+  }
+
+  .starting-tuning {
+    font-size: 0.7rem;
+    color: #7dd3fc;
+  }
+
+  .sweep-hero {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sweep-hero-pct {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    min-width: 3.2rem;
+    line-height: 1;
+  }
+
+  .sweep-hero-copy {
+    min-width: 0;
+  }
+
+  .progress-bar-lg {
+    height: 10px;
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .metric-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .metric-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+
+  .metric-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .metric-note {
+    font-size: 0.62rem;
+    color: var(--text-secondary);
+  }
+
+  .diagnostics-fold {
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0 10px 10px;
+  }
+
+  .diagnostics-fold > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 10px 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .diagnostics-fold > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .batch-fill.indeterminate {
+    animation: batch-indeterminate 1.6s ease-in-out infinite;
+  }
+
+  @keyframes batch-indeterminate {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .scope-mismatch-banner {
@@ -527,3 +685,21 @@
   .meta-item strong {
     color: var(--text-primary);
   }
+
+.checkpoint-banner {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: rgba(45, 212, 191, 0.08);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.checkpoint-banner strong { color: #5eead4; }
+.checkpoint-banner code {
+  font-size: 0.9em;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.25);
+}

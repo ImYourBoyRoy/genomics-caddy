@@ -3,6 +3,7 @@
   import type { EvaluatedSection } from '../../types/genomics';
   import { getSectionSummaryParts } from '../../utils/evidence';
   import VariantCard from './VariantCard.svelte';
+  import ClinicalFindingsTable from './ClinicalFindingsTable.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import { slide } from 'svelte/transition';
   import { browser } from '$app/environment';
@@ -260,11 +261,20 @@
         {/if}
       </div>
 
-      <div class="markers-grid">
-        {#each section.markers as marker}
-          <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
-        {/each}
-      </div>
+      {#if viewMode === 'clinical'}
+        <ClinicalFindingsTable
+          markers={section.markers}
+          {onExploreResearch}
+          {highlightRsid}
+          {onNavigateToVariant}
+        />
+      {:else}
+        <div class="markers-grid">
+          {#each section.markers as marker}
+            <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

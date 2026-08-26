@@ -358,6 +358,27 @@ describe('support resource context', () => {
     expect(context.food_safety.source_registry.aha_dyslipidemia_2026).toBeDefined();
   });
 
+  it('routes bone and digestive consultation context to clinical follow-up resources', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['bone_growth_mineral_density', 'digestive_gut_microbiome'],
+    });
+    const actionabilityIds = context.actionability_rules.map((rule) => rule.id);
+
+    expect(actionabilityIds).toEqual(expect.arrayContaining([
+      'bone_mineral_density_context',
+      'digestive_inflammatory_context',
+      'celiac_hla_context',
+    ]));
+    expect(context.actionability_rules.find((rule) => rule.id === 'bone_mineral_density_context')?.genes)
+      .toContain('WNT16');
+    expect(context.actionability_rules.find((rule) => rule.id === 'digestive_inflammatory_context')?.genes)
+      .toContain('NOD2');
+    expect(context.food_safety.source_registry.niams_bone_density_tests).toBeDefined();
+    expect(context.food_safety.source_registry.niddk_crohns_diagnosis).toBeDefined();
+    expect(context.food_safety.source_registry.niddk_ulcerative_colitis_diagnosis).toBeDefined();
+    expect(context.food_safety.source_registry.niddk_celiac_tests).toBeDefined();
+  });
+
   it('routes every phenotype domain and its source records from resource-authored pack IDs', () => {
     for (const domain of phenotypePrompts.domains) {
       const context = buildSupportResourceContext({ packIds: [domain.id] });

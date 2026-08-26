@@ -523,6 +523,38 @@
       "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
       "notes": "Use for history, blood-test, imaging, and differential-diagnosis boundaries around fatty-liver evaluation; a PNPLA3 or TM6SF2 marker is not a diagnosis."
     },
+    "niddk_crohns_diagnosis": {
+      "name": "NIDDK Diagnosis of Crohn's Disease",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/crohns-disease/diagnosis",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIDDK clinical education",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
+      "notes": "Use for symptom, family-history, blood-test, stool-test, endoscopy, imaging, and differential-diagnosis boundaries around Crohn's disease; an IBD susceptibility marker is not a diagnosis."
+    },
+    "niddk_ulcerative_colitis_diagnosis": {
+      "name": "NIDDK Diagnosis of Ulcerative Colitis",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/ulcerative-colitis/diagnosis",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIDDK clinical education",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
+      "notes": "Use for blood, stool, endoscopy, biopsy, infection, and symptom-severity boundaries around ulcerative colitis; an IBD susceptibility marker is not a diagnosis."
+    },
+    "niddk_celiac_tests": {
+      "name": "NIDDK Celiac Disease Tests",
+      "url": "https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-management/digestive-diseases/celiac-disease-health-care-professionals",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIDDK clinical education",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
+      "notes": "Use for tTG-IgA, total IgA, confirmatory testing, gluten exposure before testing, biopsy, and HLA-DQ2/DQ8 limits; HLA permissiveness is not a celiac diagnosis."
+    },
+    "niams_bone_density_tests": {
+      "name": "NIAMS Bone Mineral Density Tests",
+      "url": "https://www.niams.nih.gov/health-topics/bone-mineral-density-tests-what-numbers-mean",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIAMS clinical education",
+      "conflict_of_interest": "U.S. National Institute of Arthritis and Musculoskeletal and Skin Diseases public-health resource",
+      "notes": "Use for DXA/BMD, T-score/Z-score, fracture-risk, age, and clinical-context boundaries; common bone SNPs do not diagnose osteoporosis or determine treatment."
+    },
     "aha_dyslipidemia_2026": {
       "name": "AHA 2026 Guideline on the Management of Dyslipidemia",
       "url": "https://professional.heart.org/en/science-news/2026-guideline-on-the-management-of-dyslipidemia",

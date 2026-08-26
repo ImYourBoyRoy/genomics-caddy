@@ -165,6 +165,36 @@ describe('actionability engine safety policy', () => {
     expect(plan.diet.avoid.join(' ')).toContain('fixed calorie target');
   });
 
+  it('routes bone, inflammatory-bowel, and celiac markers to measured clinical follow-up', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs3736228',
+        gene: 'LRP5',
+        interpretation: 'LRP5 bone mineral-density context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs2066844',
+        gene: 'NOD2',
+        interpretation: 'NOD2 Crohn disease susceptibility context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'PANEL_CELIAC_HLA_DQ2_DQ8',
+        gene: 'HLA-DQA1/HLA-DQB1',
+        severity_class: 'confirmation_required',
+        interpretation: 'Clinical HLA typing is required; this panel is not diagnostic.',
+      }),
+    ]));
+    const dietAvoidance = plan.diet.avoid.join(' ');
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('DXA/BMD'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('fecal calprotectin'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('tTG-IgA'))).toBe(true);
+    expect(dietAvoidance).toContain('lifelong gluten avoidance');
+    expect(plan.supplements.some((item) => item.name.includes('bone-health'))).toBe(true);
+    expect(medicationText).toContain('raw DNA');
+  });
+
   it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
     const plan = deriveActionablePlan({
       ...report([marker({

@@ -1921,6 +1921,177 @@
         "clinical_confirmation_required",
         "safety_guardrail"
       ]
+    },
+    {
+      "id": "bone_mineral_density_context",
+      "genes": [
+        "LRP5",
+        "WNT16",
+        "SOST",
+        "TNFRSF11B",
+        "RANKL",
+        "TNFSF11",
+        "COL1A1",
+        "VDR",
+        "GC",
+        "CYP2R1",
+        "DHCR7",
+        "NADSYN1",
+        "CASR",
+        "SP7",
+        "CPED1",
+        "SOX6",
+        "CRHR2",
+        "ESR1",
+        "MEF2C",
+        "CTNNB1",
+        "FOXL1",
+        "AXIN1"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "bone_growth_mineral_density",
+        "nutrients",
+        "connective_tissue"
+      ],
+      "favor": [
+        "Adequate protein and calcium-rich or fortified foods that fit the person's diet, plus weight-bearing or resistance activity when safe",
+        "Track low-trauma fractures, height loss, bone pain, steroid exposure, relevant menstrual or menopause or hormone-therapy context, and family history before interpreting a bone marker"
+      ],
+      "avoid": [
+        "Using a bone SNP to diagnose osteoporosis, predict a fracture, or prescribe calcium, vitamin D, or hormone therapy",
+        "High-dose calcium or vitamin D, unmonitored bone-building products, or abrupt changes to activity or medication without measured and clinical context"
+      ],
+      "supplements": [
+        "Review calcium, vitamin D, magnesium, vitamin K, and any bone-health product against diet, kidney or stone history, medications, and measured status with a clinician or pharmacist; a genotype does not establish need or dose"
+      ],
+      "lab_tests": [
+        {
+          "name": "DXA/BMD assessment when indicated by age, fracture history, risk factors, or clinician assessment",
+          "urgency": "consider"
+        },
+        {
+          "name": "25-hydroxyvitamin D [25(OH)D], calcium, phosphate, PTH, and alkaline phosphatase when bone or mineral symptoms or risk factors warrant",
+          "urgency": "consider"
+        },
+        {
+          "name": "Kidney function and medication review when calcium, vitamin D, or bone therapy is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Review glucocorticoids, thyroid replacement, anticonvulsants, aromatase inhibitors, androgen or estrogen therapy, and osteoporosis medicines with a clinician; do not start, stop, or change them from raw DNA."
+      ],
+      "notes": "Bone density and fracture decisions differ by age, sex, menopause or hormone status, body context, medications, prior fracture, and clinical risk. Common variants are modest context only; DXA and clinical evaluation lead when indicated. This route supports different bodies without inferring anatomy or current hormone levels.",
+      "sources": [
+        "niams_bone_density_tests",
+        "nih_ods_calcium",
+        "nih_ods_vitamin_d",
+        "dietary_guidelines_2025_2030",
+        "cdc_activity_stop_signs",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "digestive_inflammatory_context",
+      "genes": [
+        "NOD2",
+        "ATG16L1",
+        "IL23R",
+        "FCGR2A",
+        "IL10"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "digestive_gut_microbiome",
+        "immune_autoimmune_general"
+      ],
+      "favor": [
+        "Use a symptom, stool, food, and medication log that records bleeding, pain, fever, weight change, nocturnal symptoms, and exposure timing",
+        "Maintain adequate hydration and nourishment using tolerated foods, and ask a gastroenterology clinician or dietitian before restrictive elimination plans"
+      ],
+      "avoid": [
+        "Using an IBD-associated SNP to diagnose Crohn disease or ulcerative colitis, decide that symptoms are IBS, or start steroids, biologics, or immune-suppressing treatment",
+        "Long-term restrictive diets, probiotics, digestive enzymes, or detox products as treatment based only on DNA"
+      ],
+      "supplements": [
+        "Do not use an IBD marker to choose iron, B12, vitamin D, calcium, or another supplement; review measured deficiencies, possible malabsorption, kidney or liver status, and medicines with a clinician or pharmacist"
+      ],
+      "lab_tests": [
+        {
+          "name": "Complete blood count (CBC) and iron studies when anemia, bleeding, or malabsorption is a concern",
+          "urgency": "consider"
+        },
+        {
+          "name": "C-reactive protein (CRP) and fecal calprotectin when inflammatory bowel disease is clinically suspected",
+          "urgency": "consider"
+        },
+        {
+          "name": "Stool infection evaluation, GI consultation, endoscopy, or imaging when symptoms and clinician assessment warrant",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Review frequent NSAID use and every current medicine with a clinician if GI symptoms or bleeding occur; a genotype does not establish NSAID safety.",
+        "Do not self-treat, stop, or change prescribed digestive or immune medicines from raw DNA; persistent diarrhea, blood, weight loss, fever, nocturnal symptoms, anemia, or significant pain warrants clinical evaluation."
+      ],
+      "notes": "IBD susceptibility is polygenic and interacts with immune, microbiome, environmental, and clinical factors. The NOD2, ATG16L1, IL23R, FCGR2A, and IL10 markers are hypothesis prompts only; blood, stool, endoscopy or imaging, and a clinician's differential diagnosis lead.",
+      "sources": [
+        "niddk_crohns_diagnosis",
+        "niddk_ulcerative_colitis_diagnosis",
+        "gwas_catalog",
+        "phenotype_required",
+        "clinical_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "celiac_hla_context",
+      "genes": [
+        "HLA-DQA1",
+        "HLA-DQB1"
+      ],
+      "marker_ids": [
+        "PANEL_CELIAC_HLA_DQ2_DQ8"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "digestive_gut_microbiome",
+        "immune_autoimmune_general"
+      ],
+      "avoid": [
+        "Beginning lifelong gluten avoidance solely because HLA-DQ2 or HLA-DQ8 is permissive, especially before discussing diagnostic testing if celiac disease is suspected",
+        "Using a consumer SNP tag as a substitute for clinical HLA typing, celiac serology, or biopsy"
+      ],
+      "lab_tests": [
+        {
+          "name": "tTG-IgA and total IgA while celiac disease is being evaluated",
+          "urgency": "consider"
+        },
+        {
+          "name": "EMA-IgA or appropriate IgG-based testing when clinically indicated, followed by duodenal biopsy when warranted",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical HLA-DQ2/DQ8 typing when a clinician uses genetic testing to clarify celiac disease likelihood",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If celiac disease is suspected, discuss testing before removing gluten because a gluten-free diet can affect test interpretation; do not diagnose or change medicines from an HLA context marker."
+      ],
+      "notes": "HLA-DQ2/DQ8 permissiveness is common and is not a celiac diagnosis. This panel is a prompt to verify what the consumer array can and cannot resolve, then use symptoms, serology, gluten exposure, and clinician-directed testing.",
+      "sources": [
+        "niddk_celiac_tests",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
   "version": "1.0.0",
-  "last_updated": "2026-07-06",
+  "last_updated": "2026-08-25",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -90,6 +90,62 @@
       "evidence_type": "Phenotype ontology",
       "conflict_of_interest": "Academic phenotype resource",
       "notes": "Use to standardize symptom prompts and phenotype tags."
+    },
+    "acog_premenstrual_disorders": {
+      "name": "ACOG Clinical Practice Guideline: Management of Premenstrual Disorders",
+      "url": "https://www.acog.org/clinical/clinical-guidance/clinical-practice-guideline/articles/2023/12/management-of-premenstrual-disorders",
+      "accessed": "2026-08-25",
+      "evidence_type": "Professional clinical practice guideline",
+      "conflict_of_interest": "Professional medical society guideline; review the guideline disclosures when using clinically",
+      "notes": "Use for PMS/PMDD assessment and treatment framing. The app must not turn a marker or a report into a diagnosis or treatment plan."
+    },
+    "womenshealth_pmdd": {
+      "name": "Office on Women's Health: Premenstrual Dysphoric Disorder",
+      "url": "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome/premenstrual-dysphoric-disorder-pmdd",
+      "accessed": "2026-08-25",
+      "evidence_type": "U.S. government health information",
+      "conflict_of_interest": "U.S. Department of Health and Human Services public health resource",
+      "notes": "Use for plain-language symptom timing, symptom diaries, and emergency mental-health safety wording."
+    },
+    "acog_combined_contraception": {
+      "name": "ACOG: Combined Hormonal Birth Control",
+      "url": "https://www.acog.org/womens-health/faqs/combined-hormonal-birth-control-pill-patch-ring",
+      "accessed": "2026-08-25",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "Professional medical society patient guidance",
+      "notes": "Use to distinguish combined estrogen-plus-progestin methods from progestin-only methods and to require exact product identification."
+    },
+    "acog_progestin_only_contraception": {
+      "name": "ACOG: Progestin-Only Hormonal Birth Control",
+      "url": "https://www.acog.org/womens-health/faqs/progestin-only-hormonal-birth-control-pill-and-injection",
+      "accessed": "2026-08-25",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "Professional medical society patient guidance",
+      "notes": "Use the term progestin for synthetic progesterone-like contraceptive ingredients and do not infer a medication class from DNA."
+    },
+    "nice_adenomyosis_heavy_bleeding": {
+      "name": "NICE NG88: Heavy Menstrual Bleeding Assessment and Management",
+      "url": "https://www.nice.org.uk/guidance/ng88/chapter/Recommendations",
+      "accessed": "2026-08-25",
+      "evidence_type": "Clinical guideline",
+      "conflict_of_interest": "UK National Institute for Health and Care Excellence guideline",
+      "notes": "Use for suspected adenomyosis symptom triage and imaging prompts; transvaginal ultrasound is preferred when clinically appropriate."
+    },
+    "medlineplus_adenomyosis": {
+      "name": "MedlinePlus Medical Encyclopedia: Adenomyosis",
+      "url": "https://medlineplus.gov/ency/article/001513.htm",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH consumer medical reference",
+      "conflict_of_interest": "U.S. National Library of Medicine public health resource",
+      "notes": "Use for symptom and diagnostic-limit language. Do not imply that a raw DNA file confirms or excludes adenomyosis."
+    },
+    "menstrual_cycle_physiology": {
+      "name": "NCBI Bookshelf: Physiology, Menstrual Cycle",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK500020/",
+      "accessed": "2026-08-25",
+      "evidence_type": "Medical reference chapter",
+      "conflict_of_interest": "NCBI Bookshelf medical reference; verify current clinical guidance for patient care",
+      "notes": "Use to explain that the late-luteal transition is characterized by withdrawal/fall of estradiol and progesterone in a natural cycle, not a presumed estrogen spike."
     },
     "dietary_guidelines_2025_2030": {
       "name": "Dietary Guidelines for Americans, 2025-2030",

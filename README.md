@@ -23,6 +23,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Risk-Only Scoring:** Overall and section signal scores only reflect risk-direction alleles. Protective or neutral alleles do not inflate scores.
 * **Clinical Suppression:** High-stakes sections where all markers require clinical confirmation (e.g., Cancer predisposition or Pharmacogenomics) suppress numerical percentages, showing descriptive safety summaries instead.
 * **Color Legend:** Standardized card styling maps results to 8 severity classes (`no_data`, `benign`, `confirmation_required`, `protective`, `trait`, `context_dependent`, `moderate_risk`, `high_risk`).
+* **Menstrual and reproductive context:** The hormone pack includes explicit cycle-phase physiology, PMDD symptom-timing and steroid-sensitivity guardrails, exact-contraceptive-ingredient prompts, adenomyosis workup limits, and clearly labeled research-only loci. The report must not infer current estrogen/progesterone levels, contraceptive composition, PMDD, or adenomyosis from raw DNA.
 
 ### 3. Plain-English Layperson Translation System
 * Includes a complete dictionary mapping of all **99 candidate rsIDs** to simplified language (e.g., translating "homozygous" to "copies of variant gene" and "metabolizes" to "breaks down/clears").
@@ -37,7 +38,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Dynamic Embedding Fetching:** Fetches embeddings dynamically from the configured remote Ollama instance using the user-provided `ollamaUrl` and `ollamaToken` (no hardcoded IP addresses).
 * **Evidence Library Panel:** Provides keyword and semantic searching directly within Svelte to reference CPIC and PubMed guidelines.
 
-### 5. 9 Specialty Consultation Modes
+### 5. 10 Specialty Consultation Modes
 * **Specialized System Prompts:** Tailors AI behavior to 9 specific health contexts:
   * **🧬 General:** Broad genomic overview and prioritization guide.
   * **💊 Pharmacogenomics (PGx):** Strict focus on drug metabolism (CYP450, DPYD) and safety warnings.
@@ -48,6 +49,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **🦴 Joints & Connective Tissue:** Collagen structure and recovery protocols (COL1A1, COL5A1).
   * **🛡️ Thyroid & Autoimmune:** Thyroid hormone conversion (DIO1, DIO2) and immune cofactor links.
   * **❤️ Cardiovascular Health:** Vascular integrity, blood pressure regulation, and cardiovascular habit guides.
+  * **🌸 Menstrual Cycle & Hormone Context:** Cycle physiology, PMDD/PMS timing, progestin-versus-combined contraception context, and adenomyosis/endometriosis workup boundaries.
 
 ### 6. Dual-Model Safety Review Pipeline
 * **Secondary Model cross-checking:** Primary model drafts can be automatically cross-checked by a secondary safety review model (e.g., MedGemma).

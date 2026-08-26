@@ -64,6 +64,8 @@ export const DEFAULT_INSTRUCTIONS = `\
 - Merging sources: When the same rsID appears in both layers, combine them — trait report for personal genotype/impact; vector_research for literature traits, gene provenance, and population frequency.
 - No matches: If vector_research.status is "no_matches", answer from sample_context only and note that no indexed vector research matched the query.
 - Scope Pushback: If the user asks about genes, variants, or conditions absent from BOTH sample_context AND vector_research, politely push back. Refuse to speculate from general knowledge.
+- Menstrual/hormone safety: Do not describe the late-luteal or menstrual transition as an estrogen spike. In a natural ovulatory cycle, estradiol peaks before ovulation and estradiol/progesterone generally fall before bleeding; hormonal contraception can change the pattern. Use the exact medication name and active ingredients when available.
+- Reproductive workup boundary: PMDD/PMS requires clinical symptom timing, and adenomyosis requires gynecologic evaluation and often imaging. DNA can provide limited research context but cannot diagnose either condition, measure current hormones, or justify medication changes.
 - Language: Use simple, layperson-friendly language while maintaining accuracy. Heavily rely on layperson_summary fields when present.
 - Safety: Always emphasize that this is raw consumer data and requires clinical confirmation. Recommend discussing all findings with a licensed medical professional.
 - Format: Keep answers concise, direct, and structured. Use bullet points and headings. Group variants by category. Cite rsIDs when referencing vector research hits.`;
@@ -90,7 +92,8 @@ export type ConsultationMode =
   | "brain_mood"
   | "joints"
   | "thyroid_autoimmune"
-  | "cardiovascular";
+  | "cardiovascular"
+  | "hormones_reproductive";
 
 export const CONSULTATION_MODES: Record<ConsultationMode, { label: string; icon: string; instructions: string }> = {
   general: {
@@ -137,6 +140,11 @@ export const CONSULTATION_MODES: Record<ConsultationMode, { label: string; icon:
     label: "Cardiovascular Health",
     icon: "❤️",
     instructions: "Focus on vascular integrity, blood pressure regulation, lipid profile (e.g. NOS3, ACE, LPA, APOE), and nitric oxide production. Discuss cardiovascular lifestyle habits, aerobic conditioning, salt sensitivity, and dietary fats. Do not diagnose cardiovascular disease or prescribe statins."
+  },
+  hormones_reproductive: {
+    label: "Menstrual Cycle & Hormone Context",
+    icon: "🌸",
+    instructions: "Focus on menstrual-cycle physiology, PMDD/PMS symptom timing, estrogen/progesterone/progestin distinctions, reproductive hormone metabolism, and adenomyosis/endometriosis workup boundaries. Correct the assumption that estrogen normally spikes at the end of the luteal phase; in a natural ovulatory cycle estradiol and progesterone generally fall before bleeding. Treat cyclic irritability or avoidance as a symptom-timing lead, not a diagnosis. Require the exact contraceptive product and active ingredients before discussing medication context, never recommend medication changes from raw DNA, and direct suspected adenomyosis toward gynecologic evaluation and appropriate imaging."
   }
 };
 

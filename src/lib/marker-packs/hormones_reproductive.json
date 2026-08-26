@@ -1648,6 +1648,291 @@
           "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
         }
       ]
+    },
+    {
+      "rsid": "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "gene": "OVARIAN_STEROID_AXIS",
+      "variant_name": "Natural menstrual-cycle hormone phase physiology",
+      "effect_allele": "N/A",
+      "impact": "Corrects late-luteal and menstrual hormone-direction assumptions",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "In a natural ovulatory cycle, estradiol is typically highest around the pre-ovulatory phase and progesterone peaks mid-luteal; both generally decline at the end of the luteal phase before bleeding. Symptoms during this transition can reflect sensitivity to hormone change rather than an estrogen spike.",
+      "do_not_claim": [
+        "estrogen spike at the start of menstruation",
+        "progesterone level from raw DNA",
+        "cycle phase from genotype"
+      ],
+      "confirm_with": [
+        "cycle-day and bleeding tracking",
+        "symptom timing",
+        "clinician-directed labs when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Hormone concentrations are dynamic and affected by ovulation, contraception, pregnancy, age, illness, stress, and assay timing. DNA cannot measure a current hormone level.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NCBI Bookshelf: Physiology, Menstrual Cycle",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK500020/",
+          "accessed": "2026-08-25",
+          "evidence_type": "Medical reference chapter",
+          "conflict_of_interest": "NCBI Bookshelf medical reference",
+          "notes": "Use for phase physiology and the late-luteal fall of estradiol and progesterone."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "gene": "MULTI_GENE",
+      "variant_name": "Premenstrual mood symptoms are not an estrogen-level genotype",
+      "effect_allele": "N/A",
+      "impact": "PMDD/PMS symptom-timing and ovarian-steroid sensitivity context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "PMDD research often supports abnormal sensitivity to normal ovarian-steroid changes rather than a simple excess of estrogen or progesterone. Cyclic irritability, anger, avoidance, anxiety, depression, or physical symptoms deserve symptom-timing review, but a DNA panel cannot establish PMDD or identify which hormone is responsible.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "progesterone intolerance diagnosis",
+        "estrogen sensitivity diagnosis",
+        "psychiatric diagnosis from a genotype"
+      ],
+      "confirm_with": [
+        "prospective daily symptom ratings across at least two cycles",
+        "clinical review for depression, anxiety, and other conditions",
+        "clinician-directed treatment discussion"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "PMDD is a clinical symptom pattern. Consumer SNP arrays do not measure brain steroid response, gene expression, allopregnanolone response, or current hormone levels.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "ACOG Clinical Practice Guideline: Management of Premenstrual Disorders",
+          "url": "https://www.acog.org/clinical/clinical-guidance/clinical-practice-guideline/articles/2023/12/management-of-premenstrual-disorders",
+          "accessed": "2026-08-25",
+          "evidence_type": "Professional clinical practice guideline",
+          "conflict_of_interest": "Professional medical society guideline",
+          "notes": "Use for clinical assessment and treatment framing, not genotype-based diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_CONTRACEPTIVE_PRODUCT_MUST_BE_IDENTIFIED",
+      "gene": "MULTI_GENE",
+      "variant_name": "Contraceptive ingredients cannot be inferred from DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates progestin-only from combined hormonal contraception context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "The report cannot infer whether a person uses progestin-only contraception or a combined method. Progestin is a progesterone-like medication class; combined methods contain estrogen plus progestin, and formulations differ. Use the exact product name and active ingredients before discussing cycle effects. No DNA result should drive a medication change.",
+      "do_not_claim": [
+        "current contraceptive product",
+        "contraceptive dose or effectiveness",
+        "absence of medication side effects",
+        "medication start, stop, or dose change from DNA"
+      ],
+      "confirm_with": [
+        "exact product name and active ingredients",
+        "package label or prescribing record",
+        "clinician or pharmacist review"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Genotype cannot identify medication exposure, endogenous ovulation, serum hormone concentration, or an individual's response to a contraceptive.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "ACOG: Combined Hormonal Birth Control",
+          "url": "https://www.acog.org/womens-health/faqs/combined-hormonal-birth-control-pill-patch-ring",
+          "accessed": "2026-08-25",
+          "evidence_type": "Professional patient guidance",
+          "conflict_of_interest": "Professional medical society patient guidance",
+          "notes": "Use to identify combined estrogen-plus-progestin methods."
+        },
+        {
+          "name": "ACOG: Progestin-Only Hormonal Birth Control",
+          "url": "https://www.acog.org/womens-health/faqs/progestin-only-hormonal-birth-control-pill-and-injection",
+          "accessed": "2026-08-25",
+          "evidence_type": "Professional patient guidance",
+          "conflict_of_interest": "Professional medical society patient guidance",
+          "notes": "Use to distinguish progestin-only methods from combined methods."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "gene": "MULTI_GENE",
+      "variant_name": "Adenomyosis requires clinical gynecologic workup",
+      "effect_allele": "N/A",
+      "impact": "Prevents adenomyosis diagnosis or exclusion from consumer DNA",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Adenomyosis is a uterine tissue condition and is not a validated consumer-SNP diagnosis. Heavy or prolonged bleeding, worsening period pain, pelvic pain, pain with sex, or a tender/bulky uterus should be evaluated clinically. Transvaginal ultrasound is commonly preferred when adenomyosis is suspected; MRI may help when ultrasound is insufficient.",
+      "do_not_claim": [
+        "adenomyosis diagnosis",
+        "adenomyosis ruled out by a negative raw file",
+        "adenomyosis risk percentage from a SNP panel",
+        "endometriosis and adenomyosis are interchangeable"
+      ],
+      "confirm_with": [
+        "bleeding and pain history",
+        "pelvic examination when appropriate",
+        "transvaginal ultrasound or MRI when clinically indicated",
+        "gynecology review"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Adenomyosis biology may include tissue-specific, somatic, epigenetic, and polygenic research signals that are not captured or validated by a consumer germline SNP report.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NICE NG88: Heavy Menstrual Bleeding Assessment and Management",
+          "url": "https://www.nice.org.uk/guidance/ng88/chapter/Recommendations",
+          "accessed": "2026-08-25",
+          "evidence_type": "Clinical guideline",
+          "conflict_of_interest": "UK National Institute for Health and Care Excellence guideline",
+          "notes": "Use for suspected-adenomyosis symptom triage and imaging prompts."
+        },
+        {
+          "name": "MedlinePlus Medical Encyclopedia: Adenomyosis",
+          "url": "https://medlineplus.gov/ency/article/001513.htm",
+          "accessed": "2026-08-25",
+          "evidence_type": "NIH consumer medical reference",
+          "conflict_of_interest": "U.S. National Library of Medicine public health resource",
+          "notes": "Use for symptom and diagnostic-limit language."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_ADENOMYOSIS_RESEARCH_GAP",
+      "gene": "ESR1/PGR/WNT4/VEZT/MULTI_GENE",
+      "variant_name": "Adenomyosis research biology—not a callable SNP panel",
+      "effect_allele": "N/A",
+      "impact": "Research context around hormonally responsive uterine tissue",
+      "evidence_tier": "E_negative_evidence_or_gap",
+      "interpretation": "Adenomyosis research includes hormonally responsive tissue, somatic mutations, epigenetic regulation, and possible inherited susceptibility, but there is no validated consumer-DNA panel that can diagnose or exclude the condition. Keep this as an evidence-gap note rather than a score.",
+      "do_not_claim": [
+        "adenomyosis diagnosis",
+        "adenomyosis exclusion",
+        "molecular subtype from raw DNA"
+      ],
+      "confirm_with": [
+        "symptoms and pelvic examination",
+        "gynecologic imaging",
+        "specialist interpretation"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Tissue-specific and somatic findings in adenomyosis are not equivalent to inherited SNP-array findings in blood or saliva.",
+      "clinical_confirmation_required": true,
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "Adenomyosis pathogenesis: insights from next-generation sequencing",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/8543024/",
+          "accessed": "2026-08-25",
+          "evidence_type": "Peer-reviewed review",
+          "conflict_of_interest": "Review article",
+          "notes": "Use to distinguish tissue-level/somatic research from consumer germline SNP interpretation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7521902",
+      "gene": "WNT4",
+      "variant_name": "WNT4 endometriosis-susceptibility locus context",
+      "effect_allele": "A",
+      "impact": "Endometriosis/uterine-development hormone context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "WNT4 rs7521902 has been reported in endometriosis susceptibility research in some populations. It is not an adenomyosis test and cannot explain pelvic pain, bleeding, or menstrual mood changes in an individual.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage"
+      ],
+      "confirm_with": [
+        "symptom pattern",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Small-effect GWAS loci are population- and study-dependent; this consumer SNP cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-08-25",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for locus provenance and study details; do not convert a GWAS association into a personal diagnosis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6269",
+      "gene": "COMT",
+      "variant_name": "COMT haplotype marker for catecholamine/estrogen context",
+      "effect_allele": "A",
+      "impact": "Catecholamine and catechol-estrogen clearance haplotype context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT rs6269 can contribute to a COMT haplotype with rs4680 and nearby variants. It is included as a weak mechanistic context marker, not as a predictor of menstrual mood, estrogen level, or medication response.",
+      "do_not_claim": [
+        "estrogen dominance",
+        "PMDD diagnosis",
+        "personality or psychiatric diagnosis",
+        "medication response from one SNP"
+      ],
+      "confirm_with": [
+        "complete haplotype if relevant",
+        "symptom timing and clinical history",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "COMT effects are small, haplotype- and tissue-dependent, and modified by stress, medications, sleep, and hormone state.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-08-25",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for association provenance, not single-SNP prediction."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4633",
+      "gene": "COMT",
+      "variant_name": "COMT haplotype marker rs4633",
+      "effect_allele": "T",
+      "impact": "COMT haplotype/catecholamine clearance context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "COMT rs4633 should be interpreted only with the surrounding COMT haplotype and phenotype. It does not measure estrogen, progesterone, allopregnanolone, or menstrual-cycle mood response.",
+      "do_not_claim": [
+        "PMDD diagnosis",
+        "estrogen or progesterone level",
+        "psychiatric diagnosis"
+      ],
+      "confirm_with": [
+        "complete COMT haplotype if relevant",
+        "prospective cycle symptom tracking",
+        "clinician review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Single COMT haplotype markers have limited predictive value and do not replace symptom, medication, or laboratory information.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-08-25",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for association provenance, not single-SNP prediction."
+        }
+      ]
     }
   ]
 }

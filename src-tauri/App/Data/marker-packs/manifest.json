@@ -93,8 +93,8 @@
     },
     {
       "id": "hormones_reproductive",
-      "label": "Hormones, Reproductive Biology & PMDD Context",
-      "description": "Estrogen/progesterone/androgen signaling, PMDD hormone-sensitivity overlay, PCOS/endometriosis context, steroid metabolism, and fertility guardrails.",
+      "label": "Menstrual Cycle, Hormones & Reproductive Context",
+      "description": "Menstrual-phase physiology, estrogen/progesterone/androgen signaling, PMDD symptom-timing and steroid-sensitivity context, contraceptive composition guardrails, adenomyosis/endometriosis workup limits, steroid metabolism, and fertility guardrails.",
       "default_enabled": true,
       "requires_clinical_confirmation": false
     },

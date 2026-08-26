@@ -1,7 +1,7 @@
 {
   "name": "Phenotype Prompt Library",
   "version": "1.0.0",
-  "last_updated": "2026-07-01",
+  "last_updated": "2026-08-25",
   "domains": [
     {
       "id": "allergy_atopy_mast_cell",
@@ -86,24 +86,35 @@
       "trigger": [
         "PMDD panel",
         "ESR/PGR markers",
-        "androgen/SHBG markers"
+        "androgen/SHBG markers",
+        "menstrual cycle symptoms",
+        "hormonal contraception",
+        "progestin",
+        "adenomyosis",
+        "heavy menstrual bleeding"
       ],
       "questions": [
         "Are symptoms cyclic and strongest in the luteal phase?",
         "Do symptoms improve within a few days after bleeding starts?",
-        "Cycle regularity, acne, hair changes, cramps, pelvic pain, libido, or fertility concerns?"
+        "What is the first day of bleeding, and on which cycle days do irritability, avoidance, anxiety, depression, pain, or physical symptoms begin and end?",
+        "Has this pattern been recorded prospectively every day across at least two cycles, including symptom-free days?",
+        "What is the exact contraceptive product, active ingredient(s), dose, schedule, and start date? Is it progestin-only or combined estrogen-plus-progestin?",
+        "Cycle regularity, acne, hair changes, cramps, pelvic pain, pain with sex, unusually heavy/prolonged bleeding, or fertility concerns?"
       ],
       "red_flags": [
         "suicidal ideation premenstrually",
-        "severe pelvic pain",
-        "very heavy bleeding",
-        "amenorrhea"
+        "severe or sudden pelvic pain",
+        "very heavy bleeding with dizziness, fainting, or weakness",
+        "possible pregnancy with pain or bleeding",
+        "amenorrhea with concerning symptoms"
       ],
       "confirmations": [
         "daily symptom tracking across at least 2 cycles",
-        "TSH/ferritin/B12/vitamin D context",
-        "reproductive hormone labs when indicated",
-        "gynecology review"
+        "exact medication label or prescribing record",
+        "CBC and ferritin when bleeding is heavy or prolonged",
+        "TSH and other targeted tests when clinically indicated",
+        "transvaginal ultrasound or MRI when adenomyosis is suspected",
+        "gynecology and mental-health review when indicated"
       ]
     },
     {

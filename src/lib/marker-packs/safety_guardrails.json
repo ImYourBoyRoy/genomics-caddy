@@ -1,7 +1,7 @@
 {
   "name": "Global Safety Guardrails",
   "version": "1.0.0",
-  "last_updated": "2026-07-01",
+  "last_updated": "2026-08-25",
   "rules": [
     {
       "id": "NO_DIAGNOSIS_FROM_RAW_DNA",
@@ -57,6 +57,26 @@
       "id": "LABS_AND_PHENOTYPE_FIRST",
       "severity": "high",
       "text": "When phenotype/labs conflict with genotype, phenotype/labs dominate."
+    },
+    {
+      "id": "MENSTRUAL_HORMONE_PHASES_NOT_SPIKE",
+      "severity": "high",
+      "text": "Do not describe the late-luteal or menstrual transition as an estrogen spike. In a natural ovulatory cycle, estradiol peaks before ovulation and both estradiol and progesterone generally fall late in the luteal phase; cycle timing and hormonal contraception can change the pattern."
+    },
+    {
+      "id": "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA",
+      "severity": "critical",
+      "text": "Raw DNA cannot identify a person's contraceptive product, active ingredients, dose, ovulation suppression, or medication response. Ask for the exact product label and do not recommend starting, stopping, or changing it from genotype."
+    },
+    {
+      "id": "PMDD_REQUIRES_SYMPTOM_TIMING",
+      "severity": "high",
+      "text": "PMDD/PMS is a clinical symptom-timing diagnosis, not a DNA diagnosis. Treat cyclic irritability, avoidance, anxiety, depression, or physical symptoms as a reason for prospective daily tracking and clinical review, not proof of an estrogen or progesterone abnormality."
+    },
+    {
+      "id": "ADENOMYOSIS_REQUIRES_GYNECOLOGIC_WORKUP",
+      "severity": "critical",
+      "text": "Do not diagnose, exclude, or assign adenomyosis risk from consumer DNA. Evaluate heavy or painful bleeding and pelvic symptoms clinically; imaging such as transvaginal ultrasound, and sometimes MRI, may be appropriate."
     }
   ]
 }

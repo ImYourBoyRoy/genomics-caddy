@@ -1,7 +1,7 @@
 {
   "name": "Lab Overlay Map",
   "version": "1.0.0",
-  "last_updated": "2026-07-01",
+  "last_updated": "2026-08-25",
   "principle": "Labs confirm phenotype. Genotype suggests what to check, not what to diagnose.",
   "overlays": [
     {
@@ -156,6 +156,36 @@
         "pharmacist/clinician review"
       ],
       "notes": "Never change meds from raw DNA alone."
+    },
+    {
+      "domain": "menstrual_cycle_mood_symptoms",
+      "markers_or_packs": [
+        "hormones_reproductive",
+        "thyroid_autoimmune",
+        "neuropsych"
+      ],
+      "labs": [
+        "CBC when bleeding is heavy or prolonged",
+        "ferritin when iron deficiency is possible",
+        "TSH when thyroid symptoms or cycle changes warrant it",
+        "pregnancy testing when clinically relevant",
+        "reproductive hormone testing only when a clinician has a specific indication"
+      ],
+      "notes": "There is no single lab or DNA result that diagnoses PMS/PMDD. Prospective daily symptom timing across at least two cycles is more informative for the pattern; labs help evaluate mimics and consequences."
+    },
+    {
+      "domain": "adenomyosis_heavy_bleeding_pelvic_pain",
+      "markers_or_packs": [
+        "hormones_reproductive"
+      ],
+      "labs_tests": [
+        "CBC",
+        "ferritin",
+        "pregnancy testing when clinically relevant",
+        "transvaginal ultrasound",
+        "MRI when ultrasound is insufficient or a specialist recommends it"
+      ],
+      "notes": "Adenomyosis is not diagnosed or excluded by consumer DNA. Symptoms, pelvic examination, and gynecologic imaging guide the workup; endometriosis, fibroids, pregnancy, and other causes may overlap."
     }
   ]
 }

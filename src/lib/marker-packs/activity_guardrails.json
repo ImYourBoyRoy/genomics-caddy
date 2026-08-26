@@ -1,6 +1,6 @@
 {
   "name": "Activity Guidance & Exercise Safety Guardrails",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Use genotype as a weak context modifier for training questions while keeping symptoms, medical history, progression, and professional clearance ahead of genetic optimization.",
@@ -22,6 +22,8 @@
     {
       "id": "muscle_performance_recovery",
       "section_keywords": ["muscle", "performance", "hypertrophy", "recovery"],
+      "context_ids": [],
+      "personal_context_keywords": ["exercise intolerance", "recurrent injury", "muscle cramp", "dark urine", "severe muscle pain"],
       "context": "ACTN3, recovery, mitochondrial, creatine, and myopathy-related markers",
       "favor": [
         "progressive overload with recovery days",
@@ -45,6 +47,8 @@
         "bone_growth_mineral_density"
       ],
       "section_keywords": ["connective", "musculoskeletal", "bone", "skeletal"],
+      "context_ids": [],
+      "personal_context_keywords": ["joint instability", "hypermobility", "recurrent injury", "fracture history", "tendon pain", "ligament injury"],
       "context": "Collagen, ligament, tendon, hypermobility, and bone-density context",
       "favor": [
         "technique-first progressive resistance and low-impact conditioning when tolerated",
@@ -63,6 +67,8 @@
     {
       "id": "cardiovascular",
       "section_keywords": ["cardiovascular", "lipid", "blood pressure", "vascular"],
+      "context_ids": [],
+      "personal_context_keywords": ["chest pain", "palpitations", "fainting", "blood pressure", "arrhythmia", "heart disease", "cardiac"],
       "context": "Blood-pressure, lipid, thrombosis, arrhythmia, and vascular context",
       "favor": [
         "gradual aerobic and resistance progression matched to current symptoms and clinical status",
@@ -81,6 +87,8 @@
     {
       "id": "metabolic",
       "section_keywords": ["metabolic", "glucose", "insulin", "diabetes", "weight", "triglyceride", "fatty liver"],
+      "context_ids": [],
+      "personal_context_keywords": ["a1c", "hba1c", "fasting glucose", "insulin", "diabetes", "triglyceride", "fatty liver", "eating disorder"],
       "context": "Glucose, insulin, lipid, body-composition, and fatty-liver context",
       "favor": [
         "regular aerobic and resistance activity progressed gradually to current ability and recovery",
@@ -104,6 +112,8 @@
         "allergy_atopy_mast_cell"
       ],
       "section_keywords": ["respiratory", "airway", "oxygenation", "lung"],
+      "context_ids": [],
+      "personal_context_keywords": ["wheeze", "wheezing", "asthma", "shortness of breath", "breathlessness", "low oxygen", "sleep apnea", "snoring"],
       "context": "Asthma, airway, lung-function, oxygenation, and sleep-apnea context",
       "favor": [
         "symptom- and environment-aware conditioning with appropriate warm-up",
@@ -125,6 +135,8 @@
         "sleep"
       ],
       "section_keywords": ["sleep", "circadian", "fatigue", "recovery"],
+      "context_ids": [],
+      "personal_context_keywords": ["insomnia", "sleep apnea", "snoring", "daytime sleepiness", "fatigue", "shift work"],
       "context": "Sleep opportunity, alertness, circadian timing, and recovery context",
       "favor": [
         "protect a consistent sleep opportunity and wake-time routine that fits the person's work, caregiving, and health needs",
@@ -145,6 +157,8 @@
         "kidney_fluid_electrolytes"
       ],
       "section_keywords": ["kidney", "fluid", "electrolyte", "stone", "gout", "urate", "creatinine", "egfr"],
+      "context_ids": [],
+      "personal_context_keywords": ["kidney disease", "kidney stone", "gout", "creatinine", "egfr", "electrolyte", "dark urine", "dehydration"],
       "context": "Hydration, kidney-function, urate, stone, and electrolyte context",
       "favor": [
         "individualized hydration and gradual conditioning based on kidney function, climate, medications, and clinician guidance",
@@ -165,6 +179,8 @@
         "pain_migraine_sensory"
       ],
       "section_keywords": ["pain", "migraine", "headache", "sensory", "neuropath"],
+      "context_ids": [],
+      "personal_context_keywords": ["migraine", "headache", "neurologic", "neuropathy", "chronic pain", "pain"],
       "context": "Migraine, pain, sensory-trigger, and symptom-paced activity context",
       "favor": [
         "graded activity with a symptom and trigger log rather than all-or-nothing training",
@@ -182,6 +198,20 @@
     {
       "id": "hormones_reproductive",
       "section_keywords": ["menstrual", "hormone", "reproductive", "pmdd", "ovarian"],
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "uterine_pelvic",
+        "suspected_adenomyosis",
+        "androgen_reproductive",
+        "menopause_hormone_therapy",
+        "hormone_therapy_context",
+        "pregnancy_postpartum",
+        "preconception_fertility"
+      ],
+      "personal_context_keywords": ["menstrual", "cycle", "pms", "pmdd", "pelvic", "bleeding", "pregnancy", "postpartum", "lactation", "menopause", "hormone", "contracept", "birth control", "testosterone", "androgen"],
       "context": "Cycle timing, contraception, menopause, pregnancy/postpartum, and hormone-therapy context",
       "favor": [
         "symptom- and cycle-aware adjustment of training load, sleep, hydration, and recovery",

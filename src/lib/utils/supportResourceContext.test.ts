@@ -188,6 +188,30 @@ describe('support resource context', () => {
     expect(androgen.cycle_support.selected_context_id).toBe('androgen_reproductive');
   });
 
+  it('routes explicit reproductive and personal safety context into the AI activity resources', () => {
+    const context = buildSupportResourceContext({
+      packIds: [],
+      reproductiveContext: 'menstrual_cycle',
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: ['wheezing during exercise', 'daytime sleepiness'],
+        labObservations: ['eGFR 45 mL/min/1.73 m²'],
+      },
+    });
+    const activityDomainIds = context.activity_safety.relevant_domains.map((domain) => domain.id);
+
+    expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
+    expect(context.cycle_support.relevant_domains.length).toBeGreaterThan(0);
+    expect(activityDomainIds).toEqual(expect.arrayContaining([
+      'hormones_reproductive',
+      'respiratory_airway',
+      'sleep_recovery',
+      'kidney_fluid_electrolytes',
+    ]));
+  });
+
   it('selects PGx confirmation resources and retains medication safety priorities', () => {
     const context = buildSupportResourceContext({ packIds: ['pgx'], consultationMode: 'pgx' });
 

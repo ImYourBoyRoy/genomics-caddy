@@ -28,6 +28,8 @@ import supplementSafety from '../marker-packs/supplement_safety.json';
 import sourceRegistry from '../marker-packs/source_registry.json';
 import userDietProfileSchema from '../marker-packs/user_diet_profile_schema.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
+import { activityDomainMatchesPersonalContext, activityPersonalContextText } from './activityContext';
+import type { PersonalSafetyContext } from './personalSafetyContext';
 
 export type SupportConsultationMode = typeof consultationModes.modes[number]['id'];
 
@@ -103,8 +105,14 @@ function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
-function relevantPackIds(packIds: string[], consultationMode: SupportConsultationMode): Set<string> {
-  return new Set(uniqueStrings([...packIds, CONSULTATION_PACK[consultationMode] || '']));
+function relevantPackIds(
+  packIds: string[],
+  consultationMode: SupportConsultationMode,
+  reproductiveContext?: string,
+): Set<string> {
+  const selected = new Set(uniqueStrings([...packIds, CONSULTATION_PACK[consultationMode] || '']));
+  if (selectedReproductiveContextOption(reproductiveContext)) selected.add('hormones_reproductive');
+  return selected;
 }
 
 function overlayPackIds(overlay: Record<string, unknown>): string[] {
@@ -188,12 +196,18 @@ function selectConditionalQuestions(packIds: Set<string>): Record<string, string
   return result;
 }
 
-function selectActivityDomains(packIds: Set<string>): typeof activityGuardrails.domains {
+function selectActivityDomains(
+  packIds: Set<string>,
+  reproductiveContext?: string,
+  personalSafetyContext?: PersonalSafetyContext,
+): typeof activityGuardrails.domains {
+  const personalContextText = activityPersonalContextText(personalSafetyContext);
   return activityGuardrails.domains.filter((domain) => {
     const signals = Array.isArray(domain.relevant_pack_signals)
       ? domain.relevant_pack_signals
       : [domain.id];
-    return signals.some((signal) => packIds.has(signal));
+    return signals.some((signal) => packIds.has(signal))
+      || activityDomainMatchesPersonalContext(domain, personalContextText, reproductiveContext);
   });
 }
 
@@ -213,12 +227,14 @@ export function buildSupportResourceContext({
   packIds,
   consultationMode = 'general',
   reproductiveContext,
+  personalSafetyContext,
 }: {
   packIds: string[];
   consultationMode?: SupportConsultationMode;
   reproductiveContext?: string;
+  personalSafetyContext?: PersonalSafetyContext;
 }): SupportResourceContext {
-  const selectedPackIds = relevantPackIds(packIds, consultationMode);
+  const selectedPackIds = relevantPackIds(packIds, consultationMode, reproductiveContext);
   const phenotype = selectPhenotypeDomains(selectedPackIds);
   const overlays = selectLabOverlays(selectedPackIds);
   const relevantCycleDomains = cycleSupportDomainsForContext(reproductiveContext).filter((domain) => {
@@ -286,7 +302,7 @@ export function buildSupportResourceContext({
     activity_safety: {
       principles: activityGuardrails.principles,
       stop_and_escalate: activityGuardrails.stop_and_escalate,
-      relevant_domains: selectActivityDomains(selectedPackIds),
+      relevant_domains: selectActivityDomains(selectedPackIds, reproductiveContext, personalSafetyContext),
       sources: activityGuardrails.sources,
     },
     cycle_support: {

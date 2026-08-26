@@ -582,7 +582,40 @@ const safetyGuardrails = readJson(path.join(sourceDir, 'safety_guardrails.json')
 const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
 const reproductiveContextIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));
 const safetyRuleIds = new Set((safetyGuardrails?.rules || []).map((rule) => rule.id));
+const activityGuardrails = readJson(path.join(sourceDir, 'activity_guardrails.json'));
 const supplementSafety = readJson(path.join(sourceDir, 'supplement_safety.json'));
+
+const activityDomainIds = new Set();
+for (const [index, domain] of (activityGuardrails?.domains || []).entries()) {
+  const location = `activity_guardrails.json domain ${index + 1}`;
+  for (const field of ['id', 'context']) {
+    if (typeof domain[field] !== 'string' || domain[field].trim() === '') {
+      errors.push(`${location}: ${field} must be a non-empty string`);
+    }
+  }
+  for (const field of ['section_keywords', 'favor', 'avoid', 'confirm_with', 'personal_context_keywords']) {
+    if (!isStringArray(domain[field]) || domain[field].length === 0) {
+      errors.push(`${location}: ${field} must be a non-empty string array`);
+    }
+  }
+  for (const field of ['relevant_pack_signals', 'context_ids']) {
+    if (domain[field] !== undefined && !isStringArray(domain[field])) {
+      errors.push(`${location}: optional ${field} must be a string array`);
+    }
+  }
+  for (const packId of domain.relevant_pack_signals || []) {
+    if (!manifestIds.has(packId)) {
+      errors.push(`${location}: relevant_pack_signals references unknown manifest pack ${packId}`);
+    }
+  }
+  for (const contextId of domain.context_ids || []) {
+    if (!reproductiveContextIds.has(contextId)) {
+      errors.push(`${location}: context_ids references unknown reproductive context ${contextId}`);
+    }
+  }
+  if (activityDomainIds.has(domain.id)) errors.push(`${location}: duplicate id ${domain.id}`);
+  activityDomainIds.add(domain.id);
+}
 for (const [index, rule] of (supplementSafety?.rules || []).entries()) {
   for (const contextId of rule.context_ids || []) {
     if (!reproductiveContextIds.has(contextId)) {

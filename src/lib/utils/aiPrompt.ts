@@ -218,6 +218,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     packIds: supportPackIds,
     consultationMode,
     reproductiveContext,
+    personalSafetyContext,
   });
 
   // --- Construct Payload JSON ---

@@ -110,6 +110,34 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_nutrition_activity_context')).toBe(true);
   });
 
+  it('surfaces reproductive activity guardrails from explicit context even without a matching SNP', () => {
+    const plan = deriveActionablePlan(report([]), { reproductiveContext: 'menstrual_cycle' });
+
+    expect(plan.activity.relevantDomains.map((domain) => domain.id)).toContain('hormones_reproductive');
+    expect(plan.activity.relevantDomains.find((domain) => domain.id === 'hormones_reproductive')?.favor.join(' '))
+      .toContain('cycle-aware');
+  });
+
+  it('routes personal symptoms and lab context to activity safety without turning them into genotype findings', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: ['wheezing during exercise', 'daytime sleepiness'],
+        labObservations: ['eGFR 45 mL/min/1.73 m²'],
+      },
+    });
+    const domainIds = plan.activity.relevantDomains.map((domain) => domain.id);
+
+    expect(domainIds).toEqual(expect.arrayContaining([
+      'respiratory_airway',
+      'sleep_recovery',
+      'kidney_fluid_electrolytes',
+    ]));
+    expect(plan.topFindings).toHaveLength(0);
+  });
+
   it('surfaces context-relevant supplement safety rules without inventing a supplement need', () => {
     const cyclePlan = deriveActionablePlan(report([]), { reproductiveContext: 'menstrual_cycle' });
     const cycleRuleIds = cyclePlan.supplementSafety.relevantRules.map((rule) => rule.id);

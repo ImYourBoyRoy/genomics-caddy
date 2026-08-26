@@ -17,6 +17,7 @@ import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
+import { activityDomainMatches, activityPersonalContextText } from './activityContext';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import type { ReproductiveIntakeValues } from './reproductiveIntake';
 import type { CycleDiaryEntry } from './cycleDiary';
@@ -320,19 +321,6 @@ function upsertLab(
       requires_counselor: requiresCounselor,
     });
   }
-}
-
-function activityContextMatches(
-  domain: typeof activityGuardrails.domains[number],
-  markers: EvaluatedMarker[],
-  sectionNames: string[]
-): boolean {
-  const context = [
-    ...sectionNames,
-    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
-  ].join(' ').toLowerCase();
-  const keywords = Array.isArray(domain.section_keywords) ? domain.section_keywords : [];
-  return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
 }
 
 function deriveMedicationSafety(
@@ -647,11 +635,18 @@ export function deriveActionablePlan(
   const labGroups = buildLabGroups(labTests);
   const markerValues = allMarkers.map(({ marker }) => marker);
   const sectionNames = allMarkers.map(({ sectionName }) => sectionName);
+  const personalSafetyContext = actionabilityContext.personalSafetyContext;
+  const personalActivityContext = activityPersonalContextText(personalSafetyContext);
   const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
-    activityContextMatches(domain, markerValues, sectionNames)
+    activityDomainMatches(
+      domain,
+      markerValues,
+      sectionNames,
+      personalActivityContext,
+      actionabilityContext.reproductiveContext,
+    )
   );
   const relevantCycleDomains = cycleSupportDomainsForContext(actionabilityContext.reproductiveContext);
-  const personalSafetyContext = actionabilityContext.personalSafetyContext;
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [

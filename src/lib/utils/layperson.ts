@@ -64,8 +64,8 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This GDF5 marker has been studied in cartilage and osteoarthritis susceptibility. Any association is small and probabilistic; it does not diagnose osteoarthritis or predict which joint becomes symptomatic."
   },
   "rs3025058": {
-    simpleImpact: "Altered tissue remodeling in tendons (MMP3 gene)",
-    simpleMeaning: "This variant affects how your body breaks down and rebuilds tissue in your joints and tendons. It can influence your risk of tendon injuries, such as Achilles tendon issues."
+    simpleImpact: "MMP3 tissue-remodeling association marker",
+    simpleMeaning: "This MMP3 marker has been studied in tissue-remodeling traits in joints and tendons. Associations vary and may be small; it does not determine tendon integrity or predict an Achilles injury."
   },
   "rs2118181": {
     simpleImpact: "FBN1/connective-tissue association marker",
@@ -76,16 +76,16 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This common variant is linked to natural variations in height and bone length. It is not harmful and represents normal human diversity."
   },
   "rs1815739": {
-    simpleImpact: "Reduced fast-twitch muscle power (ACTN3 gene)",
+    simpleImpact: "ACTN3 fast-fiber performance association marker",
     simpleMeaning: "Two copies are associated with absence of an ACTN3 protein in fast fibers in relevant research. Training, health, and many other genes influence performance, so this does not determine an endurance or sprint profile."
   },
   "rs970547": {
-    simpleImpact: "Altered ligament strength (COL12A1 gene)",
-    simpleMeaning: "This variant affects how collagen is organized in your ligaments. Certain versions are associated with a slightly higher risk of ligament tears, such as ACL injuries in the knee."
+    simpleImpact: "COL12A1 ligament-trait association marker",
+    simpleMeaning: "This COL12A1 marker has been studied in ligament and injury-related traits. Some studies report associations with ligament injury, but effects vary and it does not predict an ACL tear."
   },
   "rs3918242": {
-    simpleImpact: "Altered tissue remodeling (MMP9 gene)",
-    simpleMeaning: "This variant changes how your body maintains and breaks down tissues in your joints and blood vessels, which can impact your overall joint and heart health."
+    simpleImpact: "MMP9 tissue-remodeling association marker",
+    simpleMeaning: "This MMP9 marker has been studied in tissue-remodeling and vascular or joint traits. Associations vary; it does not measure tissue function or establish joint or heart disease."
   },
   "rs10156191": {
     simpleImpact: "AOC1 histamine-processing research marker",
@@ -180,12 +180,12 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This DRD2 marker has been studied in dopamine signaling and cognitive traits. Associations are small and inconsistent; it does not measure receptor availability or determine memory, learning, or flexibility."
   },
   "rs7794154": {
-    simpleImpact: "Altered brain cell connections (CNTNAP2 gene)",
-    simpleMeaning: "This research-level variant is involved in how brain cells connect and communicate. It has been studied in relation to language development and sensory sensitivity."
+    simpleImpact: "CNTNAP2 brain-connectivity research marker",
+    simpleMeaning: "This research-level CNTNAP2 marker has been studied in brain connectivity, language development, and sensory traits. It does not establish a neurodevelopmental condition or predict an individual's abilities."
   },
   "rs4307059": {
-    simpleImpact: "Altered brain structure connections (MSNP1AS gene)",
-    simpleMeaning: "This is a minor research marker that plays a role in brain cell architecture. It shows a weak association with sensory processing and neurodevelopmental traits."
+    simpleImpact: "MSNP1AS brain-structure research marker",
+    simpleMeaning: "This minor research marker has been studied in brain structure, sensory processing, and neurodevelopmental traits. The association is weak and does not predict an individual's traits or diagnosis."
   },
   "rs1800544": {
     simpleImpact: "ADRA2A norepinephrine-signaling association marker",
@@ -216,11 +216,11 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This ADORA2A marker has been associated with differences in caffeine sensitivity in some studies. Dose, sleep, expectations, medicines, pregnancy, and personal response matter; it does not diagnose anxiety or set a universal caffeine limit."
   },
   "rs1799971": {
-    simpleImpact: "Altered pain and reward sensitivity (OPRM1 gene)",
-    simpleMeaning: "This variant affects your body's endorphin system. It can slightly change your pain tolerance and affect how you respond to rewards or social bonding."
+    simpleImpact: "OPRM1 pain and reward association marker",
+    simpleMeaning: "This OPRM1 marker has been studied in endorphin signaling, pain, and reward-related traits. Associations are small or inconsistent; it does not determine pain tolerance, social bonding, or medication response."
   },
   "rs1611115": {
-    simpleImpact: "Altered dopamine and norepinephrine balance (DBH gene)",
+    simpleImpact: "DBH dopamine-to-norepinephrine association marker",
     simpleMeaning: "This DBH marker has been studied in dopamine-to-norepinephrine metabolism. It does not measure neurotransmitter levels or determine focus, stress response, or medication outcome."
   },
   "rs1801133": {
@@ -404,8 +404,8 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This CD40 marker has been studied in antibody and autoimmune-trait research. It does not measure thyroid antibodies or diagnose thyroid disease; symptoms and laboratory testing are required."
   },
   "rs179247": {
-    simpleImpact: "Altered thyroid hormone receptor sensitivity (TSHR gene)",
-    simpleMeaning: "This variant affects the sensitivity of your thyroid receptors to hormone signals, which can influence your risk of autoimmune thyroid conditions."
+    simpleImpact: "TSHR thyroid and autoimmune-association marker",
+    simpleMeaning: "This TSHR marker has been studied in thyroid signaling and autoimmune-thyroid traits. Associations vary by condition and population; it does not measure receptor sensitivity or diagnose thyroid disease."
   },
   "rs2235544": {
     simpleImpact: "Altered thyroid hormone conversion in organs (DIO1 gene)",

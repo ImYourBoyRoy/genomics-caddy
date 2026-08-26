@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -450,6 +450,54 @@
       "evidence_type": "NIH nutrient safety reference",
       "conflict_of_interest": "U.S. National Institutes of Health public health resource",
       "notes": "Use for iodine food/supplement safety and the risk of excessive intake; do not convert thyroid-pathway SNPs into iodine dosing advice."
+    },
+    "nih_ods_vitamin_a": {
+      "name": "NIH Office of Dietary Supplements: Vitamin A and Carotenoids Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminA-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for preformed vitamin A versus provitamin A distinctions, excess-intake risks, and medication interactions; do not convert a common marker into a vitamin-A dose."
+    },
+    "nih_ods_pregnancy_supplements": {
+      "name": "NIH Office of Dietary Supplements: Dietary Supplements and Life Stages—Pregnancy",
+      "url": "https://ods.od.nih.gov/factsheets/Pregnancy-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH life-stage supplement safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for pregnancy and preconception supplement context, especially the distinction between preformed vitamin A and provitamin A carotenoids."
+    },
+    "nih_ods_zinc": {
+      "name": "NIH Office of Dietary Supplements: Zinc Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Zinc-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for zinc upper-intake, copper-depletion, and medication-interaction context; do not use SLC30A8 or SLC39A8 markers to prescribe zinc."
+    },
+    "nih_ods_potassium": {
+      "name": "NIH Office of Dietary Supplements: Potassium Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Potassium-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for kidney function, serum potassium, salt-substitute, and ACE/ARB or potassium-sparing-diuretic safety context; do not turn a common marker into potassium advice."
+    },
+    "nih_ods_calcium": {
+      "name": "NIH Office of Dietary Supplements: Calcium Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for calcium upper-intake, kidney-stone, and medication-interaction context; do not use VDR, CASR, CYP24A1, or SLC34A1 markers to prescribe calcium."
+    },
+    "nih_ods_vitamin_k": {
+      "name": "NIH Office of Dietary Supplements: Vitamin K Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient and medication-interaction reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for consistent vitamin-K intake and warfarin interaction context; do not use VKORC1/CYP2C9/CYP4F2 raw-array data to set anticoagulant dosing."
     },
     "cpic_dpyd_fluoropyrimidines": {
       "name": "CPIC: DPYD and Fluoropyrimidine Guideline",

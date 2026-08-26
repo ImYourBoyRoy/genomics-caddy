@@ -140,6 +140,19 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('Change warfarin dose');
   });
 
+  it('routes nutrient supplement safety from related pathway markers', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'DIO2', rsid: 'rs225014' }),
+      marker({ gene: 'VDR', rsid: 'rs2228570' }),
+      marker({ gene: 'SLC30A8', rsid: 'rs13266634' }),
+      marker({ gene: 'SLC12A3', rsid: 'rs13333226' }),
+      marker({ gene: 'VKORC1', rsid: 'rs9923231' }),
+    ]));
+    const ruleIds = plan.supplementSafety.relevantRules.map((rule) => rule.id);
+
+    expect(ruleIds).toEqual(expect.arrayContaining(['iodine', 'calcium', 'zinc', 'potassium', 'vitamin_k']));
+  });
+
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {
     const plan = deriveActionablePlan({
       ...report([]),

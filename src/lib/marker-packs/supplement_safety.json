@@ -1,7 +1,7 @@
 {
   "name": "Supplement Safety & Interaction Guardrails",
-  "version": "1.0.0",
-  "last_updated": "2026-08-25",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits.",
   "principles": [
@@ -104,6 +104,120 @@
         "medication and pregnancy/lactation review"
       ],
       "sources": ["nih_ods_vitamin_d"]
+    },
+    {
+      "id": "vitamin_a",
+      "label": "Vitamin A and retinoid safety",
+      "signal_genes": [],
+      "match_terms": ["vitamin a", "retinol", "retinyl", "cod liver oil", "beta-carotene", "isotretinoin", "acitretin", "bexarotene"],
+      "food_first": [
+        "Use ordinary food sources and read the label carefully, distinguishing preformed vitamin A from provitamin A carotenoids before considering a supplement."
+      ],
+      "avoid": [
+        "Do not stack retinol-containing products, cod-liver oil, multivitamins, or oral retinoids without clinician guidance.",
+        "If pregnant or potentially pregnant, do not self-start high-dose supplements containing preformed vitamin A; review the exact product with a clinician."
+      ],
+      "confirm_with": [
+        "pregnancy, preconception, or lactation context",
+        "exact product label and total preformed vitamin A",
+        "liver disease and oral-retinoid or weight-loss medication context"
+      ],
+      "sources": ["nih_ods_vitamin_a", "nih_ods_pregnancy_supplements"]
+    },
+    {
+      "id": "iodine",
+      "label": "Iodine and thyroid-context safety",
+      "signal_genes": ["DIO1", "DIO2", "TSHR", "SLC5A5", "TPO", "GPX1"],
+      "match_terms": ["iodine", "iodide", "kelp", "sea moss", "seaweed"],
+      "food_first": [
+        "Review ordinary dietary iodine sources, iodized-salt use, geography, and life stage before considering an iodine product."
+      ],
+      "avoid": [
+        "Do not use a thyroid-pathway SNP to justify high-dose iodine, kelp, or sea-moss products.",
+        "Do not combine iodine products with antithyroid medicines, ACE inhibitors, or potassium-sparing diuretics without clinician review."
+      ],
+      "confirm_with": [
+        "TSH/free T4 and thyroid history when clinically relevant",
+        "exact iodine product and total intake from multivitamins or prenatal products",
+        "pregnancy/lactation and medication context"
+      ],
+      "sources": ["nih_ods_iodine"]
+    },
+    {
+      "id": "zinc",
+      "label": "Zinc dose and interaction safety",
+      "signal_genes": ["SLC30A8", "SLC39A8"],
+      "match_terms": ["zinc", "zinc picolinate", "zinc gluconate", "zinc acetate"],
+      "food_first": [
+        "Favor zinc-containing foods and measured clinical context rather than treating a zinc-transport marker as proof that a supplement is needed."
+      ],
+      "avoid": [
+        "Do not use chronic high-dose zinc without checking the total intake and the risk of copper depletion.",
+        "Do not take zinc with interacting antibiotics or penicillamine without following the product label or pharmacist guidance."
+      ],
+      "confirm_with": [
+        "exact dose, duration, and copper-containing products",
+        "antibiotic, penicillamine, and diuretic medication context",
+        "diet, symptoms, and laboratory evaluation when deficiency is suspected"
+      ],
+      "sources": ["nih_ods_zinc"]
+    },
+    {
+      "id": "potassium",
+      "label": "Potassium and electrolyte safety",
+      "signal_genes": ["SLC12A3", "SLC12A1", "KCNJ1", "CLCNKB", "WNK1", "WNK4", "UMOD"],
+      "match_terms": ["potassium", "potassium chloride", "potassium salt", "salt substitute", "electrolyte powder"],
+      "food_first": [
+        "Use food and measured electrolyte context first; a high-potassium diet or product is not automatically appropriate for everyone."
+      ],
+      "avoid": [
+        "Do not use potassium supplements or potassium-containing salt substitutes with kidney disease, abnormal potassium, or impaired potassium excretion without clinician guidance.",
+        "Do not use a blood-pressure or kidney-associated SNP to self-prescribe potassium or a low-potassium diet."
+      ],
+      "confirm_with": [
+        "serum potassium and kidney function/eGFR when clinically indicated",
+        "ACE-inhibitor, ARB, potassium-sparing diuretic, and other medication context",
+        "heart, kidney, liver, diabetes, and dehydration context"
+      ],
+      "sources": ["nih_ods_potassium"]
+    },
+    {
+      "id": "calcium",
+      "label": "Calcium, kidney-stone, and medication safety",
+      "signal_genes": ["VDR", "CASR", "CYP24A1", "SLC34A1"],
+      "match_terms": ["calcium", "calcium citrate", "calcium carbonate", "bone meal"],
+      "food_first": [
+        "Prefer dietary calcium and measured vitamin-D, kidney, and bone context before considering a calcium supplement."
+      ],
+      "avoid": [
+        "Do not stack calcium products or use high-dose calcium solely because of a VDR, CASR, or bone-related marker.",
+        "Do not ignore kidney-stone history or medication interactions with levothyroxine, dolutegravir, lithium, or quinolone antibiotics."
+      ],
+      "confirm_with": [
+        "dietary calcium, serum calcium, vitamin D, and PTH when clinically relevant",
+        "kidney function and kidney-stone history",
+        "exact medication timing and interaction review"
+      ],
+      "sources": ["nih_ods_calcium"]
+    },
+    {
+      "id": "vitamin_k",
+      "label": "Vitamin K and anticoagulant consistency",
+      "signal_genes": ["VKORC1", "CYP2C9", "CYP4F2"],
+      "match_terms": ["vitamin k", "vitamin k1", "vitamin k2", "mk-7", "menaquinone", "phytonadione"],
+      "food_first": [
+        "Use a consistent, ordinary dietary pattern and disclose vitamin-K supplements rather than treating a VKORC1 result as a dosing instruction."
+      ],
+      "avoid": [
+        "Do not start, stop, or sharply change vitamin-K intake or supplements while taking warfarin or a similar anticoagulant without the anticoagulation team.",
+        "Do not use VKORC1, CYP2C9, or CYP4F2 raw-array data to set an anticoagulant dose."
+      ],
+      "confirm_with": [
+        "exact anticoagulant and current INR/monitoring plan",
+        "usual dietary vitamin-K intake and all supplements",
+        "prescriber or anticoagulation-clinic guidance"
+      ],
+      "sources": ["nih_ods_vitamin_k"]
     },
     {
       "id": "folate",

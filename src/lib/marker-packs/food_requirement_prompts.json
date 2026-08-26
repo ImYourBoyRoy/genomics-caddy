@@ -1,7 +1,7 @@
 {
   "name": "Food Requirement Intake Prompts",
-  "version": "1.0.0",
-  "last_updated": "2026-07-06",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Structured questions to capture hard food requirements, values, allergies, symptoms, labs and goals before generating diet guidance.",
   "global_first_run_questions": [
@@ -130,6 +130,42 @@
       "Was the stone type confirmed or uric acid measured?",
       "Any 24-hour urine results?",
       "Do beer, organ meats, sardines/anchovies, or high-fructose drinks trigger flares?"
+    ]
+  },
+  "conditional_prompt_signals": {
+    "fish_yes_pork_no": [
+      "nutrients",
+      "cardiovascular",
+      "metabolic",
+      "allergy_atopy_mast_cell"
+    ],
+    "allergy_or_atopy": [
+      "allergy_atopy_mast_cell",
+      "digestive_gut_microbiome"
+    ],
+    "histamine": [
+      "core",
+      "allergy_atopy_mast_cell",
+      "digestive_gut_microbiome"
+    ],
+    "glucose_metabolic": [
+      "metabolic",
+      "nutrients"
+    ],
+    "pmdd_cycle": [
+      "hormones_reproductive",
+      "neuropsych",
+      "thyroid_autoimmune"
+    ],
+    "muscle_gain": [
+      "muscle_performance_recovery",
+      "connective_tissue",
+      "metabolic",
+      "kidney_fluid_electrolytes"
+    ],
+    "kidney_stone_or_gout": [
+      "kidney_fluid_electrolytes",
+      "metabolic"
     ]
   }
 }

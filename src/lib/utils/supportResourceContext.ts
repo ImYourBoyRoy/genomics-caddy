@@ -110,15 +110,6 @@ const CONSULTATION_PACK: Partial<Record<SupportConsultationMode, string>> = {
   hormones_reproductive: 'hormones_reproductive',
 };
 
-const CONDITIONAL_PROMPT_PACKS: Record<string, string[]> = {
-  pmdd_cycle: ['hormones_reproductive', 'neuropsych', 'thyroid_autoimmune'],
-  glucose_metabolic: ['metabolic', 'nutrients'],
-  kidney_stone_or_gout: ['kidney_fluid_electrolytes', 'metabolic'],
-  muscle_gain: ['muscle_performance_recovery', 'connective_tissue'],
-  allergy_or_atopy: ['allergy_atopy_mast_cell', 'digestive_gut_microbiome'],
-  histamine: ['core', 'allergy_atopy_mast_cell', 'digestive_gut_microbiome'],
-};
-
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));
 }
@@ -197,10 +188,11 @@ function supportSourceIds(
 function selectConditionalQuestions(packIds: Set<string>): Record<string, string[]> {
   const result: Record<string, string[]> = {};
   const conditionalPrompts = foodRequirementPrompts.conditional_prompts as Record<string, string[]>;
-  for (const [questionId, linkedPacks] of Object.entries(CONDITIONAL_PROMPT_PACKS)) {
+  const promptSignals = foodRequirementPrompts.conditional_prompt_signals as Record<string, string[]>;
+  for (const [questionId, questions] of Object.entries(conditionalPrompts)) {
+    const linkedPacks = Array.isArray(promptSignals[questionId]) ? promptSignals[questionId] : [];
     if (linkedPacks.some((packId) => packIds.has(packId))) {
-      const questions = conditionalPrompts[questionId];
-      if (Array.isArray(questions)) result[questionId] = questions;
+      result[questionId] = questions;
     }
   }
   return result;

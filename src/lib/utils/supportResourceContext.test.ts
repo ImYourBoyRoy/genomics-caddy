@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
 import { buildSupportResourceContext } from './supportResourceContext';
 
 describe('support resource context', () => {
@@ -14,6 +15,9 @@ describe('support resource context', () => {
     expect(context.safety_guardrails.some((rule) => rule.id === 'ADENOMYOSIS_REQUIRES_GYNECOLOGIC_WORKUP')).toBe(true);
     expect(context.medication_context.ask_for.some((item) => item.includes('active ingredient'))).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'selenium')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_a')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_k')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'potassium')).toBe(true);
     expect(context.food_safety.profile_minimum_required.length).toBeGreaterThan(0);
     expect(context.food_safety.source_registry.nih_ods_selenium).toBeDefined();
     expect(context.food_safety.conditional_questions.pmdd_cycle).toBeDefined();
@@ -90,5 +94,15 @@ describe('support resource context', () => {
     expect(domainIds).toContain('sleep_recovery');
     expect(domainIds).toContain('kidney_fluid_electrolytes');
     expect(domainIds).toContain('pain_migraine_sensory');
+  });
+
+  it('routes every resource-authored conditional food prompt without a TypeScript map', () => {
+    const signals = foodRequirementPrompts.conditional_prompt_signals as Record<string, string[]>;
+    for (const [promptId, linkedPacks] of Object.entries(signals)) {
+      const context = buildSupportResourceContext({ packIds: [linkedPacks[0]] });
+      expect(context.food_safety.conditional_questions[promptId]).toEqual(
+        foodRequirementPrompts.conditional_prompts[promptId as keyof typeof foodRequirementPrompts.conditional_prompts],
+      );
+    }
   });
 });

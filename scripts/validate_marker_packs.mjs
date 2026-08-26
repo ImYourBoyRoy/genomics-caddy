@@ -93,6 +93,7 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
 }
 
 const actionability = readJson(path.join(sourceDir, 'actionability_guidance.json'));
+const foodRequirementPrompts = readJson(path.join(sourceDir, 'food_requirement_prompts.json'));
 if (!actionability?.policy?.safety_notes?.length) {
   errors.push('actionability_guidance.json: policy.safety_notes is required');
 }
@@ -103,6 +104,19 @@ for (const rule of actionability?.rules || []) {
   }
   if (!Array.isArray(rule.genes) || rule.genes.length === 0) {
     errors.push(`actionability rule ${rule.id || '(unnamed)'}: genes must be non-empty`);
+  }
+}
+const conditionalPromptIds = new Set(Object.keys(foodRequirementPrompts?.conditional_prompts || {}));
+const conditionalPromptSignalIds = new Set(Object.keys(foodRequirementPrompts?.conditional_prompt_signals || {}));
+for (const promptId of conditionalPromptIds) {
+  const signals = foodRequirementPrompts?.conditional_prompt_signals?.[promptId];
+  if (!Array.isArray(signals) || signals.length === 0 || !signals.every((signal) => typeof signal === 'string' && signal.trim() !== '')) {
+    errors.push(`food_requirement_prompts.json: ${promptId} needs non-empty conditional_prompt_signals`);
+  }
+}
+for (const promptId of conditionalPromptSignalIds) {
+  if (!conditionalPromptIds.has(promptId)) {
+    errors.push(`food_requirement_prompts.json: conditional_prompt_signals references unknown prompt ${promptId}`);
   }
 }
 
@@ -118,7 +132,7 @@ const supportContracts = {
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
-  food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts'] },
+  food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
   lab_overlays: { arrays: ['overlays'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },

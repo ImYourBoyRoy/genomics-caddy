@@ -35,6 +35,7 @@ describe('support resource context', () => {
     const contraceptiveDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'contraceptive_product_context');
     expect(contraceptiveDomain?.support_options.join(' ')).toContain('no new adverse effects');
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_linked_pain_headache_context')).toBe(true);
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_nutrition_activity_context')).toBe(true);
   });
 
   it('routes cycle-linked pain and migraine to diary, aura, and safety resources', () => {
@@ -52,6 +53,21 @@ describe('support resource context', () => {
     expect(context.cycle_support.source_registry.nice_menstrual_related_migraine).toBeDefined();
     expect(context.cycle_support.source_registry.cdc_migraine_contraception_safety).toBeDefined();
     expect(context.safety_guardrails.some((rule) => rule.id === 'CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA')).toBe(true);
+  });
+
+  it('routes cycle-linked nutrition and activity support through food and safety guardrails', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive', 'nutrients'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'menstrual_cycle',
+    });
+    const domain = context.cycle_support.relevant_domains.find((item) => item.id === 'cycle_nutrition_activity_context');
+
+    expect(domain?.support_options.join(' ')).toContain('CBC and ferritin');
+    expect(domain?.support_options.join(' ')).toContain('megadose');
+    expect(domain?.questions.join(' ')).toContain('exact supplement');
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'iron')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'magnesium')).toBe(true);
   });
 
   it('routes exogenous hormone therapy context with product and monitoring sources', () => {

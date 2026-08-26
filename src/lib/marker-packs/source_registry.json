@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -106,6 +106,22 @@
       "evidence_type": "U.S. government health information",
       "conflict_of_interest": "U.S. Department of Health and Human Services public health resource",
       "notes": "Use for plain-language symptom timing, symptom diaries, and emergency mental-health safety wording."
+    },
+    "acog_premenstrual_syndrome": {
+      "name": "ACOG: Premenstrual Syndrome",
+      "url": "https://www.acog.org/womens-health/faqs/Premenstrual-Syndrome",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "Professional medical society patient guidance; review current clinical advice when using clinically",
+      "notes": "Use for practical PMS nutrition, activity, sleep, relaxation, and supplement-caution prompts. Keep recommendations individualized and do not turn them into genotype-specific treatment."
+    },
+    "womenshealth_pms": {
+      "name": "Office on Women's Health: Premenstrual Syndrome",
+      "url": "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome",
+      "accessed": "2026-08-26",
+      "evidence_type": "U.S. government health information",
+      "conflict_of_interest": "U.S. Department of Health and Human Services public health resource",
+      "notes": "Use for plain-language food, activity, sleep, stress, and symptom-support prompts. Individual response and clinical context remain more important than a DNA association."
     },
     "acog_combined_contraception": {
       "name": "ACOG: Combined Hormonal Birth Control",

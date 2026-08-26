@@ -60,6 +60,7 @@ describe('reproductive marker context routing', () => {
     expect(option?.domain_ids).toEqual([
       'cycle_linked_pain_headache_context',
       'heavy_bleeding_pelvic_pain',
+      'cycle_nutrition_activity_context',
       'general_symptom_day_support',
     ]);
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');

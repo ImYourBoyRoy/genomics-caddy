@@ -39,6 +39,7 @@
         "contraceptive_product_context",
         "heavy_bleeding_pelvic_pain",
         "cycle_linked_pain_headache_context",
+        "cycle_nutrition_activity_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -52,6 +53,7 @@
       "domain_ids": [
         "cycle_linked_pain_headache_context",
         "heavy_bleeding_pelvic_pain",
+        "cycle_nutrition_activity_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -241,6 +243,7 @@
     "Hormonal contraception can change bleeding and hormone patterns. Identify the exact product and active ingredients before discussing cycle effects; progestin is not the same chemical as endogenous progesterone.",
     "Cyclic irritability, avoidance, anxiety, depression, pain, or bleeding are reasons to organize timing and clinical questions, not reasons to infer PMDD, adenomyosis, endometriosis, or a medication problem from DNA.",
     "Cycle-linked pelvic pain, headache, or migraine should be tracked against bleeding and other symptoms; timing can guide clinical questions, but DNA cannot diagnose dysmenorrhea, menstrual-related migraine, or the cause of pelvic pain.",
+    "Food, supplement, sleep, and activity changes should be treated as small, reversible experiments based on the person's symptoms, diet, medications, allergies, labs, and goals; DNA does not establish a nutrient deficiency or a universal menstrual trigger.",
     "When symptoms are present, use sleep, regular meals, hydration, and activity scaled to symptoms as general supportive options; do not present them as genotype-specific treatment."
   ],
   "domains": [
@@ -385,6 +388,50 @@
         "medlineplus_adenomyosis",
         "clinical_confirmation_required",
         "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "cycle_nutrition_activity_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "nutrients",
+        "metabolic",
+        "pain_migraine_sensory"
+      ],
+      "title": "Cycle-linked food, supplement, sleep and activity support",
+      "context": "Food, supplement, sleep, and activity patterns may influence how a person feels around a cycle, but a consumer DNA file cannot establish a deficiency, a food trigger, a supplement need, or a safe medication or exercise prescription.",
+      "questions": [
+        "What food, caffeine, alcohol, salt, sugar, missed meals, hydration, sleep, or activity patterns change symptoms for this person, and which observations are repeated rather than assumed?",
+        "Are there heavy or prolonged periods, fatigue, dizziness, restricted eating, gastrointestinal symptoms, kidney or liver conditions, thyroid history, pregnancy possibility, allergies, or other factors that change nutrition and supplement safety?",
+        "What are the exact supplement, OTC, medication, and fortified-food labels, including iron, magnesium, calcium, vitamin D, vitamin A, omega-3, iodine, and caffeine products?",
+        "What activity is realistic during symptomatic days, and are there pain, migraine, faintness, chest symptoms, unusual breathlessness, or recovery changes that should stop exercise and prompt care?"
+      ],
+      "support_options": [
+        "Start with ordinary balanced meals, regular meal timing, adequate fluids, sleep opportunity, and movement scaled to symptoms. Keep changes practical and reversible rather than using a restrictive hormone-detox or elimination plan.",
+        "For heavy bleeding or fatigue, ask whether CBC and ferritin are appropriate before taking iron; an HFE or other SNP is not proof of deficiency, and iron can be harmful when the problem is not deficiency.",
+        "Food sources of calcium and magnesium may fit some people's goals, but supplement trials should account for total intake, kidney function, pregnancy/lactation, and medication interactions. Do not use a DNA marker to justify a megadose.",
+        "If caffeine, alcohol, salt, sugar, or a specific food appears related to symptoms, test one modest change at a time while preserving adequate nutrition and tracking the result; do not assume the same trigger applies to everyone or infer an allergy from a symptom diary.",
+        "Regular activity may help some premenstrual symptoms, while symptomatic days may call for lower intensity or recovery. Stop for red flags and do not use genotype to clear maximal training."
+      ],
+      "confirm_with": [
+        "food, symptom, sleep, activity, and medication-use diary",
+        "exact supplement and medication labels with total nutrient and caffeine exposure",
+        "CBC, ferritin, thyroid, kidney, or other labs only when clinically indicated",
+        "dietitian, primary-care, gynecology, neurology, or sports-medicine review as appropriate"
+      ],
+      "red_flags": [
+        "heavy bleeding with dizziness, fainting, weakness, or shortness of breath",
+        "chest pain, fainting, severe breathlessness, new neurologic symptoms, or a first or worst sudden headache during activity",
+        "rapid weight loss, severe food restriction, repeated vomiting, dehydration, or symptoms of an eating disorder"
+      ],
+      "sources": [
+        "acog_premenstrual_disorders",
+        "acog_premenstrual_syndrome",
+        "womenshealth_pms",
+        "nih_ods_iron",
+        "nih_ods_magnesium",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
       ]
     },
     {

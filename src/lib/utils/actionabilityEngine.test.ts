@@ -141,6 +141,31 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('Change warfarin dose');
   });
 
+  it('routes CYP2C9 to NSAID exposure and menstrual-pain safety review', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'CYP2C9', rsid: 'rs1057910', variant_name: 'CYP2C9*3' }),
+    ]));
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('CYP2C9') && test.name.includes('NSAID'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('Kidney function/eGFR'))).toBe(true);
+    expect(medicationText).toContain('menstrual or other pain');
+    expect(medicationText).toContain('raw-array data');
+    expect(medicationText).not.toContain('dose this NSAID');
+  });
+
+  it('routes CYP3A5 to transplant-only tacrolimus monitoring', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'CYP3A5', rsid: 'rs776746', variant_name: 'CYP3A5*3' }),
+    ]));
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('CYP3A5') && test.name.includes('tacrolimus'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('whole-blood trough'))).toBe(true);
+    expect(medicationText).toContain('transplant care');
+    expect(medicationText).toContain('cannot determine a tacrolimus dose');
+  });
+
   it('routes nutrient supplement safety from related pathway markers', () => {
     const plan = deriveActionablePlan(report([
       marker({ gene: 'DIO2', rsid: 'rs225014' }),

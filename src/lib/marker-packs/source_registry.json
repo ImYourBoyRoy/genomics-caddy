@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -330,6 +330,22 @@
       "evidence_type": "CPIC clinical pharmacogenomic guideline",
       "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
       "notes": "Use for validated clinical PGx context when an antidepressant question is active. A consumer-array finding cannot independently select, stop, or change a psychiatric medication."
+    },
+    "cpic_cyp2c9_nsaids_2020": {
+      "name": "CPIC: CYP2C9 and Nonsteroidal Anti-Inflammatory Drugs Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/NSAID/2020/32189324.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated clinical CYP2C9 diplotype/phenotype context with selected NSAIDs. The guideline supports exposure-related clinical discussion but does not make a consumer-array result a diagnosis of intolerance or a self-directed medication instruction."
+    },
+    "cpic_cyp3a5_tacrolimus_2015": {
+      "name": "CPIC: CYP3A5 Genotype and Tacrolimus Dosing Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/tacrolimus/2015/25801146.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use only for validated clinical CYP3A5 interpretation in active tacrolimus care, with transplant-team oversight and therapeutic-drug monitoring. Consumer-array data cannot determine a tacrolimus dose."
     },
     "nih_ods_supplements": {
       "name": "NIH Office of Dietary Supplements Fact Sheets",

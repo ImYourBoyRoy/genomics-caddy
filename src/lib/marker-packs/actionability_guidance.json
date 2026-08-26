@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -1182,6 +1182,69 @@
         "cpic_ryr1_cacna1s_anesthesia",
         "gene_reviews_malignant_hyperthermia",
         "clinical_confirmation_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp2c9_nsaid_context",
+      "genes": [
+        "CYP2C9"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "pain_migraine_sensory",
+        "hormones_reproductive"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2C9 diplotype/phenotype review when an NSAID such as ibuprofen, celecoxib, meloxicam, naproxen, or diclofenac is being considered",
+          "urgency": "consider"
+        },
+        {
+          "name": "Kidney function/eGFR and blood-pressure review when regular or repeated NSAID use is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If an NSAID is being considered for menstrual or other pain, a complete clinical CYP2C9 phenotype may inform a drug-specific discussion; kidney, gastrointestinal, cardiovascular, bleeding-risk, pregnancy, and interacting-medication context still matter. Do not start, stop, select, or dose an NSAID from raw-array data."
+      ],
+      "notes": "CPIC reports moderate-to-high evidence linking CYP2C9 genotype with exposure to several NSAIDs, but evidence for many direct treatment-response or adverse-event outcomes is weaker. This does not diagnose NSAID intolerance or make an NSAID unsafe for everyone.",
+      "sources": [
+        "cpic_cyp2c9_nsaids_2020",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp3a5_tacrolimus_context",
+      "genes": [
+        "CYP3A5"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP3A5 diplotype/phenotype review when tacrolimus is being considered in transplant care",
+          "urgency": "consider"
+        },
+        {
+          "name": "Tacrolimus whole-blood trough / therapeutic-drug monitoring when tacrolimus is prescribed",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If tacrolimus is being considered or already used in transplant care, bring the complete clinical CYP3A5 result, transplant details, interacting medicines, organ function, and trough-monitoring plan to the transplant team. A consumer-array call cannot determine a tacrolimus dose or justify a medication change."
+      ],
+      "notes": "CPIC links CYP3A5 genotype to tacrolimus exposure and target-trough achievement, while noting that genotype-guided dosing has not established improved long-term clinical outcomes. This pathway is not a general kidney-health or wellness finding and is relevant only to active clinical tacrolimus care.",
+      "sources": [
+        "cpic_cyp3a5_tacrolimus_2015",
+        "clinical_confirmation_required",
+        "user_declared_values_required",
         "safety_guardrail"
       ]
     }

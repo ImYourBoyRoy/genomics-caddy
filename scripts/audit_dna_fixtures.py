@@ -9,12 +9,30 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import zipfile
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PACK_DIR = ROOT / "src" / "lib" / "marker-packs"
+
+
+def manifest_pack_paths() -> list[Path]:
+    manifest_path = PACK_DIR / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        return [PACK_DIR / f"{pack['id']}.json" for pack in manifest.get("packs", [])]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return sorted(PACK_DIR.glob("*.json"))
+
+
+def marker_gene_symbols(value: object) -> set[str]:
+    return {
+        gene.strip().upper()
+        for gene in re.split(r"[\s/]+", str(value or ""))
+        if gene.strip()
+    }
 
 
 def curated_rsids_by_pack() -> dict[str, set[str]]:
@@ -40,6 +58,48 @@ def curated_rsids_by_pack() -> dict[str, set[str]]:
                 pack_rsids.add(rsid)
         packs[path.stem] = pack_rsids
     return packs
+
+
+def actionability_rsids() -> dict[str, set[str]]:
+    """Map support-layer actionability rules to callable standard rsIDs only."""
+    try:
+        guidance = json.loads(
+            (PACK_DIR / "actionability_guidance.json").read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    marker_records: list[dict[str, object]] = []
+    for path in manifest_pack_paths():
+        if path.name in {"discovery_catalog.json", "manifest.json"}:
+            continue
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        marker_records.extend(
+            marker for marker in document.get("markers", []) if isinstance(marker, dict)
+        )
+
+    result: dict[str, set[str]] = {}
+    for rule in guidance.get("rules", []):
+        if not isinstance(rule, dict):
+            continue
+        rule_id = str(rule.get("id", "")).strip()
+        genes = {
+            str(gene).strip().upper()
+            for gene in rule.get("genes", [])
+            if str(gene).strip()
+        }
+        if not rule_id or not genes:
+            continue
+        result[rule_id] = {
+            str(marker.get("rsid", "")).strip().lower()
+            for marker in marker_records
+            if str(marker.get("rsid", "")).strip().lower().startswith("rs")
+            and marker_gene_symbols(marker.get("gene")) & genes
+        }
+    return result
 
 
 def candidate_files() -> list[Path]:
@@ -69,10 +129,12 @@ def audit(
     pack_rsids_by_pack: dict[str, set[str]],
     pack_rsids: set[str],
     hormone_rsids: set[str],
+    actionability_by_rule: dict[str, set[str]],
 ) -> dict[str, object]:
     rows = 0
     valid = 0
     rsids: set[str] = set()
+    called_rsids: set[str] = set()
     chromosomes: Counter[str] = Counter()
     y_calls = 0
     header = ""
@@ -101,6 +163,8 @@ def audit(
             continue
         valid += 1
         rsids.add(rsid)
+        if genotype and not any(token in genotype for token in ("-", "0", "?")):
+            called_rsids.add(rsid)
         chromosomes[chromosome] += 1
         if chromosome == "Y" and genotype and not any(token in genotype for token in ("-", "0", "?")):
             y_calls += 1
@@ -114,6 +178,15 @@ def audit(
         if rsid_set
     }
 
+    actionability_coverage = {
+        rule_id: {
+            "present": len(called_rsids & rule_rsids),
+            "total": len(rule_rsids),
+        }
+        for rule_id, rule_rsids in actionability_by_rule.items()
+        if rule_rsids
+    }
+
     return {
         "rows": rows,
         "valid_rows": valid,
@@ -124,6 +197,7 @@ def audit(
         "y_calls": y_calls,
         "chromosomes": ",".join(f"{key}:{value}" for key, value in chromosomes.most_common()),
         "pack_coverage": pack_coverage,
+        "actionability_coverage": actionability_coverage,
     }
 
 
@@ -131,6 +205,7 @@ def main() -> int:
     packs = curated_rsids_by_pack()
     pack_rsids = set().union(*packs.values()) if packs else set()
     hormone_rsids = packs.get("hormones_reproductive", set())
+    actionability_by_rule = actionability_rsids()
     paths = candidate_files()
     if not paths:
         print("No DNA fixtures found in the repository root.")
@@ -138,7 +213,7 @@ def main() -> int:
     print(f"Curated standard rsID markers: {len(pack_rsids)}")
     for path in paths:
         try:
-            result = audit(path, packs, pack_rsids, hormone_rsids)
+            result = audit(path, packs, pack_rsids, hormone_rsids, actionability_by_rule)
         except (OSError, ValueError, zipfile.BadZipFile) as error:
             print(f"{path.name}: ERROR {error}")
             return 1
@@ -163,6 +238,29 @@ def main() -> int:
         )
         if low_coverage:
             print(f"  low_coverage(<50%, >=10 markers)={','.join(low_coverage)}")
+        actionability_coverage = result["actionability_coverage"]
+        callable_rules = [
+            rule_id
+            for rule_id, values in actionability_coverage.items()
+            if values["present"] > 0
+        ]
+        print(
+            f"  actionability_pathways_with_called_rsids={len(callable_rules)}"
+            f"/{len(actionability_coverage)}"
+        )
+        for rule_id in (
+            "cyp2c9_nsaid_context",
+            "cyp3a5_tacrolimus_context",
+            "bche_succinylcholine_anesthesia",
+            "ugt1a1_irinotecan_safety",
+            "nat2_hydralazine_context",
+        ):
+            values = actionability_coverage.get(rule_id)
+            if values:
+                print(
+                    f"  actionability_coverage={rule_id}:"
+                    f"{values['present']}/{values['total']}"
+                )
     print("Raw genotype values were not emitted or persisted.")
     return 0
 

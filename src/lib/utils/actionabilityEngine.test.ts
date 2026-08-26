@@ -166,6 +166,23 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).toContain('cannot determine a tacrolimus dose');
   });
 
+  it('routes additional high-impact PGx markers to bounded clinical safety review', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'BCHE', rsid: 'rs1803274', variant_name: 'BCHE anesthesia context' }),
+      marker({ gene: 'UGT1A1', rsid: 'rs887829', variant_name: 'UGT1A1*28 tag' }),
+      marker({ gene: 'NAT2', rsid: 'rs1801280', variant_name: 'NAT2*5 component' }),
+    ]));
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('pseudocholinesterase'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('UGT1A1') && test.name.includes('irinotecan'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('NAT2') && test.name.includes('hydralazine'))).toBe(true);
+    expect(medicationText).toContain('succinylcholine');
+    expect(medicationText).toContain('irinotecan');
+    expect(medicationText).toContain('hydralazine');
+    expect(medicationText).not.toContain('Change hydralazine dose to');
+  });
+
   it('routes nutrient supplement safety from related pathway markers', () => {
     const plan = deriveActionablePlan(report([
       marker({ gene: 'DIO2', rsid: 'rs225014' }),

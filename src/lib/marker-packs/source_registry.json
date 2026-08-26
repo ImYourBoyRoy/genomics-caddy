@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -347,6 +347,14 @@
       "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
       "notes": "Use only for validated clinical CYP3A5 interpretation in active tacrolimus care, with transplant-team oversight and therapeutic-drug monitoring. Consumer-array data cannot determine a tacrolimus dose."
     },
+    "cpic_nat2_hydralazine_2025": {
+      "name": "CPIC: NAT2 Genotype and Hydralazine Therapy Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/hydralazine/2025/40974042.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated clinical NAT2 diplotype/phenotype context during hydralazine care. Consumer-array markers cannot independently assign phenotype or direct a dose or medication change."
+    },
     "nih_ods_supplements": {
       "name": "NIH Office of Dietary Supplements Fact Sheets",
       "url": "https://ods.od.nih.gov/factsheets/list-all/",
@@ -586,6 +594,22 @@
       "evidence_type": "Clinical genetics review resource",
       "conflict_of_interest": "NCBI Bookshelf clinical review resource",
       "notes": "Use for RYR1/CACNA1S testing limits, inheritance, and clinical susceptibility boundaries."
+    },
+    "ncbi_pseudocholinesterase": {
+      "name": "NCBI Bookshelf: Biochemistry, Pseudocholinesterase",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK545284/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NCBI Bookshelf clinical review",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for inherited and acquired pseudocholinesterase deficiency, succinylcholine/mivacurium exposure, dibucaine testing, and clinical confirmation limits."
+    },
+    "ncbi_ugt1a1_irinotecan": {
+      "name": "NCBI Bookshelf: Irinotecan Therapy and UGT1A1 Genotype",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK294473/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NCBI Medical Genetics Summary",
+      "conflict_of_interest": "NCBI Bookshelf clinical genetics resource",
+      "notes": "Use for UGT1A1/irinotecan toxicity context and the distinction between a clinical UGT1A1 result and a consumer-array proxy."
     },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",

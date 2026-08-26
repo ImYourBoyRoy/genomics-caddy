@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -1244,6 +1244,96 @@
       "sources": [
         "cpic_cyp3a5_tacrolimus_2015",
         "clinical_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "bche_succinylcholine_anesthesia",
+      "genes": [
+        "BCHE"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Plasma pseudocholinesterase activity and dibucaine number or validated BCHE clinical testing when an anesthesia history or BCHE finding warrants review",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If there is a personal or family history of prolonged paralysis or apnea after succinylcholine or mivacurium, or a confirmed BCHE finding, tell the anesthesia team before surgery. BCHE risk can be inherited or acquired, and a consumer-array call cannot clear risk or choose an anesthetic plan."
+      ],
+      "notes": "BCHE deficiency is often silent until exposure to susceptible neuromuscular blockers. Clinical enzyme activity, dibucaine testing, history, and validated genetic testing are more informative than a limited consumer SNP set.",
+      "sources": [
+        "ncbi_pseudocholinesterase",
+        "clinical_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "ugt1a1_irinotecan_safety",
+      "genes": [
+        "UGT1A1"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical UGT1A1 repeat/diplotype review before irinotecan therapy",
+          "urgency": "consider"
+        },
+        {
+          "name": "CBC with neutrophil monitoring and liver-function review as directed by the oncology team when irinotecan is used",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If irinotecan is being considered or used, the oncology team should review the complete clinical UGT1A1 result, including promoter-repeat testing when relevant, the regimen, liver function, blood counts, and monitoring plan. A raw-array proxy cannot select or change an irinotecan dose."
+      ],
+      "notes": "UGT1A1*28 and *6 context can contribute to irinotecan toxicity risk, but clinical significance depends on complete variant/haplotype testing, regimen, dose, ancestry, and patient factors. These markers do not diagnose Gilbert syndrome or predict toxicity from a proxy alone.",
+      "sources": [
+        "fda_pharmacogenomic_biomarkers",
+        "ncbi_ugt1a1_irinotecan",
+        "clinical_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "nat2_hydralazine_context",
+      "genes": [
+        "NAT2"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cardiovascular"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical NAT2 diplotype/acetylator-phenotype review when hydralazine is being considered or used",
+          "urgency": "consider"
+        },
+        {
+          "name": "Blood-pressure, symptom, and clinician-directed monitoring review during hydralazine care",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If hydralazine is being considered or already used for resistant hypertension, heart failure, or another clinical indication, a complete NAT2 phenotype may inform the prescriber’s review of exposure, response, adverse effects, and follow-up. Do not start, stop, or change hydralazine from raw-array data."
+      ],
+      "notes": "The 2025 CPIC guideline links NAT2 phenotype with hydralazine exposure and response, while emphasizing complete diplotype interpretation and clinical monitoring. Consumer SNPs cannot assign rapid, intermediate, poor, or indeterminate NAT2 phenotype by themselves.",
+      "sources": [
+        "cpic_nat2_hydralazine_2025",
+        "clinical_confirmation_required",
+        "phenotype_required",
         "user_declared_values_required",
         "safety_guardrail"
       ]

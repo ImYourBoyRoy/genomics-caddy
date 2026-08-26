@@ -2,12 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('./markerPacksState.svelte', () => ({
   markerPacksStore: {
-    manifest: { packs: [] },
+    manifest: { packs: [{ id: 'hormones_reproductive', label: 'Hormone & Reproductive Context' }] },
     packs: {},
   },
 }));
 
-import { buildMarkerPayload, buildSystemPrompt, CONSULTATION_MODES } from './aiPrompt';
+import { markerPacksStore } from './markerPacksState.svelte';
+import { buildMarkerPayload, buildSystemPrompt, CONSULTATION_MODES, getActiveCategories, getDynamicQuestions } from './aiPrompt';
 import type { EvaluatedMarker, GeneratedReport, GenomeSample } from '../types/genomics';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
@@ -17,6 +18,42 @@ describe('AI marker payload claim boundaries', () => {
     expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('different bodies');
     expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('not a diagnosis');
     expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('exact contraceptive or hormone product');
+  });
+
+  it('derives quick helper prompts from resource-authored relevance IDs', () => {
+    const questions = getDynamicQuestions({
+      hormones_reproductive: true,
+      activity_recovery: true,
+      food_supplement_safety: true,
+    });
+
+    expect(questions.map((question) => question.label)).toEqual([
+      '🥗 Food & Supplement Safety',
+      '🏃 Activity & Recovery Context',
+      '🌸 Hormone & Reproductive Context',
+    ]);
+    expect(getDynamicQuestions({})).toEqual([{
+      label: '🧬 Genomic Overview',
+      text: 'Give me a high-level summary of the active marker findings in my profile and what they mean.',
+    }]);
+  });
+
+  it('activates the hormone helper from a selected pack and active callable finding', () => {
+    const categories = getActiveCategories({
+      sections: [{
+        name: 'Hormone & Reproductive Context',
+        markers: [{
+          rsid: 'rs-example',
+          gene: 'ESR1',
+          user_genotype: 'AG',
+          effect_count: 1,
+        }],
+      }],
+    } as unknown as GeneratedReport, { hormones_reproductive: true });
+
+    expect(categories.hormones_reproductive).toBe(true);
+    expect(categories.food_supplement_safety).toBe(false);
+    expect(markerPacksStore.manifest.packs).toHaveLength(1);
   });
 
   it('keeps confirmation, limitations, callability, and source context beside the interpretation', () => {

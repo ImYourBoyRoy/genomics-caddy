@@ -1,0 +1,63 @@
+{
+  "name": "Dynamic AI Helper Prompts",
+  "version": "1.0.0",
+  "last_updated": "2026-08-26",
+  "type": "prompt_relevance_resource",
+  "purpose": "Define quick consultation prompts and the active finding signals that make each prompt relevant. These are navigation aids, not evidence or diagnostic rules.",
+  "do_not_claim": [
+    "A helper prompt is a relevance hint based on selected packs and active callable findings; it does not establish a disease, trait, anatomy, identity, hormone level, medication response, or personal risk.",
+    "Missing or uncalled markers do not activate or deactivate a clinical conclusion, and helper text cannot override marker claim boundaries, evidence tiers, or clinical confirmation requirements."
+  ],
+  "helpers": [
+    {
+      "id": "metabolic_methylation",
+      "label": "🍎 Metabolic & Methylation Summary",
+      "text": "Explain my active metabolic and nutrient methylation findings in simple, clear terms.",
+      "pack_ids": ["metabolic", "nutrients"]
+    },
+    {
+      "id": "histamine_caffeine",
+      "label": "☕ Histamine & Caffeine Lifestyle",
+      "text": "What lifestyle or dietary topics should I discuss with my doctor based on my histamine and caffeine markers?",
+      "gene_symbols": ["AOC1", "HNMT"],
+      "rsids": ["rs762551"]
+    },
+    {
+      "id": "food_supplement_safety",
+      "label": "🥗 Food & Supplement Safety",
+      "text": "Help me review food and supplement questions raised by my active findings, including labs, allergies, medications, and what I should avoid assuming from DNA.",
+      "pack_ids": ["nutrients", "metabolic", "allergy_atopy_mast_cell", "digestive_gut_microbiome", "kidney_fluid_electrolytes"]
+    },
+    {
+      "id": "activity_recovery",
+      "label": "🏃 Activity & Recovery Context",
+      "text": "Help me turn my active performance, connective-tissue, bone, or sleep findings into cautious activity and recovery questions for a clinician or coach.",
+      "pack_ids": ["muscle_performance_recovery", "connective_tissue", "bone_growth_mineral_density", "sleep"]
+    },
+    {
+      "id": "pgx_drug",
+      "label": "💊 PGx Drug Variations Guide",
+      "text": "Help me draft a simple summary of my active pharmacogenomic (PGx) variations to share with my doctor or pharmacist.",
+      "pack_ids": ["pgx"]
+    },
+    {
+      "id": "hormones_reproductive",
+      "label": "🌸 Hormone & Reproductive Context",
+      "text": "Help me review active hormone and reproductive context markers alongside symptom timing, exact medication ingredients, and appropriate clinical follow-up—without inferring current hormone levels or a diagnosis.",
+      "pack_ids": ["hormones_reproductive"]
+    },
+    {
+      "id": "clinical_confirmation",
+      "label": "⚠️ Clinical vs Standard Traits",
+      "text": "Explain the difference between variants requiring clinical confirmation (like high-stakes cancer markers) and standard traits.",
+      "pack_ids": ["cancer_confirmation_only"],
+      "requires_clinical_confirmation": true
+    },
+    {
+      "id": "overview",
+      "label": "🧬 Genomic Overview",
+      "text": "Give me a high-level summary of the active marker findings in my profile and what they mean.",
+      "fallback": true
+    }
+  ]
+}

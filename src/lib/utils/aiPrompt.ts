@@ -16,6 +16,7 @@
 
 import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/genomics";
 import type { QdrantHit } from "../types/research";
+import aiPromptHelpers from "../marker-packs/ai_prompt_helpers.json";
 import consultationModes from "../marker-packs/consultation_modes.json";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
@@ -45,12 +46,7 @@ export interface ContextStats {
   total: number;
 }
 
-export interface ActiveCategories {
-  metabolicMethylation: boolean;
-  histamineCaffeine: boolean;
-  pgxDrug: boolean;
-  clinicalConfirmation: boolean;
-}
+export type ActiveCategories = Record<string, boolean>;
 
 export interface CuratedQuestion {
   label: string;
@@ -103,6 +99,10 @@ export interface ConsultationModeInfo {
 export const CONSULTATION_MODES = Object.fromEntries(
   consultationModes.modes.map(({ id, label, icon, instructions }) => [id, { label, icon, instructions }]),
 ) as Record<ConsultationMode, ConsultationModeInfo>;
+
+type AiPromptHelper = typeof aiPromptHelpers.helpers[number];
+
+const AI_PROMPT_HELPERS = aiPromptHelpers.helpers as AiPromptHelper[];
 
 interface PromptBuildParams {
   selectedSample: GenomeSample;
@@ -396,12 +396,10 @@ export function getActiveCategories(
   generatedReport: GeneratedReport,
   selectedPacks: Record<string, boolean>
 ): ActiveCategories {
-  const cats: ActiveCategories = {
-    metabolicMethylation: false,
-    histamineCaffeine: false,
-    pgxDrug: false,
-    clinicalConfirmation: false,
-  };
+  const cats: ActiveCategories = Object.fromEntries(
+    AI_PROMPT_HELPERS.map((helper) => [helper.id, false]),
+  );
+  const activeFindings: Array<{ packId: string; marker: EvaluatedMarker }> = [];
 
   for (const sec of generatedReport.sections) {
     const pack = markerPacksStore.manifest.packs.find(
@@ -415,31 +413,30 @@ export function getActiveCategories(
         m.user_genotype !== "--" &&
         !m.user_genotype.includes("-");
       if (!isActive) continue;
-
-      const secName = sec.name;
-      if (
-        secName === "Metabolic Health & T2D" ||
-        secName === "Nutrients & One-Carbon Methylation"
-      ) {
-        cats.metabolicMethylation = true;
-      }
-      if (
-        m.rsid === "rs762551" ||
-        m.gene === "AOC1" ||
-        m.gene === "HNMT"
-      ) {
-        cats.histamineCaffeine = true;
-      }
-      if (secName === "Pharmacogenomics (PGx)") {
-        cats.pgxDrug = true;
-      }
-      if (
-        secName === "Cancer Risks (Confirmation Required)" ||
-        m.clinical_confirmation_required
-      ) {
-        cats.clinicalConfirmation = true;
-      }
+      activeFindings.push({ packId: pack.id, marker: m });
     }
+  }
+
+  for (const helper of AI_PROMPT_HELPERS) {
+    if (helper.fallback) continue;
+    cats[helper.id] = activeFindings.some(({ packId, marker }) => {
+      const geneSymbols = new Set(
+        String(marker.gene || '')
+          .split(/[\s/]+/)
+          .map((gene) => gene.trim().toUpperCase())
+          .filter(Boolean),
+      );
+      const packMatch = helper.pack_ids?.includes(packId) ?? false;
+      const geneMatch = helper.gene_symbols?.some((gene) =>
+        geneSymbols.has(String(gene).trim().toUpperCase())
+      ) ?? false;
+      const rsidMatch = helper.rsids?.some((rsid) =>
+        String(rsid).trim().toLowerCase() === String(marker.rsid || '').trim().toLowerCase()
+      ) ?? false;
+      const clinicalMatch = helper.requires_clinical_confirmation === true
+        && marker.clinical_confirmation_required === true;
+      return packMatch || geneMatch || rsidMatch || clinicalMatch;
+    });
   }
   return cats;
 }
@@ -453,39 +450,13 @@ export function getActiveCategories(
  * are active in the user's genomic profile.
  */
 export function getDynamicQuestions(cats: ActiveCategories): CuratedQuestion[] {
-  const list: CuratedQuestion[] = [];
+  const list = AI_PROMPT_HELPERS
+    .filter((helper) => !helper.fallback && cats[helper.id])
+    .map(({ label, text }) => ({ label, text }));
+  if (list.length > 0) return list;
 
-  if (cats.metabolicMethylation) {
-    list.push({
-      label: "🍎 Metabolic & Methylation Summary",
-      text: "Explain my active metabolic and nutrient methylation findings in simple, clear terms.",
-    });
-  }
-  if (cats.histamineCaffeine) {
-    list.push({
-      label: "☕ Histamine & Caffeine Lifestyle",
-      text: "What lifestyle or dietary topics should I discuss with my doctor based on my histamine and caffeine markers?",
-    });
-  }
-  if (cats.pgxDrug) {
-    list.push({
-      label: "💊 PGx Drug Variations Guide",
-      text: "Help me draft a simple summary of my active pharmacogenomic (PGx) variations to share with my doctor or pharmacist.",
-    });
-  }
-  if (cats.clinicalConfirmation) {
-    list.push({
-      label: "⚠️ Clinical vs Standard Traits",
-      text: "Explain the difference between variants requiring clinical confirmation (like high-stakes cancer markers) and standard traits.",
-    });
-  }
-  if (list.length === 0) {
-    list.push({
-      label: "🧬 Genomic Overview",
-      text: "Give me a high-level summary of the active marker findings in my profile and what they mean.",
-    });
-  }
-  return list;
+  const fallback = AI_PROMPT_HELPERS.find((helper) => helper.fallback);
+  return fallback ? [{ label: fallback.label, text: fallback.text }] : [];
 }
 
 // ---------------------------------------------------------------------------

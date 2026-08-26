@@ -346,7 +346,7 @@
 
   let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, reproductiveContext, personalSafetyContext, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
   let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
-  let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false });
+  let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : {});
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
 
   let lastContextSignature = $state("");

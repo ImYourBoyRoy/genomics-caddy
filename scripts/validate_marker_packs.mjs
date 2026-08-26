@@ -128,6 +128,7 @@ for (const promptId of conditionalPromptSignalIds) {
 // a resource is expanded or renamed.
 const supportContracts = {
   actionability_guidance: { arrays: ['rules', 'lab_categories', 'lab_tiers'], objects: ['policy', 'lab_confirmation_filter'] },
+  ai_prompt_helpers: { arrays: ['helpers'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
@@ -287,6 +288,44 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     for (const requiredId of ['general', 'hormones_reproductive']) {
       if (!modeIds.has(requiredId)) errors.push(`consultation_modes.json: missing required mode ${requiredId}`);
+    }
+  }
+  if (resourceId === 'ai_prompt_helpers') {
+    const helperIds = new Set();
+    let fallbackCount = 0;
+    for (const [index, helper] of (resource.helpers || []).entries()) {
+      const location = `ai_prompt_helpers.json helper ${index + 1}`;
+      for (const field of ['id', 'label', 'text']) {
+        if (typeof helper[field] !== 'string' || helper[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['pack_ids', 'gene_symbols', 'rsids']) {
+        if (helper[field] !== undefined && !isStringArray(helper[field])) {
+          errors.push(`${location}: optional ${field} must be a string array`);
+        }
+      }
+      for (const packId of helper.pack_ids || []) {
+        if (!manifestIds.has(packId)) errors.push(`${location}: pack_ids references unknown manifest pack ${packId}`);
+      }
+      for (const field of ['requires_clinical_confirmation', 'fallback']) {
+        if (helper[field] !== undefined && typeof helper[field] !== 'boolean') {
+          errors.push(`${location}: optional ${field} must be boolean when provided`);
+        }
+      }
+      const hasSignal = (helper.pack_ids || []).length > 0
+        || (helper.gene_symbols || []).length > 0
+        || (helper.rsids || []).length > 0
+        || helper.requires_clinical_confirmation === true
+        || helper.fallback === true;
+      if (!hasSignal) errors.push(`${location}: requires at least one relevance signal or fallback=true`);
+      if (helper.fallback === true) fallbackCount += 1;
+      if (helperIds.has(helper.id)) errors.push(`${location}: duplicate id ${helper.id}`);
+      helperIds.add(helper.id);
+    }
+    if (fallbackCount !== 1) errors.push(`ai_prompt_helpers.json: requires exactly one fallback helper`);
+    for (const requiredId of ['hormones_reproductive', 'food_supplement_safety', 'activity_recovery']) {
+      if (!helperIds.has(requiredId)) errors.push(`ai_prompt_helpers.json: missing required helper ${requiredId}`);
     }
   }
   if (resourceId === 'lab_overlays') {

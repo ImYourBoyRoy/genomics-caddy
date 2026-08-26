@@ -4,6 +4,7 @@ import {
   hasReproductiveIntake,
   normalizeReproductiveIntake,
   populatedReproductiveIntake,
+  reproductiveIntakeGroupsForContext,
 } from './reproductiveIntake';
 
 describe('resource-backed reproductive intake', () => {
@@ -45,5 +46,19 @@ describe('resource-backed reproductive intake', () => {
       'clinical_questions_or_findings',
     ]));
     expect(REPRODUCTIVE_INTAKE_SCHEMA.do_not_infer.join(' ')).toContain('adenomyosis');
+  });
+
+  it('shows cycle and androgen groups according to explicit context without hiding common review fields', () => {
+    const menstrualGroups = reproductiveIntakeGroupsForContext('menstrual_cycle').map((group) => group.id);
+    const androgenGroups = reproductiveIntakeGroupsForContext('androgen_reproductive').map((group) => group.id);
+    const unselectedGroups = reproductiveIntakeGroupsForContext().map((group) => group.id);
+
+    expect(menstrualGroups).toContain('cycle_timing_symptoms');
+    expect(menstrualGroups).not.toContain('androgen_body_context');
+    expect(androgenGroups).toContain('androgen_body_context');
+    expect(androgenGroups).not.toContain('cycle_timing_symptoms');
+    expect(menstrualGroups).toContain('hormone_product_review');
+    expect(androgenGroups).toContain('hormone_product_review');
+    expect(unselectedGroups).toEqual(REPRODUCTIVE_INTAKE_SCHEMA.groups.map((group) => group.id));
   });
 });

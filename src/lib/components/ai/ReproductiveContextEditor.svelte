@@ -1,6 +1,6 @@
 <!-- Resource-authored, self-reported cycle and hormone context editor. -->
 <script lang="ts">
-  import { REPRODUCTIVE_INTAKE_SCHEMA, hasReproductiveIntake, normalizeReproductiveIntake, reproductiveIntakeValue } from '../../utils/reproductiveIntake';
+  import { REPRODUCTIVE_INTAKE_SCHEMA, hasReproductiveIntake, normalizeReproductiveIntake, reproductiveIntakeGroupsForContext, reproductiveIntakeValue } from '../../utils/reproductiveIntake';
   import {
     savePersonalSafetyContext,
     type PersonalSafetyContext,
@@ -9,18 +9,21 @@
   interface Props {
     personalSafetyContext: PersonalSafetyContext;
     sampleId?: number;
+    reproductiveContext?: string;
     compact?: boolean;
   }
 
   let {
     personalSafetyContext = $bindable(),
     sampleId,
+    reproductiveContext,
     compact = false,
   }: Props = $props();
 
   let expanded = $state(false);
   let hasValues = $derived(hasReproductiveIntake(personalSafetyContext.reproductiveIntake));
   let idPrefix = $derived(`reproductive-intake-${sampleId ?? 'profile'}`);
+  let visibleGroups = $derived(reproductiveIntakeGroupsForContext(reproductiveContext));
 
   function updateField(fieldId: string, event: Event): void {
     const target = event.currentTarget as HTMLInputElement | HTMLTextAreaElement;
@@ -57,7 +60,7 @@
       <p class="reproductive-intake-description">{REPRODUCTIVE_INTAKE_SCHEMA.description}</p>
       <p class="reproductive-intake-privacy">🔒 {REPRODUCTIVE_INTAKE_SCHEMA.privacy_note}</p>
 
-      {#each REPRODUCTIVE_INTAKE_SCHEMA.groups as group (group.id)}
+      {#each visibleGroups as group (group.id)}
         <fieldset class="reproductive-intake-group">
           <legend>{group.title}</legend>
           <p>{group.description}</p>

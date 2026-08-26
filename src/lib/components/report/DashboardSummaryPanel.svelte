@@ -149,7 +149,7 @@
     </select>
   </div>
 
-  <ReproductiveContextEditor bind:personalSafetyContext sampleId={sampleId} />
+  <ReproductiveContextEditor bind:personalSafetyContext sampleId={sampleId} reproductiveContext={reproductiveContext} />
 
   {#if plan.personalContext.priorityNotes.length > 0}
     <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">

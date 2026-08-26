@@ -363,6 +363,7 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       fieldIds.add(field.id);
     }
     const groupIds = new Set();
+    const contextIds = new Set((resource.context_options || []).map((option) => option.id));
     for (const [index, group] of (schema?.groups || []).entries()) {
       const location = `cycle_support_guidance.json intake group ${index + 1}`;
       for (const key of ['id', 'title', 'description']) {
@@ -372,6 +373,14 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       if (!isStringArray(group.field_ids) || group.field_ids.length === 0) {
         errors.push(`${location}: field_ids must be a non-empty string array`);
+      }
+      if (group.context_ids !== undefined) {
+        if (!isStringArray(group.context_ids) || group.context_ids.length === 0) {
+          errors.push(`${location}: context_ids must be a non-empty string array when provided`);
+        }
+        for (const contextId of group.context_ids || []) {
+          if (!contextIds.has(contextId)) errors.push(`${location}: context_ids references unknown context ${contextId}`);
+        }
       }
       for (const fieldId of group.field_ids || []) {
         if (!fieldIds.has(fieldId)) errors.push(`${location}: field_ids references unknown field ${fieldId}`);

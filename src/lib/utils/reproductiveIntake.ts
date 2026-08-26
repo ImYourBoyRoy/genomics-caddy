@@ -10,6 +10,7 @@ import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 
 export const REPRODUCTIVE_INTAKE_SCHEMA = cycleSupport.intake_schema;
 export type ReproductiveIntakeSchema = typeof REPRODUCTIVE_INTAKE_SCHEMA;
+export type ReproductiveIntakeGroup = ReproductiveIntakeSchema['groups'][number];
 export type ReproductiveIntakeField = ReproductiveIntakeSchema['fields'][number];
 export type ReproductiveIntakeValues = Partial<Record<ReproductiveIntakeField['id'], string>>;
 
@@ -46,6 +47,21 @@ export function reproductiveIntakeValue(
 
 export function hasReproductiveIntake(values: ReproductiveIntakeValues | undefined): boolean {
   return Object.keys(values || {}).length > 0;
+}
+
+/**
+ * Show context-specific groups only after the person explicitly selects that
+ * context. Groups without context_ids remain common to every route; with no
+ * selection, all groups stay available in the profile editor.
+ */
+export function reproductiveIntakeGroupsForContext(
+  reproductiveContext?: string | null,
+): ReproductiveIntakeGroup[] {
+  const normalizedContext = String(reproductiveContext || '').trim().toLowerCase();
+  return REPRODUCTIVE_INTAKE_SCHEMA.groups.filter((group) => {
+    const contextIds = group.context_ids as readonly string[] | undefined;
+    return !normalizedContext || !contextIds?.length || contextIds.includes(normalizedContext);
+  });
 }
 
 /** Return only populated fields in the schema's display order. */

@@ -1,9 +1,9 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
-  "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
+  "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
     "menstrual",
     "hormone",
@@ -38,6 +38,14 @@
         "id": "cycle_timing_symptoms",
         "title": "Cycle timing and symptoms",
         "description": "Prospective timing is more useful than a single retrospective impression. Record symptom-free days as well as difficult days when possible.",
+        "context_ids": [
+          "menstrual_cycle",
+          "cycle_linked_pain_headache",
+          "cyclic_mood_symptoms",
+          "ovarian_reproductive",
+          "uterine_pelvic",
+          "suspected_adenomyosis"
+        ],
         "field_ids": [
           "most_recent_bleeding_start",
           "typical_cycle_length_days",
@@ -46,6 +54,21 @@
           "symptom_resolution_timing",
           "mood_behavior_symptoms",
           "pain_bleeding_headache_symptoms"
+        ]
+      },
+      {
+        "id": "androgen_body_context",
+        "title": "Androgen, prostate, testicular, and measured-lab context",
+        "description": "Use only when relevant to the selected body or care goal. Record symptoms and measured findings without turning them into a DNA diagnosis.",
+        "context_ids": [
+          "androgen_reproductive",
+          "hormone_therapy_context",
+          "preconception_fertility"
+        ],
+        "field_ids": [
+          "androgen_prostate_testicular_symptoms",
+          "hormone_lab_results",
+          "fertility_family_building_context"
         ]
       },
       {
@@ -123,6 +146,27 @@
         "help": "Record severity and functional impact when useful; urgent symptoms still need timely care."
       },
       {
+        "id": "androgen_prostate_testicular_symptoms",
+        "label": "Androgen, prostate, testicular, or urinary symptoms",
+        "input_type": "textarea",
+        "placeholder": "e.g. libido, erectile function, energy, urinary changes, testicular pain/swelling, or another concern",
+        "help": "Optional and body-context neutral. Sudden severe testicular pain, a new lump, acute urinary retention, or severe symptoms need timely medical care."
+      },
+      {
+        "id": "hormone_lab_results",
+        "label": "Measured hormone or related lab results",
+        "input_type": "textarea",
+        "placeholder": "e.g. test name, date, value, units, reference range, and clinician interpretation",
+        "help": "Measured results are clinical context; a DNA marker does not replace testing or establish current hormone levels."
+      },
+      {
+        "id": "fertility_family_building_context",
+        "label": "Fertility or family-building context",
+        "input_type": "textarea",
+        "placeholder": "e.g. planning, evaluation, preservation, partner factors, or leave blank",
+        "help": "Optional user-supplied context. DNA cannot diagnose infertility or predict fertility outcomes."
+      },
+      {
         "id": "hormone_product_name",
         "label": "Exact product name",
         "input_type": "text",
@@ -189,7 +233,8 @@
     "do_not_infer": [
       "Do not infer current estrogen, progesterone, progestin, allopregnanolone, ovulation, pregnancy, or medication response from DNA or from a symptom pattern.",
       "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
-      "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker."
+      "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker.",
+      "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context."
     ]
   },
   "context_options": [

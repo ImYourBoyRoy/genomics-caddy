@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -777,6 +777,96 @@
       "rsid": "rs12979860",
       "simpleImpact": "IFNL3/IFNL4 antiviral-response context marker",
       "simpleMeaning": "This marker was important in older interferon-based hepatitis C treatment research. Modern direct-acting antivirals have changed its relevance, so current hepatology guidance matters more than this SNP alone."
+    },
+    {
+      "rsid": "rs386833395",
+      "simpleImpact": "BRCA1 founder-variant confirmation trigger",
+      "simpleMeaning": "This marker represents a clinically important BRCA1 founder variant in the curated resource. A consumer-DNA call is not a diagnosis; confirm it with clinical testing and genetic counseling before medical decisions."
+    },
+    {
+      "rsid": "rs80357906",
+      "simpleImpact": "BRCA1 founder-variant confirmation trigger",
+      "simpleMeaning": "This marker represents a clinically important BRCA1 founder variant in the curated resource. Consumer-array indel calls can be unreliable, so clinical confirmation and genetic counseling are required before interpretation."
+    },
+    {
+      "rsid": "rs80359550",
+      "simpleImpact": "BRCA2 founder-variant confirmation trigger",
+      "simpleMeaning": "This marker represents a clinically important BRCA2 founder variant in the curated resource. Confirm any consumer-DNA call with a clinical laboratory and genetic counselor; it is not a final cancer diagnosis."
+    },
+    {
+      "rsid": "rs28897696",
+      "simpleImpact": "BRCA1 pathogenic-variant confirmation trigger",
+      "simpleMeaning": "This rare BRCA1 marker is treated as confirmation-required in the curated resource. A raw-DNA call may be false positive or represented differently; clinical testing and genetic counseling must come first."
+    },
+    {
+      "rsid": "rs555607708",
+      "simpleImpact": "CHEK2 truncating-variant confirmation trigger",
+      "simpleMeaning": "This CHEK2 marker is associated with a moderate-penetrance cancer-susceptibility context in the curated resource. Confirm the variant clinically and interpret it with family history and variant-specific counseling."
+    },
+    {
+      "rsid": "rs17879961",
+      "simpleImpact": "CHEK2 lower-penetrance modifier",
+      "simpleMeaning": "This CHEK2 marker is a lower-penetrance susceptibility association, not equivalent to every pathogenic CHEK2 variant. Clinical confirmation, family history, and a risk model are more useful than this SNP alone."
+    },
+    {
+      "rsid": "rs1801155",
+      "simpleImpact": "APC colorectal-risk ancestry-context marker",
+      "simpleMeaning": "This APC marker has been associated with moderate colorectal-cancer risk in some ancestry groups. It is distinct from classic familial-adenomatous-polyposis variants and should not replace clinician-guided screening."
+    },
+    {
+      "rsid": "rs34612342",
+      "simpleImpact": "MUTYH carrier/variant confirmation marker",
+      "simpleMeaning": "This MUTYH marker is a clinically relevant variant that requires confirmation. The key interpretation depends on whether another pathogenic MUTYH variant is present, so one consumer-DNA call cannot diagnose a recessive syndrome."
+    },
+    {
+      "rsid": "rs36053993",
+      "simpleImpact": "MUTYH carrier/variant confirmation marker",
+      "simpleMeaning": "This MUTYH marker is a clinically relevant variant that requires confirmation. Distinguishing carrier status from two pathogenic variants needs a complete clinical test and genetic counseling."
+    },
+    {
+      "rsid": "rs149617956",
+      "simpleImpact": "MITF melanoma and kidney-cancer susceptibility context",
+      "simpleMeaning": "This MITF marker is a moderate or low-penetrance susceptibility association in some research. Family history, skin findings, pigmentation, UV exposure, and clinical assessment matter more than this SNP alone."
+    },
+    {
+      "rsid": "rs138213197",
+      "simpleImpact": "HOXB13 prostate-cancer susceptibility marker",
+      "simpleMeaning": "This HOXB13 marker is associated with prostate-cancer susceptibility in some ancestry groups. It is not diagnostic and does not replace a clinician-guided screening discussion using family history and current health context."
+    },
+    {
+      "rsid": "rs16969968",
+      "simpleImpact": "CHRNA5 nicotine-exposure context marker",
+      "simpleMeaning": "This CHRNA5 marker has been associated with nicotine dependence or smoking intensity in some studies. It is exposure-behavior context, not a high-penetrance lung-cancer diagnosis or a reason to infer someone's behavior."
+    },
+    {
+      "rsid": "rs6983267",
+      "simpleImpact": "8q24 low-effect cancer-susceptibility locus",
+      "simpleMeaning": "This common 8q24 marker is a small-effect research association reported for colorectal and prostate cancer traits. It belongs in a calibrated polygenic model, not stand-alone clinical risk reporting."
+    },
+    {
+      "rsid": "rs2981582",
+      "simpleImpact": "FGFR2 low-effect breast-cancer GWAS locus",
+      "simpleMeaning": "This common FGFR2-region marker is a small-effect breast-cancer research association. It is not clinically actionable by itself and should not change screening outside an appropriately calibrated risk assessment."
+    },
+    {
+      "rsid": "rs3803662",
+      "simpleImpact": "TOX3 low-effect breast-cancer GWAS locus",
+      "simpleMeaning": "This common TOX3-region marker is a small-effect breast-cancer research association. It is useful only as part of validated risk modeling, not as a stand-alone prediction or diagnosis."
+    },
+    {
+      "rsid": "rs889312",
+      "simpleImpact": "MAP3K1 low-effect breast-cancer GWAS locus",
+      "simpleMeaning": "This common MAP3K1 marker is a small-effect breast-cancer research association. Do not overinterpret it or use it alone to alter screening or treatment decisions."
+    },
+    {
+      "rsid": "rs10993994",
+      "simpleImpact": "MSMB low-effect prostate-cancer GWAS locus",
+      "simpleMeaning": "This common MSMB marker is a small-effect prostate-cancer research association. It belongs in a calibrated polygenic model and does not replace PSA, family-history, or clinician-guided screening decisions."
+    },
+    {
+      "rsid": "rs8175347",
+      "simpleImpact": "UGT1A1*28 repeat and irinotecan-safety context",
+      "simpleMeaning": "This repeat marker can contribute to UGT1A1*28 and may matter for irinotecan toxicity in a drug- and dose-specific context. Consumer SNP data may not represent repeat length reliably; use clinical PGx guidance."
     }
   ]
 }

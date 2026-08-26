@@ -95,6 +95,8 @@ export interface SeverityInfo {
   glyph: string;
   label: string;
   plainLabel: string;
+  legendLabel: string;
+  legendDescription: string;
   description: string;
 }
 
@@ -106,6 +108,8 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
     glyph: display.glyph,
     label: display.label,
     plainLabel: display.plain_label,
+    legendLabel: display.legend_label,
+    legendDescription: display.legend_description,
     description: display.description,
   };
 }

@@ -34,6 +34,7 @@ describe('evidence tier display', () => {
     expect(getSeverityInfo('confirmation_required')).toEqual(expect.objectContaining({
       label: 'Clinical confirmation needed',
       plainLabel: 'Needs clinical lab test to verify',
+      legendLabel: 'Needs Confirmation',
       cssClass: 'signal-confirm',
     }));
     expect(getScopeLabel('menstrual_cycle_context')).toBe('Menstrual-cycle context');

@@ -715,7 +715,7 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       for (const key of ['high_risk', 'moderate_risk', 'low_risk', 'protective', 'trait', 'context_dependent', 'confirmation_required', 'no_data', 'benign']) {
         const severity = display.severity?.[key];
-        for (const field of ['css_class', 'emoji', 'glyph', 'label', 'plain_label', 'description']) {
+        for (const field of ['css_class', 'emoji', 'glyph', 'label', 'plain_label', 'legend_label', 'legend_description', 'description']) {
           if (typeof severity?.[field] !== 'string' || severity[field].trim() === '') {
             errors.push(`evidence_policy.json: display.severity.${key}.${field} must be a non-empty string`);
           }

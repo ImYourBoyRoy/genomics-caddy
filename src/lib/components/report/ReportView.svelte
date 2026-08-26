@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/report/ReportView.svelte -->
 <script lang="ts">
-  import type { GeneratedReport, NormalizedReport, GenomeSample } from '../../types/genomics';
+  import type { GeneratedReport, NormalizedReport, GenomeSample, SeverityClass } from '../../types/genomics';
   import { saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
@@ -10,6 +10,7 @@
   import VectorPromotedSection from './VectorPromotedSection.svelte';
   import PanelLoadingState from '../common/loading/PanelLoadingState.svelte';
   import type { VariantNavTarget } from '../../constants/traitCategories';
+  import { getSeverityInfo } from '../../utils/evidence';
   import { untrack } from 'svelte';
   import { browser } from '$app/environment';
   import {
@@ -73,6 +74,18 @@
   let reproductiveContext = $state('');
   let loadedReproductiveContextKey = $state('');
   let prioritizeReproductiveContext = $state(true);
+
+  // Presentation order is fixed; labels and descriptions come from the shared evidence policy.
+  const severityLegend: SeverityClass[] = [
+    'high_risk',
+    'moderate_risk',
+    'protective',
+    'trait',
+    'context_dependent',
+    'confirmation_required',
+    'benign',
+    'no_data',
+  ];
 
   $effect(() => {
     const contextKey = reproductiveContextStorageKey(selectedSample?.id);
@@ -347,62 +360,16 @@
     <div class="report-legend card">
       <p class="legend-intro">Each card represents a single genetic marker. Color and icon summarize what was found:</p>
       <div class="legend-grid">
-        <div class="legend-item">
-          <span class="legend-swatch signal-high-risk"></span>
-          <div>
-            <strong>Stronger association (2 copies)</strong>
-            <span>Both copies match the researched association allele. Discuss with a healthcare provider if relevant.</span>
+        {#each severityLegend as severityClass (severityClass)}
+          {@const legend = getSeverityInfo(severityClass)}
+          <div class="legend-item">
+            <span class="legend-swatch {legend.cssClass}"></span>
+            <div>
+              <strong>{legend.legendLabel}</strong>
+              <span>{legend.legendDescription}</span>
+            </div>
           </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-moderate-risk"></span>
-          <div>
-            <strong>Possible association (1 copy)</strong>
-            <span>One copy matches the association allele. Effect is usually smaller.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-protective"></span>
-          <div>
-            <strong>Protective</strong>
-            <span>This variant may be linked to a beneficial or lower-association effect.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-trait"></span>
-          <div>
-            <strong>Trait</strong>
-            <span>Describes a personal characteristic (e.g. caffeine metabolism), not a disease.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-context"></span>
-          <div>
-            <strong>Context-Dependent</strong>
-            <span>The effect depends on other factors like diet, medications, or lifestyle.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-confirm"></span>
-          <div>
-            <strong>Needs Confirmation</strong>
-            <span>Consumer DNA chips can report false positives. A clinical lab test is required.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-benign"></span>
-          <div>
-            <strong>Not Detected</strong>
-            <span>The effect allele was not found at this position. Card is collapsed since no action is needed.</span>
-          </div>
-        </div>
-        <div class="legend-item">
-          <span class="legend-swatch signal-nodata"></span>
-          <div>
-            <strong>Not Tested</strong>
-            <span>Your DNA file did not include data for this position.</span>
-          </div>
-        </div>
+        {/each}
       </div>
     </div>
   </details>
@@ -550,7 +517,7 @@
           <section class="help-section warning-section">
             <h5>⚠️ Crucial Safety Information</h5>
             <p>
-              <strong>This tool uses raw, unvalidated consumer DNA data.</strong> Consumer tests (like AncestryDNA or 23andMe) are designed for recreational ancestry and can contain raw sequence errors or false positives (up to 40% error rate on rare health variants). 
+              <strong>This tool uses raw, unvalidated consumer DNA data.</strong> Consumer arrays can miss variants, use different assays, or produce a result that needs confirmation; a rare health-variant call must not be treated as a clinical result by itself.
             </p>
             <p>
               <em>Never change medications, supplement dosages, or medical therapies based on this report alone.</em> Always verify high-risk or clinical findings with a medical-grade clinical lab test (e.g. CLIA/CAP certified) ordered by your physician.

@@ -1,6 +1,6 @@
 {
   "name": "Evidence Policy",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "tiers": {
     "A_clinical_guideline": "Clinical guideline or guideline-backed marker. Display with clinical confirmation and clinician action warning.",
@@ -152,6 +152,8 @@
         "glyph": "!",
         "label": "Two association alleles detected",
         "plain_label": "Stronger association detected",
+        "legend_label": "Stronger association (2 copies)",
+        "legend_description": "Both copies match the researched association allele. Discuss with a healthcare provider if relevant.",
         "description": "Both copies match the allele used by this pack's association rule. This is not a diagnosis or a personal disease probability."
       },
       "moderate_risk": {
@@ -160,6 +162,8 @@
         "glyph": "?",
         "label": "One association allele detected",
         "plain_label": "Possible association detected",
+        "legend_label": "Possible association (1 copy)",
+        "legend_description": "One copy matches the association allele. Effect is usually smaller.",
         "description": "One copy matches the allele used by this pack's association rule. Effects are usually smaller than two copies and remain context-dependent."
       },
       "low_risk": {
@@ -168,6 +172,8 @@
         "glyph": "?",
         "label": "Preliminary risk signal",
         "plain_label": "Preliminary association",
+        "legend_label": "Preliminary association",
+        "legend_description": "Limited evidence should be treated as an early hypothesis, not a confirmed finding.",
         "description": "Limited evidence (Tier D/E research). Treat this as an early hypothesis — not a confirmed finding. Consider discussing with your healthcare provider."
       },
       "protective": {
@@ -176,6 +182,8 @@
         "glyph": "+",
         "label": "Protective association detected",
         "plain_label": "Protective association detected",
+        "legend_label": "Protective",
+        "legend_description": "This variant may be linked to a beneficial or lower-association effect; protection is not guaranteed.",
         "description": "This variant is associated with a potentially beneficial or lower-risk direction; it does not guarantee protection."
       },
       "trait": {
@@ -184,6 +192,8 @@
         "glyph": "T",
         "label": "Trait variant detected",
         "plain_label": "Trait association detected",
+        "legend_label": "Trait",
+        "legend_description": "Describes a personal characteristic, not a disease.",
         "description": "This variant describes a characteristic, not a health risk."
       },
       "context_dependent": {
@@ -192,6 +202,8 @@
         "glyph": "~",
         "label": "Context-dependent variant",
         "plain_label": "Depends on diet & lifestyle",
+        "legend_label": "Context-Dependent",
+        "legend_description": "The effect depends on other factors like diet, medications, or lifestyle.",
         "description": "This variant's effect depends on other factors like medications, diet, or environment."
       },
       "confirmation_required": {
@@ -200,6 +212,8 @@
         "glyph": "C",
         "label": "Clinical confirmation needed",
         "plain_label": "Needs clinical lab test to verify",
+        "legend_label": "Needs Confirmation",
+        "legend_description": "Consumer DNA chips can report false positives. A clinical lab test is required.",
         "description": "Consumer DNA tests can produce false positives on rare variants. A clinical lab test is needed to confirm."
       },
       "no_data": {
@@ -208,6 +222,8 @@
         "glyph": "·",
         "label": "No data available",
         "plain_label": "No data available",
+        "legend_label": "Not Tested",
+        "legend_description": "Your DNA file did not include data for this position.",
         "description": "Your DNA test did not include or could not read this position."
       },
       "benign": {
@@ -216,6 +232,8 @@
         "glyph": "·",
         "label": "Variant not detected",
         "plain_label": "Normal / Benign",
+        "legend_label": "Not Detected",
+        "legend_description": "The effect allele was not found at this position; the card is collapsed since no action is needed.",
         "description": "Your genotype at this position matches the standard reference. The effect allele being tested was not found."
       }
     },

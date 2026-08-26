@@ -250,48 +250,54 @@
           <span>{nextHelpfulStep()}</span>
         </div>
 
-        <!-- Simple mode: compact source/context summary; technical evidence stays below. -->
+        <!-- Simple mode: plain context labels; exact catalog data stays in technical details. -->
         <div class="simple-evidence-summary">
           {#if (marker.sources?.length ?? 0) > 0 || (marker.db_enriched_sources?.length ?? 0) > 0}
             <span class="evidence-count-pill">
-              📚 {(marker.sources?.length ?? 0) + (marker.db_enriched_sources?.length ?? 0)} {((marker.sources?.length ?? 0) + (marker.db_enriched_sources?.length ?? 0)) === 1 ? 'source' : 'sources'}
+              📚 Evidence sources available
             </span>
           {/if}
           {#if marker.clinvar_significance}
-            {#if isHighPriorityClinvar(marker.clinvar_significance)}
-              <span class="clinvar-simple">
-                🏛️ ClinVar: <strong>{marker.clinvar_significance}</strong>
-              </span>
-            {:else}
-              <details class="clinvar-simple-low-priority">
-                <summary class="enrichment-detail-summary">
-                  <span>🏛️ ClinVar (VUS/Benign)</span>
-                </summary>
-                <div class="enrichment-detail-body">
-                  <span class="clinvar-simple">
-                    🏛️ ClinVar: <strong>{marker.clinvar_significance}</strong>
-                  </span>
-                </div>
-              </details>
-            {/if}
+            <span class="simple-context-pill">🏛️ Medical reference context available</span>
           {/if}
           {#if marker.population_rarity}
-            <span class="pop-simple">🌍 {marker.population_rarity}</span>
+            <span class="simple-context-pill">🌍 Population context available</span>
           {/if}
         </div>
         <details class="technical-details">
-          <summary>Technical details</summary>
+          <summary>Technical data</summary>
           <dl>
             <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
             <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
             <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
             <div><dt>Claim boundary</dt><dd>{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</dd></div>
+            {#if marker.clinvar_significance}
+              <div>
+                <dt>Clinical catalog</dt>
+                <dd>
+                  {marker.clinvar_significance}
+                  {#if marker.clinvar_review_status} · {marker.clinvar_review_status}{/if}
+                  {#if marker.clinvar_conditions} · {marker.clinvar_conditions}{/if}
+                </dd>
+              </div>
+            {/if}
+            {#if marker.population_rarity}
+              <div>
+                <dt>Population context</dt>
+                <dd>
+                  {marker.population_rarity}
+                  {#if marker.population_af != null} ({formatAf(marker.population_af)}){/if}
+                </dd>
+              </div>
+            {/if}
           </dl>
           {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
             <ConfirmWithList confirmWith={marker.confirm_with} />
-            <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
           {/if}
         </details>
+        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+          <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
+        {/if}
       {:else}
         <div class="impact-section">
           <strong>What this gene does:</strong>
@@ -406,13 +412,8 @@
     margin: 0.5rem 0 0.75rem;
   }
 
-  .clinvar-low-priority-detail,
-  .clinvar-simple-low-priority {
+  .clinvar-low-priority-detail {
     margin-top: 0.2rem;
-  }
-
-  .clinvar-simple-low-priority {
-    display: inline-block;
   }
 
   .enrichment-detail-summary {
@@ -512,7 +513,7 @@
     gap: 0.4rem;
     margin-top: 0.5rem;
     padding-top: 0.4rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid var(--border-color);
   }
 
   .simple-meaning-block {
@@ -536,16 +537,17 @@
 
   .evidence-count-pill {
     font-size: 0.72rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     padding: 0.15rem 0.4rem;
-    background: rgba(148,163,184,0.1);
+    background: var(--surface-subtle);
+    border: 1px solid var(--border-color);
     border-radius: 999px;
   }
-  .clinvar-simple, .pop-simple {
+
+  .simple-context-pill {
     font-size: 0.72rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
-  .clinvar-simple strong { color: #e2e8f0; }
 
   .genotype-info-icon {
     font-size: 0.72rem;

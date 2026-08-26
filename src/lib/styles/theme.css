@@ -397,15 +397,39 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(88, 80, 236, 0.15);
   border-color: var(--accent);
 }
-.sample-name {
-  cursor: pointer;
+.sample-name-wrap {
+  display: flex;
   flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+}
+.sample-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
   font-size: 0.85rem;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
+}
+.sample-name:hover:not(:disabled) {
+  color: var(--accent);
+}
+.sample-name:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.sample-scope-help {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 .btn-delete {
   background: none;

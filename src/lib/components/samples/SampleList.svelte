@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/samples/SampleList.svelte -->
 <script lang="ts">
   import type { GenomeSample } from '../../types/genomics';
+  import Tooltip from '../common/Tooltip.svelte';
 
   /*
   Module Docstring:
@@ -39,13 +40,24 @@
     <ul class="sample-list">
       {#each samples as s}
         <li class="sample-item" class:active={selectedSample && selectedSample.id === s.id} class:disabled={disabled}>
-          <span class="sample-name" role="button" tabindex="0"
-            style={disabled ? "pointer-events: none; opacity: 0.65; cursor: not-allowed;" : ""}
-            onclick={() => { if (!disabled) onSelectSample(s); }}
-            onkeydown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectSample(s); } }}>
-            👤 {s.name} <span class="sex-pill" title="Chromosome-call hint only; not gender identity, anatomy, fertility, pregnancy, or hormone status">{s.genetic_sex}</span>
-          </span>
-          <button class="btn-delete" disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>
+          <div class="sample-name-wrap">
+            <button
+              type="button"
+              class="sample-name"
+              disabled={disabled}
+              aria-current={selectedSample?.id === s.id ? 'true' : undefined}
+              onclick={() => onSelectSample(s)}
+            >
+              👤 {s.name} <span class="sex-pill">{s.genetic_sex}</span>
+            </button>
+            <Tooltip
+              label="Chromosome-call context"
+              description="This is a limited DNA-call hint only. It is not gender identity, anatomy, fertility, pregnancy, or hormone status."
+            >
+              <span class="sample-scope-help" aria-label="Explain chromosome-call context">ⓘ</span>
+            </Tooltip>
+          </div>
+          <button type="button" class="btn-delete" aria-label={`Delete profile ${s.name}`} disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>
         </li>
       {/each}
     </ul>

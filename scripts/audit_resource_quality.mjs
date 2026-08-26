@@ -92,6 +92,7 @@ const cycleSupport = readJson(path.join(resourceDir, 'cycle_support_guidance.jso
 const safetyGuardrails = readJson(path.join(resourceDir, 'safety_guardrails.json'));
 const researchTaxonomy = readJson(path.join(resourceDir, 'research_taxonomy.json'));
 const discoveryCatalog = readJson(path.join(resourceDir, 'discovery_catalog.json'));
+const laypersonTranslations = readJson(path.join(resourceDir, 'layperson_translations.json'));
 const runtimeDiscoveryCatalogPath = path.join(runtimeDir, 'discovery_catalog.json');
 
 if (!manifest || !Array.isArray(manifest.packs)) errors.push('manifest.json: packs must be an array');
@@ -369,23 +370,30 @@ if (uncoveredActionabilityGenes.length > 0) {
   warnings.push(`actionability genes without curated markers: ${uncoveredActionabilityGenes.join(', ')}`);
 }
 
-const laypersonPath = path.join(root, 'src', 'lib', 'utils', 'layperson.ts');
-if (fs.existsSync(laypersonPath)) {
-  const laypersonText = fs.readFileSync(laypersonPath, 'utf8');
-  const simpleMeaningPattern = /simpleMeaning:\s*"((?:\\.|[^"\\])*)"/g;
-  for (const match of laypersonText.matchAll(simpleMeaningPattern)) {
-    let meaning = match[1];
-    try {
-      meaning = JSON.parse(`"${meaning}"`);
-    } catch {
-      // The TypeScript parser/checker is the authority for syntax; retain the
-      // raw text if this lightweight review scanner cannot decode one string.
-    }
-    if (hasUnqualifiedStrongLanguage(meaning)) laypersonLanguageReview.push(meaning);
+const curatedStandardRsids = new Set(
+  allMarkers
+    .map(({ marker }) => String(marker.rsid || '').trim().toLowerCase())
+    .filter((rsid) => /^rs\d+$/.test(rsid))
+);
+const translationIds = new Set();
+for (const translation of laypersonTranslations?.translations || []) {
+  const rsid = String(translation.rsid || '').trim().toLowerCase();
+  translationIds.add(rsid);
+  const meaning = String(translation.simpleMeaning || '');
+  if (hasUnqualifiedStrongLanguage(meaning)) {
+    laypersonLanguageReview.push({ rsid, simple_meaning: meaning });
   }
-  if (laypersonLanguageReview.length > 0) {
-    warnings.push(`plain-English interpretations needing wording review: ${laypersonLanguageReview.length}`);
-  }
+}
+const translatedLaypersonCount = [...translationIds].filter((rsid) => curatedStandardRsids.has(rsid)).length;
+const laypersonTranslationCoverage = {
+  translated: translatedLaypersonCount,
+  total: curatedStandardRsids.size,
+  missing: Math.max(curatedStandardRsids.size - translatedLaypersonCount, 0),
+  fallback_available: typeof laypersonTranslations?.fallback?.simpleMeaning === 'string'
+    && laypersonTranslations.fallback.simpleMeaning.trim() !== '',
+};
+if (laypersonTranslationCoverage.missing > 0) {
+  warnings.push(`plain-English translation coverage: ${translatedLaypersonCount}/${curatedStandardRsids.size} curated standard rsIDs have dedicated translations; fallback=${laypersonTranslationCoverage.fallback_available ? 'available' : 'missing'}`);
 }
 
 const summary = {
@@ -413,6 +421,7 @@ const summary = {
   absolute_language_review: absoluteLanguageReview,
   discovery_language_review: discoveryLanguageReview,
   layperson_language_review: laypersonLanguageReview,
+  layperson_translation_coverage: laypersonTranslationCoverage,
   actionability_source_gaps: actionabilitySourceGaps,
   actionability_marker_reference_gaps: actionabilityMarkerReferenceGaps,
   clinical_allele_conflicts: clinicalAlleleConflicts,
@@ -431,6 +440,7 @@ if (outputJson) {
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
   console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; clinical allele conflicts: ${clinicalAlleleConflicts.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Plain-English translation coverage: ${laypersonTranslationCoverage.translated}/${laypersonTranslationCoverage.total} curated standard rsIDs; fallback=${laypersonTranslationCoverage.fallback_available ? 'available' : 'missing'}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }

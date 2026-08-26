@@ -95,6 +95,8 @@ describe('AI marker payload claim boundaries', () => {
     expect(payload.assertion_status).toBe('Verified');
     expect(payload.interpretation_allowed).toBe(true);
     expect(payload.source_names).toEqual(['Example source']);
+    expect(payload.layperson_summary?.simple_impact).toBe('Genetic context marker');
+    expect(payload.layperson_summary?.simple_meaning).toContain('probabilistic association');
   });
 
   it('injects explicitly supplied per-profile safety context without treating it as genotype evidence', () => {

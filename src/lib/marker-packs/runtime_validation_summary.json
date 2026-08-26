@@ -46,6 +46,7 @@
     "diet_pattern_profiles.json",
     "meal_planning_rules.json",
     "food_requirement_prompts.json",
+    "layperson_translations.json",
     "supplement_safety.json",
     "cycle_support_guidance.json",
     "user_diet_profile_schema.json",

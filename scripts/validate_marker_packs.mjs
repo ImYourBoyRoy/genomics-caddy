@@ -55,6 +55,7 @@ if (!manifest || !Array.isArray(manifest.packs)) {
 
 let markerCount = 0;
 let packCount = 0;
+const curatedStandardRsids = new Set();
 for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith('.json')).sort()) {
   if (fileName === 'discovery_catalog.json') continue;
   const file = path.join(sourceDir, fileName);
@@ -66,6 +67,9 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
     for (const [index, marker] of doc.markers.entries()) {
       const location = `${fileName} marker ${index + 1}`;
       markerCount += 1;
+      if (typeof marker.rsid === 'string' && /^rs\d+$/i.test(marker.rsid.trim())) {
+        curatedStandardRsids.add(marker.rsid.trim().toLowerCase());
+      }
       for (const field of ['rsid', 'gene', 'effect_allele', 'impact', 'evidence_tier', 'interpretation', 'effect_direction']) {
         if (typeof marker[field] !== 'string' || marker[field].trim() === '') {
           errors.push(`${location}: missing string field ${field}`);
@@ -140,6 +144,7 @@ const supportContracts = {
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
   lab_overlays: { arrays: ['overlays'] },
+  layperson_translations: { arrays: ['translations'], objects: ['fallback'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
@@ -338,6 +343,33 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     if (typeof resource.date_warning !== 'string' || resource.date_warning.trim() === '') {
       errors.push('ai_prompt_policy.json: date_warning must be a non-empty string');
     }
+  }
+  if (resourceId === 'layperson_translations') {
+    for (const field of ['simpleImpact', 'simpleMeaning']) {
+      if (typeof resource.fallback?.[field] !== 'string' || resource.fallback[field].trim() === '') {
+        errors.push(`layperson_translations.json: fallback.${field} must be a non-empty string`);
+      }
+    }
+    const translationIds = new Set();
+    for (const [index, translation] of (resource.translations || []).entries()) {
+      const location = `layperson_translations.json translation ${index + 1}`;
+      if (typeof translation.rsid !== 'string' || !/^rs\d+$/i.test(translation.rsid.trim())) {
+        errors.push(`${location}: rsid must be a numeric rsID such as rs12345`);
+      }
+      for (const field of ['simpleImpact', 'simpleMeaning']) {
+        if (typeof translation[field] !== 'string' || translation[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      const normalizedRsid = String(translation.rsid || '').trim().toLowerCase();
+      if (translationIds.has(normalizedRsid)) errors.push(`${location}: duplicate rsid ${translation.rsid}`);
+      if (normalizedRsid && !curatedStandardRsids.has(normalizedRsid)) {
+        errors.push(`${location}: rsid ${translation.rsid} is not present in curated marker packs`);
+      }
+      translationIds.add(normalizedRsid);
+    }
+    const translatedCount = [...translationIds].filter((rsid) => curatedStandardRsids.has(rsid)).length;
+    warnings.push(`layperson_translations.json: ${translatedCount}/${curatedStandardRsids.size} curated standard rsIDs have dedicated plain-English translations`);
   }
   if (resourceId === 'lab_overlays') {
     for (const [index, overlay] of (resource.overlays || []).entries()) {

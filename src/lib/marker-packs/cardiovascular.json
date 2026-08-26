@@ -900,7 +900,7 @@
       "effect_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Reduced or absent LDL receptor function / high LDL-C from birth",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "LDLR pathogenic variants are the most common monogenic cause of familial hypercholesterolemia. Variant interpretation requires ACMG/ClinGen-grade curation plus lipid phenotype.",
+      "interpretation": "Pathogenic LDLR variants are a well-established genetic basis for familial hypercholesterolemia and are among its common monogenic findings. Variant interpretation requires ACMG/ClinGen-grade curation plus lipid phenotype.",
       "do_not_claim": [
         "FH diagnosis from consumer SNPs",
         "severity prediction from variant presence alone",
@@ -2093,7 +2093,7 @@
       "effect_allele": "loss_of_function_or_pathogenic_variant",
       "impact": "Sodium-channel loss-of-function / Brugada syndrome susceptibility",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "SCN5A is the only definitive Brugada syndrome gene under ClinGen-style curation. Other marketed Brugada genes should be treated skeptically unless current curation supports them.",
+      "interpretation": "Current expert curation recognizes SCN5A as the primary established Brugada-syndrome gene. Other proposed Brugada genes require separate current curation and phenotype correlation.",
       "do_not_claim": [
         "Brugada diagnosis from raw DNA",
         "sudden death prediction",

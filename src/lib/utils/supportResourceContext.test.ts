@@ -16,6 +16,8 @@ describe('support resource context', () => {
     expect(context.food_safety.profile_minimum_required.length).toBeGreaterThan(0);
     expect(context.food_safety.source_registry.nih_ods_selenium).toBeDefined();
     expect(context.food_safety.conditional_questions.pmdd_cycle).toBeDefined();
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'pmdd_like_mood_symptoms')).toBe(true);
+    expect(context.cycle_support.source_registry.acog_premenstrual_disorders).toBeDefined();
   });
 
   it('selects PGx confirmation resources and retains medication safety priorities', () => {

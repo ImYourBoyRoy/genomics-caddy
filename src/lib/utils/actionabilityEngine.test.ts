@@ -103,6 +103,8 @@ describe('actionability engine safety policy', () => {
     expect(plan.activity.stopAndEscalate.some((item) => item.includes('Chest pain'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('contraceptive'))).toBe(true);
     expect(plan.medication.askFor.some((item) => item.includes('active ingredient'))).toBe(true);
+    expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_phase_and_symptom_timing')).toBe(true);
+    expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'heavy_bleeding_pelvic_pain')).toBe(true);
   });
 
   it('keeps PGx medication guidance at the review boundary', () => {

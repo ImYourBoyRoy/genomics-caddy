@@ -13,6 +13,7 @@ Operational Notes: Guidance is educational only. Expand rules in the JSON pack f
 import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/genomics';
 import guidanceDoc from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
+import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 
@@ -65,6 +66,11 @@ export interface MedicationSafetyGuidance {
   askFor: string[];
 }
 
+export interface CycleSupportGuidance {
+  principles: typeof cycleSupport.principles;
+  relevantDomains: typeof cycleSupport.domains;
+}
+
 export interface SupplementSafetyGuidance {
   principles: typeof supplementSafety.principles;
   relevantRules: typeof supplementSafety.rules;
@@ -78,6 +84,7 @@ export interface ActionablePlan {
   labGroups: LabTestGroup[];
   activity: ActivityGuidance;
   medication: MedicationSafetyGuidance;
+  cycleSupport: CycleSupportGuidance;
   supplementSafety: SupplementSafetyGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
@@ -366,6 +373,14 @@ function activityContextMatches(
   return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
 }
 
+function cycleContextMatches(markers: EvaluatedMarker[], sectionNames: string[]): boolean {
+  const context = [
+    ...sectionNames,
+    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+  ].join(' ').toLowerCase();
+  return /menstrual|hormone|reproductive|pmdd|ovarian|uterine|contracept|estrogen|progesterone|\besr[12]\b|\bpgr\b/.test(context);
+}
+
 function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string[]): MedicationSafetyGuidance {
   const context = [
     ...sectionNames,
@@ -586,6 +601,9 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
     activityContextMatches(domain, markerValues, sectionNames)
   );
+  const relevantCycleDomains = cycleContextMatches(markerValues, sectionNames)
+    ? cycleSupport.domains
+    : [];
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     supplements.map((item) => item.name)
@@ -607,6 +625,10 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
       relevantDomains: relevantActivityDomains,
     },
     medication: deriveMedicationSafety(markerValues, sectionNames),
+    cycleSupport: {
+      principles: cycleSupport.principles,
+      relevantDomains: relevantCycleDomains,
+    },
     supplementSafety: {
       principles: supplementSafety.principles,
       relevantRules: supplementSafetyRules,

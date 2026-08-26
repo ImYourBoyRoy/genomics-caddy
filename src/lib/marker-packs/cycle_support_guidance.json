@@ -1,0 +1,198 @@
+{
+  "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
+  "version": "1.0.0",
+  "last_updated": "2026-08-25",
+  "type": "support_engine",
+  "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
+  "principles": [
+    "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
+    "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",
+    "Hormonal contraception can change bleeding and hormone patterns. Identify the exact product and active ingredients before discussing cycle effects; progestin is not the same chemical as endogenous progesterone.",
+    "Cyclic irritability, avoidance, anxiety, depression, pain, or bleeding are reasons to organize timing and clinical questions, not reasons to infer PMDD, adenomyosis, endometriosis, or a medication problem from DNA.",
+    "When symptoms are present, use sleep, regular meals, hydration, and activity scaled to symptoms as general supportive options; do not present them as genotype-specific treatment."
+  ],
+  "domains": [
+    {
+      "id": "cycle_phase_and_symptom_timing",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "neuropsych",
+        "thyroid_autoimmune"
+      ],
+      "title": "Cycle phase and symptom timing",
+      "context": "Map the first day of bleeding, symptom onset, symptom offset, and symptom-free days before assigning meaning to a cyclic pattern.",
+      "questions": [
+        "What is day 1 of bleeding, and on which cycle days do irritability, avoidance, anxiety, depression, pain, or physical symptoms begin and end?",
+        "Do symptoms improve within a few days after bleeding starts, and are there symptom-free days in the follicular phase?",
+        "Has the pattern been recorded prospectively every day across at least two cycles, including symptom-free days?"
+      ],
+      "support_options": [
+        "Use a simple daily symptom score and bleeding log for at least two cycles; include sleep, major stressors, medication changes, and missed doses as context.",
+        "Do not label the late-luteal or menstrual transition an estrogen spike without clinician-directed hormone assessment; the natural-cycle direction is usually a fall in estradiol and progesterone before bleeding."
+      ],
+      "confirm_with": [
+        "daily symptom tracking across at least two cycles",
+        "cycle and bleeding history",
+        "clinician review when symptoms impair relationships, work, safety, or daily function"
+      ],
+      "red_flags": [
+        "suicidal thoughts or feeling unsafe",
+        "severe mood symptoms with loss of functioning",
+        "new severe or sudden pelvic pain"
+      ],
+      "sources": [
+        "menstrual_cycle_physiology",
+        "acog_premenstrual_disorders",
+        "womenshealth_pmdd",
+        "phenotype_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "pmdd_like_mood_symptoms",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "neuropsych"
+      ],
+      "title": "Premenstrual mood-symptom support",
+      "context": "PMDD is assessed from a recurring symptom pattern and functional impact, not from one hormone level or SNP.",
+      "questions": [
+        "Which symptoms recur before menses, how intense are they, and do they remit after bleeding begins?",
+        "Are symptoms present outside the premenstrual window, or do they represent worsening of an existing mood or anxiety condition?",
+        "Do anger, avoidance, depression, or anxiety create safety concerns or major impairment?"
+      ],
+      "support_options": [
+        "Bring the prospective symptom log to a clinician; it can help separate cyclic symptoms from persistent or overlapping conditions.",
+        "Keep supportive routines practical and non-punitive: regular sleep opportunity, regular meals, hydration, and symptom-scaled movement if tolerated.",
+        "If thoughts of self-harm or immediate danger occur, use local emergency or crisis support rather than waiting for a DNA interpretation."
+      ],
+      "confirm_with": [
+        "prospective daily symptom ratings across at least two cycles",
+        "mental-health and primary-care review",
+        "clinician-directed treatment discussion"
+      ],
+      "red_flags": [
+        "suicidal ideation",
+        "self-harm risk",
+        "inability to remain safe"
+      ],
+      "sources": [
+        "acog_premenstrual_disorders",
+        "womenshealth_pmdd",
+        "clinical_confirmation_required",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "contraceptive_product_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "pgx"
+      ],
+      "title": "Contraceptive and hormone-medication context",
+      "context": "A DNA file cannot identify a birth-control product, its dose, whether ovulation is suppressed, or whether a person is exposed to estrogen or progestin.",
+      "questions": [
+        "What is the exact product name, active ingredient or ingredients, dose, schedule, and start date?",
+        "Is it progestin-only, combined estrogen-plus-progestin, an implant, an injection, an IUD, or another method?",
+        "Did the mood, bleeding, pain, or avoidance pattern change after starting, stopping, missing, or switching the product?"
+      ],
+      "support_options": [
+        "Use the package label or prescribing record when documenting the medication; do not infer its composition from the DNA report.",
+        "Discuss benefits, risks, and alternatives with the prescriber or pharmacist; do not start, stop, or change dose from raw DNA or a symptom theory alone."
+      ],
+      "confirm_with": [
+        "exact product label or prescribing record",
+        "active ingredients and dose",
+        "prescriber or pharmacist review"
+      ],
+      "red_flags": [
+        "possible pregnancy with pain or bleeding",
+        "severe new headache, chest pain, shortness of breath, or leg swelling while using a hormonal method",
+        "heavy bleeding with dizziness, fainting, or weakness"
+      ],
+      "sources": [
+        "acog_combined_contraception",
+        "acog_progestin_only_contraception",
+        "user_declared_values_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "heavy_bleeding_pelvic_pain",
+      "relevant_pack_signals": [
+        "hormones_reproductive"
+      ],
+      "title": "Heavy bleeding, pelvic pain and suspected adenomyosis",
+      "context": "Adenomyosis is a uterine tissue condition and is not diagnosed or excluded by a consumer SNP file.",
+      "questions": [
+        "How many days does bleeding last, how heavy is it, and are there clots, dizziness, fatigue, or reduced exercise tolerance?",
+        "Is pelvic pain worsening, present between periods, or associated with pain during sex or bowel movements?",
+        "Has a clinician performed a pelvic examination or ordered imaging?"
+      ],
+      "support_options": [
+        "Record bleeding duration, approximate severity, pain score, and impact on work or daily activity for the clinical visit.",
+        "Ask about CBC and ferritin when bleeding is heavy or prolonged; do not begin iron solely because an HFE or other SNP was found.",
+        "Ask whether transvaginal ultrasound is appropriate; MRI may be considered when ultrasound is insufficient or a specialist recommends it."
+      ],
+      "confirm_with": [
+        "CBC and ferritin when bleeding is heavy or prolonged",
+        "pelvic examination when appropriate",
+        "transvaginal ultrasound or MRI when clinically indicated",
+        "gynecology review"
+      ],
+      "red_flags": [
+        "very heavy bleeding with fainting, dizziness, weakness, or shortness of breath",
+        "severe or sudden pelvic pain",
+        "possible pregnancy with pain or bleeding"
+      ],
+      "sources": [
+        "nice_adenomyosis_heavy_bleeding",
+        "medlineplus_adenomyosis",
+        "clinical_confirmation_required",
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "general_symptom_day_support",
+      "relevant_pack_signals": [
+        "hormones_reproductive"
+      ],
+      "title": "General symptom-day support",
+      "context": "These are non-genotype-specific options to discuss or try safely while tracking symptoms; they are not a PMDD or adenomyosis treatment plan.",
+      "questions": [
+        "Which basics are realistic during the symptomatic days: sleep opportunity, regular meals, hydration, gentle movement, or a quieter environment?",
+        "Are pain medicines, supplements, alcohol, caffeine, or other substances affecting symptoms or interacting with current medicines?",
+        "What support does the person want from others when symptoms are intense, and what communication boundary is safe and respectful?"
+      ],
+      "support_options": [
+        "Scale activity to symptoms and stop for concerning symptoms; DNA does not clear strenuous exercise during bleeding, pain, dizziness, or illness.",
+        "Use regular meals and hydration as practical supportive basics rather than restrictive elimination diets or hormone-detox claims.",
+        "Write a pre-agreed communication plan for difficult days, while treating safety, coercion, and interpersonal harm as separate concerns from genetics."
+      ],
+      "confirm_with": [
+        "medication and supplement list",
+        "symptom and activity log",
+        "clinician review when symptoms are severe or worsening"
+      ],
+      "red_flags": [
+        "chest pain, fainting, severe shortness of breath, or new neurologic symptoms",
+        "suicidal thoughts or inability to remain safe",
+        "rapidly worsening pain or bleeding"
+      ],
+      "sources": [
+        "acog_premenstrual_disorders",
+        "womenshealth_pmdd",
+        "aha_physical_activity_warning_signs",
+        "safety_guardrail",
+        "user_declared_values_required"
+      ]
+    }
+  ],
+  "do_not_do": [
+    "Do not infer menstruation, reproductive anatomy, pregnancy, menopause, or contraceptive use from sex chromosomes or autosomal DNA.",
+    "Do not call an estrogen spike, progesterone intolerance, PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric condition from consumer DNA.",
+    "Do not recommend a medication start, stop, or dose change from raw DNA, a reported hormone theory, or a symptom-day communication problem.",
+    "Do not use a negative or missing SNP call to rule out adenomyosis or another clinical condition.",
+    "Do not present symptom-day support options as cures, genotype-specific prescriptions, or substitutes for urgent care."
+  ]
+}

@@ -17,6 +17,7 @@
   let collapsed = $state({
     topFindings: false,
     diet: false,
+    cycleSupport: false,
     supplements: false,
     activity: false,
     medication: true,
@@ -234,6 +235,48 @@
           {/if}
         </div>
       {/if}
+
+      <!-- Cycle/reproductive support is a phenotype and safety layer, not a diagnosis. -->
+      {#if plan.cycleSupport.relevantDomains.length > 0}
+        <div class="summary-card card card-cycle-support" class:collapsed={collapsed.cycleSupport}>
+          <div class="card-header" onclick={() => toggle('cycleSupport')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('cycleSupport'))}>
+            <h3>🌙 Cycle &amp; Reproductive Support</h3>
+            <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
+          </div>
+          {#if !collapsed.cycleSupport}
+            <div class="card-body">
+              <p class="section-hint">This section organizes timing, medication, symptom, and gynecologic follow-up questions. DNA cannot measure current hormones or diagnose PMDD, adenomyosis, endometriosis, PCOS, or a medication response.</p>
+              <ul class="guardrail-list">
+                {#each plan.cycleSupport.principles as principle (principle)}<li>{principle}</li>{/each}
+              </ul>
+              {#each plan.cycleSupport.relevantDomains as domain (domain.id)}
+                <div class="cycle-support-domain">
+                  <strong>{domain.title}</strong>
+                  <p>{domain.context}</p>
+                  <div class="activity-columns">
+                    <div>
+                      <h4>Ask / record</h4>
+                      <ul class="guardrail-list">
+                        {#each domain.questions as item (item)}<li>{item}</li>{/each}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4>Support / confirm</h4>
+                      <ul class="guardrail-list">
+                        {#each domain.support_options as item (item)}<li>{item}</li>{/each}
+                        {#each domain.confirm_with as item (item)}<li>Confirm with: {item}</li>{/each}
+                      </ul>
+                    </div>
+                  </div>
+                  {#if domain.red_flags?.length}
+                    <p class="activity-stop-list"><strong>Escalate promptly for:</strong> {domain.red_flags.join('; ')}</p>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
 
     {#if plan.activity.relevantDomains.length > 0}
@@ -423,6 +466,10 @@
 
   .card-lab-followups {
     width: 100%;
+  }
+
+  .card-cycle-support {
+    grid-column: 1 / -1;
   }
 
   .lab-body {
@@ -785,6 +832,13 @@
     padding: 0.55rem 0.65rem;
     border-left: 2px solid #38bdf8;
     background: rgba(56, 189, 248, 0.04);
+    border-radius: 4px;
+  }
+  .cycle-support-domain {
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.65rem;
+    border-left: 2px solid #c084fc;
+    background: rgba(192, 132, 252, 0.04);
     border-radius: 4px;
   }
   .activity-context {

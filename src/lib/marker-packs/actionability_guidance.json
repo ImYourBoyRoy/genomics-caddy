@@ -92,6 +92,11 @@
           "name": "hs-CRP (Inflammation marker)",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030",
+        "nih_ods_omega3"
       ]
     },
     {
@@ -200,6 +205,10 @@
           "name": "Hydrogen Breath Test (if symptomatic)",
           "urgency": "routine"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "usda_fooddata_central"
       ]
     },
     {
@@ -227,7 +236,11 @@
           "urgency": "consider"
         }
       ],
-      "notes": "Acetaldehyde accumulates rapidly \u2014 even minimal alcohol intake elevates esophageal cancer risk"
+      "notes": "Some ALDH2-associated patterns are linked to slower acetaldehyde clearance after alcohol exposure. Use personal symptoms, exposure history, and clinician guidance; this is not a cancer diagnosis or a fixed personal threshold.",
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030"
+      ]
     },
     {
       "id": "uric_acid",
@@ -260,6 +273,10 @@
           "name": "Serum Uric Acid",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030"
       ]
     },
     {
@@ -291,6 +308,10 @@
           "name": "Ionized Calcium & PTH",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "nih_ods_vitamin_d"
       ]
     },
     {
@@ -318,6 +339,10 @@
           "name": "Comprehensive Liver Panel",
           "urgency": "routine"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030"
       ]
     },
     {
@@ -401,6 +426,10 @@
           "name": "Cardiovascular Risk Panel / Blood Pressure",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030"
       ]
     },
     {
@@ -458,7 +487,13 @@
           "requires_counselor": true
         }
       ],
-      "notes": "Requires professional genetic counseling support."
+      "notes": "Requires professional genetic counseling support.",
+      "sources": [
+        "clinvar",
+        "clingen",
+        "genereviews",
+        "clinical_confirmation_required"
+      ]
     },
     {
       "id": "lynch_confirmation",
@@ -488,7 +523,13 @@
           "requires_counselor": true
         }
       ],
-      "notes": "Requires professional genetic counseling support."
+      "notes": "Requires professional genetic counseling support.",
+      "sources": [
+        "clinvar",
+        "clingen",
+        "genereviews",
+        "clinical_confirmation_required"
+      ]
     }
   ]
 }

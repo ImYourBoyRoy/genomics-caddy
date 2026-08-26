@@ -100,6 +100,7 @@ const markerFiles = new Set();
 const boundaryGaps = [];
 const absoluteLanguageReview = [];
 const laypersonLanguageReview = [];
+const actionabilitySourceGaps = [];
 
 for (const pack of manifest?.packs || []) {
   const packId = pack?.id;
@@ -190,6 +191,13 @@ const actionabilityCoverage = [];
 for (const rule of actionability?.rules || []) {
   const genes = (rule.genes || []).map((gene) => String(gene).toUpperCase());
   genes.forEach((gene) => actionabilityGenes.add(gene));
+  if (!isNonEmptyStringArray(rule.sources)) {
+    actionabilitySourceGaps.push({ id: rule.id || '(unnamed)', reason: 'sources_required' });
+  }
+  if ((rule.actionability_class === 'clinical_confirmation' || rule.severity_classes?.includes('confirmation_required'))
+    && !isNonEmptyStringArray(rule.sources)) {
+    actionabilitySourceGaps.push({ id: rule.id || '(unnamed)', reason: 'clinical_rule_requires_registered_sources' });
+  }
   const matchingMarkers = allMarkers.filter(({ marker }) => markerGenes(marker.gene).some((gene) => genes.includes(gene)));
   actionabilityCoverage.push({
     id: rule.id || '(unnamed)',
@@ -249,6 +257,7 @@ const summary = {
   boundary_gaps: boundaryGaps,
   absolute_language_review: absoluteLanguageReview,
   layperson_language_review: laypersonLanguageReview,
+  actionability_source_gaps: actionabilitySourceGaps,
   uncovered_actionability_genes: uncoveredActionabilityGenes,
   pack_summaries: packSummaries,
   errors,
@@ -263,7 +272,7 @@ if (outputJson) {
   console.log(`Audited ${summary.support_resources} support resources / ${summary.registered_sources} registered sources.`);
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
-  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }
@@ -271,5 +280,5 @@ if (outputJson) {
   for (const error of errors) console.error(`ERROR: ${error}`);
 }
 
-if (errors.length > 0 || boundaryGaps.length > 0) process.exit(1);
+if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0) process.exit(1);
 console.log('Resource-quality audit passed; review warnings before treating coverage as complete.');

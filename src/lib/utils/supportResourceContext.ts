@@ -12,6 +12,7 @@
 import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import callabilityRules from '../marker-packs/callability_rules.json';
+import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import dietPatternProfiles from '../marker-packs/diet_pattern_profiles.json';
 import dietaryRequirements from '../marker-packs/dietary_requirements.json';
 import evidencePolicy from '../marker-packs/evidence_policy.json';
@@ -82,6 +83,14 @@ export interface SupportResourceContext {
     stop_and_escalate: typeof activityGuardrails.stop_and_escalate;
     relevant_domains: typeof activityGuardrails.domains;
     sources: typeof activityGuardrails.sources;
+  };
+  cycle_support: {
+    principles: typeof cycleSupport.principles;
+    domains: typeof cycleSupport.domains;
+    relevant_domains: typeof cycleSupport.domains;
+    do_not_do: typeof cycleSupport.do_not_do;
+    sources: string[];
+    source_registry: Record<string, unknown>;
   };
 }
 
@@ -166,6 +175,7 @@ function supportSourceIds(selectedPackIds: Set<string>): string[] {
     ...activityGuardrails.sources,
     ...actionabilityGuidance.rules.flatMap((rule) => rule.sources || []),
     ...supplementSafety.rules.flatMap((rule) => rule.sources),
+    ...cycleSupport.domains.flatMap((domain) => domain.sources || []),
   ]);
   for (const rule of selectDietaryRules(selectedPackIds)) {
     if (Array.isArray(rule.sources)) {
@@ -193,6 +203,13 @@ function selectActivityDomains(packIds: Set<string>): typeof activityGuardrails.
   return activityGuardrails.domains.filter((domain) => packIds.has(domain.id));
 }
 
+function selectCycleDomains(packIds: Set<string>): typeof cycleSupport.domains {
+  return cycleSupport.domains.filter((domain) => {
+    const signals = Array.isArray(domain.relevant_pack_signals) ? domain.relevant_pack_signals : [];
+    return signals.length === 0 || signals.some((signal) => packIds.has(signal));
+  });
+}
+
 /**
  * Build a bounded, pack-aware resource payload. The payload contains rules and
  * questions, not raw DNA, and intentionally keeps the full safety/callability
@@ -208,6 +225,7 @@ export function buildSupportResourceContext({
   const selectedPackIds = relevantPackIds(packIds, consultationMode);
   const phenotype = selectPhenotypeDomains(selectedPackIds);
   const overlays = selectLabOverlays(selectedPackIds);
+  const relevantCycleDomains = selectCycleDomains(selectedPackIds);
   const selectedSourceRecords = selectSourceRecords(supportSourceIds(selectedPackIds));
 
   return {
@@ -264,6 +282,14 @@ export function buildSupportResourceContext({
       stop_and_escalate: activityGuardrails.stop_and_escalate,
       relevant_domains: selectActivityDomains(selectedPackIds),
       sources: activityGuardrails.sources,
+    },
+    cycle_support: {
+      principles: cycleSupport.principles,
+      domains: cycleSupport.domains,
+      relevant_domains: relevantCycleDomains,
+      do_not_do: cycleSupport.do_not_do,
+      sources: relevantCycleDomains.flatMap((domain) => domain.sources || []),
+      source_registry: selectedSourceRecords,
     },
   };
 }

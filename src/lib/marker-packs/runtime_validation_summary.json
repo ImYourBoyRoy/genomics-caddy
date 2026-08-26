@@ -44,6 +44,7 @@
     "meal_planning_rules.json",
     "food_requirement_prompts.json",
     "supplement_safety.json",
+    "cycle_support_guidance.json",
     "user_diet_profile_schema.json"
   ],
   "food_decision_layer": {
@@ -70,5 +71,13 @@
     ],
     "rules_count": 7,
     "note": "Supplement guidance is a food-first, medication-aware safety layer; genotype can prompt a question but cannot establish need, dose, or safety."
+  },
+  "cycle_support_layer": {
+    "added": true,
+    "new_support_files": [
+      "cycle_support_guidance.json"
+    ],
+    "domains_count": 5,
+    "note": "Cycle support separates phenotype timing, medication composition, symptom-day support, and gynecologic escalation from genetic interpretation."
   }
 }

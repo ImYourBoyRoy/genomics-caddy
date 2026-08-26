@@ -56,7 +56,7 @@
         {@const effectCount = getEffectCount(marker)}
         {@const effectAllele = getEffectAllele(marker)}
         <tr class:clinical-row-highlight={isHighlighted(marker)}>
-          <td>
+          <td data-label="Finding">
             <strong>{marker.gene}</strong>
             <span class="clinical-finding-sub">{marker.variant_name || marker.rsid}</span>
             <div class="clinical-row-actions no-print">
@@ -67,21 +67,21 @@
               {/if}
             </div>
           </td>
-          <td>
+          <td data-label="DNA result">
             <strong class="clinical-genotype">{marker.user_genotype}</strong>
             <span class="clinical-cell-note">{marker.assertion_status}</span>
           </td>
-          <td>
+          <td data-label="Evidence">
             <strong>{tier.label}</strong>
             <span class="clinical-cell-note">{tier.confidenceLabel}</span>
           </td>
-          <td>{marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}</td>
-          <td>
+          <td data-label="Applicability">{marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}</td>
+          <td data-label="Clinical status">
             <span class="clinical-severity {severity.cssClass}">{severity.label}</span>
             <span class="clinical-cell-note">{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</span>
           </td>
-          <td>{nextHelpfulStep(marker)}</td>
-          <td>
+          <td data-label="Next helpful step">{nextHelpfulStep(marker)}</td>
+          <td data-label="Details">
             <details class="clinical-details">
               <summary>Technical details</summary>
               <dl>
@@ -246,8 +246,92 @@
   }
 
   @media (max-width: 720px) {
+    .clinical-table-wrap {
+      overflow-x: visible;
+    }
+
     .clinical-findings-table {
-      min-width: 760px;
+      min-width: 0;
+    }
+
+    .clinical-findings-table,
+    .clinical-findings-table tbody,
+    .clinical-findings-table tr,
+    .clinical-findings-table td {
+      display: block;
+    }
+
+    .clinical-findings-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .clinical-findings-table tbody {
+      display: grid;
+      gap: 0.75rem;
+      padding: 0.75rem;
+    }
+
+    .clinical-findings-table tbody tr {
+      border: 1px solid var(--border-color);
+      border-radius: 0.6rem;
+      background: var(--surface-raised);
+      overflow: hidden;
+    }
+
+    .clinical-findings-table tbody tr:hover,
+    .clinical-row-highlight {
+      background: var(--accent-soft);
+    }
+
+    .clinical-findings-table tbody td {
+      display: grid;
+      grid-template-columns: minmax(7rem, 0.45fr) minmax(0, 1fr);
+      gap: 0.65rem;
+      align-items: start;
+      padding: 0.65rem 0.75rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .clinical-findings-table tbody td:first-child {
+      border-top: 0;
+    }
+
+    .clinical-findings-table tbody td::before {
+      content: attr(data-label);
+      color: var(--text-secondary);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }
+
+    .clinical-findings-table tbody td[data-label="Details"] {
+      display: block;
+    }
+
+    .clinical-findings-table tbody td[data-label="Details"]::before {
+      content: none;
+    }
+
+    .clinical-details {
+      min-width: 0;
+    }
+
+    .clinical-details dl {
+      min-width: 0;
+    }
+
+    .clinical-details dl > div {
+      grid-template-columns: minmax(6rem, 0.45fr) minmax(0, 1fr);
     }
   }
 </style>

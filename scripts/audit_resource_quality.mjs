@@ -114,6 +114,16 @@ if (!evidencePolicy?.display || typeof evidencePolicy.display !== 'object' || Ar
   for (const frame of ['interpretation_blocked', 'clinical_confirmation', 'B', 'C', 'D', 'E', 'unknown']) {
     if (typeof evidencePolicy.display.claim_frames?.[frame] !== 'string') errors.push(`evidence_policy.json: display claim frame ${frame} is missing`);
   }
+  for (const severity of ['high_risk', 'moderate_risk', 'low_risk', 'protective', 'trait', 'context_dependent', 'confirmation_required', 'no_data', 'benign']) {
+    if (typeof evidencePolicy.display.severity?.[severity]?.plain_label !== 'string') {
+      errors.push(`evidence_policy.json: display severity plain label ${severity} is missing`);
+    }
+  }
+  for (const scope of ['xx_reproductive', 'xy_reproductive', 'x_linked', 'y_linked', 'menstrual_cycle_context', 'ovarian_context', 'uterine_context', 'androgen_reproductive_context', 'all_bodies_preconception_fertility_context', 'all_bodies_hormone_therapy_context', 'all_bodies_pregnancy_lactation_context']) {
+    if (typeof evidencePolicy.display.scope_labels?.[scope] !== 'string') {
+      errors.push(`evidence_policy.json: display scope label ${scope} is missing`);
+    }
+  }
 }
 if (!Array.isArray(callabilityRules?.rules) || callabilityRules.rules.length === 0) {
   errors.push('callability_rules.json: rules must be a non-empty array');

@@ -1,6 +1,6 @@
 {
   "name": "Evidence Policy",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "tiers": {
     "A_clinical_guideline": "Clinical guideline or guideline-backed marker. Display with clinical confirmation and clinician action warning.",
@@ -151,6 +151,7 @@
         "emoji": "🔴",
         "glyph": "!",
         "label": "Two association alleles detected",
+        "plain_label": "Stronger association detected",
         "description": "Both copies match the allele used by this pack's association rule. This is not a diagnosis or a personal disease probability."
       },
       "moderate_risk": {
@@ -158,6 +159,7 @@
         "emoji": "🟡",
         "glyph": "?",
         "label": "One association allele detected",
+        "plain_label": "Possible association detected",
         "description": "One copy matches the allele used by this pack's association rule. Effects are usually smaller than two copies and remain context-dependent."
       },
       "low_risk": {
@@ -165,6 +167,7 @@
         "emoji": "🟠",
         "glyph": "?",
         "label": "Preliminary risk signal",
+        "plain_label": "Preliminary association",
         "description": "Limited evidence (Tier D/E research). Treat this as an early hypothesis — not a confirmed finding. Consider discussing with your healthcare provider."
       },
       "protective": {
@@ -172,6 +175,7 @@
         "emoji": "🟢",
         "glyph": "+",
         "label": "Protective association detected",
+        "plain_label": "Protective association detected",
         "description": "This variant is associated with a potentially beneficial or lower-risk direction; it does not guarantee protection."
       },
       "trait": {
@@ -179,6 +183,7 @@
         "emoji": "🔵",
         "glyph": "T",
         "label": "Trait variant detected",
+        "plain_label": "Trait association detected",
         "description": "This variant describes a characteristic, not a health risk."
       },
       "context_dependent": {
@@ -186,6 +191,7 @@
         "emoji": "🟣",
         "glyph": "~",
         "label": "Context-dependent variant",
+        "plain_label": "Depends on diet & lifestyle",
         "description": "This variant's effect depends on other factors like medications, diet, or environment."
       },
       "confirmation_required": {
@@ -193,6 +199,7 @@
         "emoji": "⚠️",
         "glyph": "C",
         "label": "Clinical confirmation needed",
+        "plain_label": "Needs clinical lab test to verify",
         "description": "Consumer DNA tests can produce false positives on rare variants. A clinical lab test is needed to confirm."
       },
       "no_data": {
@@ -200,6 +207,7 @@
         "emoji": "⚪",
         "glyph": "·",
         "label": "No data available",
+        "plain_label": "No data available",
         "description": "Your DNA test did not include or could not read this position."
       },
       "benign": {
@@ -207,8 +215,22 @@
         "emoji": "○",
         "glyph": "·",
         "label": "Variant not detected",
+        "plain_label": "Normal / Benign",
         "description": "Your genotype at this position matches the standard reference. The effect allele being tested was not found."
       }
+    },
+    "scope_labels": {
+      "xx_reproductive": "XX reproductive context",
+      "xy_reproductive": "XY reproductive context",
+      "x_linked": "X-linked context",
+      "y_linked": "Y-linked context",
+      "menstrual_cycle_context": "Menstrual-cycle context",
+      "ovarian_context": "Ovarian context",
+      "uterine_context": "Uterine context",
+      "androgen_reproductive_context": "Androgen-reproductive context",
+      "all_bodies_preconception_fertility_context": "All-bodies preconception/fertility context",
+      "all_bodies_hormone_therapy_context": "All-bodies hormone-therapy context",
+      "all_bodies_pregnancy_lactation_context": "All-bodies pregnancy/lactation context"
     }
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getClaimFrame, getDirectionInfo, getSeverityInfo, getTierInfo } from './evidence';
+import { getClaimFrame, getDirectionInfo, getScopeLabel, getSeverityInfo, getTierInfo } from './evidence';
 
 describe('evidence tier display', () => {
   it('uses the tier prefix for custom evidence labels', () => {
@@ -33,7 +33,10 @@ describe('evidence tier display', () => {
     }));
     expect(getSeverityInfo('confirmation_required')).toEqual(expect.objectContaining({
       label: 'Clinical confirmation needed',
+      plainLabel: 'Needs clinical lab test to verify',
       cssClass: 'signal-confirm',
     }));
+    expect(getScopeLabel('menstrual_cycle_context')).toBe('Menstrual-cycle context');
+    expect(getScopeLabel('new_resource_scope')).toBe('new resource scope');
   });
 });

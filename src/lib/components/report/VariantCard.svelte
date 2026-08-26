@@ -7,7 +7,7 @@
   import ConfirmWithList from './ConfirmWithList.svelte';
   import WarningBlocks from './WarningBlocks.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
-  import { getClaimFrame, getSeverityInfo } from '../../utils/evidence';
+  import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
   import { getLaypersonTranslation } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
@@ -61,33 +61,6 @@
     return `${base.toFixed(1)}×10${exp < 0 ? '⁻' : ''}${Math.abs(exp)}`;
   }
 
-  function getSimpleLabel(severityClass: string): string {
-    switch (severityClass) {
-      case "high_risk": return "Stronger association detected";
-      case "moderate_risk": return "Possible association detected";
-      case "low_risk": return "Preliminary association";
-      case "protective": return "Protective association detected";
-      case "trait": return "Trait association detected";
-      case "context_dependent": return "Depends on diet & lifestyle";
-      case "confirmation_required": return "Needs clinical lab test to verify";
-      case "no_data": return "No data available";
-      default: return "Normal / Benign";
-    }
-  }
-
-  function sexScopeLabel(scope: string): string {
-    switch (scope) {
-      case 'xx_reproductive': return 'XX reproductive context';
-      case 'xy_reproductive': return 'XY reproductive context';
-      case 'x_linked': return 'X-linked context';
-      case 'y_linked': return 'Y-linked context';
-      case 'menstrual_cycle_context': return 'Menstrual-cycle context';
-      case 'ovarian_context': return 'Ovarian context';
-      case 'uterine_context': return 'Uterine context';
-      case 'androgen_reproductive_context': return 'Androgen-reproductive context';
-      default: return scope.replaceAll('_', ' ');
-    }
-  }
 </script>
 
 <div
@@ -124,7 +97,7 @@
     <EvidenceBadge tier={marker.evidence_tier} />
     {#if marker.sex_scope && marker.sex_scope !== 'all'}
       <span class="scope-badge" title="Biological applicability hint only; this is not gender or anatomy.">
-        {sexScopeLabel(marker.sex_scope)}
+        {getScopeLabel(marker.sex_scope)}
       </span>
     {/if}
   </div>
@@ -139,7 +112,7 @@
     </span>
     <span class="marker-severity-label">
       <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
-      {viewMode === 'simple' ? getSimpleLabel(marker.severity_class) : severity.label}
+      {viewMode === 'simple' ? severity.plainLabel : severity.label}
       {#if effectCount > 0 && isActiveFindings}
         <span class="allele-detail">
           {#if viewMode === 'simple'}

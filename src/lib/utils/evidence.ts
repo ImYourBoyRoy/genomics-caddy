@@ -94,6 +94,7 @@ export interface SeverityInfo {
   emoji: string;
   glyph: string;
   label: string;
+  plainLabel: string;
   description: string;
 }
 
@@ -104,8 +105,16 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
     emoji: display.emoji,
     glyph: display.glyph,
     label: display.label,
+    plainLabel: display.plain_label,
     description: display.description,
   };
+}
+
+/** Resolve biological-applicability scope wording without implying identity or anatomy. */
+export function getScopeLabel(scope: string): string {
+  const normalized = String(scope || '').trim();
+  const label = (evidencePolicy.display.scope_labels as Record<string, string>)[normalized];
+  return label || normalized.replaceAll('_', ' ');
 }
 
 // ---------------------------------------------------------------------------

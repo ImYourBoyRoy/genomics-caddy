@@ -19,7 +19,8 @@
   let findings = $state<VectorPromotedFinding[]>([]);
   let corpusHighlights = $state<ActionabilityPoint[]>([]);
   let isLoading = $state(true);
-  let expanded = $state(true);
+  let expanded = $state(false);
+  const promotedBodyId = 'vector-promoted-items';
 
   let displayItems = $derived.by(() => {
     const seen = new Set(findings.map((f) => f.rsid.toLowerCase()));
@@ -74,13 +75,19 @@
           Sweep-promoted GWAS hits plus top actionable variants from your {findings.length > 0 ? "enrichment run" : "corpus index"}.
         </p>
       </div>
-      <button type="button" class="toggle" onclick={() => (expanded = !expanded)}>
+      <button
+        type="button"
+        class="toggle"
+        aria-expanded={expanded}
+        aria-controls={promotedBodyId}
+        onclick={() => (expanded = !expanded)}
+      >
         {expanded ? "Hide" : "Show"}
       </button>
     </div>
 
     {#if expanded}
-      <div class="grid">
+      <div class="grid" id={promotedBodyId}>
         {#each displayItems.slice(0, 32) as item (item.rsid)}
           <article
             class="card"

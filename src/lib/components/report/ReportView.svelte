@@ -427,10 +427,7 @@
     />
   {/if}
 
-  <!-- Disclaimer Banner -->
-  <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
-  <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
-
+  <!-- Core report context and controls remain ahead of secondary research surfaces. -->
   <div class="disclaimer-banner">
     <strong>Important:</strong> This report shows curated marker-pack context from your raw DNA file. It is <strong>not</strong> a medical diagnosis, disease probability, or treatment recommendation. Uncalled markers remain unknown.
   </div>
@@ -606,6 +603,10 @@
       />
     {/each}
   </div>
+
+  <!-- Secondary research surfaces stay below the core report and remain optional. -->
+  <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
+  <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
 
   {#if showHelpGuide}
     <div class="modal-backdrop help-backdrop" onclick={closeHelpGuide} role="presentation">

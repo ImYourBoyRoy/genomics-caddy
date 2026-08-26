@@ -5,6 +5,7 @@
   import type { ActionabilityPoint } from "../../types/research";
   import type { VariantNavTarget } from "../../constants/traitCategories";
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     selectedSample: GenomeSample;
@@ -90,7 +91,9 @@
               <code class="rsid">{item.rsid}</code>
               {#if item.gene}<span class="gene">{item.gene}</span>{/if}
               {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
-              <span class="score" title="Significance">{Math.round(item.significance_score * 100)}%</span>
+              <Tooltip label="Research index score" description="This local ranking signal helps organize research items. It is not a disease probability or a health score.">
+                <span class="score">Rank {Math.round(item.significance_score * 100)}%</span>
+              </Tooltip>
             </div>
             <p class="trait">{item.trait_summary}</p>
             {#if item.trait_categories.length > 0}
@@ -101,10 +104,10 @@
               </div>
             {/if}
             <div class="actions">
-              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "report")} title="Trait report">📋 Report</button>
-              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "map")} title="Genome map">🗺️ Map</button>
-              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "browser")} title="Raw browser">🔍 Browser</button>
-              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onExploreResearch?.(item.rsid)} title="Evidence library">🔬 Evidence</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "report")}>📋 Report</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "map")}>🗺️ Map</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "browser")}>🔍 Browser</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick={() => onExploreResearch?.(item.rsid)}>🔬 Evidence</button>
             </div>
           </article>
         {/each}

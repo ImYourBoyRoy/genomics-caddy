@@ -80,8 +80,8 @@
               <span class="clinvar">{item.clinvar_clinical_significance}</span>
             {/if}
             <span class="mini-nav">
-              <button type="button" class="mini-btn" onclick={() => onNavigate?.(item.rsid, "map")} title="Map">🗺️</button>
-              <button type="button" class="mini-btn" onclick={() => onNavigate?.(item.rsid, "browser")} title="Browser">🔍</button>
+              <button type="button" class="mini-btn" aria-label="Open on genome map" onclick={() => onNavigate?.(item.rsid, "map")}>🗺️</button>
+              <button type="button" class="mini-btn" aria-label="Open in raw browser" onclick={() => onNavigate?.(item.rsid, "browser")}>🔍</button>
             </span>
           </li>
         {/each}

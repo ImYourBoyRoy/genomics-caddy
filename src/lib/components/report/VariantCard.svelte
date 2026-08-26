@@ -96,13 +96,13 @@
           {marker.rsid}
           {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
             <span class="nav-links no-print">
-              <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "map")} title="Genome map">🗺️</button>
-              <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")} title="Raw browser">🔍</button>
+              <button type="button" class="research-explore-link" aria-label="Open on genome map" onclick={() => onNavigateToVariant?.(marker.rsid, "map")}>🗺️</button>
+              <button type="button" class="research-explore-link" aria-label="Open in raw browser" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")}>🔍</button>
               <button
                 type="button"
                 class="research-explore-link"
                 onclick={() => onExploreResearch?.(marker.rsid)}
-                title="Search Enriched Vector Research"
+                aria-label="Search enriched vector research"
               >
                 🔬
               </button>
@@ -157,50 +157,62 @@
 
       <!-- Reference DB enrichment chips (clinical + dual view only) -->
       {#if viewMode !== 'simple' && (marker.clinvar_significance || marker.population_rarity || marker.gwas_top_trait || marker.pharmgkb || marker.clingen || marker.mane)}
-        <div class="enrichment-row" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <div class="enrichment-row">
           {#if marker.clinvar_significance}
             {#if isHighPriorityClinvar(marker.clinvar_significance)}
-              <span class="clinvar-chip clinvar-{clinvarClass(marker.clinvar_significance)}" title={marker.clinvar_conditions ?? undefined}>
-                🏛️ ClinVar: {marker.clinvar_significance}
-                {#if marker.clinvar_review_status}
-                  <span class="review-status">({marker.clinvar_review_status})</span>
-                {/if}
-              </span>
+              <Tooltip label="ClinVar classification" description={marker.clinvar_conditions || 'A local clinical-variant database annotation; review status and conditions are shown in Clinical details.'}>
+                <span class="clinvar-chip clinvar-{clinvarClass(marker.clinvar_significance)}">
+                  🏛️ ClinVar: {marker.clinvar_significance}
+                  {#if marker.clinvar_review_status}
+                    <span class="review-status">({marker.clinvar_review_status})</span>
+                  {/if}
+                </span>
+              </Tooltip>
             {:else}
-              <details class="clinvar-low-priority-detail" style="margin-top: 0.2rem;">
-                <summary style="font-size: 0.72rem; cursor: pointer; color: var(--text-secondary); list-style: none; display: flex; align-items: center; gap: 0.25rem;">
+              <details class="clinvar-low-priority-detail">
+                <summary class="enrichment-detail-summary">
                   <span>🏛️ ClinVar (VUS/Benign)</span>
                 </summary>
-                <div style="margin-top: 0.25rem;">
-                  <span class="clinvar-chip clinvar-{clinvarClass(marker.clinvar_significance)}" title={marker.clinvar_conditions ?? undefined}>
-                    🏛️ ClinVar: {marker.clinvar_significance}
-                    {#if marker.clinvar_review_status}
-                      <span class="review-status">({marker.clinvar_review_status})</span>
-                    {/if}
-                  </span>
+                <div class="enrichment-detail-body">
+                  <Tooltip label="ClinVar classification" description={marker.clinvar_conditions || 'A local clinical-variant database annotation; review status and conditions are shown in Clinical details.'}>
+                    <span class="clinvar-chip clinvar-{clinvarClass(marker.clinvar_significance)}">
+                      🏛️ ClinVar: {marker.clinvar_significance}
+                      {#if marker.clinvar_review_status}
+                        <span class="review-status">({marker.clinvar_review_status})</span>
+                      {/if}
+                    </span>
+                  </Tooltip>
                 </div>
               </details>
             {/if}
           {/if}
           {#if marker.population_rarity && marker.population_af != null}
-            <span class="population-chip" title="gnomAD allele frequency">
-              🌍 {marker.population_rarity} ({formatAf(marker.population_af)})
-            </span>
+            <Tooltip label="gnomAD allele frequency" description="Population frequency context from the local gnomAD cache; this is not a personal disease probability.">
+              <span class="population-chip">
+                🌍 {marker.population_rarity} ({formatAf(marker.population_af)})
+              </span>
+            </Tooltip>
           {/if}
           {#if marker.pharmgkb}
-            <span class="pharmgkb-chip" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;" title={marker.pharmgkb.phenotype}>
-              💊 PharmGKB PGx: Level {marker.pharmgkb.evidence_level} ({marker.pharmgkb.drug})
-            </span>
+            <Tooltip label="PharmGKB medication context" description={marker.pharmgkb.phenotype || 'A medication-response annotation that requires the complete clinical PGx context.'}>
+              <span class="pharmgkb-chip">
+                💊 PharmGKB PGx: Level {marker.pharmgkb.evidence_level} ({marker.pharmgkb.drug})
+              </span>
+            </Tooltip>
           {/if}
           {#if marker.clingen}
-            <span class="clingen-chip" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;" title={marker.clingen.disease_label}>
-              🧬 ClinGen: {marker.clingen.classification}
-            </span>
+            <Tooltip label="ClinGen classification" description={marker.clingen.disease_label || 'A gene-validity annotation from the local ClinGen catalog.'}>
+              <span class="clingen-chip">
+                🧬 ClinGen: {marker.clingen.classification}
+              </span>
+            </Tooltip>
           {/if}
           {#if marker.mane}
-            <span class="mane-chip" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;" title="MANE Status: {marker.mane.mane_status}">
-              🧬 MANE: {marker.mane.refseq_transcript}
-            </span>
+            <Tooltip label="MANE transcript" description={`MANE status: ${marker.mane.mane_status}`}>
+              <span class="mane-chip">
+                🧬 MANE: {marker.mane.refseq_transcript}
+              </span>
+            </Tooltip>
           {/if}
         </div>
       {/if}
@@ -298,11 +310,11 @@
                 🏛️ ClinVar: <strong>{marker.clinvar_significance}</strong>
               </span>
             {:else}
-              <details class="clinvar-simple-low-priority" style="display: inline-block;">
-                <summary style="font-size: 0.72rem; cursor: pointer; color: var(--text-secondary); list-style: none; display: inline-flex; align-items: center; gap: 0.25rem;">
+              <details class="clinvar-simple-low-priority">
+                <summary class="enrichment-detail-summary">
                   <span>🏛️ ClinVar (VUS/Benign)</span>
                 </summary>
-                <div style="margin-top: 0.25rem;">
+                <div class="enrichment-detail-body">
                   <span class="clinvar-simple">
                     🏛️ ClinVar: <strong>{marker.clinvar_significance}</strong>
                   </span>
@@ -390,7 +402,34 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin: 0.5rem 0;
+    margin: 0.5rem 0 0.75rem;
+  }
+
+  .clinvar-low-priority-detail,
+  .clinvar-simple-low-priority {
+    margin-top: 0.2rem;
+  }
+
+  .clinvar-simple-low-priority {
+    display: inline-block;
+  }
+
+  .enrichment-detail-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.72rem;
+    list-style: none;
+  }
+
+  .enrichment-detail-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .enrichment-detail-body {
+    margin-top: 0.25rem;
   }
 
   .clinvar-chip, .population-chip {
@@ -413,6 +452,35 @@
   .review-status { opacity: 0.75; font-weight: 400; font-size: 0.68rem; }
 
   .population-chip { background: rgba(14, 165, 233, 0.1); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.25); }
+
+  .pharmgkb-chip,
+  .clingen-chip,
+  .mane-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+  }
+
+  .pharmgkb-chip {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  .clingen-chip {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+
+  .mane-chip {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
 
   .gwas-detail {
     margin: 0.4rem 0;

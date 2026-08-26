@@ -1408,6 +1408,14 @@ h1, h2, h3, h4, h5, h6 {
 .mode-group {
   margin-left: auto;
 }
+.guide-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  border-color: var(--border-strong);
+  background: var(--surface-subtle);
+}
 .filter-label {
   font-size: 0.8rem;
   font-weight: 600;

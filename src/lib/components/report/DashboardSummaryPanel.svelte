@@ -620,7 +620,7 @@
                               <span class="lab-chip-name">{lt.name}</span>
                               <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
                               {#if lt.requires_counselor}
-                                <span class="lab-chip-counselor" title="Genetic counselor advised">🧑‍⚕️</span>
+                                <span class="lab-chip-counselor" aria-label="Genetic counselor advised">🧑‍⚕️</span>
                               {/if}
                             </button>
                             {#if expandedLabReasons[labKey(lt)]}

@@ -406,7 +406,6 @@
       <button
         class="btn btn-primary btn-sm"
         onclick={exportCuratedJson}
-        title="Same format as roy_ancestrydna_report_v3/v4 — curated marker-pack report only"
       >
         Export curated report JSON
       </button>
@@ -426,7 +425,6 @@
         class="btn btn-secondary btn-sm"
         onclick={exportFullCatalogJson}
         disabled={discoveryExportBusy}
-        title="Genome × ClinVar/GWAS/PharmGKB associations → App/Data/exports/"
       >
         {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
       </button>
@@ -495,11 +493,11 @@
     </div>
 
     {#if reproductiveContext}
-      <label class="filter-toggle" title="This only changes ordering; no report markers are removed.">
+      <label class="filter-toggle" aria-describedby="reproductive-priority-hint">
         <input type="checkbox" bind:checked={prioritizeReproductiveContext} />
         Prioritize {selectedReproductiveContextLabel()}
       </label>
-      <span class="filter-context-hint">All reproductive markers remain visible.</span>
+      <span id="reproductive-priority-hint" class="filter-context-hint">This changes ordering only; all reproductive markers remain visible.</span>
     {/if}
     
     <div class="mode-group">
@@ -526,9 +524,8 @@
       >
         👥 Compare
       </button>
-      <button 
-        class="view-mode-btn" 
-        style="background: rgba(255,255,255,0.06); margin-left: 8px; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;"
+      <button
+        class="view-mode-btn guide-mode-btn"
         onclick={() => showHelpGuide = true}
       >
         📖 Guide

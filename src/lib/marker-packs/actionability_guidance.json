@@ -8,6 +8,7 @@
   "disclaimer": "Educational suggestions only. Not medical advice. Confirm symptoms, labs, medications, and clinical context before changing diet or supplements.",
   "policy": {
     "default_actionability": "symptom_or_lab_conditioned",
+    "confirm_with_cap": 12,
     "safety_notes": [
       "More markers increase coverage, not certainty or personal disease probability.",
       "Do not start, stop, or change a medication from raw DNA alone; use a current CPIC/FDA/label-supported PGx result with a clinician or pharmacist.",

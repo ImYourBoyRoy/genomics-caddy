@@ -176,6 +176,7 @@ function actionabilityRuleMatchesMarker(rule: ActionableRule, marker: EvaluatedM
 
 interface ActionabilityPolicy {
   default_actionability?: ActionabilityClass;
+  confirm_with_cap?: number;
   safety_notes?: string[];
 }
 
@@ -341,12 +342,7 @@ function deriveMedicationSafety(
   personalSafetyContext?: PersonalSafetyContext,
 ): MedicationSafetyGuidance {
   const structuredMedicationNames = Object.entries(personalSafetyContext?.reproductiveIntake || {})
-    .filter(([fieldId]) => [
-      'hormone_product_name',
-      'active_ingredients',
-      'route_dose_schedule',
-      'treatment_goal',
-    ].includes(fieldId))
+    .filter(([fieldId]) => safetyGuardrails.medication_context.reproductive_intake_field_ids.includes(fieldId))
     .map(([, value]) => value);
   const context = [
     ...sectionNames,
@@ -357,10 +353,9 @@ function deriveMedicationSafety(
   const pgxContext = safetyGuardrails.medication_context.pgx_context_keywords.some((keyword) =>
     context.includes(String(keyword).toLowerCase())
   );
-  const relevantRuleIds = new Set(['PGX_NO_MED_CHANGE', 'LABS_AND_PHENOTYPE_FIRST']);
+  const relevantRuleIds = new Set(safetyGuardrails.medication_context.base_rule_ids);
   if (pgxContext) {
-    relevantRuleIds.add('HLA_TAGS_NOT_TYPING');
-    relevantRuleIds.add('CNV_STR_VNTR_NOT_ARRAY_SAFE');
+    for (const ruleId of safetyGuardrails.medication_context.pgx_rule_ids) relevantRuleIds.add(ruleId);
   }
 
   // A user-supplied hormonal medication name is an explicit medication
@@ -594,7 +589,7 @@ export function deriveActionablePlan(
 
   // Pack marker confirm_with → lab-like prompts only (strict filter; never auto-urgent)
   let confirmWithAdded = 0;
-  const CONFIRM_WITH_CAP = 12;
+  const confirmWithCap = ACTIONABILITY_POLICY.confirm_with_cap || 12;
   for (const { marker } of allMarkers) {
     if (!marker.interpretation_allowed) continue;
     if (
@@ -605,7 +600,7 @@ export function deriveActionablePlan(
       continue;
     }
     for (const item of marker.confirm_with || []) {
-      if (confirmWithAdded >= CONFIRM_WITH_CAP) break;
+      if (confirmWithAdded >= confirmWithCap) break;
       const trimmed = String(item || '').trim();
       if (!trimmed || !isLabLikeConfirmItem(trimmed)) continue;
       if (labTestsMap.has(trimmed)) continue;

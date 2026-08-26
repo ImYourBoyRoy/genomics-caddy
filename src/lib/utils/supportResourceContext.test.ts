@@ -15,6 +15,7 @@ describe('support resource context', () => {
     expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
     expect(context.lab_overlays.some((overlay) => overlay.domain === 'adenomyosis_heavy_bleeding_pelvic_pain')).toBe(true);
     expect(context.safety_guardrails.some((rule) => rule.id === 'ADENOMYOSIS_REQUIRES_GYNECOLOGIC_WORKUP')).toBe(true);
+    expect(context.personal_context_notes.reproductive_intake).toContain('exact label');
     expect(context.medication_context.ask_for.some((item) => item.includes('active ingredient'))).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'selenium')).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_a')).toBe(true);
@@ -206,6 +207,7 @@ describe('support resource context', () => {
     expect(context.evidence_policy.claim_policy.never_claim).toContain('diagnosis from raw DNA');
     expect(context.prs_policy.principle).toContain('Do not compute');
     expect(context.actionability_policy.safety_notes?.[0]).toContain('More markers increase coverage');
+    expect(context.actionability_policy.confirm_with_cap).toBe(12);
     const apoeRule = context.actionability_rules.find((rule) => rule.id === 'apoe_lipid');
     expect(apoeRule?.interpretation_contains).toContain('APOE4');
     expect(apoeRule?.pack_hints).toContain('cardiovascular');

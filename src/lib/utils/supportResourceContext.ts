@@ -37,6 +37,7 @@ export interface SupportResourceContext {
     claim_policy: typeof evidencePolicy.claim_policy;
   };
   safety_guardrails: typeof safetyGuardrails.rules;
+  personal_context_notes: typeof safetyGuardrails.personal_context_notes;
   medication_context: typeof safetyGuardrails.medication_context;
   supplement_safety: {
     principles: typeof supplementSafety.principles;
@@ -48,6 +49,7 @@ export interface SupportResourceContext {
   lab_overlays: Array<Record<string, unknown>>;
   actionability_policy: {
     default_actionability?: string;
+    confirm_with_cap?: number;
     safety_notes?: string[];
   };
   actionability_rules: Array<Record<string, unknown>>;
@@ -231,6 +233,7 @@ export function buildSupportResourceContext({
       claim_policy: evidencePolicy.claim_policy,
     },
     safety_guardrails: safetyGuardrails.rules,
+    personal_context_notes: safetyGuardrails.personal_context_notes,
     medication_context: safetyGuardrails.medication_context,
     supplement_safety: {
       principles: supplementSafety.principles,
@@ -242,6 +245,7 @@ export function buildSupportResourceContext({
     lab_overlays: overlays,
     actionability_policy: {
       default_actionability: actionabilityGuidance.policy?.default_actionability,
+      confirm_with_cap: actionabilityGuidance.policy?.confirm_with_cap,
       safety_notes: actionabilityGuidance.policy?.safety_notes,
     },
     actionability_rules: actionabilityGuidance.rules.map((rule) => ({

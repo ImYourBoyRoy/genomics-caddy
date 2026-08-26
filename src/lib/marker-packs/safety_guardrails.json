@@ -1,6 +1,6 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "last_updated": "2026-08-26",
   "personal_context_notes": {
     "allergies": "Reported allergies or intolerances take priority over genotype-based food and supplement prompts; never use raw DNA to clear an exposure.",
@@ -12,6 +12,20 @@
     "cycle_diary": "The cycle diary contains self-reported observations. Missing entries are not symptom-free days; review patterns over time with a clinician rather than treating them as hormone measurements or a diagnosis."
   },
   "medication_context": {
+    "base_rule_ids": [
+      "PGX_NO_MED_CHANGE",
+      "LABS_AND_PHENOTYPE_FIRST"
+    ],
+    "pgx_rule_ids": [
+      "HLA_TAGS_NOT_TYPING",
+      "CNV_STR_VNTR_NOT_ARRAY_SAFE"
+    ],
+    "reproductive_intake_field_ids": [
+      "hormone_product_name",
+      "active_ingredients",
+      "route_dose_schedule",
+      "treatment_goal"
+    ],
     "ask_for": [
       "Exact medication name and active ingredient(s)",
       "Dose, timing, indication, start date, and prescriber instructions",

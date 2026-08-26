@@ -99,6 +99,7 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
 const actionability = readJson(path.join(sourceDir, 'actionability_guidance.json'));
 const foodRequirementPrompts = readJson(path.join(sourceDir, 'food_requirement_prompts.json'));
 const sourceRegistry = readJson(path.join(sourceDir, 'source_registry.json'));
+const cycleSupport = readJson(path.join(sourceDir, 'cycle_support_guidance.json'));
 if (!actionability?.policy?.safety_notes?.length) {
   errors.push('actionability_guidance.json: policy.safety_notes is required');
 }
@@ -151,7 +152,7 @@ const supportContracts = {
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
   research_taxonomy: { arrays: ['categories', 'discovery_categories'] },
-  safety_guardrails: { arrays: ['rules'], objects: ['medication_context', 'personal_context_notes'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
+  safety_guardrails: { arrays: ['rules'], objects: ['medication_context', 'personal_context_notes'], nested_arrays: { medication_context: ['base_rule_ids', 'pgx_rule_ids', 'reproductive_intake_field_ids', 'ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
   supplement_safety: { arrays: ['principles', 'rules', 'do_not_do'] },
   source_registry: { objects: ['sources'] },
   user_diet_profile_schema: { arrays: ['minimum_required_for_food_advice', 'do_not_infer'], objects: ['schema'] },
@@ -233,6 +234,9 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
   }
   if (resourceId === 'actionability_guidance') {
+    if (!Number.isInteger(resource.policy?.confirm_with_cap) || resource.policy.confirm_with_cap < 1 || resource.policy.confirm_with_cap > 100) {
+      errors.push('actionability_guidance.json: policy.confirm_with_cap must be an integer from 1 through 100');
+    }
     const tiers = resource.lab_tiers || [];
     const tierIds = new Set();
     for (const [index, tier] of tiers.entries()) {
@@ -280,6 +284,20 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
   }
   if (resourceId === 'safety_guardrails') {
+    const medicationRuleIds = new Set((resource.rules || []).map((rule) => rule.id));
+    for (const field of ['base_rule_ids', 'pgx_rule_ids']) {
+      for (const ruleId of resource.medication_context?.[field] || []) {
+        if (!medicationRuleIds.has(ruleId)) {
+          errors.push(`safety_guardrails.json: medication_context.${field} references unknown rule ${ruleId}`);
+        }
+      }
+    }
+    const intakeFieldIds = new Set((cycleSupport?.intake_schema?.fields || []).map((field) => field.id));
+    for (const fieldId of resource.medication_context?.reproductive_intake_field_ids || []) {
+      if (!intakeFieldIds.has(fieldId)) {
+        errors.push(`safety_guardrails.json: medication_context.reproductive_intake_field_ids references unknown intake field ${fieldId}`);
+      }
+    }
     for (const field of ['allergies', 'medications', 'supplements', 'symptoms', 'labs', 'reproductive_intake', 'cycle_diary']) {
       if (typeof resource.personal_context_notes?.[field] !== 'string' || resource.personal_context_notes[field].trim() === '') {
         errors.push(`safety_guardrails.json: personal_context_notes.${field} must be a non-empty string`);
@@ -560,7 +578,6 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
   }
 }
 
-const cycleSupport = readJson(path.join(sourceDir, 'cycle_support_guidance.json'));
 const safetyGuardrails = readJson(path.join(sourceDir, 'safety_guardrails.json'));
 const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
 const reproductiveContextIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));

@@ -28,15 +28,40 @@
   let panelElement = $state<HTMLSpanElement | undefined>(undefined);
   let panelStyle = $state('');
   let tooltipId = $state('');
+  let hoverCloseTimer: ReturnType<typeof setTimeout> | undefined;
 
   function refreshOpenState() {
     isOpen = isHovered || isFocused || isClicked;
   }
 
+  function clearHoverCloseTimer() {
+    if (hoverCloseTimer !== undefined) {
+      clearTimeout(hoverCloseTimer);
+      hoverCloseTimer = undefined;
+    }
+  }
+
   function close() {
+    clearHoverCloseTimer();
     isClicked = false;
     isHovered = false;
+    isFocused = false;
     refreshOpenState();
+  }
+
+  function handleHoverEnter() {
+    clearHoverCloseTimer();
+    isHovered = true;
+    refreshOpenState();
+  }
+
+  function handleHoverLeave() {
+    clearHoverCloseTimer();
+    hoverCloseTimer = setTimeout(() => {
+      isHovered = false;
+      hoverCloseTimer = undefined;
+      refreshOpenState();
+    }, 120);
   }
 
   function handleDocumentPointerDown(event: PointerEvent) {
@@ -97,6 +122,7 @@
       document.removeEventListener('keydown', handleKeydown);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
+      clearHoverCloseTimer();
     };
   });
 
@@ -108,8 +134,8 @@
   data-tooltip-id={tooltipId}
   role="group"
   aria-label={label}
-  onmouseenter={() => { isHovered = true; refreshOpenState(); }}
-  onmouseleave={() => { isHovered = false; refreshOpenState(); }}
+  onmouseenter={handleHoverEnter}
+  onmouseleave={handleHoverLeave}
   onfocusin={() => { isFocused = true; refreshOpenState(); }}
   onfocusout={handleHostFocusOut}
 >
@@ -128,7 +154,15 @@
     {@render children()}
   </button>
   {#if isOpen}
-    <span bind:this={panelElement} class="tooltip-panel tooltip-{placement}" id={tooltipId} role="tooltip" style={panelStyle}>
+    <span
+      bind:this={panelElement}
+      class="tooltip-panel tooltip-{placement}"
+      id={tooltipId}
+      role="tooltip"
+      style={panelStyle}
+      onmouseenter={handleHoverEnter}
+      onmouseleave={handleHoverLeave}
+    >
       <strong>{label}</strong>
       <span>{description}</span>
       {#if learnMoreHref}

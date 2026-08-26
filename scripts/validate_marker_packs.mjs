@@ -328,6 +328,9 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       for (const field of ['domain_ids', 'medication_rule_ids']) {
         if (!isStringArray(option[field])) errors.push(`${location}: ${field} must be a string array`);
       }
+      if (option.id !== 'none_or_unknown' && (!isStringArray(option.profile_keywords) || option.profile_keywords.length === 0 || option.profile_keywords.some((keyword) => keyword.trim() === ''))) {
+        errors.push(`${location}: profile_keywords must be a non-empty string array for routable contexts`);
+      }
       for (const domainId of option.domain_ids || []) {
         if (!domainIds.has(domainId)) errors.push(`${location}: references unknown domain ${domainId}`);
       }

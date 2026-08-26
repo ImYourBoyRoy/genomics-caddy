@@ -225,10 +225,25 @@ describe('support resource context', () => {
     });
 
     expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
-    expect(context.cycle_support.relevant_domains).toHaveLength(0);
-    expect(context.cycle_support.context_activation).toBe('none');
+    expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual(['androgen_reproductive_context']);
+    expect(context.cycle_support.context_activation).toBe('profile_context');
+    expect(context.cycle_support.active_context_ids).toEqual(['androgen_reproductive']);
     expect(context.context_routing.profile_category_ids).toContain('hormones_reproductive');
     expect(context.context_routing.profile_pack_ids).toContain('hormones_reproductive');
+    expect(context.context_routing.profile_context_ids).toEqual(['androgen_reproductive']);
+  });
+
+  it('lets an explicit context override a conflicting profile-text route', () => {
+    const context = buildSupportResourceContext({
+      packIds: [],
+      reproductiveContext: 'menstrual_cycle',
+      profileContext: 'prostate screening and testosterone questions',
+    });
+
+    expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
+    expect(context.cycle_support.active_context_ids).toEqual(['menstrual_cycle']);
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'androgen_reproductive_context')).toBe(false);
+    expect(context.context_routing.profile_context_ids).toEqual(['androgen_reproductive']);
   });
 
   it('routes explicit reproductive and personal safety context into the AI activity resources', () => {

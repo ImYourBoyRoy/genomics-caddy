@@ -54,6 +54,29 @@ export function cycleSupportDomainsForContext(
 }
 
 /**
+ * Resolve specific reproductive routes from explicitly supplied profile text.
+ * The keyword lists live in cycle_support_guidance.json so adding a context
+ * does not require a second TypeScript routing table. This is relevance
+ * routing only; it never infers anatomy, identity, hormones, or a diagnosis.
+ */
+export function reproductiveContextIdsForProfileText(profileContext?: string | null): string[] {
+  const normalizedText = String(profileContext || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalizedText) return [];
+
+  const matchedIds = new Set<string>();
+  for (const option of cycleSupport.context_options) {
+    const keywords = (option.profile_keywords || []).filter((keyword) => String(keyword).trim() !== '');
+    if (keywords.some((keyword) => normalizedText.includes(String(keyword).trim().toLowerCase()))) {
+      matchedIds.add(option.id);
+    }
+  }
+
+  return cycleSupport.context_options
+    .filter((option) => matchedIds.has(option.id))
+    .map((option) => option.id);
+}
+
+/**
  * Resolve context options from explicitly supplied intake fields and diary
  * entries. This is a routing aid only: it never infers anatomy, identity,
  * fertility, pregnancy, hormones, or a diagnosis from DNA or from free text.

@@ -32,6 +32,7 @@ import {
   activeReproductiveContextIds,
   cycleSupportDomainsForContextIds,
   hasReproductivePersonalContext,
+  reproductiveContextIdsForProfileText,
   selectedReproductiveContextOption,
 } from './reproductiveContext';
 import { activityDomainMatchesPersonalContext, activityPersonalContextText } from './activityContext';
@@ -43,6 +44,7 @@ export interface SupportResourceContext {
   context_routing: {
     profile_category_ids: string[];
     profile_pack_ids: string[];
+    profile_context_ids: string[];
   };
   evidence_policy: {
     tiers: typeof evidencePolicy.tiers;
@@ -98,7 +100,7 @@ export interface SupportResourceContext {
     diary_schema: typeof cycleSupport.diary_schema;
     selected_context_id: string | null;
     active_context_ids: string[];
-    context_activation: 'explicit_selection' | 'self_reported_context' | 'none';
+    context_activation: 'explicit_selection' | 'self_reported_context' | 'profile_context' | 'none';
     domains: typeof cycleSupport.domains;
     relevant_domains: typeof cycleSupport.domains;
     do_not_do: typeof cycleSupport.do_not_do;
@@ -116,6 +118,7 @@ const CONSULTATION_PACK = Object.fromEntries(
 interface ProfileContextRouting {
   category_ids: string[];
   pack_ids: string[];
+  context_ids: string[];
 }
 
 function uniqueStrings(values: string[]): string[] {
@@ -125,7 +128,7 @@ function uniqueStrings(values: string[]): string[] {
 /** Route explicitly supplied profile goals/context through the shared taxonomy. */
 function routeProfileContext(profileContext?: string): ProfileContextRouting {
   const text = String(profileContext || '').trim().toLowerCase();
-  if (!text) return { category_ids: [], pack_ids: [] };
+  if (!text) return { category_ids: [], pack_ids: [], context_ids: [] };
 
   const matched = researchTaxonomy.categories.filter((category) =>
     category.keywords.some((keyword) => text.includes(String(keyword).toLowerCase()))
@@ -133,6 +136,7 @@ function routeProfileContext(profileContext?: string): ProfileContextRouting {
   return {
     category_ids: matched.map((category) => category.id),
     pack_ids: uniqueStrings(matched.flatMap((category) => category.packs)),
+    context_ids: reproductiveContextIdsForProfileText(text),
   };
 }
 
@@ -143,8 +147,14 @@ function relevantPackIds(
   personalSafetyContext?: PersonalSafetyContext,
   profileContext?: string,
 ): { selected: Set<string>; profileRouting: ProfileContextRouting; activeContextIds: string[] } {
-  const activeContextIds = activeReproductiveContextIds(reproductiveContext, personalSafetyContext);
   const profileRouting = routeProfileContext(profileContext);
+  const selectedContext = selectedReproductiveContextOption(reproductiveContext);
+  const activeContextIds = selectedContext
+    ? [selectedContext.id]
+    : uniqueStrings([
+        ...activeReproductiveContextIds('', personalSafetyContext),
+        ...profileRouting.context_ids,
+      ]);
   const selected = new Set(uniqueStrings([...packIds, CONSULTATION_PACK[consultationMode] || '']));
   for (const packId of profileRouting.pack_ids) selected.add(packId);
   if (activeContextIds.length > 0 || hasReproductivePersonalContext(personalSafetyContext)) {
@@ -296,6 +306,7 @@ export function buildSupportResourceContext({
     context_routing: {
       profile_category_ids: routing.profileRouting.category_ids,
       profile_pack_ids: routing.profileRouting.pack_ids,
+      profile_context_ids: routing.profileRouting.context_ids,
     },
     evidence_policy: {
       tiers: evidencePolicy.tiers,
@@ -373,8 +384,10 @@ export function buildSupportResourceContext({
       active_context_ids: routing.activeContextIds,
       context_activation: selectedReproductiveContextOption(reproductiveContext)
         ? 'explicit_selection'
-        : routing.activeContextIds.length > 0
+        : activeReproductiveContextIds('', personalSafetyContext).length > 0
           ? 'self_reported_context'
+          : routing.profileRouting.context_ids.length > 0
+            ? 'profile_context'
           : 'none',
       domains: cycleSupport.domains,
       relevant_domains: relevantCycleDomains,

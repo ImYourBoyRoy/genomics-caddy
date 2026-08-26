@@ -3,6 +3,7 @@ import hormonesReproductive from '../marker-packs/hormones_reproductive.json';
 import {
   activeReproductiveContextIds,
   cycleSupportDomainsForPersonalContext,
+  reproductiveContextIdsForProfileText,
   reproductiveContextIdsForPersonalContext,
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
@@ -104,6 +105,18 @@ describe('reproductive marker context routing', () => {
     ]);
     expect(option?.medication_rule_ids).toContain('PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA', 'preconception_fertility')).toBe(3);
+  });
+
+  it('maps explicit all-body profile goals to only their resource-authored context route', () => {
+    expect(reproductiveContextIdsForProfileText('prostate screening and testosterone questions')).toEqual([
+      'androgen_reproductive',
+    ]);
+    expect(reproductiveContextIdsForProfileText('cycle timing, menstrual migraine, and late luteal mood')).toEqual([
+      'menstrual_cycle',
+      'cycle_linked_pain_headache',
+      'cyclic_mood_symptoms',
+    ]);
+    expect(reproductiveContextIdsForProfileText('general wellness')).toEqual([]);
   });
 
   it('routes explicit cycle-linked pain and migraine context without using DNA diagnostically', () => {

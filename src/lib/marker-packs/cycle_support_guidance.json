@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.11.0",
+  "version": "1.13.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
@@ -373,6 +373,7 @@
       "id": "menstrual_cycle",
       "label": "Menstrual cycle / PMS / PMDD symptoms",
       "description": "Use when the person reports an ongoing menstrual cycle or recurring cycle-linked symptoms.",
+      "profile_keywords": ["menstrual", "menstruation", "period", "pms", "pmdd", "late luteal", "luteal phase", "cycle day", "cycle timing"],
       "domain_ids": [
         "cycle_phase_and_symptom_timing",
         "measured_hormone_context",
@@ -391,6 +392,7 @@
       "id": "cycle_linked_pain_headache",
       "label": "Cycle-linked pain or migraine",
       "description": "Use only when a person reports recurring pelvic pain, headache, or migraine around a user-supplied bleeding or cycle pattern. This route does not infer menstruation, anatomy, migraine, or contraceptive safety from DNA.",
+      "profile_keywords": ["menstrual migraine", "period migraine", "cycle-linked migraine", "cycle linked migraine", "period pain", "menstrual pain", "dysmenorrhea", "pelvic pain around", "cramps around"],
       "domain_ids": [
         "cycle_linked_pain_headache_context",
         "heavy_bleeding_pelvic_pain",
@@ -405,6 +407,7 @@
       "id": "cyclic_mood_symptoms",
       "label": "Cyclic mood, irritability or need-for-space symptoms",
       "description": "Use when the person reports recurring irritability, anger, avoidance, anxiety, depression, or a need for more space around a suspected cycle window. This is a symptom-timing route, not a PMDD diagnosis or a hormone-level inference.",
+      "profile_keywords": ["cyclic mood", "cyclical mood", "premenstrual mood", "premenstrual irritability", "premenstrual anxiety", "premenstrual depression", "premenstrual avoidance", "need for space before period", "late luteal mood"],
       "domain_ids": [
         "cycle_phase_and_symptom_timing",
         "measured_hormone_context",
@@ -420,6 +423,7 @@
       "id": "ovarian_reproductive",
       "label": "Ovarian / reproductive care",
       "description": "Use when ovarian or reproductive care is relevant, without assuming a cycle, anatomy, fertility, or pregnancy status.",
+      "profile_keywords": ["ovarian", "ovary", "ovulation", "egg retrieval", "ovarian reserve"],
       "domain_ids": [
         "measured_hormone_context",
         "contraceptive_product_context",
@@ -433,6 +437,7 @@
       "id": "uterine_pelvic",
       "label": "Uterine / pelvic symptoms",
       "description": "Use when bleeding, pelvic pain, or a uterine evaluation is relevant.",
+      "profile_keywords": ["uterine", "uterus", "pelvic pain", "heavy bleeding", "abnormal bleeding", "pain with sex", "painful periods"],
       "domain_ids": [
         "heavy_bleeding_pelvic_pain",
         "general_symptom_day_support"
@@ -443,6 +448,7 @@
       "id": "suspected_adenomyosis",
       "label": "Suspected adenomyosis / heavy-bleeding workup",
       "description": "Use when the person reports a concern about adenomyosis or symptoms that warrant a uterine/pelvic workup. Consumer DNA cannot diagnose or exclude adenomyosis; route to symptom history, examination, and clinically indicated imaging.",
+      "profile_keywords": ["adenomyosis", "adeno myosis", "suspected adenomyosis"],
       "domain_ids": [
         "heavy_bleeding_pelvic_pain",
         "general_symptom_day_support"
@@ -453,6 +459,7 @@
       "id": "androgen_reproductive",
       "label": "Androgen / prostate / testicular context",
       "description": "Use when androgen, prostate, testicular, or related reproductive context is relevant.",
+      "profile_keywords": ["testosterone", "androgen", "prostate", "prostatic", "testicular", "testicle", "testes", "sperm", "semen", "male fertility", "erectile", "libido", "urinary symptoms"],
       "domain_ids": [
         "androgen_reproductive_context"
       ],
@@ -462,6 +469,7 @@
       "id": "menopause_hormone_therapy",
       "label": "Menopause / hormone therapy",
       "description": "Use when menopause or hormone-therapy context is relevant; record the exact product and ingredients.",
+      "profile_keywords": ["menopause", "perimenopause", "postmenopause", "hot flashes", "hormone replacement"],
       "domain_ids": [
         "exogenous_hormone_medication_context",
         "measured_hormone_context",
@@ -475,6 +483,7 @@
       "id": "hormone_therapy_context",
       "label": "Exogenous hormone therapy / gender-affirming care",
       "description": "Use when estrogen, testosterone, progesterone/progestin, an antiandrogen, puberty suppression, or another prescribed hormone treatment is relevant. Record the exact product and monitoring context without assuming identity, anatomy, or goals.",
+      "profile_keywords": ["hormone therapy", "gender affirming", "gender-affirming", "estrogen therapy", "testosterone therapy", "antiandrogen", "anti-androgen", "puberty suppression", "puberty blocker"],
       "domain_ids": [
         "exogenous_hormone_medication_context",
         "measured_hormone_context",
@@ -488,6 +497,7 @@
       "id": "pregnancy_postpartum",
       "label": "Pregnancy / postpartum / lactation context",
       "description": "Use only when the person supplies this context; DNA does not establish pregnancy, postpartum timing, lactation, feeding goals, or medication safety.",
+      "profile_keywords": ["pregnancy", "pregnant", "postpartum", "post-partum", "lactation", "breastfeeding", "chestfeeding", "feeding an infant"],
       "domain_ids": [
         "pregnancy_postpartum_lactation_context",
         "general_symptom_day_support"
@@ -500,6 +510,7 @@
       "id": "preconception_fertility",
       "label": "Preconception / fertility evaluation",
       "description": "Use only when the person supplies a pregnancy-planning or fertility-evaluation goal. This route supports people with different bodies, partners, and family-building paths without inferring anatomy, identity, fertility, or pregnancy from DNA.",
+      "profile_keywords": ["preconception", "trying to conceive", "trying to get pregnant", "fertility", "infertility", "ivf", "assisted reproduction", "egg freezing", "sperm analysis", "semen analysis", "family building"],
       "domain_ids": [
         "preconception_fertility_context",
         "measured_hormone_context",

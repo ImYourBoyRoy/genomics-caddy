@@ -258,12 +258,12 @@
       <!-- Panel 2: Dietary Guidance -->
       {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0 || plan.foodSafety.suppressedSuggestions.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
-          <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('diet'))}>
-            <h3>🥗 Dietary Alignment</h3>
+          <button type="button" class="card-header" onclick={() => toggle('diet')} aria-expanded={!collapsed.diet} aria-controls="dietary-alignment-body">
+            <span class="card-header-title" role="heading" aria-level="3">🥗 Dietary Alignment</span>
             <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {#if !collapsed.diet}
-            <div class="card-body">
+            <div class="card-body" id="dietary-alignment-body">
               <p class="section-hint">These are conditional discussion or short-trial prompts. A genotype match is not a permanent food restriction; use symptoms, labs, allergies, medications, and clinician guidance first.</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
                 <div class="dietary-profile-safety" role="note">
@@ -360,12 +360,12 @@
       <!-- Panel 3: Supplements to Discuss -->
       {#if plan.supplements.length > 0 || plan.supplementSafety.relevantRules.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
-          <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('supplements'))}>
-            <h3>💊 Supplements to Discuss</h3>
+          <button type="button" class="card-header" onclick={() => toggle('supplements')} aria-expanded={!collapsed.supplements} aria-controls="supplements-body">
+            <span class="card-header-title" role="heading" aria-level="3">💊 Supplements to Discuss</span>
             <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {#if !collapsed.supplements}
-            <div class="card-body">
+            <div class="card-body" id="supplements-body">
               <p class="section-hint">Every supplement item is a discussion prompt, not a prescription. Check medications, pregnancy/lactation status, kidney/liver health, and labs before starting anything.</p>
               {#if plan.supplements.length > 0}
                 <div class="supplements-list">
@@ -406,12 +406,12 @@
       <!-- Cycle/reproductive support is a phenotype and safety layer, not a diagnosis. -->
       {#if plan.cycleSupport.relevantDomains.length > 0}
         <div class="summary-card card card-cycle-support" class:collapsed={collapsed.cycleSupport}>
-          <div class="card-header" onclick={() => toggle('cycleSupport')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('cycleSupport'))}>
-            <h3>⚕️ Reproductive &amp; Hormone Support</h3>
+          <button type="button" class="card-header" onclick={() => toggle('cycleSupport')} aria-expanded={!collapsed.cycleSupport} aria-controls="cycle-support-body">
+            <span class="card-header-title" role="heading" aria-level="3">⚕️ Reproductive &amp; Hormone Support</span>
             <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
-          </div>
+          </button>
           {#if !collapsed.cycleSupport}
-            <div class="card-body">
+            <div class="card-body" id="cycle-support-body">
               <p class="section-hint">Showing guidance for {selectedReproductiveContextLabel()}. This section organizes timing, medication, symptom, and clinical follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
               {#if plan.cycleSupport.diaryReview}
                 <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
@@ -502,12 +502,12 @@
 
     {#if plan.activity.relevantDomains.length > 0}
       <div class="summary-card card" class:collapsed={collapsed.activity}>
-        <div class="card-header" onclick={() => toggle('activity')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('activity'))}>
-          <h3>🏃 Activity &amp; Recovery Guardrails</h3>
+        <button type="button" class="card-header" onclick={() => toggle('activity')} aria-expanded={!collapsed.activity} aria-controls="activity-body">
+          <span class="card-header-title" role="heading" aria-level="3">🏃 Activity &amp; Recovery Guardrails</span>
           <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
-        </div>
+        </button>
         {#if !collapsed.activity}
-          <div class="card-body">
+          <div class="card-body" id="activity-body">
             <p class="section-hint">Genotype may provide weak context for training questions. It never clears high-intensity, contact, endurance, heat, altitude, or maximal-load activity.</p>
             <ul class="guardrail-list">
               {#each plan.activity.principles as principle (principle)}
@@ -548,12 +548,12 @@
 
     {#if plan.medication.rules.length > 0}
       <div class="summary-card card" class:collapsed={collapsed.medication}>
-        <div class="card-header" onclick={() => toggle('medication')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('medication'))}>
-          <h3>💊 Medication Safety &amp; Context</h3>
+        <button type="button" class="card-header" onclick={() => toggle('medication')} aria-expanded={!collapsed.medication} aria-controls="medication-body">
+          <span class="card-header-title" role="heading" aria-level="3">💊 Medication Safety &amp; Context</span>
           <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
-        </div>
+        </button>
         {#if !collapsed.medication}
-          <div class="card-body">
+          <div class="card-body" id="medication-body">
             <p class="section-hint">Record medication context before interpreting a marker. Raw consumer DNA is not a complete clinical PGx result and is never a reason to change a medication.</p>
             {#if plan.pgxGuidance.relevantGenes.length > 0}
               <div class="pgx-readiness" role="note">
@@ -590,12 +590,12 @@
     <!-- Labs: full-width, grouped & compact (collapsed by default) -->
     {#if plan.labTests.length > 0}
       <div class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
-        <div class="card-header" onclick={() => toggle('labTests')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('labTests'))}>
-          <h3>🔬 Lab & screening follow-ups ({plan.labTests.length})</h3>
+        <button type="button" class="card-header" onclick={() => toggle('labTests')} aria-expanded={!collapsed.labTests} aria-controls="lab-followups-body">
+          <span class="card-header-title" role="heading" aria-level="3">🔬 Lab &amp; screening follow-ups ({plan.labTests.length})</span>
           <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
-        </div>
+        </button>
         {#if !collapsed.labTests}
-          <div class="card-body lab-body">
+          <div class="card-body lab-body" id="lab-followups-body">
             <p class="section-hint">Grouped by priority — bring to a clinician; none of these imply an emergency workup unless you have acute symptoms.</p>
             <div class="lab-tier-stack">
               {#each plan.labGroups as group (group.label)}
@@ -1068,20 +1068,34 @@
 
   .card-header {
     display: flex;
+    width: 100%;
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.02);
+    border: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    appearance: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
     user-select: none;
   }
-  .card-header h3 {
+  .card-header:hover {
+    background: var(--surface-subtle);
+  }
+  .card-header:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+  }
+  .card-header-title {
     margin: 0;
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #f1f5f9;
+    color: var(--text-primary);
   }
   .chevron {
     font-size: 0.75rem;

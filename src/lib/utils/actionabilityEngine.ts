@@ -25,9 +25,10 @@ import {
   selectedReproductiveContextOption,
 } from './reproductiveContext';
 import { activityDomainMatches, activityPersonalContextText } from './activityContext';
+import { reviewCycleDiary, type CycleDiaryReview } from './cycleDiaryReview';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import type { ReproductiveIntakeValues } from './reproductiveIntake';
-import type { CycleDiaryEntry } from './cycleDiary';
+import { cycleDiaryAppliesToContexts, type CycleDiaryEntry } from './cycleDiary';
 
 export interface TopFinding {
   rsid: string;
@@ -83,6 +84,7 @@ export interface CycleSupportGuidance {
   relevantEvidenceLayers: typeof cycleSupport.evidence_layers;
   dnaCoverage: ReturnType<typeof reproductiveDnaCoverageForReport>;
   relevantDomains: typeof cycleSupport.domains;
+  diaryReview: CycleDiaryReview | null;
 }
 
 export interface PgxInterpretationGuidance {
@@ -704,6 +706,9 @@ export function deriveActionablePlan(
   const relevantCycleDomains = cycleSupportDomainsForContextIds(activeContextIds);
   const relevantCycleEvidenceLayers = cycleSupportEvidenceLayersForContextIds(activeContextIds);
   const reproductiveDnaCoverage = reproductiveDnaCoverageForReport(report, activeContextIds);
+  const diaryReview = cycleDiaryAppliesToContexts(activeContextIds)
+    ? reviewCycleDiary(personalSafetyContext?.cycleDiary)
+    : null;
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [
@@ -751,6 +756,7 @@ export function deriveActionablePlan(
       relevantEvidenceLayers: relevantCycleEvidenceLayers,
       dnaCoverage: reproductiveDnaCoverage,
       relevantDomains: relevantCycleDomains,
+      diaryReview,
     },
     pgxGuidance,
     supplementSafety: {

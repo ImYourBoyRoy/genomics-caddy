@@ -331,6 +331,9 @@ describe('actionability engine safety policy', () => {
 
     expect(plan.personalContext.cycleDiary?.[0].values.mood_behavior_score).toBe('3');
     expect(plan.personalContext.priorityNotes.join(' ')).toContain('Missing entries are not symptom-free days');
+    expect(plan.cycleSupport.diaryReview?.metrics.find((metric) => metric.id === 'mood_behavior_impact'))
+      .toEqual(expect.objectContaining({ recorded_days: 1, elevated_days: 1 }));
+    expect(plan.cycleSupport.diaryReview?.notes.join(' ')).toContain('hormone cause');
     expect(plan.supplements).toHaveLength(0);
   });
 

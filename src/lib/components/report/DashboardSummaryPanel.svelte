@@ -321,6 +321,34 @@
           {#if !collapsed.cycleSupport}
             <div class="card-body">
               <p class="section-hint">Showing guidance for {selectedReproductiveContextLabel()}. This section organizes timing, medication, symptom, and clinical follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
+              {#if plan.cycleSupport.diaryReview}
+                <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
+                  <h4 id="cycle-diary-review-title">📈 Observed diary review</h4>
+                  <p>{plan.cycleSupport.diaryReview.entry_count} saved observation{plan.cycleSupport.diaryReview.entry_count === 1 ? '' : 's'} across {plan.cycleSupport.diaryReview.observed_date_count} dated day{plan.cycleSupport.diaryReview.observed_date_count === 1 ? '' : 's'}{#if plan.cycleSupport.diaryReview.first_observed_date && plan.cycleSupport.diaryReview.last_observed_date} ({plan.cycleSupport.diaryReview.first_observed_date} to {plan.cycleSupport.diaryReview.last_observed_date}{#if plan.cycleSupport.diaryReview.observation_span_days !== null}, {plan.cycleSupport.diaryReview.observation_span_days} day span{/if}).{/if}</p>
+                  <div class="cycle-diary-review-metrics">
+                    {#each plan.cycleSupport.diaryReview.metrics as metric (metric.id)}
+                      <div class="cycle-diary-review-metric">
+                        <strong>{metric.label}</strong>
+                        <span>{metric.elevated_days} day{metric.elevated_days === 1 ? '' : 's'} at or above self-rated {metric.threshold} ({metric.recorded_days} recorded)</span>
+                      </div>
+                    {/each}
+                  </div>
+                  {#if plan.cycleSupport.diaryReview.cycle_day_observation_count > 0}
+                    <p><strong>Cycle-day entries:</strong> {plan.cycleSupport.diaryReview.cycle_day_observation_count}. These are user-entered labels only; they do not establish ovulation, luteal phase, hormone levels, or a cause.</p>
+                    <div class="cycle-diary-review-days" aria-label="Observed cycle-day counts">
+                      {#each plan.cycleSupport.diaryReview.cycle_day_summary.slice(0, 12) as day (day.cycle_day)}
+                        <span>Day {day.cycle_day}: {day.observation_count} obs · bleeding {day.bleeding_days} · mood/behavior {day.mood_behavior_days} · pain/headache {day.pain_headache_days}</span>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days > 0 || plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days > 0}
+                    <p><strong>Observed co-occurrence:</strong> mood/behavior impact and bleeding were both recorded on {plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days} day{plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days === 1 ? '' : 's'}; pain/headache impact and bleeding were both recorded on {plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days} day{plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days === 1 ? '' : 's'}. This is descriptive only, not evidence of a hormone cause.</p>
+                  {/if}
+                  <ul class="guardrail-list">
+                    {#each plan.cycleSupport.diaryReview.notes as note (note)}<li>{note}</li>{/each}
+                  </ul>
+                </div>
+              {/if}
               {#if plan.cycleSupport.relevantEvidenceLayers.length > 0}
                 <div class="reproductive-evidence-layer" role="note">
                   <strong>🧬 How to read the DNA for this context</strong>
@@ -1024,6 +1052,60 @@
     padding: 0.55rem 0.65rem;
     border-left: 2px solid #c084fc;
     background: rgba(192, 132, 252, 0.04);
+    border-radius: 4px;
+  }
+  .cycle-diary-review {
+    margin: 0.65rem 0 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    border-left: 3px solid #34d399;
+    background: rgba(52, 211, 153, 0.05);
+    border-radius: 5px;
+  }
+  .cycle-diary-review h4 {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #a7f3d0;
+  }
+  .cycle-diary-review > p,
+  .cycle-diary-review-metric span,
+  .cycle-diary-review-days span {
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+  .cycle-diary-review > p {
+    margin: 0.3rem 0 0;
+  }
+  .cycle-diary-review-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+  }
+  .cycle-diary-review-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+  .cycle-diary-review-metric strong {
+    font-size: 0.7rem;
+  }
+  .cycle-diary-review-metric span,
+  .cycle-diary-review-days span {
+    color: var(--text-secondary);
+  }
+  .cycle-diary-review-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+  }
+  .cycle-diary-review-days span {
+    padding: 0.25rem 0.4rem;
+    border: 1px solid rgba(52, 211, 153, 0.2);
     border-radius: 4px;
   }
   .reproductive-evidence-layer {

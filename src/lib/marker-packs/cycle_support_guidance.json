@@ -508,6 +508,41 @@
       "Do not infer personality, intent, relationship meaning, or a fixed character trait from cyclic withdrawal, avoidance, irritability, or a request for space."
     ]
   },
+  "review_schema": {
+    "id": "cycle_diary_review",
+    "title": "Observed pattern review",
+    "description": "Summarize only the observations that were entered. This review does not fill gaps, identify a hormone phase, or diagnose a condition.",
+    "metric_thresholds": {
+      "meaningful_impact_score": 2,
+      "heavy_bleeding_score": 3
+    },
+    "metrics": [
+      {
+        "id": "mood_behavior_impact",
+        "field_id": "mood_behavior_score",
+        "label": "mood or behavior impact",
+        "threshold_key": "meaningful_impact_score"
+      },
+      {
+        "id": "pain_headache_impact",
+        "field_id": "pain_headache_score",
+        "label": "pain or headache impact",
+        "threshold_key": "meaningful_impact_score"
+      },
+      {
+        "id": "heavy_bleeding",
+        "field_id": "bleeding_level",
+        "label": "heavy bleeding or spotting",
+        "threshold_key": "heavy_bleeding_score"
+      }
+    ],
+    "review_notes": [
+      "Compare observed high-impact days with observed bleeding and user-entered cycle days; co-occurrence is not proof of a hormone cause.",
+      "Missing entries are unknown, not symptom-free days. Keep recording lower-symptom days as well as difficult days.",
+      "Use the review to prepare a clinician conversation. Do not use it to start, stop, skip, dose, or switch medication or supplements.",
+      "A request for space, withdrawal, or irritability is an observed experience and support need, not a personality, intent, relationship, or psychiatric conclusion."
+    ]
+  },
   "context_options": [
     {
       "id": "menstrual_cycle",

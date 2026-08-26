@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CYCLE_DIARY_SCHEMA,
   cycleDiaryAppliesToContext,
+  cycleDiaryAppliesToContexts,
   normalizeCycleDiary,
   normalizeCycleDiaryEntry,
   populatedCycleDiaryFields,
@@ -47,6 +48,8 @@ describe('resource-backed cycle diary', () => {
     expect(normalizeCycleDiary(entries)).toHaveLength(CYCLE_DIARY_SCHEMA.retention_limit);
     expect(cycleDiaryAppliesToContext('menstrual_cycle')).toBe(true);
     expect(cycleDiaryAppliesToContext('androgen_reproductive')).toBe(false);
+    expect(cycleDiaryAppliesToContexts(['androgen_reproductive', 'cyclic_mood_symptoms'])).toBe(true);
+    expect(cycleDiaryAppliesToContexts(['androgen_reproductive'])).toBe(false);
     expect(cycleDiaryAppliesToContext('')).toBe(false);
   });
 });

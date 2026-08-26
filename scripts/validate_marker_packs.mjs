@@ -140,7 +140,7 @@ const supportContracts = {
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
-  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema'] },
+  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },
@@ -602,6 +602,44 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (!isStringArray(diary?.do_not_infer) || diary.do_not_infer.length === 0) {
       errors.push('cycle_support_guidance.json diary_schema.do_not_infer must be a non-empty string array');
+    }
+
+    const review = resource.review_schema;
+    for (const key of ['id', 'title', 'description']) {
+      if (typeof review?.[key] !== 'string' || review[key].trim() === '') {
+        errors.push(`cycle_support_guidance.json review_schema.${key} must be a non-empty string`);
+      }
+    }
+    if (!review?.metric_thresholds || typeof review.metric_thresholds !== 'object' || Array.isArray(review.metric_thresholds)) {
+      errors.push('cycle_support_guidance.json review_schema.metric_thresholds must be an object');
+    } else {
+      for (const [key, value] of Object.entries(review.metric_thresholds)) {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+          errors.push(`cycle_support_guidance.json review_schema.metric_thresholds.${key} must be a non-negative finite number`);
+        }
+      }
+    }
+    if (!Array.isArray(review?.metrics) || review.metrics.length === 0) {
+      errors.push('cycle_support_guidance.json review_schema.metrics must be a non-empty array');
+    } else {
+      const reviewMetricIds = new Set();
+      for (const [index, metric] of review.metrics.entries()) {
+        const location = `cycle_support_guidance.json review metric ${index + 1}`;
+        for (const key of ['id', 'field_id', 'label', 'threshold_key']) {
+          if (typeof metric[key] !== 'string' || metric[key].trim() === '') {
+            errors.push(`${location}: ${key} must be a non-empty string`);
+          }
+        }
+        if (reviewMetricIds.has(metric.id)) errors.push(`${location}: duplicate id ${metric.id}`);
+        reviewMetricIds.add(metric.id);
+        if (!diaryFieldIds.has(metric.field_id)) errors.push(`${location}: references unknown diary field ${metric.field_id}`);
+        if (!Object.prototype.hasOwnProperty.call(review.metric_thresholds || {}, metric.threshold_key)) {
+          errors.push(`${location}: references unknown metric threshold ${metric.threshold_key}`);
+        }
+      }
+    }
+    if (!isStringArray(review?.review_notes) || review.review_notes.length === 0) {
+      errors.push('cycle_support_guidance.json review_schema.review_notes must be a non-empty string array');
     }
   }
   if (resourceId === 'pgx_diplotype_guidance') {

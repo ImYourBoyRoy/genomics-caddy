@@ -78,6 +78,10 @@ export function cycleDiaryAppliesToContext(reproductiveContext?: string | null):
   return Boolean(context && CYCLE_DIARY_SCHEMA.context_ids.some((id) => id.toLowerCase() === context));
 }
 
+export function cycleDiaryAppliesToContexts(contextIds: readonly string[]): boolean {
+  return contextIds.some((contextId) => cycleDiaryAppliesToContext(contextId));
+}
+
 export function populatedCycleDiaryFields(
   values: CycleDiaryValues,
 ): Array<{ field: CycleDiaryField; value: string }> {

@@ -39,6 +39,8 @@ describe('support resource context', () => {
     expect(context.cycle_support.intake_schema.do_not_infer.join(' ')).toContain('fixed character trait');
     expect(context.cycle_support.diary_schema.fields.some((field) => field.id === 'mood_behavior_score')).toBe(true);
     expect(context.cycle_support.diary_schema.retention_limit).toBe(180);
+    expect(context.cycle_support.review_schema.metrics.some((metric) => metric.field_id === 'mood_behavior_score')).toBe(true);
+    expect(context.cycle_support.diary_review).toBeNull();
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
     expect(context.cycle_support.relevant_evidence_layers.map((layer) => layer.id)).toEqual([
@@ -224,6 +226,28 @@ describe('support resource context', () => {
     ]));
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'measured_hormone_context')).toBe(true);
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'contraceptive_product_context')).toBe(true);
+  });
+
+  it('passes an observation-only diary review into the AI resource payload', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'cyclic_mood_symptoms',
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        cycleDiary: [
+          { id: 'day-1', values: { entry_date: '2026-08-01', bleeding_level: '3', mood_behavior_score: '2' } },
+        ],
+      },
+    });
+
+    expect(context.cycle_support.diary_review?.entry_count).toBe(1);
+    expect(context.cycle_support.diary_review?.co_occurrence.mood_behavior_with_bleeding_days).toBe(1);
+    expect(JSON.stringify(context.cycle_support.diary_review)).not.toContain('genotype');
   });
 
   it('routes explicit user goals through taxonomy without inferring body or identity', () => {

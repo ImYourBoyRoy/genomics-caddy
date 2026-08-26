@@ -38,6 +38,8 @@ import {
   selectedReproductiveContextOption,
 } from './reproductiveContext';
 import { activityDomainMatchesPersonalContext, activityPersonalContextText } from './activityContext';
+import { reviewCycleDiary, type CycleDiaryReview } from './cycleDiaryReview';
+import { cycleDiaryAppliesToContexts } from './cycleDiary';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
 export type SupportConsultationMode = typeof consultationModes.modes[number]['id'];
@@ -109,6 +111,8 @@ export interface SupportResourceContext {
     marker_contexts: typeof cycleSupport.marker_contexts;
     intake_schema: typeof cycleSupport.intake_schema;
     diary_schema: typeof cycleSupport.diary_schema;
+    review_schema: typeof cycleSupport.review_schema;
+    diary_review: CycleDiaryReview | null;
     selected_context_id: string | null;
     active_context_ids: string[];
     context_activation: 'explicit_selection' | 'self_reported_context' | 'profile_context' | 'none';
@@ -316,6 +320,9 @@ export function buildSupportResourceContext({
     return signals.length === 0 || signals.some((signal) => selectedPackIds.has(signal));
   });
   const relevantCycleEvidenceLayers = cycleSupportEvidenceLayersForContextIds(routing.activeContextIds);
+  const diaryReview = cycleDiaryAppliesToContexts(routing.activeContextIds)
+    ? reviewCycleDiary(personalSafetyContext?.cycleDiary)
+    : null;
   const relevantPgxGenes = selectPgxGenes(selectedPackIds);
   const selectedSourceRecords = selectSourceRecords([
     ...supportSourceIds(selectedPackIds, relevantCycleDomains),
@@ -410,6 +417,8 @@ export function buildSupportResourceContext({
       marker_contexts: cycleSupport.marker_contexts,
       intake_schema: cycleSupport.intake_schema,
       diary_schema: cycleSupport.diary_schema,
+      review_schema: cycleSupport.review_schema,
+      diary_review: diaryReview,
       selected_context_id: selectedReproductiveContextOption(reproductiveContext)?.id || null,
       active_context_ids: routing.activeContextIds,
       context_activation: selectedReproductiveContextOption(reproductiveContext)

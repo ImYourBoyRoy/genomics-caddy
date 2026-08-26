@@ -86,6 +86,13 @@
       : 'This is a research association that may be useful to discuss in the right personal context.';
   }
 
+  function findingTitle(finding: ActionablePlan['topFindings'][number]): string {
+    const marker = markerForFinding(finding);
+    return marker
+      ? getLaypersonTranslation(marker).simpleImpact
+      : 'Research finding';
+  }
+
   function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
     if (finding.severity_class === 'confirmation_required' || finding.severity_class === 'high_risk') {
       return 'Ask a qualified clinician whether medical-grade confirmation or follow-up is appropriate.';
@@ -161,7 +168,7 @@
           <article class="action-queue-item">
             <div class="action-queue-item-top">
               <div>
-                <h4>{finding.variant_name || 'Research finding'}</h4>
+                <h4>{findingTitle(finding)}</h4>
                 <span class="action-queue-context">{finding.section_name}</span>
               </div>
               <span class="severity-badge {finding.severity_class}">{getSeverityLabel(finding.severity_class)}</span>

@@ -38,4 +38,25 @@ describe('observation-only cycle diary review', () => {
     expect(reviewCycleDiary([])).toBeNull();
     expect(reviewCycleDiary([{ id: 'bad', values: { entry_date: 'not-a-date', genotype: 'AA' } }])).toBeNull();
   });
+
+  it('compares repeated user-entered cycle days only among recorded observations', () => {
+    const review = reviewCycleDiary([
+      entry('2026-08-01', { cycle_day: '24', mood_behavior_score: '2' }),
+      entry('2026-08-29', { cycle_day: '24', mood_behavior_score: '3' }),
+      entry('2026-09-26', { cycle_day: '24', mood_behavior_score: '0' }),
+    ]);
+
+    const day = review?.cycle_day_summary.find((candidate) => candidate.cycle_day === 24);
+    const mood = day?.metrics.find((metric) => metric.metric_id === 'mood_behavior_impact');
+
+    expect(day?.observation_count).toBe(3);
+    expect(mood).toEqual(expect.objectContaining({
+      recorded_days: 3,
+      elevated_days: 2,
+      observed_share_percent: 67,
+      minimum_observations: 2,
+      enough_observations: true,
+    }));
+    expect(review?.notes.join(' ')).toContain('not a population probability');
+  });
 });

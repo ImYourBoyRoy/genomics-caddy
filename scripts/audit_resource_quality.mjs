@@ -266,6 +266,10 @@ if (runtimeSummary?.cycle_support_layer?.evidence_layers_count !== cycleSupport?
 if (runtimeSummary?.cycle_support_layer?.review_metrics_count !== cycleSupport?.review_schema?.metrics?.length) {
   errors.push(`runtime_validation_summary.json: cycle_support_layer.review_metrics_count is ${runtimeSummary?.cycle_support_layer?.review_metrics_count ?? '(missing)'}, expected ${cycleSupport?.review_schema?.metrics?.length ?? 0}`);
 }
+if (runtimeSummary?.cycle_support_layer?.cycle_day_comparison_min_observations
+  !== cycleSupport?.review_schema?.minimum_observations_for_cycle_day_comparison) {
+  errors.push(`runtime_validation_summary.json: cycle_support_layer.cycle_day_comparison_min_observations is ${runtimeSummary?.cycle_support_layer?.cycle_day_comparison_min_observations ?? '(missing)'}, expected ${cycleSupport?.review_schema?.minimum_observations_for_cycle_day_comparison ?? '(missing)'}`);
+}
 if (runtimeSummary?.research_taxonomy_layer?.categories_count !== researchTaxonomy?.categories?.length) {
   errors.push(`runtime_validation_summary.json: research_taxonomy_layer.categories_count is ${runtimeSummary?.research_taxonomy_layer?.categories_count ?? '(missing)'}, expected ${researchTaxonomy?.categories?.length ?? 0}`);
 }

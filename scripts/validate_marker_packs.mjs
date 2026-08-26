@@ -619,6 +619,10 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
         }
       }
     }
+    if (!Number.isInteger(review?.minimum_observations_for_cycle_day_comparison)
+      || review.minimum_observations_for_cycle_day_comparison < 2) {
+      errors.push('cycle_support_guidance.json review_schema.minimum_observations_for_cycle_day_comparison must be an integer of at least 2');
+    }
     if (!Array.isArray(review?.metrics) || review.metrics.length === 0) {
       errors.push('cycle_support_guidance.json review_schema.metrics must be a non-empty array');
     } else {

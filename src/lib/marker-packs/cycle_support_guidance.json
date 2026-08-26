@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
@@ -516,6 +516,7 @@
       "meaningful_impact_score": 2,
       "heavy_bleeding_score": 3
     },
+    "minimum_observations_for_cycle_day_comparison": 2,
     "metrics": [
       {
         "id": "mood_behavior_impact",
@@ -538,6 +539,7 @@
     ],
     "review_notes": [
       "Compare observed high-impact days with observed bleeding and user-entered cycle days; co-occurrence is not proof of a hormone cause.",
+      "A cycle-day comparison is a descriptive share among the entries that were recorded with that user-entered cycle day; it is not a population probability, hormone measurement, diagnosis, or medication-response estimate.",
       "Missing entries are unknown, not symptom-free days. Keep recording lower-symptom days as well as difficult days.",
       "Use the review to prepare a clinician conversation. Do not use it to start, stop, skip, dose, or switch medication or supplements.",
       "A request for space, withdrawal, or irritability is an observed experience and support need, not a personality, intent, relationship, or psychiatric conclusion."

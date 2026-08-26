@@ -335,9 +335,20 @@
                   </div>
                   {#if plan.cycleSupport.diaryReview.cycle_day_observation_count > 0}
                     <p><strong>Cycle-day entries:</strong> {plan.cycleSupport.diaryReview.cycle_day_observation_count}. These are user-entered labels only; they do not establish ovulation, luteal phase, hormone levels, or a cause.</p>
-                    <div class="cycle-diary-review-days" aria-label="Observed cycle-day counts">
+                    <div class="cycle-diary-review-days" aria-label="Observed cycle-day comparisons">
                       {#each plan.cycleSupport.diaryReview.cycle_day_summary.slice(0, 12) as day (day.cycle_day)}
-                        <span>Day {day.cycle_day}: {day.observation_count} obs · bleeding {day.bleeding_days} · mood/behavior {day.mood_behavior_days} · pain/headache {day.pain_headache_days}</span>
+                        {#each day.metrics as metric (metric.metric_id)}
+                          {#if metric.recorded_days > 0}
+                            <span>
+                              Day {day.cycle_day}: {metric.label} {metric.elevated_days}/{metric.recorded_days} recorded entries at or above {metric.threshold}
+                              {#if metric.enough_observations}
+                                ({metric.observed_share_percent}% observed share)
+                              {:else}
+                                (one recorded entry; collect at least {metric.minimum_observations} before comparing)
+                              {/if}
+                            </span>
+                          {/if}
+                        {/each}
                       {/each}
                     </div>
                   {/if}

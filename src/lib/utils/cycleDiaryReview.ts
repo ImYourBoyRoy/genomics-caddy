@@ -11,6 +11,10 @@ import { normalizeCycleDiary, type CycleDiaryEntry } from './cycleDiary';
 
 const REVIEW_SCHEMA = cycleSupport.review_schema;
 const METRIC_THRESHOLDS = REVIEW_SCHEMA.metric_thresholds as Record<string, number>;
+const MINIMUM_CYCLE_DAY_OBSERVATIONS = Number.isInteger(REVIEW_SCHEMA.minimum_observations_for_cycle_day_comparison)
+  && REVIEW_SCHEMA.minimum_observations_for_cycle_day_comparison > 0
+  ? REVIEW_SCHEMA.minimum_observations_for_cycle_day_comparison
+  : 2;
 
 export interface CycleDiaryMetricReview {
   id: string;
@@ -21,12 +25,26 @@ export interface CycleDiaryMetricReview {
   elevated_days: number;
 }
 
+export interface CycleDiaryCycleDayMetricReview {
+  metric_id: string;
+  field_id: string;
+  label: string;
+  threshold: number;
+  recorded_days: number;
+  elevated_days: number;
+  observed_share_percent: number | null;
+  minimum_observations: number;
+  enough_observations: boolean;
+}
+
 export interface CycleDiaryCycleDayReview {
   cycle_day: number;
   observation_count: number;
+  /** Counts retained for compatibility with the first diary-review payload. */
   bleeding_days: number;
   mood_behavior_days: number;
   pain_headache_days: number;
+  metrics: CycleDiaryCycleDayMetricReview[];
 }
 
 export interface CycleDiaryReview {
@@ -133,12 +151,38 @@ export function reviewCycleDiary(
       bleeding_days: 0,
       mood_behavior_days: 0,
       pain_headache_days: 0,
+      metrics: [],
     };
     row.observation_count += 1;
     if ((numericValue(entry, 'bleeding_level') ?? 0) >= 1) row.bleeding_days += 1;
     if ((numericValue(entry, 'mood_behavior_score') ?? -Infinity) >= moodThreshold) row.mood_behavior_days += 1;
     if ((numericValue(entry, 'pain_headache_score') ?? -Infinity) >= painThreshold) row.pain_headache_days += 1;
     cycleDayMap.set(cycleDay, row);
+  }
+
+  for (const [cycleDay, row] of cycleDayMap.entries()) {
+    const entriesForDay = cycleDayEntries.filter((entry) => numericValue(entry, 'cycle_day') === cycleDay);
+    row.metrics = REVIEW_SCHEMA.metrics.map((metric) => {
+      const threshold = metricThreshold(metric);
+      const values = entriesForDay
+        .map((entry) => numericValue(entry, metric.field_id))
+        .filter((value): value is number => value !== null);
+      const recordedDays = values.length;
+      const elevatedDays = values.filter((value) => value >= threshold).length;
+      return {
+        metric_id: metric.id,
+        field_id: metric.field_id,
+        label: metric.label,
+        threshold,
+        recorded_days: recordedDays,
+        elevated_days: elevatedDays,
+        observed_share_percent: recordedDays > 0
+          ? Math.round((elevatedDays / recordedDays) * 100)
+          : null,
+        minimum_observations: MINIMUM_CYCLE_DAY_OBSERVATIONS,
+        enough_observations: recordedDays >= MINIMUM_CYCLE_DAY_OBSERVATIONS,
+      };
+    });
   }
 
   return {

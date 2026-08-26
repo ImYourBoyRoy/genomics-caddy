@@ -2,12 +2,16 @@
  * Dynamic routing for the research discovery catalog.
  *
  * The catalog is the source of truth for available categories. Labels and the
- * default scan set are UI policy, while the category list itself is derived
- * from the catalog so new resource domains cannot become silently unreachable.
+ * default scan set are authored in research_taxonomy.json. The category list
+ * itself is still derived from the catalog so new resource domains cannot
+ * become silently unreachable.
  */
+
+import researchTaxonomy from '../marker-packs/research_taxonomy.json';
 
 export interface DiscoveryCatalogMarkerLike {
   category?: string | null;
+  categories?: readonly string[] | null;
 }
 
 export interface CatalogCategoryOption {
@@ -16,57 +20,33 @@ export interface CatalogCategoryOption {
   count: number;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  core: "🧬 Core Traits",
-  pgx: "💊 Drug Metabolism",
-  metabolic: "🥗 Metabolic",
-  nutrients: "🍽️ Nutrients",
-  neuropsych: "🧠 Neurotype & Mood",
-  cardiovascular: "🫀 Cardiovascular",
-  cancer_confirmation_only: "🎗️ Cancer Risk",
-  hormones_reproductive: "🌙 Hormones & Reproductive",
-  allergy_atopy_mast_cell: "🌿 Allergy & Mast Cell",
-  bone_growth_mineral_density: "🦴 Bone & Mineral Density",
-  connective_tissue: "🧵 Connective Tissue",
-  dental_oral_health: "🦷 Dental & Oral Health",
-  digestive_gut_microbiome: "🫃 Digestive & Gut",
-  immune_autoimmune_general: "🛡️ Immune & Autoimmune",
-  kidney_fluid_electrolytes: "💧 Kidney & Electrolytes",
-  longevity_aging_resilience: "⌛ Longevity & Resilience",
-  muscle_performance_recovery: "💪 Muscle & Recovery",
-  pain_migraine_sensory: "🩹 Pain & Sensory",
-  respiratory_airway: "🫁 Respiratory & Airway",
-  skin_hair_dermatology: "🧴 Skin, Hair & Dermatology",
-  sleep: "🌙 Sleep",
-  thyroid_autoimmune: "🦋 Thyroid & Autoimmune"
-};
+interface DiscoveryCategoryConfig {
+  id: string;
+  label: string;
+  order: number;
+  default_selected: boolean;
+}
 
-const CATEGORY_ORDER = [
-  "core",
-  "pgx",
-  "metabolic",
-  "nutrients",
-  "neuropsych",
-  "cardiovascular",
-  "cancer_confirmation_only",
-  "hormones_reproductive"
-];
+const DISCOVERY_CATEGORY_CONFIG: DiscoveryCategoryConfig[] = Array.isArray(
+  (researchTaxonomy as { discovery_categories?: DiscoveryCategoryConfig[] }).discovery_categories
+)
+  ? ((researchTaxonomy as { discovery_categories: DiscoveryCategoryConfig[] }).discovery_categories)
+      .filter((category) => category && typeof category.id === 'string' && typeof category.label === 'string')
+      .sort((left, right) => left.order - right.order)
+  : [];
+
+const DISCOVERY_CATEGORY_BY_ID = new Map(
+  DISCOVERY_CATEGORY_CONFIG.map((category) => [category.id, category])
+);
 
 /**
  * Categories enabled in the normal scan. The full catalog remains available
  * through the UI, but scanning every research entry by default would create a
  * large and avoidable external-query workload.
  */
-export const DEFAULT_SELECTED_CATALOG_CATEGORY_IDS = [
-  "core",
-  "pgx",
-  "metabolic",
-  "nutrients",
-  "neuropsych",
-  "cardiovascular",
-  "cancer_confirmation_only",
-  "hormones_reproductive"
-] as const;
+export const DEFAULT_SELECTED_CATALOG_CATEGORY_IDS = DISCOVERY_CATEGORY_CONFIG
+  .filter((category) => category.default_selected)
+  .map((category) => category.id);
 
 function humanizeCategory(category: string): string {
   return category
@@ -77,8 +57,15 @@ function humanizeCategory(category: string): string {
 }
 
 function categorySortKey(category: string): [number, string] {
-  const knownIndex = CATEGORY_ORDER.indexOf(category);
-  return [knownIndex === -1 ? CATEGORY_ORDER.length : knownIndex, category];
+  return [DISCOVERY_CATEGORY_BY_ID.get(category)?.order ?? Number.MAX_SAFE_INTEGER, category];
+}
+
+export function catalogMarkerCategories(marker: DiscoveryCatalogMarkerLike): string[] {
+  const categories = Array.isArray(marker.categories) ? marker.categories : [];
+  return Array.from(new Set([
+    ...categories,
+    marker.category,
+  ].map((category) => String(category || '').trim()).filter(Boolean)));
 }
 
 export function buildCatalogCategories(
@@ -87,9 +74,9 @@ export function buildCatalogCategories(
   const counts = new Map<string, number>();
 
   for (const marker of markers) {
-    const category = marker.category?.trim();
-    if (!category) continue;
-    counts.set(category, (counts.get(category) ?? 0) + 1);
+    for (const category of catalogMarkerCategories(marker)) {
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
   }
 
   return [...counts.entries()]
@@ -100,7 +87,7 @@ export function buildCatalogCategories(
     })
     .map(([id, count]) => ({
       id,
-      label: CATEGORY_LABELS[id] ?? `🔬 ${humanizeCategory(id)}`,
+      label: DISCOVERY_CATEGORY_BY_ID.get(id)?.label ?? `🔬 ${humanizeCategory(id)}`,
       count
     }));
 }

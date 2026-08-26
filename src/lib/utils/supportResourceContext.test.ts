@@ -60,6 +60,40 @@ describe('support resource context', () => {
     expect(context.safety_guardrails.some((rule) => rule.id === 'CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA')).toBe(true);
   });
 
+  it('routes cyclic mood and avoidance symptoms to timing and communication support', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'cyclic_mood_symptoms',
+    });
+
+    expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
+      'cycle_phase_and_symptom_timing',
+      'pmdd_like_mood_symptoms',
+      'contraceptive_product_context',
+      'general_symptom_day_support',
+    ]);
+    expect(context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms')?.questions.join(' '))
+      .toContain('avoidance');
+    expect(context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms')?.support_options.join(' '))
+      .toContain('communication plan');
+  });
+
+  it('routes suspected adenomyosis to the imaging and bleeding workup overlay', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'suspected_adenomyosis',
+    });
+    const domain = context.cycle_support.relevant_domains.find((item) => item.id === 'heavy_bleeding_pelvic_pain');
+    const overlay = context.lab_overlays.find((item) => item.domain === 'adenomyosis_heavy_bleeding_pelvic_pain');
+
+    expect(domain?.context).toContain('not diagnosed');
+    expect(domain?.confirm_with.join(' ')).toContain('transvaginal ultrasound');
+    expect(overlay?.labs).toContain('transvaginal ultrasound');
+    expect(overlay).not.toHaveProperty('labs_tests');
+  });
+
   it('routes cycle-linked nutrition and activity support through food and safety guardrails', () => {
     const context = buildSupportResourceContext({
       packIds: ['hormones_reproductive', 'nutrients'],

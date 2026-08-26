@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 51,
+    "hormones_reproductive": 57,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -24,9 +24,9 @@
     "longevity_aging_resilience": 35,
     "research_found": 0
   },
-  "discovery_records": 857,
+  "discovery_records": 862,
   "manifest_packs": 23,
-  "duplicate_rsids_skipped_from_discovery_catalog": 266,
+  "duplicate_rsids_skipped_from_discovery_catalog": 269,
   "validation_errors": [],
   "support_files": [
     "actionability_guidance.json",
@@ -79,6 +79,7 @@
       "cycle_support_guidance.json"
     ],
     "domains_count": 11,
+    "context_options_count": 12,
     "note": "Cycle support separates phase physiology, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation."
   },
   "research_taxonomy_layer": {
@@ -87,6 +88,7 @@
       "research_taxonomy.json"
     ],
     "categories_count": 21,
+    "discovery_categories_count": 23,
     "note": "Discovery keyword routing is shared by the Svelte UI and Rust enrichment path; taxonomy matches are navigation hints and do not upgrade evidence or imply a diagnosis."
   }
 }

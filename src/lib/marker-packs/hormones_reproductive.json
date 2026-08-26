@@ -1876,6 +1876,216 @@
       ]
     },
     {
+      "rsid": "rs12700667",
+      "gene": "NFE2L3/HOXA10",
+      "variant_name": "7p15.2 endometriosis susceptibility locus",
+      "effect_allele": "A",
+      "impact": "Endometriosis susceptibility research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs12700667 A allele is an endometriosis-associated research signal reported near NFE2L3/HOXA10. It is not a test for endometriosis, adenomyosis, pelvic pain, fertility, or current hormone levels, and it should not be used to estimate an individual risk percentage.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs13394619",
+      "gene": "GREB1",
+      "variant_name": "GREB1 endometriosis susceptibility locus",
+      "effect_allele": "G",
+      "impact": "Endometriosis susceptibility research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs13394619 G allele was reported in endometriosis GWAS meta-analysis near GREB1. It is research context only and cannot diagnose endometriosis or adenomyosis, explain an individual's symptoms, or predict fertility or treatment response.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4141819",
+      "gene": "INTERGENIC_2P14",
+      "variant_name": "2p14 endometriosis susceptibility locus",
+      "effect_allele": "C",
+      "impact": "Moderate-to-severe endometriosis research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs4141819 C allele was reported in a stage-stratified endometriosis GWAS analysis. It is research context only and cannot diagnose endometriosis or adenomyosis, explain pelvic pain, or estimate personal risk.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7739264",
+      "gene": "ID4",
+      "variant_name": "ID4 endometriosis susceptibility locus",
+      "effect_allele": "T",
+      "impact": "Moderate-to-severe endometriosis research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs7739264 T allele near ID4 was reported in a stage-stratified endometriosis GWAS analysis. It is research context only and cannot diagnose endometriosis or adenomyosis, explain symptoms, or predict treatment response.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1537377",
+      "gene": "CDKN2B-AS1",
+      "variant_name": "9p21.3 endometriosis susceptibility locus",
+      "effect_allele": "C",
+      "impact": "Moderate-to-severe endometriosis research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs1537377 C allele near CDKN2B-AS1 was reported in a stage-stratified endometriosis GWAS analysis. It is research context only and cannot diagnose endometriosis or adenomyosis, explain symptoms, or estimate personal risk.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10859871",
+      "gene": "VEZT",
+      "variant_name": "VEZT endometriosis susceptibility locus",
+      "effect_allele": "C",
+      "impact": "Endometriosis susceptibility research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The rs10859871 C allele near VEZT was reported in endometriosis GWAS meta-analysis. It is research context only and cannot diagnose endometriosis or adenomyosis, explain symptoms, or predict fertility or treatment response.",
+      "do_not_claim": [
+        "endometriosis diagnosis",
+        "adenomyosis diagnosis",
+        "individual risk percentage",
+        "fertility prediction"
+      ],
+      "confirm_with": [
+        "symptom pattern and bleeding history",
+        "gynecologic examination and imaging when indicated",
+        "ancestry- and study-specific source review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a small-effect, population- and study-dependent GWAS signal. Consumer DNA cannot diagnose or exclude endometriosis or adenomyosis.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association meta-analysis identifies new endometriosis risk loci",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3527416/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed genome-wide association meta-analysis",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the endometriosis locus and cohort-level association only; this is not adenomyosis validation."
+        }
+      ]
+    },
+    {
       "rsid": "rs6269",
       "gene": "COMT",
       "variant_name": "COMT haplotype marker for catecholamine/estrogen context",

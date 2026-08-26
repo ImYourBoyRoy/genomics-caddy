@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
@@ -61,6 +61,20 @@
       ]
     },
     {
+      "id": "cyclic_mood_symptoms",
+      "label": "Cyclic mood, irritability or need-for-space symptoms",
+      "description": "Use when the person reports recurring irritability, anger, avoidance, anxiety, depression, or a need for more space around a suspected cycle window. This is a symptom-timing route, not a PMDD diagnosis or a hormone-level inference.",
+      "domain_ids": [
+        "cycle_phase_and_symptom_timing",
+        "pmdd_like_mood_symptoms",
+        "contraceptive_product_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA"
+      ]
+    },
+    {
       "id": "ovarian_reproductive",
       "label": "Ovarian / reproductive care",
       "description": "Use when ovarian or reproductive care is relevant, without assuming a cycle, anatomy, fertility, or pregnancy status.",
@@ -76,6 +90,16 @@
       "id": "uterine_pelvic",
       "label": "Uterine / pelvic symptoms",
       "description": "Use when bleeding, pelvic pain, or a uterine evaluation is relevant.",
+      "domain_ids": [
+        "heavy_bleeding_pelvic_pain",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": []
+    },
+    {
+      "id": "suspected_adenomyosis",
+      "label": "Suspected adenomyosis / heavy-bleeding workup",
+      "description": "Use when the person reports a concern about adenomyosis or symptoms that warrant a uterine/pelvic workup. Consumer DNA cannot diagnose or exclude adenomyosis; route to symptom history, examination, and clinically indicated imaging.",
       "domain_ids": [
         "heavy_bleeding_pelvic_pain",
         "general_symptom_day_support"
@@ -194,7 +218,24 @@
       "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
       "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
       "PANEL_ADENOMYOSIS_RESEARCH_GAP",
-      "rs7521902"
+      "rs7521902",
+      "rs12700667",
+      "rs13394619",
+      "rs4141819",
+      "rs7739264",
+      "rs1537377",
+      "rs10859871"
+    ],
+    "cyclic_mood_symptoms": [
+      "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY",
+      "rs4757144",
+      "rs114741500",
+      "rs8079626",
+      "rs4680",
+      "rs6265",
+      "rs1360780"
     ],
     "ovarian_reproductive": [
       "rs6166",
@@ -210,7 +251,26 @@
       "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
       "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
       "PANEL_ADENOMYOSIS_RESEARCH_GAP",
-      "rs7521902"
+      "rs7521902",
+      "rs12700667",
+      "rs13394619",
+      "rs4141819",
+      "rs7739264",
+      "rs1537377",
+      "rs10859871"
+    ],
+    "suspected_adenomyosis": [
+      "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "PANEL_ADENOMYOSIS_RESEARCH_GAP",
+      "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "PANEL_ENDOMETRIOSIS_CONTEXT",
+      "rs7521902",
+      "rs12700667",
+      "rs13394619",
+      "rs4141819",
+      "rs7739264",
+      "rs1537377",
+      "rs10859871"
     ],
     "androgen_reproductive": [
       "rs523349",

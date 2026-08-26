@@ -89,6 +89,7 @@ pub fn lookup_discovery_catalog(data_dir: Option<&Path>, rsid: &str) -> Option<s
                 "rsid": m["rsid"],
                 "gene": m["gene"],
                 "category": m["category"],
+                "categories": m.get("categories").cloned().unwrap_or_else(|| serde_json::json!([])),
                 "name": m["name"],
                 "impact": m["impact"],
                 "description": m["description"],

@@ -1957,6 +1957,7 @@
       "rsid": "rs1801132",
       "gene": "ESR1",
       "category": "neuropsych",
+      "categories": ["neuropsych", "hormones_reproductive"],
       "name": "Pvull polymorphism",
       "risk_allele": "G",
       "impact": "Estrogen receptor alpha transcriptional sensitivity",
@@ -1966,6 +1967,7 @@
       "rsid": "rs2234693",
       "gene": "ESR1",
       "category": "neuropsych",
+      "categories": ["neuropsych", "hormones_reproductive"],
       "name": "Xbal polymorphism",
       "risk_allele": "T",
       "impact": "Estrogen receptor splicing / binding affinity variation",
@@ -1975,6 +1977,7 @@
       "rsid": "rs8079626",
       "gene": "PGR",
       "category": "neuropsych",
+      "categories": ["neuropsych", "hormones_reproductive"],
       "name": "Progesterone receptor variant",
       "risk_allele": "A",
       "impact": "Progesterone receptor expression & sensitivity",
@@ -7712,6 +7715,51 @@
       "risk_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
       "impact": "Rare DNA repair syndrome/cancer predisposition context",
       "description": "DNA repair genes can be clinically important, but ordinary SNPs do not diagnose rare syndromes or cancer predisposition. Use clinical testing when indicated."
+    },
+    {
+      "rsid": "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "gene": "OVARIAN_STEROID_AXIS",
+      "category": "hormones_reproductive",
+      "name": "Natural menstrual-cycle hormone phase physiology",
+      "risk_allele": "N/A",
+      "impact": "Corrects late-luteal and menstrual hormone-direction assumptions",
+      "description": "This clinical guardrail keeps cycle timing separate from genotype: in a natural ovulatory cycle, estradiol and progesterone generally decline before bleeding. Symptoms can reflect sensitivity to hormone change, and DNA cannot measure current hormone levels."
+    },
+    {
+      "rsid": "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "gene": "MULTI_GENE",
+      "category": "hormones_reproductive",
+      "name": "Premenstrual mood symptoms are not an estrogen-level genotype",
+      "risk_allele": "N/A",
+      "impact": "PMDD/PMS symptom-timing and ovarian-steroid sensitivity context",
+      "description": "Cyclic irritability, anger, avoidance, anxiety, depression, or physical symptoms should be evaluated by timing and functional impact. A DNA panel cannot establish PMDD or identify which hormone is responsible."
+    },
+    {
+      "rsid": "GUARDRAIL_CONTRACEPTIVE_PRODUCT_MUST_BE_IDENTIFIED",
+      "gene": "MULTI_GENE",
+      "category": "hormones_reproductive",
+      "name": "Contraceptive ingredients cannot be inferred from DNA",
+      "risk_allele": "N/A",
+      "impact": "Separates progestin-only from combined hormonal contraception context",
+      "description": "The report cannot infer whether a person uses progestin-only contraception or a combined estrogen-plus-progestin method. Record the exact product and active ingredients before discussing cycle effects or medication safety."
+    },
+    {
+      "rsid": "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "gene": "MULTI_GENE",
+      "category": "hormones_reproductive",
+      "name": "Adenomyosis requires clinical gynecologic workup",
+      "risk_allele": "N/A",
+      "impact": "Prevents adenomyosis diagnosis or exclusion from consumer DNA",
+      "description": "Adenomyosis is not a validated consumer-SNP diagnosis. Heavy or prolonged bleeding, worsening period pain, pelvic pain, pain with sex, or a tender or bulky uterus should be evaluated with clinical history, examination, and indicated gynecologic imaging."
+    },
+    {
+      "rsid": "PANEL_ADENOMYOSIS_RESEARCH_GAP",
+      "gene": "ESR1/PGR/WNT4/VEZT/MULTI_GENE",
+      "category": "hormones_reproductive",
+      "name": "Adenomyosis research biology—not a callable SNP panel",
+      "risk_allele": "N/A",
+      "impact": "Research context around hormonally responsive uterine tissue",
+      "description": "Adenomyosis research includes tissue-specific, somatic, epigenetic, and possible inherited biology, but no validated consumer-DNA panel can diagnose or exclude it. Keep this as an evidence-gap note rather than a score."
     }
   ]
 }

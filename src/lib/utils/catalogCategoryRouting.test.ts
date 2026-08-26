@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCatalogCategories,
+  catalogMarkerCategories,
   defaultCatalogCategorySelection,
   selectedCatalogCategoryIds
 } from "./catalogCategoryRouting";
@@ -40,5 +41,18 @@ describe("catalog category routing", () => {
     expect(selectedCatalogCategoryIds(categories, { new_domain: true, stale_id: true })).toEqual(
       new Set(["new_domain"])
     );
+  });
+
+  it("counts a catalog record in every resource-authored category it declares", () => {
+    const marker = {
+      category: "neuropsych",
+      categories: ["neuropsych", "hormones_reproductive"]
+    };
+
+    expect(catalogMarkerCategories(marker)).toEqual(["neuropsych", "hormones_reproductive"]);
+    expect(buildCatalogCategories([marker])).toEqual([
+      { id: "neuropsych", label: "🧠 Neurotype & Mood", count: 1 },
+      { id: "hormones_reproductive", label: "🌙 Hormones & Reproductive", count: 1 }
+    ]);
   });
 });

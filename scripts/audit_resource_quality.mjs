@@ -90,6 +90,7 @@ const evidencePolicy = readJson(path.join(resourceDir, 'evidence_policy.json'));
 const callabilityRules = readJson(path.join(resourceDir, 'callability_rules.json'));
 const cycleSupport = readJson(path.join(resourceDir, 'cycle_support_guidance.json'));
 const safetyGuardrails = readJson(path.join(resourceDir, 'safety_guardrails.json'));
+const researchTaxonomy = readJson(path.join(resourceDir, 'research_taxonomy.json'));
 const discoveryCatalog = readJson(path.join(resourceDir, 'discovery_catalog.json'));
 const runtimeDiscoveryCatalogPath = path.join(runtimeDir, 'discovery_catalog.json');
 
@@ -211,11 +212,27 @@ if (runtimeSummary?.manifest_packs !== manifest?.packs?.length) {
 if (runtimeSummary?.discovery_records !== discoveryCatalog?.markers?.length) {
   errors.push(`runtime_validation_summary.json: discovery_records is ${runtimeSummary?.discovery_records ?? '(missing)'}, expected ${discoveryCatalog?.markers?.length ?? 0}`);
 }
+const duplicateRsidCount = allMarkers.length - new Set(allMarkers.map(({ marker }) => marker.rsid)).size;
+if (runtimeSummary?.duplicate_rsids_skipped_from_discovery_catalog !== duplicateRsidCount) {
+  errors.push(`runtime_validation_summary.json: duplicate_rsids_skipped_from_discovery_catalog is ${runtimeSummary?.duplicate_rsids_skipped_from_discovery_catalog ?? '(missing)'}, expected ${duplicateRsidCount}`);
+}
 if (runtimeSummary?.cycle_support_layer?.domains_count !== cycleSupport?.domains?.length) {
   errors.push(`runtime_validation_summary.json: cycle_support_layer.domains_count is ${runtimeSummary?.cycle_support_layer?.domains_count ?? '(missing)'}, expected ${cycleSupport?.domains?.length ?? 0}`);
 }
+if (runtimeSummary?.cycle_support_layer?.context_options_count !== cycleSupport?.context_options?.length) {
+  errors.push(`runtime_validation_summary.json: cycle_support_layer.context_options_count is ${runtimeSummary?.cycle_support_layer?.context_options_count ?? '(missing)'}, expected ${cycleSupport?.context_options?.length ?? 0}`);
+}
+if (runtimeSummary?.research_taxonomy_layer?.categories_count !== researchTaxonomy?.categories?.length) {
+  errors.push(`runtime_validation_summary.json: research_taxonomy_layer.categories_count is ${runtimeSummary?.research_taxonomy_layer?.categories_count ?? '(missing)'}, expected ${researchTaxonomy?.categories?.length ?? 0}`);
+}
+if (runtimeSummary?.research_taxonomy_layer?.discovery_categories_count !== researchTaxonomy?.discovery_categories?.length) {
+  errors.push(`runtime_validation_summary.json: research_taxonomy_layer.discovery_categories_count is ${runtimeSummary?.research_taxonomy_layer?.discovery_categories_count ?? '(missing)'}, expected ${researchTaxonomy?.discovery_categories?.length ?? 0}`);
+}
 
 for (const marker of discoveryCatalog?.markers || []) {
+  if (marker.categories !== undefined && !isNonEmptyStringArray(marker.categories)) {
+    errors.push(`discovery_catalog.json: ${marker.rsid || '(missing rsid)'} categories must be a non-empty string array when provided`);
+  }
   const description = String(marker.description || '');
   if (hasUnqualifiedStrongLanguage(description)) {
     discoveryLanguageReview.push({

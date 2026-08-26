@@ -15,6 +15,81 @@
       "A safety concern can be more important than a wellness suggestion: review allergies, pregnancy/lactation, kidney/liver disease, eating-disorder risk, and medication interactions first."
     ]
   },
+  "lab_categories": [
+    {
+      "id": "clinical_confirmation",
+      "label": "Clinical confirmation",
+      "order": 0,
+      "keywords": ["brca", "lynch", "ngs", "confirmation", "counselor", "mammograph", "colonoscop"]
+    },
+    {
+      "id": "heart_lipids",
+      "label": "Heart & lipids",
+      "order": 1,
+      "keywords": ["apob", "lipo(a)", "lipid", "lipoprotein", "crp", "cholesterol", "cardiovascular", "blood pressure", "omega-3"]
+    },
+    {
+      "id": "nutrients_methylation",
+      "label": "Nutrients & methylation",
+      "order": 2,
+      "keywords": ["homocysteine", "folate", "b12", "vitamin d", "25(oh)", "selenium", "methyl"]
+    },
+    {
+      "id": "iron_studies",
+      "label": "Iron studies",
+      "order": 3,
+      "keywords": ["ferritin", "iron", "tibc", "transferrin"]
+    },
+    {
+      "id": "metabolic",
+      "label": "Metabolic",
+      "order": 4,
+      "keywords": ["uric acid", "glucose", "insulin", "metabolic"]
+    },
+    {
+      "id": "liver",
+      "label": "Liver",
+      "order": 5,
+      "keywords": ["liver", "alt", "ast", "hepatic"]
+    },
+    {
+      "id": "kidney_fluids",
+      "label": "Kidney & fluids",
+      "order": 6,
+      "keywords": ["kidney", "egfr", "creatinine", "urinalysis", "electrolyte"]
+    },
+    {
+      "id": "thyroid_immune",
+      "label": "Thyroid & immune",
+      "order": 7,
+      "keywords": ["thyroid", "tsh", "autoantibod"]
+    },
+    {
+      "id": "respiratory_sleep",
+      "label": "Respiratory & sleep",
+      "order": 8,
+      "keywords": ["spirometry", "sleep", "oxygen"]
+    },
+    {
+      "id": "bone_minerals",
+      "label": "Bone & minerals",
+      "order": 9,
+      "keywords": ["dxa", "bone", "calcium", "pth"]
+    },
+    {
+      "id": "pharmacogenomics",
+      "label": "Pharmacogenomics",
+      "order": 10,
+      "keywords": ["pgx", "pharmacogen"]
+    },
+    {
+      "id": "other_follow_up",
+      "label": "Other follow-up",
+      "order": 99,
+      "keywords": [],
+      "fallback": true
+    }
+  ],
   "rules": [
     {
       "id": "mthfr_methylation",

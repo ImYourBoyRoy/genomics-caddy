@@ -20,6 +20,7 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   import { dialogStore } from "../../utils/dialogState.svelte";
   import {
     buildCatalogCategories,
+    catalogMarkerCategories,
     defaultCatalogCategorySelection,
     selectedCatalogCategoryIds
   } from "../../utils/catalogCategoryRouting";
@@ -82,7 +83,9 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
 
     try {
       const activeCatalogCategories = selectedCatalogCategoryIds(categories, selectedCategories);
-      const catalogMarkers = catalogData.markers.filter(m => activeCatalogCategories.has(m.category));
+      const catalogMarkers = catalogData.markers.filter(m =>
+        catalogMarkerCategories(m).some(category => activeCatalogCategories.has(category))
+      );
       const rsids = catalogMarkers.map(m => m.rsid);
       totalToScan = rsids.length;
 

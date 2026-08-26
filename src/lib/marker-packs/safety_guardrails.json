@@ -1,6 +1,6 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "last_updated": "2026-08-26",
   "medication_context": {
     "ask_for": [
@@ -51,6 +51,32 @@
       "hormone replacement",
       "gender affirming",
       "puberty suppression"
+    ],
+    "hormone_medication_keywords": [
+      "contracept",
+      "birth control",
+      "estrogen",
+      "estradiol",
+      "progesterone",
+      "progestin",
+      "testosterone",
+      "androgen",
+      "antiandrogen",
+      "hormone therapy",
+      "hormone replacement",
+      "gender affirming",
+      "puberty suppression",
+      "hormonal"
+    ],
+    "contraceptive_medication_keywords": [
+      "contracept",
+      "birth control",
+      "oral contraceptive",
+      "intrauterine device",
+      "iud",
+      "nexplanon",
+      "nuvaring",
+      "depo-provera"
     ]
   },
   "rules": [

@@ -134,6 +134,14 @@ interface ActionableRule {
   notes?: string;
 }
 
+interface LabCategory {
+  id: string;
+  label: string;
+  order: number;
+  keywords: string[];
+  fallback?: boolean;
+}
+
 function normalizedGeneSymbols(value: string): string[] {
   return String(value || '')
     .split(/[\s/]+/)
@@ -213,42 +221,20 @@ const LAB_TIER_META: Record<LabTest['tier'], { label: string; hint: string; orde
   },
 };
 
+const LAB_CATEGORIES: LabCategory[] = Array.isArray(
+  (guidanceDoc as { lab_categories?: LabCategory[] }).lab_categories
+)
+  ? ((guidanceDoc as { lab_categories: LabCategory[] }).lab_categories)
+      .filter((category) => category && typeof category.label === 'string' && Array.isArray(category.keywords))
+      .sort((left, right) => left.order - right.order)
+  : [];
+
 function inferLabCategory(name: string): string {
   const lower = name.toLowerCase();
-  if (/brca|lynch|ngs|confirmation|counselor|mammograph|colonoscop/i.test(lower)) {
-    return 'Clinical confirmation';
-  }
-  if (/apob|lipo\(a\)|lipid|lipoprotein|crp|cholesterol|cardiovascular|blood pressure|omega-3/i.test(lower)) {
-    return 'Heart & lipids';
-  }
-  if (/homocysteine|folate|b12|vitamin d|25\(oh\)|selenium|methyl/i.test(lower)) {
-    return 'Nutrients & methylation';
-  }
-  if (/ferritin|iron|tibc|transferrin/i.test(lower)) {
-    return 'Iron studies';
-  }
-  if (/uric acid|glucose|insulin|metabolic/i.test(lower)) {
-    return 'Metabolic';
-  }
-  if (/liver|alt|ast|hepatic/i.test(lower)) {
-    return 'Liver';
-  }
-  if (/kidney|egfr|creatinine|urinalysis|electrolyte/i.test(lower)) {
-    return 'Kidney & fluids';
-  }
-  if (/thyroid|tsh|autoantibod/i.test(lower)) {
-    return 'Thyroid & immune';
-  }
-  if (/spirometry|sleep|oxygen/i.test(lower)) {
-    return 'Respiratory & sleep';
-  }
-  if (/dxa|bone|calcium|pth/i.test(lower)) {
-    return 'Bone & minerals';
-  }
-  if (/pgx|pharmacogen/i.test(lower)) {
-    return 'Pharmacogenomics';
-  }
-  return 'Other follow-up';
+  const match = LAB_CATEGORIES.find((category) =>
+    !category.fallback && category.keywords.some((keyword) => lower.includes(keyword.toLowerCase()))
+  );
+  return match?.label || LAB_CATEGORIES.find((category) => category.fallback)?.label || 'Other follow-up';
 }
 
 function deriveLabTier(
@@ -437,11 +423,16 @@ function deriveMedicationSafety(
   // A user-supplied hormonal medication name is an explicit medication
   // context signal. It does not establish anatomy, cycle status, or hormone
   // levels; it only makes the composition/label guardrail relevant.
-  const hasHormonalMedication = (personalSafetyContext?.medications || []).some((name) =>
-    /contracept|birth control|estrogen|estradiol|progesterone|progestin|testosterone|androgen|antiandrogen|hormone therapy|hormone replacement|gender[- ]affirming|puberty suppression|hormonal/i.test(name)
+  const medicationNames = personalSafetyContext?.medications || [];
+  const medicationMatchesKeywords = (keywords: readonly string[]) => medicationNames.some((name) => {
+    const lowerName = String(name).toLowerCase();
+    return keywords.some((keyword) => lowerName.includes(String(keyword).toLowerCase()));
+  });
+  const hasHormonalMedication = medicationMatchesKeywords(
+    safetyGuardrails.medication_context.hormone_medication_keywords
   );
-  const hasContraceptiveMedication = (personalSafetyContext?.medications || []).some((name) =>
-    /contracept|birth control|oral contraceptive|intrauterine device|\biud\b|nexplanon|nuvaring|depo[- ]?provera/i.test(name)
+  const hasContraceptiveMedication = medicationMatchesKeywords(
+    safetyGuardrails.medication_context.contraceptive_medication_keywords
   );
   if (hasContraceptiveMedication) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
   if (hasHormonalMedication) relevantRuleIds.add('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');

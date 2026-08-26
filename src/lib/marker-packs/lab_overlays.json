@@ -1,7 +1,7 @@
 {
   "name": "Lab Overlay Map",
-  "version": "1.0.0",
-  "last_updated": "2026-08-25",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "principle": "Labs confirm phenotype. Genotype suggests what to check, not what to diagnose.",
   "overlays": [
     {
@@ -135,7 +135,7 @@
       "markers_or_packs": [
         "respiratory_airway"
       ],
-      "labs_tests": [
+      "labs": [
         "spirometry",
         "peak flow",
         "sleep study",
@@ -178,7 +178,7 @@
       "markers_or_packs": [
         "hormones_reproductive"
       ],
-      "labs_tests": [
+      "labs": [
         "CBC",
         "ferritin",
         "pregnancy testing when clinically relevant",

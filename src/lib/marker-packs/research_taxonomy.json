@@ -177,5 +177,30 @@
       "packs": ["longevity_aging_resilience"],
       "modes": ["general"]
     }
+  ],
+  "discovery_categories": [
+    { "id": "core", "label": "🧬 Core Traits", "order": 0, "default_selected": true },
+    { "id": "pgx", "label": "💊 Drug Metabolism", "order": 1, "default_selected": true },
+    { "id": "metabolic", "label": "🥗 Metabolic", "order": 2, "default_selected": true },
+    { "id": "nutrients", "label": "🍽️ Nutrients", "order": 3, "default_selected": true },
+    { "id": "neuropsych", "label": "🧠 Neurotype & Mood", "order": 4, "default_selected": true },
+    { "id": "sleep", "label": "🌙 Sleep", "order": 5, "default_selected": false },
+    { "id": "connective_tissue", "label": "🧵 Connective Tissue", "order": 6, "default_selected": false },
+    { "id": "thyroid_autoimmune", "label": "🦋 Thyroid & Autoimmune", "order": 7, "default_selected": false },
+    { "id": "cardiovascular", "label": "🫀 Cardiovascular", "order": 8, "default_selected": true },
+    { "id": "cancer_confirmation_only", "label": "🎗️ Cancer Risk", "order": 9, "default_selected": true },
+    { "id": "allergy_atopy_mast_cell", "label": "🌿 Allergy & Mast Cell", "order": 10, "default_selected": false },
+    { "id": "digestive_gut_microbiome", "label": "🫃 Digestive & Gut", "order": 11, "default_selected": false },
+    { "id": "muscle_performance_recovery", "label": "💪 Muscle & Recovery", "order": 12, "default_selected": false },
+    { "id": "hormones_reproductive", "label": "🌙 Hormones & Reproductive", "order": 13, "default_selected": true },
+    { "id": "skin_hair_dermatology", "label": "🧴 Skin, Hair & Dermatology", "order": 14, "default_selected": false },
+    { "id": "bone_growth_mineral_density", "label": "🦴 Bone & Mineral Density", "order": 15, "default_selected": false },
+    { "id": "kidney_fluid_electrolytes", "label": "💧 Kidney & Electrolytes", "order": 16, "default_selected": false },
+    { "id": "respiratory_airway", "label": "🫁 Respiratory & Airway", "order": 17, "default_selected": false },
+    { "id": "immune_autoimmune_general", "label": "🛡️ Immune & Autoimmune", "order": 18, "default_selected": false },
+    { "id": "pain_migraine_sensory", "label": "🩹 Pain & Sensory", "order": 19, "default_selected": false },
+    { "id": "dental_oral_health", "label": "🦷 Dental & Oral Health", "order": 20, "default_selected": false },
+    { "id": "longevity_aging_resilience", "label": "⌛ Longevity & Resilience", "order": 21, "default_selected": false },
+    { "id": "research_found", "label": "🧪 Research Found", "order": 99, "default_selected": false }
   ]
 }

@@ -127,7 +127,7 @@ for (const promptId of conditionalPromptSignalIds) {
 // Validate their public shape here so prompt wiring cannot silently drift when
 // a resource is expanded or renamed.
 const supportContracts = {
-  actionability_guidance: { arrays: ['rules'], objects: ['policy'] },
+  actionability_guidance: { arrays: ['rules', 'lab_categories'], objects: ['policy'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts'] },
@@ -140,8 +140,8 @@ const supportContracts = {
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
-  research_taxonomy: { arrays: ['categories'] },
-  safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords'] } },
+  research_taxonomy: { arrays: ['categories', 'discovery_categories'] },
+  safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
   supplement_safety: { arrays: ['principles', 'rules', 'do_not_do'] },
   source_registry: { objects: ['sources'] },
   user_diet_profile_schema: { arrays: ['minimum_required_for_food_advice', 'do_not_infer'], objects: ['schema'] },
@@ -201,6 +201,66 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
         if (!isStringArray(category[field]) || category[field].length === 0) {
           errors.push(`${location}: ${field} must be a non-empty string array`);
         }
+      }
+    }
+    const discoveryCategories = resource.discovery_categories || [];
+    const discoveryIds = new Set();
+    for (const [index, category] of discoveryCategories.entries()) {
+      const location = `research_taxonomy.json discovery category ${index + 1}`;
+      for (const field of ['id', 'label']) {
+        if (typeof category[field] !== 'string' || category[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (!Number.isInteger(category.order) || category.order < 0) {
+        errors.push(`${location}: order must be a non-negative integer`);
+      }
+      if (typeof category.default_selected !== 'boolean') {
+        errors.push(`${location}: default_selected must be boolean`);
+      }
+      if (discoveryIds.has(category.id)) errors.push(`${location}: duplicate id ${category.id}`);
+      discoveryIds.add(category.id);
+    }
+  }
+  if (resourceId === 'actionability_guidance') {
+    const labCategoryIds = new Set();
+    for (const [index, category] of (resource.lab_categories || []).entries()) {
+      const location = `actionability_guidance.json lab category ${index + 1}`;
+      for (const field of ['id', 'label']) {
+        if (typeof category[field] !== 'string' || category[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (!Number.isInteger(category.order) || category.order < 0) {
+        errors.push(`${location}: order must be a non-negative integer`);
+      }
+      if (!isStringArray(category.keywords)) errors.push(`${location}: keywords must be a string array`);
+      if (category.fallback !== undefined && typeof category.fallback !== 'boolean') {
+        errors.push(`${location}: fallback must be boolean when provided`);
+      }
+      if (labCategoryIds.has(category.id)) errors.push(`${location}: duplicate id ${category.id}`);
+      labCategoryIds.add(category.id);
+    }
+    if (!(resource.lab_categories || []).some((category) => category.fallback === true)) {
+      errors.push('actionability_guidance.json: lab_categories requires a fallback category');
+    }
+  }
+  if (resourceId === 'lab_overlays') {
+    for (const [index, overlay] of (resource.overlays || []).entries()) {
+      const location = `lab_overlays.json overlay ${index + 1}`;
+      if (typeof overlay.domain !== 'string' || overlay.domain.trim() === '') {
+        errors.push(`${location}: domain must be a non-empty string`);
+      }
+      if (!isStringArray(overlay.markers_or_packs) || overlay.markers_or_packs.length === 0) {
+        errors.push(`${location}: markers_or_packs must be a non-empty string array`);
+      }
+      const hasLabs = isStringArray(overlay.labs) && overlay.labs.length > 0;
+      const hasConfirmations = isStringArray(overlay.confirmations) && overlay.confirmations.length > 0;
+      if (!hasLabs && !hasConfirmations) {
+        errors.push(`${location}: labs or confirmations must be a non-empty string array`);
+      }
+      if (Object.hasOwn(overlay, 'labs_tests')) {
+        errors.push(`${location}: use labs, not labs_tests`);
       }
     }
   }

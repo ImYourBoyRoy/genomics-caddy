@@ -437,39 +437,25 @@ function derivePersonalContextGuidance(
   };
   const priorityNotes: string[] = [];
   if (context.allergies.length > 0) {
-    priorityNotes.push(
-      'Reported allergies or intolerances take priority over genotype-based food and supplement prompts; never use raw DNA to clear an exposure.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.allergies);
   }
   if (context.medications.length > 0) {
-    priorityNotes.push(
-      'Current medication names are safety context only. Confirm the exact product, active ingredients, dose, timing, indication, and prescriber instructions before acting.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.medications);
   }
   if (context.supplements.length > 0) {
-    priorityNotes.push(
-      'Current supplements are included for interaction and duplicate-nutrient review; a genotype match is not proof that another supplement is needed.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.supplements);
   }
   if (context.symptoms.length > 0) {
-    priorityNotes.push(
-      'Symptoms and timing are phenotype evidence to track and discuss; do not convert them into a DNA diagnosis or a hormone-level claim.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.symptoms);
   }
   if (context.labObservations.length > 0) {
-    priorityNotes.push(
-      'User-recorded labs and clinician findings should be interpreted with dates, units, reference ranges, and clinical context; measured phenotype outranks a generic SNP prompt.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.labs);
   }
   if (context.reproductiveIntake && Object.keys(context.reproductiveIntake).length > 0) {
-    priorityNotes.push(
-      'Structured cycle and hormone details are self-reported context. Verify product composition, dose, and schedule from the exact label; timing and symptoms do not establish hormone levels or a diagnosis.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.reproductive_intake);
   }
   if (context.cycleDiary && context.cycleDiary.length > 0) {
-    priorityNotes.push(
-      'The cycle diary contains self-reported observations. Missing entries are not symptom-free days; review patterns over time with a clinician rather than treating them as hormone measurements or a diagnosis.'
-    );
+    priorityNotes.push(safetyGuardrails.personal_context_notes.cycle_diary);
   }
 
   return {

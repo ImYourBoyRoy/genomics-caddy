@@ -151,7 +151,7 @@ const supportContracts = {
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
   research_taxonomy: { arrays: ['categories', 'discovery_categories'] },
-  safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
+  safety_guardrails: { arrays: ['rules'], objects: ['medication_context', 'personal_context_notes'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
   supplement_safety: { arrays: ['principles', 'rules', 'do_not_do'] },
   source_registry: { objects: ['sources'] },
   user_diet_profile_schema: { arrays: ['minimum_required_for_food_advice', 'do_not_infer'], objects: ['schema'] },
@@ -277,6 +277,13 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       if (domainIds.has(domain.id)) errors.push(`${location}: duplicate id ${domain.id}`);
       domainIds.add(domain.id);
+    }
+  }
+  if (resourceId === 'safety_guardrails') {
+    for (const field of ['allergies', 'medications', 'supplements', 'symptoms', 'labs', 'reproductive_intake', 'cycle_diary']) {
+      if (typeof resource.personal_context_notes?.[field] !== 'string' || resource.personal_context_notes[field].trim() === '') {
+        errors.push(`safety_guardrails.json: personal_context_notes.${field} must be a non-empty string`);
+      }
     }
   }
   if (resourceId === 'actionability_guidance') {

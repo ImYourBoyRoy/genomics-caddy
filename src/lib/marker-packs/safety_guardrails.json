@@ -1,7 +1,16 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "last_updated": "2026-08-26",
+  "personal_context_notes": {
+    "allergies": "Reported allergies or intolerances take priority over genotype-based food and supplement prompts; never use raw DNA to clear an exposure.",
+    "medications": "Current medication names are safety context only. Confirm the exact product, active ingredients, dose, timing, indication, and prescriber instructions before acting.",
+    "supplements": "Current supplements are included for interaction and duplicate-nutrient review; a genotype match is not proof that another supplement is needed.",
+    "symptoms": "Symptoms and timing are phenotype evidence to track and discuss; do not convert them into a DNA diagnosis or a hormone-level claim.",
+    "labs": "User-recorded labs and clinician findings should be interpreted with dates, units, reference ranges, and clinical context; measured phenotype outranks a generic SNP prompt.",
+    "reproductive_intake": "Structured cycle and hormone details are self-reported context. Verify product composition, dose, and schedule from the exact label; timing and symptoms do not establish hormone levels or a diagnosis.",
+    "cycle_diary": "The cycle diary contains self-reported observations. Missing entries are not symptom-free days; review patterns over time with a clinician rather than treating them as hormone measurements or a diagnosis."
+  },
   "medication_context": {
     "ask_for": [
       "Exact medication name and active ingredient(s)",

@@ -574,7 +574,7 @@
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <span class="pill font-mono">Sex: {selectedSample.genetic_sex}</span>
+              <span class="pill font-mono">Chromosome-call context: {selectedSample.genetic_sex}</span>
               <span class="pill">Sample ID: {selectedSample.id}</span>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">

@@ -3,15 +3,20 @@
   import { onMount } from 'svelte';
   import type { GeneratedReport, SeverityClass } from '../../types/genomics';
   import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
+  import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
+  import { loadReproductiveContext, reproductiveContextStorageKey, saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
 
   interface Props {
     report: GeneratedReport;
+    sampleId?: number;
     onJumpToMarker?: (linkId: string) => void;
   }
 
-  let { report, onJumpToMarker }: Props = $props();
+  let { report, sampleId, onJumpToMarker }: Props = $props();
 
-  let plan = $derived<ActionablePlan>(deriveActionablePlan(report));
+  let reproductiveContext = $state('');
+  let loadedContextKey = $state('');
+  let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext }));
 
   // Collapsible states with localStorage persistence
   let collapsed = $state({
@@ -25,6 +30,17 @@
   });
 
   let expandedLabReasons = $state<Record<string, boolean>>({});
+
+  $effect(() => {
+    const contextKey = reproductiveContextStorageKey(sampleId);
+    if (loadedContextKey === contextKey || typeof localStorage === 'undefined') return;
+    loadedContextKey = contextKey;
+    try {
+      reproductiveContext = loadReproductiveContext(sampleId);
+    } catch (e) {
+      console.warn('Failed to load reproductive context:', e);
+    }
+  });
 
   onMount(() => {
     try {
@@ -44,6 +60,15 @@
     } catch (e) {
       console.warn('Failed to save dashboard collapsed state:', e);
     }
+  }
+
+  function setReproductiveContext(event: Event) {
+    reproductiveContext = (event.currentTarget as HTMLSelectElement).value;
+    saveReproductiveContext(sampleId, reproductiveContext);
+  }
+
+  function selectedReproductiveContextLabel(): string {
+    return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
   }
 
   function getSeverityLabel(sc: SeverityClass): string {
@@ -112,6 +137,19 @@
       </ul>
     </div>
   {/if}
+
+  <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
+    <div class="context-selector-copy">
+      <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
+      <span>Choose only when relevant to the person. This selection is self-reported, stored per DNA profile, and is never inferred from genotype, chromosome calls, gender, anatomy, fertility, pregnancy, or hormone status.</span>
+    </div>
+    <select aria-labelledby="reproductive-context-label" value={reproductiveContext} onchange={setReproductiveContext}>
+      <option value="">Not specified — keep context-specific guidance hidden</option>
+      {#each cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown') as option (option.id)}
+        <option value={option.id}>{option.label}</option>
+      {/each}
+    </select>
+  </div>
 
   <div class="grid-layout">
     <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
@@ -240,12 +278,12 @@
       {#if plan.cycleSupport.relevantDomains.length > 0}
         <div class="summary-card card card-cycle-support" class:collapsed={collapsed.cycleSupport}>
           <div class="card-header" onclick={() => toggle('cycleSupport')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('cycleSupport'))}>
-            <h3>🌙 Cycle &amp; Reproductive Support</h3>
+            <h3>⚕️ Reproductive &amp; Hormone Support</h3>
             <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
           </div>
           {#if !collapsed.cycleSupport}
             <div class="card-body">
-              <p class="section-hint">This section organizes timing, medication, symptom, and gynecologic follow-up questions. DNA cannot measure current hormones or diagnose PMDD, adenomyosis, endometriosis, PCOS, or a medication response.</p>
+              <p class="section-hint">Showing guidance for {selectedReproductiveContextLabel()}. This section organizes timing, medication, symptom, and clinical follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
               <ul class="guardrail-list">
                 {#each plan.cycleSupport.principles as principle (principle)}<li>{principle}</li>{/each}
               </ul>
@@ -450,6 +488,43 @@
     font-size: 1.1rem;
   }
 
+  .context-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(167, 139, 250, 0.28);
+    background: rgba(139, 92, 246, 0.08);
+  }
+
+  .context-selector-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .context-selector-copy strong {
+    color: #ddd6fe;
+  }
+
+  .context-selector-copy span {
+    color: var(--text-secondary);
+  }
+
+  .context-selector select {
+    min-width: min(320px, 42%);
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    border-radius: 5px;
+    color: var(--text-primary);
+    padding: 0.45rem 0.55rem;
+    font: inherit;
+  }
+
   .grid-layout {
     display: flex;
     flex-direction: column;
@@ -470,6 +545,18 @@
 
   .card-cycle-support {
     grid-column: 1 / -1;
+  }
+
+  @media (max-width: 720px) {
+    .context-selector {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .context-selector select {
+      min-width: 0;
+      width: 100%;
+    }
   }
 
   .lab-body {

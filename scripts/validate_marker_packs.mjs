@@ -113,7 +113,7 @@ const supportContracts = {
   actionability_guidance: { arrays: ['rules'], objects: ['policy'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
-  cycle_support_guidance: { arrays: ['context_keywords', 'principles', 'domains', 'do_not_do'] },
+  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },

@@ -6,6 +6,7 @@ describe('support resource context', () => {
     const context = buildSupportResourceContext({
       packIds: ['hormones_reproductive'],
       consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'menstrual_cycle',
     });
 
     expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
@@ -19,6 +20,26 @@ describe('support resource context', () => {
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'pmdd_like_mood_symptoms')).toBe(true);
     expect(context.cycle_support.source_registry.acog_premenstrual_disorders).toBeDefined();
     expect(context.cycle_support.source_registry.cdc_usmec_2024).toBeDefined();
+    expect(context.cycle_support.context_options.some((option) => option.id === 'menstrual_cycle')).toBe(true);
+    expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
+    expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
+  });
+
+  it('keeps reproductive domains hidden until an explicit context is selected', () => {
+    const hidden = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+    });
+    const androgen = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'androgen_reproductive',
+    });
+
+    expect(hidden.cycle_support.relevant_domains).toHaveLength(0);
+    expect(hidden.cycle_support.selected_context_id).toBeNull();
+    expect(androgen.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual(['androgen_reproductive_context']);
+    expect(androgen.cycle_support.selected_context_id).toBe('androgen_reproductive');
   });
 
   it('selects PGx confirmation resources and retains medication safety priorities', () => {

@@ -18,6 +18,80 @@
     "esr2",
     "pgr"
   ],
+  "context_options": [
+    {
+      "id": "menstrual_cycle",
+      "label": "Menstrual cycle / PMS / PMDD symptoms",
+      "description": "Use when the person reports an ongoing menstrual cycle or recurring cycle-linked symptoms.",
+      "domain_ids": [
+        "cycle_phase_and_symptom_timing",
+        "pmdd_like_mood_symptoms",
+        "contraceptive_product_context",
+        "heavy_bleeding_pelvic_pain",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA"
+      ]
+    },
+    {
+      "id": "ovarian_reproductive",
+      "label": "Ovarian / reproductive care",
+      "description": "Use when ovarian or reproductive care is relevant, without assuming a cycle, anatomy, fertility, or pregnancy status.",
+      "domain_ids": [
+        "contraceptive_product_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA"
+      ]
+    },
+    {
+      "id": "uterine_pelvic",
+      "label": "Uterine / pelvic symptoms",
+      "description": "Use when bleeding, pelvic pain, or a uterine evaluation is relevant.",
+      "domain_ids": [
+        "heavy_bleeding_pelvic_pain",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": []
+    },
+    {
+      "id": "androgen_reproductive",
+      "label": "Androgen / prostate / testicular context",
+      "description": "Use when androgen, prostate, testicular, or related reproductive context is relevant.",
+      "domain_ids": [
+        "androgen_reproductive_context"
+      ],
+      "medication_rule_ids": []
+    },
+    {
+      "id": "menopause_hormone_therapy",
+      "label": "Menopause / hormone therapy",
+      "description": "Use when menopause or hormone-therapy context is relevant; record the exact product and ingredients.",
+      "domain_ids": [
+        "contraceptive_product_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": []
+    },
+    {
+      "id": "pregnancy_postpartum",
+      "label": "Pregnancy / postpartum context",
+      "description": "Use only when the person supplies this context; DNA does not establish pregnancy or postpartum status.",
+      "domain_ids": [
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": []
+    },
+    {
+      "id": "none_or_unknown",
+      "label": "Not relevant / keep reproductive guidance hidden",
+      "description": "Keep cycle and reproductive support hidden until relevant context is supplied.",
+      "domain_ids": [],
+      "medication_rule_ids": []
+    }
+  ],
   "principles": [
     "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
     "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",
@@ -200,6 +274,40 @@
         "aha_physical_activity_warning_signs",
         "safety_guardrail",
         "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "androgen_reproductive_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive"
+      ],
+      "title": "Androgen, prostate and testicular context",
+      "context": "A DNA report cannot measure testosterone, diagnose hypogonadism, determine fertility, or diagnose prostate or testicular disease.",
+      "questions": [
+        "Is there current testosterone, androgen, prostate, fertility, or other hormone treatment? Record the exact product, active ingredients, dose, schedule, and start date.",
+        "Which symptoms or goals are relevant: libido, erectile function, energy, mood, fertility, urinary symptoms, testicular pain/swelling, or another concern?",
+        "Has a clinician evaluated symptoms with appropriate examination, laboratory testing, or imaging?"
+      ],
+      "support_options": [
+        "Track symptoms, sleep, training load, illness, medications, and treatment timing before attributing a change to DNA or hormones.",
+        "Discuss hormone or prostate concerns with the appropriate clinician; do not start, stop, or change hormone treatment from raw DNA or an online interpretation."
+      ],
+      "confirm_with": [
+        "exact medication label and active ingredients",
+        "clinician assessment with laboratory testing or imaging when indicated",
+        "repeated early-morning testosterone testing only when a clinician is evaluating suspected deficiency"
+      ],
+      "red_flags": [
+        "sudden severe testicular or scrotal pain, especially with nausea or vomiting",
+        "new testicular lump, marked swelling, fever, or redness",
+        "acute urinary retention, blood in urine, or severe pelvic pain"
+      ],
+      "sources": [
+        "endocrine_testosterone_hypogonadism",
+        "medlineplus_testicle_pain",
+        "user_declared_values_required",
+        "clinical_confirmation_required",
+        "phenotype_required"
       ]
     }
   ],

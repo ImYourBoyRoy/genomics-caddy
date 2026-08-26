@@ -28,6 +28,7 @@
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
+  import { loadReproductiveContext, reproductiveContextStorageKey } from "../../utils/reproductiveContext";
   import "$lib/styles/components/ai-assistant-panel.css";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
@@ -113,6 +114,15 @@
   let attachedImages = $state<{ name: string; base64: string; previewUrl: string }[]>([]);
   let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", relevantBodySystems: "", reproductiveHormoneContext: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
   let systemInstructions = $state("");
+  let reproductiveContext = $state("");
+  let loadedReproductiveContextKey = $state("");
+
+  $effect(() => {
+    const contextKey = reproductiveContextStorageKey(selectedSample?.id);
+    if (loadedReproductiveContextKey === contextKey) return;
+    loadedReproductiveContextKey = contextKey;
+    reproductiveContext = loadReproductiveContext(selectedSample?.id);
+  });
 
   let useVectorResearch = $state(
     typeof localStorage !== "undefined" && localStorage.getItem("genomics_consultation_vector_rag") !== null
@@ -211,6 +221,7 @@
       contextMode,
       consultationMode,
       userProfile,
+      reproductiveContext,
       systemInstructions,
       alert: (message) => dialogStore.alert(message),
       onExportModal: () => { showExportModal = true; },
@@ -320,7 +331,7 @@
 
   $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
+  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, reproductiveContext, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
   let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
   let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false });
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));

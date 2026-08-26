@@ -98,7 +98,7 @@ describe('actionability engine safety policy', () => {
           sex_scope: 'menstrual_cycle_context',
         })],
       }],
-    });
+    }, { reproductiveContext: 'menstrual_cycle' });
     expect(plan.activity.relevantDomains.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
     expect(plan.activity.stopAndEscalate.some((item) => item.includes('Chest pain'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('contraceptive'))).toBe(true);
@@ -168,5 +168,31 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('ApoB'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('statin'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('raw DNA'))).toBe(true);
+  });
+
+  it('does not infer reproductive applicability from hormone marker text', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs2234693',
+      gene: 'ESR1',
+      variant_name: 'estrogen receptor alpha marker',
+      sex_scope: 'menstrual_cycle_context',
+      interpretation: 'Hormone context marker; not diagnostic.',
+      effect_direction: 'context_dependent',
+    })]));
+
+    expect(plan.cycleSupport.relevantDomains).toHaveLength(0);
+    expect(plan.medication.rules.some((item) => item.includes('Raw DNA cannot identify a person'))).toBe(false);
+  });
+
+  it('supports an explicitly selected androgen context without showing menstrual guidance', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'PANEL_AR_CAG_REPEAT_CALLOUT',
+      gene: 'AR',
+      sex_scope: 'androgen_reproductive_context',
+      effect_direction: 'context_dependent',
+    })]), { reproductiveContext: 'androgen_reproductive' });
+
+    expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'androgen_reproductive_context')).toBe(true);
+    expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_phase_and_symptom_timing')).toBe(false);
   });
 });

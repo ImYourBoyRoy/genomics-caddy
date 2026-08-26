@@ -38,6 +38,7 @@ export interface SendConsultationPromptParams {
   contextMode: AiContextMode;
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
+  reproductiveContext: string;
   systemInstructions: string;
   alert: (message: string) => void;
   onExportModal: () => void;
@@ -128,6 +129,7 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
         contextMode: params.contextMode,
         consultationMode: params.consultationMode,
         userProfile: params.userProfile,
+        reproductiveContext: params.reproductiveContext,
         systemInstructions: params.systemInstructions,
       },
       {

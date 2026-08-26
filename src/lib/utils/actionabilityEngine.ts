@@ -16,6 +16,7 @@ import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
+import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
 
 export interface TopFinding {
   rsid: string;
@@ -88,6 +89,11 @@ export interface ActionablePlan {
   supplementSafety: SupplementSafetyGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
+}
+
+export interface ActionabilityContext {
+  /** User-supplied applicability context; never inferred from genotype or chromosome calls. */
+  reproductiveContext?: string;
 }
 
 export type ActionabilityClass =
@@ -376,15 +382,11 @@ function activityContextMatches(
   return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
 }
 
-function cycleContextMatches(markers: EvaluatedMarker[], sectionNames: string[]): boolean {
-  const context = [
-    ...sectionNames,
-    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
-  ].join(' ').toLowerCase();
-  return cycleSupport.context_keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
-}
-
-function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string[]): MedicationSafetyGuidance {
+function deriveMedicationSafety(
+  markers: EvaluatedMarker[],
+  sectionNames: string[],
+  reproductiveContext?: string
+): MedicationSafetyGuidance {
   const context = [
     ...sectionNames,
     ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
@@ -392,15 +394,14 @@ function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string
   const pgxContext = safetyGuardrails.medication_context.pgx_context_keywords.some((keyword) =>
     context.includes(String(keyword).toLowerCase())
   );
-  const hormoneContext = safetyGuardrails.medication_context.hormone_context_keywords.some((keyword) =>
-    context.includes(String(keyword).toLowerCase())
-  );
   const relevantRuleIds = new Set(['PGX_NO_MED_CHANGE', 'LABS_AND_PHENOTYPE_FIRST']);
   if (pgxContext) {
     relevantRuleIds.add('HLA_TAGS_NOT_TYPING');
     relevantRuleIds.add('CNV_STR_VNTR_NOT_ARRAY_SAFE');
   }
-  if (hormoneContext) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
+  for (const ruleId of selectedReproductiveContextOption(reproductiveContext)?.medication_rule_ids || []) {
+    relevantRuleIds.add(ruleId);
+  }
 
   const rules = [
     ...safetyGuardrails.medication_context.do_not_do,
@@ -428,7 +429,10 @@ function selectSupplementSafetyRules(
   });
 }
 
-export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
+export function deriveActionablePlan(
+  report: GeneratedReport,
+  actionabilityContext: ActionabilityContext = {}
+): ActionablePlan {
   const topFindings: TopFinding[] = [];
   const favorSet = new Set<string>();
   const avoidSet = new Set<string>();
@@ -610,14 +614,16 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
     activityContextMatches(domain, markerValues, sectionNames)
   );
-  const relevantCycleDomains = cycleContextMatches(markerValues, sectionNames)
-    ? cycleSupport.domains
-    : [];
+  const relevantCycleDomains = cycleSupportDomainsForContext(actionabilityContext.reproductiveContext);
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     supplements.map((item) => item.name)
   );
-  const medicationSafety = deriveMedicationSafety(markerValues, sectionNames);
+  const medicationSafety = deriveMedicationSafety(
+    markerValues,
+    sectionNames,
+    actionabilityContext.reproductiveContext
+  );
 
   return {
     topFindings,

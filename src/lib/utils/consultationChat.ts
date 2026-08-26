@@ -52,6 +52,7 @@ export interface ConsultationTurnInput {
   contextMode: AiContextMode;
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
+  reproductiveContext?: string;
   systemInstructions: string;
 }
 
@@ -110,6 +111,7 @@ export async function runConsultationTurn(
     contextMode,
     consultationMode,
     userProfile,
+    reproductiveContext,
     systemInstructions,
   } = input;
 
@@ -170,6 +172,7 @@ export async function runConsultationTurn(
     contextMode,
     consultationMode,
     userProfile,
+    reproductiveContext,
     systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS,
     laypersonMap: LAYPERSON_MAP,
     qdrantHits,

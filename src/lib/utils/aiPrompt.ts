@@ -18,7 +18,7 @@ import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/ge
 import type { QdrantHit } from "../types/research";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
-import { buildSupportResourceContext } from "./supportResourceContext";
+  import { buildSupportResourceContext } from "./supportResourceContext";
 
 // ---------------------------------------------------------------------------
 // Shared Interfaces (re-exported for convenience)
@@ -162,6 +162,7 @@ interface PromptBuildParams {
   contextMode: AiContextMode;
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
+  reproductiveContext?: string;
   systemInstructions: string;
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>;
   qdrantHits?: QdrantHit[];
@@ -213,6 +214,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     contextMode = "active_findings",
     consultationMode = "general",
     userProfile, systemInstructions, laypersonMap,
+    reproductiveContext,
     qdrantHits = [],
     vectorSearchMeta,
   } = params;
@@ -276,6 +278,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   const supportResources = buildSupportResourceContext({
     packIds: supportPackIds,
     consultationMode,
+    reproductiveContext,
   });
 
   // --- Construct Payload JSON ---
@@ -336,6 +339,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         "Consultation is educational only and does not substitute for medical professional consultation.",
         "Use sample_context.sections for curated trait report markers AND vector_research for semantically retrieved enriched evidence when present.",
         "Use support_resources as the operational safety layer: ask the listed phenotype questions, use the listed lab overlays, respect callability limits, and apply food/medication safety priorities before genotype context.",
+        "For reproductive topics, use only support_resources.cycle_support.relevant_domains. It is empty until the person supplies an explicit context; never infer reproductive context from DNA, chromosome calls, or the hormone pack.",
         "When vector_research.status is ok, cite rsIDs from vector_research.hits — do not claim lack of database access.",
         "Use simple, layperson-friendly language. Heavily rely on layperson_summary fields when present.",
         "If a gene or condition is absent from both sample_context and vector_research, politely push back and refuse to speculate.",

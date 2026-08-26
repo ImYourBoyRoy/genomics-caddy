@@ -355,6 +355,22 @@
       "conflict_of_interest": "U.S. Food and Drug Administration public health resource",
       "notes": "Use for general caffeine context and the need to account for individual sensitivity, health conditions, medicines, and pregnancy; do not convert a CYP1A2 signal into a fixed personal limit."
     },
+    "endocrine_testosterone_hypogonadism": {
+      "name": "Endocrine Society Testosterone Therapy Guideline Resources",
+      "url": "https://www.endocrine.org/clinical-practice-guidelines/testosterone-therapy",
+      "accessed": "2026-08-25",
+      "evidence_type": "Endocrine Society clinical practice guideline",
+      "conflict_of_interest": "Professional medical society guideline; review the guideline disclosures when using clinically",
+      "notes": "Use for the boundary that suspected testosterone deficiency requires compatible symptoms plus consistently low, accurately measured testosterone, usually confirmed with repeat morning testing. Do not screen or prescribe from raw DNA."
+    },
+    "medlineplus_testicle_pain": {
+      "name": "MedlinePlus: Testicle Pain",
+      "url": "https://medlineplus.gov/ency/article/003160.htm",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH consumer medical reference",
+      "conflict_of_interest": "U.S. National Library of Medicine public health resource",
+      "notes": "Use for urgent symptom escalation: sudden severe testicle pain needs immediate medical care. This is a symptom-safety rule, not a genetic inference."
+    },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",
       "evidence_type": "Local support-engine policy",

@@ -441,7 +441,7 @@
   />
 
   {#if generatedReport}
-    <DashboardSummaryPanel report={generatedReport} onJumpToMarker={handleJumpToMarker} />
+    <DashboardSummaryPanel report={generatedReport} sampleId={selectedSample.id} onJumpToMarker={handleJumpToMarker} />
   {/if}
 
   <div class="sections-container">

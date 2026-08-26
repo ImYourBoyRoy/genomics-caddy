@@ -26,6 +26,7 @@ import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import sourceRegistry from '../marker-packs/source_registry.json';
 import userDietProfileSchema from '../marker-packs/user_diet_profile_schema.json';
+import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
 
 export type SupportConsultationMode =
   | 'general'
@@ -86,6 +87,8 @@ export interface SupportResourceContext {
   };
   cycle_support: {
     principles: typeof cycleSupport.principles;
+    context_options: typeof cycleSupport.context_options;
+    selected_context_id: string | null;
     domains: typeof cycleSupport.domains;
     relevant_domains: typeof cycleSupport.domains;
     do_not_do: typeof cycleSupport.do_not_do;
@@ -169,13 +172,16 @@ function selectSourceRecords(sourceIds: string[]): Record<string, unknown> {
   return selected;
 }
 
-function supportSourceIds(selectedPackIds: Set<string>): string[] {
+function supportSourceIds(
+  selectedPackIds: Set<string>,
+  relevantCycleDomains: typeof cycleSupport.domains,
+): string[] {
   const ids = new Set<string>([
     ...foodNutrientMatrix.sources,
     ...activityGuardrails.sources,
     ...actionabilityGuidance.rules.flatMap((rule) => rule.sources || []),
     ...supplementSafety.rules.flatMap((rule) => rule.sources),
-    ...cycleSupport.domains.flatMap((domain) => domain.sources || []),
+    ...relevantCycleDomains.flatMap((domain) => domain.sources || []),
   ]);
   for (const rule of selectDietaryRules(selectedPackIds)) {
     if (Array.isArray(rule.sources)) {
@@ -218,15 +224,20 @@ function selectCycleDomains(packIds: Set<string>): typeof cycleSupport.domains {
 export function buildSupportResourceContext({
   packIds,
   consultationMode = 'general',
+  reproductiveContext,
 }: {
   packIds: string[];
   consultationMode?: SupportConsultationMode;
+  reproductiveContext?: string;
 }): SupportResourceContext {
   const selectedPackIds = relevantPackIds(packIds, consultationMode);
   const phenotype = selectPhenotypeDomains(selectedPackIds);
   const overlays = selectLabOverlays(selectedPackIds);
-  const relevantCycleDomains = selectCycleDomains(selectedPackIds);
-  const selectedSourceRecords = selectSourceRecords(supportSourceIds(selectedPackIds));
+  const relevantCycleDomains = cycleSupportDomainsForContext(reproductiveContext).filter((domain) => {
+    const signals = Array.isArray(domain.relevant_pack_signals) ? domain.relevant_pack_signals : [];
+    return signals.length === 0 || signals.some((signal) => selectedPackIds.has(signal));
+  });
+  const selectedSourceRecords = selectSourceRecords(supportSourceIds(selectedPackIds, relevantCycleDomains));
 
   return {
     evidence_policy: {
@@ -289,6 +300,8 @@ export function buildSupportResourceContext({
     },
     cycle_support: {
       principles: cycleSupport.principles,
+      context_options: cycleSupport.context_options,
+      selected_context_id: selectedReproductiveContextOption(reproductiveContext)?.id || null,
       domains: cycleSupport.domains,
       relevant_domains: relevantCycleDomains,
       do_not_do: cycleSupport.do_not_do,

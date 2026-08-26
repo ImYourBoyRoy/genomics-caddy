@@ -125,10 +125,11 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #7dd3fc;
+    color: var(--status-info-soft-text);
     margin-right: 0.3rem;
     padding: 0.1rem 0.3rem;
-    background: rgba(125, 211, 252, 0.1);
+    background: var(--status-info-soft-bg);
+    border: 1px solid var(--status-info-soft-border);
     border-radius: 3px;
   }
 </style>

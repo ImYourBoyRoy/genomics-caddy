@@ -134,7 +134,8 @@ for (const promptId of conditionalPromptSignalIds) {
 const supportContracts = {
   actionability_guidance: { arrays: ['rules', 'lab_categories', 'lab_tiers'], objects: ['policy', 'lab_confirmation_filter'] },
   ai_prompt_helpers: { arrays: ['helpers'] },
-  ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'] },
+  agent_research_prompts: { objects: ['templates'] },
+  ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'], objects: ['safety_review_prompt'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
@@ -367,6 +368,42 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (typeof resource.date_warning !== 'string' || resource.date_warning.trim() === '') {
       errors.push('ai_prompt_policy.json: date_warning must be a non-empty string');
+    }
+    const safetyReview = resource.safety_review_prompt;
+    if (!isStringArray(safetyReview?.required_placeholders) || safetyReview.required_placeholders.length === 0) {
+      errors.push('ai_prompt_policy.json: safety_review_prompt.required_placeholders must be a non-empty string array');
+    }
+    if (typeof safetyReview?.template !== 'string' || safetyReview.template.trim() === '') {
+      errors.push('ai_prompt_policy.json: safety_review_prompt.template must be a non-empty string');
+    }
+    if (typeof safetyReview?.template === 'string') {
+      for (const placeholder of safetyReview.required_placeholders || []) {
+        if (!safetyReview.template.includes(`{{${placeholder}}}`)) {
+          errors.push(`ai_prompt_policy.json: safety_review_prompt.template missing placeholder {{${placeholder}}}`);
+        }
+      }
+    }
+  }
+  if (resourceId === 'agent_research_prompts') {
+    for (const templateId of ['critique', 'synthesis', 'validation']) {
+      const prompt = resource.templates?.[templateId];
+      const location = `agent_research_prompts.json templates.${templateId}`;
+      if (!prompt || typeof prompt !== 'object' || Array.isArray(prompt)) {
+        errors.push(`${location} must be an object`);
+        continue;
+      }
+      if (!isStringArray(prompt.required_placeholders) || prompt.required_placeholders.length === 0) {
+        errors.push(`${location}.required_placeholders must be a non-empty string array`);
+      }
+      if (typeof prompt.template !== 'string' || prompt.template.trim() === '') {
+        errors.push(`${location}.template must be a non-empty string`);
+        continue;
+      }
+      for (const placeholder of prompt.required_placeholders || []) {
+        if (!prompt.template.includes(`{{${placeholder}}}`)) {
+          errors.push(`${location}.template missing placeholder {{${placeholder}}}`);
+        }
+      }
     }
   }
   if (resourceId === 'cycle_support_guidance') {

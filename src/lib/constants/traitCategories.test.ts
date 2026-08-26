@@ -8,7 +8,7 @@ describe('shared research taxonomy', () => {
     expect(TRAIT_CATEGORIES.find((category) => category.id === 'hormones_reproductive')).toEqual({
       id: 'hormones_reproductive',
       label: 'Hormone & reproductive',
-      queryHint: 'menstrual cycle pmdd menopause fertility estrogen progesterone testosterone prostate',
+      queryHint: 'menstrual cycle pmdd menopause fertility estrogen progesterone testosterone prostate adenomyosis',
     });
   });
 

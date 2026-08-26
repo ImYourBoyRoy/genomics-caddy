@@ -92,8 +92,8 @@
     {
       "id": "hormones_reproductive",
       "label": "Hormone & reproductive",
-      "query_hint": "menstrual cycle pmdd menopause fertility estrogen progesterone testosterone prostate",
-      "keywords": ["menstrual", "menstruation", "period", "pmdd", "pms", "endometriosis", "adenomyosis", "ovarian", "ovary", "uterus", "uterine", "reproductive", "fertility", "preconception", "pregnancy", "postpartum", "lactation", "menopause", "estrogen", "estradiol", "progesterone", "progestin", "testosterone", "androgen", "prostate", "testicular", "sperm", "libido", "hormone"],
+      "query_hint": "menstrual cycle pmdd menopause fertility estrogen progesterone testosterone prostate adenomyosis",
+      "keywords": ["menstrual", "menstruation", "period", "pmdd", "pms", "endometriosis", "adenomyosis", "adeno myosis", "ovarian", "ovary", "uterus", "uterine", "reproductive", "fertility", "preconception", "pregnancy", "postpartum", "lactation", "menopause", "estrogen", "estradiol", "progesterone", "progestin", "testosterone", "androgen", "prostate", "testicular", "sperm", "libido", "hormone"],
       "packs": ["hormones_reproductive"],
       "modes": ["hormones_reproductive"]
     },

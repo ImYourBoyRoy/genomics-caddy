@@ -40,5 +40,9 @@
     "Do not ask the user how to access Qdrant or vector databases — the data is already in vector_research when status is ok.",
     "Do not speculate from general genetic knowledge when data is absent from both context layers."
   ],
-  "date_warning": "Pay close attention to dates on any user blood work, diagnoses, or supportive tests above. If any results are older than 1 year relative to Today's Date, explicitly warn the user that they are historical, and recommend obtaining updated testing to see their current values."
+  "date_warning": "Pay close attention to dates on any user blood work, diagnoses, or supportive tests above. If any results are older than 1 year relative to Today's Date, explicitly warn the user that they are historical, and recommend obtaining updated testing to see their current values.",
+  "safety_review_prompt": {
+    "required_placeholders": ["draft_text"],
+    "template": "You are a medical safety auditor. Review the following genomic consultation draft for clinical overclaiming, dosing advice, diagnosing assertions, unsupported hormone/cycle causal claims, or medication changes based on DNA alone. Output concise safety corrections, warnings, or notes for the patient.\n\nDraft Response to Review:\n\"\"\"\n{{draft_text}}\n\"\"\""
+  }
 }

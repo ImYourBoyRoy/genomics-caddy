@@ -30,6 +30,7 @@
   "validation_errors": [],
   "support_files": [
     "actionability_guidance.json",
+    "agent_research_prompts.json",
     "activity_guardrails.json",
     "ai_prompt_helpers.json",
     "ai_prompt_policy.json",

@@ -5,6 +5,7 @@ import {
   defaultCatalogCategorySelection,
   selectedCatalogCategoryIds
 } from "./catalogCategoryRouting";
+import researchTaxonomy from "../marker-packs/research_taxonomy.json";
 
 describe("catalog category routing", () => {
   const markers = [
@@ -54,5 +55,10 @@ describe("catalog category routing", () => {
       { id: "neuropsych", label: "🧠 Neurotype & Mood", count: 1 },
       { id: "hormones_reproductive", label: "🌙 Hormones & Reproductive", count: 1 }
     ]);
+  });
+
+  it("keeps the user-facing adenomyosis spelling variant routable", () => {
+    const category = researchTaxonomy.categories.find((item) => item.id === "hormones_reproductive");
+    expect(category?.keywords).toContain("adeno myosis");
   });
 });

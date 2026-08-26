@@ -2,6 +2,8 @@
 import { queryRsids, searchEvidence, getEvidenceForMarker, fetchExternalApi } from "../api/tauri";
 import type { DbSnpRecord, GeneratedReport, EvaluatedMarker } from "../types/genomics";
 import { asApiJson } from "../types/api";
+import agentResearchPrompts from "../marker-packs/agent_research_prompts.json";
+import { renderPromptTemplate } from "./promptTemplates";
 
 export interface AgentStep {
   id: string;
@@ -308,31 +310,20 @@ export function buildCritiquePrompt(
   trials: ClinicalTrial[],
   drugs: ChemblDrug[]
 ): string {
-  return `You are a genomic database auditor. Analyze the gathered raw data for variant ${rsid} and identify any gaps, conflicts, or mismatches.
-
-VARIANT INFORMATION:
-- RSID: ${rsid}
-- User Genotype: ${localGenotype.genotype} (Gene: ${localGenotype.gene || "Unknown"})
-- dbSNP Location: Chr ${ncbi.chromosome}, Position ${ncbi.position}
-- dbSNP Alleles: ${ncbi.alleles}
-- ClinVar Clinical Significance: ${ncbi.clinicalSignificance}
-- ClinVar Associated Traits: ${ncbi.clinvarTraits.join(", ") || "None"}
-- PubMed Papers: ${pubmed.map(p => p.title).join("; ")}
-- Clinical Trials: ${trials.map(t => t.id).join("; ")}
-- Related Compounds: ${drugs.map(d => d.name).join("; ")}
-
-INSTRUCTIONS:
-1. Auditing Strand Mismatch: Compare dbSNP alleles (${ncbi.alleles}) with the user's genotype (${localGenotype.genotype}). Note if there is a risk of a forward/reverse strand orientation mismatch.
-2. Gap Identification: Is there missing data? (e.g. no associated drugs in ChEMBL, or no active clinical trials listed?). Recommend if we should perform a refined search (e.g. searching by Gene symbol instead).
-3. Conflict Resolution: Note if ClinVar lists conflicting reports.
-
-Respond ONLY with a JSON block in this exact format:
-{
-  "strandWarning": "yes/no explanation",
-  "missingGaps": ["gap1", "gap2"],
-  "recommendedGeneHealing": "${localGenotype.gene || "none"}",
-  "conflicts": "explanation of any conflicts or none"
-}`;
+  return renderPromptTemplate(agentResearchPrompts.templates.critique.template, {
+    rsid,
+    user_genotype: localGenotype.genotype,
+    gene: localGenotype.gene || "Unknown",
+    chromosome: ncbi.chromosome,
+    position: ncbi.position,
+    dbsnp_alleles: ncbi.alleles,
+    clinvar_significance: ncbi.clinicalSignificance,
+    clinvar_traits: ncbi.clinvarTraits.join(", ") || "None",
+    pubmed_titles: pubmed.map(p => p.title).join("; "),
+    trial_ids: trials.map(t => t.id).join("; "),
+    drug_names: drugs.map(d => d.name).join("; "),
+    recommended_gene: localGenotype.gene || "none",
+  });
 }
 
 export function buildSynthesisPrompt(
@@ -349,58 +340,22 @@ export function buildSynthesisPrompt(
   const finalTrials = trials.length > 0 ? trials : healedTrials;
   const finalDrugs = drugs.length > 0 ? drugs : healedDrugs;
 
-  return `You are an expert clinical genomic researcher. Synthesize a comprehensive personal research report for variant ${rsid} based on the gathered data and self-critique audits.
-
-RESEARCH PROFILE DATA:
-- rsID: ${rsid}
-- User Genotype: ${localGenotype.genotype}
-- Gene Symbol: ${localGenotype.gene || "N/A"}
-- Local DB Interpretation: ${localGenotype.interpretation || "No local interpretation."}
-- dbSNP Location: Chr ${ncbi.chromosome}, Position ${ncbi.position}
-- ClinVar Significance: ${ncbi.clinicalSignificance}
-- ClinVar Associated Traits: ${ncbi.clinvarTraits.join(", ") || "None"}
-
-CRITIQUE & STRAND AUDIT:
-${critique}
-
-PubMed ARTICLES FETCHED:
-${pubmed.map((p, i) => `${i+1}. [${p.year}] "${p.title}" by ${p.author} (${p.journal}) - Link: ${p.url}`).join("\n")}
-
-CLINICAL TRIALS:
-${finalTrials.map((t, i) => `${i+1}. Trial ${t.id}: "${t.title}" (Status: ${t.status}, Sponsor: ${t.sponsor}, Phase: ${t.phase})`).join("\n")}
-
-THERAPEUTIC DRUGS & COMPOUNDS (ChEMBL):
-${finalDrugs.map((d, i) => `${i+1}. ${d.name} (${d.type}, Max Phase: ${d.maxPhase})`).join("\n")}
-
-REPORT FORMATTING REQUIREMENT:
-Provide a highly polished markdown report containing:
-1. **Overview & Local Significance**: Chromosome position, ClinVar classification, and what this marker means.
-2. **Personalized Genotype Analysis**: Compare the user's genotype (${localGenotype.genotype}) with ClinVar's risk alleles. Explicitly note the findings from the Critique & Strand audit.
-3. **Recent Scientific Literature Summary**: Summarize the PubMed articles, explaining their relevance to the user's health.
-4. **Clinical Trials & Drugs**: Detail active clinical trials and small molecules associated with the variant/gene.
-5. **Supportive Lifestyle & Biohacking Actions**: Nutritional, dietary, or lifestyle options that support the molecular pathway (e.g. one-carbon cycle for MTHFR). Keep it safe, supportive, and guardrailed.
-6. **Required Disclaimer**: Place a standard disclaimer at the bottom: "This report is for educational purposes only and does not constitute medical advice."`;
+  return renderPromptTemplate(agentResearchPrompts.templates.synthesis.template, {
+    rsid,
+    user_genotype: localGenotype.genotype,
+    gene: localGenotype.gene || "N/A",
+    interpretation: localGenotype.interpretation || "No local interpretation.",
+    chromosome: ncbi.chromosome,
+    position: ncbi.position,
+    clinvar_significance: ncbi.clinicalSignificance,
+    clinvar_traits: ncbi.clinvarTraits.join(", ") || "None",
+    critique,
+    pubmed_articles: pubmed.map((p, i) => `${i+1}. [${p.year}] "${p.title}" by ${p.author} (${p.journal}) - Link: ${p.url}`).join("\n"),
+    clinical_trials: finalTrials.map((t, i) => `${i+1}. Trial ${t.id}: "${t.title}" (Status: ${t.status}, Sponsor: ${t.sponsor}, Phase: ${t.phase})`).join("\n"),
+    therapeutic_drugs: finalDrugs.map((d, i) => `${i+1}. ${d.name} (${d.type}, Max Phase: ${d.maxPhase})`).join("\n"),
+  });
 }
 
 export function buildValidationPrompt(draftText: string): string {
-  return `You are a clinical quality assurance auditor. Verify the draft report for medical safety, structure, and disclaimers.
-
-DRAFT REPORT TO AUDIT:
-"""
-${draftText}
-"""
-
-VERIFICATION CRITERIA:
-1. Medical Overclaiming: Does the text diagnose the patient (e.g. saying "you have disease X") or recommend specific drug dosages? (This must be flagged as false).
-2. Proper Disclaimer: Is there a medical disclaimer at the bottom?
-3. Formatting: Are there clear headings and lists?
-
-Respond ONLY with a JSON block in this exact format:
-{
-  "medicalClaimingFree": true/false,
-  "disclaimerPresent": true/false,
-  "structureOk": true/false,
-  "auditComments": "Brief summary of quality findings",
-  "approved": true/false
-}`;
+  return renderPromptTemplate(agentResearchPrompts.templates.validation.template, { draft_text: draftText });
 }

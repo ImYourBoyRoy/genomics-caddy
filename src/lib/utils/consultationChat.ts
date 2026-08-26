@@ -26,6 +26,8 @@ import {
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { stripThinkingTokens } from "./chatParser";
 import { LAYPERSON_MAP } from "./layperson";
+import aiPromptPolicy from "../marker-packs/ai_prompt_policy.json";
+import { renderPromptTemplate } from "./promptTemplates";
 import {
   newOllamaStreamId,
   subscribeOllamaStream,
@@ -238,12 +240,9 @@ export async function runConsultationTurn(
   currentMessages[assistantIndex].safetyReview = "Reviewing response safety...";
   callbacks.onMessages([...currentMessages]);
 
-  const reviewPrompt = `You are a medical safety auditor. Review the following genomic consultation draft for any clinical overclaiming, dosing advice, or diagnosing assertions. Output your safety corrections, warnings, or notes to the patient.
-
-Draft Response to Review:
-"""
-${stripThinkingTokens(currentMessages[assistantIndex].content)}
-"""`;
+  const reviewPrompt = renderPromptTemplate(aiPromptPolicy.safety_review_prompt.template, {
+    draft_text: stripThinkingTokens(currentMessages[assistantIndex].content),
+  });
 
   const reviewStreamId = newOllamaStreamId();
   let stopReview: (() => void) | null = null;

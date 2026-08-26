@@ -32,6 +32,7 @@
     "actionability_guidance.json",
     "activity_guardrails.json",
     "callability_rules.json",
+    "consultation_modes.json",
     "phenotype_prompts.json",
     "lab_overlays.json",
     "evidence_policy.json",

@@ -13,6 +13,7 @@ import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import callabilityRules from '../marker-packs/callability_rules.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
+import consultationModes from '../marker-packs/consultation_modes.json';
 import dietPatternProfiles from '../marker-packs/diet_pattern_profiles.json';
 import dietaryRequirements from '../marker-packs/dietary_requirements.json';
 import evidencePolicy from '../marker-packs/evidence_policy.json';
@@ -28,17 +29,7 @@ import sourceRegistry from '../marker-packs/source_registry.json';
 import userDietProfileSchema from '../marker-packs/user_diet_profile_schema.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
 
-export type SupportConsultationMode =
-  | 'general'
-  | 'pgx'
-  | 'nutrients'
-  | 'metabolic'
-  | 'sleep'
-  | 'brain_mood'
-  | 'joints'
-  | 'thyroid_autoimmune'
-  | 'cardiovascular'
-  | 'hormones_reproductive';
+export type SupportConsultationMode = typeof consultationModes.modes[number]['id'];
 
 export interface SupportResourceContext {
   evidence_policy: {
@@ -98,17 +89,11 @@ export interface SupportResourceContext {
   };
 }
 
-const CONSULTATION_PACK: Partial<Record<SupportConsultationMode, string>> = {
-  pgx: 'pgx',
-  nutrients: 'nutrients',
-  metabolic: 'metabolic',
-  sleep: 'sleep',
-  brain_mood: 'neuropsych',
-  joints: 'connective_tissue',
-  thyroid_autoimmune: 'thyroid_autoimmune',
-  cardiovascular: 'cardiovascular',
-  hormones_reproductive: 'hormones_reproductive',
-};
+const CONSULTATION_PACK = Object.fromEntries(
+  consultationModes.modes
+    .filter((mode) => typeof mode.pack_id === 'string' && mode.pack_id.trim() !== '')
+    .map((mode) => [mode.id, mode.pack_id]),
+) as Partial<Record<SupportConsultationMode, string>>;
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));

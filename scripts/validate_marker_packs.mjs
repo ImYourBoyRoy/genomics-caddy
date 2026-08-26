@@ -130,6 +130,7 @@ const supportContracts = {
   actionability_guidance: { arrays: ['rules', 'lab_categories', 'lab_tiers'], objects: ['policy', 'lab_confirmation_filter'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
+  consultation_modes: { arrays: ['modes'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
@@ -266,6 +267,26 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (!(resource.lab_categories || []).some((category) => category.fallback === true)) {
       errors.push('actionability_guidance.json: lab_categories requires a fallback category');
+    }
+  }
+  if (resourceId === 'consultation_modes') {
+    const modeIds = new Set();
+    for (const [index, mode] of (resource.modes || []).entries()) {
+      const location = `consultation_modes.json mode ${index + 1}`;
+      for (const field of ['id', 'label', 'icon', 'instructions']) {
+        if (typeof mode[field] !== 'string' || mode[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (mode.pack_id !== undefined && mode.pack_id !== null
+        && (typeof mode.pack_id !== 'string' || !manifestIds.has(mode.pack_id))) {
+        errors.push(`${location}: pack_id must reference a manifest pack when provided`);
+      }
+      if (modeIds.has(mode.id)) errors.push(`${location}: duplicate id ${mode.id}`);
+      modeIds.add(mode.id);
+    }
+    for (const requiredId of ['general', 'hormones_reproductive']) {
+      if (!modeIds.has(requiredId)) errors.push(`consultation_modes.json: missing required mode ${requiredId}`);
     }
   }
   if (resourceId === 'lab_overlays') {

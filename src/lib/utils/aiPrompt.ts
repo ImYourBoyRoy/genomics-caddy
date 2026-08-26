@@ -16,6 +16,7 @@
 
 import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/genomics";
 import type { QdrantHit } from "../types/research";
+import consultationModes from "../marker-packs/consultation_modes.json";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
   import { buildSupportResourceContext } from "./supportResourceContext";
@@ -90,70 +91,18 @@ export type AiContextMode =
   | "evidence_audit"
   | "developer_raw_json";
 
-export type ConsultationMode =
-  | "general"
-  | "pgx"
-  | "nutrients"
-  | "metabolic"
-  | "sleep"
-  | "brain_mood"
-  | "joints"
-  | "thyroid_autoimmune"
-  | "cardiovascular"
-  | "hormones_reproductive";
+export type ConsultationMode = typeof consultationModes.modes[number]["id"];
 
-export const CONSULTATION_MODES: Record<ConsultationMode, { label: string; icon: string; instructions: string }> = {
-  general: {
-    label: "General Consultation",
-    icon: "🧬",
-    instructions: "Focus on providing a broad, balanced overview of the user's genomic profile. Explain basic inheritance concepts, help the user prioritize which packs/findings they might want to discuss first with a healthcare provider, and keep all insights structured."
-  },
-  pgx: {
-    label: "Pharmacogenomics (PGx)",
-    icon: "💊",
-    instructions: "Focus strictly on drug metabolism, transport, and safety/efficacy markers (e.g., CYP450, DPYD). You MUST explain that drug responses are highly variable. Highlight any markers requiring clinical confirmation (such as DPYD rs55886062) and remind the user to never alter medications or dosages without consulting a licensed physician or pharmacist."
-  },
-  nutrients: {
-    label: "Nutrients & Methylation",
-    icon: "🍎",
-    instructions: "Focus on MTHFR, COMT, PEMT, and other nutrient/methylation markers. Explain the one-carbon cycle, how these genes influence nutrient requirements (e.g. folate, B12, choline), and suggest dietary foods (no supplement dosages) that support these pathways. Emphasize discussing supplement changes with a doctor."
-  },
-  metabolic: {
-    label: "Metabolic Health & T2D",
-    icon: "🏃",
-    instructions: "Focus on blood sugar regulation, insulin sensitivity, lipid transport (e.g. APOE, FTO, TCF7L2), and type 2 diabetes markers. Discuss how these genetic predispositions interact with diet, exercise, circadian rhythms, and stress. Do not diagnose metabolic syndrome."
-  },
-  sleep: {
-    label: "Sleep & Circadian Rhythms",
-    icon: "🌙",
-    instructions: "Focus on circadian rhythm genes (CLOCK, PER2, MTNR1B) and sleep duration/quality markers. Explain how light exposure, sleep hygiene, and sleep timing can be optimized based on genetic predispositions. Do not diagnose sleep apnea or insomnia."
-  },
-  brain_mood: {
-    label: "Brain & Mood (Neuropsych)",
-    icon: "🧠",
-    instructions: "Focus on neurotransmitter synthesis, transport, and receptors (e.g., COMT, MAOA, DRD2, 5-HTTLPR). Discuss how these relate to focus, mood, stress response, and caffeine/alcohol sensitivity. Strictly avoid diagnosing clinical depression, ADHD, or anxiety disorders."
-  },
-  joints: {
-    label: "Joints & Connective Tissue",
-    icon: "🦴",
-    instructions: "Focus on collagen structure, joint mobility, tendon/ligament integrity (e.g. COL1A1, COL5A1), and bone density markers. Discuss training volume, recovery protocols, joint-supporting nutrition, and injury prevention, emphasizing consult with physical therapists or sports medicine doctors."
-  },
-  thyroid_autoimmune: {
-    label: "Thyroid & Autoimmune Context",
-    icon: "🛡️",
-    instructions: "Focus on thyroid hormone conversion (e.g. DIO1, DIO2), inflammation pathways, and immune sensitivity markers. Discuss environmental triggers, gut health/dietary links, and thyroid cofactors (selenium, iodine) from a high-level perspective. Strictly avoid diagnosing autoimmune diseases."
-  },
-  cardiovascular: {
-    label: "Cardiovascular Health",
-    icon: "❤️",
-    instructions: "Focus on vascular integrity, blood pressure regulation, lipid profile (e.g. NOS3, ACE, LPA, APOE), and nitric oxide production. Discuss cardiovascular lifestyle habits, aerobic conditioning, salt sensitivity, and dietary fats. Do not diagnose cardiovascular disease or prescribe statins."
-  },
-  hormones_reproductive: {
-    label: "Hormone & Reproductive Context",
-    icon: "🌸",
-    instructions: "Support user-supplied hormone and reproductive goals across different bodies, including menstrual-cycle physiology, PMDD/PMS symptom timing, androgen/prostate/testicular context, fertility or preconception questions, menopause, and exogenous hormone therapy. Explain estrogen/progesterone/progestin distinctions without inferring identity, anatomy, fertility, pregnancy, or current hormone levels. Correct the assumption that estrogen normally spikes at the end of the luteal phase; in a natural ovulatory cycle estradiol and progesterone generally fall before bleeding. Treat cyclic irritability, avoidance, or a request for space as symptom-timing and communication leads, not a diagnosis. Require the exact contraceptive or hormone product and active ingredients before discussing medication context, never recommend medication changes from raw DNA, and direct suspected adenomyosis toward gynecologic evaluation and appropriate imaging."
-  }
-};
+export interface ConsultationModeInfo {
+  label: string;
+  icon: string;
+  instructions: string;
+}
+
+/** User-facing mode metadata is resource-authored so labels and safety focus cannot drift from routing. */
+export const CONSULTATION_MODES = Object.fromEntries(
+  consultationModes.modes.map(({ id, label, icon, instructions }) => [id, { label, icon, instructions }]),
+) as Record<ConsultationMode, ConsultationModeInfo>;
 
 interface PromptBuildParams {
   selectedSample: GenomeSample;

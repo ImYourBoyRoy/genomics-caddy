@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/ai/settings/InferenceSettingsSection.svelte -->
 <script lang="ts">
-  import type { AiContextMode, ConsultationMode } from "../../../utils/aiPrompt";
+  import { CONSULTATION_MODES, type AiContextMode, type ConsultationMode } from "../../../utils/aiPrompt";
 
   interface Props {
     temperature: number;
@@ -69,16 +69,9 @@
     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08);">
       <label for="consultation-mode-select" class="highlight-text font-bold" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Specialty Mode</label>
       <select id="consultation-mode-select" bind:value={consultationMode} class="settings-select">
-        <option value="general">🧬 General Consultation</option>
-        <option value="pgx">💊 Pharmacogenomics (PGx)</option>
-        <option value="nutrients">🍎 Nutrients &amp; Methylation</option>
-        <option value="metabolic">🏃 Metabolic Health &amp; T2D</option>
-        <option value="sleep">🌙 Sleep &amp; Circadian Rhythms</option>
-        <option value="brain_mood">🧠 Brain &amp; Mood (Neuropsych)</option>
-        <option value="joints">🦴 Joints &amp; Connective Tissue</option>
-        <option value="thyroid_autoimmune">🛡️ Thyroid &amp; Autoimmune Context</option>
-        <option value="cardiovascular">❤️ Cardiovascular Health</option>
-        <option value="hormones_reproductive">🌸 Hormone &amp; Reproductive Context</option>
+        {#each Object.entries(CONSULTATION_MODES) as [modeId, mode] (modeId)}
+          <option value={modeId}>{mode.icon} {mode.label}</option>
+        {/each}
       </select>
     </div>
 

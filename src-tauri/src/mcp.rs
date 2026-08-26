@@ -665,7 +665,7 @@ async fn handle_request(
 /// Offline resource operations exposed to MCP use the same manifest/sync
 /// implementation as the desktop UI. Status is read-only; sync operations are
 /// write-gated above and intentionally return only asset metadata/messages.
-async fn mcp_offline_tool(name: &str, args: Value, db_path: &PathBuf) -> Result<Value, String> {
+async fn mcp_offline_tool(name: &str, args: Value, db_path: &Path) -> Result<Value, String> {
     let data_dir = db_path
         .parent()
         .ok_or("Could not resolve offline data directory")?;
@@ -711,8 +711,8 @@ async fn mcp_offline_tool(name: &str, args: Value, db_path: &PathBuf) -> Result<
                     None,
                 )
                 .await?;
-                return Ok(serde_json::to_value(result)
-                    .map_err(|e| format!("Offline sync serialization error: {e}"))?);
+                return serde_json::to_value(result)
+                    .map_err(|e| format!("Offline sync serialization error: {e}"));
             }
 
             let mut results = Vec::new();

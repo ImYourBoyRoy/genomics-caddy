@@ -141,10 +141,12 @@
   {/if}
 
   {#if isActiveFindings}
-    <!-- Severity explanation — only shown for active findings -->
-    <div class="severity-explainer">
-      {severity.description}
-    </div>
+    <!-- Simple mode keeps the primary explanation concise; Clinical/Compare retain the full evidence framing. -->
+    {#if viewMode !== 'simple'}
+      <div class="severity-explainer">
+        {severity.description}
+      </div>
+    {/if}
     <div class="claim-frame" role="note">
       {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
     </div>
@@ -231,73 +233,24 @@
         </details>
       {/if}
 
-      <div class="impact-section">
-        <strong>{viewMode === 'simple' ? 'What this is about:' : 'What this gene does:'}</strong>
-        {#if viewMode === "simple"}
-          <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
-        {:else if viewMode === "clinical"}
-          <span class="clinical-text">{marker.impact}</span>
-        {:else}
-          <div class="dual-explanations">
-            <div class="dual-row layperson-box">
-              <span class="dual-tag layperson-tag">🌱 Simple:</span>
-              <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
-            </div>
-            <div class="dual-row clinical-box">
-              <span class="dual-tag clinical-tag">🏥 Medical:</span>
-              <span class="clinical-text">{marker.impact}</span>
-            </div>
-          </div>
-        {/if}
-      </div>
-
-      {#if viewMode !== "simple"}
-        <WarningBlocks
-          gene={marker.gene}
-          rawDnaLimitation={marker.raw_dna_limitation}
-          clinicalConfirmationRequired={marker.clinical_confirmation_required}
-          doNotClaim={marker.do_not_claim}
-        />
-      {:else if marker.clinical_confirmation_required}
-        <div class="simple-alert no-print">
-          ⚠️ <strong>Clinical test needed:</strong> Consumer DNA tests can sometimes report false positives on rare variants. A medical-grade lab test is required to confirm this finding before making any therapy changes.
-        </div>
-      {/if}
-
-      <div class="interpretation-section">
-        <strong>{viewMode === 'simple' ? 'What this might mean for you:' : 'What your result means:'}</strong>
-        {#if viewMode === "simple"}
-          <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
-        {:else if viewMode === "clinical"}
-          <span class="clinical-text">{marker.interpretation}</span>
-        {:else}
-          <div class="dual-explanations">
-            <div class="dual-row layperson-box">
-              <span class="dual-tag layperson-tag">🌱 Simple:</span>
-              <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
-            </div>
-            <div class="dual-row clinical-box">
-              <span class="dual-tag clinical-tag">🏥 Medical:</span>
-              <span class="clinical-text">{marker.interpretation}</span>
-            </div>
-          </div>
-        {/if}
-      </div>
-
       {#if viewMode === 'simple'}
+        <div class="simple-meaning-block">
+          <strong>What this might mean for you:</strong>
+          <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
+        </div>
+
+        {#if marker.clinical_confirmation_required}
+          <div class="simple-alert no-print">
+            ⚠️ <strong>Clinical test needed:</strong> Consumer DNA tests can sometimes report false positives on rare variants. A medical-grade lab test is required to confirm this finding before making any therapy changes.
+          </div>
+        {/if}
+
         <div class="simple-next-step">
           <strong>Next helpful step:</strong>
           <span>{nextHelpfulStep()}</span>
         </div>
-      {/if}
 
-      {#if viewMode !== "simple" && marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
-        <ConfirmWithList confirmWith={marker.confirm_with} />
-        <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
-      {/if}
-
-      <!-- Simple mode: condensed source count instead of hiding all evidence -->
-      {#if viewMode === 'simple'}
+        <!-- Simple mode: compact source/context summary; technical evidence stays below. -->
         <div class="simple-evidence-summary">
           {#if (marker.sources?.length ?? 0) > 0 || (marker.db_enriched_sources?.length ?? 0) > 0}
             <span class="evidence-count-pill">
@@ -339,6 +292,54 @@
             <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
           {/if}
         </details>
+      {:else}
+        <div class="impact-section">
+          <strong>What this gene does:</strong>
+          {#if viewMode === "clinical"}
+            <span class="clinical-text">{marker.impact}</span>
+          {:else}
+            <div class="dual-explanations">
+              <div class="dual-row layperson-box">
+                <span class="dual-tag layperson-tag">🌱 Simple:</span>
+                <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
+              </div>
+              <div class="dual-row clinical-box">
+                <span class="dual-tag clinical-tag">🏥 Medical:</span>
+                <span class="clinical-text">{marker.impact}</span>
+              </div>
+            </div>
+          {/if}
+        </div>
+
+        <WarningBlocks
+          gene={marker.gene}
+          rawDnaLimitation={marker.raw_dna_limitation}
+          clinicalConfirmationRequired={marker.clinical_confirmation_required}
+          doNotClaim={marker.do_not_claim}
+        />
+
+        <div class="interpretation-section">
+          <strong>What your result means:</strong>
+          {#if viewMode === "clinical"}
+            <span class="clinical-text">{marker.interpretation}</span>
+          {:else}
+            <div class="dual-explanations">
+              <div class="dual-row layperson-box">
+                <span class="dual-tag layperson-tag">🌱 Simple:</span>
+                <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
+              </div>
+              <div class="dual-row clinical-box">
+                <span class="dual-tag clinical-tag">🏥 Medical:</span>
+                <span class="clinical-text">{marker.interpretation}</span>
+              </div>
+            </div>
+          {/if}
+        </div>
+
+        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+          <ConfirmWithList confirmWith={marker.confirm_with} />
+          <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
+        {/if}
       {/if}
     </div>
   {/if}
@@ -513,6 +514,26 @@
     padding-top: 0.4rem;
     border-top: 1px solid rgba(255,255,255,0.06);
   }
+
+  .simple-meaning-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.15rem 0;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .simple-meaning-block strong {
+    font-size: 0.76rem;
+    letter-spacing: 0.01em;
+  }
+
+  .simple-meaning-block .layperson-text {
+    color: var(--text-secondary);
+  }
+
   .evidence-count-pill {
     font-size: 0.72rem;
     color: #94a3b8;

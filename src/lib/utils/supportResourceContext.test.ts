@@ -351,6 +351,8 @@ describe('support resource context', () => {
     expect(context.actionability_rules.some((rule) => rule.id === 'glucose_insulin_context')).toBe(true);
     expect(context.actionability_rules.some((rule) => rule.id === 'triglyceride_liver_context')).toBe(true);
     expect(context.actionability_rules.some((rule) => rule.id === 'atherogenic_lipid_context')).toBe(true);
+    expect(context.actionability_rules.find((rule) => rule.id === 'glucose_insulin_context')?.genes).toContain('KCNQ1');
+    expect(context.actionability_rules.find((rule) => rule.id === 'triglyceride_liver_context')?.genes).toContain('LPL');
     expect(context.activity_safety.relevant_domains.some((domain) => domain.id === 'metabolic')).toBe(true);
     expect(context.food_safety.source_registry.cdc_prediabetes_lifestyle).toBeDefined();
     expect(context.food_safety.source_registry.aha_dyslipidemia_2026).toBeDefined();

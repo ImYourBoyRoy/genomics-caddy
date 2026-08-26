@@ -127,6 +127,44 @@ describe('actionability engine safety policy', () => {
     expect(plan.diet.favor.join(' ')).toContain('Alcohol-free options');
   });
 
+  it('routes metabolic and iron-status markers to measured follow-up', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs2237897',
+        gene: 'KCNQ1',
+        interpretation: 'KCNQ1 glucose-stimulated insulin secretion context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs328',
+        gene: 'LPL',
+        interpretation: 'LPL lipoprotein and triglyceride context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs855791',
+        gene: 'TMPRSS6',
+        interpretation: 'TMPRSS6 iron-status context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs3811647',
+        gene: 'TF',
+        interpretation: 'TF transferrin and iron context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs17782313',
+        gene: 'MC4R',
+        interpretation: 'MC4R satiety context; not diagnostic.',
+      }),
+    ]));
+    expect(plan.labTests.some((test) => test.name === 'HbA1c')).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('triglycerides'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name === 'Complete blood count (CBC)')).toBe(true);
+    expect(plan.labTests.some((test) => test.name === 'Ferritin and transferrin saturation')).toBe(true);
+    expect(plan.supplements.some((item) => item.reason.includes('Iron supplementation only'))).toBe(true);
+    expect(plan.supplementSafety.relevantRules.map((rule) => rule.id)).toContain('iron_status');
+    expect(plan.diet.favor.join(' ')).toContain('hunger, fullness');
+    expect(plan.diet.avoid.join(' ')).toContain('fixed calorie target');
+  });
+
   it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
     const plan = deriveActionablePlan({
       ...report([marker({

@@ -94,6 +94,25 @@
       "sources": ["nih_ods_iron", "nih_ods_supplements"]
     },
     {
+      "id": "iron_status",
+      "label": "Iron-status marker and supplement safety",
+      "signal_genes": ["TMPRSS6", "TF"],
+      "match_terms": ["iron", "ferrous", "ferritin", "transferrin"],
+      "medication_terms": ["antacid", "levothyroxine", "antibiotic"],
+      "food_first": [
+        "Use allowed iron-containing foods while confirming whether the issue is deficiency, excess, blood loss, inflammation, or another cause."
+      ],
+      "avoid": [
+        "Do not use TMPRSS6 or TF genotype alone to diagnose anemia or deficiency or to choose an iron dose.",
+        "Do not start or avoid iron supplements from fatigue or a single SNP without iron studies and clinical context."
+      ],
+      "confirm_with": [
+        "CBC, ferritin, transferrin saturation, and clinician interpretation",
+        "bleeding, gastrointestinal, kidney, pregnancy, diet, and medication context"
+      ],
+      "sources": ["nih_ods_iron", "nih_ods_supplements"]
+    },
+    {
       "id": "vitamin_d",
       "label": "Vitamin D dose and lab safety",
       "context_ids": ["pregnancy_postpartum", "preconception_fertility", "menopause_hormone_therapy", "hormone_therapy_context"],

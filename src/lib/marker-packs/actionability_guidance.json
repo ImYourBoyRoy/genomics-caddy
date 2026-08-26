@@ -346,6 +346,48 @@
       ]
     },
     {
+      "id": "iron_status_context",
+      "genes": [
+        "TMPRSS6",
+        "TF"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "nutrients",
+        "core"
+      ],
+      "favor": [
+        "Iron-containing foods that fit the person's diet while the reason for an abnormal iron result is clarified"
+      ],
+      "avoid": [
+        "Treating an iron-status marker as proof of iron deficiency, iron overload, or anemia",
+        "Starting or avoiding iron supplements from fatigue or a single SNP without iron studies and clinical context"
+      ],
+      "supplements": [
+        "Iron supplementation only after reviewing ferritin, transferrin saturation, CBC, bleeding or dietary history, and clinician or pharmacist guidance"
+      ],
+      "lab_tests": [
+        {
+          "name": "Complete blood count (CBC)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Ferritin and transferrin saturation",
+          "urgency": "consider"
+        },
+        {
+          "name": "Serum iron, TIBC, or transferrin when clinically indicated",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "TMPRSS6 and TF markers can modestly shift population iron or hemoglobin traits, but they do not distinguish deficiency, blood loss, inflammation, kidney disease, diet, or iron overload in an individual. Menstrual or other bleeding, gastrointestinal history, pregnancy, medications, and measured iron studies are more informative than a common SNP.",
+      "sources": [
+        "nih_ods_iron",
+        "user_declared_values_required",
+        "lab_confirmation_required"
+      ]
+    },
+    {
       "id": "lactose",
       "genes": [
         "LCT",
@@ -859,7 +901,20 @@
         "TCF7L2",
         "SLC30A8",
         "KCNJ11",
-        "GCKR"
+        "GCKR",
+        "KCNQ1",
+        "CDKAL1",
+        "IGF2BP2",
+        "HHEX",
+        "IDE",
+        "JAZF1",
+        "ADCY5",
+        "PROX1",
+        "WFS1",
+        "IRS1",
+        "MTNR1B",
+        "KLF14",
+        "GLIS3"
       ],
       "actionability_class": "symptom_or_lab_conditioned",
       "pack_hints": [
@@ -898,7 +953,12 @@
         "GCKR",
         "APOA5",
         "PNPLA3",
-        "TM6SF2"
+        "TM6SF2",
+        "LPL",
+        "ANGPTL4",
+        "APOC3",
+        "MBOAT7",
+        "PPP1R3B"
       ],
       "actionability_class": "symptom_or_lab_conditioned",
       "pack_hints": [
@@ -941,6 +1001,35 @@
       ]
     },
     {
+      "id": "mc4r_satiety_context",
+      "genes": [
+        "MC4R"
+      ],
+      "marker_ids": [
+        "rs17782313"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "metabolic",
+        "muscle_performance_recovery"
+      ],
+      "favor": [
+        "Use hunger, fullness, meal timing, sleep, and activity observations to personalize meal structure",
+        "Build meals around satisfying protein- and fiber-containing foods that fit the person's goals and dietary requirements"
+      ],
+      "avoid": [
+        "Treating an MC4R association as an obesity diagnosis, a willpower judgment, or a fixed calorie target",
+        "Using a satiety marker to justify extreme restriction or unmonitored weight-loss medication use"
+      ],
+      "supplements": [],
+      "notes": "MC4R rs17782313 is associated with modest appetite/adiposity differences in some studies. Personal hunger, sleep, medications, environment, body-composition trajectory, and many other genes are more informative; the marker does not diagnose obesity or select a diet or medication.",
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030",
+        "user_declared_values_required"
+      ]
+    },
+    {
       "id": "atherogenic_lipid_context",
       "genes": [
         "LPA",
@@ -948,7 +1037,11 @@
         "LDLR",
         "APOB",
         "APOA5",
-        "GCKR"
+        "GCKR",
+        "CETP",
+        "LPL",
+        "ANGPTL4",
+        "APOC3"
       ],
       "actionability_class": "symptom_or_lab_conditioned",
       "interpretation_contains": [

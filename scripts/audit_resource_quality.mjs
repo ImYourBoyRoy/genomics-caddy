@@ -78,6 +78,7 @@ const sourceRegistry = readJson(path.join(resourceDir, 'source_registry.json'));
 const actionability = readJson(path.join(resourceDir, 'actionability_guidance.json'));
 const evidencePolicy = readJson(path.join(resourceDir, 'evidence_policy.json'));
 const callabilityRules = readJson(path.join(resourceDir, 'callability_rules.json'));
+const cycleSupport = readJson(path.join(resourceDir, 'cycle_support_guidance.json'));
 
 if (!manifest || !Array.isArray(manifest.packs)) errors.push('manifest.json: packs must be an array');
 if (!runtimeSummary || !Array.isArray(runtimeSummary.support_files)) {
@@ -91,6 +92,9 @@ if (!evidencePolicy?.claim_policy || typeof evidencePolicy.claim_policy !== 'obj
 }
 if (!Array.isArray(callabilityRules?.rules) || callabilityRules.rules.length === 0) {
   errors.push('callability_rules.json: rules must be a non-empty array');
+}
+if (!cycleSupport?.marker_contexts || typeof cycleSupport.marker_contexts !== 'object' || Array.isArray(cycleSupport.marker_contexts)) {
+  errors.push('cycle_support_guidance.json: marker_contexts must be an object');
 }
 
 const packSummaries = [];
@@ -185,6 +189,24 @@ for (const fileName of supportFiles) {
 const registeredSourceIds = new Set(Object.keys(sourceRegistry?.sources || {}));
 const missingSourceIds = Array.from(supportRefs).filter((sourceId) => !registeredSourceIds.has(sourceId)).sort();
 if (missingSourceIds.length > 0) errors.push(`unregistered support source ids: ${missingSourceIds.join(', ')}`);
+
+const hormonePack = allMarkers.filter(({ packId }) => packId === 'hormones_reproductive');
+const hormoneMarkerIds = new Set(hormonePack.map(({ marker }) => marker.rsid));
+const contextOptionIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));
+for (const [contextId, markerIds] of Object.entries(cycleSupport?.marker_contexts || {})) {
+  if (contextId !== 'shared_reproductive' && !contextOptionIds.has(contextId)) {
+    errors.push(`cycle_support_guidance.json: marker_contexts references unknown context ${contextId}`);
+  }
+  if (!Array.isArray(markerIds)) {
+    errors.push(`cycle_support_guidance.json: marker_contexts.${contextId} must be an array`);
+    continue;
+  }
+  for (const markerId of markerIds) {
+    if (!hormoneMarkerIds.has(markerId)) {
+      errors.push(`cycle_support_guidance.json: marker_contexts.${contextId} references missing hormone marker ${markerId}`);
+    }
+  }
+}
 
 const actionabilityGenes = new Set();
 const actionabilityCoverage = [];

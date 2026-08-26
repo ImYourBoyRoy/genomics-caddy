@@ -49,3 +49,44 @@ export function cycleSupportDomainsForContext(
   const domainIds = new Set(option.domain_ids);
   return cycleSupport.domains.filter((domain) => domainIds.has(domain.id));
 }
+
+/**
+ * Rank a reproductive marker for an explicitly selected life/body context.
+ *
+ * This is a relevance hint, not a biological eligibility test. A marker can
+ * remain visible even when its context rank is low; the report must never use
+ * this function to infer anatomy, identity, fertility, pregnancy, or hormone
+ * status from DNA.
+ */
+export function reproductiveMarkerContextRank(
+  rsid: string,
+  reproductiveContext?: string | null,
+): number {
+  const option = selectedReproductiveContextOption(reproductiveContext);
+  if (!option) return 0;
+
+  const markerId = String(rsid || '').trim();
+  const markerContexts = cycleSupport.marker_contexts as Record<string, string[]>;
+  const sharedMarkers = markerContexts.shared_reproductive || [];
+  const selectedMarkers = markerContexts[option.id] || [];
+  const isShared = sharedMarkers.includes(markerId);
+  const isSelected = selectedMarkers.includes(markerId);
+
+  // A marker authored for the selected context is the strongest match. Shared
+  // reproductive biology remains useful in every selected reproductive route.
+  if (isSelected) return 3;
+  if (isShared) return 2;
+
+  // Unmapped markers remain visible but are placed after explicitly mapped
+  // findings; a mapped marker for another context is placed last.
+  const isMapped = Object.values(markerContexts).some((ids) => ids.includes(markerId));
+  return isMapped ? 0 : 1;
+}
+
+export function reproductiveMarkerContextIds(rsid: string): string[] {
+  const markerId = String(rsid || '').trim();
+  const markerContexts = cycleSupport.marker_contexts as Record<string, string[]>;
+  return Object.entries(markerContexts)
+    .filter(([, ids]) => ids.includes(markerId))
+    .map(([contextId]) => contextId);
+}

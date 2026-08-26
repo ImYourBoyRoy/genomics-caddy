@@ -23,6 +23,8 @@ describe('support resource context', () => {
     expect(context.cycle_support.context_options.some((option) => option.id === 'menstrual_cycle')).toBe(true);
     expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
+    expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
+    expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
   });
 
   it('keeps reproductive domains hidden until an explicit context is selected', () => {

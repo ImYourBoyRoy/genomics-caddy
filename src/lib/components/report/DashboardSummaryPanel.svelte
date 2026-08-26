@@ -4,18 +4,17 @@
   import type { GeneratedReport, SeverityClass } from '../../types/genomics';
   import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
-  import { loadReproductiveContext, reproductiveContextStorageKey, saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
+  import { saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
 
   interface Props {
     report: GeneratedReport;
     sampleId?: number;
     onJumpToMarker?: (linkId: string) => void;
+    reproductiveContext?: string;
   }
 
-  let { report, sampleId, onJumpToMarker }: Props = $props();
+  let { report, sampleId, onJumpToMarker, reproductiveContext = $bindable('') }: Props = $props();
 
-  let reproductiveContext = $state('');
-  let loadedContextKey = $state('');
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext }));
 
   // Collapsible states with localStorage persistence
@@ -30,17 +29,6 @@
   });
 
   let expandedLabReasons = $state<Record<string, boolean>>({});
-
-  $effect(() => {
-    const contextKey = reproductiveContextStorageKey(sampleId);
-    if (loadedContextKey === contextKey || typeof localStorage === 'undefined') return;
-    loadedContextKey = contextKey;
-    try {
-      reproductiveContext = loadReproductiveContext(sampleId);
-    } catch (e) {
-      console.warn('Failed to load reproductive context:', e);
-    }
-  });
 
   onMount(() => {
     try {

@@ -12,6 +12,12 @@
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { untrack } from 'svelte';
   import { browser } from '$app/environment';
+  import {
+    loadReproductiveContext,
+    reproductiveMarkerContextRank,
+    reproductiveContextStorageKey,
+    selectedReproductiveContextOption,
+  } from '../../utils/reproductiveContext';
 
   /*
   Module Docstring:
@@ -60,6 +66,25 @@
   let viewMode = $state<"simple" | "clinical" | "dual">("dual");
   let showHelpGuide = $state(false);
   let collapsedSections = $state<Record<string, boolean>>({});
+  let reproductiveContext = $state('');
+  let loadedReproductiveContextKey = $state('');
+  let prioritizeReproductiveContext = $state(true);
+
+  $effect(() => {
+    const contextKey = reproductiveContextStorageKey(selectedSample?.id);
+    if (loadedReproductiveContextKey === contextKey) return;
+    loadedReproductiveContextKey = contextKey;
+    reproductiveContext = browser ? loadReproductiveContext(selectedSample?.id) : '';
+  });
+
+  function isReproductiveSection(sectionName: string): boolean {
+    const normalized = sectionName.toLowerCase();
+    return normalized.includes('hormone') || normalized.includes('reproductive') || normalized.includes('pmdd');
+  }
+
+  function selectedReproductiveContextLabel(): string {
+    return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
+  }
 
   function handleJumpToMarker(linkId: string) {
     if (!generatedReport) return;
@@ -146,7 +171,15 @@
         return true;
       });
 
-      if (sortBy === "severity") {
+      if (reproductiveContext && prioritizeReproductiveContext && isReproductiveSection(sec.name)) {
+        markers = [...markers].sort((a, b) => {
+          const contextRank = reproductiveMarkerContextRank(b.rsid, reproductiveContext)
+            - reproductiveMarkerContextRank(a.rsid, reproductiveContext);
+          if (contextRank !== 0) return contextRank;
+          if (sortBy === "severity") return getSeverityRank(a.severity_class) - getSeverityRank(b.severity_class);
+          return 0;
+        });
+      } else if (sortBy === "severity") {
         markers = [...markers].sort((a, b) => getSeverityRank(a.severity_class) - getSeverityRank(b.severity_class));
       }
 
@@ -398,6 +431,14 @@
       <button class="view-mode-btn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px;" onclick={expandAll}>📂 Expand All</button>
       <button class="view-mode-btn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px;" onclick={collapseAll}>📁 Collapse All</button>
     </div>
+
+    {#if reproductiveContext}
+      <label class="filter-toggle" title="This only changes ordering; no report markers are removed.">
+        <input type="checkbox" bind:checked={prioritizeReproductiveContext} />
+        Prioritize {selectedReproductiveContextLabel()}
+      </label>
+      <span class="filter-context-hint">All reproductive markers remain visible.</span>
+    {/if}
     
     <span class="filter-label" style="margin-left: auto;">View Mode:</span>
     <div class="view-mode-buttons" style="display: flex; gap: 4px;">
@@ -441,7 +482,12 @@
   />
 
   {#if generatedReport}
-    <DashboardSummaryPanel report={generatedReport} sampleId={selectedSample.id} onJumpToMarker={handleJumpToMarker} />
+    <DashboardSummaryPanel
+      report={generatedReport}
+      sampleId={selectedSample.id}
+      bind:reproductiveContext
+      onJumpToMarker={handleJumpToMarker}
+    />
   {/if}
 
   <div class="sections-container">
@@ -524,6 +570,12 @@
 {/if}
 
 <style>
+  .filter-context-hint {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    max-width: 180px;
+  }
+
   .help-backdrop {
     position: fixed;
     top: 0;

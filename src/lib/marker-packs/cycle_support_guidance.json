@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "last_updated": "2026-08-25",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
@@ -92,6 +92,83 @@
       "medication_rule_ids": []
     }
   ],
+  "marker_contexts": {
+    "shared_reproductive": [
+      "GUARDRAIL_HORMONE_GENOTYPE_NOT_DIAGNOSIS",
+      "GUARDRAIL_CONTRACEPTIVE_PRODUCT_MUST_BE_IDENTIFIED",
+      "rs2234693",
+      "rs9340799",
+      "rs1801132",
+      "rs4986938",
+      "rs1256049",
+      "rs1042838",
+      "rs10895068",
+      "rs8079626",
+      "rs4680",
+      "rs10046",
+      "rs700519",
+      "rs743572",
+      "rs6259",
+      "rs1799941",
+      "rs4646903",
+      "rs1056836",
+      "rs1800440",
+      "rs1048943",
+      "rs887829",
+      "rs4148323",
+      "rs9282861",
+      "rs6258",
+      "rs10830963",
+      "rs6265",
+      "rs1360780",
+      "rs6269",
+      "rs4633"
+    ],
+    "menstrual_cycle": [
+      "rs6166",
+      "rs6165",
+      "rs2293275",
+      "rs1799971",
+      "rs324420",
+      "rs4757144",
+      "rs114741500",
+      "PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY",
+      "PANEL_PCOS_REPRODUCTIVE_METABOLIC_CONTEXT",
+      "PANEL_ENDOMETRIOSIS_CONTEXT",
+      "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "PANEL_ADENOMYOSIS_RESEARCH_GAP",
+      "rs7521902"
+    ],
+    "ovarian_reproductive": [
+      "rs6166",
+      "rs6165",
+      "rs2293275",
+      "PANEL_PCOS_REPRODUCTIVE_METABOLIC_CONTEXT",
+      "PANEL_ENDOMETRIOSIS_CONTEXT",
+      "rs7521902"
+    ],
+    "uterine_pelvic": [
+      "PANEL_ENDOMETRIOSIS_CONTEXT",
+      "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "PANEL_ADENOMYOSIS_RESEARCH_GAP",
+      "rs7521902"
+    ],
+    "androgen_reproductive": [
+      "rs523349",
+      "rs9282858",
+      "rs523349_AR_CONTEXT",
+      "PANEL_AR_CAG_REPEAT_CALLOUT"
+    ],
+    "menopause_hormone_therapy": [
+      "rs1799971",
+      "rs324420"
+    ],
+    "pregnancy_postpartum": []
+  },
   "principles": [
     "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
     "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",

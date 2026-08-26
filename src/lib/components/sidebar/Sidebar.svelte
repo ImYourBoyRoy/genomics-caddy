@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/sidebar/Sidebar.svelte -->
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+import { onMount, onDestroy } from 'svelte';
+  import { isTauri } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
   import GenomeImportPanel from '../import/GenomeImportPanel.svelte';
   import SampleList from '../samples/SampleList.svelte';
@@ -71,6 +72,7 @@
     onDeleteSample: (id: number) => void;
     onOpenConnections?: () => void;
     onResourcesUpdated?: () => void | Promise<void>;
+    runtimeAvailable?: boolean;
   }
 
   let {
@@ -97,6 +99,7 @@
     onDeleteSample,
     onOpenConnections,
     onResourcesUpdated,
+    runtimeAvailable = true,
   }: Props = $props();
 
   interface DownloadProgress {
@@ -337,6 +340,8 @@
   }
 
   onMount(async () => {
+    if (!isTauri()) return;
+
     onReady?.({
       syncAllMissing: startSyncAllMissing,
       expandDatabases: () => {
@@ -765,13 +770,19 @@
     <h2>Genomics Caddy</h2>
   </div>
 
+  {#if !runtimeAvailable}
+    <div class="runtime-note" role="note">
+      Desktop runtime required for local DNA import, catalogs, and saved profiles. The browser preview is read-only.
+    </div>
+  {/if}
+
   {#if onOpenConnections}
     <div class="chain-status-card card">
       <h4>Connections</h4>
       <p class="card-hint">
         Set Ollama + vector DB endpoints, monitor health, and see which models are likely GPU vs CPU — no baked-in hosts.
       </p>
-      <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()}>
+      <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()} disabled={!runtimeAvailable}>
         Open Connections
       </button>
     </div>
@@ -785,7 +796,7 @@
     {:else}
       <div class="badge warning">⚠️ GRCh37 Only</div>
       <p class="card-hint">Liftover chain file is missing. Import will not map to GRCh38 coordinates.</p>
-      <button class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning}>
+      <button class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
         {isDownloadingChain ? 'Downloading…' : 'Download Chain'}
       </button>
     {/if}
@@ -795,7 +806,7 @@
       </p>
       <button
         class="btn btn-warning btn-sm"
-        disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated}
+        disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
         onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
       >
         {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update liftover chain'}
@@ -803,18 +814,18 @@
     {/if}
   </div>
 
-  <!-- Reference Databases Card -->
+  <!-- Data and updates disclosure -->
   <div class="chain-status-card card">
-    <div
-      class="card-header"
+    <button
+      type="button"
+      class="data-updates-toggle"
       onclick={() => isPanelCollapsed = !isPanelCollapsed}
-      onkeydown={(e) => e.key === 'Enter' && (isPanelCollapsed = !isPanelCollapsed)}
-      role="button"
-      tabindex="0"
-      style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;"
+      aria-expanded={!isPanelCollapsed}
+      aria-controls="data-updates-panel"
     >
-      <h4 style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-        Reference Databases
+      <span class="data-updates-heading">
+        <strong>Data &amp; updates</strong>
+        <span class="data-updates-subtitle">Reference catalogs and local status</span>
         {#if missingPrimaryCount > 0}
           <span
             class="missing-pill"
@@ -835,12 +846,12 @@
             {/if}
           </span>
         {/if}
-      </h4>
-      <span style="font-size: 0.8rem; opacity: 0.7;">{isPanelCollapsed ? '▶' : '▼'}</span>
-    </div>
+      </span>
+      <span class="data-updates-caret" aria-hidden="true">{isPanelCollapsed ? '▶' : '▼'}</span>
+    </button>
 
     {#if !isPanelCollapsed}
-      <div class="card-body" style="margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.75rem;">
+      <div id="data-updates-panel" class="data-updates-body">
 
         {#if updatePhase !== 'idle'}
           <div class="resource-update-state" class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
@@ -896,7 +907,7 @@
                       <button
                         type="button"
                         class="btn btn-warning btn-xs"
-                        disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated}
+                        disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
                         onclick={() => handleSyncAsset(u.asset_id, forceRedownload)}
                       >
                         {syncingAsset[u.asset_id] ? 'Updating…' : 'Update'}
@@ -907,7 +918,7 @@
                 <button
                   type="button"
                   class="btn btn-primary btn-sm updates-all-btn"
-                  disabled={bulkBusy || updatingAllOutdated || Object.values(syncingAsset).some(Boolean) || sweepRunning}
+                  disabled={bulkBusy || updatingAllOutdated || Object.values(syncingAsset).some(Boolean) || sweepRunning || !runtimeAvailable}
                   onclick={handleUpdateAllOutdated}
                 >
                   {updatingAllOutdated ? 'Updating all…' : `Update all ${pendingUpdates.length} outdated`}
@@ -922,20 +933,19 @@
 
         <!-- Custom Directory Row -->
         <div class="dir-setting">
-          <span class="setting-label" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Download Location</span>
-          <div style="display: flex; gap: 0.4rem; align-items: center;">
+          <span class="setting-label">Download Location</span>
+          <div class="setting-row">
             <input
               type="text"
               placeholder="Default App Directory"
               value={customDir || ''}
               readonly
               aria-label="Download location"
-              style="flex: 1; font-size: 0.75rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.4); color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+              class="download-location-input"
             />
             <button
-              class="btn btn-secondary btn-sm"
+              class="btn btn-secondary btn-sm compact-sidebar-button"
               onclick={handleBrowseDir}
-              style="min-height: auto; font-size: 0.75rem; padding: 6px 12px;"
             >
               Browse
             </button>
@@ -944,7 +954,6 @@
             <button
               onclick={handleResetDir}
               class="reset-dir-btn"
-              style="font-size: 0.65rem; color: var(--danger); background: none; border: none; padding: 0; margin-top: 0.25rem; cursor: pointer; display: block; opacity: 0.85;"
             >
               Reset to Default
             </button>
@@ -952,19 +961,18 @@
         </div>
 
         <!-- Force re-download checkbox -->
-        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; opacity: 0.85; cursor: pointer; user-select: none;">
-          <input type="checkbox" bind:checked={forceRedownload} style="cursor: pointer;" />
+        <label class="force-redownload-label">
+          <input type="checkbox" bind:checked={forceRedownload} />
           Force re-download existing files
         </label>
 
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0.1rem 0;" />
+        <hr class="sidebar-rule" />
 
         <!-- Sync All Missing -->
         <button
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm full-width-sidebar-button"
           onclick={handleSyncAllMissing}
-          disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning}
-          style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
+          disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning || !runtimeAvailable}
         >
           {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
         </button>
@@ -974,7 +982,7 @@
             <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="#34d399" />
             {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
               {@const prog = downloadProgress[bulkActiveAssetId]}
-              <div class="progress-track" style="margin-top: 0.4rem;">
+              <div class="progress-track progress-track-spaced">
                 <div
                   class="progress-fill"
                   style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
@@ -986,13 +994,13 @@
               </div>
             {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
               {@const imp = importProgress[bulkActiveAssetId]}
-              <div class="progress-track" style="background: rgba(165, 180, 252, 0.15); margin-top: 0.4rem;">
+              <div class="progress-track progress-track-indexing progress-track-spaced">
                 <div
                   class="progress-fill"
                   style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                 ></div>
               </div>
-              <div class="bulk-sync-meta" style="color: #a5b4fc;">
+              <div class="bulk-sync-meta bulk-sync-meta-indexing">
                 <span>{imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
                 {#if imp.eta_seconds != null}
                   <span>{imp.eta_seconds}s remaining</span>
@@ -1008,67 +1016,64 @@
 
         {#if importingAny}
           <button
-            class="btn btn-secondary btn-sm"
+            class="btn btn-secondary btn-sm full-width-sidebar-button"
             onclick={handleCancelImport}
-            style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
           >
             ⏹ Cancel import
           </button>
         {/if}
 
         <button
-          class="btn btn-secondary btn-sm"
+          class="btn btn-secondary btn-sm full-width-sidebar-button"
           onclick={handleExportDiscovery}
-          disabled={!selectedSample || exportBusy || sweepRunning}
-          style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
+          disabled={!selectedSample || exportBusy || sweepRunning || !runtimeAvailable}
         >
           {exportBusy ? 'Exporting…' : '📤 Export pack vs genome findings'}
         </button>
         {#if exportMessage}
-          <div style="font-size: 0.65rem; opacity: 0.85; line-height: 1.35;">{exportMessage}</div>
+          <div class="sidebar-message">{exportMessage}</div>
         {/if}
 
         {#if syncErrors.__all__}
           <div class="sync-error-block">
             <strong>⚠️ Sync errors:</strong>
-            <pre style="white-space: pre-wrap; font-size: 0.65rem; margin-top: 0.25rem; opacity: 0.85;">{syncErrors.__all__}</pre>
+            <pre class="sidebar-error-detail">{syncErrors.__all__}</pre>
           </div>
         {/if}
 
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0.1rem 0;" />
+        <hr class="sidebar-rule" />
 
         <!-- Individual Databases list -->
-        <div class="db-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="db-list">
           {#each DB_DEFS as db}
             {@const btnState = assetButtonState(db.tierNum, db.assetId)}
             {@const prog = downloadProgress[db.assetId]}
             {@const isActive = assetIsShowingProgress(db.assetId)}
             <div class="db-item-wrap">
-              <div class="db-item" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-                <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
-                  <span style="font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
-                    <strong style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{db.label}</strong>
+              <div class="db-item">
+                <div class="db-item-meta">
+                  <span class="db-item-title">
+                    <strong>{db.label}</strong>
                     {#if findAsset(db.tierNum, db.assetId)?.update_available || companionNeedsUpdate(db)}
                       <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
                         <span class="update-pill">update</span>
                       </Tooltip>
                     {/if}
                     <Tooltip label={db.label} description={assetTooltip(db)}>
-                      <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;">ⓘ</span>
+                      <span class="info-icon">ⓘ</span>
                     </Tooltip>
                   </span>
-                  <span style="font-size: 0.65rem; opacity: 0.7; margin-top: 0.1rem;">
+                  <span class="db-item-status">
                     {getAssetStatusLine(db.tierNum, db.assetId)}
                   </span>
                 </div>
                 <button
-                  class="btn btn-xs"
+                  class="btn btn-xs db-action-button"
                   class:btn-primary={btnState.variant === 'primary'}
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
                   onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={!!syncingAsset[db.assetId] || bulkBusy || !offlineStatus || sweepRunning}
-                  style="font-size: 0.65rem; padding: 4px 8px; min-height: auto; min-width: 72px; white-space: nowrap;"
+                  disabled={!!syncingAsset[db.assetId] || bulkBusy || !offlineStatus || sweepRunning || !runtimeAvailable}
                 >
                   {btnState.label}
                 </button>
@@ -1083,25 +1088,25 @@
                       style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                     ></div>
                   </div>
-                  <div style="display: flex; justify-content: space-between; font-size: 0.6rem; opacity: 0.7; margin-top: 0.1rem;">
+                  <div class="progress-meta">
                     <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
                     <span>{prog.speedMbps.toFixed(1)} MB/s</span>
                   </div>
                 {:else if importProgress[db.assetId]}
                   {@const imp = importProgress[db.assetId]}
-                  <div class="progress-track" style="background: rgba(165, 180, 252, 0.15); margin-top: 0.25rem;">
+                  <div class="progress-track progress-track-indexing">
                     <div
                       class="progress-fill"
                       style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                     ></div>
                   </div>
-                  <div style="display: flex; justify-content: space-between; font-size: 0.6rem; color: #a5b4fc; margin-top: 0.1rem; font-family: var(--font-mono), monospace;">
+                  <div class="progress-meta progress-meta-indexing">
                     <span>{imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
                     {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
                       <span>{imp.eta_seconds}s remaining</span>
                     {/if}
                   </div>
-                  <div style="font-size: 0.65rem; color: #a5b4fc; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem;">
+                  <div class="import-status-line">
                     <span class="import-dot"></span>
                     <span>{imp.message}</span>
                   </div>
@@ -1109,7 +1114,7 @@
                   <div class="progress-track" style="margin-top: 0.25rem;">
                     <div class="progress-fill" style="width: 100%; animation: indeterminate 1.4s ease infinite;"></div>
                   </div>
-                  <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 0.1rem;">
+                  <div class="progress-preparing">
                     Preparing import (no download needed)…
                   </div>
                 {/if}
@@ -1151,7 +1156,7 @@
                         class="btn btn-xs"
                         class:btn-warning={!!companion?.update_available || forceRedownload}
                         class:btn-secondary={!companion?.update_available && !forceRedownload}
-                        disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated}
+                        disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
                         onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
                       >
                         {#if cBusy}
@@ -1177,7 +1182,7 @@
                           </div>
                         {:else if importProgress[c.assetId]}
                           {@const cimp = importProgress[c.assetId]}
-                          <div class="progress-track" style="background: rgba(165, 180, 252, 0.15);">
+                            <div class="progress-track progress-track-indexing">
                             <div
                               class="progress-fill"
                               style="width: {cimp.percent !== undefined && cimp.percent >= 0 ? cimp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {cimp.percent === undefined || cimp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
@@ -1192,16 +1197,16 @@
 
               <!-- Per-asset error display -->
               {#if syncErrors[db.assetId]}
-                <div class="sync-error-block" style="margin-top: 0.35rem;">
+                <div class="sync-error-block asset-feedback">
                   <strong>⚠️ Error:</strong>
-                  <span style="font-size: 0.65rem; opacity: 0.85;">{syncErrors[db.assetId]}</span>
+                  <span>{syncErrors[db.assetId]}</span>
                 </div>
               {/if}
 
               <!-- Per-asset success message -->
               {#if syncMessages[db.assetId] && !isActive}
-                <div class="sync-ok-block" style="margin-top: 0.35rem;">
-                  <span style="font-size: 0.65rem; opacity: 0.85;">✅ {syncMessages[db.assetId].split('\n')[0]}</span>
+                <div class="sync-ok-block asset-feedback">
+                  <span>✅ {syncMessages[db.assetId].split('\n')[0]}</span>
                 </div>
               {/if}
             </div>
@@ -1209,16 +1214,16 @@
         </div>
 
         {#if referenceDetails}
-          <div class="ref-status-details" style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; font-size: 0.7rem; display: flex; flex-direction: column; gap: 0.4rem;">
-            <div style="font-weight: bold; font-size: 0.75rem; color: #a5b4fc; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.2rem; margin-bottom: 0.1rem;">
+          <div class="ref-status-details">
+            <div class="ref-status-heading">
               Catalog readiness
             </div>
 
             <div class="status-group">
-              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">ClinVar</div>
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
+              <div class="status-group-title">ClinVar</div>
+              <div class="status-group-grid">
                 <span>Status:</span>
-                <strong style="color: {referenceDetails.clinvar_indexed_rows > 0 ? '#34d399' : referenceDetails.clinvar_raw_found ? '#fbbf24' : '#f87171'}">
+                <strong class:status-ready={referenceDetails.clinvar_indexed_rows > 0} class:status-pending={referenceDetails.clinvar_indexed_rows === 0 && referenceDetails.clinvar_raw_found} class:status-missing={referenceDetails.clinvar_indexed_rows === 0 && !referenceDetails.clinvar_raw_found}>
                   {#if referenceDetails.clinvar_indexed_rows > 0}
                     Ready · {referenceDetails.clinvar_indexed_rows.toLocaleString()} rows
                   {:else if referenceDetails.clinvar_raw_found}
@@ -1243,11 +1248,11 @@
               {/if}
             </div>
 
-            <div class="status-group" style="margin-top: 0.25rem;">
-              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">dbSNP (rsID merge map)</div>
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
+            <div class="status-group status-group-spaced">
+              <div class="status-group-title">dbSNP (rsID merge map)</div>
+              <div class="status-group-grid">
                 <span>Status:</span>
-                <strong style="color: {referenceDetails.dbsnp_merge_mappings_indexed > 0 ? '#34d399' : referenceDetails.dbsnp_merged_raw_found ? '#fbbf24' : '#f87171'}">
+                <strong class:status-ready={referenceDetails.dbsnp_merge_mappings_indexed > 0} class:status-pending={referenceDetails.dbsnp_merge_mappings_indexed === 0 && referenceDetails.dbsnp_merged_raw_found} class:status-missing={referenceDetails.dbsnp_merge_mappings_indexed === 0 && !referenceDetails.dbsnp_merged_raw_found}>
                   {#if referenceDetails.dbsnp_merge_mappings_indexed > 0}
                     Ready · {referenceDetails.dbsnp_merge_mappings_indexed.toLocaleString()} mappings
                   {:else if referenceDetails.dbsnp_merged_raw_found}
@@ -1269,11 +1274,11 @@
               <div class="status-note">Offline dbSNP here is the NCBI <em>refsnp-merged</em> + withdrawn catalog (rsID merge map + dates/citations). Alleles, placements, and AF live in the huge per-chromosome <em>refsnp-chr*.json</em> files — we do not ingest those yet. Report AF chips use the local gnomAD cache when present (not this merge DB).</div>
             </div>
 
-            <div class="status-group" style="margin-top: 0.45rem;">
-              <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 0.15rem;">gnomAD allele frequencies</div>
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.25rem; opacity: 0.85; padding-left: 0.25rem;">
+            <div class="status-group status-group-more-spaced">
+              <div class="status-group-title">gnomAD allele frequencies</div>
+              <div class="status-group-grid">
                 <span>Status:</span>
-                <strong style="color: {gnomadReadiness?.ready ? '#34d399' : gnomadReadiness?.indexes_cached ? '#fbbf24' : '#f87171'}">
+                <strong class:status-ready={gnomadReadiness?.ready === true} class:status-pending={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) > 0} class:status-missing={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) === 0}>
                   {#if gnomadReadiness?.ready}
                     Ready · {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes
                   {:else if gnomadReadiness}
@@ -1287,9 +1292,8 @@
               {#if gnomadReadiness && !gnomadReadiness.ready}
                 <button
                   type="button"
-                  class="btn btn-secondary btn-sm"
-                  style="margin-top: 0.35rem; align-self: start;"
-                  disabled={gnomadBusy || sweepRunning}
+                  class="btn btn-secondary btn-sm download-gnomad-button"
+                  disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
                   onclick={handleDownloadGnomadIndexes}
                 >
                   {gnomadBusy ? 'Downloading…' : 'Download gnomAD indexes'}
@@ -1315,7 +1319,7 @@
     {progressStatus}
     {importError}
     {importSuccess}
-    disabled={sweepRunning}
+    disabled={sweepRunning || !runtimeAvailable}
     {onBrowseFile}
     {onImportGenome}
   />
@@ -1324,7 +1328,7 @@
   <SampleList
     {samples}
     {selectedSample}
-    disabled={sweepRunning}
+    disabled={sweepRunning || !runtimeAvailable}
     {onSelectSample}
     {onDeleteSample}
   />

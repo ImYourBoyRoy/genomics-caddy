@@ -53,7 +53,7 @@
   padding: 16px 18px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-card);
   color: var(--text-primary);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -80,7 +80,17 @@
 
 .welcome-cta-static:hover {
   border-color: var(--border-color);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-card);
+}
+
+.welcome-cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.welcome-cta:disabled:hover {
+  border-color: var(--border-color);
+  background: var(--surface-card);
 }
 
 .welcome-cta-kicker {
@@ -109,6 +119,18 @@
   opacity: 0.85;
 }
 
+.welcome-runtime-note {
+  max-width: 34rem;
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.55rem;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .app-paths-info {
   margin-top: 12px;
   width: 100%;
@@ -135,4 +157,12 @@
 
 .app-paths-info code {
   font-size: 0.72rem;
+}
+
+@media (max-width: 720px) {
+  .welcome-screen {
+    justify-content: flex-start;
+    min-height: auto;
+    padding-bottom: 1rem;
+  }
 }

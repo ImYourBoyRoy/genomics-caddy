@@ -28,7 +28,7 @@
   {@render children()}
   <button
     type="button"
-    class="focus-toggle"
+    class="focus-toggle no-print"
     aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
     aria-pressed={focusMode}
     onclick={() => focusMode = !focusMode}

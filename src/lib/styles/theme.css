@@ -7,11 +7,14 @@ Responsibilities:
 */
 
 :root {
-  color-scheme: dark; /* Force native form controls and scrollbars to render in dark theme */
+  color-scheme: dark;
+  --sidebar-width: 288px;
   --bg-primary: #0a0b10;
   --bg-secondary: #12131a;
   --surface-raised: #171923;
+  --surface-card: rgba(255, 255, 255, 0.03);
   --surface-subtle: rgba(255, 255, 255, 0.04);
+  --surface-control: rgba(0, 0, 0, 0.35);
   --accent-soft: rgba(20, 184, 166, 0.14);
   --border-color: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
@@ -24,9 +27,15 @@ Responsibilities:
   --tooltip-heading: #f8fafc;
   --accent: #14b8a6;
   --accent-hover: #0d9488;
+  --text-on-accent: #ffffff;
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
+}
+
+:root[data-theme="system"] {
+  /* The browser selects the OS-preferred branch while retaining dark defaults. */
+  color-scheme: light dark;
 }
 
 :root[data-theme="light"] {
@@ -34,7 +43,9 @@ Responsibilities:
   --bg-primary: #f4f7fb;
   --bg-secondary: #ffffff;
   --surface-raised: #ffffff;
+  --surface-card: #ffffff;
   --surface-subtle: #eef3f8;
+  --surface-control: #ffffff;
   --accent-soft: rgba(13, 148, 136, 0.12);
   --border-color: rgba(15, 23, 42, 0.14);
   --border-strong: rgba(15, 23, 42, 0.24);
@@ -47,6 +58,7 @@ Responsibilities:
   --tooltip-heading: #ffffff;
   --accent: #0f766e;
   --accent-hover: #115e59;
+  --text-on-accent: #ffffff;
   --danger: #b42318;
   --success: #047857;
   --warning: #a16207;
@@ -58,7 +70,9 @@ Responsibilities:
     --bg-primary: #f4f7fb;
     --bg-secondary: #ffffff;
     --surface-raised: #ffffff;
+    --surface-card: #ffffff;
     --surface-subtle: #eef3f8;
+    --surface-control: #ffffff;
     --accent-soft: rgba(13, 148, 136, 0.12);
     --border-color: rgba(15, 23, 42, 0.14);
     --border-strong: rgba(15, 23, 42, 0.24);
@@ -71,6 +85,7 @@ Responsibilities:
     --tooltip-heading: #ffffff;
     --accent: #0f766e;
     --accent-hover: #115e59;
+    --text-on-accent: #ffffff;
     --danger: #b42318;
     --success: #047857;
     --warning: #a16207;
@@ -128,7 +143,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sidebar */
 .sidebar {
-  width: 320px;
+  width: var(--sidebar-width);
   flex-shrink: 0;
   align-self: stretch;
   height: 100%;
@@ -160,7 +175,7 @@ h1, h2, h3, h4, h5, h6 {
   position: fixed;
   z-index: 110;
   top: 0.75rem;
-  left: 0.75rem;
+  left: calc(var(--sidebar-width) + 0.75rem);
   min-height: 44px;
   padding: 0.45rem 0.7rem;
   border: 1px solid var(--border-color);
@@ -200,7 +215,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Cards */
 .card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 18px;
@@ -307,7 +322,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em;
 }
 .form-group input, .form-group select {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface-control);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 8px 12px;
@@ -421,6 +436,7 @@ h1, h2, h3, h4, h5, h6 {
 .main-content > * {
   width: min(100%, 1500px);
   margin-inline: auto;
+  box-sizing: border-box;
 }
 
 /* Welcome / empty-state layout lives in empty-state.css */
@@ -661,7 +677,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 20px;
 }
 .section-card {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--surface-card);
 }
 .section-header {
   display: flex;
@@ -689,7 +705,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 24px;
 }
 .marker-card {
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--surface-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
@@ -1433,7 +1449,7 @@ h1, h2, h3, h4, h5, h6 {
   accent-color: var(--accent);
 }
 .filter-select {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-control);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   color: var(--text-primary);
@@ -1450,6 +1466,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 720px) {
   .main-content {
     padding: 16px;
+    padding-bottom: 5.5rem;
   }
 
   .sidebar {
@@ -1553,22 +1570,31 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===== Responsive Sidebar ===== */
 @media (max-width: 900px) {
+  :root {
+    --sidebar-width: 280px;
+  }
+
   .app-layout {
     grid-template-columns: 1fr !important;
   }
   .sidebar {
     position: fixed;
-    left: -300px;
+    left: calc(-1 * var(--sidebar-width) - 0.75rem);
     top: 0;
     bottom: 0;
     height: 100%;
-    width: 280px;
+    width: var(--sidebar-width);
     z-index: 100;
     transition: left 0.3s ease;
     overflow-y: auto;
   }
   .sidebar.sidebar-open {
     left: 0;
+  }
+
+  .focus-toggle {
+    left: auto;
+    right: 0.75rem;
   }
 }
 

@@ -6,35 +6,63 @@
   const STORAGE_KEY = 'genomics_theme_mode';
   let mode = $state<ThemeMode>('system');
   let isOpen = $state(false);
+  let rootElement: HTMLDivElement;
+
+  function readStoredTheme(): ThemeMode {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored === 'system' || stored === 'light' || stored === 'dark' ? stored : 'system';
+    } catch {
+      return 'system';
+    }
+  }
 
   function applyTheme(nextMode: ThemeMode) {
     mode = nextMode;
     document.documentElement.dataset.theme = nextMode;
-    localStorage.setItem(STORAGE_KEY, nextMode);
+    try {
+      localStorage.setItem(STORAGE_KEY, nextMode);
+    } catch {
+      // A restricted storage area must not prevent changing the active theme.
+    }
+  }
+
+  function handleDocumentPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (target instanceof Node && !rootElement?.contains(target)) isOpen = false;
+  }
+
+  function handleDocumentKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') isOpen = false;
   }
 
   onMount(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'system' || stored === 'light' || stored === 'dark') {
-      mode = stored;
-    }
+    mode = readStoredTheme();
     document.documentElement.dataset.theme = mode;
+    document.addEventListener('pointerdown', handleDocumentPointerDown);
+    document.addEventListener('keydown', handleDocumentKeydown);
+    return () => {
+      document.removeEventListener('pointerdown', handleDocumentPointerDown);
+      document.removeEventListener('keydown', handleDocumentKeydown);
+    };
   });
 </script>
 
-<div class="theme-toggle" data-theme-toggle>
+<div class="theme-toggle no-print" data-theme-toggle bind:this={rootElement}>
   <button
     type="button"
     class="theme-toggle-button"
     aria-expanded={isOpen}
     aria-controls="theme-options"
+    aria-haspopup="menu"
+    aria-label={`Theme: ${mode}`}
     onclick={() => isOpen = !isOpen}
   >
     <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
     <span>Theme</span>
   </button>
   {#if isOpen}
-    <div id="theme-options" class="theme-options" role="group" aria-label="Theme preference">
+    <div id="theme-options" class="theme-options" role="menu" aria-label="Theme preference">
       {#each [
         { id: 'system', label: 'System', icon: '◐' },
         { id: 'light', label: 'Light', icon: '☀️' },
@@ -43,6 +71,8 @@
         <button
           type="button"
           class:active={mode === option.id}
+          role="menuitemradio"
+          aria-checked={mode === option.id}
           onclick={() => { applyTheme(option.id as ThemeMode); isOpen = false; }}
         >
           <span aria-hidden="true">{option.icon}</span> {option.label}
@@ -56,7 +86,7 @@
   .theme-toggle {
     position: fixed;
     z-index: 120;
-    left: 0.75rem;
+    left: calc(var(--sidebar-width) + 0.75rem);
     bottom: 0.75rem;
   }
 
@@ -104,5 +134,11 @@
   .theme-options button.active {
     border-color: var(--accent);
     background: var(--accent-soft);
+  }
+
+  @media (max-width: 900px) {
+    .theme-toggle {
+      left: 0.75rem;
+    }
   }
 </style>

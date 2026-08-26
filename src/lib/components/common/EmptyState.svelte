@@ -16,6 +16,7 @@
     appPaths: AppPaths | null;
     offlineStatus?: OfflineUpdateCheck | null;
     isChainDownloaded?: boolean;
+    runtimeAvailable?: boolean;
     onImportGenome?: () => void;
     onDownloadDatabases?: () => void;
     onDownloadChain?: () => void;
@@ -25,6 +26,7 @@
     appPaths,
     offlineStatus = null,
     isChainDownloaded = true,
+    runtimeAvailable = true,
     onImportGenome,
     onDownloadDatabases,
     onDownloadChain,
@@ -69,13 +71,13 @@
   </p>
 
   <div class="welcome-cta-grid">
-    <button type="button" class="welcome-cta primary" onclick={() => onImportGenome?.()}>
+    <button type="button" class="welcome-cta primary" onclick={() => onImportGenome?.()} disabled={!runtimeAvailable}>
       <span class="welcome-cta-kicker">Step 1</span>
       <strong>Import genome file</strong>
       <span class="welcome-cta-hint">Browse a raw DNA export in the sidebar</span>
     </button>
 
-    <button type="button" class="welcome-cta" onclick={() => onDownloadDatabases?.()}>
+    <button type="button" class="welcome-cta" onclick={() => onDownloadDatabases?.()} disabled={!runtimeAvailable}>
       <span class="welcome-cta-kicker">Step 2</span>
       <strong>Download reference catalogs</strong>
       <span class="welcome-cta-hint">
@@ -101,7 +103,7 @@
     </div>
 
     {#if !isChainDownloaded}
-      <button type="button" class="welcome-cta" onclick={() => onDownloadChain?.()}>
+      <button type="button" class="welcome-cta" onclick={() => onDownloadChain?.()} disabled={!runtimeAvailable}>
         <span class="welcome-cta-kicker">Optional</span>
         <strong>Download liftover chain</strong>
         <span class="welcome-cta-hint">Maps GRCh37 coordinates to GRCh38</span>
@@ -112,6 +114,12 @@
   <p class="welcome-aside">
     The left sidebar stays available for downloads, profiles, and progress while you work.
   </p>
+
+  {#if !runtimeAvailable}
+    <p class="welcome-runtime-note" role="note">
+      This is a browser preview. Local DNA import, catalogs, and saved profiles are available in the desktop app.
+    </p>
+  {/if}
 
   {#if appPaths}
     <details class="app-paths-info">

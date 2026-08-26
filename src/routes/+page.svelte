@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
+  import { isTauri } from "@tauri-apps/api/core";
 
   // API wrappers
   import {
@@ -85,6 +86,7 @@
   let bootstrapMessage = $state("Opening local database…");
   let bootstrapError = $state("");
   let bootstrapStatus = $state<AppBootstrapStatus | null>(null);
+  let runtimeAvailable = $state(true);
   let showBootstrapOverlay = $derived(
     isBootstrapping || (bootstrapPhase === "error" && samples.length === 0)
   );
@@ -296,6 +298,14 @@
   });
 
   onMount(() => {
+    runtimeAvailable = isTauri();
+    if (!runtimeAvailable) {
+      isBootstrapping = false;
+      bootstrapPhase = "ready";
+      bootstrapMessage = "Web preview mode — the desktop database is unavailable.";
+      return;
+    }
+
     // Intercept and route global webview JS errors to the persistent file log
     window.onerror = (message, source, lineno, colno, error) => {
       const msg = typeof message === "string" ? message : (message as any).message || "Unknown error";
@@ -542,6 +552,7 @@
       {samples}
       {selectedSample}
       report={generatedReport}
+      {runtimeAvailable}
       sweepRunning={researchJob?.status === "running" && researchJob.loop_active !== false}
       {expandDatabases}
       onReady={(api) => {
@@ -568,6 +579,7 @@
           {appPaths}
           offlineStatus={offlineStatusForWelcome}
           {isChainDownloaded}
+          {runtimeAvailable}
           onImportGenome={handleWelcomeImport}
           onDownloadDatabases={handleWelcomeDownloadDatabases}
           onDownloadChain={downloadChain}

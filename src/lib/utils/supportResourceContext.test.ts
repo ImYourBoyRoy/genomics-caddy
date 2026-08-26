@@ -78,4 +78,17 @@ describe('support resource context', () => {
     expect(context.food_safety.source_registry.cdc_prediabetes_lifestyle).toBeDefined();
     expect(context.food_safety.source_registry.aha_dyslipidemia_2026).toBeDefined();
   });
+
+  it('routes cross-domain activity safety from resource-authored pack signals', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['bone_growth_mineral_density', 'sleep', 'kidney_fluid_electrolytes', 'pain_migraine_sensory'],
+    });
+    const domainIds = context.activity_safety.relevant_domains.map((domain) => domain.id);
+
+    expect(domainIds).toContain('connective_tissue');
+    expect(domainIds).toContain('respiratory_airway');
+    expect(domainIds).toContain('sleep_recovery');
+    expect(domainIds).toContain('kidney_fluid_electrolytes');
+    expect(domainIds).toContain('pain_migraine_sensory');
+  });
 });

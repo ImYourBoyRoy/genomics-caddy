@@ -207,7 +207,12 @@ function selectConditionalQuestions(packIds: Set<string>): Record<string, string
 }
 
 function selectActivityDomains(packIds: Set<string>): typeof activityGuardrails.domains {
-  return activityGuardrails.domains.filter((domain) => packIds.has(domain.id));
+  return activityGuardrails.domains.filter((domain) => {
+    const signals = Array.isArray(domain.relevant_pack_signals)
+      ? domain.relevant_pack_signals
+      : [domain.id];
+    return signals.some((signal) => packIds.has(signal));
+  });
 }
 
 function selectCycleDomains(packIds: Set<string>): typeof cycleSupport.domains {

@@ -1,7 +1,7 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.1.0",
-  "last_updated": "2026-08-25",
+  "version": "1.2.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
   "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. Do not hardcode parallel rules in the UI. Every item is conditional guidance, never a diagnosis, prescription, permanent elimination diet, or medication instruction. Soft genetic context must yield to allergies, medical diets, pregnancy/lactation context, medications, labs, and clinician orders (see meal_planning_rules.json).",
@@ -832,6 +832,176 @@
         "clinical_confirmation_required",
         "phenotype_required",
         "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp2c19_clopidogrel",
+      "genes": [
+        "CYP2C19"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cardiovascular"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2C19 phenotype review when clopidogrel is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If clopidogrel is being considered or already used, show this report to the prescriber or pharmacist; a validated clinical CYP2C19 phenotype may inform antiplatelet selection, but a consumer-array call cannot select, stop, or switch therapy."
+      ],
+      "notes": "Clopidogrel decisions require a complete clinical CYP2C19 interpretation plus the cardiovascular indication, other medicines, and clinician judgment.",
+      "sources": [
+        "cpic_clopidogrel_2022",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "cyp2c9_vkorc1_warfarin",
+      "genes": [
+        "CYP2C9",
+        "VKORC1",
+        "CYP4F2"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cardiovascular"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2C9/VKORC1/CYP4F2 review with INR monitoring when warfarin is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If warfarin is being considered or already used, review a validated clinical result with the prescriber; INR, indication, interacting medicines, diet, and ongoing monitoring remain essential, and raw DNA cannot determine a dose or justify a medication change."
+      ],
+      "notes": "CPIC warfarin guidance uses a complete clinical genotype-to-phenotype interpretation together with non-genetic dosing and monitoring factors.",
+      "sources": [
+        "cpic_warfarin",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "slco1b1_statin_safety",
+      "genes": [
+        "SLCO1B1",
+        "ABCG2",
+        "CYP2C9"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cardiovascular",
+        "muscle_performance_recovery"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical statin-PGx review when statin-associated muscle symptoms or a statin decision is active",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a statin is being considered or already used, especially simvastatin, discuss a validated clinical result with the prescriber and report muscle pain, weakness, or dark urine; do not stop, select, or change a statin from raw DNA."
+      ],
+      "notes": "Statin-associated musculoskeletal symptoms depend on the complete clinical result, statin, dose, interactions, medical history, and symptoms.",
+      "sources": [
+        "cpic_statins_2022",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "cyp2d6_opioid_context",
+      "genes": [
+        "CYP2D6"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "pain_migraine_sensory"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2D6 phenotype review when codeine or tramadol is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If codeine or tramadol is being considered or already used, a complete clinical CYP2D6 phenotype may identify situations where an alternative is preferred; do not select, avoid, or change an opioid from raw SNP data."
+      ],
+      "notes": "Opioid recommendations are drug-specific and phenotype-specific; pain indication, age, other medicines, and safer non-opioid options also matter.",
+      "sources": [
+        "cpic_opioids_2020",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "cyp2d6_tamoxifen_context",
+      "genes": [
+        "CYP2D6"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cancer_confirmation_only",
+        "hormones_reproductive"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2D6 and medication-interaction review when tamoxifen is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If tamoxifen is being considered or already used, bring this report and the complete medication list to the oncology team; do not alter endocrine therapy or stop another medicine because of raw DNA."
+      ],
+      "notes": "Tamoxifen decisions require oncology context, complete CYP2D6 interpretation, and review of CYP2D6-inhibiting medicines; a consumer-array result is not sufficient.",
+      "sources": [
+        "cpic_tamoxifen_2018",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "cyp2d6_cyp2c19_ssri_context",
+      "genes": [
+        "CYP2D6",
+        "CYP2C19",
+        "CYP2B6"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "neuropsych"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical antidepressant-PGx review when an SSRI or related antidepressant question is active",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If an SSRI, SNRI, or related antidepressant is being considered or already used, a validated clinical phenotype may inform a prescribing discussion; do not start, stop, or change psychiatric medication from raw SNP data."
+      ],
+      "notes": "CPIC distinguishes gene-drug guidance with clinical evidence from genes or outcomes that do not support routine prescribing use; medication response also depends on diagnosis, symptoms, interactions, and patient preference.",
+      "sources": [
+        "cpic_ssri_2023",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
       ]
     },
     {

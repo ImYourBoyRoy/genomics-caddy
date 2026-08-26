@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
-  "version": "1.1.0",
-  "last_updated": "2026-08-25",
+  "version": "1.2.0",
+  "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -282,6 +282,54 @@
       "evidence_type": "Clinical pharmacogenomic guideline consortium",
       "conflict_of_interest": "Professional guideline consortium; review individual guideline disclosures",
       "notes": "Use to interpret an available validated PGx phenotype for a drug; CPIC guidance is not a reason to infer a phenotype from an incomplete consumer SNP panel."
+    },
+    "cpic_clopidogrel_2022": {
+      "name": "CPIC: CYP2C19 and Clopidogrel Guideline (2022 Update)",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/clopidogrel/2022/35034351.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated clinical CYP2C19 phenotype interpretation when clopidogrel antiplatelet therapy is being considered. A consumer-array SNP is not a complete phenotype and must not drive self-directed medication changes."
+    },
+    "cpic_warfarin": {
+      "name": "CPIC: Warfarin Based on CYP2C9, VKORC1 and CYP4F2",
+      "url": "https://cpicpgx.org/gene/VKORC1/",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline resource",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline resource; review current guideline disclosures",
+      "notes": "Use for the current CPIC warfarin guideline pathway. INR, indication, age, interacting medicines, diet, and clinical monitoring remain necessary; raw consumer-array data cannot determine a warfarin dose."
+    },
+    "cpic_statins_2022": {
+      "name": "CPIC: SLCO1B1, ABCG2 and CYP2C9 Statin Guideline (2022)",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/statins/2022/publication.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated clinical PGx context around statin-associated musculoskeletal symptoms. It does not authorize a raw consumer-array result to stop, select, or dose a statin."
+    },
+    "cpic_opioids_2020": {
+      "name": "CPIC: CYP2D6 and Opioids Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/opioids/2020/CPIC_opioids_PREPRINT.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated CYP2D6 phenotype context for codeine and tramadol pain treatment. The guideline does not make one consumer SNP a complete metabolizer result."
+    },
+    "cpic_tamoxifen_2018": {
+      "name": "CPIC: CYP2D6 and Tamoxifen Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/tamoxifen/2017/29385237.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated CYP2D6 phenotype and medication-interaction review in tamoxifen care. Oncology decisions must account for cancer context and other therapies; raw DNA cannot direct endocrine-treatment changes."
+    },
+    "cpic_ssri_2023": {
+      "name": "CPIC: CYP2D6, CYP2C19, CYP2B6 and Serotonin-Reuptake Antidepressants (2023)",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated clinical PGx context when an antidepressant question is active. A consumer-array finding cannot independently select, stop, or change a psychiatric medication."
     },
     "nih_ods_supplements": {
       "name": "NIH Office of Dietary Supplements Fact Sheets",

@@ -120,6 +120,26 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.rules.some((item) => item.includes('HLA'))).toBe(true);
   });
 
+  it('surfaces named medication pathways without turning raw SNPs into prescriptions', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'CYP2C19', rsid: 'rs4244285' }),
+      marker({ gene: 'CYP2D6', rsid: 'rs3892097' }),
+      marker({ gene: 'SLCO1B1', rsid: 'rs4149056' }),
+      marker({ gene: 'VKORC1', rsid: 'rs9923231' }),
+    ]));
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(medicationText).toContain('clopidogrel');
+    expect(medicationText).toContain('warfarin');
+    expect(medicationText).toContain('statin');
+    expect(medicationText).toContain('codeine or tramadol');
+    expect(medicationText).toContain('tamoxifen');
+    expect(medicationText).toContain('antidepressant');
+    expect(medicationText).toContain('raw DNA');
+    expect(medicationText).not.toContain('Start clopidogrel');
+    expect(medicationText).not.toContain('Change warfarin dose');
+  });
+
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {
     const plan = deriveActionablePlan({
       ...report([]),

@@ -1,7 +1,7 @@
 {
   "name": "Activity Guidance & Exercise Safety Guardrails",
-  "version": "1.0.0",
-  "last_updated": "2026-08-25",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Use genotype as a weak context modifier for training questions while keeping symptoms, medical history, progression, and professional clearance ahead of genetic optimization.",
   "principles": [
@@ -40,6 +40,10 @@
     },
     {
       "id": "connective_tissue",
+      "relevant_pack_signals": [
+        "connective_tissue",
+        "bone_growth_mineral_density"
+      ],
       "section_keywords": ["connective", "musculoskeletal", "bone", "skeletal"],
       "context": "Collagen, ligament, tendon, hypermobility, and bone-density context",
       "favor": [
@@ -94,6 +98,11 @@
     },
     {
       "id": "respiratory_airway",
+      "relevant_pack_signals": [
+        "respiratory_airway",
+        "sleep",
+        "allergy_atopy_mast_cell"
+      ],
       "section_keywords": ["respiratory", "airway", "oxygenation", "lung"],
       "context": "Asthma, airway, lung-function, oxygenation, and sleep-apnea context",
       "favor": [
@@ -108,6 +117,66 @@
         "spirometry or peak-flow review",
         "sleep study when indicated",
         "pulmonary review for persistent or severe symptoms"
+      ]
+    },
+    {
+      "id": "sleep_recovery",
+      "relevant_pack_signals": [
+        "sleep"
+      ],
+      "section_keywords": ["sleep", "circadian", "fatigue", "recovery"],
+      "context": "Sleep opportunity, alertness, circadian timing, and recovery context",
+      "favor": [
+        "protect a consistent sleep opportunity and wake-time routine that fits the person's work, caregiving, and health needs",
+        "use a brief sleep, daytime-alertness, and training log before changing training load"
+      ],
+      "avoid": [
+        "using a chronotype or sleep-duration marker to force a schedule or clear severe fatigue",
+        "repeated maximal or high-risk training when sleep deprivation, impaired alertness, or suspected sleep apnea is present"
+      ],
+      "confirm_with": [
+        "sleep study when snoring, witnessed apneas, gasping, or daytime sleepiness warrant evaluation",
+        "clinician review for persistent insomnia, severe daytime sleepiness, or safety-sensitive work"
+      ]
+    },
+    {
+      "id": "kidney_fluid_electrolytes",
+      "relevant_pack_signals": [
+        "kidney_fluid_electrolytes"
+      ],
+      "section_keywords": ["kidney", "fluid", "electrolyte", "stone", "gout", "urate", "creatinine", "egfr"],
+      "context": "Hydration, kidney-function, urate, stone, and electrolyte context",
+      "favor": [
+        "individualized hydration and gradual conditioning based on kidney function, climate, medications, and clinician guidance",
+        "track unusual cramps, dizziness, urine changes, and exercise tolerance when those symptoms are relevant"
+      ],
+      "avoid": [
+        "deliberate dehydration, extreme heat exposure, or rapid weight-cutting when kidney disease, recurrent stones, or abnormal kidney tests are present",
+        "using a urate or kidney-associated SNP to clear strenuous activity or replace kidney-function testing"
+      ],
+      "confirm_with": [
+        "creatinine/eGFR, electrolytes, and urinalysis when clinically indicated",
+        "clinician or sports-medicine review for recurrent stones, gout, fainting, or exercise-related urine changes"
+      ]
+    },
+    {
+      "id": "pain_migraine_sensory",
+      "relevant_pack_signals": [
+        "pain_migraine_sensory"
+      ],
+      "section_keywords": ["pain", "migraine", "headache", "sensory", "neuropath"],
+      "context": "Migraine, pain, sensory-trigger, and symptom-paced activity context",
+      "favor": [
+        "graded activity with a symptom and trigger log rather than all-or-nothing training",
+        "adequate hydration, regular meals, recovery, and clinician-guided return to activity when symptoms permit"
+      ],
+      "avoid": [
+        "using COMT, OPRM1, or another common SNP to predict pain tolerance or analgesic response",
+        "pushing through sudden neurologic symptoms, a new severe headache, fainting, or rapidly worsening pain"
+      ],
+      "confirm_with": [
+        "clinician evaluation for new, severe, or changing headache or neurologic symptoms",
+        "a symptom, activity, sleep, hydration, and medication-response log"
       ]
     },
     {

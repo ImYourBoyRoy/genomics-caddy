@@ -303,6 +303,7 @@ describe('actionability engine safety policy', () => {
     expect(plan.foodSafety.confirmedAllergies).toEqual(['fish']);
     expect(plan.foodSafety.suspectedAllergies).toEqual(['sesame']);
     expect(ruleIds).toEqual(expect.arrayContaining([
+      'RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT',
       'RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE',
       'RULE_HALAL_COMPATIBLE',
       'RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY',
@@ -333,6 +334,39 @@ describe('actionability engine safety policy', () => {
     });
 
     expect(plan.foodSafety.relevantRules.map((rule) => rule.id)).not.toContain('RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE');
+  });
+
+  it('suppresses conflicting food suggestions and routes dietary allergies into supplement safety', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        gene: 'APOE',
+        rsid: 'rs429358',
+        interpretation: 'APOE4 context',
+      }),
+    ]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        dietaryProfile: {
+          hard_exclusions: [],
+          allergies_confirmed: ['fish'],
+          allergies_suspected: [],
+          religious_cultural_profiles: [],
+          ethical_preference_profiles: [],
+          medical_diet_profiles: [],
+          goals: [],
+        },
+      },
+    });
+
+    expect(plan.foodSafety.suppressedSuggestions.length).toBeGreaterThan(0);
+    expect(plan.foodSafety.suppressedSuggestions.join(' ')).toContain('fish');
+    expect(plan.diet.favor.join(' ')).not.toContain('fatty fish');
+    expect(plan.supplementSafety.relevantRules.map((rule) => rule.id)).toContain('omega3');
+    expect(plan.foodSafety.conflictNotes.join(' ')).toContain('reported as a reaction');
   });
 
   it('recognizes an exact progestin ingredient without inferring that it is contraception', () => {

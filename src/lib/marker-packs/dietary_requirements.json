@@ -1,11 +1,35 @@
 {
   "name": "Dietary Requirements & Food Decision Rules",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute decisions.",
   "critical_design_rule": "Food requirements are not inferred from DNA unless the rule explicitly uses genotype as one weak input. Allergy, medical diagnosis, medication safety, pregnancy, kidney disease, and user-declared values override nutrigenomic optimization.",
   "profile_routes": {
+    "hard_exclusions": {
+      "pork": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "beef": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "lamb": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "poultry": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "fish": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "seafood": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "shellfish": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "dairy": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "milk": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "egg": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "eggs": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "gluten": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "wheat": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "soy": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "sesame": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "peanut": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "tree nut": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "tree_nut": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "alcohol": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "coffee": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "caffeine": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"],
+      "animal products": ["RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT"]
+    },
     "allergies_confirmed": {
       "peanut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
       "groundnut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
@@ -65,6 +89,85 @@
     "suspected_allergies": "Suspected food reactions are not automatically confirmed allergies. Record reaction timing and seek clinician or allergist input before reintroduction, especially after severe symptoms.",
     "empty": "Add only the food requirements the person explicitly wants considered. The tool does not infer allergies, religion, medical diets, pregnancy, or eating-disorder history from DNA."
   },
+  "recommendation_conflicts": [
+    {
+      "id": "FISH_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["fish", "seafood", "fin fish"],
+      "blocked_suggestion_terms": ["fish", "seafood", "salmon", "sardine", "trout", "herring", "anchov", "cod", "mackerel", "tuna", "fish oil"],
+      "reason": "Do not show fish-based food suggestions when fish or seafood is explicitly excluded or reported as a reaction. This does not clear or diagnose an allergy; use safe substitutes and clinical advice when needed."
+    },
+    {
+      "id": "SHELLFISH_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["shellfish", "crustacean", "shrimp", "prawn", "crab", "lobster", "mussel", "oyster", "scallop"],
+      "blocked_suggestion_terms": ["shellfish", "crustacean", "shrimp", "prawn", "crab", "lobster", "mussel", "oyster", "scallop"],
+      "reason": "Do not show shellfish suggestions when shellfish or a crustacean is explicitly excluded or reported as a reaction."
+    },
+    {
+      "id": "DAIRY_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["milk", "dairy", "whey", "casein"],
+      "blocked_suggestion_terms": ["milk", "dairy", "cheese", "yogurt", "whey", "casein", "kefir"],
+      "reason": "Do not show dairy-based suggestions when dairy or milk is explicitly excluded or reported as a reaction; lactose intolerance and milk allergy remain distinct clinical contexts."
+    },
+    {
+      "id": "EGG_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["egg", "eggs"],
+      "blocked_suggestion_terms": ["egg", "eggs"],
+      "reason": "Do not show egg suggestions when egg is explicitly excluded or reported as a reaction."
+    },
+    {
+      "id": "SOY_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["soy", "soya"],
+      "blocked_suggestion_terms": ["soy", "tofu", "tempeh", "edamame", "soybean"],
+      "reason": "Do not show soy-based suggestions when soy is explicitly excluded or reported as a reaction."
+    },
+    {
+      "id": "NUT_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected"],
+      "profile_terms": ["peanut", "groundnut", "tree nut", "tree_nut", "nuts", "nut"],
+      "blocked_suggestion_terms": ["peanut", "groundnut", "almond", "walnut", "cashew", "pistachio", "pecan", "hazelnut", "macadamia", "nuts"],
+      "reason": "Do not show nut-based suggestions when a nut is explicitly excluded or reported as a reaction; verify cross-contact requirements for severe reactions."
+    },
+    {
+      "id": "GLUTEN_WHEAT_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "allergies_confirmed", "allergies_suspected", "medical_diet_profiles"],
+      "profile_terms": ["gluten", "wheat", "celiac", "celiac_gluten_free"],
+      "blocked_suggestion_terms": ["gluten", "wheat", "bread", "pasta", "barley", "rye", "malt", "whole grain"],
+      "reason": "Do not show gluten or wheat suggestions when they are explicitly excluded or a celiac/gluten-free profile is declared. Genetic HLA context does not diagnose celiac disease."
+    },
+    {
+      "id": "PORK_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "religious_cultural_profiles", "ethical_preference_profiles"],
+      "profile_terms": ["pork", "pork_free", "pescatarian"],
+      "blocked_suggestion_terms": ["pork", "bacon", "ham", "lard", "pork sausage", "pork broth", "pork gelatin"],
+      "reason": "Do not show pork-based suggestions when pork is explicitly excluded or a pork-free/pescatarian profile is declared."
+    },
+    {
+      "id": "ALCOHOL_EXCLUSION",
+      "profile_fields": ["hard_exclusions", "religious_cultural_profiles"],
+      "profile_terms": ["alcohol", "alcohol_free", "halal", "halal_compatible", "lds_word_of_wisdom"],
+      "blocked_suggestion_terms": ["alcohol", "wine", "beer", "liquor", "spirits", "cooking wine"],
+      "reason": "Do not show alcohol-containing food or beverage suggestions when alcohol is explicitly excluded or a profile with an alcohol restriction is declared."
+    },
+    {
+      "id": "VEGAN_ANIMAL_FOOD_EXCLUSION",
+      "profile_fields": ["ethical_preference_profiles"],
+      "profile_terms": ["vegan"],
+      "blocked_suggestion_terms": ["fish", "seafood", "salmon", "sardine", "meat", "beef", "lamb", "pork", "poultry", "chicken", "egg", "dairy", "milk", "cheese", "whey", "casein", "gelatin", "animal"],
+      "reason": "Do not show animal-food suggestions when a vegan profile is explicitly declared; use plant-based or fortified substitutes instead."
+    },
+    {
+      "id": "VEGETARIAN_MEAT_EXCLUSION",
+      "profile_fields": ["ethical_preference_profiles"],
+      "profile_terms": ["vegetarian"],
+      "blocked_suggestion_terms": ["meat", "beef", "lamb", "pork", "poultry", "chicken", "turkey", "fish", "seafood", "salmon", "sardine"],
+      "reason": "Do not show meat or fish suggestions when a vegetarian profile is explicitly declared; preserve the person's chosen food pattern."
+    }
+  ],
   "priority_order": [
     "anaphylaxis/allergy safety",
     "medication interaction / clinical contraindication",
@@ -78,6 +181,44 @@
     "general preference"
   ],
   "rules": [
+    {
+      "id": "RULE_EXPLICIT_FOOD_EXCLUSION_RESPECT",
+      "label": "Explicit food exclusion respect",
+      "trigger_sources": [
+        "user_preference",
+        "religious_requirement",
+        "cultural_requirement",
+        "ethical_preference"
+      ],
+      "rule_type": "strict_avoid_and_substitute",
+      "priority": 80,
+      "applies_to_food_tags": [
+        "user_declared_exclusion",
+        "cross_contact",
+        "ingredient_label"
+      ],
+      "recommendation": "Treat a user-declared food exclusion as a hard meal-planning constraint. Remove matching suggestions, check ingredient and cross-contact details when relevant, and use acceptable substitutions to meet nutrition goals.",
+      "substitutions": [
+        "use the person's allowed foods and stated preferences",
+        "choose an allergen-specific, plant-based, or certified substitute when relevant",
+        "review restrictive or medically necessary exclusions with a clinician or dietitian"
+      ],
+      "confirm_with": [
+        "exact food or ingredient scope",
+        "cross-contact and certification needs",
+        "nutrient replacement plan when the exclusion is broad"
+      ],
+      "do_not_claim": [
+        "DNA determines the exclusion",
+        "a personal exclusion proves an allergy or diagnosis",
+        "a substitute is safe without checking its ingredients and clinical context"
+      ],
+      "relevant_pack_signals": [],
+      "conflict_resolution": "Explicit user constraints outrank genotype-derived food emphasis and are applied before optimization.",
+      "sources": [
+        "user_declared_values_required"
+      ]
+    },
     {
       "id": "RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE",
       "label": "Major food allergen strict avoidance",

@@ -107,6 +107,8 @@ export interface FoodSafetyGuidance {
   suspectedAllergies: string[];
   relevantRules: typeof dietaryRequirements.rules;
   notes: string[];
+  conflictNotes: string[];
+  suppressedSuggestions: string[];
 }
 
 export interface PersonalContextGuidance {
@@ -477,6 +479,8 @@ type DietaryProfileRoutes = Record<string, Record<string, string[]>>;
 
 const DIETARY_PROFILE_ROUTES = dietaryRequirements.profile_routes as DietaryProfileRoutes;
 const DIETARY_CONTEXT_ROUTES = dietaryRequirements.context_routes as Record<string, string[]>;
+type DietaryRecommendationConflict = typeof dietaryRequirements.recommendation_conflicts[number];
+const DIETARY_RECOMMENDATION_CONFLICTS = dietaryRequirements.recommendation_conflicts as DietaryRecommendationConflict[];
 
 function normalizedDietaryTerm(value: unknown): string {
   return String(value || '')
@@ -484,6 +488,36 @@ function normalizedDietaryTerm(value: unknown): string {
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function recommendationConflictsForProfile(
+  dietaryProfile: PersonalDietaryProfile | undefined,
+): DietaryRecommendationConflict[] {
+  if (!dietaryProfile) return [];
+  return DIETARY_RECOMMENDATION_CONFLICTS.filter((conflict) =>
+    conflict.profile_fields.some((field) => {
+      const values = dietaryProfile[field as keyof PersonalDietaryProfile];
+      if (!Array.isArray(values)) return false;
+      return values.some((value) => {
+        const normalizedValue = normalizedDietaryTerm(value);
+        return normalizedValue && conflict.profile_terms.some((term) => {
+          const normalizedTerm = normalizedDietaryTerm(term);
+          return normalizedTerm && (normalizedValue === normalizedTerm || normalizedValue.includes(normalizedTerm));
+        });
+      });
+    }),
+  );
+}
+
+function suggestionMatchesConflict(
+  suggestion: string,
+  conflict: DietaryRecommendationConflict,
+): boolean {
+  const normalizedSuggestion = normalizedDietaryTerm(suggestion);
+  return conflict.blocked_suggestion_terms.some((term) => {
+    const normalizedTerm = normalizedDietaryTerm(term);
+    return normalizedTerm && normalizedSuggestion.includes(normalizedTerm);
+  });
 }
 
 /**
@@ -494,6 +528,7 @@ function normalizedDietaryTerm(value: unknown): string {
 function deriveFoodSafetyGuidance(
   dietaryProfile: PersonalDietaryProfile | undefined,
   activeContextIds: readonly string[],
+  candidateSuggestions: string[] = [],
 ): FoodSafetyGuidance {
   const ruleIds = new Set<string>();
   for (const [field, values] of Object.entries(dietaryProfile || {})) {
@@ -524,7 +559,9 @@ function deriveFoodSafetyGuidance(
   const explicitExclusions = [...(dietaryProfile?.hard_exclusions || [])];
   const confirmedAllergies = [...(dietaryProfile?.allergies_confirmed || [])];
   const suspectedAllergies = [...(dietaryProfile?.allergies_suspected || [])];
+  const recommendationConflicts = recommendationConflictsForProfile(dietaryProfile);
   const notes: string[] = [];
+  const conflictNotes = recommendationConflicts.map((conflict) => conflict.reason);
   if (explicitExclusions.length > 0) {
     notes.push(dietaryRequirements.profile_notes.hard_exclusions);
   }
@@ -541,7 +578,11 @@ function deriveFoodSafetyGuidance(
     confirmedAllergies,
     suspectedAllergies,
     relevantRules,
-    notes,
+    notes: Array.from(new Set(notes)),
+    conflictNotes: Array.from(new Set(conflictNotes)),
+    suppressedSuggestions: candidateSuggestions.filter((suggestion) =>
+      recommendationConflicts.some((conflict) => suggestionMatchesConflict(suggestion, conflict))
+    ),
   };
 }
 
@@ -802,10 +843,6 @@ export function deriveActionablePlan(
   const diaryReview = cycleDiaryAppliesToContexts(activeContextIds)
     ? reviewCycleDiary(personalSafetyContext?.cycleDiary)
     : null;
-  const foodSafety = deriveFoodSafetyGuidance(
-    personalSafetyContext?.dietaryProfile,
-    activeContextIds,
-  );
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [
@@ -815,6 +852,9 @@ export function deriveActionablePlan(
     personalSafetyContext?.medications || [],
     [
       ...(personalSafetyContext?.allergies || []),
+      ...(personalSafetyContext?.dietaryProfile?.hard_exclusions || []),
+      ...(personalSafetyContext?.dietaryProfile?.allergies_confirmed || []),
+      ...(personalSafetyContext?.dietaryProfile?.allergies_suspected || []),
     ],
     actionabilityContext.reproductiveContext,
     activeContextIds,
@@ -828,11 +868,17 @@ export function deriveActionablePlan(
   );
   const personalContext = derivePersonalContextGuidance(personalSafetyContext);
   const pgxGuidance = derivePgxInterpretationGuidance(markerValues);
+  const candidateDietFavor = Array.from(favorSet);
+  const foodSafety = deriveFoodSafetyGuidance(
+    personalSafetyContext?.dietaryProfile,
+    activeContextIds,
+    candidateDietFavor,
+  );
 
   return {
     topFindings,
     diet: {
-      favor: Array.from(favorSet),
+      favor: candidateDietFavor.filter((item) => !foodSafety.suppressedSuggestions.includes(item)),
       avoid: Array.from(avoidSet),
       notes: overallNotes || undefined,
     },

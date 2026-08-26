@@ -222,7 +222,7 @@
 
     <div class="action-row">
       <!-- Panel 2: Dietary Guidance -->
-      {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0}
+      {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0 || plan.foodSafety.suppressedSuggestions.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
           <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('diet'))}>
             <h3>🥗 Dietary Alignment</h3>
@@ -273,6 +273,20 @@
                       {/if}
                     </div>
                   {/each}
+                </div>
+              {/if}
+              {#if plan.foodSafety.suppressedSuggestions.length > 0}
+                <div class="dietary-suppressed-suggestions" role="note">
+                  <strong>🛡️ Suggestions withheld by explicit food constraints</strong>
+                  <p>These genotype- or nutrient-linked food suggestions were removed from the “Lean Into / Favor” list because they conflict with an explicitly entered food exclusion or reaction.</p>
+                  <ul>
+                    {#each plan.foodSafety.suppressedSuggestions as item (item)}<li>{item}</li>{/each}
+                  </ul>
+                  {#if plan.foodSafety.conflictNotes.length > 0}
+                    <ul class="guardrail-list">
+                      {#each plan.foodSafety.conflictNotes as note (note)}<li>{note}</li>{/each}
+                    </ul>
+                  {/if}
                 </div>
               {/if}
               <div class="diet-section">
@@ -1070,6 +1084,29 @@
   .dietary-resource-rule > span {
     display: block;
     margin-top: 0.18rem;
+  }
+
+  .dietary-suppressed-suggestions {
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(251, 191, 36, 0.28);
+    border-radius: 6px;
+    background: rgba(245, 158, 11, 0.07);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  .dietary-suppressed-suggestions p {
+    margin: 0.2rem 0 0.45rem;
+  }
+
+  .dietary-suppressed-suggestions ul {
+    margin: 0.35rem 0 0;
+  }
+
+  .dietary-suppressed-suggestions > strong {
+    color: #fde68a;
   }
 
   .diet-column h4 {

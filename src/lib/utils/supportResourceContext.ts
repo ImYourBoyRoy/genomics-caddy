@@ -84,6 +84,7 @@ export interface SupportResourceContext {
     profile_routes: typeof dietaryRequirements.profile_routes;
     context_routes: typeof dietaryRequirements.context_routes;
     profile_notes: typeof dietaryRequirements.profile_notes;
+    recommendation_conflicts: typeof dietaryRequirements.recommendation_conflicts;
     meal_decision_pipeline: typeof mealPlanningRules.decision_pipeline;
     priority_weights: typeof mealPlanningRules.priority_weights;
     relevant_rules: Array<Record<string, unknown>>;
@@ -389,6 +390,7 @@ export function buildSupportResourceContext({
       profile_routes: dietaryRequirements.profile_routes,
       context_routes: dietaryRequirements.context_routes,
       profile_notes: dietaryRequirements.profile_notes,
+      recommendation_conflicts: dietaryRequirements.recommendation_conflicts,
       meal_decision_pipeline: mealPlanningRules.decision_pipeline,
       priority_weights: mealPlanningRules.priority_weights,
       relevant_rules: selectDietaryRules(selectedPackIds),

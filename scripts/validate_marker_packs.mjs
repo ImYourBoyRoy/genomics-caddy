@@ -142,7 +142,7 @@ const supportContracts = {
   consultation_modes: { arrays: ['modes'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
-  dietary_requirements: { arrays: ['priority_order', 'rules'], objects: ['profile_routes', 'context_routes', 'profile_notes'] },
+  dietary_requirements: { arrays: ['priority_order', 'rules', 'recommendation_conflicts'], objects: ['profile_routes', 'context_routes', 'profile_notes'] },
   evidence_policy: { objects: ['tiers', 'claim_policy', 'display'] },
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
@@ -231,6 +231,37 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       if (typeof resource.profile_notes?.[key] !== 'string' || resource.profile_notes[key].trim() === '') {
         errors.push(`dietary_requirements.json: profile_notes.${key} must be a non-empty string`);
       }
+    }
+    const dietaryProfileFields = new Set([
+      'hard_exclusions',
+      'allergies_confirmed',
+      'allergies_suspected',
+      'religious_cultural_profiles',
+      'ethical_preference_profiles',
+      'medical_diet_profiles',
+      'goals',
+    ]);
+    const conflictIds = new Set();
+    for (const [index, conflict] of (resource.recommendation_conflicts || []).entries()) {
+      const location = `dietary_requirements.json recommendation conflict ${index + 1}`;
+      for (const field of ['id', 'reason']) {
+        if (typeof conflict?.[field] !== 'string' || conflict[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (conflictIds.has(conflict?.id)) errors.push(`${location}: duplicate id ${conflict.id}`);
+      conflictIds.add(conflict?.id);
+      for (const field of ['profile_fields', 'profile_terms', 'blocked_suggestion_terms']) {
+        if (!isStringArray(conflict?.[field]) || conflict[field].length === 0) {
+          errors.push(`${location}: ${field} must be a non-empty string array`);
+        }
+      }
+      for (const field of conflict?.profile_fields || []) {
+        if (!dietaryProfileFields.has(field)) errors.push(`${location}: unknown profile field ${field}`);
+      }
+    }
+    if ((resource.recommendation_conflicts || []).length === 0) {
+      errors.push('dietary_requirements.json: recommendation_conflicts must be non-empty');
     }
   }
   if (resourceId === 'research_taxonomy') {

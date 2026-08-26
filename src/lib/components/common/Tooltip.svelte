@@ -134,8 +134,7 @@
   class="tooltip-host"
   bind:this={hostElement}
   data-tooltip-id={tooltipId}
-  role="group"
-  aria-label={label}
+  role="presentation"
   onmouseenter={handleHoverEnter}
   onmouseleave={handleHoverLeave}
   onfocusin={() => { isFocused = true; refreshOpenState(); }}

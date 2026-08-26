@@ -86,7 +86,12 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   // Prefer enabled matches so automation does not "click" disabled Start/Cancel shells.
   const ranked = candidates
     .map((el) => {
-      const label = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const visibleLabel = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+      const accessibleLabel = el.getAttribute('aria-label')?.replace(/\s+/g, ' ').trim() || '';
+      const label = [visibleLabel, accessibleLabel]
+        .filter(Boolean)
+        .join(' · ')
+        .toLowerCase();
       if (!label.includes(needle)) return null;
       const disabled =
         (el as HTMLButtonElement).disabled === true ||

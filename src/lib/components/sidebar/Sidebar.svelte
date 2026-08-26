@@ -996,8 +996,8 @@ import { onMount, onDestroy } from 'svelte';
               {@const imp = importProgress[bulkActiveAssetId]}
               <div class="progress-track progress-track-indexing progress-track-spaced">
                 <div
-                  class="progress-fill"
-                  style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                  class="progress-fill progress-fill-indexing"
+                  style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                 ></div>
               </div>
               <div class="bulk-sync-meta bulk-sync-meta-indexing">
@@ -1096,8 +1096,8 @@ import { onMount, onDestroy } from 'svelte';
                   {@const imp = importProgress[db.assetId]}
                   <div class="progress-track progress-track-indexing">
                     <div
-                      class="progress-fill"
-                      style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                      class="progress-fill progress-fill-indexing"
+                      style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                     ></div>
                   </div>
                   <div class="progress-meta progress-meta-indexing">
@@ -1111,8 +1111,8 @@ import { onMount, onDestroy } from 'svelte';
                     <span>{imp.message}</span>
                   </div>
                 {:else}
-                  <div class="progress-track" style="margin-top: 0.25rem;">
-                    <div class="progress-fill" style="width: 100%; animation: indeterminate 1.4s ease infinite;"></div>
+                  <div class="progress-track progress-track-preparing">
+                    <div class="progress-fill progress-fill-indeterminate"></div>
                   </div>
                   <div class="progress-preparing">
                     Preparing import (no download needed)…
@@ -1184,8 +1184,8 @@ import { onMount, onDestroy } from 'svelte';
                           {@const cimp = importProgress[c.assetId]}
                             <div class="progress-track progress-track-indexing">
                             <div
-                              class="progress-fill"
-                              style="width: {cimp.percent !== undefined && cimp.percent >= 0 ? cimp.percent + '%' : '100%'}; background: linear-gradient(90deg, #818cf8, #a5b4fc); animation: {cimp.percent === undefined || cimp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
+                              class="progress-fill progress-fill-indexing"
+                              style="width: {cimp.percent !== undefined && cimp.percent >= 0 ? cimp.percent + '%' : '100%'}; animation: {cimp.percent === undefined || cimp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
                             ></div>
                           </div>
                         {/if}
@@ -1234,7 +1234,7 @@ import { onMount, onDestroy } from 'svelte';
                 </strong>
                 {#if report}
                   <span>Hits in current report:</span>
-                  <strong style="color: {referenceDetails.clinvar_rsid_hits > 0 ? '#60a5fa' : '#9ca3af'}">
+                  <strong class:status-hit-active={referenceDetails.clinvar_rsid_hits > 0} class:status-hit-empty={referenceDetails.clinvar_rsid_hits === 0}>
                     {referenceDetails.clinvar_rsid_hits.toLocaleString()}
                   </strong>
                 {/if}
@@ -1263,7 +1263,7 @@ import { onMount, onDestroy } from 'svelte';
                 </strong>
                 {#if report}
                   <span>rsIDs remapped in report:</span>
-                  <strong style="color: {referenceDetails.dbsnp_rsids_normalized > 0 ? '#60a5fa' : '#9ca3af'}">
+                  <strong class:status-hit-active={referenceDetails.dbsnp_rsids_normalized > 0} class:status-hit-empty={referenceDetails.dbsnp_rsids_normalized === 0}>
                     {referenceDetails.dbsnp_rsids_normalized.toLocaleString()}
                   </strong>
                 {/if}

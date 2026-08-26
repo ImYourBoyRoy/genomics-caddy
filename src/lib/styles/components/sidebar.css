@@ -238,6 +238,19 @@
   background: rgba(165, 180, 252, 0.15);
 }
 
+.progress-track-preparing {
+  margin-top: 0.25rem;
+}
+
+.progress-fill-indexing {
+  background: linear-gradient(90deg, #818cf8, #a5b4fc);
+}
+
+.progress-fill-indeterminate {
+  width: 100%;
+  animation: indeterminate 1.4s ease infinite;
+}
+
 .progress-preparing {
   margin-top: 0.1rem;
   color: var(--text-secondary);
@@ -307,6 +320,8 @@
 .status-group-grid .status-ready { color: var(--success); }
 .status-group-grid .status-pending { color: var(--warning); }
 .status-group-grid .status-missing { color: var(--danger); }
+.status-group-grid .status-hit-active { color: var(--accent); }
+.status-group-grid .status-hit-empty { color: var(--text-secondary); }
 
 .download-gnomad-button {
   align-self: flex-start;

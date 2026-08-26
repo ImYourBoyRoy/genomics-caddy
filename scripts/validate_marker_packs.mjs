@@ -181,7 +181,7 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       for (const field of ['signal_genes', 'match_terms', 'avoid', 'confirm_with', 'sources']) {
         if (!isStringArray(rule[field])) errors.push(`${location}: ${field} must be a string array`);
       }
-      for (const field of ['medication_terms', 'allergy_terms']) {
+      for (const field of ['context_ids', 'medication_terms', 'allergy_terms']) {
         if (rule[field] !== undefined && !isStringArray(rule[field])) {
           errors.push(`${location}: optional ${field} must be a string array`);
         }
@@ -193,7 +193,16 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
 const cycleSupport = readJson(path.join(sourceDir, 'cycle_support_guidance.json'));
 const safetyGuardrails = readJson(path.join(sourceDir, 'safety_guardrails.json'));
 const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
+const reproductiveContextIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));
 const safetyRuleIds = new Set((safetyGuardrails?.rules || []).map((rule) => rule.id));
+const supplementSafety = readJson(path.join(sourceDir, 'supplement_safety.json'));
+for (const [index, rule] of (supplementSafety?.rules || []).entries()) {
+  for (const contextId of rule.context_ids || []) {
+    if (!reproductiveContextIds.has(contextId)) {
+      errors.push(`supplement_safety.json rule ${index + 1} references unknown reproductive context ${contextId}`);
+    }
+  }
+}
 for (const option of cycleSupport?.context_options || []) {
   if (!isStringArray(option.domain_ids)) {
     errors.push(`cycle_support_guidance.json context ${option.id || '(unnamed)'}: domain_ids must be a string array`);

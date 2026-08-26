@@ -110,6 +110,31 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_nutrition_activity_context')).toBe(true);
   });
 
+  it('surfaces context-relevant supplement safety rules without inventing a supplement need', () => {
+    const cyclePlan = deriveActionablePlan(report([]), { reproductiveContext: 'menstrual_cycle' });
+    const cycleRuleIds = cyclePlan.supplementSafety.relevantRules.map((rule) => rule.id);
+    expect(cycleRuleIds).toEqual(expect.arrayContaining(['iron', 'magnesium', 'calcium', 'vitamin_b6']));
+    expect(cyclePlan.supplements).toHaveLength(0);
+
+    const neutralPlan = deriveActionablePlan(report([]));
+    expect(neutralPlan.supplementSafety.relevantRules.map((rule) => rule.id)).not.toContain('iron');
+  });
+
+  it('routes an explicitly named B6 product to the neuropathy guardrail', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: ['pyridoxine 50 mg'],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+      },
+    });
+    const b6Rule = plan.supplementSafety.relevantRules.find((rule) => rule.id === 'vitamin_b6');
+    expect(b6Rule?.avoid.join(' ')).toContain('neurologic symptoms');
+    expect(b6Rule?.sources).toContain('nih_ods_vitamin_b6');
+  });
+
   it('keeps PGx medication guidance at the review boundary', () => {
     const plan = deriveActionablePlan({
       ...report([]),

@@ -18,6 +18,8 @@ describe('support resource context', () => {
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_a')).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_k')).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'potassium')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_b6')).toBe(true);
+    expect(context.supplement_safety.rules.find((rule) => rule.id === 'vitamin_b6')?.sources).toContain('nih_ods_vitamin_b6');
     expect(context.food_safety.profile_minimum_required.length).toBeGreaterThan(0);
     expect(context.food_safety.source_registry.nih_ods_selenium).toBeDefined();
     expect(context.food_safety.conditional_questions.pmdd_cycle).toBeDefined();

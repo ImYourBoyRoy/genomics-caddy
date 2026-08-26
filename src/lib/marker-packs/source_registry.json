@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -322,6 +322,14 @@
       "evidence_type": "NIH nutrient fact sheet",
       "conflict_of_interest": "U.S. NIH public health resource",
       "notes": "Use for B12 food sources, deficiency risk and supplement/fortified food context."
+    },
+    "nih_ods_vitamin_b6": {
+      "name": "NIH Office of Dietary Supplements Vitamin B6 Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminB6-HealthProfessional/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH nutrient and supplement safety fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for vitamin B6 food sources, supplement upper-limit framing, neuropathy risk from excessive intake, and medication interactions; do not convert a symptom pattern or genotype into a B6 dose."
     },
     "nih_ods_choline": {
       "name": "NIH Office of Dietary Supplements Choline Fact Sheet",

@@ -467,11 +467,13 @@ function selectSupplementSafetyRules(
   supplementNames: string[],
   medicationNames: string[],
   allergyTerms: string[],
+  reproductiveContext?: string,
 ): typeof supplementSafety.rules {
   const markerGenes = new Set(markers.flatMap((marker) => marker.gene.split(/[\s/]+/).map((gene) => gene.toLowerCase())));
   const supplementContext = supplementNames.join(' ').toLowerCase();
   const medicationContext = medicationNames.join(' ').toLowerCase();
   const allergyContext = allergyTerms.join(' ').toLowerCase();
+  const selectedContextId = selectedReproductiveContextOption(reproductiveContext)?.id;
   return supplementSafety.rules.filter((rule) => {
     const geneMatch = rule.signal_genes.some((gene) => markerGenes.has(gene.toLowerCase()));
     const termMatch = rule.match_terms.some((term) => supplementContext.includes(term.toLowerCase()));
@@ -481,7 +483,8 @@ function selectSupplementSafetyRules(
     const allergyMatch = (rule as typeof rule & { allergy_terms?: string[] }).allergy_terms?.some((term) =>
       allergyContext.includes(term.toLowerCase())
     ) || false;
-    return geneMatch || termMatch || medicationMatch || allergyMatch;
+    const contextMatch = (rule as typeof rule & { context_ids?: string[] }).context_ids?.includes(selectedContextId || '') || false;
+    return geneMatch || termMatch || medicationMatch || allergyMatch || contextMatch;
   });
 }
 
@@ -728,7 +731,8 @@ export function deriveActionablePlan(
     personalSafetyContext?.medications || [],
     [
       ...(personalSafetyContext?.allergies || []),
-    ]
+    ],
+    actionabilityContext.reproductiveContext,
   );
   const medicationSafety = deriveMedicationSafety(
     markerValues,

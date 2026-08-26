@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
@@ -403,7 +403,7 @@
       "questions": [
         "What food, caffeine, alcohol, salt, sugar, missed meals, hydration, sleep, or activity patterns change symptoms for this person, and which observations are repeated rather than assumed?",
         "Are there heavy or prolonged periods, fatigue, dizziness, restricted eating, gastrointestinal symptoms, kidney or liver conditions, thyroid history, pregnancy possibility, allergies, or other factors that change nutrition and supplement safety?",
-        "What are the exact supplement, OTC, medication, and fortified-food labels, including iron, magnesium, calcium, vitamin D, vitamin A, omega-3, iodine, and caffeine products?",
+        "What are the exact supplement, OTC, medication, and fortified-food labels, including iron, magnesium, calcium, vitamin D, vitamin A, vitamin B6, omega-3, iodine, and caffeine products?",
         "What activity is realistic during symptomatic days, and are there pain, migraine, faintness, chest symptoms, unusual breathlessness, or recovery changes that should stop exercise and prompt care?"
       ],
       "support_options": [

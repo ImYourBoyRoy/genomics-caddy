@@ -1,6 +1,6 @@
 {
   "name": "Supplement Safety & Interaction Guardrails",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits.",
@@ -34,6 +34,7 @@
     {
       "id": "magnesium",
       "label": "Magnesium food and interaction safety",
+      "context_ids": ["menstrual_cycle", "cycle_linked_pain_headache", "pregnancy_postpartum"],
       "signal_genes": ["COMT"],
       "match_terms": ["magnesium"],
       "medication_terms": ["antibiotic", "bisphosphonate", "diuretic", "acid suppressant", "omeprazole"],
@@ -75,6 +76,7 @@
     {
       "id": "iron",
       "label": "Iron supplementation requires evidence",
+      "context_ids": ["menstrual_cycle", "cycle_linked_pain_headache", "uterine_pelvic", "pregnancy_postpartum", "preconception_fertility"],
       "signal_genes": ["HFE"],
       "match_terms": ["iron"],
       "medication_terms": ["antacid", "levothyroxine", "antibiotic"],
@@ -94,6 +96,7 @@
     {
       "id": "vitamin_d",
       "label": "Vitamin D dose and lab safety",
+      "context_ids": ["pregnancy_postpartum", "preconception_fertility", "menopause_hormone_therapy", "hormone_therapy_context"],
       "signal_genes": ["VDR", "GC", "DHCR7", "CYP2R1"],
       "match_terms": ["vitamin d", "25(oh)d"],
       "medication_terms": ["steroid", "corticosteroid", "orlistat"],
@@ -114,6 +117,7 @@
     {
       "id": "vitamin_a",
       "label": "Vitamin A and retinoid safety",
+      "context_ids": ["pregnancy_postpartum", "preconception_fertility"],
       "signal_genes": [],
       "match_terms": ["vitamin a", "retinol", "retinyl", "cod liver oil", "beta-carotene", "isotretinoin", "acitretin", "bexarotene"],
       "medication_terms": ["isotretinoin", "acitretin", "bexarotene", "retinoid"],
@@ -134,6 +138,7 @@
     {
       "id": "iodine",
       "label": "Iodine and thyroid-context safety",
+      "context_ids": ["pregnancy_postpartum", "preconception_fertility"],
       "signal_genes": ["DIO1", "DIO2", "TSHR", "SLC5A5", "TPO", "GPX1"],
       "match_terms": ["iodine", "iodide", "kelp", "sea moss", "seaweed"],
       "medication_terms": ["methimazole", "propylthiouracil", "lisinopril", "spironolactone", "potassium-sparing"],
@@ -194,6 +199,7 @@
     {
       "id": "calcium",
       "label": "Calcium, kidney-stone, and medication safety",
+      "context_ids": ["menstrual_cycle", "pregnancy_postpartum", "preconception_fertility", "menopause_hormone_therapy", "hormone_therapy_context"],
       "signal_genes": ["VDR", "CASR", "CYP24A1", "SLC34A1"],
       "match_terms": ["calcium", "calcium citrate", "calcium carbonate", "bone meal"],
       "medication_terms": ["levothyroxine", "dolutegravir", "lithium", "quinolone", "ciprofloxacin"],
@@ -234,6 +240,7 @@
     {
       "id": "folate",
       "label": "Folate and MTHFR guardrail",
+      "context_ids": ["pregnancy_postpartum", "preconception_fertility"],
       "signal_genes": ["MTHFR", "MTHFD1", "PEMT"],
       "match_terms": ["folate", "folic acid", "methylfolate"],
       "food_first": [
@@ -248,6 +255,28 @@
         "pregnancy or preconception guidance"
       ],
       "sources": ["cdc_mthfr_folic_acid", "nih_ods_folate"]
+    },
+    {
+      "id": "vitamin_b6",
+      "label": "Vitamin B6 dose and neuropathy safety",
+      "context_ids": ["menstrual_cycle", "pregnancy_postpartum", "preconception_fertility"],
+      "signal_genes": [],
+      "match_terms": ["vitamin b6", "vitamin-b6", "pyridoxine", "pyridoxal", "pyridoxal-5-phosphate", "p5p", "b-complex", "b complex"],
+      "medication_terms": ["cycloserine", "theophylline", "antiepileptic", "anti-epileptic", "seizure medication"],
+      "food_first": [
+        "Prefer ordinary food sources and check the full product label before considering a vitamin B6 supplement; a symptom pattern or DNA result does not establish a B6 need."
+      ],
+      "avoid": [
+        "Do not stack B6 across a multivitamin, B-complex, energy product, and single-nutrient supplement without totaling the amount and duration.",
+        "Do not use high-dose or long-term supplemental B6 to treat cycle symptoms, mood, nausea, or a methylation claim without clinician guidance.",
+        "Stop self-directed B6 supplementation and seek medical advice for new numbness, tingling, burning pain, balance changes, or other neurologic symptoms."
+      ],
+      "confirm_with": [
+        "exact product labels, B6 form, amount, total daily intake, and duration",
+        "new neurologic symptoms and other possible causes of neuropathy",
+        "pregnancy/lactation, kidney/liver, and medication context, including cycloserine, theophylline, or seizure medicines"
+      ],
+      "sources": ["nih_ods_vitamin_b6", "nih_ods_supplements"]
     },
     {
       "id": "creatine",

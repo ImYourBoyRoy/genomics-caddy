@@ -1,17 +1,27 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
   "version": "1.0.0",
-  "last_updated": "2026-07-10",
+  "last_updated": "2026-08-25",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
-  "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. Do not hardcode parallel rules in the UI. Expand by editing this JSON (or adding per-marker lifestyle fields later). Soft genetic context only \u2014 never override allergies, medical diets, or clinician orders (see meal_planning_rules.json).",
-  "disclaimer": "Educational suggestions only. Not medical advice. Confirm with labs and a qualified clinician before changing diet or supplements.",
+  "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. Do not hardcode parallel rules in the UI. Every item is conditional guidance, never a diagnosis, prescription, permanent elimination diet, or medication instruction. Soft genetic context must yield to allergies, medical diets, pregnancy/lactation context, medications, labs, and clinician orders (see meal_planning_rules.json).",
+  "disclaimer": "Educational suggestions only. Not medical advice. Confirm symptoms, labs, medications, and clinical context before changing diet or supplements.",
+  "policy": {
+    "default_actionability": "symptom_or_lab_conditioned",
+    "safety_notes": [
+      "More markers increase coverage, not certainty or personal disease probability.",
+      "Do not start, stop, or change a medication from raw DNA alone; use a current CPIC/FDA/label-supported PGx result with a clinician or pharmacist.",
+      "Do not start high-dose supplements or impose long-term food exclusions from a common SNP alone.",
+      "A safety concern can be more important than a wellness suggestion: review allergies, pregnancy/lactation, kidney/liver disease, eating-disorder risk, and medication interactions first."
+    ]
+  },
   "rules": [
     {
       "id": "mthfr_methylation",
       "genes": [
         "MTHFR"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -22,18 +32,9 @@
         "metabolic"
       ],
       "favor": [
-        "Leafy greens (spinach, kale)",
-        "Lentils & beans",
-        "Organic eggs"
+        "Folate-rich foods (leafy greens, beans, eggs) as part of a balanced diet"
       ],
-      "avoid": [
-        "Folic acid fortified foods",
-        "Synthetic multivitamins"
-      ],
-      "supplements": [
-        "Methylfolate (L-5-MTHF)",
-        "Methylcobalamin (active B12)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Homocysteine (plasma)",
@@ -50,6 +51,7 @@
       "genes": [
         "APOE"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "interpretation_contains": [
         "\u03b54",
         "e4",
@@ -71,8 +73,7 @@
         "Trans fats"
       ],
       "supplements": [
-        "High-potency Omega-3 DHA/EPA",
-        "Vitamin D3 + K2"
+        "Omega-3 food or supplement options after reviewing diet, lipids, and medication interactions"
       ],
       "lab_tests": [
         {
@@ -95,6 +96,7 @@
         "FADS1",
         "FADS2"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -107,10 +109,7 @@
         "Pre-formed DHA/EPA (seafood, fatty fish)",
         "Algae oil"
       ],
-      "avoid": [
-        "Industrial seed oils (canola, corn, soy)",
-        "High omega-6 foods"
-      ],
+      "avoid": [],
       "supplements": [
         "Algae-derived DHA/EPA or high-quality fish oil"
       ],
@@ -126,6 +125,7 @@
       "genes": [
         "HFE"
       ],
+      "actionability_class": "clinical_confirmation",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -163,6 +163,7 @@
         "LCT",
         "MCM6"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -195,6 +196,7 @@
       "genes": [
         "ALDH2"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -207,10 +209,7 @@
         "Alcohol",
         "Acetaldehyde exposure"
       ],
-      "supplements": [
-        "N-Acetyl Cysteine (NAC)",
-        "Glutathione precursors"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Liver Enzyme Panel (ALT/AST)",
@@ -225,6 +224,7 @@
         "SLC2A9",
         "ABCG2"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -243,9 +243,7 @@
         "Beer",
         "High-fructose corn syrup"
       ],
-      "supplements": [
-        "Vitamin C (helps promote uric acid excretion)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Serum Uric Acid",
@@ -258,6 +256,7 @@
       "genes": [
         "VDR"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -271,9 +270,7 @@
         "Egg yolks",
         "UV-irradiated mushrooms"
       ],
-      "supplements": [
-        "Vitamin D3 + Vitamin K2 (to direct calcium to bones)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "25-hydroxyvitamin D [25(OH)D]",
@@ -291,6 +288,7 @@
         "GSTT1",
         "GSTM1"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -303,10 +301,7 @@
         "Cruciferous vegetables (broccoli, brussels sprouts)",
         "Allium vegetables (garlic, onions)"
       ],
-      "supplements": [
-        "Sulforaphane / Broccoli sprout extract",
-        "Milk Thistle (Silymarin)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Comprehensive Liver Panel",
@@ -319,6 +314,7 @@
       "genes": [
         "COMT"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "interpretation_contains": [
         "Met/Met",
         "slow COMT",
@@ -337,10 +333,7 @@
         "Chronic sleep deprivation",
         "High-stress environments"
       ],
-      "supplements": [
-        "Magnesium Glycinate",
-        "L-Theanine (calming support)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Salivary Cortisol Rhythm (4-point)",
@@ -353,6 +346,7 @@
       "genes": [
         "CYP1A2"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "interpretation_contains": [
         "slow metabolizer",
         "slow caffeine"
@@ -372,6 +366,7 @@
       "genes": [
         "NOS3"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -384,10 +379,7 @@
         "Arugula & leafy spinach",
         "Pomegranates"
       ],
-      "supplements": [
-        "L-Citrulline or L-Arginine",
-        "Nitric Oxide support"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Cardiovascular Risk Panel / Blood Pressure",
@@ -400,6 +392,7 @@
       "genes": [
         "GPX1"
       ],
+      "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
         "high_risk",
         "moderate_risk"
@@ -412,9 +405,7 @@
         "Seafood",
         "Sunflower seeds"
       ],
-      "supplements": [
-        "Selenium (L-selenomethionine)"
-      ],
+      "supplements": [],
       "lab_tests": [
         {
           "name": "Selenium level (blood)",
@@ -428,6 +419,7 @@
         "BRCA1",
         "BRCA2"
       ],
+      "actionability_class": "clinical_confirmation",
       "severity_classes": [
         "high_risk",
         "confirmation_required"
@@ -457,6 +449,7 @@
         "MSH6",
         "PMS2"
       ],
+      "actionability_class": "clinical_confirmation",
       "severity_classes": [
         "high_risk",
         "confirmation_required"

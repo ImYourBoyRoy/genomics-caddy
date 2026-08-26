@@ -74,6 +74,16 @@
       default: return "Normal / Benign";
     }
   }
+
+  function sexScopeLabel(scope: string): string {
+    switch (scope) {
+      case 'xx_reproductive': return 'XX reproductive context';
+      case 'xy_reproductive': return 'XY reproductive context';
+      case 'x_linked': return 'X-linked context';
+      case 'y_linked': return 'Y-linked context';
+      default: return scope.replaceAll('_', ' ');
+    }
+  }
 </script>
 
 <div
@@ -108,6 +118,11 @@
       </span>
     </span>
     <EvidenceBadge tier={marker.evidence_tier} />
+    {#if marker.sex_scope && marker.sex_scope !== 'all'}
+      <span class="scope-badge" title="Biological applicability hint only; this is not gender or anatomy.">
+        {sexScopeLabel(marker.sex_scope)}
+      </span>
+    {/if}
   </div>
 
   <!-- Status line: genotype result + severity verdict -->

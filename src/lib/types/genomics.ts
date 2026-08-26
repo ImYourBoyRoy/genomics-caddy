@@ -15,6 +15,13 @@ export type EffectDirection = "risk" | "protective" | "context_dependent" | "tra
 
 export type VariantType = "snp" | "indel" | "repeat" | "cnv" | "hla" | "haplotype" | "star_allele" | "gene_panel";
 
+/**
+ * Optional applicability hint for explicitly sex-linked or reproductive markers.
+ * This is biological/genomic context, not gender identity or anatomy. Missing
+ * values mean the marker is intended for all users unless the pack says otherwise.
+ */
+export type MarkerSexScope = "all" | "xx_reproductive" | "xy_reproductive" | "x_linked" | "y_linked" | string;
+
 export type SeverityClass =
   | "high_risk"
   | "moderate_risk"
@@ -56,6 +63,7 @@ export interface MarkerDefinition {
   effect_direction: EffectDirection;
   raw_dna_limitation?: string | null;
   clinical_confirmation_required?: boolean | null;
+  sex_scope?: MarkerSexScope | null;
   variant_type?: VariantType | null;
   sources?: MarkerSource[] | null;
   expected_plus_alleles?: string[] | null;
@@ -127,6 +135,7 @@ export interface VariantCategoryLink {
   confirm_with: string[];
   raw_dna_limitation?: string | null;
   clinical_confirmation_required?: boolean | null;
+  sex_scope?: MarkerSexScope | null;
   interpretation_blocked_if_unverified?: boolean | null;
   sources: MarkerSource[];
 }
@@ -270,6 +279,7 @@ export interface DisplayMarker {
   confirm_with: string[];
   do_not_claim: string[];
   clinical_confirmation_required?: boolean;
+  sex_scope?: MarkerSexScope;
   raw_dna_limitation?: string;
   pharmgkb?: PharmGkbAnnotation | null;
   clingen?: ClinGenAnnotation | null;

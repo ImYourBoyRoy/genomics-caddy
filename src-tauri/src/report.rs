@@ -96,6 +96,8 @@ pub struct MarkerDefinition {
     pub effect_direction: EffectDirection,
     pub raw_dna_limitation: Option<String>,
     pub clinical_confirmation_required: Option<bool>,
+    /// Optional biological applicability hint; never inferred as gender or anatomy.
+    pub sex_scope: Option<String>,
     pub sources: Option<Vec<MarkerSource>>,
     pub variant_type: Option<String>,
     pub expected_plus_alleles: Option<Vec<String>>,
@@ -201,6 +203,8 @@ pub struct VariantCategoryLink {
     pub raw_dna_limitation: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clinical_confirmation_required: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sex_scope: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interpretation_blocked_if_unverified: Option<bool>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -1638,6 +1642,7 @@ pub fn generate_report(
                 confirm_with: m.confirm_with.clone(),
                 raw_dna_limitation: m.raw_dna_limitation.clone(),
                 clinical_confirmation_required: m.clinical_confirmation_required,
+                sex_scope: m.sex_scope.clone(),
                 interpretation_blocked_if_unverified: m.interpretation_blocked_if_unverified,
                 sources,
             };
@@ -1865,6 +1870,7 @@ mod tests {
             effect_direction: EffectDirection::Risk,
             raw_dna_limitation: None,
             clinical_confirmation_required: Some(true),
+            sex_scope: None,
             sources: None,
             variant_type: Some("snp".to_string()),
             expected_plus_alleles: Some(vec!["A".to_string(), "C".to_string()]),
@@ -1958,6 +1964,7 @@ mod tests {
             effect_direction: EffectDirection::Risk,
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
+            sex_scope: None,
             sources: None,
             variant_type: None,
             expected_plus_alleles: None,
@@ -1982,6 +1989,7 @@ mod tests {
             effect_direction: EffectDirection::Risk,
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
+            sex_scope: None,
             sources: None,
             variant_type: None,
             expected_plus_alleles: None,
@@ -2006,6 +2014,7 @@ mod tests {
             effect_direction: EffectDirection::Risk,
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
+            sex_scope: None,
             sources: None,
             variant_type: None,
             expected_plus_alleles: None,

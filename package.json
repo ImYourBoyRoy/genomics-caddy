@@ -19,6 +19,8 @@
     "clean:deep": "node -e \"const fs=require('fs'); for (const p of ['node_modules','package-lock.json','dist','.svelte-kit']) fs.rmSync(p,{recursive:true,force:true});\"",
     "clean:fresh": "npm run clean:deep && npm install",
     "test": "vitest run",
+    "validate:packs": "node ./scripts/validate_marker_packs.mjs",
+    "audit:dna-fixtures": "python3 ./scripts/audit_dna_fixtures.py",
     "test:watch": "vitest",
     "smoke": "python scripts/smoke_test.py",
     "mcp": "tauri dev -- --mcp",

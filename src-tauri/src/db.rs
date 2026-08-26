@@ -683,6 +683,7 @@ pub fn open_user_db_with_progress<P: AsRef<Path>>(
     ensure_schema(&conn)?;
     if let Some(data_dir) = path.as_ref().parent() {
         migrate_legacy_sample_tables(&conn, data_dir)?;
+        refresh_genetic_sex_labels(&conn, data_dir)?;
     }
 
     emit_progress("Migrating reference schema mappings...");
@@ -1188,6 +1189,93 @@ fn migrate_legacy_sample_tables(conn: &Connection, data_dir: &Path) -> Result<()
     Ok(())
 }
 
+/// Infer a conservative chromosome-call label from the raw file.
+///
+/// A missing Y chromosome call is not evidence of an XX pattern: many
+/// consumer exports omit Y markers or provide too little coverage. The label
+/// is therefore an applicability hint for biological/genomic context, not a
+/// statement about gender identity, anatomy, fertility, or hormone status.
+fn infer_genetic_sex(records: &[SnpRecord]) -> String {
+    let mut y_records = 0usize;
+    let mut y_calls = 0usize;
+
+    for record in records {
+        if !record.chromosome.eq_ignore_ascii_case("Y") {
+            continue;
+        }
+        y_records += 1;
+        let genotype = format!("{}{}", record.allele1.trim(), record.allele2.trim());
+        let has_call = !genotype.is_empty()
+            && genotype != "--"
+            && genotype != "-"
+            && genotype != "00"
+            && !genotype.contains('?');
+        if has_call {
+            y_calls += 1;
+        }
+    }
+
+    classify_genetic_sex(y_records, y_calls)
+}
+
+fn classify_genetic_sex(y_records: usize, y_calls: usize) -> String {
+    if y_calls >= 20 {
+        "XY-like (Y chromosome calls present)".to_string()
+    } else if y_records == 0 {
+        "Unknown (Y chromosome not observed)".to_string()
+    } else {
+        "Uncertain (limited Y chromosome calls)".to_string()
+    }
+}
+
+/// Recompute derived chromosome-call labels for samples imported before the
+/// conservative inference rule was introduced. This intentionally reads only
+/// Y rows and never treats missing Y coverage as evidence of XX.
+fn refresh_genetic_sex_labels(conn: &Connection, data_dir: &Path) -> Result<()> {
+    let sample_ids = conn
+        .prepare("SELECT id FROM samples")?
+        .query_map([], |row| row.get::<_, i64>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+
+    for sample_id in sample_ids {
+        let sample_path = crate::paths::sample_db_path(data_dir, sample_id);
+        if !sample_path.is_file() {
+            continue;
+        }
+
+        let sample_conn = match connect_sample(data_dir, sample_id) {
+            Ok(sample_conn) => sample_conn,
+            Err(error) => {
+                eprintln!(
+                    "Warning: could not refresh chromosome context for sample {sample_id}: {error}"
+                );
+                continue;
+            }
+        };
+        let mut stmt = sample_conn.prepare(
+            "SELECT allele1, allele2 FROM genotypes
+             WHERE UPPER(REPLACE(UPPER(chromosome), 'CHR', '')) = 'Y'",
+        )?;
+        let y_records = stmt
+            .query_map([], |row| {
+                Ok(SnpRecord {
+                    rsid: String::new(),
+                    chromosome: "Y".to_string(),
+                    position: 0,
+                    allele1: row.get(0)?,
+                    allele2: row.get(1)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        let genetic_sex = infer_genetic_sex(&y_records);
+        conn.execute(
+            "UPDATE samples SET genetic_sex = ? WHERE id = ?",
+            params![genetic_sex, sample_id],
+        )?;
+    }
+    Ok(())
+}
+
 pub fn import_raw_genome<F: Fn(u32, &str)>(
     conn: &mut Connection,
     data_dir: &Path,
@@ -1211,21 +1299,8 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
         )
         .map_err(|e| format!("Failed to retrieve sample ID: {}", e))?;
 
-    // Determine genetic sex from Y chromosome density
-    let mut y_call_count = 0;
-    for record in records {
-        if record.chromosome == "Y" {
-            let genotype = format!("{}{}", record.allele1.trim(), record.allele2.trim());
-            if genotype != "--" && genotype != "-" && genotype != "00" && !genotype.is_empty() {
-                y_call_count += 1;
-            }
-        }
-    }
-    let genetic_sex = if y_call_count > 20 {
-        "XY (Male)".to_string()
-    } else {
-        "XX (Female)".to_string()
-    };
+    // Determine a conservative chromosome-call hint from Y coverage.
+    let genetic_sex = infer_genetic_sex(records);
 
     conn.execute(
         "UPDATE samples SET genetic_sex = ? WHERE id = ?",
@@ -2421,4 +2496,46 @@ pub fn get_vector_promoted_findings(
         .map_err(|e| e.to_string())?;
     rows.collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod sex_context_tests {
+    use super::infer_genetic_sex;
+    use crate::parser::SnpRecord;
+
+    fn y_record(index: usize, called: bool) -> SnpRecord {
+        SnpRecord {
+            rsid: format!("rs{index}"),
+            chromosome: "Y".to_string(),
+            position: index as u64 + 1,
+            allele1: if called { "A" } else { "-" }.to_string(),
+            allele2: if called { "A" } else { "-" }.to_string(),
+        }
+    }
+
+    #[test]
+    fn missing_y_data_stays_unknown() {
+        assert_eq!(
+            infer_genetic_sex(&[]),
+            "Unknown (Y chromosome not observed)"
+        );
+    }
+
+    #[test]
+    fn strong_y_coverage_is_xy_like_not_gender_identity() {
+        let records = (0..20).map(|i| y_record(i, true)).collect::<Vec<_>>();
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "XY-like (Y chromosome calls present)"
+        );
+    }
+
+    #[test]
+    fn sparse_y_coverage_is_uncertain() {
+        let records = (0..5).map(|i| y_record(i, i == 0)).collect::<Vec<_>>();
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Uncertain (limited Y chromosome calls)"
+        );
+    }
 }

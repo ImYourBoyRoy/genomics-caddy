@@ -57,11 +57,19 @@ export interface ActionablePlan {
   supplements: SupplementItem[];
   labTests: LabTest[];
   labGroups: LabTestGroup[];
+  /** Guardrails shown with every generated actionability plan. */
+  safetyNotes: string[];
 }
+
+export type ActionabilityClass =
+  | 'general_wellness'
+  | 'symptom_or_lab_conditioned'
+  | 'clinical_confirmation';
 
 interface ActionableRule {
   id?: string;
   genes: string[];
+  actionability_class?: ActionabilityClass;
   severity_classes?: SeverityClass[];
   interpretation_contains?: string[];
   favor?: string[];
@@ -75,6 +83,14 @@ interface ActionableRule {
   notes?: string;
 }
 
+interface ActionabilityPolicy {
+  default_actionability?: ActionabilityClass;
+  safety_notes?: string[];
+}
+
+const ACTIONABILITY_POLICY: ActionabilityPolicy =
+  (guidanceDoc as { policy?: ActionabilityPolicy }).policy || {};
+
 const ACTIONABLE_RULES: ActionableRule[] = Array.isArray(
   (guidanceDoc as { rules?: ActionableRule[] }).rules
 )
@@ -82,6 +98,35 @@ const ACTIONABLE_RULES: ActionableRule[] = Array.isArray(
   : [];
 
 const URGENCY_RANK = { routine: 0, consider: 1, urgent: 2 } as const;
+
+function qualifyGuidance(
+  text: string,
+  actionabilityClass: ActionabilityClass,
+  kind: 'favor' | 'avoid' | 'supplement'
+): string {
+  const clean = text.trim();
+  if (!clean) return clean;
+
+  if (kind === 'supplement') {
+    return `Discuss with a clinician or pharmacist before starting: ${clean}`;
+  }
+
+  switch (actionabilityClass) {
+    case 'clinical_confirmation':
+      return kind === 'avoid'
+        ? `Do not avoid solely from raw DNA; confirm the finding clinically first: ${clean}`
+        : `Only consider after clinical confirmation and individualized advice: ${clean}`;
+    case 'symptom_or_lab_conditioned':
+      return kind === 'avoid'
+        ? `Consider limiting only if symptoms, labs, or clinician guidance support it: ${clean}`
+        : `Consider only if symptoms, labs, or personal goals support it: ${clean}`;
+    case 'general_wellness':
+    default:
+      return kind === 'avoid'
+        ? `General health consideration, not a genotype-specific restriction: ${clean}`
+        : `General low-risk option, not a genotype prescription: ${clean}`;
+  }
+}
 
 const LAB_TIER_META: Record<LabTest['tier'], { label: string; hint: string; order: number }> = {
   counselor: {
@@ -290,6 +335,7 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const topFindings: TopFinding[] = [];
   const favorSet = new Set<string>();
   const avoidSet = new Set<string>();
+  const safetyNotes = new Set<string>(ACTIONABILITY_POLICY.safety_notes || []);
   const supplementsMap = new Map<string, string[]>();
   const labTestsMap = new Map<
     string,
@@ -380,19 +426,25 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     const reason = `Based on your ${rule.genes.join('/')} variant (${matchingMarkers
       .map((m) => m.marker.rsid)
       .join(', ')})`;
+    const actionabilityClass =
+      rule.actionability_class ||
+      ACTIONABILITY_POLICY.default_actionability ||
+      'symptom_or_lab_conditioned';
 
-    rule.favor?.forEach((f) => favorSet.add(f));
-    rule.avoid?.forEach((a) => avoidSet.add(a));
+    rule.favor?.forEach((f) => favorSet.add(qualifyGuidance(f, actionabilityClass, 'favor')));
+    rule.avoid?.forEach((a) => avoidSet.add(qualifyGuidance(a, actionabilityClass, 'avoid')));
     rule.supplements?.forEach((s) => {
       const list = supplementsMap.get(s) || [];
-      list.push(reason);
+      list.push(`${reason}; ${qualifyGuidance(s, actionabilityClass, 'supplement')}`);
       supplementsMap.set(s, list);
     });
     rule.lab_tests?.forEach((lt) => {
       upsertLab(labTestsMap, lt.name, reason, lt.urgency, !!lt.requires_counselor);
     });
     if (rule.notes) {
-      overallNotes += (overallNotes ? '\n' : '') + `• ${rule.genes.join('/')}: ${rule.notes}`;
+      overallNotes +=
+        (overallNotes ? '\n' : '') +
+        `• ${rule.genes.join('/')}: ${qualifyGuidance(rule.notes, actionabilityClass, 'favor')}`;
     }
   }
 
@@ -465,5 +517,6 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     supplements,
     labTests,
     labGroups,
+    safetyNotes: Array.from(safetyNotes),
   };
 }

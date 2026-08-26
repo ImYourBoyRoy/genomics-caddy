@@ -198,7 +198,7 @@
     "cdc_mthfr_folic_acid": {
       "name": "CDC MTHFR and Folic Acid Guidance",
       "url": "https://www.cdc.gov/folic-acid/data-research/mthfr/index.html",
-      "accessed": "2026-07-06",
+      "accessed": "2026-08-25",
       "evidence_type": "CDC public health guidance",
       "conflict_of_interest": "U.S. CDC public health resource",
       "notes": "Use to prevent MTHFR overclaims and false folic-acid avoidance recommendations."
@@ -226,6 +226,38 @@
       "evidence_type": "NIH nutrient fact sheet",
       "conflict_of_interest": "U.S. NIH public health resource",
       "notes": "Use for vitamin D intake/lab context; genotype does not diagnose deficiency."
+    },
+    "fda_pharmacogenomic_biomarkers": {
+      "name": "FDA Table of Pharmacogenomic Biomarkers in Drug Labeling",
+      "url": "https://www.fda.gov/drugs/science-and-research-drugs/table-pharmacogenomic-biomarkers-drug-labeling/",
+      "accessed": "2026-08-25",
+      "evidence_type": "FDA drug-labeling resource",
+      "conflict_of_interest": "U.S. Food and Drug Administration regulatory resource",
+      "notes": "Use only for drug-label-supported biomarker context. Raw array results do not justify medication changes; review the current label and clinician/pharmacist guidance."
+    },
+    "fda_pharmacogenetic_associations": {
+      "name": "FDA Table of Pharmacogenetic Associations",
+      "url": "https://www.fda.gov/medical-devices/precision-medicine/table-pharmacogenetic-associations",
+      "accessed": "2026-08-25",
+      "evidence_type": "FDA pharmacogenetic association table",
+      "conflict_of_interest": "U.S. Food and Drug Administration regulatory resource",
+      "notes": "Use to separate therapeutic-management recommendations from pharmacokinetic-only or potential-response associations. Patients should not adjust medication without a prescriber."
+    },
+    "cpic_guidelines": {
+      "name": "CPIC Pharmacogenomic Guidelines",
+      "url": "https://cpicpgx.org/guidelines/",
+      "accessed": "2026-08-25",
+      "evidence_type": "Clinical pharmacogenomic guideline consortium",
+      "conflict_of_interest": "Professional guideline consortium; review individual guideline disclosures",
+      "notes": "Use to interpret an available validated PGx phenotype for a drug; CPIC guidance is not a reason to infer a phenotype from an incomplete consumer SNP panel."
+    },
+    "nih_ods_supplements": {
+      "name": "NIH Office of Dietary Supplements Fact Sheets",
+      "url": "https://ods.od.nih.gov/factsheets/list-all/",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH dietary supplement safety and nutrient resource",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for nutrient forms, upper limits, medication interactions, deficiency/excess context and pregnancy/lactation cautions before presenting supplement ideas."
     }
   }
 }

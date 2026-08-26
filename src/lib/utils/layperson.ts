@@ -224,12 +224,12 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This variant reduces the speed at which your body turns dopamine into norepinephrine. This changes the balance of key focus and stress chemicals in your nervous system."
   },
   "rs1801133": {
-    simpleImpact: "Reduced conversion of folic acid to active folate (MTHFR gene)",
-    simpleMeaning: "Having two copies of this variant can reduce your ability to convert folic acid from food or supplements into the active form your body needs by up to 70%. It is important to get enough natural folate."
+    simpleImpact: "Folate-processing context marker (MTHFR gene)",
+    simpleMeaning: "This common variant may modestly affect folate-related lab values in some people, especially with two copies, but it does not mean you cannot process folic acid. Do not avoid folic acid or replace it with a supplement solely because of this genotype; use diet, labs, pregnancy context, and clinician guidance."
   },
   "rs1801131": {
-    simpleImpact: "Slightly reduced folate conversion (MTHFR gene)",
-    simpleMeaning: "This variant causes a minor decrease in how well you process folate. If combined with other MTHFR variants, it can moderately affect your body's methylation process."
+    simpleImpact: "Folate-processing context marker (MTHFR gene)",
+    simpleMeaning: "This common variant is usually a small-effect context marker. It does not diagnose a folate problem or justify avoiding folic acid; consider folate, B12, and homocysteine only when clinically relevant."
   },
   "rs1800795": {
     simpleImpact: "Higher baseline inflammation (IL-6 gene)",

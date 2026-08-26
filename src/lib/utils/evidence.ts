@@ -21,39 +21,56 @@ export interface TierInfo {
   label: string;
   description: string;
   colorClass: string;
+  /** Evidence strength is not the same as personal certainty or disease probability. */
+  confidenceLabel: string;
 }
 
 export function getTierInfo(tier: string): TierInfo {
-  switch (tier) {
-    case "A_clinical_guideline":
+  const normalized = String(tier || "").trim();
+  const band = normalized.charAt(0).toUpperCase();
+
+  switch (band) {
+    case "A":
       return {
-        label: "Tier A — Clinical Guideline",
-        description: "Supported by established medical guidelines (e.g. CPIC).",
-        colorClass: "tier-a"
+        label: "Tier A — Clinical / high evidence",
+        description: "Strongest evidence band in this app, but a raw consumer genotype still may require clinical confirmation and does not establish personal disease probability.",
+        colorClass: "tier-a",
+        confidenceLabel: "Higher evidence; personal impact still needs context"
       };
-    case "B_replicated_common_marker":
+    case "B":
       return {
-        label: "Tier B — Well-Studied",
-        description: "Confirmed across multiple large-scale studies.",
-        colorClass: "tier-b"
+        label: "Tier B — Replicated context",
+        description: "Replicated or clinically relevant context with modest or conditional effects. This is not a diagnosis or a personal probability estimate.",
+        colorClass: "tier-b",
+        confidenceLabel: "Moderate evidence; context-dependent"
       };
-    case "C_biohacker_hypothesis":
+    case "C":
       return {
         label: "Tier C — Preliminary",
-        description: "Limited evidence. Treat as hypothesis, not fact.",
-        colorClass: "tier-c"
+        description: "Limited, mechanistic, or biohacker-hypothesis evidence. Treat as a testable idea, not a fact or treatment instruction.",
+        colorClass: "tier-c",
+        confidenceLabel: "Limited evidence; hypothesis only"
       };
-    case "D_research_only":
+    case "D":
       return {
         label: "Tier D — Research Only",
         description: "Early research. Not validated for clinical use.",
-        colorClass: "tier-d"
+        colorClass: "tier-d",
+        confidenceLabel: "Research only; no actionability"
+      };
+    case "E":
+      return {
+        label: "Tier E — Guardrail / evidence gap",
+        description: "This entry exists to prevent an unsupported claim or to mark a known evidence gap. It should not be interpreted as a positive finding.",
+        colorClass: "tier-e",
+        confidenceLabel: "No health claim; safety boundary"
       };
     default:
       return {
-        label: "Tier D — Research Only",
-        description: "Early research. Not validated for clinical use.",
-        colorClass: "tier-d"
+        label: "Evidence tier not classified",
+        description: `The pack uses an unrecognized evidence label (${normalized || "missing"}). Treat it as unvalidated until the pack is reviewed.`,
+        colorClass: "tier-unknown",
+        confidenceLabel: "Unclassified; do not act"
       };
   }
 }

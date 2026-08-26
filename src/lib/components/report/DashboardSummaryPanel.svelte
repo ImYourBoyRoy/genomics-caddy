@@ -99,6 +99,17 @@
     </p>
   </div>
 
+  {#if plan.safetyNotes.length > 0}
+    <div class="actionability-safety" role="note">
+      <strong>🧭 How to use actionability guidance</strong>
+      <ul>
+        {#each plan.safetyNotes as note (note)}
+          <li>{note}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+
   <div class="grid-layout">
     <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
     {#if plan.topFindings.length > 0}
@@ -141,7 +152,7 @@
           </div>
           {#if !collapsed.diet}
             <div class="card-body">
-              <p class="section-hint">Suggestions come from pack-authored guidance for genes that matched in your report — discuss with a clinician before changing diet.</p>
+              <p class="section-hint">These are conditional discussion or short-trial prompts. A genotype match is not a permanent food restriction; use symptoms, labs, allergies, medications, and clinician guidance first.</p>
               <div class="diet-section">
                 {#if plan.diet.favor.length > 0}
                   <div class="diet-column favor">
@@ -185,7 +196,7 @@
           </div>
           {#if !collapsed.supplements}
             <div class="card-body">
-              <p class="section-hint">Consult your doctor before starting any supplementation, especially if taking medications.</p>
+              <p class="section-hint">Every supplement item is a discussion prompt, not a prescription. Check medications, pregnancy/lactation status, kidney/liver health, and labs before starting anything.</p>
               <div class="supplements-list">
                 {#each plan.supplements as s (`${s.name}:${s.reason}`)}
                   <div class="supplement-item">
@@ -276,6 +287,22 @@
   }
   .disclaimer-banner p {
     margin: 0;
+  }
+  .actionability-safety {
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+  .actionability-safety strong {
+    color: #93c5fd;
+  }
+  .actionability-safety ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.2rem;
   }
   .warning-icon {
     font-size: 1.1rem;

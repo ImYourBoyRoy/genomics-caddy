@@ -657,6 +657,27 @@ h1, h2, h3, h4, h5, h6 {
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
+.tier-e {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+.tier-unknown {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.scope-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  white-space: nowrap;
+}
 .marker-middle {
   display: flex;
   justify-content: space-between;

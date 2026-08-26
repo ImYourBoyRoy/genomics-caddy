@@ -23,10 +23,12 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Risk-Only Scoring:** Overall and section signal scores only reflect risk-direction alleles. Protective or neutral alleles do not inflate scores.
 * **Clinical Suppression:** High-stakes sections where all markers require clinical confirmation (e.g., Cancer predisposition or Pharmacogenomics) suppress numerical percentages, showing descriptive safety summaries instead.
 * **Color Legend:** Standardized card styling maps results to 8 severity classes (`no_data`, `benign`, `confirmation_required`, `protective`, `trait`, `context_dependent`, `moderate_risk`, `high_risk`).
+* **Probabilistic evidence bands:** Marker tiers A–E are interpreted by evidence prefix, including custom subtiers. Tier E is an evidence-gap/guardrail, not a positive finding. Common SNP coverage expands the questions the tool can ask; it does not establish a diagnosis, current hormone level, medication response, or personal disease probability by itself.
 * **Menstrual and reproductive context:** The hormone pack includes explicit cycle-phase physiology, PMDD symptom-timing and steroid-sensitivity guardrails, exact-contraceptive-ingredient prompts, adenomyosis workup limits, and clearly labeled research-only loci. The report must not infer current estrogen/progesterone levels, contraceptive composition, PMDD, or adenomyosis from raw DNA.
+* **Conditional actionability:** Food, supplement, activity, and medication context is qualified by symptoms, labs, allergies, pregnancy/lactation status, kidney/liver conditions, and clinician/pharmacist review. Raw DNA alone never triggers medication changes, high-dose supplements, or permanent restrictive diets.
 
 ### 3. Plain-English Layperson Translation System
-* Includes a complete dictionary mapping of all **99 candidate rsIDs** to simplified language (e.g., translating "homozygous" to "copies of variant gene" and "metabolizes" to "breaks down/clears").
+* Includes a layperson dictionary for curated candidate rsIDs, translating terms such as "homozygous" to "two copies of the variant" and "metabolizes" to "breaks down/clears".
 * **View Modes:** Toggle dynamically between:
   * **Simple Mode 🌱:** Hides all complex terminology and evidence lists for average users.
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
@@ -39,7 +41,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Evidence Library Panel:** Provides keyword and semantic searching directly within Svelte to reference CPIC and PubMed guidelines.
 
 ### 5. 10 Specialty Consultation Modes
-* **Specialized System Prompts:** Tailors AI behavior to 9 specific health contexts:
+* **Specialized System Prompts:** Tailors AI behavior to 10 specific health contexts:
   * **🧬 General:** Broad genomic overview and prioritization guide.
   * **💊 Pharmacogenomics (PGx):** Strict focus on drug metabolism (CYP450, DPYD) and safety warnings.
   * **🍎 Nutrients & Methylation:** One-carbon cycle dynamics (MTHFR, COMT, PEMT) and dietary recommendations.
@@ -96,6 +98,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Multiple Filtering Criteria:** Toggle between showing undetected benign markers, filtering strictly to active risk findings, and selecting specific evidence tiers (Tier A/B only).
 * **Severity Ranking Sort:** Reorders markers dynamically within each section to bubble up High Risk and Needs Confirmation markers to the top.
 * **Wrapped Exports:** JSON exports wrap raw reports in metadata envelopes containing version numbers, timestamps, and sample genetic sex.
+* **Conservative chromosome context:** Missing Y calls remain unknown rather than being treated as proof of XX. Genetic-sex context is a chromosome-call hint only; it is not gender identity, anatomy, fertility, pregnancy status, or hormone status. Marker packs can declare biological applicability such as `xx_reproductive`, `xy_reproductive`, `x_linked`, or `y_linked`.
 
 ---
 
@@ -315,6 +318,8 @@ Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cro
 * **`npm run tauri:dev`**: Starts Vite server and mounts the Tauri desktop window.
 * **`npm run build`**: Compiles static production web assets into `/build`.
 * **`npm run check`**: Runs Svelte compiler and TypeScript diagnostics.
+* **`npm run validate:packs`**: Validates curated marker-pack schemas, evidence tiers, actionability policy, and runtime mirror manifests without removing any pack.
+* **`npm run audit:dna-fixtures`**: Read-only coverage audit for root DNA `.txt`/`.zip` fixtures. Reports row counts, curated rsID coverage, chromosome-call counts, and Y-call counts; never prints or imports genotype values.
 * **`npm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
 * **`npm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.
 * **`npm run update:all`**: Full refresh — npm itself, rustup stable (+ sync `rust-version`), bump **all** npm deps to latest (including TypeScript majors), Cargo upgrade/update, then verify. TypeScript **7** is primary (`tsc` via `scripts/run_tsc.mjs`). `npm run check` shims the TS6 API for Svelte tooling (`@typescript/typescript6` + preload). `.npmrc` sets `legacy-peer-deps=true` so Kit’s outdated TS peerOptional range does not block installs. Flags: `--dry-run`, `--skip-toolchains`, `--skip-npm`, `--skip-cargo`, `--skip-verify`, `--update-node`.

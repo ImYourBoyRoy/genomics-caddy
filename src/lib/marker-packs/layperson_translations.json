@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "last_updated": "2026-08-26",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -872,6 +872,116 @@
       "rsid": "rs184700",
       "simpleImpact": "HRH1 preliminary adenomyosis research locus",
       "simpleMeaning": "This HRH1 marker was associated with adenomyosis in a recent large research study, but it is not a diagnostic test. Results may vary by ancestry and phenotype definition; clinical history and indicated imaging matter more than this SNP, and an uncalled result is unknown."
+    },
+    {
+      "rsid": "rs35742686",
+      "simpleImpact": "CYP2D6 no-function allele component",
+      "simpleMeaning": "This indel is one component of a CYP2D6 star allele associated with absent enzyme activity. A consumer call needs clinical confirmation and the complete diplotype, including copy-number review, before any medication discussion."
+    },
+    {
+      "rsid": "rs5030655",
+      "simpleImpact": "CYP2D6 deletion-allele component",
+      "simpleMeaning": "This deletion can contribute to a no-function CYP2D6 star allele. It is not a complete metabolizer result; indel detection, both star alleles, copy number, and the exact medication require clinical PGx review."
+    },
+    {
+      "rsid": "rs56337013",
+      "simpleImpact": "Rare no-function CYP2C19 allele component",
+      "simpleMeaning": "This rare CYP2C19 marker is used as one component of a clinical star-allele call. A raw-DNA result needs confirmation and the other allele before discussing drug metabolism or treatment options."
+    },
+    {
+      "rsid": "rs72558186",
+      "simpleImpact": "CYP2C19 no-function allele component",
+      "simpleMeaning": "This marker can be part of a no-function CYP2C19 star allele. It does not assign a metabolizer phenotype by itself; use a confirmed diplotype and medication-specific clinical guidance."
+    },
+    {
+      "rsid": "rs72552267",
+      "simpleImpact": "CYP2C19 splice-allele component",
+      "simpleMeaning": "This marker can contribute to a no-function CYP2C19 allele. Rare raw-array calls need clinical confirmation and complete diplotype interpretation before they are used in medication decisions."
+    },
+    {
+      "rsid": "rs41291556",
+      "simpleImpact": "CYP2C19 no-function allele component",
+      "simpleMeaning": "This marker is one part of a CYP2C19 star-allele interpretation. It cannot establish a poor-metabolizer phenotype or guide a dose without clinical confirmation, the second allele, and the exact drug."
+    },
+    {
+      "rsid": "rs9332131",
+      "simpleImpact": "CYP2C9 reduced-function allele component",
+      "simpleMeaning": "This marker can contribute to a reduced-function CYP2C9 diplotype. Drug effects are medication-specific and depend on the other allele and clinical factors; confirm with a clinical PGx test before acting."
+    },
+    {
+      "rsid": "rs28371685",
+      "simpleImpact": "CYP2C9 reduced-function allele component",
+      "simpleMeaning": "This CYP2C9 marker is one component of a decreased-function allele. It does not provide a warfarin, NSAID, or other drug dose; a confirmed diplotype and prescribing guidance are required."
+    },
+    {
+      "rsid": "rs11045819",
+      "simpleImpact": "SLCO1B1 transporter-haplotype component",
+      "simpleMeaning": "This marker can contribute to an SLCO1B1 reduced-function haplotype involved in hepatic drug transport. Statin or other medication context requires the complete clinical haplotype, drug, dose, interactions, and symptoms."
+    },
+    {
+      "rsid": "rs56038477",
+      "simpleImpact": "DPYD reduced-activity haplotype component",
+      "simpleMeaning": "This marker is part of DPYD HapB3 research and clinical-PGx context. It is not a chemotherapy dosing result; confirm the haplotype with a clinical laboratory before fluoropyrimidine treatment decisions."
+    },
+    {
+      "rsid": "rs186364861",
+      "simpleImpact": "NUDT15 thiopurine-safety allele component",
+      "simpleMeaning": "This rare marker may contribute to reduced NUDT15 activity and thiopurine-toxicity susceptibility. It requires clinical confirmation and complete TPMT/NUDT15 interpretation; it must not be used alone to choose a dose."
+    },
+    {
+      "rsid": "rs1050829",
+      "simpleImpact": "G6PD A-haplotype component",
+      "simpleMeaning": "This marker can contribute to a G6PD A or A- haplotype. One SNP cannot diagnose G6PD deficiency or establish medication safety; enzyme testing and a clinically interpreted genotype are more appropriate when relevant."
+    },
+    {
+      "rsid": "rs1801280",
+      "simpleImpact": "NAT2 slow-acetylator haplotype component",
+      "simpleMeaning": "This NAT2 marker can contribute to a slow-acetylator haplotype. It does not establish a phenotype or an isoniazid plan by itself; full haplotype and medication monitoring context are needed."
+    },
+    {
+      "rsid": "rs1799930",
+      "simpleImpact": "NAT2*6 haplotype component",
+      "simpleMeaning": "This marker is one component used to infer NAT2 acetylator status. The full haplotype, drug, liver health, and monitoring plan matter more than this single consumer-DNA call."
+    },
+    {
+      "rsid": "rs1799931",
+      "simpleImpact": "NAT2*7 haplotype component",
+      "simpleMeaning": "This marker can contribute to NAT2 slow-acetylator context. It cannot assign a personal drug response or dose without the full clinical haplotype and medication-specific review."
+    },
+    {
+      "rsid": "rs11572080",
+      "simpleImpact": "CYP2C8*3 haplotype component",
+      "simpleMeaning": "This marker is one component of the CYP2C8*3 haplotype. Any medication implication is drug-specific and requires a confirmed haplotype, complete clinical context, and prescriber review."
+    },
+    {
+      "rsid": "rs1058930",
+      "simpleImpact": "CYP2C8 metabolism-context marker",
+      "simpleMeaning": "This CYP2C8 marker has been studied in metabolism of selected medicines. Effects are context-dependent and do not provide a dose or treatment recommendation from raw DNA alone."
+    },
+    {
+      "rsid": "rs368234815",
+      "simpleImpact": "IFNL4 antiviral-response context marker",
+      "simpleMeaning": "This indel has been used in interferon-era hepatitis C response research. Consumer data may not represent it reliably, and current antiviral decisions depend on the infection, treatment options, and clinical assessment."
+    },
+    {
+      "rsid": "rs2031920",
+      "simpleImpact": "CYP2E1 exposure-metabolism research marker",
+      "simpleMeaning": "This CYP2E1 marker has been studied in alcohol, solvent, and anesthetic metabolism. The enzyme is strongly affected by exposures and metabolic state, so this SNP does not predict alcohol safety or anesthesia response."
+    },
+    {
+      "rsid": "rs1805007",
+      "simpleImpact": "MC1R pigmentation and UV-sensitivity context",
+      "simpleMeaning": "This MC1R marker is associated with red-hair or fair-skin biology in some people and can add melanoma-susceptibility context. It is not a melanoma diagnosis; visible phenotype, UV exposure, skin examination, and family history matter more."
+    },
+    {
+      "rsid": "rs1805008",
+      "simpleImpact": "MC1R pigmentation and UV-sensitivity context",
+      "simpleMeaning": "This MC1R marker is associated with pigmentation and UV-sensitivity traits in some populations. It does not establish melanoma or make UV exposure safe; use skin phenotype, exposure history, and clinical examination."
+    },
+    {
+      "rsid": "rs1805009",
+      "simpleImpact": "MC1R pigmentation and UV-sensitivity context",
+      "simpleMeaning": "This MC1R marker is part of pigmentation and melanoma-susceptibility research. Any effect is probabilistic and not diagnostic; dermatology assessment, skin findings, UV exposure, and family history remain important."
     }
   ]
 }

@@ -14,6 +14,7 @@ import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/g
 import guidanceDoc from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
+import pgxDiplotypeGuidance from '../marker-packs/pgx_diplotype_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import {
@@ -84,6 +85,12 @@ export interface CycleSupportGuidance {
   relevantDomains: typeof cycleSupport.domains;
 }
 
+export interface PgxInterpretationGuidance {
+  policy: typeof pgxDiplotypeGuidance.policy;
+  relevantGenes: typeof pgxDiplotypeGuidance.genes;
+  doNotDo: typeof pgxDiplotypeGuidance.do_not_do;
+}
+
 export interface SupplementSafetyGuidance {
   principles: typeof supplementSafety.principles;
   relevantRules: typeof supplementSafety.rules;
@@ -109,6 +116,7 @@ export interface ActionablePlan {
   activity: ActivityGuidance;
   medication: MedicationSafetyGuidance;
   cycleSupport: CycleSupportGuidance;
+  pgxGuidance: PgxInterpretationGuidance;
   supplementSafety: SupplementSafetyGuidance;
   personalContext: PersonalContextGuidance;
   /** Guardrails shown with every generated actionability plan. */
@@ -394,6 +402,28 @@ function deriveMedicationSafety(
   return {
     rules: Array.from(new Set(rules)),
     askFor: safetyGuardrails.medication_context.ask_for,
+  };
+}
+
+function pgxGeneMatchesMarker(
+  gene: typeof pgxDiplotypeGuidance.genes[number],
+  marker: EvaluatedMarker,
+): boolean {
+  const markerGeneSymbols = marker.gene
+    .toUpperCase()
+    .split(/[\s/]+/)
+    .filter(Boolean);
+  return gene.marker_ids.includes(marker.rsid)
+    || gene.gene_symbols.some((symbol) => markerGeneSymbols.includes(symbol.toUpperCase()));
+}
+
+function derivePgxInterpretationGuidance(markers: EvaluatedMarker[]): PgxInterpretationGuidance {
+  return {
+    policy: pgxDiplotypeGuidance.policy,
+    relevantGenes: pgxDiplotypeGuidance.genes.filter((gene) =>
+      markers.some((marker) => pgxGeneMatchesMarker(gene, marker))
+    ),
+    doNotDo: pgxDiplotypeGuidance.do_not_do,
   };
 }
 
@@ -695,6 +725,7 @@ export function deriveActionablePlan(
     activeContextIds,
   );
   const personalContext = derivePersonalContextGuidance(personalSafetyContext);
+  const pgxGuidance = derivePgxInterpretationGuidance(markerValues);
 
   return {
     topFindings,
@@ -721,6 +752,7 @@ export function deriveActionablePlan(
       dnaCoverage: reproductiveDnaCoverage,
       relevantDomains: relevantCycleDomains,
     },
+    pgxGuidance,
     supplementSafety: {
       principles: supplementSafety.principles,
       relevantRules: supplementSafetyRules,

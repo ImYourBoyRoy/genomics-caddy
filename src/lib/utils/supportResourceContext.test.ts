@@ -290,6 +290,10 @@ describe('support resource context', () => {
     expect(context.food_safety.priority_order[1]).toContain('medication');
     expect(context.supplement_safety.do_not_do.some((item) => item.includes('common SNP'))).toBe(true);
     expect(context.food_safety.nutrient_matrix.length).toBeGreaterThan(0);
+    expect(context.pgx_diplotype.relevant_genes.some((gene) => gene.id === 'CYP2D6')).toBe(true);
+    expect(context.pgx_diplotype.relevant_genes.some((gene) => gene.id === 'TPMT_NUDT15')).toBe(true);
+    expect(context.pgx_diplotype.source_registry.cpic_clopidogrel_2022).toBeDefined();
+    expect(context.pgx_diplotype.policy.display_rule).toContain('never assign');
   });
 
   it('keeps PRS and common-marker evidence probabilistic', () => {

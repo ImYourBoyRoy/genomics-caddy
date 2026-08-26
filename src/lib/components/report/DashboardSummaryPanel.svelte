@@ -424,6 +424,19 @@
         {#if !collapsed.medication}
           <div class="card-body">
             <p class="section-hint">Record medication context before interpreting a marker. Raw consumer DNA is not a complete clinical PGx result and is never a reason to change a medication.</p>
+            {#if plan.pgxGuidance.relevantGenes.length > 0}
+              <div class="pgx-readiness" role="note">
+                <strong>🧪 PGx completeness check</strong>
+                <p>{plan.pgxGuidance.policy.summary}</p>
+                {#each plan.pgxGuidance.relevantGenes as gene (gene.id)}
+                  <div class="pgx-readiness-item">
+                    <strong>{gene.label}</strong>
+                    <p>{gene.limitation}</p>
+                    <p><strong>Useful next step:</strong> {gene.clinical_next_step}</p>
+                  </div>
+                {/each}
+              </div>
+            {/if}
             <div class="medication-columns">
               <div>
                 <h4>Ask for / record</h4>
@@ -1041,6 +1054,29 @@
     font-size: 0.7rem;
     line-height: 1.45;
     color: #dbeafe;
+  }
+  .pgx-readiness {
+    margin: 0.65rem 0 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    border-left: 3px solid #60a5fa;
+    background: rgba(96, 165, 250, 0.06);
+    border-radius: 5px;
+  }
+  .pgx-readiness > p,
+  .pgx-readiness-item p {
+    margin: 0.25rem 0 0;
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+  .pgx-readiness-item {
+    margin-top: 0.65rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .pgx-readiness-item > strong {
+    font-size: 0.75rem;
+    color: #bfdbfe;
   }
   .activity-context {
     display: block;

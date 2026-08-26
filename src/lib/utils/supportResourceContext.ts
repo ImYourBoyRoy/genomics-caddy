@@ -22,6 +22,7 @@ import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.jso
 import labOverlays from '../marker-packs/lab_overlays.json';
 import mealPlanningRules from '../marker-packs/meal_planning_rules.json';
 import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
+import pgxDiplotypeGuidance from '../marker-packs/pgx_diplotype_guidance.json';
 import prsRegistry from '../marker-packs/prs_registry.json';
 import researchTaxonomy from '../marker-packs/research_taxonomy.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
@@ -60,6 +61,13 @@ export interface SupportResourceContext {
     do_not_do: typeof supplementSafety.do_not_do;
   };
   callability_rules: typeof callabilityRules.rules;
+  pgx_diplotype: {
+    policy: typeof pgxDiplotypeGuidance.policy;
+    genes: typeof pgxDiplotypeGuidance.genes;
+    relevant_genes: typeof pgxDiplotypeGuidance.genes;
+    do_not_do: typeof pgxDiplotypeGuidance.do_not_do;
+    source_registry: Record<string, unknown>;
+  };
   phenotype_prompts: typeof phenotypePrompts.domains;
   lab_overlays: Array<Record<string, unknown>>;
   actionability_policy: {
@@ -247,6 +255,10 @@ function selectConditionalQuestions(packIds: Set<string>): Record<string, string
   return result;
 }
 
+function selectPgxGenes(packIds: Set<string>): typeof pgxDiplotypeGuidance.genes {
+  return packIds.has('pgx') ? pgxDiplotypeGuidance.genes : [];
+}
+
 function selectActivityDomains(
   packIds: Set<string>,
   reproductiveContext?: string,
@@ -304,9 +316,11 @@ export function buildSupportResourceContext({
     return signals.length === 0 || signals.some((signal) => selectedPackIds.has(signal));
   });
   const relevantCycleEvidenceLayers = cycleSupportEvidenceLayersForContextIds(routing.activeContextIds);
+  const relevantPgxGenes = selectPgxGenes(selectedPackIds);
   const selectedSourceRecords = selectSourceRecords([
     ...supportSourceIds(selectedPackIds, relevantCycleDomains),
     ...relevantCycleEvidenceLayers.flatMap((layer) => layer.sources || []),
+    ...relevantPgxGenes.flatMap((gene) => gene.sources || []),
   ]);
 
   return {
@@ -328,6 +342,13 @@ export function buildSupportResourceContext({
       do_not_do: supplementSafety.do_not_do,
     },
     callability_rules: callabilityRules.rules,
+    pgx_diplotype: {
+      policy: pgxDiplotypeGuidance.policy,
+      genes: pgxDiplotypeGuidance.genes,
+      relevant_genes: relevantPgxGenes,
+      do_not_do: pgxDiplotypeGuidance.do_not_do,
+      source_registry: selectedSourceRecords,
+    },
     phenotype_prompts: phenotype,
     lab_overlays: overlays,
     actionability_policy: {

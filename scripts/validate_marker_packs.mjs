@@ -150,6 +150,7 @@ const supportContracts = {
   layperson_translations: { arrays: ['translations'], objects: ['fallback'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
+  pgx_diplotype_guidance: { arrays: ['genes', 'do_not_do'], objects: ['policy'] },
   prs_registry: { arrays: ['prs_modules'] },
   research_taxonomy: { arrays: ['categories', 'discovery_categories'] },
   safety_guardrails: { arrays: ['rules'], objects: ['medication_context', 'personal_context_notes'], nested_arrays: { medication_context: ['base_rule_ids', 'pgx_rule_ids', 'reproductive_intake_field_ids', 'ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords', 'hormone_medication_keywords', 'contraceptive_medication_keywords'] } },
@@ -601,6 +602,44 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (!isStringArray(diary?.do_not_infer) || diary.do_not_infer.length === 0) {
       errors.push('cycle_support_guidance.json diary_schema.do_not_infer must be a non-empty string array');
+    }
+  }
+  if (resourceId === 'pgx_diplotype_guidance') {
+    const policy = resource.policy;
+    for (const field of ['summary', 'display_rule']) {
+      if (typeof policy?.[field] !== 'string' || policy[field].trim() === '') {
+        errors.push(`pgx_diplotype_guidance.json: policy.${field} must be a non-empty string`);
+      }
+    }
+    for (const field of ['required_inputs', 'do_not_claim']) {
+      if (!isStringArray(policy?.[field]) || policy[field].length === 0) {
+        errors.push(`pgx_diplotype_guidance.json: policy.${field} must be a non-empty string array`);
+      }
+    }
+    const geneIds = new Set();
+    for (const [index, gene] of (resource.genes || []).entries()) {
+      const location = `pgx_diplotype_guidance.json gene ${index + 1}`;
+      for (const field of ['id', 'label', 'limitation', 'clinical_next_step']) {
+        if (typeof gene[field] !== 'string' || gene[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['gene_symbols', 'marker_ids', 'required_inputs', 'sources']) {
+        if (!isStringArray(gene[field]) || gene[field].length === 0) {
+          errors.push(`${location}: ${field} must be a non-empty string array`);
+        }
+      }
+      for (const sourceId of gene.sources || []) {
+        if (!sourceRegistry?.sources?.[sourceId]) {
+          errors.push(`${location}: unregistered source ${sourceId}`);
+        }
+      }
+      if (geneIds.has(gene.id)) errors.push(`${location}: duplicate id ${gene.id}`);
+      geneIds.add(gene.id);
+    }
+    if (geneIds.size === 0) errors.push('pgx_diplotype_guidance.json: genes must contain at least one gene group');
+    if (!isStringArray(resource.do_not_do) || resource.do_not_do.length === 0) {
+      errors.push('pgx_diplotype_guidance.json: do_not_do must be a non-empty string array');
     }
   }
   if (resourceId === 'layperson_translations') {

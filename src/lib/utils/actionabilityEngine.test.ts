@@ -174,6 +174,10 @@ describe('actionability engine safety policy', () => {
     });
     expect(plan.medication.rules.some((item) => item.includes('raw DNA alone'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('HLA'))).toBe(true);
+    expect(plan.pgxGuidance.relevantGenes.map((gene) => gene.id)).toContain('CYP2C19');
+    expect(plan.pgxGuidance.relevantGenes.find((gene) => gene.id === 'CYP2C19')?.clinical_next_step)
+      .toContain('clinical PGx interpretation');
+    expect(plan.pgxGuidance.policy.display_rule).toContain('never assign');
   });
 
   it('surfaces named medication pathways without turning raw SNPs into prescriptions', () => {

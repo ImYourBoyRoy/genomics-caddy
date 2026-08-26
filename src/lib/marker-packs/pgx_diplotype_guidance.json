@@ -1,0 +1,152 @@
+{
+  "name": "Pharmacogenomics Clinical Interpretation Readiness",
+  "version": "1.0.0",
+  "last_updated": "2026-08-26",
+  "type": "support_engine",
+  "purpose": "Explain when the curated PGx marker components are incomplete and identify the clinical inputs required before a drug-specific phenotype or prescribing decision can be considered.",
+  "policy": {
+    "summary": "The report may show individual PGx marker components, but a consumer array is not a complete star-allele, diplotype, copy-number, HLA, or enzyme-activity result. A clinical interpretation requires the drug and indication, complete relevant allele coverage, phase or diplotype when needed, structural-variant or HLA testing where needed, ancestry/platform limitations, and a clinician or pharmacist review.",
+    "display_rule": "Describe component coverage and missing clinical inputs; never assign a metabolizer phenotype, dose, medication choice, toxicity diagnosis, or medication change from a single raw-DNA marker.",
+    "required_inputs": [
+      "Exact drug name, indication, formulation, and current dose when relevant",
+      "Complete clinical PGx result or validated laboratory assay method",
+      "Star-allele diplotype, phase, or phenotype when the gene requires it",
+      "Copy-number, structural-variant, repeat, or HLA typing where relevant",
+      "Current medications, interactions, organ function, symptoms, and clinician or pharmacist interpretation"
+    ],
+    "do_not_claim": [
+      "A complete PGx phenotype from one or a few consumer-array SNPs",
+      "A medication dose, medication choice, or treatment change from raw DNA",
+      "A negative consumer-array result as exclusion of a rare allele, CNV, HLA allele, or enzyme deficiency",
+      "Medication toxicity, treatment failure, or symptom causation from a genotype alone"
+    ]
+  },
+  "genes": [
+    {
+      "id": "CYP2D6",
+      "label": "CYP2D6 star-allele and copy-number interpretation",
+      "gene_symbols": ["CYP2D6"],
+      "marker_ids": ["rs3892097", "PANEL_CYP2D6_DIPLOTYPE_CNV_HYBRID", "rs1065852", "rs28371725", "rs35742686", "rs5030655", "rs28371706", "CYP2D6_GENE_DELETION", "CYP2D6_GENE_DUPLICATION"],
+      "limitation": "CYP2D6 phenotype requires both star alleles plus copy-number, hybrid, and additional-variant assessment; consumer arrays may not capture the relevant structural variation or phase.",
+      "required_inputs": ["Complete CYP2D6 star-allele diplotype", "Copy-number and hybrid-allele assessment", "Drug and indication", "Clinical phenotype and interaction review"],
+      "clinical_next_step": "For a medication question, ask a clinician or pharmacist whether a validated clinical PGx result is appropriate; do not change treatment from these component markers.",
+      "sources": ["cpic_guidelines", "cpic_opioids_2020", "cpic_tamoxifen_2018", "cpic_ssri_2023", "clinical_confirmation_required"]
+    },
+    {
+      "id": "CYP2C19",
+      "label": "CYP2C19 star-allele and drug-specific interpretation",
+      "gene_symbols": ["CYP2C19"],
+      "marker_ids": ["rs12248560", "rs4244285", "rs4986893", "rs28399504", "rs56337013", "rs72558186", "rs72552267", "rs41291556"],
+      "limitation": "The listed SNPs are allele components. Phenotype requires the complete relevant CYP2C19 diplotype and the drug, indication, interactions, and clinical context; array coverage does not guarantee full allele coverage.",
+      "required_inputs": ["Complete CYP2C19 diplotype or phenotype", "Drug and indication", "Ancestry and platform coverage limitations", "Current response, interactions, and prescriber context"],
+      "clinical_next_step": "Use the component finding to ask whether clinical PGx interpretation is relevant to the specific drug; do not label someone rapid, normal, or poor metabolizer from one marker.",
+      "sources": ["cpic_clopidogrel_2022", "cpic_ssri_2023", "cpic_cyp2c19_ppi_2020", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "CYP2C9",
+      "label": "CYP2C9 diplotype and drug-specific interpretation",
+      "gene_symbols": ["CYP2C9"],
+      "marker_ids": ["rs1057910", "rs1799853", "rs28371686", "rs9332131", "rs7900194", "rs28371685"],
+      "limitation": "Reduced-function components can contribute to a clinical CYP2C9 diplotype, but the other allele, rare variants, drug, indication, and co-factors determine interpretation.",
+      "required_inputs": ["Complete CYP2C9 diplotype or phenotype", "Drug and indication", "VKORC1/CYP4F2 when warfarin is relevant", "Kidney, liver, bleeding-risk, and interaction context when relevant"],
+      "clinical_next_step": "For NSAIDs, warfarin, phenytoin, or another drug-specific question, bring the complete result to the prescriber or pharmacist; do not self-select or dose medication from a component marker.",
+      "sources": ["cpic_cyp2c9_nsaids_2020", "cpic_warfarin", "cpic_cyp2c9_hla_phenytoin_2020", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "SLCO1B1",
+      "label": "SLCO1B1 transporter haplotype and statin context",
+      "gene_symbols": ["SLCO1B1"],
+      "marker_ids": ["rs4149056", "rs2306283", "rs11045819", "rs4363657"],
+      "limitation": "These markers are transporter or haplotype components. A drug-specific clinical interpretation also depends on the complete allele definition, statin, dose, interactions, symptoms, and medical context.",
+      "required_inputs": ["Complete clinical SLCO1B1 result", "Exact statin and dose", "Drug interactions and thyroid or organ-function context", "Muscle symptoms and clinician review"],
+      "clinical_next_step": "Use the result as a prompt for pharmacist or prescriber review if statin therapy is relevant; it does not diagnose myopathy or require a medication change.",
+      "sources": ["cpic_statins_2022", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "VKORC1_CYP4F2",
+      "label": "Warfarin multi-gene context",
+      "gene_symbols": ["VKORC1", "CYP4F2"],
+      "marker_ids": ["rs9923231", "rs2108622"],
+      "limitation": "Warfarin dosing is a multi-factor clinical algorithm using VKORC1, CYP2C9, CYP4F2, age, weight, interacting medicines, diet, indication, and measured INR; these two markers are not a dose calculator.",
+      "required_inputs": ["Complete relevant clinical PGx result", "Current INR and warfarin history", "Indication, interacting medicines, and diet", "Prescriber-managed monitoring"],
+      "clinical_next_step": "If warfarin is being used or considered, discuss the complete clinical context with the anticoagulation team; never adjust warfarin from the consumer report.",
+      "sources": ["cpic_warfarin", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "DPYD",
+      "label": "DPYD fluoropyrimidine safety interpretation",
+      "gene_symbols": ["DPYD"],
+      "marker_ids": ["rs3918290", "rs55886062", "rs67376798", "rs75017182", "rs56038477"],
+      "limitation": "The listed variants are selected DPYD components and do not establish normal enzyme activity or exclude other decreased-function alleles. Treatment decisions require an oncology-led clinical result and regimen context.",
+      "required_inputs": ["Validated DPYD result or phenotype assessment", "Exact fluoropyrimidine and oncology regimen", "Clinical history, organ function, and monitoring plan", "Oncology and pharmacist review"],
+      "clinical_next_step": "Any DPYD finding should be brought to the oncology team before fluoropyrimidine treatment decisions; do not interpret a missing call as normal activity.",
+      "sources": ["cpic_dpyd_fluoropyrimidines", "fda_dpyd_fluoropyrimidine_safety", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "TPMT_NUDT15",
+      "label": "TPMT and NUDT15 thiopurine interpretation",
+      "gene_symbols": ["TPMT", "NUDT15"],
+      "marker_ids": ["rs1800460", "rs1142345", "rs1800462", "rs116855232", "rs147390019", "rs186364861"],
+      "limitation": "Thiopurine risk interpretation uses complete TPMT/NUDT15 allele coverage or enzyme/phenotype testing, the drug and indication, and clinical monitoring; a few SNPs are not a complete safety clearance.",
+      "required_inputs": ["Complete TPMT and NUDT15 clinical result or phenotype", "Exact thiopurine and indication", "CBC and clinician monitoring plan", "Relevant ancestry, interactions, and organ-function context"],
+      "clinical_next_step": "Ask the prescriber or pharmacist whether clinical TPMT/NUDT15 testing and monitoring are needed; never start, stop, or dose a thiopurine from raw DNA alone.",
+      "sources": ["cpic_thiopurines_2025", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "UGT1A1",
+      "label": "UGT1A1 repeat and irinotecan context",
+      "gene_symbols": ["UGT1A1"],
+      "marker_ids": ["UGT1A1_TA7_PROMOTER", "rs887829", "rs4148323"],
+      "limitation": "UGT1A1*28 is a promoter repeat and the tag SNP is not the repeat itself; a clinical interpretation requires repeat-aware testing, other alleles, drug/regimen, and patient context.",
+      "required_inputs": ["Repeat-aware or complete UGT1A1 clinical result", "Exact drug and regimen", "Blood-count, liver, and oncology context when relevant", "Clinician or pharmacist review"],
+      "clinical_next_step": "Treat the tag or repeat as a prompt for clinical review, not a diagnosis or irinotecan dose instruction.",
+      "sources": ["cpic_guidelines", "fda_pharmacogenomic_biomarkers", "clinical_confirmation_required"]
+    },
+    {
+      "id": "HLA_DRUG_SAFETY",
+      "label": "HLA drug-hypersensitivity typing",
+      "gene_symbols": ["HLA-B", "HLA-A"],
+      "marker_ids": ["PANEL_HLA_PHARMACOGENOMICS_CONFIRMATION", "HLA-B*57:01", "HLA-B*15:02", "HLA-B*58:01", "HLA-A*31:01"],
+      "limitation": "Consumer-array SNPs and proxy markers are not equivalent to clinical HLA typing. The exact HLA allele and drug-specific indication must be established by a validated assay before a clinical safety decision.",
+      "required_inputs": ["Validated HLA typing", "Exact drug and indication", "Prescriber or pharmacist review", "Urgent care for suspected severe drug reaction"],
+      "clinical_next_step": "Use the finding only to ask whether clinical HLA typing is appropriate; do not label a person safe or unsafe for a drug from a consumer tag.",
+      "sources": ["cpic_hla_abacavir", "cpic_hla_carbamazepine", "cpic_hla_allopurinol", "cpic_cyp2c9_hla_phenytoin_2020", "clinical_confirmation_required"]
+    },
+    {
+      "id": "G6PD",
+      "label": "G6PD variant and enzyme-activity context",
+      "gene_symbols": ["G6PD"],
+      "marker_ids": ["rs1050828", "rs1050829", "PANEL_G6PD_DEFICIENCY"],
+      "limitation": "Selected G6PD variants do not measure current enzyme activity, capture every clinically relevant allele, or account for transfusion, hemolysis, sex-chromosome context, or treatment circumstances.",
+      "required_inputs": ["Quantitative or validated clinical G6PD testing", "Exact drug or exposure", "Hemolysis symptoms and blood-count context", "Clinician review before a high-risk exposure"],
+      "clinical_next_step": "Ask a clinician about confirmatory enzyme or molecular testing when medication or exposure risk is relevant; do not treat an uncalled marker as proof of normal G6PD activity.",
+      "sources": ["cpic_g6pd", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "CYP3A5",
+      "label": "CYP3A5 tacrolimus interpretation",
+      "gene_symbols": ["CYP3A5"],
+      "marker_ids": ["rs776746"],
+      "limitation": "CYP3A5*3 is one component of a clinical interpretation. Tacrolimus management requires transplant indication, complete result, interacting medicines, and measured trough levels.",
+      "required_inputs": ["Validated CYP3A5 result", "Active transplant regimen", "Tacrolimus trough monitoring", "Transplant pharmacist or clinician review"],
+      "clinical_next_step": "Keep any dose decision with the transplant team; a consumer marker is not a tacrolimus dose instruction.",
+      "sources": ["cpic_cyp3a5_tacrolimus_2015", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "NAT2",
+      "label": "NAT2 acetylator-component context",
+      "gene_symbols": ["NAT2"],
+      "marker_ids": ["rs1041983", "rs1801280", "rs1799930", "rs1799931"],
+      "limitation": "NAT2 acetylator status is a haplotype or diplotype interpretation, not a single-SNP result, and its clinical relevance depends on the exact drug and indication.",
+      "required_inputs": ["Complete NAT2 haplotype or diplotype", "Exact drug and indication", "Clinical response, interactions, and monitoring", "Prescriber or pharmacist review"],
+      "clinical_next_step": "Use the components to prompt drug-specific clinical review only; do not call someone a rapid or slow acetylator from one marker.",
+      "sources": ["cpic_nat2_hydralazine_2025", "cpic_guidelines", "clinical_confirmation_required"]
+    }
+  ],
+  "do_not_do": [
+    "Do not infer medication response, toxicity, treatment failure, or dose from raw consumer DNA alone.",
+    "Do not use a missing array marker to rule out a pharmacogenomic allele or clinical phenotype.",
+    "Do not let a PGx component override current symptoms, contraindications, organ function, drug interactions, or prescriber instructions.",
+    "Do not treat a clinical guideline as evidence that this raw-DNA report has already produced the required clinical phenotype call."
+  ]
+}

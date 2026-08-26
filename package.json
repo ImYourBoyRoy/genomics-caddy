@@ -53,20 +53,20 @@
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-opener": "^2.5.4",
-    "isomorphic-dompurify": "^3.18.0"
+    "isomorphic-dompurify": "^3.23.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.69.3",
-    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tauri-apps/cli": "^2.11.4",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.3.0",
     "@typescript/typescript6": "^6.0.2",
-    "svelte": "^5.56.5",
-    "svelte-check": "^4.7.3",
+    "svelte": "^5.56.10",
+    "svelte-check": "^4.7.6",
     "typescript": "^7.0.2",
-    "vite": "^8.1.4",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "cookie": "1.1.1"

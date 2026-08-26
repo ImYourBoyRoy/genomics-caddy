@@ -929,8 +929,8 @@
               placeholder="Default App Directory"
               value={customDir || ''}
               readonly
+              aria-label="Download location"
               style="flex: 1; font-size: 0.75rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.4); color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-              title={customDir || 'Default App Directory'}
             />
             <button
               class="btn btn-secondary btn-sm"
@@ -1021,7 +1021,6 @@
           onclick={handleExportDiscovery}
           disabled={!selectedSample || exportBusy || sweepRunning}
           style="font-size: 0.75rem; padding: 6px 12px; width: 100%;"
-          title="Writes marker_pack_coverage + genome_catalog_findings JSON under App/Data/exports/"
         >
           {exportBusy ? 'Exporting…' : '📤 Export pack vs genome findings'}
         </button>

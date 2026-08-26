@@ -258,7 +258,7 @@
       "effect_allele": "G",
       "impact": "Altered Lipoprotein Lipase activity / triglyceride clearance",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "LPL rs328 G-allele (Ser44Ter) causes premature truncation, resulting in increased LPL activity, leading to lower triglycerides and higher HDL.",
+      "interpretation": "LPL rs328 G-allele (Ser44Ter) is associated with a truncated enzyme product and, in studied contexts, may be associated with higher LPL activity and lower triglycerides or higher HDL.",
       "do_not_claim": [
         "hyperlipidemia exclusion"
       ],
@@ -1992,7 +1992,7 @@
       "effect_allele": "C",
       "impact": "Glycemic/lipid trait context; rare MODY gene distinction",
       "evidence_tier": "C_candidate_OR_mechanistic",
-      "interpretation": "HNF1A common variants can modify glycemic traits, but pathogenic HNF1A variants cause MODY and require clinical sequencing.",
+      "interpretation": "HNF1A common variants can modify glycemic traits, while pathogenic HNF1A variants are linked to monogenic diabetes (MODY) and require clinical sequencing.",
       "do_not_claim": [
         "MODY diagnosis",
         "diabetes diagnosis"

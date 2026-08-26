@@ -227,7 +227,7 @@
       "effect_allele": "T",
       "impact": "Alpha-actinin-3 deficiency / fast-twitch power reduction",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "ACTN3 R577X. Homozygous T/T (X/X) results in complete deficiency of alpha-actinin-3 in fast muscle fibers. This shifts profile performance toward slow-twitch endurance, decreasing high-velocity sprint performance.",
+      "interpretation": "ACTN3 R577X. Two T copies are associated with absence of alpha-actinin-3 in fast fibers in relevant research, but performance is influenced by training and many other factors; this marker does not determine sprint or endurance ability.",
       "do_not_claim": [
         "athletic performance guarantee"
       ],
@@ -2187,7 +2187,7 @@
       "effect_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Fibrillin-2 pathogenic variants / contractures and Marfan-like skeletal features",
       "evidence_tier": "A_clinical_actionable",
-      "interpretation": "FBN2 pathogenic variants cause congenital contractural arachnodactyly, a Marfan-overlap skeletal connective tissue disorder. Clinical diagnosis requires molecular and physical exam correlation.",
+      "interpretation": "Pathogenic FBN2 variants are associated with congenital contractural arachnodactyly, a Marfan-overlap skeletal connective tissue disorder. Diagnosis requires validated clinical variant classification and physical-exam correlation.",
       "do_not_claim": [
         "Marfan diagnosis",
         "contractural arachnodactyly diagnosis from common SNPs"

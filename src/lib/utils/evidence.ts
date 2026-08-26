@@ -75,6 +75,37 @@ export function getTierInfo(tier: string): TierInfo {
   }
 }
 
+/**
+ * Add a visible claim frame beside every interpretation. Evidence strength,
+ * genotype matching, and clinical actionability are separate dimensions.
+ */
+export function getClaimFrame(
+  tier: string,
+  clinicalConfirmationRequired = false,
+  interpretationAllowed = true
+): string {
+  if (!interpretationAllowed) {
+    return "Interpretation is blocked until the call and its evidence are verified.";
+  }
+  if (clinicalConfirmationRequired || String(tier || "").startsWith("A_")) {
+    return "Clinical confirmation required: this raw consumer result is not a diagnosis, prognosis, dose, or treatment instruction.";
+  }
+  const band = String(tier || "").trim().charAt(0).toUpperCase();
+  if (band === "B") {
+    return "Association context: replicated evidence can still have modest or conditional effects and is not a personal disease probability.";
+  }
+  if (band === "C") {
+    return "Preliminary context: hypothesis-level evidence; do not act on this marker alone.";
+  }
+  if (band === "D") {
+    return "Research context only: this marker is not validated for individual clinical use.";
+  }
+  if (band === "E") {
+    return "Guardrail: this entry marks an evidence gap or safety boundary, not a positive health finding.";
+  }
+  return "Claim status is unclassified; do not act until the marker is reviewed.";
+}
+
 // ---------------------------------------------------------------------------
 // Effect Direction
 // ---------------------------------------------------------------------------
@@ -160,16 +191,16 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
         cssClass: "signal-high-risk",
         emoji: "🔴",
         glyph: "!",
-        label: "Two risk alleles detected",
-        description: "Both copies of this gene carry the variant associated with increased risk."
+        label: "Two association alleles detected",
+        description: "Both copies match the allele used by this pack's association rule. This is not a diagnosis or a personal disease probability."
       };
     case "moderate_risk":
       return {
         cssClass: "signal-moderate-risk",
         emoji: "🟡",
         glyph: "?",
-        label: "One risk allele detected",
-        description: "One copy carries the risk variant. Effect is typically smaller than two copies."
+        label: "One association allele detected",
+        description: "One copy matches the allele used by this pack's association rule. Effects are usually smaller than two copies and remain context-dependent."
       };
     case "low_risk":
       return {
@@ -184,8 +215,8 @@ export function getSeverityInfo(severityClass: SeverityClass): SeverityInfo {
         cssClass: "signal-protective",
         emoji: "🟢",
         glyph: "+",
-        label: "Protective variant detected",
-        description: "This variant is associated with a beneficial or protective effect."
+        label: "Protective association detected",
+        description: "This variant is associated with a potentially beneficial or lower-risk direction; it does not guarantee protection."
       };
     case "trait":
       return {

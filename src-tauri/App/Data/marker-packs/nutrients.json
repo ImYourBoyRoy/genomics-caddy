@@ -42,7 +42,7 @@
       "effect_allele": "G",
       "impact": "Secondary folate conversion pathway reduction",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "MTHFR A1298C (G allele) causes a minor decrease in enzyme activity. Heterozygous C677T combined with A1298C (compound heterozygosity) decreases folate conversion by 40-50%, affecting one-carbon metabolism.",
+      "interpretation": "MTHFR A1298C (G allele) has been associated with a small activity difference in some studies. A compound C677T/A1298C haplotype may influence folate-related measures, but genotype alone does not quantify folate conversion or establish a nutrient need.",
       "do_not_claim": [
         "routine thrombophilia testing requirement",
         "folate deficiency diagnosis"
@@ -169,7 +169,7 @@
       "effect_allele": "G",
       "impact": "Impaired iron clearance / elevated ferritin (Hemochromatosis risk)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "H63D (G allele) is a milder modifier than C282Y. Compound heterozygosity (C282Y/H63D) can cause minor to moderate iron overload, while homozygous H63D/H63D rarely leads to severe clinical symptoms on its own.",
+      "interpretation": "H63D (G allele) is generally a milder modifier than C282Y. Compound C282Y/H63D status may be associated with iron overload in some individuals, while H63D/H63D has low clinical penetrance in many populations; iron studies and clinical context determine concern.",
       "do_not_claim": [
         "hemochromatosis diagnosis"
       ],
@@ -290,7 +290,7 @@
       "effect_allele": "A",
       "impact": "Non-secretor status / lower serum vitamin B12 levels",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "FUT2 controls the secretion of ABH blood group antigens into body fluids. Homozygous A/A results in 'non-secretor' status, which alters gut microbiome composition and is strongly linked to lower circulating serum B12 levels.",
+      "interpretation": "FUT2 rs602662 is associated with secretor-status and B12-related differences in some populations. A/A at one marker does not establish secretor status or B12 deficiency; use diet, symptoms, and laboratory context.",
       "do_not_claim": [
         "B12 deficiency diagnosis",
         "Crohn's disease diagnosis"

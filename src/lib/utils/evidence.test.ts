@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getTierInfo } from './evidence';
+import { getClaimFrame, getTierInfo } from './evidence';
 
 describe('evidence tier display', () => {
   it('uses the tier prefix for custom evidence labels', () => {
@@ -17,5 +17,11 @@ describe('evidence tier display', () => {
     const info = getTierInfo('not_a_real_tier');
     expect(info.colorClass).toBe('tier-unknown');
     expect(info.confidenceLabel).toContain('Unclassified');
+  });
+
+  it('frames raw-SNP claims separately from clinical actionability', () => {
+    expect(getClaimFrame('B_replicated_common_marker')).toContain('not a personal disease probability');
+    expect(getClaimFrame('A_clinical_guideline', true)).toContain('not a diagnosis');
+    expect(getClaimFrame('E_negative_evidence_or_gap')).toContain('evidence gap');
   });
 });

@@ -8,7 +8,7 @@
       "effect_allele": "T",
       "impact": "Altered glucocorticoid receptor sensitivity / HPA-axis stress response",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "The FKBP5 rs1360780 T allele leads to higher induction of FKBP5, which reduces glucocorticoid receptor sensitivity, delaying negative feedback of cortisol during stress. Associated with stress sensitivity, PTSD, and major depression, particularly following early-life trauma.",
+      "interpretation": "The FKBP5 rs1360780 T allele has been associated in some studies with FKBP5 induction and differences in stress-response biology, especially in particular exposure contexts. It is not a prediction of PTSD, depression, or behavior.",
       "do_not_claim": [
         "PTSD diagnosis",
         "major depressive disorder diagnosis",
@@ -509,7 +509,7 @@
       "effect_allele": "G",
       "impact": "Altered mu-opioid receptor binding affinity / reward sensitivity",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "The G (Asp) allele alters the mu-opioid receptor, reducing beta-endorphin binding affinity. Leads to minor reductions in pain sensitivity threshold but is associated in literature with altered reward seeking and higher social attachment demands.",
+      "interpretation": "The G (Asp) allele changes the mu-opioid receptor sequence and has mixed, small-effect associations with pain- and reward-related traits across studies. It is not a prediction of pain sensitivity, attachment, or behavior.",
       "do_not_claim": [
         "opioid addiction diagnosis"
       ],

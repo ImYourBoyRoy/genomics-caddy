@@ -7,7 +7,7 @@
   import ConfirmWithList from './ConfirmWithList.svelte';
   import WarningBlocks from './WarningBlocks.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
-  import { getSeverityInfo } from '../../utils/evidence';
+  import { getClaimFrame, getSeverityInfo } from '../../utils/evidence';
   import { LAYPERSON_MAP } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
@@ -63,11 +63,11 @@
 
   function getSimpleLabel(severityClass: string): string {
     switch (severityClass) {
-      case "high_risk": return "Two copies of risk gene found";
-      case "moderate_risk": return "One copy of risk gene found";
-      case "low_risk": return "Preliminary risk sign";
-      case "protective": return "Protective gene copy found";
-      case "trait": return "Physical trait gene found";
+      case "high_risk": return "Stronger association detected";
+      case "moderate_risk": return "Possible association detected";
+      case "low_risk": return "Preliminary association";
+      case "protective": return "Protective association detected";
+      case "trait": return "Trait association detected";
       case "context_dependent": return "Depends on diet & lifestyle";
       case "confirmation_required": return "Needs clinical lab test to verify";
       case "no_data": return "No data available";
@@ -156,6 +156,9 @@
     <!-- Severity explanation — only shown for active findings -->
     <div class="severity-explainer">
       {severity.description}
+    </div>
+    <div class="claim-frame" role="note">
+      {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
     </div>
 
     <div class="marker-body">
@@ -349,6 +352,16 @@
     outline: 2px solid rgba(56, 189, 248, 0.75);
     outline-offset: 2px;
     box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+  }
+
+  .claim-frame {
+    margin: 0.45rem 0 0.7rem;
+    padding: 0.45rem 0.6rem;
+    border-left: 3px solid var(--accent-color, #60a5fa);
+    background: rgba(96, 165, 250, 0.07);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.4;
   }
 
   /* Reference enrichment chips */

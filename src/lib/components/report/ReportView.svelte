@@ -478,9 +478,9 @@
               We scan your raw DNA file to find your specific genetic letters. Depending on what is found:
             </p>
             <ul>
-              <li><strong>🔴 Two risk copies:</strong> Both copies of this gene carry the genetic variant associated with the finding.</li>
-              <li><strong>🟡 One risk copy:</strong> One copy carries the variant; the other is typical. The effect is usually smaller.</li>
-              <li><strong>🟢 Protective copy:</strong> This variant is linked to a beneficial or protective health trait.</li>
+              <li><strong>🔴 Two association copies:</strong> Both copies match the allele used by the pack's researched association rule.</li>
+              <li><strong>🟡 One association copy:</strong> One copy matches the association allele; effects are usually smaller and remain context-dependent.</li>
+              <li><strong>🟢 Protective association:</strong> This variant may be linked to a beneficial or lower-risk direction, not guaranteed protection.</li>
               <li><strong>🟣 Context-dependent:</strong> The variant's effect depends on other environmental factors (e.g. diet, exercise, drugs).</li>
             </ul>
           </section>

@@ -59,6 +59,19 @@ function ratio(present, total) {
   return total === 0 ? 0 : Math.round((present / total) * 1000) / 10;
 }
 
+function hasUnqualifiedStrongLanguage(text) {
+  if (/\b(?:will|always|guarantee(?:s)?|definitive(?:ly)?)\b/i.test(text)
+    && !/\b(?:not|does not|do not)\s+(?:a\s+)?(?:guarantee|guarantees|definitive)\b/i.test(text)) {
+    return true;
+  }
+  const causalPattern = /\b(?:causes?|results?\s+in|leads?\s+to)\b/gi;
+  for (const match of text.matchAll(causalPattern)) {
+    const prefix = text.slice(0, match.index).trim().split(/\s+/).slice(-1)[0] || '';
+    if (!/^(?:can|may|could|might|often|sometimes|typically|usually)$/i.test(prefix)) return true;
+  }
+  return false;
+}
+
 const manifest = readJson(path.join(resourceDir, 'manifest.json'));
 const runtimeSummary = readJson(runtimeSummaryPath);
 const sourceRegistry = readJson(path.join(resourceDir, 'source_registry.json'));
@@ -86,6 +99,7 @@ const supportRefs = new Set();
 const markerFiles = new Set();
 const boundaryGaps = [];
 const absoluteLanguageReview = [];
+const laypersonLanguageReview = [];
 
 for (const pack of manifest?.packs || []) {
   const packId = pack?.id;
@@ -134,7 +148,7 @@ for (const pack of manifest?.packs || []) {
     if (missing.length > 0) boundaryGaps.push({ pack: packId, rsid: marker.rsid || '(missing rsid)', missing });
 
     const interpretation = String(marker.interpretation || '');
-    if (marker.variant_type !== 'guardrail' && /\b(?:causes?|results? in|leads? to|will|guarantee(?:s)?|definitive|always|never)\b/i.test(interpretation)) {
+    if (marker.variant_type !== 'guardrail' && hasUnqualifiedStrongLanguage(interpretation)) {
       absoluteLanguageReview.push({
         pack: packId,
         rsid: marker.rsid || '(missing rsid)',
@@ -192,6 +206,25 @@ if (uncoveredActionabilityGenes.length > 0) {
   warnings.push(`actionability genes without curated markers: ${uncoveredActionabilityGenes.join(', ')}`);
 }
 
+const laypersonPath = path.join(root, 'src', 'lib', 'utils', 'layperson.ts');
+if (fs.existsSync(laypersonPath)) {
+  const laypersonText = fs.readFileSync(laypersonPath, 'utf8');
+  const simpleMeaningPattern = /simpleMeaning:\s*"((?:\\.|[^"\\])*)"/g;
+  for (const match of laypersonText.matchAll(simpleMeaningPattern)) {
+    let meaning = match[1];
+    try {
+      meaning = JSON.parse(`"${meaning}"`);
+    } catch {
+      // The TypeScript parser/checker is the authority for syntax; retain the
+      // raw text if this lightweight review scanner cannot decode one string.
+    }
+    if (hasUnqualifiedStrongLanguage(meaning)) laypersonLanguageReview.push(meaning);
+  }
+  if (laypersonLanguageReview.length > 0) {
+    warnings.push(`plain-English interpretations needing wording review: ${laypersonLanguageReview.length}`);
+  }
+}
+
 const summary = {
   marker_packs: packSummaries.length,
   curated_markers: allMarkers.length,
@@ -215,6 +248,7 @@ const summary = {
   },
   boundary_gaps: boundaryGaps,
   absolute_language_review: absoluteLanguageReview,
+  layperson_language_review: laypersonLanguageReview,
   uncovered_actionability_genes: uncoveredActionabilityGenes,
   pack_summaries: packSummaries,
   errors,
@@ -229,7 +263,7 @@ if (outputJson) {
   console.log(`Audited ${summary.support_resources} support resources / ${summary.registered_sources} registered sources.`);
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
-  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; absolute-language review queue: ${absoluteLanguageReview.length}.`);
+  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }

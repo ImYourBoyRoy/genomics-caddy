@@ -57,7 +57,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1800255": {
     simpleImpact: "Common collagen structure variant (COL3A1 gene)",
-    simpleMeaning: "This is a common, non-harmful change in your collagen structure. It does not cause serious tissue disease but plays a role in natural joint and tissue flexibility."
+    simpleMeaning: "This common marker is not a diagnosis of a collagen disorder. It has been studied in relation to small differences in joint and tissue flexibility, but symptoms and clinical examination matter more."
   },
   "rs143383": {
     simpleImpact: "Reduced joint cartilage repair (GDF5 gene)",
@@ -77,7 +77,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1815739": {
     simpleImpact: "Reduced fast-twitch muscle power (ACTN3 gene)",
-    simpleMeaning: "Having two copies of this variant makes your body stop producing a muscle protein found in fast-twitch fibers. This shifts your natural athletic profile toward endurance and away from pure explosive power."
+    simpleMeaning: "Two copies are associated with absence of an ACTN3 protein in fast fibers in relevant research. Training, health, and many other genes influence performance, so this does not determine an endurance or sprint profile."
   },
   "rs970547": {
     simpleImpact: "Altered ligament strength (COL12A1 gene)",
@@ -97,7 +97,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs4988235": {
     simpleImpact: "Lactose intolerance (MCM6 gene)",
-    simpleMeaning: "Having two copies of this variant makes your body stop producing lactase, the enzyme needed to digest milk sugar (lactose), as you grow older. This leads to lactose intolerance."
+    simpleMeaning: "Two copies are associated with adult lactase non-persistence in many European-ancestry studies. Symptoms and dairy tolerance vary, and this is not a milk-allergy diagnosis."
   },
   "rs9939609": {
     simpleImpact: "Increased appetite and slower fullness signals (FTO gene)",
@@ -133,11 +133,11 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs328": {
     simpleImpact: "Faster clearance of blood fats (LPL gene)",
-    simpleMeaning: "This variant increases the activity of an enzyme that clears fat from your blood. This is generally beneficial, leading to lower triglycerides and higher good (HDL) cholesterol."
+    simpleMeaning: "This variant has been associated with differences in an enzyme involved in blood-fat clearance. Some studies link it with lower triglycerides or higher HDL, but your actual lipid tests and overall health matter more."
   },
   "rs708272": {
     simpleImpact: "Increased good (HDL) cholesterol (CETP gene)",
-    simpleMeaning: "This variant reduces the activity of a protein that moves cholesterol around. This leads to higher levels of protective 'good' HDL cholesterol in your blood."
+    simpleMeaning: "This marker has been associated with differences in cholesterol transport and HDL levels. It does not guarantee protection; a complete lipid profile and ApoB-related context are more useful."
   },
   "rs10455872": {
     simpleImpact: "Elevated Lipoprotein(a) levels (LPA gene)",
@@ -145,7 +145,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs3798220": {
     simpleImpact: "Elevated Lipoprotein(a) levels (LPA gene)",
-    simpleMeaning: "This variant causes your body to make a smaller version of a blood protein that is cleared more slowly. This raises your levels of Lipoprotein(a), a risk factor for heart disease."
+    simpleMeaning: "This LPA marker is associated with a smaller lipoprotein(a) form and may be associated with higher Lp(a) in some people. A measured Lp(a) test is needed; the SNP alone is not a cardiovascular diagnosis."
   },
   "rs17782313": {
     simpleImpact: "Altered fullness signaling (MC4R gene)",
@@ -169,7 +169,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs4680": {
     simpleImpact: "Slower dopamine breakdown in the brain (COMT gene)",
-    simpleMeaning: "Having two copies of this variant makes your body clear dopamine from your brain very slowly. This helps with deep focus and planning, but can also make you more prone to anxiety and stress under pressure."
+    simpleMeaning: "This is one COMT allele component studied in dopamine and catechol-estrogen breakdown. Effects are small and context-dependent; it does not determine focus, anxiety, personality, or hormone levels."
   },
   "rs1800497": {
     simpleImpact: "Fewer dopamine receptors (DRD2/ANKK1 gene region)",
@@ -241,11 +241,11 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1800562": {
     simpleImpact: "Increased iron absorption risk (HFE gene)",
-    simpleMeaning: "Having two copies of this variant puts you at high risk for absorbing too much iron from your diet, which can build up in your organs and require medical management."
+    simpleMeaning: "This HFE variant can be relevant to iron-overload evaluation, especially when a clinical result and iron studies support it. A raw SNP result alone does not diagnose hemochromatosis or prove that you absorb too much iron."
   },
   "rs1799945": {
     simpleImpact: "Mildly increased iron absorption (HFE gene)",
-    simpleMeaning: "This is a milder iron-absorption variant. On its own, it rarely causes issues, but when combined with other variants, it can lead to mild iron buildup."
+    simpleMeaning: "This is a milder HFE component. Its significance depends on other HFE alleles, iron studies, symptoms, and life stage; it is not proof of iron buildup by itself."
   },
   "rs1805087": {
     simpleImpact: "Altered folate and B12 processing (MTR gene)",
@@ -257,23 +257,23 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1801198": {
     simpleImpact: "Reduced Vitamin B12 delivery to cells (TCN2 gene)",
-    simpleMeaning: "This variant makes the protein that carries vitamin B12 to your cells less efficient. Your cells might not get enough B12 even if blood tests show normal levels."
+    simpleMeaning: "This variant has been studied in vitamin-B12 transport. If symptoms or labs raise concern, clinicians may consider more than a single serum B12 result; the SNP alone does not establish cellular B12 deficiency."
   },
   "rs602662": {
     simpleImpact: "Altered gut environment and lower blood B12 (FUT2 gene)",
-    simpleMeaning: "Having two copies of this variant makes you a 'non-secretor,' meaning you don't release blood group markers into bodily fluids. This changes your gut bacteria and is linked to lower blood B12 levels."
+    simpleMeaning: "This FUT2 marker has been associated with secretor-status and B12 differences in some populations. One SNP does not establish secretor status or B12 deficiency; symptoms, diet, and labs provide the useful context."
   },
   "rs7946": {
     simpleImpact: "Reduced choline production in the liver (PEMT gene)",
-    simpleMeaning: "This variant reduces your liver's ability to produce choline, an essential nutrient. This makes you much more sensitive to low-choline diets and increases the risk of fatty liver."
+    simpleMeaning: "This PEMT marker is studied in choline metabolism. It may be a reason to consider ordinary choline-rich foods in the context of your diet and health, but it does not establish a choline deficiency or fatty-liver risk."
   },
   "rs2236225": {
     simpleImpact: "Altered folate processing and higher choline demand (MTHFD1 gene)",
-    simpleMeaning: "This variant reduces your ability to process folate. This forces your body to rely more on choline, increasing your daily dietary choline requirement."
+    simpleMeaning: "This MTHFD1 marker is studied in folate and choline pathways. Any effect is likely context-dependent; it does not set a personal daily choline requirement or justify high-dose supplements."
   },
   "rs2228570": {
     simpleImpact: "Slightly less active Vitamin D receptors (VDR gene)",
-    simpleMeaning: "This variant makes your cells slightly less sensitive to Vitamin D. You might need higher blood levels of Vitamin D to get the same health benefits."
+    simpleMeaning: "This VDR marker is associated in some studies with small differences in vitamin-D signaling. Use 25(OH)D and clinical context rather than the SNP to decide whether any action is needed."
   },
   "rs1544410": {
     simpleImpact: "Fewer Vitamin D receptors (VDR gene)",
@@ -281,15 +281,15 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs2282679": {
     simpleImpact: "Lower Vitamin D transport in the blood (GC gene)",
-    simpleMeaning: "This variant lowers the amount of transporter protein available to carry Vitamin D in your blood, which often leads to lower overall Vitamin D blood levels."
+    simpleMeaning: "This GC marker has been associated with differences in vitamin-D transport or measured levels in some populations. A blood test, not the SNP alone, shows your current vitamin-D status."
   },
   "rs10741657": {
     simpleImpact: "Less efficient Vitamin D activation in the liver (CYP2R1 gene)",
-    simpleMeaning: "This variant slows down how your liver converts Vitamin D from sunlight or supplements into its active form, making it harder to maintain optimal levels."
+    simpleMeaning: "This CYP2R1 marker is studied in vitamin-D activation. Effects vary; use measured 25(OH)D and clinician guidance rather than assuming supplementation is needed."
   },
   "rs12785878": {
     simpleImpact: "Reduced Vitamin D production from sunlight (DHCR7 gene)",
-    simpleMeaning: "This variant makes your skin less efficient at producing Vitamin D when exposed to sunlight, increasing your reliance on dietary sources and supplements."
+    simpleMeaning: "This DHCR7 marker is associated in some studies with vitamin-D-related differences. It does not measure sunlight exposure or establish reliance on supplements; use labs and safe sun/food guidance."
   },
   "rs3892097": {
     simpleImpact: "CYP2D6*4 no-function allele component — clinical PGx needed",
@@ -321,7 +321,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs762551": {
     simpleImpact: "Slower breakdown of caffeine (CYP1A2 gene)",
-    simpleMeaning: "You break down caffeine slowly. It stays in your body longer, which can cause jitteriness, anxiety, or trouble sleeping if you drink coffee or energy drinks later in the day."
+    simpleMeaning: "This CYP1A2 marker is one contributor to caffeine-response research. Your response also depends on dose, sleep, smoking, medicines, pregnancy, and other factors; use your symptoms and blood pressure rather than a DNA-only limit."
   },
   "rs9923231": {
     simpleImpact: "VKORC1 warfarin-sensitivity allele component — clinical dosing required",
@@ -341,7 +341,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs2231142": {
     simpleImpact: "Reduced transport of uric acid and statins (ABCG2 gene)",
-    simpleMeaning: "This variant makes it harder for your body to move certain drugs and uric acid. This can cause cholesterol medications to build up in your body and increases your risk of gout."
+    simpleMeaning: "This ABCG2 marker is studied in uric-acid handling and transport of some medicines. It may modify gout or medication context, but it is not a gout diagnosis or a medication-dose result."
   },
   "rs3918290": {
     simpleImpact: "DPYD*2A toxicity-risk allele component — urgent clinical confirmation if relevant",

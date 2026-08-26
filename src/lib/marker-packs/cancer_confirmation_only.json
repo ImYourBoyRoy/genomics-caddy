@@ -1399,7 +1399,7 @@
       "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
       "impact": "Neurofibromatosis type 1 tumor predisposition and breast cancer context",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "Confirmed pathogenic NF1 variants cause neurofibromatosis type 1, a tumor predisposition syndrome with malignant peripheral nerve sheath tumor risk and breast cancer screening implications in some adults.",
+      "interpretation": "Clinically confirmed pathogenic NF1 variants are associated with neurofibromatosis type 1 and its tumor-predisposition spectrum; management should follow genetics and oncology guidance.",
       "do_not_claim": [
         "cancer diagnosis",
         "cancer certainty",
@@ -1673,7 +1673,7 @@
       "effect_allele": "CLINICALLY_CONFIRMED_EPCAM_3PRIME_DELETION",
       "impact": "Epigenetic MSH2 silencing / Lynch syndrome",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "Certain germline EPCAM deletions can silence neighboring MSH2 and cause Lynch syndrome. This is a structural variant problem, not a typical SNP problem.",
+      "interpretation": "Certain germline EPCAM deletions can silence neighboring MSH2 and are associated with Lynch syndrome. This is a structural-variant problem, not a typical SNP problem.",
       "do_not_claim": [
         "cancer diagnosis",
         "cancer certainty",
@@ -1783,7 +1783,7 @@
       "effect_allele": "A",
       "impact": "Moderate colorectal cancer risk modifier, ancestry-contextual",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "APC I1307K is a moderate colorectal cancer risk allele, especially described in Ashkenazi Jewish ancestry. It does not cause classic FAP by itself.",
+      "interpretation": "APC I1307K is associated with moderate colorectal-cancer risk in some ancestry groups, especially in Ashkenazi Jewish studies. It is distinct from the pathogenic APC variants linked to classic FAP.",
       "do_not_claim": [
         "cancer diagnosis",
         "cancer certainty",
@@ -1830,7 +1830,7 @@
       "effect_allele": "BIALLELIC_CLINICALLY_CONFIRMED_PLP",
       "impact": "Base-excision repair defect / autosomal recessive adenomatous polyposis",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "Biallelic MUTYH pathogenic variants cause MUTYH-associated polyposis. Monoallelic carrier status has much weaker and context-dependent risk implications.",
+      "interpretation": "Biallelic pathogenic MUTYH variants are associated with MUTYH-associated polyposis; monoallelic carrier status has much weaker and context-dependent risk implications.",
       "do_not_claim": [
         "cancer diagnosis",
         "cancer certainty",

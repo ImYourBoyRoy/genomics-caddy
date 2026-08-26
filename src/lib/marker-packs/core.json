@@ -71,7 +71,7 @@
       "effect_allele": "C",
       "impact": "Lactase gene promoter downregulation (Lactose Intolerance)",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "MCM6 regulates the LCT (lactase) gene. Homozygous C/C results in adult lactase non-persistence (lactose intolerance) in European populations. T-carriers (C/T or T/T) maintain lactase expression throughout adulthood.",
+      "interpretation": "The C/C genotype at this marker is associated with adult lactase non-persistence in many European-ancestry studies; symptoms and tolerance vary, and this is not a milk-allergy diagnosis. T-carriers often retain more lactase activity, but genotype does not determine how much dairy a person can tolerate.",
       "do_not_claim": [
         "dairy allergy diagnosis",
         "irritable bowel syndrome"

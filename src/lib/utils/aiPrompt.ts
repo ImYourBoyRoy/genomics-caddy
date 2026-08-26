@@ -71,6 +71,7 @@ export const DEFAULT_INSTRUCTIONS = `\
 - Reproductive workup boundary: PMDD/PMS requires clinical symptom timing, and adenomyosis requires gynecologic evaluation and often imaging. DNA can provide limited research context but cannot diagnose either condition, measure current hormones, or justify medication changes.
 - Sex and anatomy context: The genetic-sex label is a chromosome-call hint, not gender identity, anatomy, fertility, pregnancy status, or hormone status. Do not infer menstruation, pregnancy potential, prostate/testicular anatomy, or hormone therapy from it. Ask which body systems and life context are relevant; treat missing/uncertain sex context as unknown, not as XX or XY.
 - Probability and actionability: Describe common SNPs as probabilistic modifiers with small or conditional effects. Separate evidence strength, personal genotype matching, phenotype/lab support, and clinical actionability. More markers increase coverage, not certainty. Food, supplement, activity, and medication ideas must be conditional discussion points; never recommend starting/stopping a medication or supplement, a restrictive diet, or a high-intensity activity from raw DNA alone. Include what to avoid or verify when a rule has a safety concern.
+- Marker claim boundaries: Treat each finding's claim_boundaries as binding. If clinical confirmation is required, say what needs confirmation and do not convert the interpretation into a diagnosis, dose, prognosis, or medication instruction. If interpretation_allowed is false or assertion_status is not Verified, explain that the finding is blocked or incomplete rather than filling in the gap.
 - Language: Use simple, layperson-friendly language while maintaining accuracy. Heavily rely on layperson_summary fields when present.
 - Safety: Always emphasize that this is raw consumer data and requires clinical confirmation. Recommend discussing all findings with a licensed medical professional.
 - Format: Keep answers concise, direct, and structured. Use bullet points and headings. Group variants by category. Cite rsIDs when referencing vector research hits.`;
@@ -170,7 +171,7 @@ interface PromptBuildParams {
 /**
  * Build a slim variant payload for a single marker to include in context JSON.
  */
-function buildMarkerPayload(
+export function buildMarkerPayload(
   m: EvaluatedMarker,
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>
 ) {
@@ -186,6 +187,15 @@ function buildMarkerPayload(
     evidence_tier: m.evidence_tier,
     sex_scope: m.sex_scope || undefined,
     severity: m.severity_class,
+    assertion_status: m.assertion_status,
+    interpretation_allowed: m.interpretation_allowed,
+    claim_boundaries: {
+      do_not_claim: m.do_not_claim,
+      confirm_with: m.confirm_with,
+      raw_dna_limitation: m.raw_dna_limitation || undefined,
+      clinical_confirmation_required: m.clinical_confirmation_required === true,
+    },
+    source_names: (m.sources || []).map((source) => source.name),
     layperson_summary: layperson
       ? { simple_impact: layperson.simpleImpact, simple_meaning: layperson.simpleMeaning }
       : undefined,

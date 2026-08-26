@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -474,6 +474,46 @@
       "evidence_type": "Professional clinical guidance",
       "conflict_of_interest": "American College of Obstetricians and Gynecologists clinical guidance; review the guidance disclosures when using clinically",
       "notes": "Use for respectful, goal-directed hormone-care context, product-specific monitoring, and avoiding assumptions about identity, anatomy, fertility, or hormone response."
+    },
+    "acog_optimizing_postpartum_care": {
+      "name": "ACOG: Optimizing Postpartum Care",
+      "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2018/05/optimizing-postpartum-care",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional clinical guidance",
+      "conflict_of_interest": "American College of Obstetricians and Gynecologists clinical guidance; review the guidance disclosures when using clinically",
+      "notes": "Use for ongoing, individualized postpartum care, follow-up timing, recovery, contraception, mental health, and chronic-condition review."
+    },
+    "acog_breastfeeding_medication_support": {
+      "name": "ACOG: Optimizing Support for Breastfeeding as Part of Obstetric Practice",
+      "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2018/10/optimizing-support-for-breastfeeding-as-part-of-obstetric-practice",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional clinical guidance",
+      "conflict_of_interest": "American College of Obstetricians and Gynecologists clinical guidance; review the guidance disclosures when using clinically",
+      "notes": "Use for individualized feeding support and medication review; a medically indicated medication is not automatically a reason to stop breastfeeding."
+    },
+    "acog_urgent_maternal_warning_signs": {
+      "name": "ACOG: Urgent Maternal Warning Signs",
+      "url": "https://www.acog.org/giving/programs/quality-and-safety/resources",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional patient-safety resource",
+      "conflict_of_interest": "American College of Obstetricians and Gynecologists patient-safety resource",
+      "notes": "Use for urgent symptoms during or after pregnancy and the instruction to tell emergency clinicians about a current or recent pregnancy."
+    },
+    "cdc_medicine_pregnancy": {
+      "name": "CDC: Medicine and Pregnancy",
+      "url": "https://www.cdc.gov/medicine-and-pregnancy/index.html",
+      "accessed": "2026-08-26",
+      "evidence_type": "U.S. Centers for Disease Control and Prevention public-health guidance",
+      "conflict_of_interest": "U.S. federal public-health resource",
+      "notes": "Use for reviewing every medicine with a healthcare provider during pregnancy and for directing users to drug-specific FDA information."
+    },
+    "ncbi_lactmed": {
+      "name": "NCBI: Drugs and Lactation Database (LactMed)",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK501922/",
+      "accessed": "2026-08-26",
+      "evidence_type": "National Library of Medicine evidence database",
+      "conflict_of_interest": "U.S. National Library of Medicine public evidence resource",
+      "notes": "Use for substance-specific information on breast-milk and infant levels, reported infant effects, and possible alternatives; review current records with a clinician."
     },
     "medlineplus_testicle_pain": {
       "name": "MedlinePlus: Testicle Pain",

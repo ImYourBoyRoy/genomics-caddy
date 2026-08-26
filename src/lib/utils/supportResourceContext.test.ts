@@ -47,6 +47,22 @@ describe('support resource context', () => {
     expect(context.safety_guardrails.some((rule) => rule.id === 'HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA')).toBe(true);
   });
 
+  it('routes explicit pregnancy, postpartum, and lactation context to safety resources', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'pregnancy_postpartum',
+    });
+
+    expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
+      'pregnancy_postpartum_lactation_context',
+      'general_symptom_day_support',
+    ]);
+    expect(context.cycle_support.source_registry.cdc_medicine_pregnancy).toBeDefined();
+    expect(context.cycle_support.source_registry.ncbi_lactmed).toBeDefined();
+    expect(context.safety_guardrails.some((rule) => rule.id === 'PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA')).toBe(true);
+  });
+
   it('keeps reproductive domains hidden until an explicit context is selected', () => {
     const hidden = buildSupportResourceContext({
       packIds: ['hormones_reproductive'],

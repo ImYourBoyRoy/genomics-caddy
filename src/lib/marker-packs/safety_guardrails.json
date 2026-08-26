@@ -1,6 +1,6 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "medication_context": {
     "ask_for": [
@@ -40,6 +40,9 @@
       "estrogen",
       "testosterone",
       "progesterone",
+      "pregnancy",
+      "postpartum",
+      "lactation",
       "esr1",
       "esr2",
       "pgr",
@@ -120,6 +123,11 @@
       "id": "HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA",
       "severity": "critical",
       "text": "Raw DNA cannot identify a person's current hormone-therapy product, active ingredients, route, dose, treatment goal, hormone level, or response. Ask for the exact label and clinician monitoring plan; do not start, stop, add, or change hormone treatment from genotype."
+    },
+    {
+      "id": "PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA",
+      "severity": "critical",
+      "text": "Raw DNA cannot establish pregnancy, postpartum timing, lactation/feeding status, infant exposure, or medication safety in these contexts. Ask for the exact product list and timing, then use clinician/pharmacist review and current pregnancy/lactation references; do not start, stop, or change medication or supplements from genotype."
     },
     {
       "id": "PMDD_REQUIRES_SYMPTOM_TIMING",

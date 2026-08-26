@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
@@ -91,12 +91,15 @@
     },
     {
       "id": "pregnancy_postpartum",
-      "label": "Pregnancy / postpartum context",
-      "description": "Use only when the person supplies this context; DNA does not establish pregnancy or postpartum status.",
+      "label": "Pregnancy / postpartum / lactation context",
+      "description": "Use only when the person supplies this context; DNA does not establish pregnancy, postpartum timing, lactation, feeding goals, or medication safety.",
       "domain_ids": [
+        "pregnancy_postpartum_lactation_context",
         "general_symptom_day_support"
       ],
-      "medication_rule_ids": []
+      "medication_rule_ids": [
+        "PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA"
+      ]
     },
     {
       "id": "none_or_unknown",
@@ -185,7 +188,9 @@
     "hormone_therapy_context": [
       "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA"
     ],
-    "pregnancy_postpartum": []
+    "pregnancy_postpartum": [
+      "GUARDRAIL_PREGNANCY_LACTATION_CONTEXT_NOT_IN_DNA"
+    ]
   },
   "principles": [
     "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
@@ -436,6 +441,46 @@
       "sources": [
         "endocrine_gender_affirming_hormone_therapy",
         "acog_transgender_gender_diverse_care",
+        "user_declared_values_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "pregnancy_postpartum_lactation_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "pgx",
+        "nutrients",
+        "thyroid_autoimmune"
+      ],
+      "title": "Pregnancy, postpartum and lactation safety context",
+      "context": "Pregnancy, postpartum recovery, lactation, chestfeeding, and feeding choices are user-supplied clinical contexts. DNA cannot establish pregnancy or postpartum status and cannot determine whether a medication or supplement is safe for a pregnant person, lactating person, or infant.",
+      "questions": [
+        "What context applies now: trying to conceive, pregnant, postpartum, lactating/feeding, recently stopped feeding, or none of these? If relevant, what is the gestational or postpartum timing?",
+        "What are the exact medication, OTC, supplement, herbal, and topical-product names, active ingredients, dose, route, schedule, and prescriber instructions?",
+        "Has a clinician or pharmacist reviewed the medication list for pregnancy, postpartum, or infant-exposure considerations? If lactating/feeding, what infant age, prematurity, medical conditions, or feeding goals affect the review?"
+      ],
+      "support_options": [
+        "Use the exact product label and clinician/pharmacist review for pregnancy or lactation medication decisions; do not start, stop, skip, or substitute a medicine from genotype.",
+        "For lactation/feeding questions, look up the exact substance in a current medication-and-lactation reference such as LactMed and review the result with the treating clinician; do not assume that natural, topical, or prescribed means risk-free.",
+        "Keep prenatal, postpartum, and feeding care individualized: review supplements and total nutrient intake, monitor symptoms and measured labs when ordered, and preserve the person's feeding goals without treating DNA as a pregnancy or infant-safety test."
+      ],
+      "confirm_with": [
+        "user-supplied pregnancy, postpartum, lactation/feeding, and conception context",
+        "exact medication, supplement, OTC, herbal, and topical-product labels",
+        "obstetric, primary-care, pediatric, lactation, or pharmacist review as appropriate"
+      ],
+      "red_flags": [
+        "heavy bleeding, fainting, severe shortness of breath, chest pain, or one-sided leg swelling during or after pregnancy",
+        "severe or worsening headache, vision changes, seizure, severe upper-abdominal pain, or markedly elevated blood pressure",
+        "fever with severe pelvic/abdominal pain, rapidly worsening illness, or suicidal thoughts"
+      ],
+      "sources": [
+        "acog_optimizing_postpartum_care",
+        "acog_breastfeeding_medication_support",
+        "acog_urgent_maternal_warning_signs",
+        "cdc_medicine_pregnancy",
+        "ncbi_lactmed",
         "user_declared_values_required",
         "clinical_confirmation_required"
       ]

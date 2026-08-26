@@ -35,4 +35,11 @@ describe('reproductive marker context routing', () => {
     ]);
     expect(option?.medication_rule_ids).toContain('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
   });
+
+  it('keeps pregnancy and lactation status as explicit clinical context', () => {
+    const option = selectedReproductiveContextOption('pregnancy_postpartum');
+
+    expect(option?.domain_ids).toContain('pregnancy_postpartum_lactation_context');
+    expect(option?.medication_rule_ids).toContain('PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA');
+  });
 });

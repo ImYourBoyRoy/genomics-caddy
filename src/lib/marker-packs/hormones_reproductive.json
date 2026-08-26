@@ -1984,6 +1984,57 @@
           "notes": "Use for respectful, goal-directed hormone-care context and product-specific monitoring without assumptions about identity or anatomy."
         }
       ]
+    },
+    {
+      "rsid": "GUARDRAIL_PREGNANCY_LACTATION_CONTEXT_NOT_IN_DNA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Pregnancy, postpartum and lactation status are not callable from consumer DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates pregnancy, postpartum, feeding, and medication-safety context from genetic findings",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "A consumer DNA file cannot establish pregnancy, postpartum timing, lactation/feeding status, conception plans, infant exposure, or medication and supplement safety in those contexts. Ask for the person's stated context, exact product labels, timing, and clinician or pharmacist review; do not infer these facts from chromosomes or SNPs.",
+      "do_not_claim": [
+        "pregnancy or postpartum status",
+        "lactation/feeding status or infant exposure",
+        "pregnancy or lactation medication safety from genotype",
+        "prenatal or postpartum supplement advice from genotype"
+      ],
+      "confirm_with": [
+        "user-supplied pregnancy, postpartum, lactation/feeding, or conception context",
+        "exact medication, OTC, supplement, herbal, and topical-product labels",
+        "obstetric, primary-care, pediatric, lactation, or pharmacist review as appropriate"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Pregnancy, postpartum physiology, lactation, infant exposure, and medication safety depend on timing, clinical history, the exact substance, and measured or observed outcomes rather than a consumer SNP array.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "all_bodies_pregnancy_lactation_context",
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "CDC: Medicine and Pregnancy",
+          "url": "https://www.cdc.gov/medicine-and-pregnancy/index.html",
+          "accessed": "2026-08-26",
+          "evidence_type": "U.S. Centers for Disease Control and Prevention public-health guidance",
+          "conflict_of_interest": "U.S. federal public-health resource",
+          "notes": "Use for exact medicine review with a healthcare provider during pregnancy."
+        },
+        {
+          "name": "NCBI: Drugs and Lactation Database (LactMed)",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK501922/",
+          "accessed": "2026-08-26",
+          "evidence_type": "National Library of Medicine evidence database",
+          "conflict_of_interest": "U.S. National Library of Medicine public evidence resource",
+          "notes": "Use for substance-specific lactation and infant-exposure review."
+        },
+        {
+          "name": "ACOG: Urgent Maternal Warning Signs",
+          "url": "https://www.acog.org/giving/programs/quality-and-safety/resources",
+          "accessed": "2026-08-26",
+          "evidence_type": "Professional patient-safety resource",
+          "conflict_of_interest": "American College of Obstetricians and Gynecologists patient-safety resource",
+          "notes": "Use for urgent symptoms during or after pregnancy."
+        }
+      ]
     }
   ]
 }

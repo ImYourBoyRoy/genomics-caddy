@@ -415,6 +415,33 @@
       ]
     },
     {
+      "id": "adh1b_alcohol_context",
+      "genes": [
+        "ADH1B"
+      ],
+      "marker_ids": [
+        "rs1229984"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "core",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "Alcohol-free options when alcohol causes flushing, tachycardia, nausea, headache, sleep disruption, or other adverse effects"
+      ],
+      "avoid": [
+        "Alcohol when it causes flushing, tachycardia, nausea, headache, sleep disruption, or other adverse effects",
+        "Using a possibly protective ADH1B association to justify heavier drinking or dismiss alcohol-related risk"
+      ],
+      "supplements": [],
+      "notes": "ADH1B rs1229984 can alter ethanol-to-acetaldehyde conversion and may be associated with drinking-pattern phenotypes, but the result is not an alcohol-use-disorder prediction or a safe-drinking threshold. Interpret with ALDH2, actual exposure, symptoms, medications, liver status, body size, and personal or cultural context.",
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030"
+      ]
+    },
+    {
       "id": "uric_acid",
       "genes": [
         "SLC2A9",
@@ -454,7 +481,11 @@
     {
       "id": "vdr_vitamin_d",
       "genes": [
-        "VDR"
+        "VDR",
+        "GC",
+        "CYP2R1",
+        "DHCR7",
+        "CYP24A1"
       ],
       "actionability_class": "symptom_or_lab_conditioned",
       "severity_classes": [
@@ -469,6 +500,10 @@
         "Wild fish",
         "Egg yolks",
         "UV-irradiated mushrooms"
+      ],
+      "avoid": [
+        "Megadose vitamin D or calcium without measured status and kidney, calcium, medication, and clinical context",
+        "Using a vitamin-D pathway genotype to choose a dose or claim vitamin D deficiency"
       ],
       "supplements": [],
       "lab_tests": [
@@ -575,6 +610,34 @@
       ]
     },
     {
+      "id": "adora2a_caffeine_context",
+      "genes": [
+        "ADORA2A"
+      ],
+      "marker_ids": [
+        "rs5751876"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "core",
+        "neuropsych",
+        "sleep"
+      ],
+      "favor": [
+        "Use caffeine timing, dose, sleep, anxiety, heart-rate, and blood-pressure response logs to personalize caffeine choices"
+      ],
+      "avoid": [
+        "High-dose or late-day caffeine when sleep, anxiety, palpitations, or blood-pressure symptoms worsen",
+        "Treating an ADORA2A marker as proof of an anxiety disorder or a universal caffeine limit"
+      ],
+      "supplements": [],
+      "notes": "ADORA2A rs5751876 may modify caffeine-related arousal, anxiety, or sleep response, especially under caffeine exposure. Combine it with CYP1A2, timing, dose, smoking, medications, pregnancy status when relevant, and observed response; no genotype establishes a universal cutoff.",
+      "sources": [
+        "nih_caffeine_general_context",
+        "user_declared_values_required"
+      ]
+    },
+    {
       "id": "nos3_nitric_oxide",
       "genes": [
         "NOS3"
@@ -631,6 +694,58 @@
       ],
       "sources": [
         "nih_ods_selenium"
+      ]
+    },
+    {
+      "id": "b12_status_context",
+      "genes": [
+        "FUT2",
+        "TCN2",
+        "CUBN"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "nutrients",
+        "core",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "B12-containing foods or fortified foods that fit the person's diet and goals",
+        "Use measured B12 status, symptoms, dietary pattern, and medication context before deciding whether supplementation is worth discussing"
+      ],
+      "avoid": [
+        "Treating a FUT2, TCN2, or CUBN marker as proof of vitamin B12 deficiency",
+        "Using folate or an energy formula to cover unresolved B12-related symptoms without checking the underlying cause"
+      ],
+      "supplements": [
+        "A B12 supplement only after reviewing diet, measured status, medications, total intake, and clinician or pharmacist guidance"
+      ],
+      "medication_context": [
+        "Metformin and acid-suppressing medicines can be part of a B12 review; do not stop or change them from raw DNA."
+      ],
+      "lab_tests": [
+        {
+          "name": "Complete blood count (CBC) with MCV",
+          "urgency": "consider"
+        },
+        {
+          "name": "Serum or plasma vitamin B12",
+          "urgency": "consider"
+        },
+        {
+          "name": "Methylmalonic acid (MMA) when B12 status is borderline or clinically uncertain",
+          "urgency": "consider"
+        },
+        {
+          "name": "Homocysteine with folate and kidney context when clinically indicated",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "FUT2, TCN2, and CUBN markers can point to a B12-status or absorption question, but effects are modest and overlapping causes are common. Serum B12, CBC, symptoms, diet, medication exposure, kidney function, and—when appropriate—MMA or homocysteine are more informative than a common SNP.",
+      "sources": [
+        "nih_ods_b12",
+        "user_declared_values_required",
+        "lab_confirmation_required"
       ]
     },
     {

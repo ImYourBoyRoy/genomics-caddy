@@ -24,6 +24,8 @@ describe('support resource context', () => {
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_k')).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'potassium')).toBe(true);
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_b6')).toBe(true);
+    expect(context.supplement_safety.rules.some((rule) => rule.id === 'b12_status')).toBe(true);
+    expect(context.supplement_safety.rules.find((rule) => rule.id === 'b12_status')?.sources).toContain('nih_ods_b12');
     expect(context.supplement_safety.rules.find((rule) => rule.id === 'vitamin_b6')?.sources).toContain('nih_ods_vitamin_b6');
     expect(context.food_safety.profile_minimum_required.length).toBeGreaterThan(0);
     expect(context.food_safety.profile_routes.allergies_confirmed.fish).toContain('RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE');

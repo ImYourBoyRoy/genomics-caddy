@@ -257,6 +257,28 @@
       "sources": ["cdc_mthfr_folic_acid", "nih_ods_folate"]
     },
     {
+      "id": "b12_status",
+      "label": "Vitamin B12 status and absorption safety",
+      "signal_genes": ["FUT2", "TCN2", "CUBN"],
+      "match_terms": ["b12", "vitamin b12", "cobalamin", "methylcobalamin", "cyanocobalamin", "hydroxocobalamin"],
+      "medication_terms": ["metformin", "proton pump inhibitor", "acid suppressant", "omeprazole", "lansoprazole", "h2 blocker", "famotidine"],
+      "food_first": [
+        "Use B12-containing foods or fortified foods that fit the person's diet before treating a common absorption marker as a supplement prescription."
+      ],
+      "avoid": [
+        "Do not use FUT2, TCN2, or CUBN genotype alone to diagnose deficiency or choose a B12 dose.",
+        "Do not use folate or an energy product to mask neurologic, blood-count, or fatigue symptoms while a possible B12 problem remains unexplained.",
+        "Do not stop metformin or acid-suppressing medication because of a raw DNA result; review the indication and B12 status with the prescriber."
+      ],
+      "confirm_with": [
+        "dietary pattern, fortified foods, exact supplement label, and total B12 intake",
+        "CBC/MCV and serum B12",
+        "MMA when serum B12 is borderline or clinical uncertainty remains, with renal context",
+        "medication review and clinician evaluation for neurologic or anemia symptoms"
+      ],
+      "sources": ["nih_ods_b12"]
+    },
+    {
       "id": "vitamin_b6",
       "label": "Vitamin B6 dose and neuropathy safety",
       "context_ids": ["menstrual_cycle", "pregnancy_postpartum", "preconception_fertility"],

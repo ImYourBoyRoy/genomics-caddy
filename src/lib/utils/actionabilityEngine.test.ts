@@ -83,6 +83,50 @@ describe('actionability engine safety policy', () => {
     expect(plan.supplements.some((item) => item.reason.includes('Discuss with a clinician or pharmacist'))).toBe(true);
   });
 
+  it('routes B12 and vitamin-D pathway markers to measured status and supplement safety', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs602662',
+        gene: 'FUT2',
+        interpretation: 'FUT2 B12-status context marker; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs10741657',
+        gene: 'CYP2R1',
+        interpretation: 'Vitamin-D status context marker; not diagnostic.',
+      }),
+    ]));
+
+    expect(plan.labTests.some((test) => test.name === 'Serum or plasma vitamin B12')).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('Methylmalonic acid'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name === '25-hydroxyvitamin D [25(OH)D]')).toBe(true);
+    expect(plan.diet.avoid.some((item) => item.includes('vitamin B12 deficiency'))).toBe(true);
+    expect(plan.supplementSafety.relevantRules.map((rule) => rule.id)).toEqual(expect.arrayContaining([
+      'b12_status',
+      'vitamin_d',
+    ]));
+  });
+
+  it('routes alcohol and caffeine response markers to exposure-aware guardrails', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs1229984',
+        gene: 'ADH1B',
+        interpretation: 'ADH1B alcohol response context; not diagnostic.',
+      }),
+      marker({
+        rsid: 'rs5751876',
+        gene: 'ADORA2A',
+        interpretation: 'ADORA2A caffeine response context; not diagnostic.',
+      }),
+    ]));
+    const avoidText = plan.diet.avoid.join(' ');
+    expect(avoidText).toContain('heavier drinking');
+    expect(avoidText).toContain('High-dose or late-day caffeine');
+    expect(avoidText).toContain('universal caffeine limit');
+    expect(plan.diet.favor.join(' ')).toContain('Alcohol-free options');
+  });
+
   it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
     const plan = deriveActionablePlan({
       ...report([marker({

@@ -76,7 +76,7 @@
     "new_support_files": [
       "supplement_safety.json"
     ],
-    "rules_count": 14,
+    "rules_count": 15,
     "note": "Supplement guidance is a food-first, medication-aware safety layer; genotype can prompt a question but cannot establish need, dose, or safety."
   },
   "cycle_support_layer": {

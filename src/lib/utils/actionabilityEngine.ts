@@ -119,6 +119,18 @@ interface ActionableRule {
   notes?: string;
 }
 
+function normalizedGeneSymbols(value: string): string[] {
+  return String(value || '')
+    .split(/[\s/]+/)
+    .map((gene) => gene.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+function actionabilityRuleMatchesMarker(rule: ActionableRule, marker: EvaluatedMarker): boolean {
+  const ruleGenes = new Set(rule.genes.map((gene) => gene.trim().toUpperCase()));
+  return normalizedGeneSymbols(marker.gene).some((gene) => ruleGenes.has(gene));
+}
+
 interface ActionabilityPolicy {
   default_actionability?: ActionabilityClass;
   safety_notes?: string[];
@@ -497,7 +509,7 @@ export function deriveActionablePlan(
   // Pack-authored guidance rules (actionability_guidance.json)
   for (const rule of ACTIONABLE_RULES) {
     const matchingMarkers = allMarkers.filter(({ marker }) => {
-      if (!rule.genes.includes(marker.gene)) return false;
+      if (!actionabilityRuleMatchesMarker(rule, marker)) return false;
       if (!marker.interpretation_allowed) return false;
 
       if (rule.severity_classes && !rule.severity_classes.includes(marker.severity_class)) {

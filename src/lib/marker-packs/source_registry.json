@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "last_updated": "2026-08-25",
   "sources": {
     "gwas_catalog": {
@@ -402,6 +402,78 @@
       "evidence_type": "NIH nutrient safety reference",
       "conflict_of_interest": "U.S. National Institutes of Health public health resource",
       "notes": "Use for iodine food/supplement safety and the risk of excessive intake; do not convert thyroid-pathway SNPs into iodine dosing advice."
+    },
+    "cpic_dpyd_fluoropyrimidines": {
+      "name": "CPIC: DPYD and Fluoropyrimidine Guideline",
+      "url": "https://cpicpgx.org/guidelines/guideline-for-fluoropyrimidines-and-dpyd/",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for clinical DPYD genotype-to-fluoropyrimidine interpretation. Consumer-array observations require validated clinical confirmation and oncology review."
+    },
+    "fda_dpyd_fluoropyrimidine_safety": {
+      "name": "FDA: DPD Deficiency Safety Labeling for Fluorouracil",
+      "url": "https://www.fda.gov/drugs/resources-information-approved-drugs/fda-approves-safety-labeling-changes-regarding-dpd-deficiency-fluorouracil-injection-products",
+      "accessed": "2026-08-25",
+      "evidence_type": "FDA drug-safety labeling communication",
+      "conflict_of_interest": "U.S. Food and Drug Administration regulatory resource",
+      "notes": "Use for fluorouracil DPD/DPYD safety-label context; do not turn a raw SNP into a treatment or dose instruction."
+    },
+    "cpic_thiopurines_2025": {
+      "name": "CPIC: TPMT and NUDT15 Thiopurine Guideline (2025 Update)",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/thiopurines/2026/41618934.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for clinical TPMT/NUDT15 phenotype and thiopurine starting-dose context. The guideline is for clinicians and does not make a consumer SNP a standalone prescription."
+    },
+    "cpic_hla_abacavir": {
+      "name": "CPIC: HLA-B*57:01 and Abacavir Guideline",
+      "url": "https://cpicpgx.org/wp-content/uploads/2016/01/CPIC_HLAB-Abacavir.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for drug-specific HLA-B*57:01 clinical testing and abacavir safety; raw SNP proxies are not equivalent to clinical HLA typing."
+    },
+    "cpic_hla_carbamazepine": {
+      "name": "CPIC: HLA-B and Carbamazepine Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/carbamazepine/2013/23695185.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for HLA-B*15:02 and carbamazepine clinical testing context, including severe cutaneous adverse-reaction boundaries."
+    },
+    "cpic_hla_allopurinol": {
+      "name": "CPIC: HLA-B*58:01 and Allopurinol Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/allopurinol/2015/26094938.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for HLA-B*58:01 and allopurinol severe cutaneous adverse-reaction clinical context; raw SNP proxies require confirmation."
+    },
+    "cpic_g6pd": {
+      "name": "CPIC: G6PD and Medication Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/G6PD/2022/36049896.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for drug-specific G6PD risk classification and the need to account for genotype, enzyme phenotype, medication, and concurrent illness."
+    },
+    "cpic_ryr1_cacna1s_anesthesia": {
+      "name": "CPIC: RYR1/CACNA1S and Volatile Anesthetics/Succinylcholine",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/volatile_anesthetic_succinylcholine/2018/30499100.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for validated RYR1/CACNA1S susceptibility interpretation and anesthesia-team communication; consumer-array findings cannot independently clear risk."
+    },
+    "gene_reviews_malignant_hyperthermia": {
+      "name": "GeneReviews: Nonsyndromic Malignant Hyperthermia Susceptibility",
+      "url": "https://www.ncbi.nlm.nih.gov/sites/books/NBK1146/",
+      "accessed": "2026-08-25",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for RYR1/CACNA1S testing limits, inheritance, and clinical susceptibility boundaries."
     },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",

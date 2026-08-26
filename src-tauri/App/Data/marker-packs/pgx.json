@@ -40,7 +40,7 @@
       "effect_allele": "C",
       "impact": "Reduced CYP2C9 enzyme clearance",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The CYP2C9*3 variant significantly reduces enzymatic clearance. C-carriers may experience slower clearance and higher systemic levels of warfarin, statins, and common NSAIDs (like ibuprofen or celecoxib).",
+      "interpretation": "CYP2C9*3 is a decreased-function allele. A C-containing result can contribute to a reduced-function CYP2C9 diplotype, but the clinical effect depends on the other allele, the drug, ancestry, and current prescribing context.",
       "do_not_claim": [
         "bleeding disorder diagnosis",
         "statin myopathy diagnosis"
@@ -71,7 +71,7 @@
       "effect_allele": "T",
       "impact": "Reduced CYP2C9 enzyme clearance",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2C9*2 (rs1799853) is a common coding variant that reduces enzyme activity. Individuals carrying T-alleles metabolize warfarin, phenytoin, and NSAIDs slower than typical *1/*1 individuals.",
+      "interpretation": "CYP2C9*2 is a decreased-function allele. A T-containing result can contribute to a reduced-function CYP2C9 diplotype; any warfarin, phenytoin, or NSAID implication requires the complete clinical diplotype and drug-specific guidance.",
       "do_not_claim": [
         "drug dosage calculator",
         "bleeding diagnosis"
@@ -102,7 +102,7 @@
       "effect_allele": "T",
       "impact": "Ultra-rapid CYP2C19 enzyme metabolism",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The CYP2C19*17 variant is associated with increased transcription. T-carriers are ultra-rapid metabolizers of SSRI antidepressants (like escitalopram and sertraline) and proton pump inhibitors (PPIs), potentially leading to lower drug efficacy at standard doses.",
+      "interpretation": "CYP2C19*17 is associated with increased transcription in some studies. It can contribute to a rapid or ultrarapid clinical diplotype when paired with another increased-function allele, but this SNP alone cannot assign phenotype or predict SSRI, PPI, or other drug response.",
       "do_not_claim": [
         "antidepressant resistance diagnosis",
         "PPI failure certainty"
@@ -133,7 +133,7 @@
       "effect_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2C19*2 is a common loss-of-function allele. Homozygous carriers have poor metabolizer status, leading to reduced activation of clopidogrel and slow clearance of certain SSRIs and PPIs.",
+      "interpretation": "CYP2C19*2 is a no-function allele. Two copies may contribute to a poor-metabolizer diplotype, but phenotype requires both alleles and relevant additional variants; drug implications are medication-specific, such as clopidogrel activation or SSRI/PPI exposure.",
       "do_not_claim": [
         "antiplatelet resistance diagnosis",
         "clinical SSRI selection guidance"
@@ -195,7 +195,7 @@
       "effect_allele": "C",
       "impact": "Impaired statin transport / elevated systemic statin levels",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The SLCO1B1 Val174Ala C allele decreases the transport of statins (especially simvastatin) into the liver, resulting in higher blood concentrations and a significantly higher risk of statin-induced myopathy (muscle pain).",
+      "interpretation": "The SLCO1B1 rs4149056 C allele is a reduced-function transporter component. In a clinical SLCO1B1 phenotype, it can increase exposure to simvastatin and contribute to statin-associated muscle-symptom risk; drug, dose, interactions, and thyroid status also matter.",
       "do_not_claim": [
         "statin myopathy diagnosis",
         "cardiovascular event prediction"
@@ -258,7 +258,7 @@
       "effect_allele": "A",
       "impact": "Increased sensitivity to warfarin",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The VKORC1 -1639G>A promoter variant decreases VKORC1 expression. Individuals with the A allele require significantly lower therapeutic warfarin doses to avoid bleeding risks.",
+      "interpretation": "The VKORC1 -1639G>A variant is associated with warfarin dose sensitivity. A T-containing result may contribute to lower dose requirements in a clinical dosing algorithm, but dose selection also requires INR response, CYP2C9/CYP4F2 status, age, body size, interacting drugs, and clinician oversight.",
       "do_not_claim": [
         "anticoagulant plan",
         "bleeding diagnosis"
@@ -289,7 +289,7 @@
       "effect_allele": "T",
       "impact": "Altered Vitamin K metabolism / higher warfarin dose requirements",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The Met433 variant reduces CYP4F2 activity, causing lower breakdown of Vitamin K. Consequently, T-carriers require slightly higher doses of warfarin to achieve anticoagulation.",
+      "interpretation": "The CYP4F2 Val433Met variant can contribute to modest warfarin-dose differences in a clinical algorithm. It does not independently determine a dose; INR response, VKORC1/CYP2C9 status, diet, interacting drugs, and clinical care remain necessary.",
       "do_not_claim": [
         "warfarin resistance diagnosis"
       ],
@@ -411,7 +411,7 @@
       "effect_allele": "A",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "DPYD*2A is a critical splice-site variant leading to complete lack of DPD enzyme activity. Carriers of the A allele are at extreme risk of life-threatening toxicity (neutropenia, severe mucosal inflammation) if treated with standard doses of fluorouracil or capecitabine.",
+      "interpretation": "Clinically confirmed DPYD*2A is a no-function allele associated with substantially increased fluoropyrimidine toxicity risk. A raw-array call is not sufficient for treatment; the oncology team needs validated DPYD interpretation before fluorouracil or capecitabine decisions.",
       "do_not_claim": [
         "cancer chemotherapy selector",
         "definitive DPD deficiency"
@@ -560,7 +560,7 @@
       "effect_allele": "T",
       "impact": "Severe thiopurine-induced myelosuppression (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "NUDT15 rs116855232 is a major loss-of-function allele, highly prevalent in East Asian populations. Homozygotes or compound heterozygotes develop severe leucopenia and alopecia under thiopurines, independent of TPMT status.",
+      "interpretation": "NUDT15 rs116855232 is a loss-of-function allele whose frequency varies across populations. Two copies or a compound loss-of-function diplotype can be associated with pronounced thiopurine toxicity risk, including myelosuppression; clinical TPMT/NUDT15 interpretation and monitoring remain required.",
       "do_not_claim": [
         "chemotherapy plan adjustment"
       ],

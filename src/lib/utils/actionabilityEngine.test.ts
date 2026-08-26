@@ -207,6 +207,55 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.rules.some((item) => item.includes('AOC1'))).toBe(true);
   });
 
+  it('connects high-impact PGx findings to drug-specific clinical review', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs3918290',
+        gene: 'DPYD',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        interpretation: 'DPYD*2A context marker; confirm clinically before fluoropyrimidine therapy.',
+      }),
+      marker({
+        rsid: 'rs116855232',
+        gene: 'NUDT15',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        interpretation: 'NUDT15 thiopurine context marker; confirm clinically.',
+      }),
+      marker({
+        rsid: 'HLA-B*57:01',
+        gene: 'HLA-B',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        interpretation: 'HLA drug-hypersensitivity context marker; confirm with clinical HLA typing.',
+      }),
+      marker({
+        rsid: 'PANEL_G6PD_DEFICIENCY',
+        gene: 'G6PD',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        interpretation: 'G6PD deficiency context panel; confirm clinically.',
+      }),
+      marker({
+        rsid: 'PANEL_RYR1_CACNA1S_MALIGNANT_HYPERTHERMIA',
+        gene: 'RYR1/CACNA1S',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        interpretation: 'Malignant-hyperthermia susceptibility context panel; confirm clinically.',
+      }),
+    ]));
+
+    expect(plan.labTests.some((test) => test.name.includes('DPYD'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('TPMT/NUDT15'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('HLA'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('G6PD'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('RYR1/CACNA1S'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('fluorouracil'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('thiopurine'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('abacavir'))).toBe(true);
+  });
+
   it('does not infer reproductive applicability from hormone marker text', () => {
     const plan = deriveActionablePlan(report([marker({
       rsid: 'rs2234693',

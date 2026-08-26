@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "last_updated": "2026-08-25",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -831,6 +831,187 @@
         "fda_major_food_allergens",
         "clinical_confirmation_required",
         "phenotype_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "pgx_diplotype_context",
+      "genes": [
+        "CYP2D6",
+        "CYP2C19",
+        "CYP2C9",
+        "SLCO1B1",
+        "VKORC1",
+        "CYP4F2",
+        "CYP3A5",
+        "CYP2B6",
+        "UGT1A1",
+        "NAT2",
+        "CYP3A4",
+        "CYP2A6",
+        "CES1",
+        "IFNL3",
+        "IFNL4"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cardiovascular",
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical PGx diplotype/phenotype review for the specific gene and medication",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a medication question is active, record the exact drug, indication, dose, timing, benefit, side effects, and other medicines; a single consumer SNP is not a complete PGx diplotype, phenotype, or dose recommendation."
+      ],
+      "notes": "Use current CPIC, FDA labeling, or an equivalent clinical laboratory report for gene-drug interpretation. A clinical PGx result can inform prescribing, but raw consumer-array data cannot independently clear, select, or dose a medication.",
+      "sources": [
+        "cpic_guidelines",
+        "fda_pharmacogenomic_biomarkers",
+        "fda_pharmacogenetic_associations",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "dpyd_fluoropyrimidine_safety",
+      "genes": [
+        "DPYD"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical DPYD genotype/phenotype confirmation before fluoropyrimidine therapy",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If fluorouracil (5-FU) or capecitabine is being considered, show this finding to the oncology team before treatment; do not use a raw-array call to choose a dose or to change therapy."
+      ],
+      "notes": "DPYD findings can be clinically important for fluoropyrimidine toxicity, but high-stakes decisions require a validated clinical result and oncology interpretation.",
+      "sources": [
+        "cpic_dpyd_fluoropyrimidines",
+        "fda_pharmacogenomic_biomarkers",
+        "fda_dpyd_fluoropyrimidine_safety",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "tpmt_nudt15_thiopurine_safety",
+      "genes": [
+        "TPMT",
+        "NUDT15"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical TPMT/NUDT15 genotype or enzyme-activity review before thiopurine therapy",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If azathioprine, mercaptopurine, or thioguanine is being considered, the prescriber should review a validated TPMT/NUDT15 result and monitoring plan; do not select or change a thiopurine dose from raw DNA."
+      ],
+      "notes": "TPMT and NUDT15 status can inform thiopurine starting-dose decisions in clinical care, while other disease, monitoring, and treatment factors remain important.",
+      "sources": [
+        "cpic_thiopurines_2025",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "hla_drug_hypersensitivity_safety",
+      "genes": [
+        "HLA-A",
+        "HLA-B"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "cancer_confirmation_only"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HLA typing for the specific drug-risk allele",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Before abacavir, carbamazepine/oxcarbazepine, or allopurinol is prescribed, use the appropriate clinical HLA result and prescriber guidance; a consumer SNP proxy cannot clear or contraindicate the drug by itself."
+      ],
+      "notes": "HLA-B*57:01, HLA-B*15:02, HLA-A*31:01, and HLA-B*58:01 have drug-specific clinical relevance. The medication decision is drug- and allele-specific and requires validated HLA typing.",
+      "sources": [
+        "cpic_hla_abacavir",
+        "cpic_hla_carbamazepine",
+        "cpic_hla_allopurinol",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "g6pd_oxidative_medication_safety",
+      "genes": [
+        "G6PD"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Quantitative G6PD enzyme activity and/or validated clinical G6PD genotype review",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If rasburicase, dapsone, primaquine, methylene blue, or another oxidative-stress medication is being considered, the prescriber needs validated G6PD status; do not self-stop or self-start a medicine from a raw SNP."
+      ],
+      "notes": "G6PD medication risk depends on the clinical phenotype, variant, drug, dose, illness, and other oxidative stressors. A limited SNP set cannot rule out deficiency.",
+      "sources": [
+        "cpic_g6pd",
+        "fda_pharmacogenomic_biomarkers",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "ryr1_anesthesia_safety",
+      "genes": [
+        "RYR1",
+        "CACNA1S"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "muscle_performance_recovery"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical RYR1/CACNA1S malignant-hyperthermia susceptibility evaluation when indicated",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Before surgery, tell the anesthesia team about a confirmed or suspected malignant-hyperthermia finding or relevant family history; a consumer-array result cannot clear susceptibility or choose an anesthetic plan."
+      ],
+      "notes": "Only validated pathogenic-variant or contracture-test context supports malignant-hyperthermia susceptibility management. Composite gene labels are matched by their individual gene symbols.",
+      "sources": [
+        "cpic_ryr1_cacna1s_anesthesia",
+        "gene_reviews_malignant_hyperthermia",
+        "clinical_confirmation_required",
         "safety_guardrail"
       ]
     }

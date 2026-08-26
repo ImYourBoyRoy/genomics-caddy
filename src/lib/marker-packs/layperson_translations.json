@@ -507,6 +507,176 @@
       "rsid": "rs2235544",
       "simpleImpact": "Altered thyroid hormone conversion in organs (DIO1 gene)",
       "simpleMeaning": "This DIO1 marker has been studied in thyroid-hormone conversion and measured hormone-ratio differences. It does not measure current thyroid function or determine treatment; laboratory results and clinical assessment matter."
+    },
+    {
+      "rsid": "rs9340799",
+      "simpleImpact": "ESR1 estrogen-receptor association marker",
+      "simpleMeaning": "This ESR1 marker has been studied in estrogen-receptor and reproductive-trait research. Associations vary by study and population; it does not measure current estrogen, establish hormone sensitivity, or explain cycle-linked mood symptoms."
+    },
+    {
+      "rsid": "rs4986938",
+      "simpleImpact": "ESR2 estrogen-receptor association marker",
+      "simpleMeaning": "This ESR2 marker has been studied in estrogen-receptor and reproductive-trait research. It does not measure current estrogen, determine receptor sensitivity, or diagnose a menstrual or reproductive condition."
+    },
+    {
+      "rsid": "rs1256049",
+      "simpleImpact": "ESR2 hormone-response research marker",
+      "simpleMeaning": "This ESR2 marker is a research association in hormone-response studies. Effects vary by study, ancestry, and context; it does not measure estrogen or predict cycle symptoms, fertility, or treatment response."
+    },
+    {
+      "rsid": "rs1042838",
+      "simpleImpact": "PGR progesterone-receptor research marker",
+      "simpleMeaning": "This PGR marker has been studied in progesterone-receptor and reproductive research. It does not measure progesterone, show whether a progestin or progesterone will be tolerated, or diagnose a cycle-related condition."
+    },
+    {
+      "rsid": "rs10895068",
+      "simpleImpact": "PGR hormone-response association marker",
+      "simpleMeaning": "This PGR marker has been studied in hormone-response research. Associations are context-dependent; it does not measure progesterone, identify a contraceptive ingredient, or predict an individual medication response."
+    },
+    {
+      "rsid": "rs10046",
+      "simpleImpact": "CYP19A1 aromatase association marker",
+      "simpleMeaning": "This CYP19A1 marker is studied in steroid and estrogen-production research. It does not measure current estrogen, establish aromatase activity, or justify hormone or supplement changes."
+    },
+    {
+      "rsid": "rs700519",
+      "simpleImpact": "CYP19A1 aromatase research marker",
+      "simpleMeaning": "This CYP19A1 marker has been studied in aromatase and steroid-biology research. Any association is probabilistic; it does not measure current hormone levels or predict menstrual symptoms or treatment response."
+    },
+    {
+      "rsid": "rs743572",
+      "simpleImpact": "CYP17A1 steroid-biology association marker",
+      "simpleMeaning": "This CYP17A1 promoter marker is studied in steroid-biosynthesis research. It does not measure current androgen or estrogen levels, diagnose an endocrine condition, or determine hormone treatment."
+    },
+    {
+      "rsid": "rs6259",
+      "simpleImpact": "SHBG sex-hormone-binding association marker",
+      "simpleMeaning": "This SHBG marker has been associated with differences in sex-hormone binding or measured levels in some studies. A blood test is needed for current SHBG and hormone status; the SNP does not diagnose an imbalance."
+    },
+    {
+      "rsid": "rs1799941",
+      "simpleImpact": "SHBG regulation association marker",
+      "simpleMeaning": "This SHBG promoter marker is studied in sex-hormone-binding research. It does not measure current free or total hormone levels, explain cycle symptoms, or establish a need for treatment."
+    },
+    {
+      "rsid": "rs6166",
+      "simpleImpact": "FSHR reproductive-response association marker",
+      "simpleMeaning": "This FSHR marker has been studied in ovarian and reproductive response. It does not measure FSH, ovulation, ovarian reserve, fertility, or the response to fertility treatment."
+    },
+    {
+      "rsid": "rs6165",
+      "simpleImpact": "FSHR hormone-signaling research marker",
+      "simpleMeaning": "This FSHR marker is studied in follicle-stimulating-hormone signaling. Associations vary; it does not measure current hormone levels, ovarian reserve, fertility, or treatment response."
+    },
+    {
+      "rsid": "rs2293275",
+      "simpleImpact": "LHCGR LH/CG-receptor association marker",
+      "simpleMeaning": "This LHCGR marker has been studied in luteinizing-hormone and reproductive signaling. It does not measure LH, ovulation, pregnancy, fertility, or response to reproductive medication."
+    },
+    {
+      "rsid": "rs523349",
+      "simpleImpact": "SRD5A2 androgen-metabolism association marker",
+      "simpleMeaning": "This SRD5A2 marker is studied in conversion of testosterone-related hormones. It does not measure current testosterone or DHT, diagnose an androgen condition, or determine hormone therapy."
+    },
+    {
+      "rsid": "rs9282858",
+      "simpleImpact": "SRD5A2 androgen-pathway research marker",
+      "simpleMeaning": "This SRD5A2 marker has been studied in androgen metabolism. Effects are probabilistic and body- and context-dependent; it does not measure hormone levels or predict hair, prostate, sexual, or reproductive outcomes."
+    },
+    {
+      "rsid": "rs4646903",
+      "simpleImpact": "CYP1A1 estrogen/xenobiotic research marker",
+      "simpleMeaning": "This CYP1A1 marker is studied in estrogen and chemical-metabolism pathways. It does not measure estrogen clearance, detoxification, cancer risk, or medication safety; use clinical history and testing when relevant."
+    },
+    {
+      "rsid": "rs1056836",
+      "simpleImpact": "CYP1B1 catechol-estrogen association marker",
+      "simpleMeaning": "This CYP1B1 marker has been studied in catechol-estrogen metabolism. It does not measure current estrogen or establish cancer risk, detox capacity, or a need to avoid a food or medicine."
+    },
+    {
+      "rsid": "rs1800440",
+      "simpleImpact": "CYP1B1 estrogen-metabolism research marker",
+      "simpleMeaning": "This CYP1B1 marker is studied in estrogen and xenobiotic metabolism. Associations vary; it does not measure current hormone levels, diagnose disease, or predict medication response."
+    },
+    {
+      "rsid": "rs1048943",
+      "simpleImpact": "CYP1A1 metabolism association marker",
+      "simpleMeaning": "This CYP1A1 marker has been studied in estrogen and chemical-metabolism pathways. It does not measure enzyme activity, current estrogen, detoxification, or medication safety."
+    },
+    {
+      "rsid": "rs887829",
+      "simpleImpact": "UGT1A1 glucuronidation association marker",
+      "simpleMeaning": "This UGT1A1 marker is studied in bilirubin and glucuronidation pathways, including research involving steroid compounds. It does not measure current estrogen clearance or determine drug safety; bilirubin and medication decisions need clinical context."
+    },
+    {
+      "rsid": "rs4148323",
+      "simpleImpact": "UGT1A1*6 glucuronidation allele component",
+      "simpleMeaning": "This UGT1A1 allele component is studied in bilirubin and drug-metabolism research. It does not establish a UGT1A1 phenotype, measure estrogen, or determine medication choice or dose by itself."
+    },
+    {
+      "rsid": "rs9282861",
+      "simpleImpact": "SULT1A1 sulfation-pathway association marker",
+      "simpleMeaning": "This SULT1A1 marker is studied in sulfation and hormone-metabolism research. It does not measure estrogen levels or metabolic capacity, and it is not a reason for a detox plan or medication change."
+    },
+    {
+      "rsid": "rs6258",
+      "simpleImpact": "SHBG hormone-binding research marker",
+      "simpleMeaning": "This SHBG marker has been studied in hormone-binding differences. It does not measure free testosterone, estradiol, or current hormone exposure; use measured labs and clinical context when appropriate."
+    },
+    {
+      "rsid": "rs4757144",
+      "simpleImpact": "RGS7 PMDD-candidate research locus",
+      "simpleMeaning": "This RGS7 locus has been reported in research related to premenstrual symptoms. It is not a validated PMDD test and does not explain an individual's irritability, avoidance, or treatment response; prospective symptom timing and clinical review matter."
+    },
+    {
+      "rsid": "rs114741500",
+      "simpleImpact": "PMDD cellular-response research marker",
+      "simpleMeaning": "This marker is included as a research placeholder for cellular responses to ovarian-steroid change. Evidence is limited and it does not diagnose PMDD, measure hormones, or predict symptoms."
+    },
+    {
+      "rsid": "rs7521902",
+      "simpleImpact": "WNT4 endometriosis-association research marker",
+      "simpleMeaning": "This WNT4 locus has been studied in endometriosis susceptibility research. It is a small, probabilistic research association; it does not diagnose or exclude endometriosis, adenomyosis, pelvic pain, or fertility problems."
+    },
+    {
+      "rsid": "rs12700667",
+      "simpleImpact": "7p15.2 endometriosis-association research marker",
+      "simpleMeaning": "This locus has been studied in endometriosis susceptibility research. It does not diagnose or exclude endometriosis or adenomyosis, and it cannot explain an individual's symptoms or fertility."
+    },
+    {
+      "rsid": "rs13394619",
+      "simpleImpact": "GREB1 endometriosis-association research marker",
+      "simpleMeaning": "This GREB1 locus is a research association reported for endometriosis-related traits. It does not diagnose or rule out endometriosis, adenomyosis, pelvic pain, or a hormone disorder."
+    },
+    {
+      "rsid": "rs4141819",
+      "simpleImpact": "2p14 endometriosis-association research marker",
+      "simpleMeaning": "This intergenic locus has been studied in endometriosis susceptibility research. The association is probabilistic and does not diagnose or exclude endometriosis, adenomyosis, or a person's cause of pain."
+    },
+    {
+      "rsid": "rs7739264",
+      "simpleImpact": "ID4 endometriosis-association research marker",
+      "simpleMeaning": "This ID4 locus has been studied in endometriosis susceptibility research. It does not diagnose or exclude endometriosis or adenomyosis, and it does not predict an individual clinical outcome."
+    },
+    {
+      "rsid": "rs1537377",
+      "simpleImpact": "9p21.3 endometriosis-association research marker",
+      "simpleMeaning": "This locus has been studied in endometriosis susceptibility research. It is not a diagnostic test and does not establish the cause of pelvic pain, bleeding, or fertility difficulty."
+    },
+    {
+      "rsid": "rs10859871",
+      "simpleImpact": "VEZT endometriosis-association research marker",
+      "simpleMeaning": "This VEZT locus is a research association reported for endometriosis-related traits. It does not diagnose or exclude endometriosis, adenomyosis, or any individual's pelvic symptoms."
+    },
+    {
+      "rsid": "rs6269",
+      "simpleImpact": "COMT catecholamine/estrogen-context association marker",
+      "simpleMeaning": "This COMT marker is studied as part of a haplotype in catecholamine and estrogen-response research. It does not measure COMT activity, estrogen, neurotransmitters, or explain cycle-linked mood symptoms by itself."
+    },
+    {
+      "rsid": "rs4633",
+      "simpleImpact": "COMT haplotype research marker",
+      "simpleMeaning": "This COMT marker is interpreted with other variants in some catecholamine and hormone-response research. It does not measure estrogen, dopamine, mood, or medication response on its own."
     }
   ]
 }

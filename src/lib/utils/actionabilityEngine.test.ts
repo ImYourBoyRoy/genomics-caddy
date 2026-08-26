@@ -245,6 +245,23 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains).toHaveLength(0);
   });
 
+  it('recognizes an exact progestin ingredient without inferring that it is contraception', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: ['norethindrone'],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+      },
+    });
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(medicationText).toContain('current hormone-therapy product');
+    expect(medicationText).toContain('active ingredients');
+    expect(medicationText).not.toContain('contraceptive product');
+  });
+
   it('separates general hormone therapy from contraceptive composition warnings', () => {
     const plan = deriveActionablePlan(report([]), {
       reproductiveContext: 'hormone_therapy_context',

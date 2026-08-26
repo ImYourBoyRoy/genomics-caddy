@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
@@ -294,11 +294,13 @@
       "questions": [
         "Which symptoms recur before menses, how intense are they, and do they remit after bleeding begins?",
         "Are symptoms present outside the premenstrual window, or do they represent worsening of an existing mood or anxiety condition?",
-        "Do anger, avoidance, depression, or anxiety create safety concerns or major impairment?"
+        "Do anger, avoidance, depression, or anxiety create safety concerns or major impairment?",
+        "When irritability or avoidance peaks, what communication boundary or amount of space helps, and can the person still make safe decisions and meet essential responsibilities?"
       ],
       "support_options": [
         "Bring the prospective symptom log to a clinician; it can help separate cyclic symptoms from persistent or overlapping conditions.",
         "Keep supportive routines practical and non-punitive: regular sleep opportunity, regular meals, hydration, and symptom-scaled movement if tolerated.",
+        "During a lower-symptom period, agree on a simple communication plan: how to request space, when to check in, what practical support is welcome, and what to do if safety or functioning changes. This is a communication aid, not a diagnosis.",
         "If the pattern causes meaningful impairment, ask a clinician about evidence-based options such as an SSRI, psychotherapy/CBT, or a carefully selected hormonal approach; the choice depends on medical history, goals, interactions, contraindications, and the exact product—not on a DNA marker.",
         "If thoughts of self-harm or immediate danger occur, use local emergency or crisis support rather than waiting for a DNA interpretation."
       ],

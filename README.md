@@ -63,7 +63,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **🦴 Joints & Connective Tissue:** Collagen structure and recovery protocols (COL1A1, COL5A1).
   * **🛡️ Thyroid & Autoimmune:** Thyroid hormone conversion (DIO1, DIO2) and immune cofactor links.
   * **❤️ Cardiovascular Health:** Vascular integrity, blood pressure regulation, and cardiovascular habit guides.
-  * **🌸 Menstrual Cycle & Hormone Context:** Cycle physiology, PMDD/PMS timing, progestin-versus-combined contraception context, preconception/fertility-care routing, and adenomyosis/endometriosis workup boundaries.
+  * **🌸 Hormone & Reproductive Context:** Menstrual-cycle physiology, PMDD/PMS timing, progestin-versus-combined contraception context, androgen/prostate/testicular context, menopause and hormone-therapy routing, preconception/fertility-care routing, and adenomyosis/endometriosis workup boundaries across different bodies and goals.
 
 ### 6. Dual-Model Safety Review Pipeline
 * **Secondary Model cross-checking:** Primary model drafts can be automatically cross-checked by a secondary safety review model (e.g., MedGemma).

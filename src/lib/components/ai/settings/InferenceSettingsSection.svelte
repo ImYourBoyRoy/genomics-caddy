@@ -78,7 +78,7 @@
         <option value="joints">🦴 Joints &amp; Connective Tissue</option>
         <option value="thyroid_autoimmune">🛡️ Thyroid &amp; Autoimmune Context</option>
         <option value="cardiovascular">❤️ Cardiovascular Health</option>
-        <option value="hormones_reproductive">🌸 Menstrual Cycle &amp; Hormone Context</option>
+        <option value="hormones_reproductive">🌸 Hormone &amp; Reproductive Context</option>
       </select>
     </div>
 

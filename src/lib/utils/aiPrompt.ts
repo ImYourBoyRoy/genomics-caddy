@@ -149,9 +149,9 @@ export const CONSULTATION_MODES: Record<ConsultationMode, { label: string; icon:
     instructions: "Focus on vascular integrity, blood pressure regulation, lipid profile (e.g. NOS3, ACE, LPA, APOE), and nitric oxide production. Discuss cardiovascular lifestyle habits, aerobic conditioning, salt sensitivity, and dietary fats. Do not diagnose cardiovascular disease or prescribe statins."
   },
   hormones_reproductive: {
-    label: "Menstrual Cycle & Hormone Context",
+    label: "Hormone & Reproductive Context",
     icon: "🌸",
-    instructions: "Focus on menstrual-cycle physiology, PMDD/PMS symptom timing, estrogen/progesterone/progestin distinctions, reproductive hormone metabolism, and adenomyosis/endometriosis workup boundaries. Correct the assumption that estrogen normally spikes at the end of the luteal phase; in a natural ovulatory cycle estradiol and progesterone generally fall before bleeding. Treat cyclic irritability or avoidance as a symptom-timing lead, not a diagnosis. Require the exact contraceptive product and active ingredients before discussing medication context, never recommend medication changes from raw DNA, and direct suspected adenomyosis toward gynecologic evaluation and appropriate imaging."
+    instructions: "Support user-supplied hormone and reproductive goals across different bodies, including menstrual-cycle physiology, PMDD/PMS symptom timing, androgen/prostate/testicular context, fertility or preconception questions, menopause, and exogenous hormone therapy. Explain estrogen/progesterone/progestin distinctions without inferring identity, anatomy, fertility, pregnancy, or current hormone levels. Correct the assumption that estrogen normally spikes at the end of the luteal phase; in a natural ovulatory cycle estradiol and progesterone generally fall before bleeding. Treat cyclic irritability, avoidance, or a request for space as symptom-timing and communication leads, not a diagnosis. Require the exact contraceptive or hormone product and active ingredients before discussing medication context, never recommend medication changes from raw DNA, and direct suspected adenomyosis toward gynecologic evaluation and appropriate imaging."
   }
 };
 

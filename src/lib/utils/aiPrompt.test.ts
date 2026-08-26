@@ -7,11 +7,18 @@ vi.mock('./markerPacksState.svelte', () => ({
   },
 }));
 
-import { buildMarkerPayload, buildSystemPrompt } from './aiPrompt';
+import { buildMarkerPayload, buildSystemPrompt, CONSULTATION_MODES } from './aiPrompt';
 import type { EvaluatedMarker, GeneratedReport, GenomeSample } from '../types/genomics';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
 describe('AI marker payload claim boundaries', () => {
+  it('keeps hormone consultation inclusive while preserving phenotype and clinical boundaries', () => {
+    expect(CONSULTATION_MODES.hormones_reproductive.label).toBe('Hormone & Reproductive Context');
+    expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('different bodies');
+    expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('not a diagnosis');
+    expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('exact contraceptive or hormone product');
+  });
+
   it('keeps confirmation, limitations, callability, and source context beside the interpretation', () => {
     const marker = {
       rsid: 'rs-example',

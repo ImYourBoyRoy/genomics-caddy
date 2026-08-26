@@ -38,6 +38,9 @@ describe('support resource context', () => {
     expect(contraceptiveDomain?.support_options.join(' ')).toContain('no new adverse effects');
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_linked_pain_headache_context')).toBe(true);
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_nutrition_activity_context')).toBe(true);
+    const moodDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms');
+    expect(moodDomain?.support_options.join(' ')).toContain('request space');
+    expect(moodDomain?.support_options.join(' ')).toContain('not a diagnosis');
   });
 
   it('routes cycle-linked pain and migraine to diary, aura, and safety resources', () => {

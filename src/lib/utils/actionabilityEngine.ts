@@ -181,7 +181,7 @@ function inferLabCategory(name: string): string {
   if (/brca|lynch|ngs|confirmation|counselor|mammograph|colonoscop/i.test(lower)) {
     return 'Clinical confirmation';
   }
-  if (/apob|lipid|crp|cholesterol|cardiovascular|blood pressure|omega-3/i.test(lower)) {
+  if (/apob|lipo\(a\)|lipid|lipoprotein|crp|cholesterol|cardiovascular|blood pressure|omega-3/i.test(lower)) {
     return 'Heart & lipids';
   }
   if (/homocysteine|folate|b12|vitamin d|25\(oh\)|selenium|methyl/i.test(lower)) {
@@ -290,6 +290,8 @@ function isLabLikeConfirmItem(text: string): boolean {
     'ast',
     'blood pressure',
     'nmr',
+    'lipoprotein',
+    'lpa',
     'inflammation',
     'glucose',
     'electrolyte',

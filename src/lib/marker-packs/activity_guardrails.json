@@ -75,6 +75,24 @@
       ]
     },
     {
+      "id": "metabolic",
+      "section_keywords": ["metabolic", "glucose", "insulin", "diabetes", "weight", "triglyceride", "fatty liver"],
+      "context": "Glucose, insulin, lipid, body-composition, and fatty-liver context",
+      "favor": [
+        "regular aerobic and resistance activity progressed gradually to current ability and recovery",
+        "use symptoms, blood pressure, and clinician-directed laboratory context to adjust training"
+      ],
+      "avoid": [
+        "using a diabetes-risk or weight-associated SNP as a diagnosis or exercise clearance",
+        "rapid training or weight-loss changes that ignore symptoms, medications, eating-disorder risk, or recovery"
+      ],
+      "confirm_with": [
+        "HbA1c and fasting plasma glucose when clinically appropriate",
+        "lipid panel and blood-pressure measurements",
+        "liver enzymes or imaging when liver disease is suspected"
+      ]
+    },
+    {
       "id": "respiratory_airway",
       "section_keywords": ["respiratory", "airway", "oxygenation", "lung"],
       "context": "Asthma, airway, lung-function, oxygenation, and sleep-apnea context",
@@ -113,6 +131,7 @@
   ],
   "sources": [
     "aha_physical_activity_warning_signs",
-    "cdc_activity_stop_signs"
+    "cdc_activity_stop_signs",
+    "cdc_prediabetes_lifestyle"
   ]
 }

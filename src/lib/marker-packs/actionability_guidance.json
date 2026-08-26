@@ -563,6 +563,154 @@
         "acog_combined_contraception",
         "clinical_confirmation_required"
       ]
+    },
+    {
+      "id": "glucose_insulin_context",
+      "genes": [
+        "FTO",
+        "PPARG",
+        "TCF7L2",
+        "SLC30A8",
+        "KCNJ11",
+        "GCKR"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "metabolic"
+      ],
+      "favor": [
+        "A balanced eating pattern built around fiber-rich foods, adequate protein, and minimally processed carbohydrate sources",
+        "Regular physical activity progressed gradually to fit current ability, symptoms, and recovery"
+      ],
+      "avoid": [
+        "Treating a common metabolic SNP as a diabetes diagnosis or as a reason to start medication",
+        "Using a highly restrictive diet to chase a genotype without symptom, lab, medication, or clinician context"
+      ],
+      "lab_tests": [
+        {
+          "name": "HbA1c",
+          "urgency": "consider"
+        },
+        {
+          "name": "Fasting plasma glucose",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "Common metabolic markers shift average risk by small or context-dependent amounts. Use symptoms, family history, body-composition context, medications, and laboratory testing rather than a SNP to assess glucose status.",
+      "sources": [
+        "gwas_catalog",
+        "cdc_prediabetes_lifestyle",
+        "niddk_prediabetes_tests",
+        "user_declared_values_required",
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "triglyceride_liver_context",
+      "genes": [
+        "GCKR",
+        "APOA5",
+        "PNPLA3",
+        "TM6SF2"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "metabolic",
+        "cardiovascular"
+      ],
+      "favor": [
+        "A balanced, fiber-forward eating pattern and regular movement",
+        "If triglycerides or liver tests are elevated, discuss reducing sugar-sweetened beverages and frequent alcohol exposure"
+      ],
+      "avoid": [
+        "Assuming normal blood lipids rule out fatty-liver susceptibility",
+        "Using detox products or high-dose supplements as liver treatment"
+      ],
+      "lab_tests": [
+        {
+          "name": "Fasting lipid panel including triglycerides",
+          "urgency": "consider"
+        },
+        {
+          "name": "HbA1c",
+          "urgency": "consider"
+        },
+        {
+          "name": "ALT/AST/GGT liver panel",
+          "urgency": "consider"
+        },
+        {
+          "name": "Liver ultrasound or FibroScan when clinically indicated",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "GCKR, APOA5, PNPLA3, and TM6SF2 findings can point to different lipid, glucose, and liver phenotypes. They do not diagnose fatty liver, steatohepatitis, pancreatitis, or diabetes; measured labs and clinical evaluation lead.",
+      "sources": [
+        "gwas_catalog",
+        "cdc_prediabetes_lifestyle",
+        "niddk_prediabetes_tests",
+        "niddk_fatty_liver_diagnosis",
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "atherogenic_lipid_context",
+      "genes": [
+        "LPA",
+        "PCSK9",
+        "LDLR",
+        "APOB",
+        "APOA5",
+        "GCKR"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "interpretation_contains": [
+        "lipoprotein",
+        "LDL",
+        "ApoB",
+        "cholesterol",
+        "triglyceride"
+      ],
+      "pack_hints": [
+        "cardiovascular",
+        "metabolic"
+      ],
+      "favor": [
+        "Use a heart-healthy eating pattern and regular activity as general cardiovascular foundations",
+        "Review measured Lp(a), ApoB, LDL-C, triglycerides, blood pressure, and family history together rather than reading one SNP in isolation"
+      ],
+      "avoid": [
+        "Assuming a protective-leaning LDL-pathway marker removes the need for lipid monitoring",
+        "Using a genotype as a substitute for measured lipids and global cardiovascular-risk assessment"
+      ],
+      "medication_context": [
+        "Do not start, stop, or change a statin, PCSK9 medicine, aspirin, or other cardiovascular therapy from raw DNA; review measured Lp(a), ApoB, LDL-C, medical history, and clinician guidance."
+      ],
+      "lab_tests": [
+        {
+          "name": "Lipoprotein(a) [Lp(a)] blood test (at least once if not previously measured)",
+          "urgency": "consider"
+        },
+        {
+          "name": "ApoB (Apolipoprotein B)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Standard lipid panel (LDL-C, HDL-C, triglycerides)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Blood pressure measurement",
+          "urgency": "routine"
+        }
+      ],
+      "notes": "LPA and LDL-pathway markers can suggest a reason to check the phenotype, but they do not quantify risk or determine treatment. Lp(a), ApoB, LDL-C, triglycerides, blood pressure, family history, and clinical risk assessment remain decisive.",
+      "sources": [
+        "gwas_catalog",
+        "aha_dyslipidemia_2026",
+        "user_declared_values_required",
+        "lab_confirmation_required"
+      ]
     }
   ]
 }

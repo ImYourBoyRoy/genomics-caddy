@@ -138,4 +138,35 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('Factor V Leiden'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('do not change medication'))).toBe(true);
   });
+
+  it('turns metabolic markers into conditional glucose and activity follow-up', () => {
+    const base = report([marker({
+      rsid: 'rs7903146',
+      gene: 'TCF7L2',
+      interpretation: 'Common TCF7L2 glucose and insulin-secretion association',
+    })]);
+    const plan = deriveActionablePlan({
+      ...base,
+      sections: [{ ...base.sections[0], name: 'Metabolic Health' }],
+    });
+
+    expect(plan.diet.favor.some((item) => item.includes('fiber-rich foods'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name === 'HbA1c')).toBe(true);
+    expect(plan.labTests.some((test) => test.name === 'Fasting plasma glucose')).toBe(true);
+    expect(plan.activity.relevantDomains.some((domain) => domain.id === 'metabolic')).toBe(true);
+    expect(plan.diet.avoid.some((item) => item.includes('diabetes diagnosis'))).toBe(true);
+  });
+
+  it('uses LPA context to request phenotype testing without prescribing therapy', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs10455872',
+      gene: 'LPA',
+      interpretation: 'LPA lipoprotein(a) association; measured Lp(a) remains actionable',
+    })]));
+
+    expect(plan.labTests.some((test) => test.name.includes('Lipoprotein(a)') && test.category === 'Heart & lipids')).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('ApoB'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('statin'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('raw DNA'))).toBe(true);
+  });
 });

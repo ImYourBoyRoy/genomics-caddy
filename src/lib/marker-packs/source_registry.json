@@ -307,6 +307,38 @@
       "conflict_of_interest": "U.S. CDC public health resource",
       "notes": "Use as a general activity safety guardrail; raw DNA never clears a user to ignore symptoms."
     },
+    "cdc_prediabetes_lifestyle": {
+      "name": "CDC National Diabetes Prevention Program Lifestyle Change Program",
+      "url": "https://www.cdc.gov/diabetes-prevention/lifestyle-change-program/index.html",
+      "accessed": "2026-08-25",
+      "evidence_type": "CDC public health prevention program",
+      "conflict_of_interest": "U.S. Centers for Disease Control and Prevention public-health guidance",
+      "notes": "Use for general healthy-eating, physical-activity, sleep, stress, and weight-management support when diabetes risk is clinically relevant. Do not turn a common SNP into a diagnosis or prescribe a program from DNA alone."
+    },
+    "niddk_prediabetes_tests": {
+      "name": "NIDDK Recommended Tests for Identifying Prediabetes",
+      "url": "https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-management/diabetes/game-plan-preventing-type-2-diabetes/prediabetes-screening-how-why/recommended-tests-identifying-prediabetes",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIDDK clinical education",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
+      "notes": "Use to frame A1C, fasting plasma glucose, and oral glucose tolerance testing as clinical tests interpreted with patient context; genotype does not diagnose prediabetes or diabetes."
+    },
+    "niddk_fatty_liver_diagnosis": {
+      "name": "NIDDK Diagnosis of NAFLD/NASH",
+      "url": "https://www.niddk.nih.gov/health-information/liver-disease/nafld-nash/diagnosis",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIDDK clinical education",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public-health resource",
+      "notes": "Use for history, blood-test, imaging, and differential-diagnosis boundaries around fatty-liver evaluation; a PNPLA3 or TM6SF2 marker is not a diagnosis."
+    },
+    "aha_dyslipidemia_2026": {
+      "name": "AHA 2026 Guideline on the Management of Dyslipidemia",
+      "url": "https://professional.heart.org/en/science-news/2026-guideline-on-the-management-of-dyslipidemia",
+      "accessed": "2026-08-25",
+      "evidence_type": "AHA/ACC professional clinical guideline summary",
+      "conflict_of_interest": "American Heart Association professional guidance; review the guideline disclosures when using clinically",
+      "notes": "Use for measured lipid risk assessment, at-least-once-in-adulthood Lp(a) measurement, selective ApoB use, and clinician-guided treatment decisions. Do not use raw DNA to prescribe or stop therapy."
+    },
     "gene_reviews_hemochromatosis": {
       "name": "GeneReviews: HFE-Related Hemochromatosis",
       "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",

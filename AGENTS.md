@@ -17,6 +17,10 @@ copy them into logs, or commit secrets.
 - Treat common SNPs as probabilistic context, not diagnoses or certainties.
   Preserve evidence tiers, `do_not_claim`, `confirm_with`, raw-DNA limitations,
   actionability classes, and clinical-confirmation requirements.
+- Keep `src/lib/marker-packs/research_taxonomy.json` as the shared source of
+  truth for discovery category labels, keyword routing, pack links, and
+  consultation-mode hints. The Svelte UI and Rust crossmap must consume this
+  resource rather than maintaining parallel biomedical keyword lists.
 - Reproductive and hormone resources must not infer anatomy, identity, current
   hormone levels, pregnancy, contraception, or adenomyosis from raw DNA.
   Route cycle symptoms, medication composition, and suspected pelvic disease to

@@ -1850,6 +1850,18 @@ pub fn get_manifest_str(app_data_dir: Option<&Path>) -> String {
     include_str!("../../src/lib/marker-packs/manifest.json").to_string()
 }
 
+/// Return a compiled support resource that is shared by frontend and Rust
+/// routing. Support resources are source-controlled policy/configuration files,
+/// not user-editable marker packs, so the compiled source remains authoritative.
+pub fn get_support_resource_str(resource_id: &str) -> Option<String> {
+    match resource_id {
+        "research_taxonomy" => {
+            Some(include_str!("../../src/lib/marker-packs/research_taxonomy.json").to_string())
+        }
+        _ => None,
+    }
+}
+
 pub fn get_pack_str(app_data_dir: Option<&Path>, pack_id: &str) -> Option<String> {
     if let Err(e) = crate::config::validate_pack_id(pack_id) {
         eprintln!("Rejected pack_id: {}", e);

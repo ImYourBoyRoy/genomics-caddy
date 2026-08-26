@@ -140,6 +140,7 @@ const supportContracts = {
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
+  research_taxonomy: { arrays: ['categories'] },
   safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do', 'pgx_context_keywords', 'hormone_context_keywords'] } },
   supplement_safety: { arrays: ['principles', 'rules', 'do_not_do'] },
   source_registry: { objects: ['sources'] },
@@ -184,6 +185,21 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       for (const field of ['context_ids', 'medication_terms', 'allergy_terms']) {
         if (rule[field] !== undefined && !isStringArray(rule[field])) {
           errors.push(`${location}: optional ${field} must be a string array`);
+        }
+      }
+    }
+  }
+  if (resourceId === 'research_taxonomy') {
+    for (const [index, category] of (resource.categories || []).entries()) {
+      const location = `research_taxonomy.json category ${index + 1}`;
+      for (const field of ['id', 'label', 'query_hint']) {
+        if (typeof category[field] !== 'string' || category[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['keywords', 'packs', 'modes']) {
+        if (!isStringArray(category[field]) || category[field].length === 0) {
+          errors.push(`${location}: ${field} must be a non-empty string array`);
         }
       }
     }

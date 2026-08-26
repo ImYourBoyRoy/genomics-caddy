@@ -1,0 +1,181 @@
+{
+  "name": "Research Trait Taxonomy",
+  "version": "1.0.0",
+  "last_updated": "2026-08-26",
+  "type": "routing_resource",
+  "purpose": "Shared keyword routing for discovery search, consultation suggestions, and marker-pack cross-links. Categories are navigation hints, not clinical diagnoses or evidence upgrades.",
+  "do_not_claim": [
+    "A taxonomy match does not establish a disease, trait, anatomy, identity, hormone level, medication response, or personal risk.",
+    "Keyword routing does not upgrade a research association or override marker callability, evidence tier, ancestry limits, or clinical confirmation requirements."
+  ],
+  "categories": [
+    {
+      "id": "bone_density",
+      "label": "Bone density",
+      "query_hint": "bone mineral density osteoporosis fracture skeletal",
+      "keywords": ["bone mineral", "bone density", "bmd", "osteoporosis", "fracture", "heel bone", "femoral neck", "lumbar spine", "skeletal"],
+      "packs": ["bone_growth_mineral_density", "connective_tissue"],
+      "modes": ["joints", "general"]
+    },
+    {
+      "id": "cancer_risk",
+      "label": "Cancer risk",
+      "query_hint": "cancer carcinoma tumor malignancy hereditary",
+      "keywords": ["cancer", "carcinoma", "tumor", "tumour", "melanoma", "leukemia", "lymphoma", "malignant", "neoplasm", "hereditary cancer"],
+      "packs": ["cancer_confirmation_only"],
+      "modes": ["general"]
+    },
+    {
+      "id": "connective_tissue",
+      "label": "Connective tissue",
+      "query_hint": "collagen joint ligament tendon hypermobility",
+      "keywords": ["collagen", "connective tissue", "joint", "ligament", "tendon", "ehlers", "mobility", "hypermobility"],
+      "packs": ["connective_tissue"],
+      "modes": ["joints"]
+    },
+    {
+      "id": "cardiovascular",
+      "label": "Cardiovascular",
+      "query_hint": "heart stroke blood pressure cholesterol lipid thrombosis",
+      "keywords": ["coronary", "cardiovascular", "heart", "myocardial", "stroke", "blood pressure", "hypertension", "cholesterol", "ldl", "hdl", "lipid", "thrombo", "venous", "arrhythmia"],
+      "packs": ["cardiovascular"],
+      "modes": ["cardiovascular", "general"]
+    },
+    {
+      "id": "metabolic",
+      "label": "Metabolic",
+      "query_hint": "diabetes glucose insulin obesity triglyceride fatty liver",
+      "keywords": ["diabetes", "glucose", "insulin", "hba1c", "metabolic", "obesity", "bmi", "triglyceride", "fatty liver"],
+      "packs": ["metabolic"],
+      "modes": ["metabolic"]
+    },
+    {
+      "id": "neuropsych",
+      "label": "Brain & mood",
+      "query_hint": "depression anxiety mood attention neurodevelopment",
+      "keywords": ["depression", "anxiety", "bipolar", "schizophrenia", "mood", "neuroticism", "attention", "adhd", "autism", "neurodevelopment"],
+      "packs": ["neuropsych"],
+      "modes": ["brain_mood"]
+    },
+    {
+      "id": "sleep",
+      "label": "Sleep",
+      "query_hint": "sleep insomnia circadian chronotype apnea",
+      "keywords": ["sleep", "insomnia", "circadian", "chronotype", "apnea", "daytime sleepiness", "snoring"],
+      "packs": ["sleep"],
+      "modes": ["general"]
+    },
+    {
+      "id": "thyroid_autoimmune",
+      "label": "Thyroid & autoimmune",
+      "query_hint": "thyroid hashimoto graves autoimmune tsh antibodies",
+      "keywords": ["thyroid", "hashimoto", "graves", "autoimmune", "tsh", "thyro", "antithyroid"],
+      "packs": ["thyroid_autoimmune"],
+      "modes": ["thyroid_autoimmune"]
+    },
+    {
+      "id": "nutrients",
+      "label": "Nutrients",
+      "query_hint": "vitamin folate b12 methylation iron choline omega 3",
+      "keywords": ["vitamin d", "folate", "b12", "iron", "methylation", "choline", "selenium", "omega-3", "omega 3", "fatty acid", "magnesium", "zinc"],
+      "packs": ["nutrients"],
+      "modes": ["nutrients"]
+    },
+    {
+      "id": "pharmacogenomics",
+      "label": "Pharmacogenomics",
+      "query_hint": "drug warfarin clopidogrel statin cyp pharmacogenomics",
+      "keywords": ["drug", "warfarin", "clopidogrel", "statin", "cyp", "pharmacogen", "dpyd", "tpmt", "nudt15", "hla", "allopurinol", "tacrolimus"],
+      "packs": ["pgx"],
+      "modes": ["pgx"]
+    },
+    {
+      "id": "hormones_reproductive",
+      "label": "Hormone & reproductive",
+      "query_hint": "menstrual cycle pmdd menopause fertility estrogen progesterone testosterone prostate",
+      "keywords": ["menstrual", "menstruation", "period", "pmdd", "pms", "endometriosis", "adenomyosis", "ovarian", "ovary", "uterus", "uterine", "reproductive", "fertility", "preconception", "pregnancy", "postpartum", "lactation", "menopause", "estrogen", "estradiol", "progesterone", "progestin", "testosterone", "androgen", "prostate", "testicular", "sperm", "libido", "hormone"],
+      "packs": ["hormones_reproductive"],
+      "modes": ["hormones_reproductive"]
+    },
+    {
+      "id": "allergy_atopy_mast_cell",
+      "label": "Allergy & histamine",
+      "query_hint": "allergy atopy histamine mast cell hives",
+      "keywords": ["allergy", "atopy", "mast cell", "histamine", "anaphylaxis", "urticaria", "hives", "eosinophil"],
+      "packs": ["allergy_atopy_mast_cell"],
+      "modes": ["general"]
+    },
+    {
+      "id": "digestive_gut_microbiome",
+      "label": "Digestive & gut",
+      "query_hint": "digestive gut microbiome celiac crohn inflammatory bowel",
+      "keywords": ["digestive", "gut", "microbiome", "celiac", "crohn", "ulcerative colitis", "inflammatory bowel", "ibd", "bowel", "lactose", "reflux"],
+      "packs": ["digestive_gut_microbiome"],
+      "modes": ["general"]
+    },
+    {
+      "id": "kidney_fluid_electrolytes",
+      "label": "Kidney & electrolytes",
+      "query_hint": "kidney renal eGFR urate gout stones electrolytes",
+      "keywords": ["kidney", "renal", "egfr", "creatinine", "electrolyte", "urate", "gout", "stone", "nephro", "potassium", "sodium"],
+      "packs": ["kidney_fluid_electrolytes"],
+      "modes": ["general"]
+    },
+    {
+      "id": "respiratory_airway",
+      "label": "Respiratory & airway",
+      "query_hint": "respiratory airway lung asthma oxygen alpha 1 antitrypsin",
+      "keywords": ["respiratory", "airway", "lung", "asthma", "alpha-1 antitrypsin", "oxygen", "bronch", "sleep apnea"],
+      "packs": ["respiratory_airway"],
+      "modes": ["general"]
+    },
+    {
+      "id": "immune_autoimmune_general",
+      "label": "Immune & inflammation",
+      "query_hint": "immune autoimmune inflammation cytokine rheumatoid lupus",
+      "keywords": ["immune", "autoimmune", "inflammation", "inflammatory", "lupus", "rheumatoid", "cytokine", "immunodeficiency"],
+      "packs": ["immune_autoimmune_general"],
+      "modes": ["general"]
+    },
+    {
+      "id": "pain_migraine_sensory",
+      "label": "Pain, migraine & sensory",
+      "query_hint": "pain migraine headache neuropathy sensory analgesic",
+      "keywords": ["pain", "migraine", "headache", "sensory", "neuropathic", "fibromyalgia", "analgesic", "opioid", "channelopathy"],
+      "packs": ["pain_migraine_sensory"],
+      "modes": ["general"]
+    },
+    {
+      "id": "skin_hair_dermatology",
+      "label": "Skin & hair",
+      "query_hint": "skin hair melanoma eczema psoriasis alopecia pigmentation",
+      "keywords": ["skin", "dermatology", "melanoma", "pigmentation", "eczema", "psoriasis", "alopecia", "hair", "mole", "dermatitis"],
+      "packs": ["skin_hair_dermatology"],
+      "modes": ["general"]
+    },
+    {
+      "id": "dental_oral_health",
+      "label": "Dental & oral health",
+      "query_hint": "dental oral tooth caries periodontal gum",
+      "keywords": ["dental", "oral", "tooth", "teeth", "caries", "periodontal", "gum", "cavity"],
+      "packs": ["dental_oral_health"],
+      "modes": ["general"]
+    },
+    {
+      "id": "muscle_performance_recovery",
+      "label": "Muscle & recovery",
+      "query_hint": "muscle performance exercise recovery myopathy endurance strength",
+      "keywords": ["muscle", "performance", "athletic", "exercise", "recovery", "myopathy", "rhabdomyolysis", "endurance", "strength"],
+      "packs": ["muscle_performance_recovery"],
+      "modes": ["general"]
+    },
+    {
+      "id": "longevity_aging_resilience",
+      "label": "Longevity & resilience",
+      "query_hint": "longevity aging lifespan healthspan frailty resilience",
+      "keywords": ["longevity", "aging", "lifespan", "healthspan", "frailty", "resilience"],
+      "packs": ["longevity_aging_resilience"],
+      "modes": ["general"]
+    }
+  ]
+}

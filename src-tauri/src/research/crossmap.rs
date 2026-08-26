@@ -17,162 +17,52 @@ pub struct CrossMapContext {
     pub association_summary: serde_json::Value,
 }
 
-struct TraitRule {
-    keywords: &'static [&'static str],
-    category: &'static str,
-    packs: &'static [&'static str],
-    modes: &'static [&'static str],
+#[derive(Debug, serde::Deserialize)]
+struct ResearchTaxonomy {
+    categories: Vec<TaxonomyCategory>,
 }
 
-const TRAIT_RULES: &[TraitRule] = &[
-    TraitRule {
-        keywords: &[
-            "bone mineral",
-            "bone density",
-            "bmd",
-            "osteoporosis",
-            "fracture",
-            "heel bone",
-            "femoral neck",
-            "lumbar spine",
-            "skeletal",
-        ],
-        category: "bone_density",
-        packs: &["connective_tissue"],
-        modes: &["joints", "general"],
-    },
-    TraitRule {
-        keywords: &[
-            "cancer",
-            "carcinoma",
-            "tumor",
-            "tumour",
-            "melanoma",
-            "leukemia",
-            "lymphoma",
-            "malignant",
-            "neoplasm",
-        ],
-        category: "cancer_risk",
-        packs: &["cancer_confirmation_only"],
-        modes: &["general"],
-    },
-    TraitRule {
-        keywords: &[
-            "collagen",
-            "connective tissue",
-            "joint",
-            "ligament",
-            "tendon",
-            "ehlers",
-            "mobility",
-        ],
-        category: "connective_tissue",
-        packs: &["connective_tissue"],
-        modes: &["joints"],
-    },
-    TraitRule {
-        keywords: &[
-            "coronary",
-            "cardiovascular",
-            "heart",
-            "myocardial",
-            "stroke",
-            "blood pressure",
-            "hypertension",
-            "cholesterol",
-            "ldl",
-            "hdl",
-            "lipid",
-            "thrombo",
-            "venous",
-        ],
-        category: "cardiovascular",
-        packs: &["cardiovascular"],
-        modes: &["cardiovascular", "general"],
-    },
-    TraitRule {
-        keywords: &[
-            "diabetes",
-            "glucose",
-            "insulin",
-            "hba1c",
-            "metabolic",
-            "obesity",
-            "bmi",
-        ],
-        category: "metabolic",
-        packs: &["metabolic"],
-        modes: &["metabolic"],
-    },
-    TraitRule {
-        keywords: &[
-            "depression",
-            "anxiety",
-            "bipolar",
-            "schizophrenia",
-            "mood",
-            "neuroticism",
-        ],
-        category: "neuropsych",
-        packs: &["neuropsych"],
-        modes: &["brain_mood"],
-    },
-    TraitRule {
-        keywords: &["sleep", "insomnia", "circadian", "chronotype"],
-        category: "sleep",
-        packs: &["sleep"],
-        modes: &["general"],
-    },
-    TraitRule {
-        keywords: &["thyroid", "hashimoto", "graves", "autoimmune", "tsh"],
-        category: "thyroid_autoimmune",
-        packs: &["thyroid_autoimmune"],
-        modes: &["thyroid_autoimmune"],
-    },
-    TraitRule {
-        keywords: &[
-            "vitamin d",
-            "folate",
-            "b12",
-            "iron",
-            "methylation",
-            "choline",
-        ],
-        category: "nutrients",
-        packs: &["nutrients"],
-        modes: &["nutrients"],
-    },
-    TraitRule {
-        keywords: &[
-            "drug",
-            "warfarin",
-            "clopidogrel",
-            "statin",
-            "cyp",
-            "pharmacogen",
-        ],
-        category: "pharmacogenomics",
-        packs: &["pgx"],
-        modes: &["pgx"],
-    },
-];
+#[derive(Debug, serde::Deserialize)]
+struct TaxonomyCategory {
+    id: String,
+    keywords: Vec<String>,
+    packs: Vec<String>,
+    modes: Vec<String>,
+}
+
+fn load_taxonomy() -> Vec<TaxonomyCategory> {
+    let Some(raw) = crate::db::get_support_resource_str("research_taxonomy") else {
+        return Vec::new();
+    };
+    match serde_json::from_str::<ResearchTaxonomy>(&raw) {
+        Ok(taxonomy) => taxonomy.categories,
+        Err(error) => {
+            eprintln!("Research taxonomy validation failed: {error}");
+            Vec::new()
+        }
+    }
+}
 
 pub fn classify_traits(traits: &[String]) -> (Vec<String>, Vec<String>, Vec<String>) {
     let mut categories = Vec::new();
     let mut packs = Vec::new();
     let mut modes = Vec::new();
 
+    let taxonomy = load_taxonomy();
     for trait_name in traits {
         let lower = trait_name.to_lowercase();
-        for rule in TRAIT_RULES {
-            if rule.keywords.iter().any(|kw| lower.contains(kw)) {
-                push_unique(&mut categories, rule.category.to_string());
-                for p in rule.packs {
-                    push_unique(&mut packs, p.to_string());
+        for category in &taxonomy {
+            if category
+                .keywords
+                .iter()
+                .any(|keyword| lower.contains(&keyword.to_lowercase()))
+            {
+                push_unique(&mut categories, category.id.clone());
+                for pack in &category.packs {
+                    push_unique(&mut packs, pack.clone());
                 }
-                for m in rule.modes {
-                    push_unique(&mut modes, m.to_string());
+                for mode in &category.modes {
+                    push_unique(&mut modes, mode.clone());
                 }
             }
         }
@@ -336,5 +226,40 @@ pub fn build_cross_map_context(
         discovery_catalog_match: catalog_match,
         searchable_tags,
         association_summary,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::classify_traits;
+
+    #[test]
+    fn shared_taxonomy_routes_menstrual_and_prostate_traits() {
+        let (categories, packs, modes) = classify_traits(&[
+            "premenstrual mood symptoms".to_string(),
+            "prostate cancer susceptibility".to_string(),
+        ]);
+
+        assert!(categories.contains(&"hormones_reproductive".to_string()));
+        assert!(categories.contains(&"cancer_risk".to_string()));
+        assert!(packs.contains(&"hormones_reproductive".to_string()));
+        assert!(packs.contains(&"cancer_confirmation_only".to_string()));
+        assert!(modes.contains(&"hormones_reproductive".to_string()));
+    }
+
+    #[test]
+    fn shared_taxonomy_routes_other_existing_domains() {
+        let (categories, packs, _) = classify_traits(&[
+            "histamine hives".to_string(),
+            "kidney stone".to_string(),
+            "migraine headache".to_string(),
+        ]);
+
+        assert!(categories.contains(&"allergy_atopy_mast_cell".to_string()));
+        assert!(categories.contains(&"kidney_fluid_electrolytes".to_string()));
+        assert!(categories.contains(&"pain_migraine_sensory".to_string()));
+        assert!(packs.contains(&"allergy_atopy_mast_cell".to_string()));
+        assert!(packs.contains(&"kidney_fluid_electrolytes".to_string()));
+        assert!(packs.contains(&"pain_migraine_sensory".to_string()));
     }
 }

@@ -45,7 +45,8 @@
     "food_requirement_prompts.json",
     "supplement_safety.json",
     "cycle_support_guidance.json",
-    "user_diet_profile_schema.json"
+    "user_diet_profile_schema.json",
+    "research_taxonomy.json"
   ],
   "food_decision_layer": {
     "added": true,
@@ -79,5 +80,13 @@
     ],
     "domains_count": 11,
     "note": "Cycle support separates phase physiology, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation."
+  },
+  "research_taxonomy_layer": {
+    "added": true,
+    "new_support_files": [
+      "research_taxonomy.json"
+    ],
+    "categories_count": 21,
+    "note": "Discovery keyword routing is shared by the Svelte UI and Rust enrichment path; taxonomy matches are navigation hints and do not upgrade evidence or imply a diagnosis."
   }
 }

@@ -764,7 +764,7 @@ import { onMount, onDestroy } from 'svelte';
   let bulkBusy = $derived(syncingAll || updatingAllOutdated);
 </script>
 
-<aside class="sidebar">
+<aside class="sidebar" aria-label="Profile and data controls">
   <div class="brand">
     <img src="/logo.png" alt="Genomics Caddy Logo" class="brand-logo" />
     <h2>Genomics Caddy</h2>
@@ -796,7 +796,7 @@ import { onMount, onDestroy } from 'svelte';
     {:else}
       <div class="badge warning">⚠️ GRCh37 Only</div>
       <p class="card-hint">Liftover chain file is missing. Import will not map to GRCh38 coordinates.</p>
-      <button class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
+      <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
         {isDownloadingChain ? 'Downloading…' : 'Download Chain'}
       </button>
     {/if}
@@ -805,6 +805,7 @@ import { onMount, onDestroy } from 'svelte';
         Newer <strong>UCSC GRCh37→GRCh38 chain</strong> is available (this is the “1 update” when primary catalogs are current).
       </p>
       <button
+        type="button"
         class="btn btn-warning btn-sm"
         disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
         onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
@@ -824,7 +825,7 @@ import { onMount, onDestroy } from 'svelte';
       aria-controls="data-updates-panel"
     >
       <span class="data-updates-heading">
-        <strong>Data &amp; updates</strong>
+        <strong id="data-updates-title">Data &amp; updates</strong>
         <span class="data-updates-subtitle">Reference catalogs and local status</span>
         {#if missingPrimaryCount > 0}
           <span
@@ -851,7 +852,7 @@ import { onMount, onDestroy } from 'svelte';
     </button>
 
     {#if !isPanelCollapsed}
-      <div id="data-updates-panel" class="data-updates-body">
+      <div id="data-updates-panel" class="data-updates-body" role="region" aria-labelledby="data-updates-title">
 
         {#if updatePhase !== 'idle'}
           <div class="resource-update-state" class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
@@ -907,6 +908,7 @@ import { onMount, onDestroy } from 'svelte';
                       <button
                         type="button"
                         class="btn btn-warning btn-xs"
+                        aria-label={`Update ${u.label}`}
                         disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
                         onclick={() => handleSyncAsset(u.asset_id, forceRedownload)}
                       >
@@ -944,6 +946,7 @@ import { onMount, onDestroy } from 'svelte';
               class="download-location-input"
             />
             <button
+              type="button"
               class="btn btn-secondary btn-sm compact-sidebar-button"
               onclick={handleBrowseDir}
             >
@@ -952,6 +955,7 @@ import { onMount, onDestroy } from 'svelte';
           </div>
           {#if customDir}
             <button
+              type="button"
               onclick={handleResetDir}
               class="reset-dir-btn"
             >
@@ -970,6 +974,7 @@ import { onMount, onDestroy } from 'svelte';
 
         <!-- Sync All Missing -->
         <button
+          type="button"
           class="btn btn-primary btn-sm full-width-sidebar-button"
           onclick={handleSyncAllMissing}
           disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning || !runtimeAvailable}
@@ -1016,6 +1021,7 @@ import { onMount, onDestroy } from 'svelte';
 
         {#if importingAny}
           <button
+            type="button"
             class="btn btn-secondary btn-sm full-width-sidebar-button"
             onclick={handleCancelImport}
           >
@@ -1024,6 +1030,7 @@ import { onMount, onDestroy } from 'svelte';
         {/if}
 
         <button
+          type="button"
           class="btn btn-secondary btn-sm full-width-sidebar-button"
           onclick={handleExportDiscovery}
           disabled={!selectedSample || exportBusy || sweepRunning || !runtimeAvailable}
@@ -1068,7 +1075,9 @@ import { onMount, onDestroy } from 'svelte';
                   </span>
                 </div>
                 <button
+                  type="button"
                   class="btn btn-xs db-action-button"
+                  aria-label={`${btnState.label} ${db.label}`}
                   class:btn-primary={btnState.variant === 'primary'}
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
@@ -1154,6 +1163,7 @@ import { onMount, onDestroy } from 'svelte';
                       <button
                         type="button"
                         class="btn btn-xs"
+                        aria-label={`${companion?.update_available || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
                         class:btn-warning={!!companion?.update_available || forceRedownload}
                         class:btn-secondary={!companion?.update_available && !forceRedownload}
                         disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}

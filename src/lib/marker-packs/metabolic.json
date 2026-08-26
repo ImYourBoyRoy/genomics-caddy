@@ -8,7 +8,7 @@
       "effect_allele": "A",
       "impact": "Altered satiety signaling / increased appetite susceptibility",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "FTO rs9939609 is the most robust common obesity-risk locus. The A allele affects FTO expression, altering hypothalamus satiety signaling and increasing baseline appetite and food intake. Strongly modifiable by exercise and protein intake.",
+      "interpretation": "FTO rs9939609 is a well-replicated common adiposity-associated locus. The A allele has been associated with differences in appetite and food-intake regulation in some studies, but effects are modest and strongly shaped by activity, diet, sleep, environment, and other genes.",
       "do_not_claim": [
         "obesity diagnosis",
         "inevitable weight gain"
@@ -40,7 +40,7 @@
       "effect_allele": "G",
       "impact": "Altered peroxisome proliferator-activated receptor-gamma activity",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "PPARG is a master regulator of fat cell development and insulin sensitivity. The G allele (Ala) is associated with improved insulin sensitivity and lower type 2 diabetes risk compared to the Pro/Pro genotype. A robust metabolic marker.",
+      "interpretation": "PPARG is an important regulator of fat-cell development and insulin sensitivity. The G allele (Ala) is associated with modestly improved insulin sensitivity and lower type 2 diabetes risk compared with the Pro/Pro genotype in some studies. It remains one contributor among many metabolic factors.",
       "do_not_claim": [
         "diabetes diagnosis",
         "metabolic syndrome certainty"
@@ -379,7 +379,7 @@
       "effect_allele": "C",
       "impact": "Altered melanocortin-4 receptor expression / satiety regulation",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "MC4R is a master hypothalamic regulator of energy homeostasis. The C allele is associated with minor satiety signaling impairments and higher baseline caloric intake.",
+      "interpretation": "MC4R is an important hypothalamic pathway for appetite and energy balance. The C allele has been associated with modest satiety and adiposity differences in some studies; behavior, environment, and many other genes remain important.",
       "do_not_claim": [
         "bipolar eating disorder diagnosis",
         "inevitable obesity"

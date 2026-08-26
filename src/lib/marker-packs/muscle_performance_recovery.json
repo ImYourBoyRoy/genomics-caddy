@@ -83,7 +83,7 @@
       "effect_allele": "T",
       "impact": "Fast-twitch alpha-actinin-3 deficiency / power-endurance bias",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "ACTN3 R577X is one of the best-replicated sports-performance variants. T/T eliminates functional alpha-actinin-3 and may shift toward endurance/recovery traits rather than maximal sprint-power bias.",
+      "interpretation": "ACTN3 R577X is a well-replicated sports-performance context marker. T/T is associated with little or no functional alpha-actinin-3 in fast fibers and may shift the performance profile toward endurance/recovery traits rather than maximal sprint-power bias; training and phenotype remain more informative.",
       "do_not_claim": [
         "athletic ability prediction",
         "injury prediction"

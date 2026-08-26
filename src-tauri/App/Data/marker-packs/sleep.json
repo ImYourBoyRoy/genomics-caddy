@@ -102,7 +102,7 @@
       "effect_allele": "G",
       "impact": "Reduced melatonin receptor density / impaired morning insulin release",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "MTNR1B rs10830963 G allele drives increased expression of melatonin receptors on pancreatic islet cells, causing prolonged inhibition of insulin secretion during the morning when melatonin is high. Explains circadian-metabolic glucose mismatch.",
+      "interpretation": "MTNR1B rs10830963 G has been associated with higher melatonin-receptor expression and altered insulin secretion timing in some studies. This may contribute to a circadian–metabolic mismatch when melatonin remains elevated, but glucose response depends on sleep, meal timing, insulin sensitivity, and other factors.",
       "do_not_claim": [
         "diabetes diagnosis"
       ],

@@ -230,7 +230,7 @@
       "effect_allele": "G",
       "impact": "Altered methionine synthase reductase activity / B12 recycling",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "MTRR is responsible for maintaining MTR in its active cob(I)alamin state. The G allele reduces recycling efficiency, slightly raising cobalamin demands.",
+      "interpretation": "MTRR helps maintain MTR in its active cob(I)alamin state. The G allele may modestly reduce recycling efficiency in some models; measured B12, folate, homocysteine, diet, and symptoms are more informative than this SNP alone.",
       "do_not_claim": [
         "B12 deficiency diagnosis"
       ],
@@ -260,7 +260,7 @@
       "effect_allele": "G",
       "impact": "Altered transcobalamin-2 transport / B12 cellular uptake",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "TCN2 is the primary transport protein for B12 from blood into tissues. The G (Arg) allele reduces binding affinity, which can lead to lower cellular delivery of B12 despite normal serum B12 levels.",
+      "interpretation": "TCN2 is an important protein involved in transporting B12 from blood into tissues. The G (Arg) allele has been associated with altered binding or delivery in some studies, but serum or functional B12 testing and clinical context are needed.",
       "do_not_claim": [
         "cellular B12 deficiency"
       ],
@@ -441,7 +441,7 @@
       "effect_allele": "C",
       "impact": "Reduced Vitamin D-binding protein / lower circulating D3",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "GC encodes Vitamin D-binding protein (DBP). The C allele is associated with lower DBP levels and is the most robust GWAS locus driving reduced circulating serum 25(OH)D levels in the population.",
+      "interpretation": "GC encodes vitamin-D-binding protein (DBP). The C allele has been associated with lower DBP levels and modest differences in circulating total 25(OH)D in population studies; measured 25(OH)D and clinical context are more informative than this marker alone.",
       "do_not_claim": [
         "vitamin D deficiency"
       ],
@@ -470,7 +470,7 @@
       "effect_allele": "A",
       "impact": "Impaired Vitamin D 25-hydroxylation efficiency",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "CYP2R1 is the primary liver enzyme that converts Vitamin D3 into circulating 25(OH)D. The A allele reduces enzyme activity, leading to less efficient conversion of dietary or sun-derived D3.",
+      "interpretation": "CYP2R1 is a major liver enzyme involved in converting vitamin D3 into circulating 25(OH)D. The A allele has been associated with modest differences in vitamin-D status in some studies; measured 25(OH)D, intake, sun exposure, and health context remain decisive.",
       "do_not_claim": [
         "vitamin D deficiency"
       ],

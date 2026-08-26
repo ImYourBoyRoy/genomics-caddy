@@ -59,17 +59,27 @@ function ratio(present, total) {
   return total === 0 ? 0 : Math.round((present / total) * 1000) / 10;
 }
 
+const strongClaimPattern = /\b(?:will|always|guarantee(?:s)?|definitive(?:ly)?|causes?|results?\s+in|leads?\s+to|master\s+regulator|primary\s+(?:enzyme|transport|protein|regulator|driver|locus|marker|flag)|is\s+responsible\s+for|determines?|defines?|drives?|explains?|eliminates?|complete\s+deficiency|most\s+robust|strongly\s+modifiable)\b/i;
+const qualifiedClaimPattern = /\b(?:may|might|could|can|associated\s+with|linked\s+to|contribute(?:s)?\s+to|helps?|important|major|one\s+of|among|some\s+(?:studies|cohorts|populations|models)|in\s+some|often|sometimes|typically|usually|generally|var(?:y|ies|iation)|depends?|requires?|consistent\s+with|little\s+or\s+no|rather\s+than|not|cannot|does\s+not|do\s+not|no\s+longer|research(?:-grade)?|context)\b/i;
+
+function sentences(text) {
+  return String(text || '').match(/[^.!?]+[.!?]?/g) || [];
+}
+
 function hasUnqualifiedStrongLanguage(text) {
-  if (/\b(?:will|always|guarantee(?:s)?|definitive(?:ly)?)\b/i.test(text)
-    && !/\b(?:not|does not|do not)\s+(?:a\s+)?(?:guarantee|guarantees|definitive)\b/i.test(text)) {
+  return sentences(text).some((sentence) => {
+    if (!strongClaimPattern.test(sentence) || qualifiedClaimPattern.test(sentence)) return false;
+
+    // Allele/isoform naming is a molecular annotation, not a claim that a
+    // person's health outcome is determined. Keep those exact definitions out
+    // of the health-language review queue when no phenotype is asserted.
+    if (/\b(?:determines?|defines?)\b/i.test(sentence)
+      && /\b(?:allele|haplotype|isoform|star\s+allele)\b/i.test(sentence)
+      && !/\b(?:risk|phenotype|disease|symptom|activity|clearance|level|susceptibility)\b/i.test(sentence)) {
+      return false;
+    }
     return true;
-  }
-  const causalPattern = /\b(?:causes?|results?\s+in|leads?\s+to)\b/gi;
-  for (const match of text.matchAll(causalPattern)) {
-    const prefix = text.slice(0, match.index).trim().split(/\s+/).slice(-1)[0] || '';
-    if (!/^(?:can|may|could|might|often|sometimes|typically|usually)$/i.test(prefix)) return true;
-  }
-  return false;
+  });
 }
 
 const manifest = readJson(path.join(resourceDir, 'manifest.json'));
@@ -79,6 +89,8 @@ const actionability = readJson(path.join(resourceDir, 'actionability_guidance.js
 const evidencePolicy = readJson(path.join(resourceDir, 'evidence_policy.json'));
 const callabilityRules = readJson(path.join(resourceDir, 'callability_rules.json'));
 const cycleSupport = readJson(path.join(resourceDir, 'cycle_support_guidance.json'));
+const discoveryCatalog = readJson(path.join(resourceDir, 'discovery_catalog.json'));
+const runtimeDiscoveryCatalogPath = path.join(runtimeDir, 'discovery_catalog.json');
 
 if (!manifest || !Array.isArray(manifest.packs)) errors.push('manifest.json: packs must be an array');
 if (!runtimeSummary || !Array.isArray(runtimeSummary.support_files)) {
@@ -96,6 +108,13 @@ if (!Array.isArray(callabilityRules?.rules) || callabilityRules.rules.length ===
 if (!cycleSupport?.marker_contexts || typeof cycleSupport.marker_contexts !== 'object' || Array.isArray(cycleSupport.marker_contexts)) {
   errors.push('cycle_support_guidance.json: marker_contexts must be an object');
 }
+if (!discoveryCatalog || !Array.isArray(discoveryCatalog.markers)) {
+  errors.push('discovery_catalog.json: markers must be an array');
+} else if (!fs.existsSync(runtimeDiscoveryCatalogPath)) {
+  errors.push('discovery_catalog.json: runtime mirror missing');
+} else if (fs.readFileSync(path.join(resourceDir, 'discovery_catalog.json'), 'utf8') !== fs.readFileSync(runtimeDiscoveryCatalogPath, 'utf8')) {
+  warnings.push('discovery_catalog: source/runtime content differs');
+}
 
 const packSummaries = [];
 const allMarkers = [];
@@ -103,6 +122,7 @@ const supportRefs = new Set();
 const markerFiles = new Set();
 const boundaryGaps = [];
 const absoluteLanguageReview = [];
+const discoveryLanguageReview = [];
 const laypersonLanguageReview = [];
 const actionabilitySourceGaps = [];
 
@@ -173,6 +193,17 @@ for (const pack of manifest?.packs || []) {
     evidence_tiers: tiers,
     variant_types: variants,
   });
+}
+
+for (const marker of discoveryCatalog?.markers || []) {
+  const description = String(marker.description || '');
+  if (hasUnqualifiedStrongLanguage(description)) {
+    discoveryLanguageReview.push({
+      category: marker.category || '(missing)',
+      rsid: marker.rsid || '(missing rsid)',
+      description,
+    });
+  }
 }
 
 const supportFiles = runtimeSummary?.support_files || [];
@@ -278,6 +309,7 @@ const summary = {
   },
   boundary_gaps: boundaryGaps,
   absolute_language_review: absoluteLanguageReview,
+  discovery_language_review: discoveryLanguageReview,
   layperson_language_review: laypersonLanguageReview,
   actionability_source_gaps: actionabilitySourceGaps,
   uncovered_actionability_genes: uncoveredActionabilityGenes,
@@ -294,7 +326,7 @@ if (outputJson) {
   console.log(`Audited ${summary.support_resources} support resources / ${summary.registered_sources} registered sources.`);
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
-  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }

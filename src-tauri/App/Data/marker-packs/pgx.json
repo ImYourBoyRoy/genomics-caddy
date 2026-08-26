@@ -530,7 +530,7 @@
       "effect_allele": "G",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "rs1142345 defines TPMT*3C and, when paired with rs1800460, forms TPMT*3A. It reduces TPMT activity and increases thiopurine toxicity risk. Use clinical TPMT genotype/phenotype confirmation.",
+      "interpretation": "rs1142345 helps identify TPMT*3C and, when paired with rs1800460, is part of TPMT*3A. The resulting TPMT diplotype may reduce enzyme activity and increase thiopurine toxicity risk; use clinical TPMT genotype/phenotype confirmation.",
       "do_not_claim": [
         "azathioprine dosing plan"
       ],

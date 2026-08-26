@@ -198,7 +198,7 @@
       "effect_allele": "C",
       "impact": "Altered T4-to-T3 deiodination in liver/kidneys",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "DIO1 is responsible for baseline peripheral deiodination. The C allele is linked to shifts in Free T4/Free T3 ratios in serum, reflecting minor variations in systemic conversion velocity.",
+      "interpretation": "DIO1 contributes to peripheral deiodination. The C allele has been linked to small shifts in Free T4/Free T3 ratios in some studies, reflecting a possible difference in conversion context rather than a thyroid diagnosis.",
       "do_not_claim": [
         "hypothyroidism diagnosis"
       ],

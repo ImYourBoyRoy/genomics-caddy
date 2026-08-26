@@ -8,7 +8,7 @@
       "effect_allele": "C",
       "impact": "APOE e4 isoform structural driver / LDL cholesterol elevations",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "APOE rs429358 C-allele determines the e4 isoform. Combined with rs7412, it defines the APOE haplotype. One or two copies of e4 drive higher LDL cholesterol, elevated cardiovascular risk, and late-onset Alzheimer's susceptibility.",
+      "interpretation": "APOE rs429358 C is one of the two alleles used to assign an APOE e2/e3/e4 haplotype; rs7412 must be interpreted with it. An e4 haplotype is associated with higher LDL cholesterol and higher cardiovascular and late-onset Alzheimer’s disease risk in population studies, with effects varying by copy number, ancestry, age, and other factors.",
       "do_not_claim": [
         "Alzheimer's disease diagnosis",
         "inevitable cognitive decline",
@@ -41,7 +41,7 @@
       "effect_allele": "T",
       "impact": "APOE isoform determination (e2, e3, e4 haplotype)",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "Determines the APOE e2 vs e3/e4 isoform. T/T at rs7412 combined with T/T at rs429358 defines e2/e2 (associated with lower LDL but risk of Type III hyperlipoproteinemia). G/G at rs7412 combined with C/C at rs429358 defines e4/e4.",
+      "interpretation": "rs7412 is the second allele used with rs429358 to assign the APOE e2/e3/e4 haplotype. T/T at rs7412 with T/T at rs429358 is consistent with e2/e2, which is often associated with lower LDL but can increase Type III hyperlipoproteinemia susceptibility; G/G at rs7412 with C/C at rs429358 is consistent with e4/e4. Confirm the haplotype clinically before acting on it.",
       "do_not_claim": [
         "cardiovascular disease diagnosis",
         "cognitive decline certainty"
@@ -2179,7 +2179,7 @@
       "effect_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Sarcomere dysfunction / hypertrophic cardiomyopathy susceptibility",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "Core sarcomere genes, especially MYH7 and MYBPC3, explain a large fraction of genotype-positive HCM. This is a clinical panel item, not a consumer SNP trait.",
+      "interpretation": "Core sarcomere genes, especially MYH7 and MYBPC3, account for a substantial fraction of genotype-positive HCM in clinical cohorts. This is a clinical panel item, not a consumer SNP trait.",
       "do_not_claim": [
         "HCM diagnosis from raw DNA",
         "athletic clearance",

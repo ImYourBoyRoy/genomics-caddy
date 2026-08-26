@@ -3177,7 +3177,7 @@
       "effect_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
       "impact": "SWI/SNF chromatin remodeling tumor predisposition",
       "evidence_tier": "A_clinically_actionable_gene_panel",
-      "interpretation": "Confirmed pathogenic variants in SMARCB1 or SMARCA4 can indicate rare but serious tumor predisposition syndromes. Age, gene, tumor type and family history drive management.",
+      "interpretation": "Confirmed pathogenic variants in SMARCB1 or SMARCA4 can indicate rare but serious tumor predisposition syndromes. Age, gene, tumor type, and family history are among the factors that inform management.",
       "do_not_claim": [
         "cancer diagnosis",
         "cancer certainty",

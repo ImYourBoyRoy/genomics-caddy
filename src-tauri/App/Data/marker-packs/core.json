@@ -8,7 +8,7 @@
       "effect_allele": "T",
       "impact": "Reduced Diamine Oxidase (DAO) activity",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "The AOC1 rs10156191 T allele is associated with lower DAO enzyme production. DAO is the primary enzyme responsible for breaking down ingested histamine in the gut. T-carriers may experience elevated sensitivity to high-histamine foods.",
+      "interpretation": "The AOC1 rs10156191 T allele is associated with lower DAO enzyme production. DAO is a major enzyme that helps break down ingested histamine in the gut. T-carriers may experience elevated sensitivity to high-histamine foods, but symptoms and food tolerance vary.",
       "do_not_claim": [
         "histamine intolerance diagnosis",
         "mast cell activation syndrome (MCAS) diagnosis"
@@ -40,7 +40,7 @@
       "effect_allele": "T",
       "impact": "Reduced Histamine N-Methyltransferase activity",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "HNMT is responsible for intracellular histamine breakdown, particularly in the brain. The Thr105Ile T allele reduces enzyme activity, potentially prolonging intracellular histamine signals in the central nervous system.",
+      "interpretation": "HNMT helps break down intracellular histamine, particularly in the brain. The Thr105Ile T allele is associated with lower enzyme activity in some studies and may prolong intracellular histamine signaling; phenotype and exposures still matter.",
       "do_not_claim": [
         "allergy diagnosis",
         "sleep disorder diagnosis"

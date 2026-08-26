@@ -48,12 +48,13 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   let customExportPath = $state("");
 
   const categories = [
-    { id: "neurotype_mood", label: "🧠 Neurotype & Mood" },
-    { id: "cardiovascular", label: "🫀 Cardiovascular" },
-    { id: "drug_metabolism", label: "💊 Drug Metabolism" },
-    { id: "cancer_risk", label: "🎗️ Cancer Risk" },
-    { id: "carrier_status", label: "🧬 Carrier Status" },
-    { id: "metabolic_diet", label: "🥗 Metabolic & Diet" }
+    { id: "neurotype_mood", catalogCategories: ["neuropsych"], label: "🧠 Neurotype & Mood" },
+    { id: "cardiovascular", catalogCategories: ["cardiovascular"], label: "🫀 Cardiovascular" },
+    { id: "drug_metabolism", catalogCategories: ["pgx"], label: "💊 Drug Metabolism" },
+    { id: "cancer_risk", catalogCategories: ["cancer_confirmation_only"], label: "🎗️ Cancer Risk" },
+    { id: "carrier_status", catalogCategories: ["core"], label: "🧬 Carrier & Core Traits" },
+    { id: "metabolic_diet", catalogCategories: ["metabolic", "nutrients"], label: "🥗 Metabolic & Diet" },
+    { id: "hormones_reproductive", catalogCategories: ["hormones_reproductive"], label: "🌙 Hormones & Reproductive" }
   ];
 
   let selectedCategories = $state<Record<string, boolean>>({
@@ -62,7 +63,8 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     drug_metabolism: true,
     cancer_risk: true,
     carrier_status: true,
-    metabolic_diet: true
+    metabolic_diet: true,
+    hormones_reproductive: true
   });
 
   async function selectExportFile() {
@@ -89,8 +91,12 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     totalToScan = 0;
 
     try {
-      const activeCats = Object.keys(selectedCategories).filter(k => selectedCategories[k]);
-      const catalogMarkers = catalogData.markers.filter(m => activeCats.includes(m.category));
+      const activeCatalogCategories = new Set(
+        categories
+          .filter(category => selectedCategories[category.id])
+          .flatMap(category => category.catalogCategories)
+      );
+      const catalogMarkers = catalogData.markers.filter(m => activeCatalogCategories.has(m.category));
       const rsids = catalogMarkers.map(m => m.rsid);
       totalToScan = rsids.length;
 

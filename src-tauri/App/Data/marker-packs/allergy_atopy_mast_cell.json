@@ -571,7 +571,7 @@
       "effect_allele": "N/A",
       "impact": "HLA-mediated food and immune reaction context",
       "evidence_tier": "C_research_only",
-      "interpretation": "HLA alleles drive many immune reactions, but tagging SNPs are unreliable. Use this only as a prompt to require true HLA typing for celiac/drug/allergy-related questions.",
+      "interpretation": "HLA alleles contribute to many immune reactions, but tagging SNPs are unreliable. Use this only as a prompt to require true HLA typing for celiac, drug, or allergy-related questions.",
       "do_not_claim": [
         "celiac diagnosis",
         "food allergy diagnosis"

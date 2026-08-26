@@ -104,7 +104,7 @@
       "effect_allele": "T",
       "impact": "Lower monoamine oxidase A enzyme activity",
       "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "MAOA is responsible for clearing dopamine, serotonin, and norepinephrine. The rs6323 T allele represents a lower-activity enzyme, resulting in slower neurotransmitter clearance, which can lead to higher emotional reactivity under acute stress.",
+      "interpretation": "MAOA helps break down dopamine, serotonin, and norepinephrine. The rs6323 T allele has been associated with lower enzyme activity in some studies and may be linked to greater emotional reactivity under acute stress; effects vary with sex-chromosome status, environment, and context.",
       "do_not_claim": [
         "aggression diagnosis",
         "bipolar disorder",

@@ -7,7 +7,7 @@
       "name": "DAO promoter",
       "risk_allele": "T",
       "impact": "Reduced Diamine Oxidase (DAO) activity",
-      "description": "The AOC1 rs10156191 T allele is associated with lower DAO enzyme production. DAO is the primary enzyme responsible for breaking down ingested histamine in the gut. T-carriers may experience elevated sensitivity to high-histamine foods."
+      "description": "The AOC1 rs10156191 T allele is associated with lower DAO enzyme production. DAO is a major enzyme that helps break down ingested histamine in the gut. T-carriers may experience elevated sensitivity to high-histamine foods, but symptoms and food tolerance vary."
     },
     {
       "rsid": "rs11558538",
@@ -16,7 +16,7 @@
       "name": "Thr105Ile",
       "risk_allele": "T",
       "impact": "Reduced Histamine N-Methyltransferase activity",
-      "description": "HNMT is responsible for intracellular histamine breakdown, particularly in the brain. The Thr105Ile T allele reduces enzyme activity, potentially prolonging intracellular histamine signals in the central nervous system."
+      "description": "HNMT helps break down intracellular histamine, particularly in the brain. The Thr105Ile T allele is associated with lower enzyme activity in some studies and may prolong intracellular histamine signaling; phenotype and exposures still matter."
     },
     {
       "rsid": "rs4988235",
@@ -25,7 +25,7 @@
       "name": "-13910C>T",
       "risk_allele": "C",
       "impact": "Lactase gene promoter downregulation (Lactose Intolerance)",
-      "description": "MCM6 regulates the LCT (lactase) gene. Homozygous C/C results in adult lactase non-persistence (lactose intolerance) in European populations. T-carriers (C/T or T/T) maintain lactase expression throughout adulthood."
+      "description": "MCM6 regulates the LCT (lactase) gene. C/C is associated with adult lactase non-persistence in many European-ancestry studies, but symptoms and dairy tolerance vary. T-carriers often retain more lactase activity; genotype does not determine individual tolerance."
     },
     {
       "rsid": "rs671",
@@ -322,7 +322,7 @@
       "name": "CYP2D6*4",
       "risk_allele": "A",
       "impact": "Reduced/Inactive CYP2D6 enzyme activity",
-      "description": "CYP2D6*4 is a well-established loss-of-function allele. Homozygous A/A results in a poor metabolizer phenotype, leading to impaired clearance and elevated levels of dextromethorphan (DXM), atomoxetine, and many antidepressants, while reducing the activation of codeine/tramadol."
+      "description": "CYP2D6*4 is a well-established no-function allele. An A/A result at rs3892097 may be consistent with a poor-metabolizer diplotype when the rest of the CYP2D6 genotype supports it; full clinical PGx interpretation is required before applying drug guidance."
     },
     {
       "rsid": "rs1057910",
@@ -367,7 +367,7 @@
       "name": "CYP2C19*3",
       "risk_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
-      "description": "CYP2C19*3 is a loss-of-function allele that introduces a premature stop codon. Primarily observed in East Asian populations, homozygosity or compound heterozygosity results in a poor metabolizer phenotype."
+      "description": "CYP2C19*3 is a no-function allele that introduces a premature stop codon and is observed more often in East Asian populations. Homozygosity or compound heterozygosity may support a poor-metabolizer phenotype, but the complete clinical diplotype is required."
     },
     {
       "rsid": "rs4149056",
@@ -403,7 +403,7 @@
       "name": "CYP3A5*3",
       "risk_allele": "C",
       "impact": "Impaired CYP3A5 enzyme activity (non-expressor)",
-      "description": "Homozygosity for the CYP3A5*3 C-allele causes a splicing defect and lack of active enzyme. Carriers of *3/*3 are CYP3A5 'non-expressors', leading to slower clearance of drugs like tacrolimus, midazolam, and certain statins."
+      "description": "The CYP3A5*3 C-allele is associated with altered splicing. A *3/*3 result is often consistent with a CYP3A5 non-expresser phenotype and may reduce clearance of drugs such as tacrolimus; use the complete clinical diplotype and drug-specific guidance."
     },
     {
       "rsid": "rs3745274",
@@ -439,7 +439,7 @@
       "name": "rs55886062 / I560S",
       "risk_allele": "C",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
-      "description": "The I560S variant is a rare DPYD allele that causes a severe reduction in DPD enzyme clearance. Carriers of the C allele require alternative cancer therapies or drastic dose reductions to prevent severe systemic toxicity."
+      "description": "The rare DPYD I560S allele can substantially reduce DPD activity and increase fluoropyrimidine toxicity risk. A C-allele result requires clinical DPYD confirmation and oncology/pharmacogenomic guidance before 5-FU or capecitabine exposure."
     },
     {
       "rsid": "rs67376798",
@@ -448,7 +448,7 @@
       "name": "rs67376798 / Y186C",
       "risk_allele": "A",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
-      "description": "The Y186C variant causes intermediate to poor DPD clearance. A-carriers have a high susceptibility to severe adverse events from 5-FU based chemotherapy regimens."
+      "description": "The DPYD Y186C variant may reduce DPD activity and is associated with increased fluoropyrimidine toxicity risk in clinical studies. An A-allele result requires clinical DPYD interpretation before 5-FU-based chemotherapy."
     },
     {
       "rsid": "rs1800460",
@@ -466,7 +466,7 @@
       "name": "TPMT*3C / TPMT*3A component (A719G)",
       "risk_allele": "G",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
-      "description": "rs1142345 defines TPMT*3C and, when paired with rs1800460, forms TPMT*3A. It reduces TPMT activity and increases thiopurine toxicity risk. Use clinical TPMT genotype/phenotype confirmation."
+      "description": "rs1142345 helps identify TPMT*3C and, when paired with rs1800460, is part of TPMT*3A. The resulting TPMT diplotype may reduce enzyme activity and increase thiopurine toxicity risk; use clinical TPMT genotype/phenotype confirmation."
     },
     {
       "rsid": "rs116855232",
@@ -1024,7 +1024,7 @@
       "name": "Ser447Ter",
       "risk_allele": "G",
       "impact": "Altered Lipoprotein Lipase activity / triglyceride clearance",
-      "description": "LPL rs328 G-allele (Ser44Ter) causes premature truncation, resulting in increased LPL activity, leading to lower triglycerides and higher HDL."
+      "description": "LPL rs328 G (Ser44Ter) introduces a premature stop and has been associated with increased LPL activity, lower triglycerides, and higher HDL in some studies. Lipid phenotype and clinical context remain important."
     },
     {
       "rsid": "rs708272",
@@ -1483,7 +1483,7 @@
       "name": "rs2282679 UTR variant",
       "risk_allele": "C",
       "impact": "Reduced Vitamin D-binding protein / lower circulating D3",
-      "description": "GC encodes Vitamin D-binding protein (DBP). The C allele is associated with lower DBP levels and is the most robust GWAS locus driving reduced circulating serum 25(OH)D levels in the population."
+      "description": "GC encodes vitamin-D-binding protein (DBP). The C allele has been associated with lower DBP levels and modest differences in circulating total 25(OH)D in population studies; measured 25(OH)D and clinical context are more informative than this marker alone."
     },
     {
       "rsid": "rs10741657",
@@ -1492,7 +1492,7 @@
       "name": "rs10741657 promoter variant",
       "risk_allele": "A",
       "impact": "Impaired Vitamin D 25-hydroxylation efficiency",
-      "description": "CYP2R1 is the primary liver enzyme that converts Vitamin D3 into circulating 25(OH)D. The A allele reduces enzyme activity, leading to less efficient conversion of dietary or sun-derived D3."
+      "description": "CYP2R1 is a major liver enzyme involved in converting vitamin D3 into circulating 25(OH)D. The A allele has been associated with modest differences in vitamin-D status in some studies; measured 25(OH)D, intake, sun exposure, and health context remain decisive."
     },
     {
       "rsid": "rs12785878",
@@ -1870,7 +1870,7 @@
       "name": "FKBP5 intron variant",
       "risk_allele": "T",
       "impact": "Altered glucocorticoid receptor sensitivity / HPA-axis stress response",
-      "description": "The FKBP5 rs1360780 T allele leads to higher induction of FKBP5, which reduces glucocorticoid receptor sensitivity, delaying negative feedback of cortisol during stress. Associated with stress sensitivity, PTSD, and major depression, particularly following early-life trauma."
+      "description": "The FKBP5 rs1360780 T allele has been linked to higher FKBP5 induction and altered glucocorticoid feedback in some studies. Associations with stress sensitivity, PTSD, and depression are context-dependent and stronger in some cohorts after early-life trauma."
     },
     {
       "rsid": "rs6311",
@@ -1897,7 +1897,7 @@
       "name": "MAOA coding variant",
       "risk_allele": "T",
       "impact": "Lower monoamine oxidase A enzyme activity",
-      "description": "MAOA is responsible for clearing dopamine, serotonin, and norepinephrine. The rs6323 T allele represents a lower-activity enzyme, resulting in slower neurotransmitter clearance, which can lead to higher emotional reactivity under acute stress."
+      "description": "MAOA helps break down dopamine, serotonin, and norepinephrine. The rs6323 T allele has been associated with lower enzyme activity in some studies and may be linked to greater emotional reactivity under acute stress; effects vary with sex-chromosome status, environment, and context."
     },
     {
       "rsid": "rs4680",
@@ -1996,7 +1996,7 @@
       "name": "Asn40Asp / A118G",
       "risk_allele": "G",
       "impact": "Altered mu-opioid receptor binding affinity / reward sensitivity",
-      "description": "The G (Asp) allele alters the mu-opioid receptor, reducing beta-endorphin binding affinity. Leads to minor reductions in pain sensitivity threshold but is associated in literature with altered reward seeking and higher social attachment demands."
+      "description": "The OPRM1 rs1799971 G (Asp) allele alters the mu-opioid receptor in laboratory models. Some studies report small differences in pain sensitivity or reward-related traits, but findings are inconsistent and are not diagnostic or predictive for an individual."
     },
     {
       "rsid": "rs1611115",
@@ -2977,7 +2977,7 @@
       "name": "R577X",
       "risk_allele": "T",
       "impact": "Alpha-actinin-3 deficiency / fast-twitch power reduction",
-      "description": "ACTN3 R577X. Homozygous T/T (X/X) results in complete deficiency of alpha-actinin-3 in fast muscle fibers. This shifts profile performance toward slow-twitch endurance, decreasing high-velocity sprint performance."
+      "description": "ACTN3 R577X. Homozygous T/T (X/X) is associated with little or no alpha-actinin-3 in fast muscle fibers. This may shift the performance profile toward slow-twitch endurance, but training and phenotype remain more informative than the marker alone."
     },
     {
       "rsid": "rs970547",
@@ -3445,7 +3445,7 @@
       "name": "Congenital contractural arachnodactyly gene panel",
       "risk_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Fibrillin-2 pathogenic variants / contractures and Marfan-like skeletal features",
-      "description": "FBN2 pathogenic variants cause congenital contractural arachnodactyly, a Marfan-overlap skeletal connective tissue disorder. Clinical diagnosis requires molecular and physical exam correlation."
+      "description": "Pathogenic FBN2 variants can cause congenital contractural arachnodactyly, a Marfan-overlap skeletal connective-tissue disorder. Clinical diagnosis requires molecular and physical-exam correlation."
     },
     {
       "rsid": "panel_beals_marfanoid_overlap",
@@ -3634,7 +3634,7 @@
       "name": "rs2235544 intron variant",
       "risk_allele": "C",
       "impact": "Altered T4-to-T3 deiodination in liver/kidneys",
-      "description": "DIO1 is responsible for baseline peripheral deiodination. The C allele is linked to shifts in Free T4/Free T3 ratios in serum, reflecting minor variations in systemic conversion velocity."
+      "description": "DIO1 contributes to peripheral deiodination. The C allele has been linked to small shifts in Free T4/Free T3 ratios in some studies, reflecting a possible difference in conversion context rather than a thyroid diagnosis."
     },
     {
       "rsid": "GUARDRAIL_THYROID_RAW_DNA_NOT_DIAGNOSIS",
@@ -4111,7 +4111,7 @@
       "name": "APOE e4 marker",
       "risk_allele": "C",
       "impact": "APOE e4 isoform structural driver / LDL cholesterol elevations",
-      "description": "APOE rs429358 C-allele determines the e4 isoform. Combined with rs7412, it defines the APOE haplotype. One or two copies of e4 drive higher LDL cholesterol, elevated cardiovascular risk, and late-onset Alzheimer's susceptibility."
+      "description": "APOE rs429358 C is one of the two alleles used to assign an APOE e2/e3/e4 haplotype; rs7412 must be interpreted with it. An e4 haplotype is associated with higher LDL cholesterol and higher cardiovascular and late-onset Alzheimer’s disease risk in population studies, with effects varying by copy number, ancestry, age, and other factors."
     },
     {
       "rsid": "rs7412",
@@ -4120,7 +4120,7 @@
       "name": "APOE e2/e3/e4 marker",
       "risk_allele": "T",
       "impact": "APOE isoform determination (e2, e3, e4 haplotype)",
-      "description": "Determines the APOE e2 vs e3/e4 isoform. T/T at rs7412 combined with T/T at rs429358 defines e2/e2 (associated with lower LDL but risk of Type III hyperlipoproteinemia). G/G at rs7412 combined with C/C at rs429358 defines e4/e4."
+      "description": "rs7412 is the second allele used with rs429358 to assign the APOE e2/e3/e4 haplotype. T/T at rs7412 with T/T at rs429358 is consistent with e2/e2, which is often associated with lower LDL but can increase Type III hyperlipoproteinemia susceptibility; G/G at rs7412 with C/C at rs429358 is consistent with e4/e4. Confirm the haplotype clinically before acting on it."
     },
     {
       "rsid": "rs10757278",
@@ -4246,7 +4246,7 @@
       "name": "LDLR pathogenic variant / CNV panel",
       "risk_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Reduced or absent LDL receptor function / high LDL-C from birth",
-      "description": "LDLR pathogenic variants are the most common monogenic cause of familial hypercholesterolemia. Variant interpretation requires ACMG/ClinGen-grade curation plus lipid phenotype."
+      "description": "LDLR pathogenic variants are among the common monogenic causes of familial hypercholesterolemia. Variant interpretation requires ACMG/ClinGen-grade curation plus lipid phenotype."
     },
     {
       "rsid": "APOB_FDB_PANEL",
@@ -4471,7 +4471,7 @@
       "name": "Brugada syndrome SCN5A clinical panel",
       "risk_allele": "loss_of_function_or_pathogenic_variant",
       "impact": "Sodium-channel loss-of-function / Brugada syndrome susceptibility",
-      "description": "SCN5A is the only definitive Brugada syndrome gene under ClinGen-style curation. Other marketed Brugada genes should be treated skeptically unless current curation supports them."
+      "description": "SCN5A is currently the best-supported Brugada syndrome gene under ClinGen-style curation. Other marketed Brugada genes should be treated skeptically unless current curation supports them."
     },
     {
       "rsid": "CPVT_GENE_PANEL",
@@ -4489,7 +4489,7 @@
       "name": "Hypertrophic cardiomyopathy core gene panel",
       "risk_allele": "pathogenic_or_likely_pathogenic_variant",
       "impact": "Sarcomere dysfunction / hypertrophic cardiomyopathy susceptibility",
-      "description": "Core sarcomere genes, especially MYH7 and MYBPC3, explain a large fraction of genotype-positive HCM. This is a clinical panel item, not a consumer SNP trait."
+      "description": "Core sarcomere genes, especially MYH7 and MYBPC3, account for a substantial fraction of genotype-positive HCM in clinical cohorts. This is a clinical panel item, not a consumer SNP trait."
     },
     {
       "rsid": "DCM_CORE_GENE_PANEL",
@@ -4939,7 +4939,7 @@
       "name": "MUTYH-associated polyposis biallelic pathogenic variant panel",
       "risk_allele": "BIALLELIC_CLINICALLY_CONFIRMED_PLP",
       "impact": "Base-excision repair defect / autosomal recessive adenomatous polyposis",
-      "description": "Biallelic MUTYH pathogenic variants cause MUTYH-associated polyposis. Monoallelic carrier status has much weaker and context-dependent risk implications."
+      "description": "Biallelic MUTYH pathogenic variants can cause MUTYH-associated polyposis. Monoallelic carrier status has much weaker and context-dependent risk implications; clinical confirmation is required."
     },
     {
       "rsid": "rs34612342",
@@ -5173,7 +5173,7 @@
       "name": "Rhabdoid tumor / small-cell ovarian hypercalcemic type predisposition panel",
       "risk_allele": "ANY_CLINICALLY_CONFIRMED_PLP",
       "impact": "SWI/SNF chromatin remodeling tumor predisposition",
-      "description": "Confirmed pathogenic variants in SMARCB1 or SMARCA4 can indicate rare but serious tumor predisposition syndromes. Age, gene, tumor type and family history drive management."
+      "description": "Confirmed pathogenic variants in SMARCB1 or SMARCA4 can indicate rare but serious tumor predisposition syndromes. Age, gene, tumor type, and family history are among the factors that inform management."
     },
     {
       "rsid": "PANEL_ALK_PHox2B_PATHOGENIC_VARIANTS",
@@ -5560,7 +5560,7 @@
       "name": "HLA food/immune sensitivity context",
       "risk_allele": "N/A",
       "impact": "HLA-mediated food and immune reaction context",
-      "description": "HLA alleles drive many immune reactions, but tagging SNPs are unreliable. Use this only as a prompt to require true HLA typing for celiac/drug/allergy-related questions."
+      "description": "HLA alleles contribute to many immune reactions, but tagging SNPs are unreliable. Use this only as a prompt to require true HLA typing for celiac, drug, or allergy-related questions."
     },
     {
       "rsid": "PANEL_HEREDITARY_ANGIOEDEMA",

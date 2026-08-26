@@ -328,7 +328,7 @@ Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cro
 * **`npm run build`**: Compiles static production web assets into `/build`.
 * **`npm run check`**: Runs Svelte compiler and TypeScript diagnostics.
 * **`npm run validate:packs`**: Validates curated marker-pack schemas, evidence tiers, actionability policy, source-only support-resource contracts, and runtime mirror manifests without removing any pack.
-* **`npm run audit:resources`**: Audits every curated pack and support resource for probability/callability/actionability gates, claim-boundary fields, source-registry coverage, runtime parity, actionability-rule source coverage, actionability coverage, and wording that needs human review.
+* **`npm run audit:resources`**: Audits every curated pack, discovery catalog, and support resource for probability/callability/actionability gates, claim-boundary fields, source-registry coverage, source/runtime parity, actionability-rule source coverage, actionability coverage, and deterministic wording that needs human review.
 * **`npm run audit:dna-fixtures`**: Read-only coverage audit for root DNA `.txt`/`.zip` fixtures. Reports row counts, curated rsID coverage, chromosome-call counts, and Y-call counts; never prints or imports genotype values.
 * **`npm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
 * **`npm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.

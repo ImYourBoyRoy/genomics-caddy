@@ -143,7 +143,7 @@ const supportContracts = {
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
-  evidence_policy: { objects: ['tiers', 'claim_policy'] },
+  evidence_policy: { objects: ['tiers', 'claim_policy', 'display'] },
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
   lab_overlays: { arrays: ['overlays'] },
@@ -678,6 +678,45 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     if (geneIds.size === 0) errors.push('pgx_diplotype_guidance.json: genes must contain at least one gene group');
     if (!isStringArray(resource.do_not_do) || resource.do_not_do.length === 0) {
       errors.push('pgx_diplotype_guidance.json: do_not_do must be a non-empty string array');
+    }
+  }
+  if (resourceId === 'evidence_policy') {
+    const display = resource.display;
+    if (!display || typeof display !== 'object' || Array.isArray(display)) {
+      errors.push('evidence_policy.json: display must be an object');
+    } else {
+      const displayTextFields = ['label', 'description', 'color_class', 'confidence_label'];
+      const tierKeys = ['A', 'B', 'C', 'D', 'E'];
+      for (const key of ['unknown_tier', ...tierKeys]) {
+        const tier = key === 'unknown_tier' ? display.unknown_tier : display.tiers?.[key];
+        for (const field of displayTextFields) {
+          if (typeof tier?.[field] !== 'string' || tier[field].trim() === '') {
+            errors.push(`evidence_policy.json: display.${key}.${field} must be a non-empty string`);
+          }
+        }
+      }
+      const claimFrameKeys = ['interpretation_blocked', 'clinical_confirmation', 'B', 'C', 'D', 'E', 'unknown'];
+      for (const key of claimFrameKeys) {
+        if (typeof display.claim_frames?.[key] !== 'string' || display.claim_frames[key].trim() === '') {
+          errors.push(`evidence_policy.json: display.claim_frames.${key} must be a non-empty string`);
+        }
+      }
+      for (const key of ['risk', 'protective', 'context_dependent', 'trait', 'not_applicable', 'no_claim', 'unknown']) {
+        const direction = display.directions?.[key];
+        for (const field of ['label', 'plain_label', 'description', 'color_class']) {
+          if (typeof direction?.[field] !== 'string' || direction[field].trim() === '') {
+            errors.push(`evidence_policy.json: display.directions.${key}.${field} must be a non-empty string`);
+          }
+        }
+      }
+      for (const key of ['high_risk', 'moderate_risk', 'low_risk', 'protective', 'trait', 'context_dependent', 'confirmation_required', 'no_data', 'benign']) {
+        const severity = display.severity?.[key];
+        for (const field of ['css_class', 'emoji', 'glyph', 'label', 'description']) {
+          if (typeof severity?.[field] !== 'string' || severity[field].trim() === '') {
+            errors.push(`evidence_policy.json: display.severity.${key}.${field} must be a non-empty string`);
+          }
+        }
+      }
     }
   }
   if (resourceId === 'layperson_translations') {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getClaimFrame, getTierInfo } from './evidence';
+import { getClaimFrame, getDirectionInfo, getSeverityInfo, getTierInfo } from './evidence';
 
 describe('evidence tier display', () => {
   it('uses the tier prefix for custom evidence labels', () => {
@@ -23,5 +23,17 @@ describe('evidence tier display', () => {
     expect(getClaimFrame('B_replicated_common_marker')).toContain('not a personal disease probability');
     expect(getClaimFrame('A_clinical_guideline', true)).toContain('not a diagnosis');
     expect(getClaimFrame('E_negative_evidence_or_gap')).toContain('evidence gap');
+  });
+
+  it('loads direction and severity display semantics from the evidence policy resource', () => {
+    expect(getDirectionInfo('context_dependent')).toEqual(expect.objectContaining({
+      label: 'Context-Dependent',
+      plainLabel: 'Depends on context',
+      colorClass: 'direction-context_dependent',
+    }));
+    expect(getSeverityInfo('confirmation_required')).toEqual(expect.objectContaining({
+      label: 'Clinical confirmation needed',
+      cssClass: 'signal-confirm',
+    }));
   });
 });

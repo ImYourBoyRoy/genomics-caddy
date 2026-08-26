@@ -13,6 +13,7 @@ describe('support resource context', () => {
     });
 
     expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
+    expect(context.evidence_policy.display.tiers.A.label).toContain('Tier A');
     expect(context.lab_overlays.some((overlay) => overlay.domain === 'adenomyosis_heavy_bleeding_pelvic_pain')).toBe(true);
     expect(context.safety_guardrails.some((rule) => rule.id === 'ADENOMYOSIS_REQUIRES_GYNECOLOGIC_WORKUP')).toBe(true);
     expect(context.personal_context_notes.reproductive_intake).toContain('exact label');

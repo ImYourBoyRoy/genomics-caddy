@@ -1,7 +1,7 @@
 {
   "name": "Evidence Policy",
-  "version": "1.0.0",
-  "last_updated": "2026-07-01",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "tiers": {
     "A_clinical_guideline": "Clinical guideline or guideline-backed marker. Display with clinical confirmation and clinician action warning.",
     "A_clinically_actionable_gene_panel": "Clinically meaningful when confirmed by validated sequencing or assay. Raw DNA is not sufficient.",
@@ -52,5 +52,163 @@
       "requires phenotype",
       "requires clinical confirmation if high stakes"
     ]
+  },
+  "display": {
+    "unknown_tier": {
+      "label": "Evidence tier not classified",
+      "description": "The pack uses an unrecognized evidence label. Treat it as unvalidated until the pack is reviewed.",
+      "color_class": "tier-unknown",
+      "confidence_label": "Unclassified; do not act"
+    },
+    "tiers": {
+      "A": {
+        "label": "Tier A — Clinical / high evidence",
+        "description": "Strongest evidence band in this app, but a raw consumer genotype still may require clinical confirmation and does not establish personal disease probability.",
+        "color_class": "tier-a",
+        "confidence_label": "Higher evidence; personal impact still needs context"
+      },
+      "B": {
+        "label": "Tier B — Replicated context",
+        "description": "Replicated or clinically relevant context with modest or conditional effects. This is not a diagnosis or a personal probability estimate.",
+        "color_class": "tier-b",
+        "confidence_label": "Moderate evidence; context-dependent"
+      },
+      "C": {
+        "label": "Tier C — Preliminary",
+        "description": "Limited, mechanistic, or biohacker-hypothesis evidence. Treat as a testable idea, not a fact or treatment instruction.",
+        "color_class": "tier-c",
+        "confidence_label": "Limited evidence; hypothesis only"
+      },
+      "D": {
+        "label": "Tier D — Research Only",
+        "description": "Early research. Not validated for clinical use.",
+        "color_class": "tier-d",
+        "confidence_label": "Research only; no actionability"
+      },
+      "E": {
+        "label": "Tier E — Guardrail / evidence gap",
+        "description": "This entry exists to prevent an unsupported claim or to mark a known evidence gap. It should not be interpreted as a positive finding.",
+        "color_class": "tier-e",
+        "confidence_label": "No health claim; safety boundary"
+      }
+    },
+    "claim_frames": {
+      "interpretation_blocked": "Interpretation is blocked until the call and its evidence are verified.",
+      "clinical_confirmation": "Clinical confirmation required: this raw consumer result is not a diagnosis, prognosis, dose, or treatment instruction.",
+      "B": "Association context: replicated evidence can still have modest or conditional effects and is not a personal disease probability.",
+      "C": "Preliminary context: hypothesis-level evidence; do not act on this marker alone.",
+      "D": "Research context only: this marker is not validated for individual clinical use.",
+      "E": "Guardrail: this entry marks an evidence gap or safety boundary, not a positive health finding.",
+      "unknown": "Claim status is unclassified; do not act until the marker is reviewed."
+    },
+    "directions": {
+      "risk": {
+        "label": "Risk Modifier",
+        "plain_label": "May increase risk",
+        "description": "This variant is associated with a higher likelihood of the described trait or condition.",
+        "color_class": "direction-risk"
+      },
+      "protective": {
+        "label": "Protective Modifier",
+        "plain_label": "May be beneficial",
+        "description": "This variant is associated with reduced risk or improved function.",
+        "color_class": "direction-protective"
+      },
+      "context_dependent": {
+        "label": "Context-Dependent",
+        "plain_label": "Depends on context",
+        "description": "The effect of this variant depends on other factors like diet, medication, or other genes.",
+        "color_class": "direction-context_dependent"
+      },
+      "trait": {
+        "label": "Trait Marker",
+        "plain_label": "Describes a trait",
+        "description": "This variant is linked to a physical or behavioral characteristic, not a disease risk.",
+        "color_class": "direction-trait"
+      },
+      "not_applicable": {
+        "label": "Not Applicable",
+        "plain_label": "Not applicable",
+        "description": "An effect direction is not applicable to this marker.",
+        "color_class": "direction-unknown"
+      },
+      "no_claim": {
+        "label": "No Claim",
+        "plain_label": "No clinical claim",
+        "description": "There is no clinical or health claim associated with this variant's direction.",
+        "color_class": "direction-unknown"
+      },
+      "unknown": {
+        "label": "Not Yet Classified",
+        "plain_label": "Effect unclear",
+        "description": "The direction of this variant's effect has not been definitively established.",
+        "color_class": "direction-unknown"
+      }
+    },
+    "severity": {
+      "high_risk": {
+        "css_class": "signal-high-risk",
+        "emoji": "🔴",
+        "glyph": "!",
+        "label": "Two association alleles detected",
+        "description": "Both copies match the allele used by this pack's association rule. This is not a diagnosis or a personal disease probability."
+      },
+      "moderate_risk": {
+        "css_class": "signal-moderate-risk",
+        "emoji": "🟡",
+        "glyph": "?",
+        "label": "One association allele detected",
+        "description": "One copy matches the allele used by this pack's association rule. Effects are usually smaller than two copies and remain context-dependent."
+      },
+      "low_risk": {
+        "css_class": "signal-low-risk",
+        "emoji": "🟠",
+        "glyph": "?",
+        "label": "Preliminary risk signal",
+        "description": "Limited evidence (Tier D/E research). Treat this as an early hypothesis — not a confirmed finding. Consider discussing with your healthcare provider."
+      },
+      "protective": {
+        "css_class": "signal-protective",
+        "emoji": "🟢",
+        "glyph": "+",
+        "label": "Protective association detected",
+        "description": "This variant is associated with a potentially beneficial or lower-risk direction; it does not guarantee protection."
+      },
+      "trait": {
+        "css_class": "signal-trait",
+        "emoji": "🔵",
+        "glyph": "T",
+        "label": "Trait variant detected",
+        "description": "This variant describes a characteristic, not a health risk."
+      },
+      "context_dependent": {
+        "css_class": "signal-context",
+        "emoji": "🟣",
+        "glyph": "~",
+        "label": "Context-dependent variant",
+        "description": "This variant's effect depends on other factors like medications, diet, or environment."
+      },
+      "confirmation_required": {
+        "css_class": "signal-confirm",
+        "emoji": "⚠️",
+        "glyph": "C",
+        "label": "Clinical confirmation needed",
+        "description": "Consumer DNA tests can produce false positives on rare variants. A clinical lab test is needed to confirm."
+      },
+      "no_data": {
+        "css_class": "signal-nodata",
+        "emoji": "⚪",
+        "glyph": "·",
+        "label": "No data available",
+        "description": "Your DNA test did not include or could not read this position."
+      },
+      "benign": {
+        "css_class": "signal-benign",
+        "emoji": "○",
+        "glyph": "·",
+        "label": "Variant not detected",
+        "description": "Your genotype at this position matches the standard reference. The effect allele being tested was not found."
+      }
+    }
   }
 }

@@ -105,6 +105,16 @@ if (!sourceRegistry?.sources || typeof sourceRegistry.sources !== 'object') {
 if (!evidencePolicy?.claim_policy || typeof evidencePolicy.claim_policy !== 'object') {
   errors.push('evidence_policy.json: claim_policy is required');
 }
+if (!evidencePolicy?.display || typeof evidencePolicy.display !== 'object' || Array.isArray(evidencePolicy.display)) {
+  errors.push('evidence_policy.json: display semantics are required');
+} else {
+  for (const tier of ['A', 'B', 'C', 'D', 'E']) {
+    if (!evidencePolicy.display.tiers?.[tier]) errors.push(`evidence_policy.json: display tier ${tier} is missing`);
+  }
+  for (const frame of ['interpretation_blocked', 'clinical_confirmation', 'B', 'C', 'D', 'E', 'unknown']) {
+    if (typeof evidencePolicy.display.claim_frames?.[frame] !== 'string') errors.push(`evidence_policy.json: display claim frame ${frame} is missing`);
+  }
+}
 if (!Array.isArray(callabilityRules?.rules) || callabilityRules.rules.length === 0) {
   errors.push('callability_rules.json: rules must be a non-empty array');
 }

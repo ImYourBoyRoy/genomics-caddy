@@ -53,6 +53,7 @@ export interface SupportResourceContext {
   evidence_policy: {
     tiers: typeof evidencePolicy.tiers;
     claim_policy: typeof evidencePolicy.claim_policy;
+    display: typeof evidencePolicy.display;
   };
   safety_guardrails: typeof safetyGuardrails.rules;
   personal_context_notes: typeof safetyGuardrails.personal_context_notes;
@@ -339,6 +340,7 @@ export function buildSupportResourceContext({
     evidence_policy: {
       tiers: evidencePolicy.tiers,
       claim_policy: evidencePolicy.claim_policy,
+      display: evidencePolicy.display,
     },
     safety_guardrails: safetyGuardrails.rules,
     personal_context_notes: safetyGuardrails.personal_context_notes,

@@ -72,28 +72,28 @@
 </script>
 
 <div class="section-card card" class:collapsed-card={isCollapsed}>
-  <div 
-    class="section-header" 
-    onclick={toggleCollapse}
-    onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleCollapse())}
-    role="button" 
-    tabindex="0"
-    aria-expanded={!isCollapsed}
-    aria-controls={sectionBodyId}
-  >
+  <div class="section-header">
     <div class="section-title-area">
-      <span class="collapse-icon" aria-hidden="true">
-        {isCollapsed ? '▶' : '▼'}
-      </span>
-      <h4>{section.name}</h4>
-      <span class="pill section-count-pill">
-        {section.markers.length} {section.markers.length === 1 ? 'variant' : 'variants'}
-      </span>
-      {#if activeCount > 0}
-        <span class="pill active-pill section-active-pill">
-          {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
+      <button
+        type="button"
+        class="section-toggle"
+        onclick={toggleCollapse}
+        aria-expanded={!isCollapsed}
+        aria-controls={sectionBodyId}
+      >
+        <span class="collapse-icon" aria-hidden="true">
+          {isCollapsed ? '▶' : '▼'}
         </span>
-      {/if}
+        <h4>{section.name}</h4>
+        <span class="pill section-count-pill">
+          {section.markers.length} {section.markers.length === 1 ? 'variant' : 'variants'}
+        </span>
+        {#if activeCount > 0}
+          <span class="pill active-pill section-active-pill">
+            {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
+          </span>
+        {/if}
+      </button>
       <Tooltip
         label="DNA call coverage"
         description="A missing or uncalled marker is unknown, not evidence of low risk."
@@ -137,16 +137,41 @@
     justify-content: space-between;
     gap: 1rem;
     min-height: 2.75rem;
-    cursor: pointer;
     user-select: none;
   }
 
   .section-title-area {
     display: flex;
+    flex: 1 1 auto;
     min-width: 0;
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+  }
+
+  .section-toggle {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .section-toggle:hover {
+    background: var(--surface-subtle);
+  }
+
+  .section-toggle:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .collapse-icon {

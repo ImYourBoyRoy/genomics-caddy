@@ -129,6 +129,7 @@ for (const promptId of conditionalPromptSignalIds) {
 const supportContracts = {
   actionability_guidance: { arrays: ['rules', 'lab_categories', 'lab_tiers'], objects: ['policy', 'lab_confirmation_filter'] },
   ai_prompt_helpers: { arrays: ['helpers'] },
+  ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
@@ -326,6 +327,16 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     if (fallbackCount !== 1) errors.push(`ai_prompt_helpers.json: requires exactly one fallback helper`);
     for (const requiredId of ['hormones_reproductive', 'food_supplement_safety', 'activity_recovery']) {
       if (!helperIds.has(requiredId)) errors.push(`ai_prompt_helpers.json: missing required helper ${requiredId}`);
+    }
+  }
+  if (resourceId === 'ai_prompt_policy') {
+    for (const field of ['default_instructions', 'payload_rules', 'forbidden_actions']) {
+      if (!isStringArray(resource[field]) || resource[field].length === 0) {
+        errors.push(`ai_prompt_policy.json: ${field} must be a non-empty string array`);
+      }
+    }
+    if (typeof resource.date_warning !== 'string' || resource.date_warning.trim() === '') {
+      errors.push('ai_prompt_policy.json: date_warning must be a non-empty string');
     }
   }
   if (resourceId === 'lab_overlays') {

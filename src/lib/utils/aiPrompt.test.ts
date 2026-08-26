@@ -8,11 +8,17 @@ vi.mock('./markerPacksState.svelte', () => ({
 }));
 
 import { markerPacksStore } from './markerPacksState.svelte';
-import { buildMarkerPayload, buildSystemPrompt, CONSULTATION_MODES, getActiveCategories, getDynamicQuestions } from './aiPrompt';
+import { buildMarkerPayload, buildSystemPrompt, CONSULTATION_MODES, DEFAULT_INSTRUCTIONS, getActiveCategories, getDynamicQuestions } from './aiPrompt';
 import type { EvaluatedMarker, GeneratedReport, GenomeSample } from '../types/genomics';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
 describe('AI marker payload claim boundaries', () => {
+  it('uses the resource-authored default policy for probability and safety language', () => {
+    expect(DEFAULT_INSTRUCTIONS).toContain('More markers increase coverage, not certainty.');
+    expect(DEFAULT_INSTRUCTIONS).toContain('Do not describe the late-luteal or menstrual transition as an estrogen spike.');
+    expect(DEFAULT_INSTRUCTIONS).toContain('never recommend starting/stopping a medication or supplement');
+  });
+
   it('keeps hormone consultation inclusive while preserving phenotype and clinical boundaries', () => {
     expect(CONSULTATION_MODES.hormones_reproductive.label).toBe('Hormone & Reproductive Context');
     expect(CONSULTATION_MODES.hormones_reproductive.instructions).toContain('different bodies');

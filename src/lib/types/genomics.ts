@@ -20,7 +20,17 @@ export type VariantType = "snp" | "indel" | "repeat" | "cnv" | "hla" | "haplotyp
  * This is biological/genomic context, not gender identity or anatomy. Missing
  * values mean the marker is intended for all users unless the pack says otherwise.
  */
-export type MarkerSexScope = "all" | "xx_reproductive" | "xy_reproductive" | "x_linked" | "y_linked" | string;
+export type MarkerSexScope =
+  | "all"
+  | "xx_reproductive"
+  | "xy_reproductive"
+  | "x_linked"
+  | "y_linked"
+  | "menstrual_cycle_context"
+  | "ovarian_context"
+  | "uterine_context"
+  | "androgen_reproductive_context"
+  | string;
 
 export type SeverityClass =
   | "high_risk"

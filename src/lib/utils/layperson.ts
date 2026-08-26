@@ -292,80 +292,80 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This variant makes your skin less efficient at producing Vitamin D when exposed to sunlight, increasing your reliance on dietary sources and supplements."
   },
   "rs3892097": {
-    simpleImpact: "Slower processing of many common medicines (CYP2D6 gene)",
-    simpleMeaning: "Having two copies of this variant makes you a 'poor metabolizer' for many medications, including cough syrups, antidepressants, and pain relievers. This can cause drug buildup or prevent certain drugs from working."
+    simpleImpact: "CYP2D6*4 no-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one no-function CYP2D6 allele component. A clinical CYP2D6 diplotype and copy-number result are needed before discussing a medicine; do not change medication from this SNP alone."
   },
   "rs1057910": {
-    simpleImpact: "Reduced breakdown of anti-inflammatory drugs and blood thinners (CYP2C9 gene)",
-    simpleMeaning: "This variant slows down how your body breaks down common medications like ibuprofen, blood thinners, and cholesterol-lowering statins. Standard doses might stay in your body too long."
+    simpleImpact: "CYP2C9*3 reduced-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one reduced-function CYP2C9 allele component. A clinical diplotype, the specific drug, and prescribing context are needed before estimating medication effects."
   },
   "rs1799853": {
-    simpleImpact: "Slower breakdown of blood thinners and pain relievers (CYP2C9 gene)",
-    simpleMeaning: "This variant reduces the activity of an enzyme that clears blood thinners and common anti-inflammatory drugs from your body, potentially requiring dose adjustments."
+    simpleImpact: "CYP2C9*2 reduced-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one reduced-function CYP2C9 allele component. It is not a complete medication-response result; use validated clinical PGx interpretation and a clinician or pharmacist."
   },
   "rs12248560": {
-    simpleImpact: "Ultra-fast breakdown of antidepressants and acid blockers (CYP2C19 gene)",
-    simpleMeaning: "You break down certain medications, like antidepressants and acid reflux drugs, much faster than normal. Standard doses may not be fully effective for you."
+    simpleImpact: "CYP2C19*17 increased-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one CYP2C19 increased-function allele component. A full diplotype and the specific medication are needed; do not assume ultra-rapid metabolism from this SNP alone."
   },
   "rs4244285": {
-    simpleImpact: "Slow breakdown of antidepressants and acid blockers (CYP2C19 gene)",
-    simpleMeaning: "Having two copies of this variant makes your body clear certain antidepressants and acid reflux drugs very slowly. It also prevents blood thinners like clopidogrel from working properly."
+    simpleImpact: "CYP2C19*2 loss-of-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one CYP2C19 loss-of-function allele component. A clinical diplotype and drug-specific guideline are needed before discussing clopidogrel or another medication; this SNP alone is not a phenotype."
   },
   "rs4986893": {
-    simpleImpact: "Slow breakdown of antidepressants and acid blockers (CYP2C19 gene)",
-    simpleMeaning: "This variant reduces the activity of an enzyme that clears many common antidepressants and acid reflux drugs from your body, which can lead to stronger side effects."
+    simpleImpact: "CYP2C19*3 loss-of-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one CYP2C19 loss-of-function allele component. It should be combined with the other allele and the drug-specific guideline in a validated clinical PGx result."
   },
   "rs4149056": {
-    simpleImpact: "Reduced transport of cholesterol-lowering statins (SLCO1B1 gene)",
-    simpleMeaning: "This variant slows down how statins (cholesterol drugs) are moved into your liver. This can cause the drug to build up in your blood, significantly raising your risk of muscle pain."
+    simpleImpact: "SLCO1B1 reduced-function allele component — statin context needs clinical review",
+    simpleMeaning: "This is one SLCO1B1 transporter allele component studied in statin response. The statin, full haplotype, symptoms, and clinical guidance matter; do not start or change a statin from this SNP alone."
   },
   "rs762551": {
     simpleImpact: "Slower breakdown of caffeine (CYP1A2 gene)",
     simpleMeaning: "You break down caffeine slowly. It stays in your body longer, which can cause jitteriness, anxiety, or trouble sleeping if you drink coffee or energy drinks later in the day."
   },
   "rs9923231": {
-    simpleImpact: "High sensitivity to blood-thinning warfarin (VKORC1 gene)",
-    simpleMeaning: "This variant makes you highly sensitive to the blood thinner warfarin. You will likely require a lower dose than average to avoid bleeding complications."
+    simpleImpact: "VKORC1 warfarin-sensitivity allele component — clinical dosing required",
+    simpleMeaning: "This is one VKORC1 component used with CYP2C9, CYP4F2, clinical factors, and INR monitoring when warfarin is prescribed. It does not determine a dose by itself."
   },
   "rs2108622": {
-    simpleImpact: "Altered Vitamin K breakdown (CYP4F2 gene)",
-    simpleMeaning: "This variant makes your body break down Vitamin K slower. Because of this, if you are prescribed the blood thinner warfarin, you may require a higher dose than usual."
+    simpleImpact: "CYP4F2 warfarin-dose component — clinical dosing required",
+    simpleMeaning: "This is one CYP4F2 component considered in warfarin dosing. The complete clinical PGx result, diet, other medicines, and INR monitoring matter; it does not set a dose by itself."
   },
   "rs776746": {
-    simpleImpact: "Non-active CYP3A5 enzyme (CYP3A5 gene)",
-    simpleMeaning: "Having two copies of this variant means you do not make an active version of a key drug-clearing enzyme. This slows down your body's ability to process several common medications, including some statins."
+    simpleImpact: "CYP3A5*3 splice allele component — clinical PGx needed",
+    simpleMeaning: "This is a CYP3A5 splice-variant component. A clinical genotype, ancestry-aware interpretation, and the specific medication are needed; it is not a broad result for all medicines."
   },
   "rs3745274": {
-    simpleImpact: "Reduced breakdown of certain antidepressants and medications (CYP2B6 gene)",
-    simpleMeaning: "This variant slows down how your body clears certain medications, like the antidepressant bupropion. This can increase the risk of side effects unless your dose is adjusted."
+    simpleImpact: "CYP2B6*6 reduced-function allele component — clinical PGx needed",
+    simpleMeaning: "This is one CYP2B6 reduced-function allele component. The complete diplotype, medication, and clinical guideline are needed before discussing exposure or dose."
   },
   "rs2231142": {
     simpleImpact: "Reduced transport of uric acid and statins (ABCG2 gene)",
     simpleMeaning: "This variant makes it harder for your body to move certain drugs and uric acid. This can cause cholesterol medications to build up in your body and increases your risk of gout."
   },
   "rs3918290": {
-    simpleImpact: "Extreme risk of severe side effects from certain chemo drugs (DPYD gene)",
-    simpleMeaning: "You have a gene change that prevents your body from breaking down certain chemotherapy drugs. Standard doses would cause dangerous, life-threatening side effects, so doctors must use other treatments."
+    simpleImpact: "DPYD*2A toxicity-risk allele component — urgent clinical confirmation if relevant",
+    simpleMeaning: "If this allele is confirmed by a clinical DPYD test, it can be important before fluoropyrimidine chemotherapy. A raw consumer call is not enough to choose, avoid, or dose treatment; oncology and PGx guidance are required."
   },
   "rs55886062": {
-    simpleImpact: "Extreme risk of severe side effects from certain chemo drugs (DPYD gene)",
-    simpleMeaning: "You have a rare gene change that makes your body process certain chemotherapy drugs very slowly. Standard doses could cause severe, dangerous side effects, so doctors must use alternative treatments or significantly lower doses."
+    simpleImpact: "Rare DPYD toxicity-risk allele component — urgent clinical confirmation if relevant",
+    simpleMeaning: "If this rare allele is confirmed clinically, it may affect fluoropyrimidine safety. Do not infer treatment from a raw array call; an oncology team must use validated DPYD testing and current guidance."
   },
   "rs67376798": {
-    simpleImpact: "High risk of severe side effects from certain chemo drugs (DPYD gene)",
-    simpleMeaning: "This variant reduces your body's ability to clear specific chemotherapy medications. Taking standard doses can lead to severe adverse reactions."
+    simpleImpact: "DPYD reduced-function allele component — clinical confirmation if relevant",
+    simpleMeaning: "This is one DPYD allele component studied for fluoropyrimidine toxicity. Confirm it clinically and let the oncology team interpret the complete result before treatment decisions."
   },
   "rs1800460": {
-    simpleImpact: "Severe risk of side effects from thiopurine drugs (TPMT gene)",
-    simpleMeaning: "This variant reduces the activity of an enzyme that clears immune-suppressing drugs. Standard doses can cause severe, dangerous damage to your bone marrow."
+    simpleImpact: "TPMT reduced-function allele component — thiopurine safety requires clinical testing",
+    simpleMeaning: "This is one TPMT allele component. A clinical TPMT/NUDT15 result, blood-count monitoring, and the prescribing guideline are needed before interpreting thiopurine risk."
   },
   "rs1142345": {
-    simpleImpact: "Severe risk of side effects from thiopurine drugs (TPMT gene)",
-    simpleMeaning: "Having copies of this variant causes nearly zero enzyme activity for breaking down certain immune-suppressing drugs. Doctors must drastically lower your dose to avoid life-threatening side effects."
+    simpleImpact: "TPMT*3C allele component — thiopurine safety requires clinical testing",
+    simpleMeaning: "This is one TPMT allele component and can contribute to a TPMT diplotype. Confirm clinically with TPMT/NUDT15 guidance; do not infer a dose or stop treatment from this SNP alone."
   },
   "rs116855232": {
-    simpleImpact: "Severe risk of side effects from thiopurine drugs (NUDT15 gene)",
-    simpleMeaning: "This variant causes your body to process certain immune-suppressing drugs very poorly. It can lead to severe hair loss and a dangerous drop in white blood cells."
+    simpleImpact: "NUDT15 reduced-function allele component — thiopurine safety requires clinical testing",
+    simpleMeaning: "This is one NUDT15 allele component studied for thiopurine toxicity. Confirm with a clinical PGx result and blood-count monitoring before any treatment decision."
   },
   "rs73598374": {
     simpleImpact: "Higher sleep pressure and deeper sleep (ADA gene)",

@@ -1,0 +1,213 @@
+// ./src/lib/utils/supportResourceContext.ts
+/**
+ * Selects the evidence, phenotype, laboratory, food-safety, and callability
+ * resources that belong in an AI consultation context.
+ *
+ * The source JSON files are intentionally kept separate from marker packs:
+ * marker packs describe genotype-linked observations, while these resources
+ * describe what must be asked, checked, confirmed, or avoided before acting.
+ * This module is the runtime bridge between those resources and the prompt.
+ */
+
+import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
+import activityGuardrails from '../marker-packs/activity_guardrails.json';
+import callabilityRules from '../marker-packs/callability_rules.json';
+import dietaryRequirements from '../marker-packs/dietary_requirements.json';
+import evidencePolicy from '../marker-packs/evidence_policy.json';
+import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
+import labOverlays from '../marker-packs/lab_overlays.json';
+import mealPlanningRules from '../marker-packs/meal_planning_rules.json';
+import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
+import prsRegistry from '../marker-packs/prs_registry.json';
+import safetyGuardrails from '../marker-packs/safety_guardrails.json';
+
+export type SupportConsultationMode =
+  | 'general'
+  | 'pgx'
+  | 'nutrients'
+  | 'metabolic'
+  | 'sleep'
+  | 'brain_mood'
+  | 'joints'
+  | 'thyroid_autoimmune'
+  | 'cardiovascular'
+  | 'hormones_reproductive';
+
+export interface SupportResourceContext {
+  evidence_policy: {
+    tiers: typeof evidencePolicy.tiers;
+    claim_policy: typeof evidencePolicy.claim_policy;
+  };
+  safety_guardrails: typeof safetyGuardrails.rules;
+  medication_context: typeof safetyGuardrails.medication_context;
+  callability_rules: typeof callabilityRules.rules;
+  phenotype_prompts: typeof phenotypePrompts.domains;
+  lab_overlays: Array<Record<string, unknown>>;
+  actionability_policy: {
+    default_actionability?: string;
+    safety_notes?: string[];
+  };
+  actionability_rules: Array<Record<string, unknown>>;
+  food_safety: {
+    priority_order: typeof dietaryRequirements.priority_order;
+    meal_decision_pipeline: typeof mealPlanningRules.decision_pipeline;
+    priority_weights: typeof mealPlanningRules.priority_weights;
+    relevant_rules: Array<Record<string, unknown>>;
+    do_not_do: typeof mealPlanningRules.do_not_do;
+    intake_questions: typeof foodRequirementPrompts.global_first_run_questions;
+    conditional_questions: Record<string, string[]>;
+  };
+  prs_policy: {
+    principle: string;
+    modules: typeof prsRegistry.prs_modules;
+  };
+  activity_safety: {
+    principles: typeof activityGuardrails.principles;
+    stop_and_escalate: typeof activityGuardrails.stop_and_escalate;
+    relevant_domains: typeof activityGuardrails.domains;
+    sources: typeof activityGuardrails.sources;
+  };
+}
+
+const CONSULTATION_PACK: Partial<Record<SupportConsultationMode, string>> = {
+  pgx: 'pgx',
+  nutrients: 'nutrients',
+  metabolic: 'metabolic',
+  sleep: 'sleep',
+  brain_mood: 'neuropsych',
+  joints: 'connective_tissue',
+  thyroid_autoimmune: 'thyroid_autoimmune',
+  cardiovascular: 'cardiovascular',
+  hormones_reproductive: 'hormones_reproductive',
+};
+
+const CONDITIONAL_PROMPT_PACKS: Record<string, string[]> = {
+  pmdd_cycle: ['hormones_reproductive', 'neuropsych', 'thyroid_autoimmune'],
+  glucose_metabolic: ['metabolic', 'nutrients'],
+  kidney_stone_or_gout: ['kidney_fluid_electrolytes', 'metabolic'],
+  muscle_gain: ['muscle_performance_recovery', 'connective_tissue'],
+  allergy_or_atopy: ['allergy_atopy_mast_cell', 'digestive_gut_microbiome'],
+  histamine: ['core', 'allergy_atopy_mast_cell', 'digestive_gut_microbiome'],
+};
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function relevantPackIds(packIds: string[], consultationMode: SupportConsultationMode): Set<string> {
+  return new Set(uniqueStrings([...packIds, CONSULTATION_PACK[consultationMode] || '']));
+}
+
+function overlayPackIds(overlay: Record<string, unknown>): string[] {
+  const values = overlay.markers_or_packs;
+  return Array.isArray(values) ? values.filter((value): value is string => typeof value === 'string') : [];
+}
+
+function selectPhenotypeDomains(packIds: Set<string>): typeof phenotypePrompts.domains {
+  return phenotypePrompts.domains.filter((domain) => packIds.has(domain.id));
+}
+
+function selectLabOverlays(packIds: Set<string>): Array<Record<string, unknown>> {
+  return labOverlays.overlays.filter((overlay) => {
+    const linkedPacks = overlayPackIds(overlay as Record<string, unknown>);
+    return linkedPacks.some((packId) => packIds.has(packId));
+  }) as Array<Record<string, unknown>>;
+}
+
+function selectDietaryRules(packIds: Set<string>): Array<Record<string, unknown>> {
+  return dietaryRequirements.rules
+    .filter((rule) => {
+      const signals = Array.isArray(rule.relevant_pack_signals) ? rule.relevant_pack_signals : [];
+      return signals.length === 0 || signals.some((signal) => packIds.has(signal));
+    })
+    .map((rule) => ({
+      id: rule.id,
+      label: rule.label,
+      rule_type: rule.rule_type,
+      priority: rule.priority,
+      recommendation: rule.recommendation,
+      substitutions: rule.substitutions,
+      confirm_with: rule.confirm_with,
+      conflict_resolution: rule.conflict_resolution,
+      do_not_claim: rule.do_not_claim,
+    }))
+    .slice(0, 18) as Array<Record<string, unknown>>;
+}
+
+function selectConditionalQuestions(packIds: Set<string>): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
+  const conditionalPrompts = foodRequirementPrompts.conditional_prompts as Record<string, string[]>;
+  for (const [questionId, linkedPacks] of Object.entries(CONDITIONAL_PROMPT_PACKS)) {
+    if (linkedPacks.some((packId) => packIds.has(packId))) {
+      const questions = conditionalPrompts[questionId];
+      if (Array.isArray(questions)) result[questionId] = questions;
+    }
+  }
+  return result;
+}
+
+function selectActivityDomains(packIds: Set<string>): typeof activityGuardrails.domains {
+  return activityGuardrails.domains.filter((domain) => packIds.has(domain.id));
+}
+
+/**
+ * Build a bounded, pack-aware resource payload. The payload contains rules and
+ * questions, not raw DNA, and intentionally keeps the full safety/callability
+ * policies present even when a user has few active findings.
+ */
+export function buildSupportResourceContext({
+  packIds,
+  consultationMode = 'general',
+}: {
+  packIds: string[];
+  consultationMode?: SupportConsultationMode;
+}): SupportResourceContext {
+  const selectedPackIds = relevantPackIds(packIds, consultationMode);
+  const phenotype = selectPhenotypeDomains(selectedPackIds);
+  const overlays = selectLabOverlays(selectedPackIds);
+
+  return {
+    evidence_policy: {
+      tiers: evidencePolicy.tiers,
+      claim_policy: evidencePolicy.claim_policy,
+    },
+    safety_guardrails: safetyGuardrails.rules,
+    medication_context: safetyGuardrails.medication_context,
+    callability_rules: callabilityRules.rules,
+    phenotype_prompts: phenotype,
+    lab_overlays: overlays,
+    actionability_policy: {
+      default_actionability: actionabilityGuidance.policy?.default_actionability,
+      safety_notes: actionabilityGuidance.policy?.safety_notes,
+    },
+    actionability_rules: actionabilityGuidance.rules.map((rule) => ({
+      id: rule.id,
+      genes: rule.genes,
+      actionability_class: rule.actionability_class,
+      favor: rule.favor,
+      avoid: rule.avoid,
+      supplements: rule.supplements,
+      lab_tests: rule.lab_tests,
+      notes: rule.notes,
+    })),
+    food_safety: {
+      priority_order: dietaryRequirements.priority_order,
+      meal_decision_pipeline: mealPlanningRules.decision_pipeline,
+      priority_weights: mealPlanningRules.priority_weights,
+      relevant_rules: selectDietaryRules(selectedPackIds),
+      do_not_do: mealPlanningRules.do_not_do,
+      intake_questions: foodRequirementPrompts.global_first_run_questions,
+      conditional_questions: selectConditionalQuestions(selectedPackIds),
+    },
+    prs_policy: {
+      principle: prsRegistry.principle,
+      modules: prsRegistry.prs_modules,
+    },
+    activity_safety: {
+      principles: activityGuardrails.principles,
+      stop_and_escalate: activityGuardrails.stop_and_escalate,
+      relevant_domains: selectActivityDomains(selectedPackIds),
+      sources: activityGuardrails.sources,
+    },
+  };
+}

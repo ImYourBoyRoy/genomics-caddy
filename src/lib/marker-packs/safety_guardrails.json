@@ -2,6 +2,20 @@
   "name": "Global Safety Guardrails",
   "version": "1.0.0",
   "last_updated": "2026-08-25",
+  "medication_context": {
+    "ask_for": [
+      "Exact medication name and active ingredient(s)",
+      "Dose, timing, indication, start date, and prescriber instructions",
+      "Current benefit, side effects, adherence, and any planned medication changes",
+      "Pregnancy, lactation, menopause, hormone therapy, or contraceptive context when relevant",
+      "Allergies, kidney/liver conditions, and the complete supplement/OTC list"
+    ],
+    "do_not_do": [
+      "Do not start, stop, skip, substitute, or change a medication because of raw DNA alone.",
+      "Do not infer a contraceptive product, dose, ovulation suppression, or hormone level from DNA.",
+      "Do not treat a single SNP as a complete PGx diplotype, copy-number call, HLA type, or clinical phenotype."
+    ]
+  },
   "rules": [
     {
       "id": "NO_DIAGNOSIS_FROM_RAW_DNA",

@@ -1,6 +1,6 @@
 // ./src/lib/utils/actionabilityEngine.ts
 /*
-Purpose: Derive dashboard diet / supplement / lab suggestions and top findings from a report.
+Purpose: Derive dashboard diet / supplement / lab / activity / medication-safety guidance and top findings from a report.
 Responsibilities:
 - Rank top association findings for the dashboard.
 - Apply pack-authored actionability_guidance.json rules (not hardcoded UI rules).
@@ -12,6 +12,8 @@ Operational Notes: Guidance is educational only. Expand rules in the JSON pack f
 
 import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/genomics';
 import guidanceDoc from '../marker-packs/actionability_guidance.json';
+import activityGuardrails from '../marker-packs/activity_guardrails.json';
+import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 
 export interface TopFinding {
   rsid: string;
@@ -51,12 +53,25 @@ export interface LabTestGroup {
   tests: LabTest[];
 }
 
+export interface ActivityGuidance {
+  principles: string[];
+  stopAndEscalate: string[];
+  relevantDomains: typeof activityGuardrails.domains;
+}
+
+export interface MedicationSafetyGuidance {
+  rules: string[];
+  askFor: string[];
+}
+
 export interface ActionablePlan {
   topFindings: TopFinding[];
   diet: DietaryGuidance;
   supplements: SupplementItem[];
   labTests: LabTest[];
   labGroups: LabTestGroup[];
+  activity: ActivityGuidance;
+  medication: MedicationSafetyGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
 }
@@ -331,6 +346,46 @@ function upsertLab(
   }
 }
 
+function activityContextMatches(
+  domain: typeof activityGuardrails.domains[number],
+  markers: EvaluatedMarker[],
+  sectionNames: string[]
+): boolean {
+  const context = [
+    ...sectionNames,
+    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+  ].join(' ').toLowerCase();
+  const keywords = Array.isArray(domain.section_keywords) ? domain.section_keywords : [];
+  return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
+}
+
+function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string[]): MedicationSafetyGuidance {
+  const context = [
+    ...sectionNames,
+    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+  ].join(' ').toLowerCase();
+  const pgxContext = /pharmacogen|\bpgx\b|cyp[0-9]|dpyd|tpmt|nudt15|slco1b1|vkorc1|hla|g6pd/.test(context);
+  const hormoneContext = /menstrual|hormone|reproductive|pmdd|ovarian|uterine|contracept|estrogen|progesterone|\besr[12]\b|\bpgr\b/.test(context);
+  const relevantRuleIds = new Set(['PGX_NO_MED_CHANGE', 'LABS_AND_PHENOTYPE_FIRST']);
+  if (pgxContext) {
+    relevantRuleIds.add('HLA_TAGS_NOT_TYPING');
+    relevantRuleIds.add('CNV_STR_VNTR_NOT_ARRAY_SAFE');
+  }
+  if (hormoneContext) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
+
+  const rules = [
+    ...safetyGuardrails.medication_context.do_not_do,
+    ...safetyGuardrails.rules
+      .filter((rule) => relevantRuleIds.has(rule.id))
+      .map((rule) => rule.text),
+  ];
+
+  return {
+    rules: Array.from(new Set(rules)),
+    askFor: safetyGuardrails.medication_context.ask_for,
+  };
+}
+
 export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const topFindings: TopFinding[] = [];
   const favorSet = new Set<string>();
@@ -506,6 +561,11 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     });
 
   const labGroups = buildLabGroups(labTests);
+  const markerValues = allMarkers.map(({ marker }) => marker);
+  const sectionNames = allMarkers.map(({ sectionName }) => sectionName);
+  const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
+    activityContextMatches(domain, markerValues, sectionNames)
+  );
 
   return {
     topFindings,
@@ -517,6 +577,12 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     supplements,
     labTests,
     labGroups,
+    activity: {
+      principles: activityGuardrails.principles,
+      stopAndEscalate: activityGuardrails.stop_and_escalate,
+      relevantDomains: relevantActivityDomains,
+    },
+    medication: deriveMedicationSafety(markerValues, sectionNames),
     safetyNotes: Array.from(safetyNotes),
   };
 }

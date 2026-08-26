@@ -26,6 +26,8 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Probabilistic evidence bands:** Marker tiers A–E are interpreted by evidence prefix, including custom subtiers. Tier E is an evidence-gap/guardrail, not a positive finding. Common SNP coverage expands the questions the tool can ask; it does not establish a diagnosis, current hormone level, medication response, or personal disease probability by itself.
 * **Menstrual and reproductive context:** The hormone pack includes explicit cycle-phase physiology, PMDD symptom-timing and steroid-sensitivity guardrails, exact-contraceptive-ingredient prompts, adenomyosis workup limits, and clearly labeled research-only loci. The report must not infer current estrogen/progesterone levels, contraceptive composition, PMDD, or adenomyosis from raw DNA.
 * **Conditional actionability:** Food, supplement, activity, and medication context is qualified by symptoms, labs, allergies, pregnancy/lactation status, kidney/liver conditions, and clinician/pharmacist review. Raw DNA alone never triggers medication changes, high-dose supplements, or permanent restrictive diets.
+* **Runtime support-resource layer:** AI consultations receive pack-aware evidence policy, phenotype questions, lab overlays, callability rules, food-decision constraints, medication safety notes, PRS limits, and activity stop-sign guardrails. Self-reported body-system and reproductive/hormone context is kept separate from conservative chromosome-call context.
+* **Actionability dashboard:** Report summaries now expose relevant activity/recovery guardrails and medication-context questions alongside conditional food, supplement, and lab prompts. PGx explanations are framed as allele components requiring a complete clinical interpretation.
 
 ### 3. Plain-English Layperson Translation System
 * Includes a layperson dictionary for curated candidate rsIDs, translating terms such as "homozygous" to "two copies of the variant" and "metabolizes" to "breaks down/clears".
@@ -318,7 +320,7 @@ Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cro
 * **`npm run tauri:dev`**: Starts Vite server and mounts the Tauri desktop window.
 * **`npm run build`**: Compiles static production web assets into `/build`.
 * **`npm run check`**: Runs Svelte compiler and TypeScript diagnostics.
-* **`npm run validate:packs`**: Validates curated marker-pack schemas, evidence tiers, actionability policy, and runtime mirror manifests without removing any pack.
+* **`npm run validate:packs`**: Validates curated marker-pack schemas, evidence tiers, actionability policy, source-only support-resource contracts, and runtime mirror manifests without removing any pack.
 * **`npm run audit:dna-fixtures`**: Read-only coverage audit for root DNA `.txt`/`.zip` fixtures. Reports row counts, curated rsID coverage, chromosome-call counts, and Y-call counts; never prints or imports genotype values.
 * **`npm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
 * **`npm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.
@@ -528,7 +530,7 @@ If you are connecting to a remote Ollama server (e.g., `http://192.168.1.21:1143
 │    ├── lib/
 │    │    ├── api/           # Tauri RPC async wrapper layer
 │    │    ├── components/    # Modular Svelte 5 views (each under 500 lines)
-│    │    ├── marker-packs/  # Modular category JSON databases and manifest.json
+│    │    ├── marker-packs/  # Curated packs plus evidence, lab, food, activity, and safety resources
 │    │    ├── styles/        # theme.css and print.css external stylesheets
 │    │    ├── types/         # TypeScript interface definitions
 │    │    ├── utils/         # Evidence tier and genotype calculation logic

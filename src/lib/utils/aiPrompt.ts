@@ -18,6 +18,7 @@ import type { GeneratedReport, GenomeSample, EvaluatedMarker } from "../types/ge
 import type { QdrantHit } from "../types/research";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
+import { buildSupportResourceContext } from "./supportResourceContext";
 
 // ---------------------------------------------------------------------------
 // Shared Interfaces (re-exported for convenience)
@@ -26,6 +27,8 @@ import { markerPacksStore } from "./markerPacksState.svelte";
 export interface UserBiohackingProfile {
   goals: string;
   challenges: string;
+  relevantBodySystems: string;
+  reproductiveHormoneContext: string;
   diet: string;
   supplements: string;
   medications: string;
@@ -250,10 +253,20 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         if (filteredMarkers.length === 0) return null;
 
         const findings = filteredMarkers.map((m) => buildMarkerPayload(m, laypersonMap));
-        return { section_name: sec.name, findings };
+        return { pack_id: pack?.id, section_name: sec.name, findings };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null);
   }
+
+  const supportPackIds = contextMode === "developer_raw_json"
+    ? markerPacksStore.manifest.packs.map((pack) => pack.id)
+    : sectionsData
+      .map((section) => section.pack_id)
+      .filter((packId): packId is string => typeof packId === "string");
+  const supportResources = buildSupportResourceContext({
+    packIds: supportPackIds,
+    consultationMode,
+  });
 
   // --- Construct Payload JSON ---
   let payloadContext: any = {};
@@ -270,7 +283,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         sample_name: selectedSample.name,
         genetic_sex: selectedSample.genetic_sex,
         profile: userProfile.injectProfile ? userProfile : undefined,
-        raw_report: generatedReport
+        raw_report: generatedReport,
+        support_resources: supportResources
       }
     };
   } else {
@@ -296,6 +310,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         profile: userProfile.injectProfile ? {
           goals: userProfile.goals.trim() || undefined,
           challenges: userProfile.challenges.trim() || undefined,
+          relevantBodySystems: userProfile.relevantBodySystems.trim() || undefined,
+          reproductiveHormoneContext: userProfile.reproductiveHormoneContext.trim() || undefined,
           diet: userProfile.diet.trim() || undefined,
           supplements: userProfile.supplements.trim() || undefined,
           medications: userProfile.medications.trim() || undefined,
@@ -305,9 +321,11 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         } : undefined,
         sections: sectionsData
       },
+      support_resources: supportResources,
       rules: [
         "Consultation is educational only and does not substitute for medical professional consultation.",
         "Use sample_context.sections for curated trait report markers AND vector_research for semantically retrieved enriched evidence when present.",
+        "Use support_resources as the operational safety layer: ask the listed phenotype questions, use the listed lab overlays, respect callability limits, and apply food/medication safety priorities before genotype context.",
         "When vector_research.status is ok, cite rsIDs from vector_research.hits — do not claim lack of database access.",
         "Use simple, layperson-friendly language. Heavily rely on layperson_summary fields when present.",
         "If a gene or condition is absent from both sample_context and vector_research, politely push back and refuse to speculate.",

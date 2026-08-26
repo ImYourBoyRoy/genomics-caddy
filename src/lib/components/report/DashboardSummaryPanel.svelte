@@ -18,6 +18,8 @@
     topFindings: false,
     diet: false,
     supplements: false,
+    activity: false,
+    medication: true,
     labTests: true,
   });
 
@@ -210,6 +212,80 @@
         </div>
       {/if}
     </div>
+
+    {#if plan.activity.relevantDomains.length > 0}
+      <div class="summary-card card" class:collapsed={collapsed.activity}>
+        <div class="card-header" onclick={() => toggle('activity')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('activity'))}>
+          <h3>🏃 Activity &amp; Recovery Guardrails</h3>
+          <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
+        </div>
+        {#if !collapsed.activity}
+          <div class="card-body">
+            <p class="section-hint">Genotype may provide weak context for training questions. It never clears high-intensity, contact, endurance, heat, altitude, or maximal-load activity.</p>
+            <ul class="guardrail-list">
+              {#each plan.activity.principles as principle (principle)}
+                <li>{principle}</li>
+              {/each}
+            </ul>
+            {#each plan.activity.relevantDomains as domain (domain.id)}
+              <div class="activity-domain">
+                <strong>{domain.id.replaceAll('_', ' ')}</strong>
+                <span class="activity-context">{domain.context}</span>
+                <div class="activity-columns">
+                  <div>
+                    <h4>Favor</h4>
+                    <ul class="guardrail-list">
+                      {#each domain.favor as item (item)}<li>{item}</li>{/each}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4>Avoid / confirm</h4>
+                    <ul class="guardrail-list">
+                      {#each domain.avoid as item (item)}<li>{item}</li>{/each}
+                      {#each domain.confirm_with as item (item)}<li>{item}</li>{/each}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            {/each}
+            <div class="activity-stop-list">
+              <strong>Stop activity and seek appropriate care for:</strong>
+              <ul class="guardrail-list">
+                {#each plan.activity.stopAndEscalate as item (item)}<li>{item}</li>{/each}
+              </ul>
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    {#if plan.medication.rules.length > 0}
+      <div class="summary-card card" class:collapsed={collapsed.medication}>
+        <div class="card-header" onclick={() => toggle('medication')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('medication'))}>
+          <h3>💊 Medication Safety &amp; Context</h3>
+          <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
+        </div>
+        {#if !collapsed.medication}
+          <div class="card-body">
+            <p class="section-hint">Record medication context before interpreting a marker. Raw consumer DNA is not a complete clinical PGx result and is never a reason to change a medication.</p>
+            <div class="medication-columns">
+              <div>
+                <h4>Ask for / record</h4>
+                <ul class="guardrail-list">
+                  {#each plan.medication.askFor as item (item)}<li>{item}</li>{/each}
+                </ul>
+              </div>
+              <div>
+                <h4>Do not do from raw DNA</h4>
+                <ul class="guardrail-list">
+                  {#each plan.medication.rules as item (item)}<li>{item}</li>{/each}
+                </ul>
+              </div>
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <!-- Labs: full-width, grouped & compact (collapsed by default) -->
     {#if plan.labTests.length > 0}
@@ -660,6 +736,48 @@
     margin-top: 0.1rem;
   }
 
+  .guardrail-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.15rem;
+    font-size: 0.72rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .activity-domain {
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.65rem;
+    border-left: 2px solid #38bdf8;
+    background: rgba(56, 189, 248, 0.04);
+    border-radius: 4px;
+  }
+  .activity-context {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    opacity: 0.72;
+  }
+  .activity-columns,
+  .medication-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.45rem;
+  }
+  .activity-columns h4,
+  .medication-columns h4 {
+    margin: 0;
+    font-size: 0.72rem;
+    color: #bae6fd;
+  }
+  .activity-stop-list {
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    border-radius: 4px;
+    background: rgba(248, 113, 113, 0.05);
+  }
+
   @media (max-width: 1100px) {
     .action-row {
       grid-template-columns: 1fr;
@@ -668,6 +786,10 @@
       grid-template-columns: 1fr;
     }
     .diet-section {
+      grid-template-columns: 1fr;
+    }
+    .activity-columns,
+    .medication-columns {
       grid-template-columns: 1fr;
     }
   }

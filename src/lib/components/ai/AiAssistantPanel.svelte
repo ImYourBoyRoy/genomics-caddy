@@ -111,7 +111,7 @@
   let sessionTotalTokens = $derived(sessionPromptTokens + sessionResponseTokens);
   let modelDetails = $state<any>(null), contextWindow = $state<number>(4096), isVisionCapable = $state<boolean>(false);
   let attachedImages = $state<{ name: string; base64: string; previewUrl: string }[]>([]);
-  let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
+  let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", relevantBodySystems: "", reproductiveHormoneContext: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
   let systemInstructions = $state("");
 
   let useVectorResearch = $state(

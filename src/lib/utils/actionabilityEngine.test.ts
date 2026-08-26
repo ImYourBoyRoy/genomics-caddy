@@ -81,4 +81,40 @@ describe('actionability engine safety policy', () => {
     expect(plan.diet.avoid.some((item) => item.startsWith('Do not avoid solely from raw DNA'))).toBe(true);
     expect(plan.supplements.some((item) => item.reason.includes('Discuss with a clinician or pharmacist'))).toBe(true);
   });
+
+  it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
+    const plan = deriveActionablePlan({
+      ...report([marker({
+        rsid: 'PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY',
+        gene: 'ESR1/ESR2/PGR',
+        sex_scope: 'menstrual_cycle_context',
+      })]),
+      sections: [{
+        ...report([]).sections[0],
+        name: 'Menstrual Cycle, Hormones & Reproductive Context',
+        markers: [marker({
+          rsid: 'PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY',
+          gene: 'ESR1/ESR2/PGR',
+          sex_scope: 'menstrual_cycle_context',
+        })],
+      }],
+    });
+    expect(plan.activity.relevantDomains.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
+    expect(plan.activity.stopAndEscalate.some((item) => item.includes('Chest pain'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('contraceptive'))).toBe(true);
+    expect(plan.medication.askFor.some((item) => item.includes('active ingredient'))).toBe(true);
+  });
+
+  it('keeps PGx medication guidance at the review boundary', () => {
+    const plan = deriveActionablePlan({
+      ...report([]),
+      sections: [{
+        ...report([]).sections[0],
+        name: 'Pharmacogenomics (PGx)',
+        markers: [marker({ gene: 'CYP2C19', rsid: 'rs4244285' })],
+      }],
+    });
+    expect(plan.medication.rules.some((item) => item.includes('raw DNA alone'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('HLA'))).toBe(true);
+  });
 });

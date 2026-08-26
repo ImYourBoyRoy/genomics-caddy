@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 40,
+    "hormones_reproductive": 48,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -21,13 +21,16 @@
     "immune_autoimmune_general": 38,
     "pain_migraine_sensory": 31,
     "dental_oral_health": 25,
-    "longevity_aging_resilience": 35
+    "longevity_aging_resilience": 35,
+    "research_found": 0
   },
   "discovery_records": 857,
-  "manifest_packs": 22,
+  "manifest_packs": 23,
   "duplicate_rsids_skipped_from_discovery_catalog": 266,
   "validation_errors": [],
   "support_files": [
+    "actionability_guidance.json",
+    "activity_guardrails.json",
     "callability_rules.json",
     "phenotype_prompts.json",
     "lab_overlays.json",
@@ -45,6 +48,8 @@
   "food_decision_layer": {
     "added": true,
     "new_support_files": [
+      "actionability_guidance.json",
+      "activity_guardrails.json",
       "dietary_requirements.json",
       "food_nutrient_matrix.json",
       "diet_pattern_profiles.json",

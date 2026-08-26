@@ -81,6 +81,10 @@
       case 'xy_reproductive': return 'XY reproductive context';
       case 'x_linked': return 'X-linked context';
       case 'y_linked': return 'Y-linked context';
+      case 'menstrual_cycle_context': return 'Menstrual-cycle context';
+      case 'ovarian_context': return 'Ovarian context';
+      case 'uterine_context': return 'Uterine context';
+      case 'androgen_reproductive_context': return 'Androgen-reproductive context';
       default: return scope.replaceAll('_', ' ');
     }
   }

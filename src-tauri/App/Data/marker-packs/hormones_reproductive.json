@@ -1535,6 +1535,7 @@
       "effect_direction": "context_dependent",
       "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
       "clinical_confirmation_required": false,
+      "sex_scope": "menstrual_cycle_context",
       "variant_type": "polygenic_panel",
       "sources": [
         {
@@ -1576,6 +1577,7 @@
       "effect_direction": "context_dependent",
       "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
       "clinical_confirmation_required": false,
+      "sex_scope": "ovarian_context",
       "variant_type": "polygenic_panel",
       "sources": [
         {
@@ -1607,6 +1609,7 @@
       "effect_direction": "context_dependent",
       "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
       "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
       "variant_type": "polygenic_panel",
       "sources": [
         {
@@ -1637,6 +1640,7 @@
       "effect_direction": "context_dependent",
       "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
       "clinical_confirmation_required": false,
+      "sex_scope": "androgen_reproductive_context",
       "variant_type": "str_repeat",
       "sources": [
         {
@@ -1670,6 +1674,7 @@
       "effect_direction": "no_claim",
       "raw_dna_limitation": "Hormone concentrations are dynamic and affected by ovulation, contraception, pregnancy, age, illness, stress, and assay timing. DNA cannot measure a current hormone level.",
       "clinical_confirmation_required": true,
+      "sex_scope": "menstrual_cycle_context",
       "variant_type": "guardrail",
       "sources": [
         {
@@ -1704,6 +1709,7 @@
       "effect_direction": "no_claim",
       "raw_dna_limitation": "PMDD is a clinical symptom pattern. Consumer SNP arrays do not measure brain steroid response, gene expression, allopregnanolone response, or current hormone levels.",
       "clinical_confirmation_required": true,
+      "sex_scope": "menstrual_cycle_context",
       "variant_type": "guardrail",
       "sources": [
         {
@@ -1781,6 +1787,7 @@
       "effect_direction": "no_claim",
       "raw_dna_limitation": "Adenomyosis biology may include tissue-specific, somatic, epigenetic, and polygenic research signals that are not captured or validated by a consumer germline SNP report.",
       "clinical_confirmation_required": true,
+      "sex_scope": "uterine_context",
       "variant_type": "guardrail",
       "sources": [
         {
@@ -1822,6 +1829,7 @@
       "effect_direction": "no_claim",
       "raw_dna_limitation": "Tissue-specific and somatic findings in adenomyosis are not equivalent to inherited SNP-array findings in blood or saliva.",
       "clinical_confirmation_required": true,
+      "sex_scope": "uterine_context",
       "variant_type": "polygenic_panel",
       "sources": [
         {

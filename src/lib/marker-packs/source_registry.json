@@ -258,6 +258,22 @@
       "evidence_type": "NIH dietary supplement safety and nutrient resource",
       "conflict_of_interest": "U.S. NIH public health resource",
       "notes": "Use for nutrient forms, upper limits, medication interactions, deficiency/excess context and pregnancy/lactation cautions before presenting supplement ideas."
+    },
+    "aha_physical_activity_warning_signs": {
+      "name": "American Heart Association Physical Activity Warning Signs",
+      "url": "https://www.heart.org/en/health-topics/cardiac-rehab/getting-physically-active/develop-a-physical-activity-plan-for-you",
+      "accessed": "2026-08-25",
+      "evidence_type": "AHA patient safety guidance",
+      "conflict_of_interest": "American Heart Association public health resource",
+      "notes": "Use for stop-and-escalate symptoms during activity, including chest discomfort, dizziness, unusual shortness of breath, and fast or uneven heartbeat."
+    },
+    "cdc_activity_stop_signs": {
+      "name": "CDC National Diabetes Prevention Program Activity Safety Signs",
+      "url": "https://stacks.cdc.gov/view/cdc/146517/cdc_146517_DS1.pdf",
+      "accessed": "2026-08-25",
+      "evidence_type": "CDC physical-activity safety education",
+      "conflict_of_interest": "U.S. CDC public health resource",
+      "notes": "Use as a general activity safety guardrail; raw DNA never clears a user to ignore symptoms."
     }
   }
 }

@@ -12,6 +12,8 @@
   interface UserBiohackingProfile {
     goals: string;
     challenges: string;
+    relevantBodySystems: string;
+    reproductiveHormoneContext: string;
     diet: string;
     supplements: string;
     medications: string;

@@ -3,6 +3,8 @@
   interface UserBiohackingProfile {
     goals: string;
     challenges: string;
+    relevantBodySystems: string;
+    reproductiveHormoneContext: string;
     diet: string;
     supplements: string;
     medications: string;
@@ -32,6 +34,16 @@
   <div class="input-row">
     <label for="profile-challenges">Current Challenges &amp; Symptoms</label>
     <textarea id="profile-challenges" bind:value={userProfile.challenges} placeholder="e.g. brain fog, caffeine sensitivity, insomnia..." class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="profile-body-systems">Relevant Body Systems &amp; Life Context (Optional)</label>
+    <textarea id="profile-body-systems" bind:value={userProfile.relevantBodySystems} placeholder="e.g. menstrual/reproductive, prostate/testicular, thyroid, cardiovascular, unknown..." class="profile-textarea"></textarea>
+    <small>Use this to choose relevant biology; the app does not infer anatomy or identity from DNA.</small>
+  </div>
+  <div class="input-row">
+    <label for="profile-reproductive-context">Reproductive &amp; Hormone Context (Optional)</label>
+    <textarea id="profile-reproductive-context" bind:value={userProfile.reproductiveHormoneContext} placeholder="e.g. cycle timing, contraception name/ingredients, menopause, pregnancy/postpartum, hormone therapy, none/unknown..." class="profile-textarea"></textarea>
+    <small>Exact medication names and active ingredients are more useful than a genetic-sex label.</small>
   </div>
   <div class="input-row">
     <label for="profile-diet">Average Diet</label>

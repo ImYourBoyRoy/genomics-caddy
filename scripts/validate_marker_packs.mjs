@@ -106,6 +106,53 @@ for (const rule of actionability?.rules || []) {
   }
 }
 
+// Support resources are not marker packs and are intentionally source-only.
+// Validate their public shape here so prompt wiring cannot silently drift when
+// a resource is expanded or renamed.
+const supportContracts = {
+  actionability_guidance: { arrays: ['rules'], objects: ['policy'] },
+  activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
+  callability_rules: { arrays: ['rules'] },
+  diet_pattern_profiles: { arrays: ['profiles'] },
+  dietary_requirements: { arrays: ['priority_order', 'rules'] },
+  evidence_policy: { objects: ['tiers', 'claim_policy'] },
+  food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
+  food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts'] },
+  lab_overlays: { arrays: ['overlays'] },
+  meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
+  phenotype_prompts: { arrays: ['domains'] },
+  prs_registry: { arrays: ['prs_modules'] },
+  safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do'] } },
+  source_registry: { objects: ['sources'] },
+  user_diet_profile_schema: { arrays: ['minimum_required_for_food_advice', 'do_not_infer'], objects: ['schema'] },
+};
+let supportResourceCount = 0;
+for (const [resourceId, contract] of Object.entries(supportContracts)) {
+  const resource = readJson(path.join(sourceDir, `${resourceId}.json`));
+  if (!resource) continue;
+  supportResourceCount += 1;
+  for (const field of ['name', 'version', 'last_updated']) {
+    if (typeof resource[field] !== 'string' || resource[field].trim() === '') {
+      errors.push(`${resourceId}.json: missing string field ${field}`);
+    }
+  }
+  for (const field of contract.arrays || []) {
+    if (!Array.isArray(resource[field])) errors.push(`${resourceId}.json: ${field} must be an array`);
+  }
+  for (const field of contract.objects || []) {
+    if (!resource[field] || typeof resource[field] !== 'object' || Array.isArray(resource[field])) {
+      errors.push(`${resourceId}.json: ${field} must be an object`);
+    }
+  }
+  for (const [parent, fields] of Object.entries(contract.nested_arrays || {})) {
+    for (const field of fields) {
+      if (!Array.isArray(resource[parent]?.[field])) {
+        errors.push(`${resourceId}.json: ${parent}.${field} must be an array`);
+      }
+    }
+  }
+}
+
 for (const id of manifestIds) {
   const sourceFile = path.join(sourceDir, `${id}.json`);
   const runtimeFile = path.join(runtimeDir, `${id}.json`);
@@ -126,6 +173,7 @@ if (fs.existsSync(path.join(sourceDir, 'manifest.json')) && fs.existsSync(path.j
 
 console.log(`Validated ${packCount} marker packs and ${markerCount} curated markers.`);
 console.log(`Validated ${manifestIds.size} manifest runtime mirrors.`);
+console.log(`Validated ${supportResourceCount} source support resources.`);
 for (const warning of warnings) console.log(`WARN: ${warning}`);
 for (const error of errors) console.error(`ERROR: ${error}`);
 if (errors.length > 0) process.exit(1);

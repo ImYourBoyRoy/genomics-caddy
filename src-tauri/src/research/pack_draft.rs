@@ -42,6 +42,7 @@ static PROTECTED_PACK_IDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         "longevity_aging_resilience",
         "discovery_catalog",
         "actionability_guidance",
+        "activity_guardrails",
         "callability_rules",
         "evidence_policy",
         "safety_guardrails",

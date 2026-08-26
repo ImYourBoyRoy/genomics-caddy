@@ -1,0 +1,118 @@
+{
+  "name": "Activity Guidance & Exercise Safety Guardrails",
+  "version": "1.0.0",
+  "last_updated": "2026-08-25",
+  "type": "support_engine",
+  "purpose": "Use genotype as a weak context modifier for training questions while keeping symptoms, medical history, progression, and professional clearance ahead of genetic optimization.",
+  "principles": [
+    "Do not use raw DNA to clear a person for high-intensity, contact, endurance, heat, altitude, or maximal-load activity.",
+    "Start with the user's current ability, goals, symptoms, medications, sleep, nutrition, and training history; increase load gradually.",
+    "If phenotype, clinical history, or a professional's restriction conflicts with a genetic suggestion, the phenotype or clinical direction wins.",
+    "Treat training recommendations as adjustable experiments with symptom and recovery feedback, never as genetic destiny."
+  ],
+  "stop_and_escalate": [
+    "Chest pain, pressure, or unusual tightness during or after activity",
+    "Fainting, near-fainting, confusion, or unexplained severe dizziness",
+    "Unusual or severe shortness of breath, blue lips, or low oxygen",
+    "Fast or irregular heartbeat with symptoms",
+    "Dark urine, severe weakness, or severe muscle pain after exercise",
+    "Sudden neurologic symptoms, severe allergic symptoms, or heat-illness symptoms"
+  ],
+  "domains": [
+    {
+      "id": "muscle_performance_recovery",
+      "section_keywords": ["muscle", "performance", "hypertrophy", "recovery"],
+      "context": "ACTN3, recovery, mitochondrial, creatine, and myopathy-related markers",
+      "favor": [
+        "progressive overload with recovery days",
+        "training-log review of soreness, sleep, performance, and hydration",
+        "sports-medicine review when exercise intolerance or recurrent injury is present"
+      ],
+      "avoid": [
+        "maximal testing or rapid training-load increases when severe fatigue, cramps, dark urine, or exercise intolerance is present",
+        "claiming a power/endurance genotype determines performance"
+      ],
+      "confirm_with": [
+        "CK during concerning symptoms",
+        "training history and recovery log",
+        "sports-medicine evaluation when red flags occur"
+      ]
+    },
+    {
+      "id": "connective_tissue",
+      "section_keywords": ["connective", "musculoskeletal", "bone", "skeletal"],
+      "context": "Collagen, ligament, tendon, hypermobility, and bone-density context",
+      "favor": [
+        "technique-first progressive resistance and low-impact conditioning when tolerated",
+        "physical-therapy or sports-medicine movement assessment when instability or recurrent injury is present"
+      ],
+      "avoid": [
+        "using a common SNP to clear aggressive stretching, contact sport, heavy lifting, or return-to-play",
+        "rapid load changes when pain, instability, fracture history, or neurologic symptoms are present"
+      ],
+      "confirm_with": [
+        "injury and joint-stability history",
+        "movement assessment",
+        "DXA or imaging when clinically indicated"
+      ]
+    },
+    {
+      "id": "cardiovascular",
+      "section_keywords": ["cardiovascular", "lipid", "blood pressure", "vascular"],
+      "context": "Blood-pressure, lipid, thrombosis, arrhythmia, and vascular context",
+      "favor": [
+        "gradual aerobic and resistance progression matched to current symptoms and clinical status",
+        "blood-pressure, lipid, and recovery monitoring when those markers are relevant"
+      ],
+      "avoid": [
+        "high-intensity or maximal-effort clearance from genotype alone",
+        "ignoring exertional chest pain, fainting, palpitations, or unusual breathlessness"
+      ],
+      "confirm_with": [
+        "blood pressure and lipid measurements",
+        "ECG or exercise testing when a clinician indicates",
+        "cardiology review for exertional red flags"
+      ]
+    },
+    {
+      "id": "respiratory_airway",
+      "section_keywords": ["respiratory", "airway", "oxygenation", "lung"],
+      "context": "Asthma, airway, lung-function, oxygenation, and sleep-apnea context",
+      "favor": [
+        "symptom- and environment-aware conditioning with appropriate warm-up",
+        "clinician-guided asthma or airway plan when symptoms limit exercise"
+      ],
+      "avoid": [
+        "using genotype to rule out exercise-induced bronchoconstriction or sleep-related breathing problems",
+        "pushing through wheeze, severe breathlessness, low oxygen, or faintness"
+      ],
+      "confirm_with": [
+        "spirometry or peak-flow review",
+        "sleep study when indicated",
+        "pulmonary review for persistent or severe symptoms"
+      ]
+    },
+    {
+      "id": "hormones_reproductive",
+      "section_keywords": ["menstrual", "hormone", "reproductive", "pmdd", "ovarian"],
+      "context": "Cycle timing, contraception, menopause, pregnancy/postpartum, and hormone-therapy context",
+      "favor": [
+        "symptom- and cycle-aware adjustment of training load, sleep, hydration, and recovery",
+        "prospective symptom and training tracking across cycles when cyclic changes are reported"
+      ],
+      "avoid": [
+        "assuming a hormone level, ovulation status, pregnancy status, or exercise restriction from DNA or chromosome-call context",
+        "changing contraception or hormone medication because of a training response or genotype"
+      ],
+      "confirm_with": [
+        "exact medication and active ingredients",
+        "cycle or life-stage context supplied by the user",
+        "clinician review when bleeding, pelvic pain, pregnancy, or postpartum red flags are present"
+      ]
+    }
+  ],
+  "sources": [
+    "aha_physical_activity_warning_signs",
+    "cdc_activity_stop_signs"
+  ]
+}

@@ -62,6 +62,8 @@ export function buildClinicalHandoffMarkdown(
   md += `## 👤 Biohacking & Health Profile (Self-Reported)\n`;
   md += `* **Goals:** ${userProfile.goals || "None declared"}\n`;
   md += `* **Challenges & Symptoms:** ${userProfile.challenges || "None declared"}\n`;
+  md += `* **Relevant Body Systems & Life Context:** ${userProfile.relevantBodySystems || "Not specified"}\n`;
+  md += `* **Reproductive & Hormone Context:** ${userProfile.reproductiveHormoneContext || "Not specified"}\n`;
   md += `* **Average Diet:** ${userProfile.diet || "Not specified"}\n`;
   md += `* **Supplements List:** ${userProfile.supplements || "None"}\n`;
   md += `* **Medications List:** ${userProfile.medications || "None"}\n`;

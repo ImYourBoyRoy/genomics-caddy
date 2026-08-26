@@ -216,6 +216,33 @@ const duplicateRsidCount = allMarkers.length - new Set(allMarkers.map(({ marker 
 if (runtimeSummary?.duplicate_rsids_skipped_from_discovery_catalog !== duplicateRsidCount) {
   errors.push(`runtime_validation_summary.json: duplicate_rsids_skipped_from_discovery_catalog is ${runtimeSummary?.duplicate_rsids_skipped_from_discovery_catalog ?? '(missing)'}, expected ${duplicateRsidCount}`);
 }
+
+// High-stakes duplicate markers must use one normalized clinical allele
+// convention across packs. Context-specific interpretations are allowed, but
+// silently mixing transcript-strand and positive-chromosomal-strand alleles
+// can invert a medication-safety result.
+const clinicalAllelesByRsid = new Map();
+for (const { packId, marker } of allMarkers) {
+  const evidenceTier = String(marker.evidence_tier || '').toLowerCase();
+  const isHighStakes = marker.clinical_confirmation_required === true
+    || evidenceTier.includes('clinical')
+    || evidenceTier.includes('pharmacogenomic');
+  const rsid = String(marker.rsid || '').trim().toLowerCase();
+  const effectAllele = String(marker.effect_allele || '').trim().toUpperCase();
+  if (!isHighStakes || !/^rs\d+$/.test(rsid) || !/^[ACGT]$/.test(effectAllele)) continue;
+  if (!clinicalAllelesByRsid.has(rsid)) clinicalAllelesByRsid.set(rsid, []);
+  clinicalAllelesByRsid.get(rsid).push({ pack: packId, allele: effectAllele });
+}
+const clinicalAlleleConflicts = [];
+for (const [rsid, rows] of clinicalAllelesByRsid.entries()) {
+  const alleles = Array.from(new Set(rows.map((row) => row.allele)));
+  if (alleles.length > 1) {
+    clinicalAlleleConflicts.push({ rsid, alleles, records: rows });
+  }
+}
+if (clinicalAlleleConflicts.length > 0) {
+  errors.push(`clinical allele conflicts: ${clinicalAlleleConflicts.map(({ rsid, alleles }) => `${rsid}=${alleles.join('/')}`).join(', ')}`);
+}
 if (runtimeSummary?.cycle_support_layer?.domains_count !== cycleSupport?.domains?.length) {
   errors.push(`runtime_validation_summary.json: cycle_support_layer.domains_count is ${runtimeSummary?.cycle_support_layer?.domains_count ?? '(missing)'}, expected ${cycleSupport?.domains?.length ?? 0}`);
 }
@@ -388,6 +415,7 @@ const summary = {
   layperson_language_review: laypersonLanguageReview,
   actionability_source_gaps: actionabilitySourceGaps,
   actionability_marker_reference_gaps: actionabilityMarkerReferenceGaps,
+  clinical_allele_conflicts: clinicalAlleleConflicts,
   uncovered_actionability_genes: uncoveredActionabilityGenes,
   pack_summaries: packSummaries,
   errors,
@@ -402,7 +430,7 @@ if (outputJson) {
   console.log(`Audited ${summary.support_resources} support resources / ${summary.registered_sources} registered sources.`);
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
-  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; clinical allele conflicts: ${clinicalAlleleConflicts.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }
@@ -410,5 +438,5 @@ if (outputJson) {
   for (const error of errors) console.error(`ERROR: ${error}`);
 }
 
-if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0 || actionabilityMarkerReferenceGaps.length > 0) process.exit(1);
+if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0 || actionabilityMarkerReferenceGaps.length > 0 || clinicalAlleleConflicts.length > 0) process.exit(1);
 console.log('Resource-quality audit passed; review warnings before treating coverage as complete.');

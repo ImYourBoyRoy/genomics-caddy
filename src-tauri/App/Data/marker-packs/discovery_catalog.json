@@ -428,9 +428,9 @@
       "gene": "DPYD",
       "category": "pgx",
       "name": "DPYD*2A",
-      "risk_allele": "A",
+      "risk_allele": "T",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
-      "description": "DPYD*2A is a critical splice-site variant leading to complete lack of DPD enzyme activity. Carriers of the A allele are at extreme risk of life-threatening toxicity (neutropenia, severe mucosal inflammation) if treated with standard doses of fluorouracil or capecitabine."
+      "description": "DPYD*2A is a critical splice-site variant leading to complete lack of DPD enzyme activity. Carriers of the T allele are at extreme risk of life-threatening toxicity (neutropenia, severe mucosal inflammation) if treated with standard doses of fluorouracil or capecitabine."
     },
     {
       "rsid": "rs55886062",
@@ -445,17 +445,17 @@
       "rsid": "rs67376798",
       "gene": "DPYD",
       "category": "pgx",
-      "name": "rs67376798 / Y186C",
+      "name": "c.2846A>T / p.Asp949Val (D949V)",
       "risk_allele": "A",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
-      "description": "The DPYD Y186C variant may reduce DPD activity and is associated with increased fluoropyrimidine toxicity risk in clinical studies. An A-allele result requires clinical DPYD interpretation before 5-FU-based chemotherapy."
+      "description": "The DPYD D949V variant may reduce DPD activity and is associated with increased fluoropyrimidine toxicity risk in clinical studies. An A-allele result requires clinical DPYD interpretation before 5-FU-based chemotherapy."
     },
     {
       "rsid": "rs1800460",
       "gene": "TPMT",
       "category": "pgx",
       "name": "TPMT*3B / TPMT*3A component (A154T)",
-      "risk_allele": "C",
+      "risk_allele": "T",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
       "description": "rs1800460 is the TPMT*3B-defining A154T component and, when paired with rs1142345, forms TPMT*3A. It reduces TPMT activity and increases thiopurine myelosuppression risk. Use clinical TPMT genotype/phenotype confirmation."
     },
@@ -464,7 +464,7 @@
       "gene": "TPMT",
       "category": "pgx",
       "name": "TPMT*3C / TPMT*3A component (A719G)",
-      "risk_allele": "G",
+      "risk_allele": "C",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
       "description": "rs1142345 helps identify TPMT*3C and, when paired with rs1800460, is part of TPMT*3A. The resulting TPMT diplotype may reduce enzyme activity and increase thiopurine toxicity risk; use clinical TPMT genotype/phenotype confirmation."
     },
@@ -680,7 +680,7 @@
       "gene": "DPYD",
       "category": "pgx",
       "name": "DPYD HapB3 / c.1129-5923C>G tag",
-      "risk_allele": "G",
+      "risk_allele": "C",
       "impact": "Reduced DPD activity / fluoropyrimidine toxicity risk",
       "description": "DPYD HapB3 is a clinically relevant decreased-function haplotype for fluoropyrimidine toxicity risk. Confirm before acting."
     },
@@ -689,7 +689,7 @@
       "gene": "DPYD",
       "category": "pgx",
       "name": "DPYD HapB3 component",
-      "risk_allele": "A",
+      "risk_allele": "T",
       "impact": "Reduced DPD activity haplotype component",
       "description": "rs56038477 is part of DPYD HapB3 context. Use validated DPYD haplotype calling before any clinical action."
     },
@@ -698,7 +698,7 @@
       "gene": "TPMT",
       "category": "pgx",
       "name": "TPMT*2",
-      "risk_allele": "C",
+      "risk_allele": "G",
       "impact": "Reduced TPMT activity / thiopurine toxicity risk",
       "description": "TPMT*2 reduces TPMT activity and can increase thiopurine myelosuppression risk. Interpret with TPMT/NUDT15 phenotype."
     },

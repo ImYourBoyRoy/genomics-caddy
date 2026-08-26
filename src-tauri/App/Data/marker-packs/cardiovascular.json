@@ -2949,10 +2949,10 @@
       "rsid": "rs9923231",
       "gene": "VKORC1",
       "variant_name": "VKORC1 -1639G>A warfarin sensitivity marker",
-      "effect_allele": "T",
+      "effect_allele": "A",
       "impact": "Lower VKORC1 expression / lower warfarin dose requirement",
       "evidence_tier": "A_pharmacogenomic_actionable",
-      "interpretation": "VKORC1 rs9923231 T is a major warfarin sensitivity allele. T-carriers generally require lower initial/maintenance doses, but dosing algorithms require age, body size, interacting drugs, ancestry, INR target, and CYP2C9/CYP4F2 genotype.",
+      "interpretation": "VKORC1 rs9923231 A is a major warfarin sensitivity allele. A-carriers generally require lower initial/maintenance doses, but dosing algorithms require age, body size, interacting drugs, ancestry, INR target, and CYP2C9/CYP4F2 genotype.",
       "do_not_claim": [
         "warfarin dose by genotype alone",
         "bleeding prediction",
@@ -2970,6 +2970,11 @@
       "raw_dna_limitation": "Warfarin has a narrow therapeutic index. Genotype can inform initial dosing only within a clinical dosing protocol.",
       "clinical_confirmation_required": true,
       "variant_type": "pharmacogenomic_snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["A", "G"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC warfarin dosing guideline 2017 update",

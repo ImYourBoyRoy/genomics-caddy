@@ -258,7 +258,7 @@
       "effect_allele": "A",
       "impact": "Increased sensitivity to warfarin",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The VKORC1 -1639G>A variant is associated with warfarin dose sensitivity. A T-containing result may contribute to lower dose requirements in a clinical dosing algorithm, but dose selection also requires INR response, CYP2C9/CYP4F2 status, age, body size, interacting drugs, and clinician oversight.",
+      "interpretation": "The VKORC1 -1639G>A variant is associated with warfarin dose sensitivity. An A-containing result may contribute to lower dose requirements in a clinical dosing algorithm, but dose selection also requires INR response, CYP2C9/CYP4F2 status, age, body size, interacting drugs, and clinician oversight.",
       "do_not_claim": [
         "anticoagulant plan",
         "bleeding diagnosis"
@@ -271,6 +271,11 @@
       "raw_dna_limitation": "Requires integration with CYP2C9 genotypes to calculate actual dose predictions.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["A", "G"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC Guideline for Warfarin Dosing",
@@ -408,7 +413,7 @@
       "rsid": "rs3918290",
       "gene": "DPYD",
       "variant_name": "DPYD*2A",
-      "effect_allele": "A",
+      "effect_allele": "T",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "Clinically confirmed DPYD*2A is a no-function allele associated with substantially increased fluoropyrimidine toxicity risk. A raw-array call is not sufficient for treatment; the oncology team needs validated DPYD interpretation before fluorouracil or capecitabine decisions.",
@@ -424,6 +429,11 @@
       "raw_dna_limitation": "Microarray analysis cannot rule out other rare, private DPYD variants that compromise clearance.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI DPYD nomenclature plus-strand conversion with CPIC guidance",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC Guideline for DPYD and Fluoropyrimidines",
@@ -438,7 +448,7 @@
     {
       "rsid": "rs55886062",
       "gene": "DPYD",
-      "variant_name": "rs55886062 / I560S",
+      "variant_name": "DPYD*13 / c.1679T>G / p.Ile560Ser",
       "effect_allele": "C",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
       "evidence_tier": "A_clinical_guideline",
@@ -453,6 +463,11 @@
       "raw_dna_limitation": "High-risk variant with very low prevalence; false positive array errors require clinical validation.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["A", "C"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI DPYD nomenclature plus-strand conversion with CPIC guidance",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC DPYD Guideline",
@@ -467,11 +482,11 @@
     {
       "rsid": "rs67376798",
       "gene": "DPYD",
-      "variant_name": "rs67376798 / Y186C",
+      "variant_name": "c.2846A>T / p.Asp949Val (D949V)",
       "effect_allele": "A",
       "impact": "Severe fluorouracil / capecitabine toxicity risk (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The Y186C allele has been associated with intermediate-to-poor DPD activity in clinical studies. A raw-array call must be confirmed clinically; fluoropyrimidine safety decisions belong to the oncology team using the complete validated DPYD result.",
+      "interpretation": "The DPYD D949V allele has been associated with decreased DPD activity in clinical studies. A raw-array call must be confirmed clinically; fluoropyrimidine safety decisions belong to the oncology team using the complete validated DPYD result.",
       "do_not_claim": [
         "definitive chemo recommendation"
       ],
@@ -482,6 +497,11 @@
       "raw_dna_limitation": "Requires clinical confirmatory assay prior to initiating chemotherapy.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["A", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI DPYD nomenclature plus-strand conversion with CPIC guidance",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC DPYD Guideline",
@@ -489,7 +509,7 @@
           "accessed": "2026-06-07",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None",
-          "notes": "Covers Y186C clinical recommendations."
+          "notes": "Covers DPYD c.2846A>T / p.Asp949Val clinical recommendations."
         }
       ]
     },
@@ -497,7 +517,7 @@
       "rsid": "rs1800460",
       "gene": "TPMT",
       "variant_name": "TPMT*3B / TPMT*3A component (A154T)",
-      "effect_allele": "C",
+      "effect_allele": "T",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "rs1800460 is the TPMT*3B-defining A154T component and, when paired with rs1142345, forms TPMT*3A. It reduces TPMT activity and increases thiopurine myelosuppression risk. Use clinical TPMT genotype/phenotype confirmation.",
@@ -512,6 +532,11 @@
       "raw_dna_limitation": "TPMT star allele assignment requires phasing with rs1142345 and clinical PGx confirmation. Do not infer a full TPMT phenotype from this SNP alone.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC Guideline for TPMT and NUDT15",
@@ -527,7 +552,7 @@
       "rsid": "rs1142345",
       "gene": "TPMT",
       "variant_name": "TPMT*3C / TPMT*3A component (A719G)",
-      "effect_allele": "G",
+      "effect_allele": "C",
       "impact": "Impaired TPMT enzyme activity (thiopurine toxicity)",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "rs1142345 helps identify TPMT*3C and, when paired with rs1800460, is part of TPMT*3A. The resulting TPMT diplotype may reduce enzyme activity and increase thiopurine toxicity risk; use clinical TPMT genotype/phenotype confirmation.",
@@ -542,6 +567,11 @@
       "raw_dna_limitation": "TPMT star allele assignment requires phasing with rs1800460 and clinical PGx confirmation. Do not infer a full TPMT phenotype from this SNP alone.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC Guideline for TPMT and NUDT15",
@@ -572,6 +602,11 @@
       "raw_dna_limitation": "NUDT15 testing is clinically indicated for patients of Asian or Native American descent before thiopurine therapy.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "CPIC Guideline for TPMT and NUDT15",
@@ -1782,7 +1817,7 @@
       "rsid": "rs75017182",
       "gene": "DPYD",
       "variant_name": "DPYD HapB3 / c.1129-5923C>G tag",
-      "effect_allele": "G",
+      "effect_allele": "C",
       "impact": "Reduced DPD activity / fluoropyrimidine toxicity risk",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "DPYD HapB3 is a clinically relevant decreased-function haplotype for fluoropyrimidine toxicity risk. Confirm before acting.",
@@ -1797,6 +1832,11 @@
       "raw_dna_limitation": "Rare/high-stakes PGx requires clinical confirmation.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "G"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI DPYD nomenclature plus-strand conversion with CPIC guidance",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "Clinical Pharmacogenetics Implementation Consortium (CPIC) Guidelines",
@@ -1836,7 +1876,7 @@
       "rsid": "rs56038477",
       "gene": "DPYD",
       "variant_name": "DPYD HapB3 component",
-      "effect_allele": "A",
+      "effect_allele": "T",
       "impact": "Reduced DPD activity haplotype component",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "rs56038477 is part of DPYD HapB3 context. Use validated DPYD haplotype calling before any clinical action.",
@@ -1850,6 +1890,11 @@
       "raw_dna_limitation": "Requires haplotype/clinical confirmation.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI DPYD nomenclature plus-strand conversion with CPIC guidance",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "Clinical Pharmacogenetics Implementation Consortium (CPIC) Guidelines",
@@ -1889,7 +1934,7 @@
       "rsid": "rs1800462",
       "gene": "TPMT",
       "variant_name": "TPMT*2",
-      "effect_allele": "C",
+      "effect_allele": "G",
       "impact": "Reduced TPMT activity / thiopurine toxicity risk",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "TPMT*2 reduces TPMT activity and can increase thiopurine myelosuppression risk. Interpret with TPMT/NUDT15 phenotype.",
@@ -1904,6 +1949,11 @@
       "raw_dna_limitation": "Clinical TPMT phenotype may use genotype plus enzyme activity.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "G"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CPIC positive-chromosomal-strand nomenclature",
+      "interpretation_blocked_if_unverified": true,
       "sources": [
         {
           "name": "Clinical Pharmacogenetics Implementation Consortium (CPIC) Guidelines",

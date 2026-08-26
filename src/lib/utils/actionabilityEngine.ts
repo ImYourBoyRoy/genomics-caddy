@@ -142,6 +142,18 @@ interface LabCategory {
   fallback?: boolean;
 }
 
+interface LabTier {
+  id: LabTest['tier'];
+  label: string;
+  hint: string;
+  order: number;
+}
+
+interface LabConfirmationFilter {
+  allowed_keywords: string[];
+  blocked_keywords: string[];
+}
+
 function normalizedGeneSymbols(value: string): string[] {
   return String(value || '')
     .split(/[\s/]+/)
@@ -203,23 +215,17 @@ function qualifyGuidance(
   }
 }
 
-const LAB_TIER_META: Record<LabTest['tier'], { label: string; hint: string; order: number }> = {
-  counselor: {
-    label: 'Clinical confirmation',
-    hint: 'High-stakes — discuss with a genetic counselor or specialist before acting.',
-    order: 0,
-  },
-  discuss: {
-    label: 'Worth discussing',
-    hint: 'Reasonable follow-up labs to review with your clinician at a routine visit.',
-    order: 1,
-  },
-  optional: {
-    label: 'Optional / if symptomatic',
-    hint: 'Lower priority or symptom-driven — not an emergency workup.',
-    order: 2,
-  },
-};
+const LAB_TIER_META = Object.fromEntries(
+  (((guidanceDoc as { lab_tiers?: LabTier[] }).lab_tiers || [])
+    .filter((tier) => tier && typeof tier.id === 'string' && typeof tier.label === 'string')
+    .map((tier) => [tier.id, tier]))
+) as Record<LabTest['tier'], LabTier>;
+
+const LAB_CONFIRMATION_FILTER: LabConfirmationFilter =
+  (guidanceDoc as { lab_confirmation_filter?: LabConfirmationFilter }).lab_confirmation_filter || {
+    allowed_keywords: [],
+    blocked_keywords: [],
+  };
 
 const LAB_CATEGORIES: LabCategory[] = Array.isArray(
   (guidanceDoc as { lab_categories?: LabCategory[] }).lab_categories
@@ -251,84 +257,8 @@ function isLabLikeConfirmItem(text: string): boolean {
   const lower = text.toLowerCase().trim();
   if (!lower || lower.length < 4) return false;
 
-  const blocked = [
-    'family history',
-    'personal/family',
-    'symptom diary',
-    'diary',
-    'clinician review',
-    'clinical review',
-    'genetic counseling',
-    'trigger pattern',
-    'visible phenotype',
-    'hygiene',
-    'training log',
-    'body composition',
-    'medication response',
-    'exposure history',
-    'cycle/symptom',
-    'specialist review',
-    'dermatology review',
-    'dental exam',
-    'screening plan',
-    'diet/',
-    'logs',
-    'tracking',
-  ];
-
-  const allowed = [
-    'panel',
-    'sequencing',
-    'genotyp',
-    'mri',
-    'mammograph',
-    'colonoscop',
-    'dxa',
-    'spirometry',
-    'apob',
-    'lipid',
-    'homocysteine',
-    'ferritin',
-    'tibc',
-    'transferrin',
-    'uric acid',
-    'vitamin d',
-    '25(oh)',
-    'pth',
-    'calcium',
-    'crp',
-    'esr',
-    'autoantibod',
-    'breath test',
-    'pgx',
-    'egfr',
-    'creatinine',
-    'urinalysis',
-    'omega-3',
-    'selenium',
-    'folate',
-    'b12',
-    'liver',
-    'alt',
-    'ast',
-    'blood pressure',
-    'nmr',
-    'lipoprotein',
-    'lpa',
-    'inflammation',
-    'glucose',
-    'electrolyte',
-    'hormone',
-    'cortisol',
-    'thyroid',
-    'tsh',
-    'sleep study',
-    'polysomn',
-    'allerg',
-  ];
-
-  if (allowed.some((a) => lower.includes(a))) return true;
-  if (blocked.some((b) => lower.includes(b))) return false;
+  if (LAB_CONFIRMATION_FILTER.blocked_keywords.some((keyword) => lower.includes(keyword.toLowerCase()))) return false;
+  if (LAB_CONFIRMATION_FILTER.allowed_keywords.some((keyword) => lower.includes(keyword.toLowerCase()))) return true;
   return false;
 }
 

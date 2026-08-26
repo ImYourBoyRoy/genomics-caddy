@@ -127,7 +127,7 @@ for (const promptId of conditionalPromptSignalIds) {
 // Validate their public shape here so prompt wiring cannot silently drift when
 // a resource is expanded or renamed.
 const supportContracts = {
-  actionability_guidance: { arrays: ['rules', 'lab_categories'], objects: ['policy'] },
+  actionability_guidance: { arrays: ['rules', 'lab_categories', 'lab_tiers'], objects: ['policy', 'lab_confirmation_filter'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts'] },
@@ -220,6 +220,29 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       if (discoveryIds.has(category.id)) errors.push(`${location}: duplicate id ${category.id}`);
       discoveryIds.add(category.id);
+    }
+  }
+  if (resourceId === 'actionability_guidance') {
+    const tiers = resource.lab_tiers || [];
+    const tierIds = new Set();
+    for (const [index, tier] of tiers.entries()) {
+      const location = `actionability_guidance.json lab tier ${index + 1}`;
+      for (const field of ['id', 'label', 'hint']) {
+        if (typeof tier[field] !== 'string' || tier[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (!Number.isInteger(tier.order) || tier.order < 0) errors.push(`${location}: order must be a non-negative integer`);
+      if (tierIds.has(tier.id)) errors.push(`${location}: duplicate id ${tier.id}`);
+      tierIds.add(tier.id);
+    }
+    for (const requiredId of ['counselor', 'discuss', 'optional']) {
+      if (!tierIds.has(requiredId)) errors.push(`actionability_guidance.json lab_tiers: missing ${requiredId}`);
+    }
+    for (const field of ['allowed_keywords', 'blocked_keywords']) {
+      if (!isStringArray(resource.lab_confirmation_filter?.[field]) || resource.lab_confirmation_filter[field].length === 0) {
+        errors.push(`actionability_guidance.json: lab_confirmation_filter.${field} must be a non-empty string array`);
+      }
     }
   }
   if (resourceId === 'actionability_guidance') {

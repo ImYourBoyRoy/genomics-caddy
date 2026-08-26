@@ -2232,6 +2232,446 @@
         "user_declared_values_required",
         "safety_guardrail"
       ]
+    },
+    {
+      "id": "ttr_val142ile_amyloid_confirmation",
+      "genes": [
+        "TTR"
+      ],
+      "marker_ids": [
+        "rs76992529"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cardiovascular",
+        "kidney_fluid_electrolytes"
+      ],
+      "favor": [
+        "If unexplained thickened heart muscle, heart-failure symptoms, rhythm or conduction problems, progressive neuropathy, autonomic symptoms, bilateral carpal-tunnel history, or a relevant family history is present, bring this marker label to a cardiology or amyloidosis specialist"
+      ],
+      "avoid": [
+        "Using a consumer-array signal to diagnose amyloidosis, assume ancestry or age-based certainty, or start, stop, or select cardiac or amyloidosis treatment"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical TTR genotyping and variant-classification review",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "ECG, echocardiogram, cardiac biomarkers, cardiac MRI, or nuclear cardiac imaging only when cardiology indicates",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If the variant is clinically confirmed, cardiology should interpret it with symptoms, imaging, family history, age, and other causes of amyloidosis; do not self-start, stop, or change a heart or amyloidosis medicine from raw DNA."
+      ],
+      "notes": "TTR p.Val142Ile is associated with late-onset hereditary transthyretin amyloidosis with age-dependent and incomplete penetrance. A consumer-array observation requires validated clinical testing and phenotype; a positive result is not proof of current disease, and a negative result does not exclude other TTR or non-TTR disease.",
+      "sources": [
+        "gene_reviews_ttr_amyloidosis",
+        "aha_ttr_amyloid_cardiomyopathy",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "arrhythmogenic_cardiomyopathy_panel_context",
+      "genes": [
+        "PKP2",
+        "DSP",
+        "DSG2",
+        "DSC2",
+        "JUP",
+        "TMEM43",
+        "DES",
+        "FLNC",
+        "PLN"
+      ],
+      "marker_ids": [
+        "ARRHYTHMOGENIC_CARDIOMYOPATHY_PANEL"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cardiovascular",
+        "connective_tissue"
+      ],
+      "favor": [
+        "If exertional fainting, palpitations, known cardiomyopathy, unexplained ventricular rhythm problems, or sudden cardiac death in the family is present, bring the panel label and history to an inherited-cardiomyopathy team"
+      ],
+      "avoid": [
+        "Using a consumer-array panel flag to clear endurance or high-intensity exercise, decide on an ICD, or start, stop, or select a cardiac medicine"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical cardiomyopathy gene-panel or sequencing review with expert variant classification",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "ECG, ambulatory rhythm monitoring, echocardiogram, or cardiac MRI when cardiology indicates",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If an inherited cardiomyopathy is suspected, let the cardiology team determine activity, medication, and family-evaluation plans from phenotype, imaging, rhythm data, and clinically interpreted variants; raw DNA cannot provide exercise or treatment clearance."
+      ],
+      "notes": "Arrhythmogenic cardiomyopathy is a clinical and imaging diagnosis in which variant classification, family history, rhythm findings, ventricular function, and exercise exposure may matter. This exact panel target is a route to clinical evaluation, not a positive consumer-array result.",
+      "sources": [
+        "genereviews",
+        "aha_physical_activity_warning_signs",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "chek2_cancer_confirmation",
+      "genes": [
+        "CHEK2"
+      ],
+      "marker_ids": [
+        "PANEL_CHEK2_PATHOGENIC_VARIANTS",
+        "rs555607708"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cancer_confirmation_only"
+      ],
+      "favor": [
+        "Bring the exact variant label, personal and family cancer history, and prior screening history to a genetic counselor or clinician when a CHEK2 finding is being considered"
+      ],
+      "avoid": [
+        "Treating a raw CHEK2 signal as a cancer diagnosis, assuming BRCA-level risk, or changing screening, surgery, or cancer treatment without clinical confirmation and variant-specific counseling"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CHEK2 sequencing with deletion/duplication and variant-classification review",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "Genetic counseling and family-history-based screening plan after clinical confirmation",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "If a CHEK2 pathogenic variant is clinically confirmed, the care team should interpret screening and any cancer-treatment questions using the exact variant, family history, tumor context, and current guidelines; do not change medication from raw DNA."
+      ],
+      "notes": "CHEK2 risk is moderate and variant-specific. Truncating, missense, and uncertain variants must not be collapsed into one risk estimate; a consumer indel or SNP call is not a clinical classification and a negative result does not erase hereditary-cancer risk from other genes or family history.",
+      "sources": [
+        "clinvar",
+        "clingen",
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "mutyh_cancer_confirmation",
+      "genes": [
+        "MUTYH"
+      ],
+      "marker_ids": [
+        "PANEL_MUTYH_BIALLELIC_PATHOGENIC_VARIANTS",
+        "rs34612342",
+        "rs36053993"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cancer_confirmation_only",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "Bring the exact MUTYH label, colorectal-polyp or cancer history, family history, and any prior colonoscopy information to a genetic counselor or gastroenterology clinician"
+      ],
+      "avoid": [
+        "Calling one raw MUTYH allele a diagnosis of MUTYH-associated polyposis, assuming biallelic status without phase testing, or changing colonoscopy or cancer care from consumer DNA alone"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical full-gene MUTYH sequencing with deletion/duplication, zygosity, and phase review",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "Genetic counseling and clinician-directed colorectal screening plan after confirmation",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "If MUTYH-associated polyposis is clinically confirmed, screening and treatment decisions belong with genetics and gastroenterology teams; raw DNA cannot select a medicine or replace endoscopic and family-history context."
+      ],
+      "notes": "MUTYH-associated polyposis is primarily a biallelic/compound-heterozygous question. A single consumer call may represent carrier status, a false positive, or an incomplete view of the gene; clinical sequencing and phase/zygosity interpretation are required.",
+      "sources": [
+        "clinvar",
+        "clingen",
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "apc_i1307k_context",
+      "genes": [
+        "APC"
+      ],
+      "marker_ids": [
+        "rs1801155"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cancer_confirmation_only",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "Bring this ancestry-sensitive APC label, family history, and colonoscopy history to a genetic counselor or clinician if colorectal screening questions apply"
+      ],
+      "avoid": [
+        "Treating APC I1307K as classic familial adenomatous polyposis, a cancer diagnosis, or an automatic colonoscopy or treatment instruction without clinical confirmation and ancestry-aware counseling"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical APC testing and ancestry-aware variant interpretation",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "Clinician-directed colorectal screening review using family history and current guidelines",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "APC I1307K is distinct from the high-penetrance APC variants that cause classic familial adenomatous polyposis. Associations vary by ancestry and clinical context; a consumer result is not a diagnosis or a stand-alone screening schedule.",
+      "sources": [
+        "clinvar",
+        "clingen",
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hoxb13_prostate_cancer_context",
+      "genes": [
+        "HOXB13"
+      ],
+      "marker_ids": [
+        "rs138213197"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "cancer_confirmation_only",
+        "hormones_reproductive"
+      ],
+      "favor": [
+        "If prostate screening is relevant to your anatomy or care goals, bring this ancestry-sensitive HOXB13 label, family history, and prior PSA history to a clinician or genetic counselor"
+      ],
+      "avoid": [
+        "Using a raw HOXB13 result to diagnose prostate cancer, assume risk is the same across ancestries, or begin, stop, or change screening or treatment without clinical confirmation and shared decision-making"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HOXB13 testing and variant interpretation when clinically indicated",
+          "urgency": "consider",
+          "requires_counselor": true
+        },
+        {
+          "name": "Clinician-directed PSA and prostate-risk discussion when relevant to the person's anatomy, age, and family history",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a clinically confirmed HOXB13 finding changes a prostate-risk discussion, the clinician should integrate age, family history, ancestry, PSA history, and shared goals; do not change hormone or cancer treatment from raw DNA."
+      ],
+      "notes": "HOXB13 G84E is a prostate-cancer susceptibility association with ancestry-dependent frequency and risk. It is not diagnostic, does not infer anatomy or identity, and does not replace individualized PSA or clinical risk discussion.",
+      "sources": [
+        "clinvar",
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "pmdd_ovarian_steroid_sensitivity_context",
+      "genes": [
+        "ESR1",
+        "ESR2",
+        "PGR",
+        "ALLO_GABAA",
+        "ESC_EZ"
+      ],
+      "marker_ids": [
+        "PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "hormones_reproductive",
+        "neuropsych"
+      ],
+      "favor": [
+        "If mood, behavior, pain, or need-for-space symptoms appear cycle-linked, record daily symptoms, bleeding, sleep, stress, medication timing, and symptom-free days across at least two cycles"
+      ],
+      "avoid": [
+        "Calling a late-luteal or menstrual symptom pattern an estrogen spike, diagnosing PMDD from a panel, or selecting an SSRI, hormone, supplement, or contraceptive change from raw DNA"
+      ],
+      "medication_context": [
+        "If symptoms cause meaningful impairment, discuss the prospective diary and exact medication or contraceptive label with a clinician; evidence-based options depend on the symptom pattern, goals, interactions, contraindications, and product, not on this research panel."
+      ],
+      "notes": "This panel is research context for possible sensitivity to normal ovarian-steroid change, not a measurement of estrogen, progesterone, allopregnanolone, or a PMDD diagnosis. Cyclic irritability, avoidance, anger, anxiety, depression, or pain should be evaluated as a recurring phenotype with safety review and appropriate clinical care.",
+      "sources": [
+        "acog_premenstrual_disorders",
+        "womenshealth_pmdd",
+        "pmdd_review",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "pcos_reproductive_metabolic_context",
+      "genes": [
+        "FSHR",
+        "LHCGR",
+        "SHBG",
+        "CYP17A1",
+        "INSR"
+      ],
+      "marker_ids": [
+        "PANEL_PCOS_REPRODUCTIVE_METABOLIC_CONTEXT"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "hormones_reproductive",
+        "metabolic"
+      ],
+      "favor": [
+        "If ovarian, cycle, androgen, fertility, or metabolic questions apply, record cycle regularity, symptoms, relevant medications, sleep, activity, nutrition, and the person's goals without assuming anatomy or fertility plans"
+      ],
+      "avoid": [
+        "Using a research panel to diagnose PCOS, infer ovulation or fertility, prescribe a calorie target, or start, stop, or select metformin, contraceptive, antiandrogen, or hormone treatment"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinician-directed cycle/ovulation and androgen evaluation when the person's symptoms and goals warrant",
+          "urgency": "consider"
+        },
+        {
+          "name": "HbA1c, fasting glucose, lipid panel, or other metabolic testing when clinically indicated",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Discuss the exact hormone or metabolic product label and treatment goal with the prescriber or pharmacist; PCOS care is individualized and cannot be chosen from a consumer-array panel."
+      ],
+      "notes": "PCOS is a clinical and laboratory diagnosis with overlapping phenotypes and different care goals. This panel is a reproductive-metabolic research context prompt and cannot establish PCOS, current hormone levels, ovulation, fertility, or medication response.",
+      "sources": [
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail",
+        "cdc_prediabetes_lifestyle",
+        "niddk_prediabetes_tests"
+      ]
+    },
+    {
+      "id": "endometriosis_symptom_context",
+      "genes": [
+        "WNT4",
+        "VEZT",
+        "IL1A",
+        "ESR1",
+        "MULTI_GENE"
+      ],
+      "marker_ids": [
+        "PANEL_ENDOMETRIOSIS_CONTEXT"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "hormones_reproductive",
+        "pain_migraine_sensory"
+      ],
+      "favor": [
+        "If pelvic pain, painful periods, pain with sex, bowel or bladder pain, or fertility questions apply, record timing, severity, bleeding, functional impact, and medication use for a gynecology or primary-care discussion"
+      ],
+      "avoid": [
+        "Using an endometriosis research panel to diagnose or exclude endometriosis, infer fertility, or start, stop, or choose hormonal, pain, or surgical treatment"
+      ],
+      "medication_context": [
+        "Bring the symptom diary and exact product labels to the clinician; pain and hormonal treatment require review of pregnancy possibility, contraindications, kidney/liver status, bleeding risk, interactions, and personal goals rather than DNA alone."
+      ],
+      "notes": "Endometriosis susceptibility associations are not diagnostic and do not explain the cause or severity of one person's pain. Clinical history, examination, imaging when indicated, and specialist assessment lead; consumer DNA cannot substitute for that workup.",
+      "sources": [
+        "acog_chronic_pelvic_pain",
+        "acog_dysmenorrhea_painful_periods",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "adenomyosis_research_gap_context",
+      "genes": [
+        "ESR1",
+        "PGR",
+        "WNT4",
+        "VEZT",
+        "HRH1",
+        "SSPN",
+        "MULTI_GENE"
+      ],
+      "marker_ids": [
+        "PANEL_ADENOMYOSIS_RESEARCH_GAP"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "hormones_reproductive",
+        "pain_migraine_sensory"
+      ],
+      "favor": [
+        "If heavy or prolonged bleeding, worsening period pain, pelvic pressure, or pain with sex is present, bring a dated symptom and bleeding record to a gynecology clinician"
+      ],
+      "avoid": [
+        "Treating an adenomyosis research-gap record as a diagnosis, assuming a hormone cause from DNA, or changing contraception, hormone therapy, pain treatment, or supplements from this signal"
+      ],
+      "lab_tests": [
+        {
+          "name": "CBC and ferritin when bleeding is heavy or prolonged or anemia symptoms are present",
+          "urgency": "consider"
+        },
+        {
+          "name": "Pelvic examination and transvaginal ultrasound or MRI when clinically indicated",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Use the exact contraceptive or hormone label and discuss benefits, bleeding effects, alternatives, and contraindications with the prescriber; raw DNA cannot identify adenomyosis or select a treatment."
+      ],
+      "notes": "Adenomyosis remains an evidence gap for consumer SNP interpretation. Research loci and hormonally responsive tissue biology do not diagnose or exclude the structural uterine condition; symptoms, examination, imaging, and gynecology review are required.",
+      "sources": [
+        "nice_adenomyosis_heavy_bleeding",
+        "medlineplus_adenomyosis",
+        "adenomyosis_2026_gwas",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
     }
   ]
 }

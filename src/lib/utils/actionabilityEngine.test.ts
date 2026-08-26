@@ -228,6 +228,86 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('Start enzyme');
   });
 
+  it('routes high-impact cardiovascular and hereditary-cancer markers to confirmation', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs76992529',
+        gene: 'TTR',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'ARRHYTHMOGENIC_CARDIOMYOPATHY_PANEL',
+        gene: 'PKP2/DSP/DSG2/DSC2/JUP/TMEM43/DES/FLNC/PLN',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'rs555607708',
+        gene: 'CHEK2',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'rs34612342',
+        gene: 'MUTYH',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'rs1801155',
+        gene: 'APC',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'rs138213197',
+        gene: 'HOXB13',
+        severity_class: 'confirmation_required',
+      }),
+    ]));
+    const avoidance = plan.diet.avoid.join(' ');
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('TTR genotyping'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('rhythm monitoring'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('CHEK2 sequencing'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('MUTYH sequencing'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('APC testing'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('HOXB13 testing'))).toBe(true);
+    expect(avoidance).toContain('diagnose amyloidosis');
+    expect(avoidance).toContain('classic familial adenomatous polyposis');
+    expect(medicationText).toContain('raw DNA');
+    expect(medicationText).not.toContain('select cardiac');
+  });
+
+  it('keeps reproductive research panels symptom- and context-gated', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY',
+        gene: 'ESR1/ESR2/PGR/ALLO_GABAA/ESC_EZ',
+      }),
+      marker({
+        rsid: 'PANEL_PCOS_REPRODUCTIVE_METABOLIC_CONTEXT',
+        gene: 'FSHR/LHCGR/SHBG/CYP17A1/INSR/METABOLIC',
+      }),
+      marker({
+        rsid: 'PANEL_ENDOMETRIOSIS_CONTEXT',
+        gene: 'WNT4/VEZT/IL1A/ESR1/MULTI_GENE',
+      }),
+      marker({
+        rsid: 'PANEL_ADENOMYOSIS_RESEARCH_GAP',
+        gene: 'ESR1/PGR/WNT4/VEZT/HRH1/SSPN/MULTI_GENE',
+        severity_class: 'confirmation_required',
+      }),
+    ]), { reproductiveContext: 'cyclic_mood_symptoms' });
+    const avoidance = plan.diet.avoid.join(' ');
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('HbA1c'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('transvaginal ultrasound'))).toBe(true);
+    expect(avoidance).toContain('estrogen spike');
+    expect(avoidance).toContain('diagnose PCOS');
+    expect(avoidance).toContain('diagnose or exclude endometriosis');
+    expect(medicationText).toContain('exact contraceptive');
+    expect(medicationText).toContain('raw DNA');
+  });
+
   it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
     const plan = deriveActionablePlan({
       ...report([marker({

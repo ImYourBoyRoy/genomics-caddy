@@ -382,6 +382,24 @@ describe('support resource context', () => {
     expect(context.food_safety.source_registry.niddk_celiac_tests).toBeDefined();
   });
 
+  it('routes high-impact cardiovascular and hereditary-cancer panels to their resource-authored rules', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['cardiovascular', 'cancer_confirmation_only'],
+    });
+    const actionabilityIds = context.actionability_rules.map((rule) => rule.id);
+
+    expect(actionabilityIds).toEqual(expect.arrayContaining([
+      'ttr_val142ile_amyloid_confirmation',
+      'arrhythmogenic_cardiomyopathy_panel_context',
+      'chek2_cancer_confirmation',
+      'mutyh_cancer_confirmation',
+      'apc_i1307k_context',
+      'hoxb13_prostate_cancer_context',
+    ]));
+    expect(context.food_safety.source_registry.gene_reviews_ttr_amyloidosis).toBeDefined();
+    expect(context.food_safety.source_registry.aha_ttr_amyloid_cardiomyopathy).toBeDefined();
+  });
+
   it('routes every phenotype domain and its source records from resource-authored pack IDs', () => {
     for (const domain of phenotypePrompts.domains) {
       const context = buildSupportResourceContext({ packIds: [domain.id] });

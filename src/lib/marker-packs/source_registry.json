@@ -835,6 +835,22 @@
       "conflict_of_interest": "U.S. National Institute of Dental and Craniofacial Research public-health resource",
       "notes": "Use for medication-related dry-mouth prompts, oral-health risk context, and clinician or dentist evaluation; do not infer medication causality from DNA."
     },
+    "gene_reviews_ttr_amyloidosis": {
+      "name": "GeneReviews: Hereditary Transthyretin Amyloidosis",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1194/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for TTR variant confirmation, age-dependent/incomplete penetrance, cardiac and neurologic phenotype, family history, and clinical testing boundaries."
+    },
+    "aha_ttr_amyloid_cardiomyopathy": {
+      "name": "American Heart Association: Transthyretin Amyloid Cardiomyopathy",
+      "url": "https://www.heart.org/en/health-topics/cardiomyopathy/what-is-cardiomyopathy-in-adults/transthyretin-amyloid-cardiomyopathy-attr-cm",
+      "accessed": "2026-08-26",
+      "evidence_type": "Cardiology patient and clinician education",
+      "conflict_of_interest": "American Heart Association public health resource",
+      "notes": "Use for symptom, cardiac-testing, and genetic-evaluation context; a genetic signal does not establish current amyloid cardiomyopathy."
+    },
     "cdc_oral_cancer": {
       "name": "CDC: About Oral Cancer",
       "url": "https://www.cdc.gov/oral-health/about/about-oral-cancer.html",

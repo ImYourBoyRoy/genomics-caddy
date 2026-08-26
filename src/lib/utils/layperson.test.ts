@@ -57,6 +57,25 @@ describe('plain-English claim framing', () => {
     expect(LAYPERSON_MAP.rs738409.simpleMeaning).toContain('does not diagnose fatty liver');
   });
 
+  it('covers high-impact cardiovascular and hereditary-cancer markers with confirmation boundaries', () => {
+    for (const rsid of [
+      'rs76992529',
+      'rs6025',
+      'rs1799963',
+      'rs11591147',
+      'rs6511720',
+      'rs599839',
+      'rs116843064',
+      'rs12190287',
+    ]) {
+      expect(LAYPERSON_MAP[rsid]?.simpleMeaning, rsid).toBeTruthy();
+    }
+    expect(LAYPERSON_MAP.rs76992529.simpleMeaning).toContain('not a diagnosis');
+    expect(LAYPERSON_MAP.rs6025.simpleMeaning).toContain('current clot');
+    expect(LAYPERSON_MAP.rs11591147.simpleMeaning).toContain('lower LDL cholesterol');
+    expect(LAYPERSON_MAP.rs12190287.simpleMeaning).toContain('not a diagnosis');
+  });
+
   it('derives a bounded fallback from the marker resource when no dedicated translation exists', () => {
     const translation = getLaypersonTranslation({
       rsid: 'rs-untranslated',

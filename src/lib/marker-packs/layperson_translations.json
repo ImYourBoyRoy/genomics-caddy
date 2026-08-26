@@ -1112,6 +1112,46 @@
       "rsid": "rs3024505",
       "simpleImpact": "IL10 inflammatory-bowel context marker",
       "simpleMeaning": "This IL10-region marker has been studied in immune regulation and inflammatory-bowel traits. It is probabilistic research context, not an IBD diagnosis or a reason to start an immune medicine or restrictive diet."
+    },
+    {
+      "rsid": "rs76992529",
+      "simpleImpact": "TTR amyloidosis clinical-confirmation marker",
+      "simpleMeaning": "This TTR marker is associated with an inherited transthyretin-amyloidosis variant, especially in some ancestry groups, but penetrance is age-dependent and incomplete. A consumer call is not a diagnosis; validated clinical testing and appropriate cardiac or neurologic evaluation are required."
+    },
+    {
+      "rsid": "rs6025",
+      "simpleImpact": "Factor V Leiden clot-risk context marker",
+      "simpleMeaning": "This marker can represent Factor V Leiden, an inherited tendency toward venous blood clots. A consumer result needs clinical confirmation and personal or family history; it does not diagnose a current clot or by itself determine contraception, pregnancy, or anticoagulant treatment."
+    },
+    {
+      "rsid": "rs1799963",
+      "simpleImpact": "Prothrombin G20210A clot-risk context marker",
+      "simpleMeaning": "This marker can represent a prothrombin variant associated with venous-clot risk in some situations. Confirm it clinically and discuss personal or family history and exposures such as estrogen, surgery, or immobility; it does not diagnose a current clot or prescribe treatment."
+    },
+    {
+      "rsid": "rs11591147",
+      "simpleImpact": "PCSK9 LDL-cholesterol association marker",
+      "simpleMeaning": "This PCSK9 marker has been associated with lower LDL cholesterol in some studies. It is a probabilistic lipid context signal, not a guarantee of a healthy lipid profile or a reason to start or stop a cholesterol medicine; measured lipids and clinical history matter more."
+    },
+    {
+      "rsid": "rs6511720",
+      "simpleImpact": "LDLR LDL-cholesterol association marker",
+      "simpleMeaning": "This LDLR marker has been associated with small differences in LDL cholesterol. It is a common regulatory proxy, not the same as a pathogenic familial-hypercholesterolemia variant and not a substitute for a lipid panel or clinical assessment."
+    },
+    {
+      "rsid": "rs599839",
+      "simpleImpact": "SORT1/CELSR2 LDL-handling context marker",
+      "simpleMeaning": "This liver-lipid locus has been associated with differences in LDL cholesterol and lipoprotein handling. Effects are probabilistic and small compared with the full clinical picture; it does not diagnose vascular disease or determine medication."
+    },
+    {
+      "rsid": "rs116843064",
+      "simpleImpact": "ANGPTL4 triglyceride context marker",
+      "simpleMeaning": "This ANGPTL4 marker has been studied in triglyceride and lipoprotein-lipase biology. Any association is probabilistic and does not diagnose a lipid disorder or determine a diet, supplement, or medication; a measured lipid panel is more useful."
+    },
+    {
+      "rsid": "rs12190287",
+      "simpleImpact": "TCF21 coronary-artery disease context marker",
+      "simpleMeaning": "This TCF21 locus has been studied in coronary-artery disease and vascular-remodeling research. It is a small-effect association, not a diagnosis or a personal event prediction; blood pressure, lipids, smoking, diabetes, family history, and clinical care matter more."
     }
   ]
 }

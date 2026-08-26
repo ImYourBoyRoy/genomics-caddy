@@ -9,6 +9,7 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
+  import { getLaypersonTranslation } from '../../utils/layperson';
 
   interface Props {
     report: GeneratedReport;
@@ -30,11 +31,11 @@
 
   // Collapsible states with localStorage persistence
   let collapsed = $state({
-    topFindings: false,
-    diet: false,
-    cycleSupport: false,
-    supplements: false,
-    activity: false,
+    topFindings: true,
+    diet: true,
+    cycleSupport: true,
+    supplements: true,
+    activity: true,
     medication: true,
     labTests: true,
   });
@@ -68,6 +69,31 @@
 
   function selectedReproductiveContextLabel(): string {
     return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
+  }
+
+  function markerForFinding(finding: ActionablePlan['topFindings'][number]) {
+    for (const section of report.sections || []) {
+      const marker = section.markers.find((candidate) => candidate.link_id === finding.link_id);
+      if (marker) return marker;
+    }
+    return undefined;
+  }
+
+  function findingMeaning(finding: ActionablePlan['topFindings'][number]): string {
+    const marker = markerForFinding(finding);
+    return marker
+      ? getLaypersonTranslation(marker).simpleMeaning
+      : 'This is a research association that may be useful to discuss in the right personal context.';
+  }
+
+  function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
+    if (finding.severity_class === 'confirmation_required' || finding.severity_class === 'high_risk') {
+      return 'Ask a qualified clinician whether medical-grade confirmation or follow-up is appropriate.';
+    }
+    if (finding.severity_class === 'moderate_risk' || finding.severity_class === 'low_risk') {
+      return 'Review the context, symptoms, and any relevant labs with a clinician before acting.';
+    }
+    return 'Open the detailed finding and compare it with your symptoms, goals, and history.';
   }
 
   function getSeverityLabel(sc: SeverityClass): string {
@@ -137,6 +163,45 @@
     </div>
   {/if}
 
+  <section class="action-queue summary-card card" aria-labelledby="action-queue-title">
+    <div class="action-queue-header">
+      <div>
+        <span class="section-kicker">Start here</span>
+        <h3 id="action-queue-title">Your next steps</h3>
+        <p>These are the most useful follow-up prompts from this report. They are not diagnoses or treatment instructions.</p>
+      </div>
+      <span class="action-queue-count">{Math.min(plan.topFindings.length, 5)} of 5</span>
+    </div>
+
+    {#if plan.topFindings.length > 0}
+      <div class="action-queue-list">
+        {#each plan.topFindings.slice(0, 5) as finding (finding.link_id || `${finding.rsid}:${finding.gene}`)}
+          <article class="action-queue-item">
+            <div class="action-queue-item-top">
+              <div>
+                <h4>{finding.variant_name || 'Research finding'}</h4>
+                <span class="action-queue-context">{finding.section_name}</span>
+              </div>
+              <span class="severity-badge {finding.severity_class}">{getSeverityLabel(finding.severity_class)}</span>
+            </div>
+            <p>{findingMeaning(finding)}</p>
+            <div class="action-queue-next"><strong>Next helpful step:</strong> {findingNextStep(finding)}</div>
+            {#if onJumpToMarker}
+              <button class="btn btn-xs btn-link jump-btn" type="button" onclick={() => onJumpToMarker?.(finding.link_id)}>
+                View finding details →
+              </button>
+            {/if}
+          </article>
+        {/each}
+      </div>
+    {:else}
+      <div class="action-queue-empty">
+        <strong>No immediate genetic follow-up prompts were generated.</strong>
+        <span>That does not mean every condition is ruled out. Review symptoms, routine care, and any selected personal context with a clinician.</span>
+      </div>
+    {/if}
+  </section>
+
   <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
     <div class="context-selector-copy">
       <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
@@ -189,37 +254,6 @@
   {/if}
 
   <div class="grid-layout">
-    <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
-    {#if plan.topFindings.length > 0}
-      <div class="summary-card card card-top-findings" class:collapsed={collapsed.topFindings}>
-        <div class="card-header" onclick={() => toggle('topFindings')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('topFindings'))}>
-          <h3>⭐ Top {plan.topFindings.length} Areas of Concern</h3>
-          <span class="chevron">{collapsed.topFindings ? '▶' : '▼'}</span>
-        </div>
-        {#if !collapsed.topFindings}
-          <div class="card-body">
-            <div class="findings-list">
-              {#each plan.topFindings as f (f.link_id || `${f.rsid}:${f.gene}`)}
-                <div class="finding-item">
-                  <div class="finding-meta">
-                    <span class="gene-badge">{f.gene}</span>
-                    <span class="rsid">{f.rsid}</span>
-                    <span class="severity-badge {f.severity_class}">{getSeverityLabel(f.severity_class)}</span>
-                  </div>
-                  <p class="finding-desc">{f.interpretation}</p>
-                  {#if onJumpToMarker}
-                    <button class="btn btn-xs btn-link jump-btn" onclick={() => onJumpToMarker?.(f.link_id)}>
-                      🔍 View Details (in {f.section_name})
-                    </button>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          </div>
-        {/if}
-      </div>
-    {/if}
-
     <div class="action-row">
       <!-- Panel 2: Dietary Guidance -->
       {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0 || plan.foodSafety.suppressedSuggestions.length > 0}
@@ -614,6 +648,125 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     width: 100%;
+  }
+
+  .action-queue {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
+    background: var(--surface-raised);
+  }
+
+  .action-queue-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .section-kicker {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .action-queue-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.15rem;
+  }
+
+  .action-queue-header p {
+    max-width: 46rem;
+    margin: 0.4rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .action-queue-count {
+    flex: 0 0 auto;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .action-queue-list {
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 1rem;
+  }
+
+  .action-queue-item {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent);
+    border-radius: 0.65rem;
+    background: var(--surface-subtle);
+  }
+
+  .action-queue-item-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .action-queue-item h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+
+  .action-queue-context {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+
+  .action-queue-item > p {
+    margin: 0.65rem 0;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .action-queue-next {
+    padding: 0.55rem 0.65rem;
+    border-radius: 0.45rem;
+    background: var(--accent-soft);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .action-queue-next strong {
+    color: var(--text-primary);
+  }
+
+  .action-queue-item .jump-btn {
+    margin-top: 0.55rem;
+  }
+
+  .action-queue-empty {
+    display: grid;
+    gap: 0.35rem;
+    padding-top: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .action-queue-empty strong {
+    color: var(--text-primary);
   }
 
   .disclaimer-banner {

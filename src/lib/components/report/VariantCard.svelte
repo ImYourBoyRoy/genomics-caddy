@@ -6,6 +6,7 @@
   import SourcesList from './SourcesList.svelte';
   import ConfirmWithList from './ConfirmWithList.svelte';
   import WarningBlocks from './WarningBlocks.svelte';
+  import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
   import { getLaypersonTranslation } from '../../utils/layperson';
@@ -61,6 +62,16 @@
     return `${base.toFixed(1)}×10${exp < 0 ? '⁻' : ''}${Math.abs(exp)}`;
   }
 
+  function nextHelpfulStep(): string {
+    if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
+      return 'Ask a qualified clinician whether medical-grade confirmation is appropriate.';
+    }
+    if (marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk') {
+      return 'Review this context alongside symptoms, history, and relevant labs before acting.';
+    }
+    return 'Review the details and decide whether this research context is relevant to your goals.';
+  }
+
 </script>
 
 <div
@@ -76,54 +87,54 @@
       {#if marker.variant_name}
         <span class="variant-sub">({marker.variant_name})</span>
       {/if}
-      <span class="rsid-sub">
-        {marker.rsid}
-        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
-          <span class="nav-links no-print">
-            <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "map")} title="Genome map">🗺️</button>
-            <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")} title="Raw browser">🔍</button>
-            <button
-              type="button"
-              class="research-explore-link"
-              onclick={() => onExploreResearch?.(marker.rsid)}
-              title="Search Enriched Vector Research"
-            >
-              🔬
-            </button>
-          </span>
-        {/if}
-      </span>
-    </span>
-    <EvidenceBadge tier={marker.evidence_tier} />
-    {#if marker.sex_scope && marker.sex_scope !== 'all'}
-      <span class="scope-badge" title="Biological applicability hint only; this is not gender or anatomy.">
-        {getScopeLabel(marker.sex_scope)}
-      </span>
-    {/if}
-  </div>
-
-  <!-- Status line: genotype result + severity verdict -->
-  <div class="marker-middle">
-    <span class="genotype-val">
-      Your Result: <strong>{marker.user_genotype}</strong>
-      {#if viewMode === 'simple'}
-        <span class="genotype-info-icon" title="Your DNA contains two copies of this marker (one from each parent). '{marker.user_genotype}' represents your specific genetic letters.">ℹ️</span>
-      {/if}
-    </span>
-    <span class="marker-severity-label">
-      <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
-      {viewMode === 'simple' ? severity.plainLabel : severity.label}
-      {#if effectCount > 0 && isActiveFindings}
-        <span class="allele-detail">
-          {#if viewMode === 'simple'}
-            ({effectCount === 1 ? 'one copy' : 'two copies'} of DNA letter {effectAllele} found)
-          {:else}
-            ({effectCount}× {effectAllele})
+      {#if viewMode !== 'simple'}
+        <span class="rsid-sub">
+          {marker.rsid}
+          {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+            <span class="nav-links no-print">
+              <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "map")} title="Genome map">🗺️</button>
+              <button type="button" class="research-explore-link" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")} title="Raw browser">🔍</button>
+              <button
+                type="button"
+                class="research-explore-link"
+                onclick={() => onExploreResearch?.(marker.rsid)}
+                title="Search Enriched Vector Research"
+              >
+                🔬
+              </button>
+            </span>
           {/if}
         </span>
       {/if}
     </span>
+    <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
+    {#if marker.sex_scope && marker.sex_scope !== 'all'}
+      <Tooltip label={getScopeLabel(marker.sex_scope)} description="Biological applicability hint only; this is not gender identity, anatomy, fertility, pregnancy, or hormone status.">
+        <span class="scope-badge">{getScopeLabel(marker.sex_scope)}</span>
+      </Tooltip>
+    {/if}
   </div>
+
+  <!-- Status line: Simple keeps raw calls in technical details; Clinical keeps the full call visible. -->
+  {#if viewMode === 'simple'}
+    <div class="simple-status-line">
+      <span class="marker-severity-label">
+        <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
+        {severity.plainLabel}
+      </span>
+    </div>
+  {:else}
+    <div class="marker-middle">
+      <span class="genotype-val">Your Result: <strong>{marker.user_genotype}</strong></span>
+      <span class="marker-severity-label">
+        <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
+        {severity.label}
+        {#if effectCount > 0 && isActiveFindings}
+          <span class="allele-detail">({effectCount}× {effectAllele})</span>
+        {/if}
+      </span>
+    </div>
+  {/if}
 
   {#if isActiveFindings}
     <!-- Severity explanation — only shown for active findings -->
@@ -205,7 +216,7 @@
       {/if}
 
       <div class="impact-section">
-        <strong>What this gene does:</strong>
+        <strong>{viewMode === 'simple' ? 'What this is about:' : 'What this gene does:'}</strong>
         {#if viewMode === "simple"}
           <span class="layperson-text">{laypersonTranslation?.simpleImpact || marker.impact}</span>
         {:else if viewMode === "clinical"}
@@ -238,7 +249,7 @@
       {/if}
 
       <div class="interpretation-section">
-        <strong>What your result means:</strong>
+        <strong>{viewMode === 'simple' ? 'What this might mean for you:' : 'What your result means:'}</strong>
         {#if viewMode === "simple"}
           <span class="layperson-text">{laypersonTranslation?.simpleMeaning || marker.interpretation}</span>
         {:else if viewMode === "clinical"}
@@ -256,6 +267,13 @@
           </div>
         {/if}
       </div>
+
+      {#if viewMode === 'simple'}
+        <div class="simple-next-step">
+          <strong>Next helpful step:</strong>
+          <span>{nextHelpfulStep()}</span>
+        </div>
+      {/if}
 
       {#if viewMode !== "simple" && marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
         <ConfirmWithList confirmWith={marker.confirm_with} />
@@ -292,6 +310,19 @@
             <span class="pop-simple">🌍 {marker.population_rarity}</span>
           {/if}
         </div>
+        <details class="technical-details">
+          <summary>Technical details</summary>
+          <dl>
+            <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
+            <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
+            <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
+            <div><dt>Claim boundary</dt><dd>{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</dd></div>
+          </dl>
+          {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+            <ConfirmWithList confirmWith={marker.confirm_with} />
+            <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
+          {/if}
+        </details>
       {/if}
     </div>
   {/if}
@@ -304,6 +335,8 @@
     cursor: pointer;
     font-size: 0.8rem;
     padding: 0 4px;
+    min-width: 44px;
+    min-height: 44px;
     margin-left: 4px;
     opacity: 0.6;
     transition: opacity 0.2s, transform 0.2s;
@@ -416,5 +449,67 @@
     margin-left: 4px;
     cursor: help;
     user-select: none;
+  }
+
+  .simple-status-line {
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-subtle);
+  }
+
+  .simple-next-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.5rem;
+    background: var(--accent-soft);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .simple-next-step strong {
+    color: var(--text-primary);
+  }
+
+  .technical-details {
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.55rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .technical-details summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+
+  .technical-details dl {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.7rem 0;
+  }
+
+  .technical-details dl > div {
+    display: grid;
+    grid-template-columns: minmax(6rem, 0.35fr) 1fr;
+    gap: 0.6rem;
+  }
+
+  .technical-details dt {
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+
+  .technical-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
   }
 </style>

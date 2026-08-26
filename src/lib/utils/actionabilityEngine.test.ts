@@ -62,6 +62,19 @@ function report(markers: EvaluatedMarker[]): GeneratedReport {
 }
 
 describe('actionability engine safety policy', () => {
+  it('keeps the dashboard action queue bounded while retaining full report data', () => {
+    const markers = Array.from({ length: 7 }, (_, index) => marker({
+      rsid: `rs-queue-${index}`,
+      gene: `GENE${index}`,
+      link_id: `test:queue:${index}`,
+      severity_class: 'moderate_risk',
+    }));
+
+    const plan = deriveActionablePlan(report(markers));
+
+    expect(plan.topFindings).toHaveLength(5);
+  });
+
   it('qualifies diet guidance and never revives the MTHFR folic-acid avoidance myth', () => {
     const plan = deriveActionablePlan(report([marker({})]));
     expect(plan.diet.favor.some((item) => item.startsWith('Consider only if symptoms'))).toBe(true);

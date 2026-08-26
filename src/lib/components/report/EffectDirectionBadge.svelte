@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { EffectDirection } from '../../types/genomics';
   import { getDirectionInfo } from '../../utils/evidence';
+  import Tooltip from '../common/Tooltip.svelte';
 
   /*
   Module Docstring:
@@ -24,8 +25,10 @@
 
 {#if direction}
   <div class="direction-section">
-    <span class="direction-badge {info.colorClass}" title={info.description}>
-      {info.plainLabel}
-    </span>
+    <Tooltip label={info.plainLabel} description={info.description}>
+      <span class="direction-badge {info.colorClass}">
+        {info.plainLabel}
+      </span>
+    </Tooltip>
   </div>
 {/if}

@@ -1,6 +1,8 @@
 <!-- ./src/lib/components/layout/AppShell.svelte -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import ThemeToggle from '../common/ThemeToggle.svelte';
+  let focusMode = $state(false);
 
   /*
   Module Docstring:
@@ -21,7 +23,17 @@
   let { sidebar, children }: Props = $props();
 </script>
 
-<div class="app-layout">
+<div class="app-layout" class:focus-mode={focusMode}>
   {@render sidebar()}
   {@render children()}
+  <button
+    type="button"
+    class="focus-toggle"
+    aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
+    aria-pressed={focusMode}
+    onclick={() => focusMode = !focusMode}
+  >
+    {focusMode ? '☰ Show data' : '⤢ Focus report'}
+  </button>
+  <ThemeToggle />
 </div>

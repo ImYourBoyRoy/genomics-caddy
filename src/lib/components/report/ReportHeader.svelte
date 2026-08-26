@@ -19,23 +19,18 @@
     geneticSex: string;
     foundMarkersCount: number;
     totalMarkersChecked: number;
+    presentationMode?: "simple" | "clinical" | "dual";
   }
 
   let {
     generatedReport,
     geneticSex,
     foundMarkersCount,
-    totalMarkersChecked
+    totalMarkersChecked,
+    presentationMode = "simple"
   }: Props = $props();
 
   let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
-
-  let bucketLabel = $derived(
-    overallScore <= 15 ? "Fewer matches" :
-    overallScore <= 35 ? "Some matches" :
-    overallScore <= 60 ? "Many matches" :
-    "Most markers matched"
-  );
 
   function computeSummaryLine(report: GeneratedReport): string {
     let high = 0;
@@ -64,15 +59,12 @@
   let summaryLine = $derived(computeSummaryLine(generatedReport));
 </script>
 
-<div class="report-header card">
-  <div class="overall-signal">
-    <div class="meter-wrapper">
-      <div class="meter-score">
-        {overallScore.toFixed(1)}%
-      </div>
-      <div class="meter-label">Matched alleles</div>
-      <div class="meter-bucket">{bucketLabel}</div>
-    </div>
+<div class="report-header card" data-presentation-mode={presentationMode}>
+  <div class="report-quality-summary" aria-label="Report data quality summary">
+    <span class="quality-kicker">DNA report</span>
+    <strong>{foundMarkersCount.toLocaleString()}</strong>
+    <span>of {totalMarkersChecked.toLocaleString()} curated markers called</span>
+    <span class="quality-note">Uncalled markers are unknown, not negative evidence.</span>
   </div>
   <div class="report-desc">
     <div class="header-title-row">
@@ -80,14 +72,6 @@
       <span class="overall-summary-badge">✨ {summaryLine}</span>
     </div>
     <p>{generatedReport.description}</p>
-
-    <!-- Plain-language explanation of the score -->
-    <div class="score-explainer">
-      <strong>What does this number mean?</strong>
-      Among curated pack markers tagged as association-direction (not protective/trait), this is the share of those alleles you carry.
-      It is a <em>match rate for researched associations</em> — not a disease probability, diagnosis, or “how unhealthy you are.”
-      Protective and context markers are counted separately and do not raise this number.
-    </div>
 
     <div class="health-summary-row">
       <div class="health-stat">
@@ -103,17 +87,50 @@
         Use Agent Discovery and Vector Research scopes to expand beyond this baseline.
       </p>
     </div>
+
+    <details class="technical-score-details">
+      <summary>Technical coverage metric</summary>
+      <p>
+        The curated association match rate is {overallScore.toFixed(1)}%. It is a research-association coverage metric—not a disease probability, diagnosis, or measure of health.
+      </p>
+    </details>
   </div>
 </div>
 
 <style>
-  .meter-bucket {
-    font-size: 0.62rem;
-    font-weight: 700;
+  .report-quality-summary {
+    display: flex;
+    flex: 0 0 170px;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    background: var(--surface-subtle);
+  }
+
+  .report-quality-summary strong {
     color: var(--accent);
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  .report-quality-summary > span:not(.quality-kicker) {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .quality-kicker {
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 2px;
+  }
+
+  .quality-note {
+    margin-top: 0.25rem;
   }
 
   .header-title-row {
@@ -136,5 +153,32 @@
     padding: 0.25rem 0.6rem;
     border-radius: 9999px;
     font-weight: 600;
+  }
+
+  .technical-score-details {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .technical-score-details summary {
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .technical-score-details p {
+    margin: 0.5rem 0 0;
+  }
+
+  @media (max-width: 720px) {
+    .report-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .report-quality-summary {
+      flex-basis: auto;
+    }
   }
 </style>

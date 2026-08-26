@@ -16,6 +16,8 @@ import laypersonTranslations from "../marker-packs/layperson_translations.json";
 export interface LaypersonTranslation {
   simpleImpact: string;
   simpleMeaning: string;
+  /** True when the safe generic fallback is being used instead of authored copy. */
+  isFallback?: boolean;
 }
 
 export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = Object.fromEntries(
@@ -27,10 +29,17 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = Object.fromEn
 
 export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTranslations.fallback;
 
+const SAFE_FALLBACK: LaypersonTranslation = {
+  simpleImpact: "A biological pathway studied in genetic research.",
+  simpleMeaning:
+    "This DNA result is associated with a research finding. It does not predict whether you have a condition, measure your current health, or tell you what treatment to use.",
+  isFallback: true,
+};
+
 /**
- * Keep untranslated markers useful by reusing their curated resource text.
- * This is a presentation fallback only: it does not upgrade the marker's
- * evidence tier, claim boundaries, callability, or clinical actionability.
+ * Keep untranslated markers useful without leaking technical interpretation
+ * text into Simple mode. A missing translation is a content-quality gap, not
+ * permission to expose the clinical resource wording to casual users.
  */
 export function getLaypersonTranslation(
   marker: Pick<
@@ -42,19 +51,12 @@ export function getLaypersonTranslation(
   const explicit = translations[marker.rsid];
   if (explicit) return explicit;
 
-  const gene = marker.gene.trim();
-  const impact = marker.impact.trim();
-  const interpretation = marker.interpretation.trim();
-  const limitation = marker.raw_dna_limitation?.trim();
-  const simpleImpact = impact || (gene ? `${gene} genetic context` : DEFAULT_LAYPERSON_TRANSLATION.simpleImpact);
-  const safetyBoundary = limitation
-    || "This is probabilistic genetic context; it does not by itself diagnose a condition, measure current health, or predict an individual outcome.";
-  const confirmationNote = marker.clinical_confirmation_required
-    ? " Clinical confirmation is important before medical decisions."
-    : "";
+  if (marker.clinical_confirmation_required) {
+    return {
+      ...SAFE_FALLBACK,
+      simpleMeaning: `${SAFE_FALLBACK.simpleMeaning} A clinical test may be needed before medical decisions.`,
+    };
+  }
 
-  return {
-    simpleImpact,
-    simpleMeaning: `${interpretation || DEFAULT_LAYPERSON_TRANSLATION.simpleMeaning} ${safetyBoundary}${confirmationNote}`.trim(),
-  };
+  return { ...SAFE_FALLBACK };
 }

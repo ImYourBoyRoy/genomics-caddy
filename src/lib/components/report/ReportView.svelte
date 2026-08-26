@@ -21,6 +21,12 @@
     selectedReproductiveContextOption,
   } from '../../utils/reproductiveContext';
   import type { PersonalSafetyContext } from '../../utils/personalSafetyContext';
+  import {
+    DEFAULT_PRESENTATION_MODE,
+    readPresentationMode,
+    writePresentationMode,
+    type PresentationMode,
+  } from '../../utils/presentationPreferences';
 
   /*
   Module Docstring:
@@ -68,12 +74,32 @@
   let severityFilter = $state<"all" | "risk_only">("all");
   let tierFilter = $state<string>("all");
   let sortBy = $state<"default" | "severity">("default");
-  let viewMode = $state<"simple" | "clinical" | "dual">("dual");
+  let presentationMode = $state<PresentationMode>(DEFAULT_PRESENTATION_MODE);
+  let loadedPresentationModeKey = $state("");
   let showHelpGuide = $state(false);
   let collapsedSections = $state<Record<string, boolean>>({});
   let reproductiveContext = $state('');
   let loadedReproductiveContextKey = $state('');
   let prioritizeReproductiveContext = $state(true);
+
+  function presentationModeStorageKey(sampleId: number): string {
+    return `genomics_presentation_mode_${sampleId}`;
+  }
+
+  $effect(() => {
+    if (!browser || !selectedSample?.id) return;
+    const key = presentationModeStorageKey(selectedSample.id);
+    if (loadedPresentationModeKey === key) return;
+    loadedPresentationModeKey = key;
+    presentationMode = readPresentationMode(localStorage, key);
+  });
+
+  function setPresentationMode(mode: PresentationMode) {
+    presentationMode = mode;
+    if (browser && selectedSample?.id) {
+      writePresentationMode(localStorage, presentationModeStorageKey(selectedSample.id), mode);
+    }
+  }
 
   // Presentation order is fixed; labels and descriptions come from the shared evidence policy.
   const severityLegend: SeverityClass[] = [
@@ -284,13 +310,11 @@
       <span class="report-kicker">Curated packs · on-device</span>
       <h3 class="report-hero-title">Trait report</h3>
       <p class="report-hero-lead">
-        Matched alleles from curated marker packs for <strong>{selectedSample.name}</strong>.
-        Letter badges match the Chromosome Map:
-        <span class="report-glyph">C</span> confirm ·
-        <span class="report-glyph">!</span> stronger ·
-        <span class="report-glyph">?</span> possible ·
-        <span class="report-glyph">+</span> protective.
-        Educational only — not a diagnosis.
+        Curated genetic context for <strong>{selectedSample.name}</strong>.
+        Findings are research and clinical discussion prompts, not a diagnosis or treatment plan.
+        {#if presentationMode !== 'simple'}
+          Technical marker symbols and raw calls are available in the detailed view.
+        {/if}
       </p>
       {#if onOpenDiscovery}
         <p class="report-hero-cta">
@@ -308,7 +332,7 @@
   <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
 
   <div class="disclaimer-banner">
-    <strong>Important:</strong> This report shows curated marker-pack matches from your raw DNA file. It is <strong>not</strong> a medical diagnosis. “Matched alleles” is coverage of association-direction alleles in packs — not a disease probability.
+    <strong>Important:</strong> This report shows curated marker-pack context from your raw DNA file. It is <strong>not</strong> a medical diagnosis, disease probability, or treatment recommendation. Uncalled markers remain unknown.
   </div>
 
   {#if generatedReport.catalog_warnings?.length}
@@ -376,30 +400,32 @@
 
   <!-- Filter Bar -->
   <div class="filter-bar card no-print">
-    <span class="filter-label">Filter:</span>
-    <label class="filter-toggle">
-      <input type="checkbox" bind:checked={showBenign} />
-      Show undetected
-    </label>
-    <label class="filter-toggle">
-      <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
-      Risk variants only
-    </label>
-    <select class="filter-select" bind:value={tierFilter}>
-      <option value="all">All evidence tiers</option>
-      <option value="ab">Tier A & B only</option>
-    </select>
-    
-    <span class="filter-label" style="margin-left: 12px;">Sort:</span>
-    <select class="filter-select" bind:value={sortBy}>
-      <option value="default">Default Order</option>
-      <option value="severity">By Severity (highest first)</option>
-    </select>
+    <div class="filter-group">
+      <span class="filter-label">Show</span>
+      <label class="filter-toggle">
+        <input type="checkbox" bind:checked={showBenign} />
+        Undetected
+      </label>
+      <label class="filter-toggle">
+        <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
+        Risk-focused
+      </label>
+      <select class="filter-select" aria-label="Evidence tier filter" bind:value={tierFilter}>
+        <option value="all">All evidence tiers</option>
+        <option value="ab">Tier A & B only</option>
+      </select>
+    </div>
 
-    <span class="filter-label" style="margin-left: 12px;">Sections:</span>
-    <div style="display: flex; gap: 6px;">
-      <button class="view-mode-btn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px;" onclick={expandAll}>📂 Expand All</button>
-      <button class="view-mode-btn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px;" onclick={collapseAll}>📁 Collapse All</button>
+    <div class="filter-group">
+      <span class="filter-label">Order</span>
+      <select class="filter-select" aria-label="Sort report sections" bind:value={sortBy}>
+        <option value="default">Default order</option>
+        <option value="severity">Highest priority first</option>
+      </select>
+      <div class="filter-actions" aria-label="Section visibility">
+        <button class="view-mode-btn" onclick={expandAll}>Expand all</button>
+        <button class="view-mode-btn" onclick={collapseAll}>Collapse all</button>
+      </div>
     </div>
 
     {#if reproductiveContext}
@@ -410,28 +436,29 @@
       <span class="filter-context-hint">All reproductive markers remain visible.</span>
     {/if}
     
-    <span class="filter-label" style="margin-left: auto;">View Mode:</span>
-    <div class="view-mode-buttons" style="display: flex; gap: 4px;">
-      <button 
+    <div class="mode-group">
+      <span class="filter-label">Reading mode</span>
+      <div class="view-mode-buttons">
+      <button
         class="view-mode-btn" 
-        class:view-mode-active={viewMode === 'simple'} 
-        onclick={() => viewMode = 'simple'}
+        class:view-mode-active={presentationMode === 'simple'}
+        onclick={() => setPresentationMode('simple')}
       >
         🌱 Simple
       </button>
       <button 
         class="view-mode-btn" 
-        class:view-mode-active={viewMode === 'clinical'} 
-        onclick={() => viewMode = 'clinical'}
+        class:view-mode-active={presentationMode === 'clinical'}
+        onclick={() => setPresentationMode('clinical')}
       >
         🏥 Clinical
       </button>
       <button 
         class="view-mode-btn" 
-        class:view-mode-active={viewMode === 'dual'} 
-        onclick={() => viewMode = 'dual'}
+        class:view-mode-active={presentationMode === 'dual'}
+        onclick={() => setPresentationMode('dual')}
       >
-        👥 Dual
+        👥 Compare
       </button>
       <button 
         class="view-mode-btn" 
@@ -440,6 +467,7 @@
       >
         📖 Guide
       </button>
+      </div>
     </div>
   </div>
 
@@ -449,6 +477,7 @@
     geneticSex={selectedSample.genetic_sex}
     {foundMarkersCount}
     {totalMarkersChecked}
+    presentationMode={presentationMode}
   />
 
   {#if generatedReport}
@@ -465,7 +494,7 @@
     {#each filteredSections as section}
       <SectionCard 
         {section} 
-        {viewMode} 
+        viewMode={presentationMode}
         {onExploreResearch} 
         {highlightRsid} 
         onNavigateToVariant={onNavigateToVariant} 

@@ -3,6 +3,7 @@
   import type { EvaluatedSection } from '../../types/genomics';
   import { getSectionSummaryParts } from '../../utils/evidence';
   import VariantCard from './VariantCard.svelte';
+  import Tooltip from '../common/Tooltip.svelte';
   import { slide } from 'svelte/transition';
   import { browser } from '$app/environment';
 
@@ -44,6 +45,7 @@
 
   // Collapse/expand state — persisted to localStorage so it survives report regeneration.
   let storageKey = $derived(`section-collapsed-${section.name}`);
+  let sectionBodyId = $derived(`section-body-${section.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
 
   // Write new collapse state to localStorage whenever it changes
   $effect(() => {
@@ -72,45 +74,53 @@
   <div 
     class="section-header" 
     onclick={toggleCollapse}
-    onkeydown={(e) => e.key === 'Enter' && toggleCollapse()}
+    onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleCollapse())}
     role="button" 
     tabindex="0"
-    style="cursor: pointer; user-select: none; border-bottom: {isCollapsed ? 'none' : '1px solid var(--border-color)'}; padding-bottom: {isCollapsed ? '0' : '10px'}; margin-bottom: {isCollapsed ? '0' : '16px'};"
+    aria-expanded={!isCollapsed}
+    aria-controls={sectionBodyId}
   >
-    <div class="section-title-area" style="display: flex; align-items: center; gap: 8px;">
-      <span class="collapse-icon" style="opacity: 0.6; font-size: 0.8rem; width: 12px; display: inline-block; transition: transform 0.2s;">
+    <div class="section-title-area">
+      <span class="collapse-icon" aria-hidden="true">
         {isCollapsed ? '▶' : '▼'}
       </span>
-      <h4 style="margin: 0;">{section.name}</h4>
-      <span class="pill" style="font-size: 0.7rem; padding: 2px 6px; background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);">
+      <h4>{section.name}</h4>
+      <span class="pill section-count-pill">
         {section.markers.length} {section.markers.length === 1 ? 'variant' : 'variants'}
       </span>
       {#if activeCount > 0}
-        <span class="pill active-pill" style="font-size: 0.7rem; padding: 2px 6px; background: rgba(239, 68, 68, 0.12); color: #f87171;">
+        <span class="pill active-pill section-active-pill">
           {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
         </span>
       {/if}
-      <span class="pill coverage-pill" title="A missing or uncalled marker is unknown, not evidence of low risk.">
-        DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
-      </span>
+      <Tooltip
+        label="DNA call coverage"
+        description="A missing or uncalled marker is unknown, not evidence of low risk."
+      >
+        <span class="pill coverage-pill">
+          DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
+        </span>
+      </Tooltip>
     </div>
 
     <div class="section-score-area">
-      {#if showPercent}
+      {#if showPercent && viewMode === 'simple'}
+        <span class="sec-score-descriptive">Association context · {callableCount}/{section.summary.total_markers} called</span>
+      {:else if showPercent}
         <span class="sec-score">
-          Matched alleles: {section.section_signal_score.toFixed(1)}%
+          Association match rate: {section.section_signal_score.toFixed(1)}%
         </span>
         <span class="sec-score-hint">
-          (association-direction pack markers only)
+          (curated association markers only)
         </span>
       {:else if section.summary.all_require_confirmation}
-        <span class="sec-score-badge badge-warning" title="High-stakes clinical variants require medical-grade confirmation before assigning raw risk percentages.">
-          ⚠️ Clinical Validation Required
-        </span>
+        <Tooltip label="Clinical validation required" description="High-stakes clinical variants require medical-grade confirmation before assigning risk estimates.">
+          <span class="sec-score-badge badge-warning">⚠️ Clinical validation required</span>
+        </Tooltip>
       {:else if section.summary.risk_possible === 0}
-        <span class="sec-score-badge badge-info" title="This category contains environmental modifiers, dietary, and lifestyle traits rather than direct risk indicators.">
-          ℹ️ Context &amp; Modifier Traits
-        </span>
+        <Tooltip label="Context and modifier traits" description="This category contains environmental, dietary, lifestyle, or other context markers rather than direct disease indicators.">
+          <span class="sec-score-badge badge-info">ℹ️ Context and modifier traits</span>
+        </Tooltip>
       {:else}
         <span class="sec-score-descriptive">
           {section.summary.total_markers} markers evaluated
@@ -120,6 +130,69 @@
   </div>
 
 <style>
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-title-area {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .collapse-icon {
+    width: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    transition: transform 160ms ease;
+  }
+
+  .section-title-area h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .section-count-pill,
+  .section-active-pill {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  .section-count-pill {
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+  }
+
+  .section-active-pill {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+  }
+
+  .section-score-area {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    text-align: right;
+  }
+
+  .section-body {
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+  }
+
   .sec-score-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -160,10 +233,23 @@
     color: #cbd5e1;
     background: rgba(148, 163, 184, 0.1);
   }
+
+  @media (max-width: 720px) {
+    .section-header,
+    .section-score-area {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .section-score-area {
+      justify-content: flex-start;
+      text-align: left;
+    }
+  }
 </style>
 
   {#if !isCollapsed}
-    <div class="section-body" transition:slide={{ duration: 200 }}>
+    <div class="section-body" id={sectionBodyId} transition:slide={{ duration: 200 }}>
       <!-- Direction-aware breakdown pills -->
       <div class="section-summary-pills">
         {#each summaryParts as part}

@@ -10,14 +10,71 @@ Responsibilities:
   color-scheme: dark; /* Force native form controls and scrollbars to render in dark theme */
   --bg-primary: #0a0b10;
   --bg-secondary: #12131a;
+  --surface-raised: #171923;
+  --surface-subtle: rgba(255, 255, 255, 0.04);
+  --accent-soft: rgba(20, 184, 166, 0.14);
   --border-color: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
+  --focus-ring: #5eead4;
+  --tooltip-bg: #202332;
+  --tooltip-border: rgba(148, 163, 184, 0.35);
+  --tooltip-text: #dbeafe;
+  --tooltip-heading: #f8fafc;
   --accent: #14b8a6;
   --accent-hover: #0d9488;
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary: #f4f7fb;
+  --bg-secondary: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-subtle: #eef3f8;
+  --accent-soft: rgba(13, 148, 136, 0.12);
+  --border-color: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.24);
+  --text-primary: #172033;
+  --text-secondary: #526071;
+  --focus-ring: #0f766e;
+  --tooltip-bg: #172033;
+  --tooltip-border: #475569;
+  --tooltip-text: #e2e8f0;
+  --tooltip-heading: #ffffff;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --danger: #b42318;
+  --success: #047857;
+  --warning: #a16207;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg-primary: #f4f7fb;
+    --bg-secondary: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-subtle: #eef3f8;
+    --accent-soft: rgba(13, 148, 136, 0.12);
+    --border-color: rgba(15, 23, 42, 0.14);
+    --border-strong: rgba(15, 23, 42, 0.24);
+    --text-primary: #172033;
+    --text-secondary: #526071;
+    --focus-ring: #0f766e;
+    --tooltip-bg: #172033;
+    --tooltip-border: #475569;
+    --tooltip-text: #e2e8f0;
+    --tooltip-heading: #ffffff;
+    --accent: #0f766e;
+    --accent-hover: #115e59;
+    --danger: #b42318;
+    --success: #047857;
+    --warning: #a16207;
+  }
 }
 
 /* Custom premium scrollbar styles for a polished glassmorphic UI */
@@ -45,8 +102,8 @@ select option {
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #0a0b10;
-  color: #f3f4f6;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden; /* prevent double scrollbar in Tauri WebView */
   height: 100%;
@@ -63,7 +120,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: radial-gradient(circle at top right, #1a1b36, var(--bg-primary));
+  background: radial-gradient(circle at top right, var(--surface-subtle), var(--bg-primary));
   color: var(--text-primary);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden;
@@ -76,7 +133,7 @@ h1, h2, h3, h4, h5, h6 {
   align-self: stretch;
   height: 100%;
   min-height: 0;
-  background-color: rgba(18, 19, 26, 0.75);
+  background-color: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-color);
   padding: 24px;
@@ -88,6 +145,39 @@ h1, h2, h3, h4, h5, h6 {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+.app-layout.focus-mode .sidebar {
+  width: 0;
+  padding-inline: 0;
+  border-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.focus-toggle {
+  position: fixed;
+  z-index: 110;
+  top: 0.75rem;
+  left: 0.75rem;
+  min-height: 44px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.18);
+}
+
+.focus-toggle:hover,
+.focus-toggle:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .brand {
@@ -316,7 +406,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Main Content Pane */
 .main-content {
   flex: 1;
-  padding: 36px;
+  min-width: 0;
+  padding: clamp(20px, 3vw, 36px);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -325,6 +416,11 @@ h1, h2, h3, h4, h5, h6 {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
+}
+
+.main-content > * {
+  width: min(100%, 1500px);
+  margin-inline: auto;
 }
 
 /* Welcome / empty-state layout lives in empty-state.css */
@@ -589,8 +685,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Markers Grid */
 .markers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
 }
 .marker-card {
   background: rgba(255, 255, 255, 0.01);
@@ -1276,10 +1372,25 @@ h1, h2, h3, h4, h5, h6 {
 /* ===== Filter Bar ===== */
 .filter-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   padding: 10px 16px;
   margin-bottom: 12px;
+}
+.filter-group,
+.mode-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+.mode-group {
+  margin-left: auto;
 }
 .filter-label {
   font-size: 0.8rem;
@@ -1304,6 +1415,56 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   padding: 4px 10px;
   font-size: 0.78rem;
+}
+
+@media (max-width: 1100px) {
+  .markers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-content {
+    padding: 16px;
+  }
+
+  .sidebar {
+    padding: 18px;
+  }
+
+  .filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-group,
+  .mode-group {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .filter-actions .view-mode-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .mode-group {
+    margin-left: 0;
+  }
+
+  .filter-bar .view-mode-buttons {
+    width: 100%;
+  }
+
+  .filter-bar .view-mode-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* ===== Coming Soon Panel ===== */
@@ -1402,6 +1563,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 5px 10px;
+  min-height: 44px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1596,3 +1758,66 @@ h1, h2, h3, h4, h5, h6 {
 .marker-card.signal-protective .severity-glyph { background: #4ade80; }
 .marker-card.signal-trait .severity-glyph { background: #38bdf8; }
 .marker-card.signal-context .severity-glyph { background: #cbd5e1; }
+
+/* Theme-aware report surfaces. Legacy pack colors remain meaningful, while
+   shared surfaces, text, controls, and focus states follow the selected theme. */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .summary-card,
+:root[data-theme="light"] .marker-card,
+:root[data-theme="light"] .section-card,
+:root[data-theme="light"] .filter-bar,
+:root[data-theme="light"] .report-header,
+:root[data-theme="light"] .report-hero {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .app-layout {
+  background: radial-gradient(circle at top right, #e4f5f3, var(--bg-primary));
+}
+
+:root[data-theme="light"] .sidebar {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
+:root[data-theme="light"] .tabs,
+:root[data-theme="light"] .view-mode-buttons,
+:root[data-theme="light"] .marker-middle,
+:root[data-theme="light"] .simple-status-line,
+:root[data-theme="light"] .technical-details,
+:root[data-theme="light"] .score-explainer {
+  background: var(--surface-subtle);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="light"] .tab-btn,
+:root[data-theme="light"] .view-mode-btn,
+:root[data-theme="light"] .filter-toggle,
+:root[data-theme="light"] .filter-label,
+:root[data-theme="light"] .filter-select {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .filter-select,
+:root[data-theme="light"] select option {
+  background: var(--surface-raised) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-theme="light"] .report-hero-title,
+:root[data-theme="light"] .report-hero-lead,
+:root[data-theme="light"] .report-kicker {
+  color: var(--text-primary) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

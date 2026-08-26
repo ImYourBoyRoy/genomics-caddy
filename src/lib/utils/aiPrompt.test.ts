@@ -95,8 +95,10 @@ describe('AI marker payload claim boundaries', () => {
     expect(payload.assertion_status).toBe('Verified');
     expect(payload.interpretation_allowed).toBe(true);
     expect(payload.source_names).toEqual(['Example source']);
-    expect(payload.layperson_summary?.simple_impact).toBe('Example context');
-    expect(payload.layperson_summary?.simple_meaning).toContain('A consumer SNP is incomplete.');
+    expect(payload.layperson_summary?.simple_impact).toBe('A biological pathway studied in genetic research.');
+    expect(payload.layperson_summary?.simple_meaning).toContain('does not predict whether you have a condition');
+    expect(payload.layperson_summary?.simple_meaning).not.toContain('This is an association context.');
+    expect(payload.layperson_summary?.simple_meaning).not.toContain('A consumer SNP is incomplete.');
   });
 
   it('injects explicitly supplied per-profile safety context without treating it as genotype evidence', () => {

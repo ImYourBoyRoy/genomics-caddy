@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/report/EvidenceBadge.svelte -->
 <script lang="ts">
   import { getTierInfo } from '../../utils/evidence';
+  import Tooltip from '../common/Tooltip.svelte';
 
   /*
   Module Docstring:
@@ -15,12 +16,15 @@
 
   interface Props {
     tier: string;
+    simple?: boolean;
   }
 
-  let { tier }: Props = $props();
+  let { tier, simple = false }: Props = $props();
   let info = $derived(getTierInfo(tier));
 </script>
 
-<span class="tier-badge {info.colorClass}" title={info.description}>
-  {info.label}
-</span>
+<Tooltip label={simple ? info.confidenceLabel : info.label} description={info.description}>
+  <span class="tier-badge {info.colorClass}">
+    {simple ? info.confidenceLabel : info.label}
+  </span>
+</Tooltip>

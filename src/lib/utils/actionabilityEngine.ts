@@ -698,7 +698,10 @@ export function deriveActionablePlan(
     if (!seenKeys.has(key)) {
       seenKeys.add(key);
       uniqueFindings.push(item);
-      if (uniqueFindings.length >= 10) break;
+      // The dashboard is an action queue, not an exhaustive findings list.
+      // Keep the full report available below while limiting first-screen
+      // cognitive load to the five strongest discussion prompts.
+      if (uniqueFindings.length >= 5) break;
     }
   }
   topFindings.push(...uniqueFindings.map((item) => item.finding));

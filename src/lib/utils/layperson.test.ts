@@ -76,7 +76,7 @@ describe('plain-English claim framing', () => {
     expect(LAYPERSON_MAP.rs12190287.simpleMeaning).toContain('not a diagnosis');
   });
 
-  it('derives a bounded fallback from the marker resource when no dedicated translation exists', () => {
+  it('uses a safe non-clinical fallback when no dedicated translation exists', () => {
     const translation = getLaypersonTranslation({
       rsid: 'rs-untranslated',
       gene: 'EXAMPLE',
@@ -86,9 +86,11 @@ describe('plain-English claim framing', () => {
       clinical_confirmation_required: true,
     });
 
-    expect(translation.simpleImpact).toBe('Example pathway context');
-    expect(translation.simpleMeaning).toContain('This marker has been studied in pathway research.');
-    expect(translation.simpleMeaning).toContain('does not measure current pathway activity');
-    expect(translation.simpleMeaning).toContain('Clinical confirmation is important');
+    expect(translation.simpleImpact).toBe('A biological pathway studied in genetic research.');
+    expect(translation.simpleMeaning).toContain('associated with a research finding');
+    expect(translation.simpleMeaning).toContain('does not predict whether you have a condition');
+    expect(translation.simpleMeaning).toContain('A clinical test may be needed');
+    expect(translation.simpleMeaning).not.toContain('This marker has been studied in pathway research.');
+    expect(translation.simpleMeaning).not.toContain('does not measure current pathway activity');
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
+import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
 import { buildSupportResourceContext } from './supportResourceContext';
 
 describe('support resource context', () => {
@@ -220,6 +221,17 @@ describe('support resource context', () => {
     expect(context.activity_safety.relevant_domains.some((domain) => domain.id === 'metabolic')).toBe(true);
     expect(context.food_safety.source_registry.cdc_prediabetes_lifestyle).toBeDefined();
     expect(context.food_safety.source_registry.aha_dyslipidemia_2026).toBeDefined();
+  });
+
+  it('routes every phenotype domain and its source records from resource-authored pack IDs', () => {
+    for (const domain of phenotypePrompts.domains) {
+      const context = buildSupportResourceContext({ packIds: [domain.id] });
+
+      expect(context.phenotype_prompts.some((item) => item.id === domain.id)).toBe(true);
+      for (const sourceId of domain.sources) {
+        expect(context.food_safety.source_registry[sourceId]).toBeDefined();
+      }
+    }
   });
 
   it('routes cross-domain activity safety from resource-authored pack signals', () => {

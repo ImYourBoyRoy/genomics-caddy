@@ -1,7 +1,7 @@
 {
   "name": "Phenotype Prompt Library",
-  "version": "1.0.0",
-  "last_updated": "2026-08-25",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "domains": [
     {
       "id": "allergy_atopy_mast_cell",
@@ -26,6 +26,11 @@
         "skin-prick testing",
         "tryptase when indicated",
         "allergist review"
+      ],
+      "sources": [
+        "aaaai_food_allergy_diagnosis",
+        "fda_major_food_allergens",
+        "phenotype_required"
       ]
     },
     {
@@ -53,6 +58,11 @@
         "breath tests",
         "liver enzymes",
         "GI review"
+      ],
+      "sources": [
+        "gwas_catalog",
+        "clinical_confirmation_required",
+        "phenotype_required"
       ]
     },
     {
@@ -79,6 +89,11 @@
         "training log",
         "DXA/body composition",
         "sports medicine review"
+      ],
+      "sources": [
+        "aha_physical_activity_warning_signs",
+        "cdc_activity_stop_signs",
+        "phenotype_required"
       ]
     },
     {
@@ -115,6 +130,13 @@
         "TSH and other targeted tests when clinically indicated",
         "transvaginal ultrasound or MRI when adenomyosis is suspected",
         "gynecology and mental-health review when indicated"
+      ],
+      "sources": [
+        "acog_premenstrual_disorders",
+        "acog_premenstrual_syndrome",
+        "menstrual_cycle_physiology",
+        "medlineplus_adenomyosis",
+        "clinical_confirmation_required"
       ]
     },
     {
@@ -140,6 +162,10 @@
         "skin checks",
         "photos over time",
         "vitamin D/iron/thyroid context when relevant"
+      ],
+      "sources": [
+        "hpo",
+        "phenotype_required"
       ]
     },
     {
@@ -163,6 +189,11 @@
         "25(OH)D",
         "calcium/phosphate/PTH",
         "alkaline phosphatase"
+      ],
+      "sources": [
+        "nih_ods_calcium",
+        "nih_ods_vitamin_d",
+        "phenotype_required"
       ]
     },
     {
@@ -188,6 +219,10 @@
         "uric acid",
         "electrolytes",
         "24-hour urine if stones"
+      ],
+      "sources": [
+        "lab_confirmation_required",
+        "phenotype_required"
       ]
     },
     {
@@ -212,6 +247,10 @@
         "sleep study",
         "serum AAT if indicated",
         "pulmonology review"
+      ],
+      "sources": [
+        "nhlbi_sleep_apnea_diagnosis",
+        "phenotype_required"
       ]
     },
     {
@@ -237,6 +276,11 @@
         "CRP/ESR",
         "organ-specific labs",
         "specialist review"
+      ],
+      "sources": [
+        "clingen",
+        "hpo",
+        "phenotype_required"
       ]
     },
     {
@@ -259,6 +303,239 @@
         "headache diary",
         "neurology review if red flags",
         "medication history"
+      ],
+      "sources": [
+        "nice_menstrual_related_migraine",
+        "cdc_migraine_contraception_safety",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "metabolic",
+      "trigger": [
+        "metabolic markers",
+        "glucose/insulin markers",
+        "triglyceride/liver markers",
+        "appetite or body-composition markers"
+      ],
+      "questions": [
+        "What are the most recent A1C, fasting glucose, triglyceride, blood-pressure, and liver-test results, and when were they measured?",
+        "Any increased thirst or urination, unusual fatigue, post-meal symptoms, fatty-liver history, or prior gestational diabetes?",
+        "What do sleep, activity, meal timing, alcohol, and medication patterns look like around the symptoms or lab changes?",
+        "Is there a family history of diabetes, severe triglycerides, fatty liver, or early cardiovascular disease?"
+      ],
+      "red_flags": [
+        "confusion or fainting with suspected glucose symptoms",
+        "persistent vomiting or dehydration",
+        "severe abdominal pain with jaundice",
+        "rapidly worsening symptoms with very abnormal laboratory results"
+      ],
+      "confirmations": [
+        "A1C and/or fasting plasma glucose",
+        "2-hour oral glucose tolerance test when clinically indicated",
+        "fasting lipid panel and targeted liver tests",
+        "clinician review of blood pressure, medications, and overall risk"
+      ],
+      "sources": [
+        "niddk_prediabetes_tests",
+        "cdc_prediabetes_lifestyle",
+        "niddk_fatty_liver_diagnosis",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "cardiovascular",
+      "trigger": [
+        "cardiovascular markers",
+        "lipoprotein(a) or ApoB markers",
+        "blood-pressure markers",
+        "vascular or thrombosis context"
+      ],
+      "questions": [
+        "What are the recent home or clinic blood-pressure readings and the full lipid panel, including LDL-C, HDL-C, triglycerides, and non-HDL-C?",
+        "Has Lp(a) or ApoB ever been measured, and is there a family history of early heart attack, stroke, aortic disease, or very high cholesterol?",
+        "Any exertional chest pressure, unusual shortness of breath, palpitations, fainting, leg swelling, or neurologic episodes?",
+        "What medications, nicotine exposure, sleep pattern, activity, and pregnancy-related or inflammatory conditions are clinically relevant?"
+      ],
+      "red_flags": [
+        "new or severe chest pressure",
+        "fainting or near-fainting during exertion",
+        "sudden shortness of breath",
+        "new one-sided weakness, facial droop, or trouble speaking"
+      ],
+      "confirmations": [
+        "repeat blood-pressure assessment when appropriate",
+        "standard lipid panel",
+        "one-time Lp(a) measurement and selective ApoB discussion when clinically appropriate",
+        "clinician-guided cardiovascular risk assessment rather than a SNP score"
+      ],
+      "sources": [
+        "aha_dyslipidemia_2026",
+        "aha_physical_activity_warning_signs",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "thyroid_autoimmune",
+      "trigger": [
+        "thyroid pathway markers",
+        "thyroid autoimmunity markers",
+        "DIO1/DIO2 context",
+        "thyroid symptoms or abnormal labs"
+      ],
+      "questions": [
+        "Have TSH, free T4, or thyroid-antibody results been measured, and what were the dates, units, and laboratory ranges?",
+        "Any persistent cold or heat intolerance, palpitations, tremor, bowel or weight change, neck swelling, hair/skin change, or menstrual change?",
+        "Are thyroid medication, biotin, iodine, selenium, or other supplements being used, and what are the exact products and timing?",
+        "Any personal or family history of autoimmune thyroid disease, thyroid nodules, radiation exposure, or postpartum thyroid symptoms?"
+      ],
+      "red_flags": [
+        "chest pain, fainting, or sustained rapid heartbeat",
+        "severe confusion or marked drowsiness",
+        "rapidly enlarging neck swelling or trouble breathing/swallowing",
+        "new severe symptoms during pregnancy or shortly after delivery"
+      ],
+      "confirmations": [
+        "TSH and free T4 interpreted by a clinician",
+        "thyroid antibodies or ultrasound when clinically indicated",
+        "medication and supplement timing review before interpreting discordant results",
+        "repeat or specialist evaluation when symptoms and labs do not agree"
+      ],
+      "sources": [
+        "niddk_thyroid_tests",
+        "lab_confirmation_required",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "sleep",
+      "trigger": [
+        "sleep or circadian markers",
+        "chronotype markers",
+        "sleep apnea airway panel",
+        "sleep-recovery concerns"
+      ],
+      "questions": [
+        "What are the usual sleep and wake times on workdays and free days, and how long does falling asleep or staying asleep take?",
+        "Any loud snoring, witnessed breathing pauses, gasping, morning headaches, unrefreshing sleep, or daytime sleepiness?",
+        "How do shift work, light exposure, caffeine, alcohol, medications, stress, pain, and cycle or hormone timing affect sleep?",
+        "Does sleepiness affect driving, operating equipment, school, work, or safety?"
+      ],
+      "red_flags": [
+        "near-miss or crash caused by sleepiness",
+        "repeated witnessed breathing pauses or choking during sleep",
+        "severe sleep loss with confusion or inability to function safely",
+        "chest pain or fainting associated with nighttime breathing symptoms"
+      ],
+      "confirmations": [
+        "sleep diary or wearable record used as context rather than diagnosis",
+        "validated sleep-apnea screening followed by clinician review",
+        "home sleep-apnea test or polysomnography when indicated",
+        "medication, substance, mood, pain, and thyroid review when sleep is persistently impaired"
+      ],
+      "sources": [
+        "nhlbi_sleep_apnea_diagnosis",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "pgx",
+      "trigger": [
+        "pharmacogenomics",
+        "CYP2D6/CYP2C19/CYP2C9 markers",
+        "HLA drug-safety markers",
+        "drug-response or adverse-effect question"
+      ],
+      "questions": [
+        "What exact medication, active ingredient, formulation, dose, indication, start date, and schedule are being considered or taken?",
+        "What benefit, side effect, allergy, treatment failure, or unusual sensitivity occurred, and when did it begin relative to the dose?",
+        "Which other prescriptions, over-the-counter products, supplements, alcohol, or smoking exposures could affect the medication?",
+        "Is there a complete clinical PGx result with a diplotype or phenotype, or only one or a few consumer-array SNPs?"
+      ],
+      "red_flags": [
+        "trouble breathing, facial swelling, or widespread blistering rash after a medication",
+        "unusual bleeding, severe sedation, confusion, or fainting",
+        "high fever or severe muscle symptoms after a medication",
+        "suspected overdose or rapidly worsening adverse effect"
+      ],
+      "confirmations": [
+        "clinical-grade PGx testing when a prescriber considers it relevant",
+        "complete diplotype, copy-number, and phenotype assessment where required",
+        "current drug label plus CPIC, FDA, or pharmacist review",
+        "do not start, stop, or change a medication from a consumer SNP result alone"
+      ],
+      "sources": [
+        "fda_pharmacogenetic_associations",
+        "fda_pharmacogenomic_biomarkers",
+        "cpic_guidelines",
+        "pharmgkb",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "neuropsych",
+      "trigger": [
+        "neuropsych markers",
+        "attention or executive-function markers",
+        "mood or stress-response markers",
+        "sensory or neurodevelopmental context"
+      ],
+      "questions": [
+        "Which symptoms are present, when did they begin, and how do sleep, stress, pain, substances, medications, and life context change them?",
+        "Are attention, organization, mood, anxiety, sensory sensitivity, headaches, or impulse-control concerns present across more than one setting?",
+        "What was the developmental, educational, work, and family history, and what strategies or treatments have helped or harmed?",
+        "Are any symptoms clearly cyclic, episodic, medication-related, or new rather than lifelong?"
+      ],
+      "red_flags": [
+        "suicidal thoughts or immediate safety concerns",
+        "new confusion, weakness, seizure, or severe neurologic change",
+        "several nights with little sleep plus unsafe behavior or loss of reality testing",
+        "rapidly worsening symptoms after starting or stopping a medication"
+      ],
+      "confirmations": [
+        "clinician-led history and standardized assessments",
+        "sleep, thyroid, substance, medication, and relevant laboratory review",
+        "collateral or longitudinal information when symptoms vary by setting",
+        "urgent mental-health or neurologic care when red flags are present"
+      ],
+      "sources": [
+        "gwas_catalog",
+        "hpo",
+        "phenotype_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "connective_tissue",
+      "trigger": [
+        "connective-tissue markers",
+        "collagen or extracellular-matrix markers",
+        "joint hypermobility or injury history",
+        "aortic or skeletal family history"
+      ],
+      "questions": [
+        "Any joint hypermobility, recurrent sprains, dislocations, instability, chronic pain, or unusual recovery after injury?",
+        "Any unusually stretchy or fragile skin, abnormal scarring, easy bruising, hernias, pelvic-organ prolapse, or dental/bone fragility?",
+        "Any family history of aortic aneurysm/dissection, sudden unexplained death, severe eye findings, or a diagnosed connective-tissue disorder?",
+        "Which findings are clinician-observed versus self-described, and have imaging or prior genetic reports been reviewed?"
+      ],
+      "red_flags": [
+        "sudden severe chest, back, or abdominal pain",
+        "fainting with exertion or new neurologic symptoms",
+        "acute limb numbness or loss of circulation after a dislocation",
+        "rapidly progressive weakness or breathing difficulty"
+      ],
+      "confirmations": [
+        "physical examination using an appropriate hypermobility or connective-tissue assessment",
+        "echocardiography or vascular imaging when clinically indicated",
+        "clinical genetics review for syndromic features or family history",
+        "targeted clinical sequencing rather than common SNP interpretation when a disorder is suspected"
+      ],
+      "sources": [
+        "clingen",
+        "genereviews",
+        "hpo",
+        "phenotype_required"
       ]
     }
   ]

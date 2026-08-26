@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import hormonesReproductive from '../marker-packs/hormones_reproductive.json';
 import {
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
@@ -34,6 +35,16 @@ describe('reproductive marker context routing', () => {
     expect(reproductiveMarkerContextRank('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY', 'cyclic_mood_symptoms')).toBe(3);
     expect(reproductiveMarkerContextRank('GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS', 'cyclic_mood_symptoms')).toBe(3);
     expect(reproductiveMarkerContextRank('GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE', 'cyclic_mood_symptoms')).toBe(3);
+  });
+
+  it('corrects the late-luteal estrogen-spike assumption without inferring a current level', () => {
+    const phaseGuardrail = hormonesReproductive.markers.find(
+      (marker) => marker.rsid === 'GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION',
+    );
+
+    expect(phaseGuardrail?.interpretation).toContain('both generally decline');
+    expect(phaseGuardrail?.do_not_claim).toContain('estrogen spike at the start of menstruation');
+    expect(phaseGuardrail?.raw_dna_limitation).toContain('DNA cannot measure a current hormone level');
   });
 
   it('routes an explicit adenomyosis concern to clinical workup rather than a DNA call', () => {

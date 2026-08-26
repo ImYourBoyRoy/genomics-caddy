@@ -98,6 +98,7 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
 
 const actionability = readJson(path.join(sourceDir, 'actionability_guidance.json'));
 const foodRequirementPrompts = readJson(path.join(sourceDir, 'food_requirement_prompts.json'));
+const sourceRegistry = readJson(path.join(sourceDir, 'source_registry.json'));
 if (!actionability?.policy?.safety_notes?.length) {
   errors.push('actionability_guidance.json: policy.safety_notes is required');
 }
@@ -251,6 +252,30 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       if (!isStringArray(resource.lab_confirmation_filter?.[field]) || resource.lab_confirmation_filter[field].length === 0) {
         errors.push(`actionability_guidance.json: lab_confirmation_filter.${field} must be a non-empty string array`);
       }
+    }
+  }
+  if (resourceId === 'phenotype_prompts') {
+    const domainIds = new Set();
+    const registeredSourceIds = new Set(Object.keys(sourceRegistry?.sources || {}));
+    for (const [index, domain] of (resource.domains || []).entries()) {
+      const location = `phenotype_prompts.json domain ${index + 1}`;
+      for (const field of ['id']) {
+        if (typeof domain[field] !== 'string' || domain[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['trigger', 'questions', 'red_flags', 'confirmations', 'sources']) {
+        if (!isStringArray(domain[field]) || domain[field].length === 0) {
+          errors.push(`${location}: ${field} must be a non-empty string array`);
+        }
+      }
+      for (const sourceId of domain.sources || []) {
+        if (!registeredSourceIds.has(sourceId)) {
+          errors.push(`${location}: sources references unknown source ${sourceId}`);
+        }
+      }
+      if (domainIds.has(domain.id)) errors.push(`${location}: duplicate id ${domain.id}`);
+      domainIds.add(domain.id);
     }
   }
   if (resourceId === 'actionability_guidance') {

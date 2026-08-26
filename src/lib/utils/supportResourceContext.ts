@@ -161,6 +161,7 @@ function supportSourceIds(
     ...actionabilityGuidance.rules.flatMap((rule) => rule.sources || []),
     ...supplementSafety.rules.flatMap((rule) => rule.sources),
     ...relevantCycleDomains.flatMap((domain) => domain.sources || []),
+    ...selectPhenotypeDomains(selectedPackIds).flatMap((domain) => domain.sources || []),
   ]);
   for (const rule of selectDietaryRules(selectedPackIds)) {
     if (Array.isArray(rule.sources)) {

@@ -195,6 +195,39 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).toContain('raw DNA');
   });
 
+  it('keeps rare bone and fructose panels at the clinical-confirmation boundary', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'PANEL_OSTEOGENESIS_IMPERFECTA',
+        gene: 'COL1A1/COL1A2/IFITM5/CRTAP/P3H1',
+        severity_class: 'confirmation_required',
+        interpretation: 'Clinical sequencing and phenotype are required; this panel is not diagnostic.',
+      }),
+      marker({
+        rsid: 'PANEL_HYPOPHOSPHATASIA',
+        gene: 'ALPL',
+        severity_class: 'confirmation_required',
+        interpretation: 'Low alkaline phosphatase and clinical findings require confirmation; raw DNA is not enough.',
+      }),
+      marker({
+        rsid: 'PANEL_HEREDITARY_FRUCTOSE_INTOLERANCE',
+        gene: 'ALDOB',
+        severity_class: 'confirmation_required',
+        interpretation: 'Clinical ALDOB sequencing is required; this panel is not diagnostic.',
+      }),
+    ]));
+    const avoidance = plan.diet.avoid.join(' ');
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('bone-fragility gene-panel'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('ALPL sequencing'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('ALDOB sequencing'))).toBe(true);
+    expect(avoidance).toContain('fructose challenge');
+    expect(avoidance).toContain('osteogenesis imperfecta');
+    expect(medicationText).toContain('consumer-array panel');
+    expect(medicationText).not.toContain('Start enzyme');
+  });
+
   it('surfaces cycle-aware activity and medication guardrails for reproductive context', () => {
     const plan = deriveActionablePlan({
       ...report([marker({

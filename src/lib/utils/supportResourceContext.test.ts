@@ -366,8 +366,11 @@ describe('support resource context', () => {
 
     expect(actionabilityIds).toEqual(expect.arrayContaining([
       'bone_mineral_density_context',
+      'bone_rare_disorder_panel_context',
+      'hypophosphatasia_alpl_panel_context',
       'digestive_inflammatory_context',
       'celiac_hla_context',
+      'hereditary_fructose_intolerance_panel_context',
     ]));
     expect(context.actionability_rules.find((rule) => rule.id === 'bone_mineral_density_context')?.genes)
       .toContain('WNT16');

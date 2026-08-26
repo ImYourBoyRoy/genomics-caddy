@@ -2092,6 +2092,146 @@
         "user_declared_values_required",
         "safety_guardrail"
       ]
+    },
+    {
+      "id": "bone_rare_disorder_panel_context",
+      "genes": [
+        "COL1A1",
+        "COL1A2",
+        "IFITM5",
+        "CRTAP",
+        "P3H1"
+      ],
+      "marker_ids": [
+        "PANEL_OSTEOGENESIS_IMPERFECTA"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "bone_growth_mineral_density",
+        "connective_tissue"
+      ],
+      "favor": [
+        "Bring the panel label, fracture history, dental or hearing findings, height or skeletal history, and family history to a bone specialist or clinical geneticist when the clinical picture fits"
+      ],
+      "avoid": [
+        "Using a consumer-array panel flag to diagnose or exclude osteogenesis imperfecta, clear high-impact activity, or start, stop, or select bone medication"
+      ],
+      "supplements": [
+        "Review calcium, vitamin D, and other bone products against measured status, kidney or stone history, current medicines, and the clinical evaluation; the panel does not establish a supplement need or dose"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical bone-fragility gene-panel or sequencing review when phenotype and family history warrant",
+          "urgency": "consider"
+        },
+        {
+          "name": "DXA/BMD and mineral-lab assessment when indicated by fracture history, symptoms, age, or clinician assessment",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a rare bone-fragility disorder is suspected, review glucocorticoid exposure, osteoporosis medicines, planned procedures, and activity restrictions with the treating team; do not change treatment from a consumer-array panel result."
+      ],
+      "notes": "The panel target represents a route to validated clinical testing, not a positive result in the consumer file. Osteogenesis imperfecta and related bone-fragility disorders require phenotype, imaging, family history, and clinically interpreted sequencing; common SNPs cannot rule them in or out.",
+      "sources": [
+        "clinvar",
+        "genereviews",
+        "niams_bone_density_tests",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hypophosphatasia_alpl_panel_context",
+      "genes": [
+        "ALPL"
+      ],
+      "marker_ids": [
+        "PANEL_HYPOPHOSPHATASIA"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "bone_growth_mineral_density",
+        "nutrients"
+      ],
+      "favor": [
+        "If persistently low alkaline phosphatase, recurrent stress or atypical fractures, chronic bone pain, early tooth loss, or nephrocalcinosis is present, bring the history and panel label to an endocrinology, metabolic-bone, dental, or genetics clinician"
+      ],
+      "avoid": [
+        "Treating low alkaline phosphatase as hypophosphatasia, taking extra vitamin B6 as a diagnostic test, or starting enzyme, bone, calcium, or vitamin-D treatment from a consumer-array panel flag"
+      ],
+      "supplements": [
+        "Tell the clinician about pyridoxine or vitamin B6, calcium, vitamin D, and other supplements before confirmatory testing; do not stop a prescribed product or change a dose without clinical advice"
+      ],
+      "lab_tests": [
+        {
+          "name": "Repeat serum alkaline phosphatase interpreted with age, sex, liver, pregnancy, fracture, and medication context when hypophosphatasia is suspected",
+          "urgency": "consider"
+        },
+        {
+          "name": "Specialist-directed serum PLP (vitamin B6), mineral, and urine phosphoethanolamine evaluation when indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Validated clinical ALPL sequencing and deletion/duplication analysis when phenotype and laboratory findings warrant",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If hypophosphatasia is suspected, disclose vitamin B6 products and all bone medicines to the clinician because they can affect interpretation or management; do not self-start, stop, or change treatment from raw DNA."
+      ],
+      "notes": "Hypophosphatasia is evaluated using compatible clinical features, persistently low alkaline phosphatase interpreted for age and context, relevant substrate testing, and clinically interpreted ALPL testing. A consumer panel label is not a diagnosis and a single low enzyme result has multiple possible explanations.",
+      "sources": [
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hereditary_fructose_intolerance_panel_context",
+      "genes": [
+        "ALDOB"
+      ],
+      "marker_ids": [
+        "PANEL_HEREDITARY_FRUCTOSE_INTOLERANCE"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "digestive_gut_microbiome",
+        "metabolic"
+      ],
+      "favor": [
+        "If severe, reproducible symptoms follow fructose, sucrose, sorbitol, or sucralose exposure, record the exposure, timing, symptoms, hydration, and medical history and discuss the panel label with a metabolic clinician or dietitian"
+      ],
+      "avoid": [
+        "Performing a fructose challenge, using a common FODMAP result as a hereditary-fructose-intolerance diagnosis, or adopting a highly restrictive diet solely from a consumer-array panel flag"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical ALDOB sequencing with deletion/duplication analysis when the exposure-linked phenotype warrants",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinician-directed glucose, liver-function, and metabolic evaluation after severe exposure-linked symptoms",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If hereditary fructose intolerance is suspected, tell the treating team before medicines, oral products, or nutrition plans are changed because ingredient and exposure review is clinical; do not use raw DNA to self-diagnose or manage an acute reaction."
+      ],
+      "notes": "Hereditary fructose intolerance is rare and requires an exposure-linked clinical picture plus biallelic clinically interpreted ALDOB pathogenic or likely pathogenic variants, or specialist-directed biochemical confirmation. Fructose challenge testing can be dangerous and must not be suggested by this tool.",
+      "sources": [
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
     }
   ]
 }

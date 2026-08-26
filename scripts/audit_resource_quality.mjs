@@ -260,10 +260,18 @@ for (const rule of actionability?.rules || []) {
     return markerIds.length === 0 || markerIds.includes(String(marker.rsid || '').trim().toLowerCase());
   });
   if (markerIds.length > 0) {
-    const curatedMarkerIds = new Set(allMarkers.map(({ marker }) => String(marker.rsid || '').trim().toLowerCase()));
+    const curatedMarkersById = new Map(
+      allMarkers.map(({ marker }) => [
+        String(marker.rsid || '').trim().toLowerCase(),
+        markerGenes(marker.gene),
+      ])
+    );
     for (const markerId of markerIds) {
-      if (!curatedMarkerIds.has(markerId)) {
+      const markerGeneSymbols = curatedMarkersById.get(markerId);
+      if (!markerGeneSymbols) {
         actionabilityMarkerReferenceGaps.push({ id: rule.id || '(unnamed)', marker_id: markerId });
+      } else if (!markerGeneSymbols.some((gene) => genes.includes(gene))) {
+        actionabilityMarkerReferenceGaps.push({ id: rule.id || '(unnamed)', marker_id: markerId, reason: 'gene_mismatch' });
       }
     }
   }

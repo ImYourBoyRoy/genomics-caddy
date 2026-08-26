@@ -105,8 +105,8 @@ for (const rule of actionability?.rules || []) {
   if (!Array.isArray(rule.genes) || rule.genes.length === 0) {
     errors.push(`actionability rule ${rule.id || '(unnamed)'}: genes must be non-empty`);
   }
-  if (rule.marker_ids !== undefined && !isStringArray(rule.marker_ids)) {
-    errors.push(`actionability rule ${rule.id || '(unnamed)'}: marker_ids must be a string array when present`);
+  if (rule.marker_ids !== undefined && (!isStringArray(rule.marker_ids) || rule.marker_ids.length === 0)) {
+    errors.push(`actionability rule ${rule.id || '(unnamed)'}: marker_ids must be a non-empty string array when present`);
   }
 }
 const conditionalPromptIds = new Set(Object.keys(foodRequirementPrompts?.conditional_prompts || {}));

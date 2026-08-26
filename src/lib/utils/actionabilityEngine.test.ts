@@ -371,12 +371,22 @@ describe('actionability engine safety policy', () => {
       clinical_confirmation_required: true,
       interpretation: 'HLA-B*58:01 context; confirm with clinical HLA typing.',
     })]));
+    const carbamazepinePlan = deriveActionablePlan(report([marker({
+      rsid: 'HLA-A*31:01',
+      gene: 'HLA-A',
+      variant_name: 'HLA-A*31:01',
+      severity_class: 'confirmation_required',
+      clinical_confirmation_required: true,
+      interpretation: 'HLA-A*31:01 context; confirm with clinical HLA typing.',
+    })]));
 
     expect(abacavirPlan.medication.rules.some((item) => item.includes('validated clinical HLA-B*57:01 result'))).toBe(true);
     expect(abacavirPlan.labTests.some((test) => test.name.includes('HLA-B*57:01') && test.name.includes('abacavir'))).toBe(true);
     expect(allopurinolPlan.medication.rules.some((item) => item.includes('validated HLA-B*58:01 status'))).toBe(true);
     expect(allopurinolPlan.labTests.some((test) => test.name.includes('HLA-B*58:01') && test.name.includes('allopurinol'))).toBe(true);
     expect(allopurinolPlan.medication.rules.some((item) => item.includes('validated clinical HLA-B*57:01 result'))).toBe(false);
+    expect(carbamazepinePlan.medication.rules.some((item) => item.includes('carbamazepine or oxcarbazepine'))).toBe(true);
+    expect(carbamazepinePlan.labTests.some((test) => test.name.includes('HLA-B*15:02') && test.name.includes('HLA-A*31:01'))).toBe(true);
   });
 
   it('does not infer reproductive applicability from hormone marker text', () => {

@@ -14,6 +14,7 @@ import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/g
 import guidanceDoc from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
+import dietaryRequirements from '../marker-packs/dietary_requirements.json';
 import pgxDiplotypeGuidance from '../marker-packs/pgx_diplotype_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
@@ -29,6 +30,7 @@ import { reviewCycleDiary, type CycleDiaryReview } from './cycleDiaryReview';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import type { ReproductiveIntakeValues } from './reproductiveIntake';
 import { cycleDiaryAppliesToContexts, type CycleDiaryEntry } from './cycleDiary';
+import type { PersonalDietaryProfile } from './personalSafetyContext';
 
 export interface TopFinding {
   rsid: string;
@@ -98,12 +100,22 @@ export interface SupplementSafetyGuidance {
   relevantRules: typeof supplementSafety.rules;
 }
 
+export interface FoodSafetyGuidance {
+  priorityOrder: typeof dietaryRequirements.priority_order;
+  explicitExclusions: string[];
+  confirmedAllergies: string[];
+  suspectedAllergies: string[];
+  relevantRules: typeof dietaryRequirements.rules;
+  notes: string[];
+}
+
 export interface PersonalContextGuidance {
   medications: string[];
   supplements: string[];
   allergies: string[];
   symptoms: string[];
   labObservations: string[];
+  dietaryProfile?: PersonalDietaryProfile;
   reproductiveIntake?: ReproductiveIntakeValues;
   cycleDiary?: CycleDiaryEntry[];
   priorityNotes: string[];
@@ -120,6 +132,7 @@ export interface ActionablePlan {
   cycleSupport: CycleSupportGuidance;
   pgxGuidance: PgxInterpretationGuidance;
   supplementSafety: SupplementSafetyGuidance;
+  foodSafety: FoodSafetyGuidance;
   personalContext: PersonalContextGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
@@ -460,6 +473,78 @@ function selectSupplementSafetyRules(
   });
 }
 
+type DietaryProfileRoutes = Record<string, Record<string, string[]>>;
+
+const DIETARY_PROFILE_ROUTES = dietaryRequirements.profile_routes as DietaryProfileRoutes;
+const DIETARY_CONTEXT_ROUTES = dietaryRequirements.context_routes as Record<string, string[]>;
+
+function normalizedDietaryTerm(value: unknown): string {
+  return String(value || '')
+    .toLocaleLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Select only food rules activated by explicit profile/context values. The
+ * rules themselves remain resource-authored; this function only performs
+ * conservative routing and never treats a missing field as a negative.
+ */
+function deriveFoodSafetyGuidance(
+  dietaryProfile: PersonalDietaryProfile | undefined,
+  activeContextIds: readonly string[],
+): FoodSafetyGuidance {
+  const ruleIds = new Set<string>();
+  for (const [field, values] of Object.entries(dietaryProfile || {})) {
+    const routes = DIETARY_PROFILE_ROUTES[field] || {};
+    for (const value of Array.isArray(values) ? values : []) {
+      const normalizedValue = normalizedDietaryTerm(value);
+      if (!normalizedValue) continue;
+      for (const [term, routedRuleIds] of Object.entries(routes)) {
+        const normalizedTerm = normalizedDietaryTerm(term);
+        if (normalizedTerm && (normalizedValue === normalizedTerm || normalizedValue.includes(normalizedTerm))) {
+          routedRuleIds.forEach((ruleId) => ruleIds.add(ruleId));
+        }
+      }
+    }
+  }
+  for (const contextId of activeContextIds) {
+    for (const ruleId of DIETARY_CONTEXT_ROUTES[contextId] || []) ruleIds.add(ruleId);
+  }
+
+  const rulesById = new Map(dietaryRequirements.rules.map((rule) => [rule.id, rule]));
+  const relevantRules = Array.from(ruleIds)
+    .flatMap((ruleId) => {
+      const rule = rulesById.get(ruleId);
+      return rule ? [rule] : [];
+    })
+    .sort((left, right) => right.priority - left.priority || left.label.localeCompare(right.label));
+
+  const explicitExclusions = [...(dietaryProfile?.hard_exclusions || [])];
+  const confirmedAllergies = [...(dietaryProfile?.allergies_confirmed || [])];
+  const suspectedAllergies = [...(dietaryProfile?.allergies_suspected || [])];
+  const notes: string[] = [];
+  if (explicitExclusions.length > 0) {
+    notes.push(dietaryRequirements.profile_notes.hard_exclusions);
+  }
+  if (confirmedAllergies.length > 0) {
+    notes.push(dietaryRequirements.profile_notes.confirmed_allergies);
+  }
+  if (suspectedAllergies.length > 0) {
+    notes.push(dietaryRequirements.profile_notes.suspected_allergies);
+  }
+
+  return {
+    priorityOrder: dietaryRequirements.priority_order,
+    explicitExclusions,
+    confirmedAllergies,
+    suspectedAllergies,
+    relevantRules,
+    notes,
+  };
+}
+
 function derivePersonalContextGuidance(
   personalSafetyContext?: PersonalSafetyContext,
 ): PersonalContextGuidance {
@@ -486,6 +571,9 @@ function derivePersonalContextGuidance(
   if (context.labObservations.length > 0) {
     priorityNotes.push(safetyGuardrails.personal_context_notes.labs);
   }
+  if (context.dietaryProfile && Object.values(context.dietaryProfile).some((items) => items.length > 0)) {
+    priorityNotes.push(safetyGuardrails.personal_context_notes.dietary_profile);
+  }
   if (context.reproductiveIntake && Object.keys(context.reproductiveIntake).length > 0) {
     priorityNotes.push(safetyGuardrails.personal_context_notes.reproductive_intake);
   }
@@ -499,6 +587,11 @@ function derivePersonalContextGuidance(
     allergies: [...context.allergies],
     symptoms: [...context.symptoms],
     labObservations: [...context.labObservations],
+    ...(context.dietaryProfile ? {
+      dietaryProfile: Object.fromEntries(
+        Object.entries(context.dietaryProfile).map(([field, values]) => [field, [...values]]),
+      ) as unknown as PersonalDietaryProfile,
+    } : {}),
     ...(context.reproductiveIntake ? { reproductiveIntake: { ...context.reproductiveIntake } } : {}),
     ...(context.cycleDiary ? { cycleDiary: context.cycleDiary.map((entry) => ({ id: entry.id, values: { ...entry.values } })) } : {}),
     priorityNotes,
@@ -709,6 +802,10 @@ export function deriveActionablePlan(
   const diaryReview = cycleDiaryAppliesToContexts(activeContextIds)
     ? reviewCycleDiary(personalSafetyContext?.cycleDiary)
     : null;
+  const foodSafety = deriveFoodSafetyGuidance(
+    personalSafetyContext?.dietaryProfile,
+    activeContextIds,
+  );
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [
@@ -763,6 +860,7 @@ export function deriveActionablePlan(
       principles: supplementSafety.principles,
       relevantRules: supplementSafetyRules,
     },
+    foodSafety,
     personalContext,
     safetyNotes: Array.from(safetyNotes),
   };

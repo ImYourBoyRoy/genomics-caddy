@@ -10,6 +10,15 @@ describe('clinical handoff export', () => {
       allergies: [],
       symptoms: [],
       labObservations: [],
+      dietaryProfile: {
+        hard_exclusions: ['pork'],
+        allergies_confirmed: ['fish'],
+        allergies_suspected: [],
+        religious_cultural_profiles: ['halal_compatible'],
+        ethical_preference_profiles: [],
+        medical_diet_profiles: [],
+        goals: ['PMDD_cycle'],
+      },
       reproductiveIntake: {
         active_ingredients: 'norethindrone 0.35 mg',
         symptom_onset_timing: 'at the end of the luteal phase',
@@ -37,6 +46,9 @@ describe('clinical handoff export', () => {
     );
 
     expect(markdown).toContain('Structured cycle and hormone context (self-reported)');
+    expect(markdown).toContain('Explicit food requirements (self-reported)');
+    expect(markdown).toContain('pork');
+    expect(markdown).toContain('fish');
     expect(markdown).toContain('Active ingredient(s) exactly as labeled');
     expect(markdown).toContain('norethindrone 0.35 mg');
     expect(markdown).toContain('possible adenomyosis');

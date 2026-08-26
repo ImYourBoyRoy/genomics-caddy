@@ -142,7 +142,7 @@ const supportContracts = {
   consultation_modes: { arrays: ['modes'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
-  dietary_requirements: { arrays: ['priority_order', 'rules'] },
+  dietary_requirements: { arrays: ['priority_order', 'rules'], objects: ['profile_routes', 'context_routes', 'profile_notes'] },
   evidence_policy: { objects: ['tiers', 'claim_policy', 'display'] },
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
@@ -198,6 +198,38 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
         if (rule[field] !== undefined && !isStringArray(rule[field])) {
           errors.push(`${location}: optional ${field} must be a string array`);
         }
+      }
+    }
+  }
+  if (resourceId === 'dietary_requirements') {
+    const ruleIds = new Set((resource.rules || []).map((rule) => rule.id));
+    for (const [field, routes] of Object.entries(resource.profile_routes || {})) {
+      if (!routes || typeof routes !== 'object' || Array.isArray(routes)) {
+        errors.push(`dietary_requirements.json: profile_routes.${field} must be an object`);
+        continue;
+      }
+      for (const [term, routedRuleIds] of Object.entries(routes)) {
+        if (!isStringArray(routedRuleIds) || routedRuleIds.length === 0) {
+          errors.push(`dietary_requirements.json: profile_routes.${field}.${term} must be a non-empty string array`);
+          continue;
+        }
+        for (const ruleId of routedRuleIds) {
+          if (!ruleIds.has(ruleId)) errors.push(`dietary_requirements.json: profile route ${field}.${term} references unknown rule ${ruleId}`);
+        }
+      }
+    }
+    for (const [contextId, routedRuleIds] of Object.entries(resource.context_routes || {})) {
+      if (!isStringArray(routedRuleIds) || routedRuleIds.length === 0) {
+        errors.push(`dietary_requirements.json: context_routes.${contextId} must be a non-empty string array`);
+        continue;
+      }
+      for (const ruleId of routedRuleIds) {
+        if (!ruleIds.has(ruleId)) errors.push(`dietary_requirements.json: context route ${contextId} references unknown rule ${ruleId}`);
+      }
+    }
+    for (const key of ['hard_exclusions', 'confirmed_allergies', 'suspected_allergies']) {
+      if (typeof resource.profile_notes?.[key] !== 'string' || resource.profile_notes[key].trim() === '') {
+        errors.push(`dietary_requirements.json: profile_notes.${key} must be a non-empty string`);
       }
     }
   }

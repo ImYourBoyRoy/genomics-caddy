@@ -81,6 +81,9 @@ export interface SupportResourceContext {
   actionability_rules: Array<Record<string, unknown>>;
   food_safety: {
     priority_order: typeof dietaryRequirements.priority_order;
+    profile_routes: typeof dietaryRequirements.profile_routes;
+    context_routes: typeof dietaryRequirements.context_routes;
+    profile_notes: typeof dietaryRequirements.profile_notes;
     meal_decision_pipeline: typeof mealPlanningRules.decision_pipeline;
     priority_weights: typeof mealPlanningRules.priority_weights;
     relevant_rules: Array<Record<string, unknown>>;
@@ -383,6 +386,9 @@ export function buildSupportResourceContext({
     })),
     food_safety: {
       priority_order: dietaryRequirements.priority_order,
+      profile_routes: dietaryRequirements.profile_routes,
+      context_routes: dietaryRequirements.context_routes,
+      profile_notes: dietaryRequirements.profile_notes,
       meal_decision_pipeline: mealPlanningRules.decision_pipeline,
       priority_weights: mealPlanningRules.priority_weights,
       relevant_rules: selectDietaryRules(selectedPackIds),

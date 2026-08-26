@@ -1,10 +1,70 @@
 {
   "name": "Dietary Requirements & Food Decision Rules",
-  "version": "1.0.0",
-  "last_updated": "2026-07-06",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute decisions.",
   "critical_design_rule": "Food requirements are not inferred from DNA unless the rule explicitly uses genotype as one weak input. Allergy, medical diagnosis, medication safety, pregnancy, kidney disease, and user-declared values override nutrigenomic optimization.",
+  "profile_routes": {
+    "allergies_confirmed": {
+      "peanut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "groundnut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "milk": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "dairy": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "egg": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "fish": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "shellfish": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "crustacean": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "tree nut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "tree_nut": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "wheat": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "soy": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"],
+      "sesame": ["RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE"]
+    },
+    "religious_cultural_profiles": {
+      "halal": ["RULE_HALAL_COMPATIBLE"],
+      "halal_compatible": ["RULE_HALAL_COMPATIBLE"],
+      "kosher": ["RULE_KOSHER_STYLE"],
+      "kosher_style": ["RULE_KOSHER_STYLE"],
+      "lds_word_of_wisdom": ["RULE_LDS_WORD_OF_WISDOM_COMPATIBLE"],
+      "pork_free": ["RULE_FISH_ENCOURAGED_PORK_AVOIDED"]
+    },
+    "ethical_preference_profiles": {
+      "vegan": ["RULE_B12_SUPPORT_FUT2_TCN2_VEGAN"],
+      "vegetarian": ["RULE_B12_SUPPORT_FUT2_TCN2_VEGAN"],
+      "pescatarian": ["RULE_B12_SUPPORT_FUT2_TCN2_VEGAN", "RULE_FISH_ENCOURAGED_PORK_AVOIDED"]
+    },
+    "medical_diet_profiles": {
+      "celiac_gluten_free": ["RULE_CELIAC_OR_STRICT_GLUTEN_FREE"],
+      "renal_cautious": ["RULE_CKD_ELECTROLYTE_PROTEIN_CAUTION"],
+      "low_sodium": ["RULE_BLOOD_PRESSURE_SODIUM_DASH_CONTEXT"],
+      "diabetes_low_glycemic": ["RULE_DIABETES_GLYCEMIC_CONTROL"],
+      "low_iron_support": ["RULE_LOW_IRON_OR_ANEMIA_CONTEXT"],
+      "iron_overload_caution": ["RULE_IRON_OVERLOAD_HFE_CONTEXT"]
+    },
+    "goals": {
+      "pmdd_cycle": ["RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY"],
+      "histamine": ["RULE_LOW_HISTAMINE_CONTEXT"],
+      "gut_symptoms": ["RULE_LOW_FODMAP_TRIAL"],
+      "muscle_gain": ["RULE_MUSCLE_HYPERTROPHY_PROTEIN_LEUCINE"],
+      "bone_health": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN"]
+    }
+  },
+  "context_routes": {
+    "menstrual_cycle": ["RULE_LOW_IRON_OR_ANEMIA_CONTEXT"],
+    "cyclic_mood_symptoms": ["RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY"],
+    "cycle_linked_pain_headache": ["RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY"],
+    "suspected_adenomyosis": ["RULE_LOW_IRON_OR_ANEMIA_CONTEXT"],
+    "pregnancy_postpartum": ["RULE_OMEGA3_LOW_SEAFOOD_OR_FADS_CONTEXT", "RULE_CHOLINE_SUPPORT_PEMT_MTHFD1", "RULE_FOLATE_ONE_CARBON_SUPPORT"],
+    "menopause_hormone_therapy": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN"],
+    "hormone_therapy_context": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN"]
+  },
+  "profile_notes": {
+    "hard_exclusions": "These are user-entered food exclusions. Keep them ahead of genetic optimization and verify ingredient or cross-contact needs when safety depends on them.",
+    "confirmed_allergies": "A confirmed food allergy is a safety constraint, not a genetic finding. Do not use DNA to clear the food or recommend reintroduction.",
+    "suspected_allergies": "Suspected food reactions are not automatically confirmed allergies. Record reaction timing and seek clinician or allergist input before reintroduction, especially after severe symptoms.",
+    "empty": "Add only the food requirements the person explicitly wants considered. The tool does not infer allergies, religion, medical diets, pregnancy, or eating-disorder history from DNA."
+  },
   "priority_order": [
     "anaphylaxis/allergy safety",
     "medication interaction / clinical contraindication",

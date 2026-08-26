@@ -20,6 +20,15 @@ describe('personal safety context', () => {
       allergies: null,
       symptoms: 42,
       labObservations: ['ferritin 18 ng/mL'],
+      dietaryProfile: {
+        hard_exclusions: 'pork; alcohol',
+        allergies_confirmed: ['fish'],
+        allergies_suspected: ['sesame'],
+        religious_cultural_profiles: ['halal_compatible'],
+        ethical_preference_profiles: [],
+        medical_diet_profiles: ['low_iron_support'],
+        goals: ['PMDD_cycle'],
+      },
       reproductiveIntake: {
         active_ingredients: ' norethindrone  0.35 mg ',
         question_or_belief_to_verify: 'I think this is progesterone-only',
@@ -39,6 +48,15 @@ describe('personal safety context', () => {
       allergies: [],
       symptoms: [],
       labObservations: ['ferritin 18 ng/mL'],
+      dietaryProfile: {
+        hard_exclusions: ['pork', 'alcohol'],
+        allergies_confirmed: ['fish'],
+        allergies_suspected: ['sesame'],
+        religious_cultural_profiles: ['halal_compatible'],
+        ethical_preference_profiles: [],
+        medical_diet_profiles: ['low_iron_support'],
+        goals: ['PMDD_cycle'],
+      },
       reproductiveIntake: {
         active_ingredients: 'norethindrone 0.35 mg',
         question_or_belief_to_verify: 'I think this is progesterone-only',

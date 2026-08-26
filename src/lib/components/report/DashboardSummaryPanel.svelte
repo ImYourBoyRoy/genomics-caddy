@@ -222,7 +222,7 @@
 
     <div class="action-row">
       <!-- Panel 2: Dietary Guidance -->
-      {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0}
+      {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
           <div class="card-header" onclick={() => toggle('diet')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('diet'))}>
             <h3>🥗 Dietary Alignment</h3>
@@ -231,6 +231,50 @@
           {#if !collapsed.diet}
             <div class="card-body">
               <p class="section-hint">These are conditional discussion or short-trial prompts. A genotype match is not a permanent food restriction; use symptoms, labs, allergies, medications, and clinician guidance first.</p>
+              {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
+                <div class="dietary-profile-safety" role="note">
+                  <strong>🛡️ Explicit food context</strong>
+                  <p>These entries came from the profile, not the DNA. They take priority over genetic optimization.</p>
+                  {#if plan.foodSafety.explicitExclusions.length > 0}
+                    <div class="dietary-profile-list">
+                      <strong>Foods / ingredients to exclude</strong>
+                      <span>{plan.foodSafety.explicitExclusions.join(' · ')}</span>
+                    </div>
+                  {/if}
+                  {#if plan.foodSafety.confirmedAllergies.length > 0}
+                    <div class="dietary-profile-list dietary-profile-allergy">
+                      <strong>Confirmed food allergies — keep excluded</strong>
+                      <span>{plan.foodSafety.confirmedAllergies.join(' · ')}</span>
+                    </div>
+                  {/if}
+                  {#if plan.foodSafety.suspectedAllergies.length > 0}
+                    <div class="dietary-profile-list">
+                      <strong>Suspected reactions — not confirmed allergies</strong>
+                      <span>{plan.foodSafety.suspectedAllergies.join(' · ')}</span>
+                    </div>
+                  {/if}
+                  <ul class="guardrail-list">
+                    {#each plan.foodSafety.notes as note (note)}<li>{note}</li>{/each}
+                  </ul>
+                </div>
+              {/if}
+              {#if plan.foodSafety.relevantRules.length > 0}
+                <div class="dietary-resource-rules">
+                  <strong>Resource-backed food checks</strong>
+                  {#each plan.foodSafety.relevantRules as rule (rule.id)}
+                    <div class="dietary-resource-rule">
+                      <strong>{rule.label}</strong>
+                      <p>{rule.recommendation}</p>
+                      {#if rule.substitutions?.length}
+                        <span><strong>Possible substitutions:</strong> {rule.substitutions.join('; ')}</span>
+                      {/if}
+                      {#if rule.confirm_with?.length}
+                        <span><strong>Confirm with:</strong> {rule.confirm_with.join('; ')}</span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
               <div class="diet-section">
                 {#if plan.diet.favor.length > 0}
                   <div class="diet-column favor">
@@ -976,6 +1020,58 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
+
+  .dietary-profile-safety,
+  .dietary-resource-rules {
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.06);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  .dietary-profile-safety > p {
+    margin: 0.2rem 0 0.5rem;
+  }
+
+  .dietary-profile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    margin: 0.45rem 0;
+  }
+
+  .dietary-profile-list strong,
+  .dietary-resource-rules > strong {
+    color: #a7f3d0;
+  }
+
+  .dietary-profile-allergy {
+    color: #fecaca;
+  }
+
+  .dietary-profile-allergy strong {
+    color: #fca5a5;
+  }
+
+  .dietary-resource-rule {
+    margin-top: 0.55rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .dietary-resource-rule p {
+    margin: 0.2rem 0;
+  }
+
+  .dietary-resource-rule > span {
+    display: block;
+    margin-top: 0.18rem;
+  }
+
   .diet-column h4 {
     margin: 0 0 0.4rem 0;
     font-size: 0.75rem;

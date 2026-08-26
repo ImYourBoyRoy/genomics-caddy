@@ -1,8 +1,10 @@
 <!-- ./src/lib/components/ai/BiohackingProfileSection.svelte -->
 <script lang="ts">
   import {
+    EMPTY_PERSONAL_DIETARY_PROFILE,
     parseContextList,
     savePersonalSafetyContext,
+    type PersonalDietaryProfile,
     type PersonalSafetyContext,
   } from '../../utils/personalSafetyContext';
   import ReproductiveContextEditor from './ReproductiveContextEditor.svelte';
@@ -29,6 +31,7 @@
   }
 
   type ContextListField = 'medications' | 'supplements' | 'allergies' | 'symptoms' | 'labObservations';
+  type DietaryProfileField = keyof PersonalDietaryProfile;
 
   let {
     userProfile = $bindable(),
@@ -44,6 +47,27 @@
   function updateContextList(field: ContextListField, event: Event): void {
     const value = (event.currentTarget as HTMLTextAreaElement).value;
     personalSafetyContext[field] = parseContextList(value);
+    savePersonalSafetyContext(sampleId, personalSafetyContext);
+  }
+
+  function dietaryProfileText(field: DietaryProfileField): string {
+    return personalSafetyContext.dietaryProfile?.[field]?.join('\n') || '';
+  }
+
+  function updateDietaryProfile(field: DietaryProfileField, event: Event): void {
+    const value = (event.currentTarget as HTMLTextAreaElement).value;
+    const nextProfile: PersonalDietaryProfile = {
+      ...EMPTY_PERSONAL_DIETARY_PROFILE,
+      ...(personalSafetyContext.dietaryProfile || {}),
+      [field]: parseContextList(value),
+    };
+    const hasValues = Object.values(nextProfile).some((items) => items.length > 0);
+    if (hasValues) {
+      personalSafetyContext.dietaryProfile = nextProfile;
+    } else {
+      const { dietaryProfile: _removed, ...withoutDietaryProfile } = personalSafetyContext;
+      personalSafetyContext = withoutDietaryProfile;
+    }
     savePersonalSafetyContext(sampleId, personalSafetyContext);
   }
 </script>
@@ -123,6 +147,39 @@
   <div class="input-row">
     <label for="context-labs">Recent labs / clinician findings</label>
     <textarea id="context-labs" value={contextText('labObservations')} oninput={(event) => updateContextList('labObservations', event)} placeholder="e.g. ferritin 18 ng/mL (2026-05-10), reference range ..." class="profile-textarea"></textarea>
+  </div>
+
+  <div class="structured-context-divider">
+    <strong>Explicit food requirements (optional)</strong>
+    <small>These are user-entered food rules, not DNA findings. Use confirmed versus suspected allergy fields carefully; never use a consumer DNA result to clear an allergen or diagnose celiac disease.</small>
+  </div>
+  <div class="input-row">
+    <label for="food-hard-exclusions">Foods or ingredients to exclude</label>
+    <textarea id="food-hard-exclusions" value={dietaryProfileText('hard_exclusions')} oninput={(event) => updateDietaryProfile('hard_exclusions', event)} placeholder="e.g. pork; alcohol; coffee" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-confirmed-allergies">Confirmed food allergies</label>
+    <textarea id="food-confirmed-allergies" value={dietaryProfileText('allergies_confirmed')} oninput={(event) => updateDietaryProfile('allergies_confirmed', event)} placeholder="e.g. peanut; fish; milk" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-suspected-allergies">Suspected food reactions / intolerances</label>
+    <textarea id="food-suspected-allergies" value={dietaryProfileText('allergies_suspected')} oninput={(event) => updateDietaryProfile('allergies_suspected', event)} placeholder="e.g. lactose symptoms; possible sesame reaction" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-religious-profiles">Religious / cultural food profiles</label>
+    <textarea id="food-religious-profiles" value={dietaryProfileText('religious_cultural_profiles')} oninput={(event) => updateDietaryProfile('religious_cultural_profiles', event)} placeholder="e.g. halal_compatible; kosher_style; pork_free" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-ethical-profiles">Ethical food profiles</label>
+    <textarea id="food-ethical-profiles" value={dietaryProfileText('ethical_preference_profiles')} oninput={(event) => updateDietaryProfile('ethical_preference_profiles', event)} placeholder="e.g. vegetarian; vegan; pescatarian" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-medical-profiles">Clinician-confirmed or explicitly discussed medical diet profiles</label>
+    <textarea id="food-medical-profiles" value={dietaryProfileText('medical_diet_profiles')} oninput={(event) => updateDietaryProfile('medical_diet_profiles', event)} placeholder="e.g. celiac_gluten_free; low_sodium; low_iron_support" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="food-goals">Food or nutrition goals</label>
+    <textarea id="food-goals" value={dietaryProfileText('goals')} oninput={(event) => updateDietaryProfile('goals', event)} placeholder="e.g. PMDD_cycle; muscle_gain; gut_symptoms" class="profile-textarea"></textarea>
   </div>
 </div>
 

@@ -277,6 +277,64 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains).toHaveLength(0);
   });
 
+  it('routes explicit food requirements through resource-backed safety rules', () => {
+    const plan = deriveActionablePlan(report([]), {
+      reproductiveContext: 'menstrual_cycle',
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        dietaryProfile: {
+          hard_exclusions: ['pork'],
+          allergies_confirmed: ['fish'],
+          allergies_suspected: ['sesame'],
+          religious_cultural_profiles: ['halal_compatible'],
+          ethical_preference_profiles: [],
+          medical_diet_profiles: [],
+          goals: ['PMDD_cycle'],
+        },
+      },
+    });
+    const ruleIds = plan.foodSafety.relevantRules.map((rule) => rule.id);
+
+    expect(plan.foodSafety.explicitExclusions).toEqual(['pork']);
+    expect(plan.foodSafety.confirmedAllergies).toEqual(['fish']);
+    expect(plan.foodSafety.suspectedAllergies).toEqual(['sesame']);
+    expect(ruleIds).toEqual(expect.arrayContaining([
+      'RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE',
+      'RULE_HALAL_COMPATIBLE',
+      'RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY',
+      'RULE_LOW_IRON_OR_ANEMIA_CONTEXT',
+    ]));
+    expect(plan.foodSafety.notes.join(' ')).toContain('not automatically confirmed allergies');
+    expect(plan.foodSafety.notes.join(' ')).toContain('not a genetic finding');
+  });
+
+  it('does not treat a non-food allergy entry as a major food allergy route', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        dietaryProfile: {
+          hard_exclusions: [],
+          allergies_confirmed: ['penicillin'],
+          allergies_suspected: [],
+          religious_cultural_profiles: [],
+          ethical_preference_profiles: [],
+          medical_diet_profiles: [],
+          goals: [],
+        },
+      },
+    });
+
+    expect(plan.foodSafety.relevantRules.map((rule) => rule.id)).not.toContain('RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE');
+  });
+
   it('recognizes an exact progestin ingredient without inferring that it is contraception', () => {
     const plan = deriveActionablePlan(report([]), {
       personalSafetyContext: {

@@ -26,6 +26,9 @@ describe('support resource context', () => {
     expect(context.supplement_safety.rules.some((rule) => rule.id === 'vitamin_b6')).toBe(true);
     expect(context.supplement_safety.rules.find((rule) => rule.id === 'vitamin_b6')?.sources).toContain('nih_ods_vitamin_b6');
     expect(context.food_safety.profile_minimum_required.length).toBeGreaterThan(0);
+    expect(context.food_safety.profile_routes.allergies_confirmed.fish).toContain('RULE_ALLERGY_MAJOR_FOOD_STRICT_AVOIDANCE');
+    expect(context.food_safety.context_routes.menstrual_cycle).toContain('RULE_LOW_IRON_OR_ANEMIA_CONTEXT');
+    expect(context.food_safety.profile_notes.confirmed_allergies).toContain('not a genetic finding');
     expect(context.food_safety.source_registry.nih_ods_selenium).toBeDefined();
     expect(context.food_safety.conditional_questions.pmdd_cycle).toBeDefined();
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'pmdd_like_mood_symptoms')).toBe(true);

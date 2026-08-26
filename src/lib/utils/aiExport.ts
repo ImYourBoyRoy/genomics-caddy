@@ -81,6 +81,18 @@ export function buildClinicalHandoffMarkdown(
     md += `* **Allergies / intolerances:** ${personalSafetyContext.allergies.join("; ") || "None recorded"}\n`;
     md += `* **Symptoms and timing:** ${personalSafetyContext.symptoms.join("; ") || "None recorded"}\n`;
     md += `* **Recent labs / clinician findings:** ${personalSafetyContext.labObservations.join("; ") || "None recorded"}\n`;
+    const dietaryProfile = personalSafetyContext.dietaryProfile;
+    if (dietaryProfile && Object.values(dietaryProfile).some((items) => items.length > 0)) {
+      md += `### Explicit food requirements (self-reported)\n`;
+      md += `* **Foods / ingredients to exclude:** ${dietaryProfile.hard_exclusions.join("; ") || "None recorded"}\n`;
+      md += `* **Confirmed food allergies:** ${dietaryProfile.allergies_confirmed.join("; ") || "None recorded"}\n`;
+      md += `* **Suspected reactions / intolerances:** ${dietaryProfile.allergies_suspected.join("; ") || "None recorded"}\n`;
+      md += `* **Religious / cultural profiles:** ${dietaryProfile.religious_cultural_profiles.join("; ") || "None recorded"}\n`;
+      md += `* **Ethical profiles:** ${dietaryProfile.ethical_preference_profiles.join("; ") || "None recorded"}\n`;
+      md += `* **Medical diet profiles:** ${dietaryProfile.medical_diet_profiles.join("; ") || "None recorded"}\n`;
+      md += `* **Food / nutrition goals:** ${dietaryProfile.goals.join("; ") || "None recorded"}\n`;
+      md += `*Food requirements are explicit profile context, not genetic evidence; allergy and clinician-directed restrictions take priority.*\n`;
+    }
     const reproductiveIntake = populatedReproductiveIntake(personalSafetyContext.reproductiveIntake);
     if (reproductiveIntake.length > 0) {
       md += `### Structured cycle and hormone context (self-reported)\n`;

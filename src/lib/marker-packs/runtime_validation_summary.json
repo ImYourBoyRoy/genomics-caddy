@@ -84,12 +84,13 @@
     "new_support_files": [
       "cycle_support_guidance.json"
     ],
-    "domains_count": 12,
+    "domains_count": 13,
     "context_options_count": 12,
-    "evidence_layers_count": 5,
+    "evidence_layers_count": 6,
+    "marker_context_pack_routes_count": 5,
     "review_metrics_count": 3,
     "cycle_day_comparison_min_observations": 2,
-    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis."
+    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, inherited clotting/contraception review, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis. Cross-pack marker routes connect selected hormone contexts to the cardiovascular thrombophilia markers without duplicating or reclassifying those markers."
   },
   "pgx_diplotype_layer": {
     "added": true,

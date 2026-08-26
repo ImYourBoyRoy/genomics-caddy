@@ -49,11 +49,13 @@ describe('support resource context', () => {
     expect(context.cycle_support.diary_review).toBeNull();
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
+    expect(context.cycle_support.marker_context_packs.menstrual_cycle.cardiovascular).toContain('rs6025');
     expect(context.cycle_support.relevant_evidence_layers.map((layer) => layer.id)).toEqual([
       'current_hormone_state',
       'natural_cycle_timing',
       'genetic_pathway_context',
       'hormone_product_label',
+      'thrombophilia_contraception_context',
       'adenomyosis_structural_workup',
     ]);
     expect(context.cycle_support.relevant_evidence_layers.find((layer) => layer.id === 'genetic_pathway_context')?.marker_pack_ids)
@@ -100,6 +102,7 @@ describe('support resource context', () => {
       'measured_hormone_context',
       'pmdd_like_mood_symptoms',
       'contraceptive_product_context',
+      'contraception_thrombophilia_context',
       'general_symptom_day_support',
     ]);
     expect(context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms')?.questions.join(' '))

@@ -114,6 +114,7 @@ export interface SupportResourceContext {
     relevant_evidence_layers: typeof cycleSupport.evidence_layers;
     context_options: typeof cycleSupport.context_options;
     marker_contexts: typeof cycleSupport.marker_contexts;
+    marker_context_packs: typeof cycleSupport.marker_context_packs;
     intake_schema: typeof cycleSupport.intake_schema;
     diary_schema: typeof cycleSupport.diary_schema;
     review_schema: typeof cycleSupport.review_schema;
@@ -425,6 +426,7 @@ export function buildSupportResourceContext({
       relevant_evidence_layers: relevantCycleEvidenceLayers,
       context_options: cycleSupport.context_options,
       marker_contexts: cycleSupport.marker_contexts,
+      marker_context_packs: cycleSupport.marker_context_packs,
       intake_schema: cycleSupport.intake_schema,
       diary_schema: cycleSupport.diary_schema,
       review_schema: cycleSupport.review_schema,

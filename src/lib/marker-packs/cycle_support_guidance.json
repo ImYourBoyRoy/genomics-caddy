@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
@@ -140,6 +140,34 @@
         "cdc_usmec_2024",
         "user_declared_values_required",
         "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "thrombophilia_contraception_context",
+      "title": "Inherited clotting markers change the contraception review",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "menopause_hormone_therapy"
+      ],
+      "marker_pack_ids": [
+        "cardiovascular"
+      ],
+      "summary": "The cardiovascular pack includes common Factor V Leiden and prothrombin mutation markers that may matter when an exact hormone product contains estrogen. A consumer-array call is not a complete clinical result, does not diagnose thrombophilia or a current clot, and does not choose a contraceptive or hormone treatment.",
+      "next_step": "If a report flags one of these markers, bring the report, exact product label, and personal/family clot history to the prescriber or pharmacist for confirmation and method-specific review. Routine population thrombophilia screening is not implied.",
+      "do_not_claim": [
+        "A raw-array call confirms thrombophilia",
+        "A DNA finding identifies a contraceptive product or current estrogen exposure",
+        "A DNA result justifies starting, stopping, or changing contraception or hormone treatment"
+      ],
+      "sources": [
+        "cdc_usmec_2024",
+        "acog_combined_contraception",
+        "acog_progestin_only_contraception",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
       ]
     },
     {
@@ -556,6 +584,7 @@
         "measured_hormone_context",
         "pmdd_like_mood_symptoms",
         "contraceptive_product_context",
+        "contraception_thrombophilia_context",
         "heavy_bleeding_pelvic_pain",
         "cycle_linked_pain_headache_context",
         "cycle_nutrition_activity_context",
@@ -573,6 +602,7 @@
       "domain_ids": [
         "cycle_linked_pain_headache_context",
         "heavy_bleeding_pelvic_pain",
+        "contraception_thrombophilia_context",
         "cycle_nutrition_activity_context",
         "general_symptom_day_support"
       ],
@@ -590,6 +620,7 @@
         "measured_hormone_context",
         "pmdd_like_mood_symptoms",
         "contraceptive_product_context",
+        "contraception_thrombophilia_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -604,6 +635,7 @@
       "domain_ids": [
         "measured_hormone_context",
         "contraceptive_product_context",
+        "contraception_thrombophilia_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -650,6 +682,7 @@
       "domain_ids": [
         "exogenous_hormone_medication_context",
         "measured_hormone_context",
+        "contraception_thrombophilia_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -836,6 +869,23 @@
       "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS"
     ]
   },
+  "marker_context_packs": {
+    "menstrual_cycle": {
+      "cardiovascular": ["rs6025", "rs1799963"]
+    },
+    "cyclic_mood_symptoms": {
+      "cardiovascular": ["rs6025", "rs1799963"]
+    },
+    "cycle_linked_pain_headache": {
+      "cardiovascular": ["rs6025", "rs1799963"]
+    },
+    "ovarian_reproductive": {
+      "cardiovascular": ["rs6025", "rs1799963"]
+    },
+    "menopause_hormone_therapy": {
+      "cardiovascular": ["rs6025", "rs1799963"]
+    }
+  },
   "principles": [
     "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
     "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",
@@ -991,6 +1041,44 @@
         "cdc_usmec_2024",
         "user_declared_values_required",
         "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "contraception_thrombophilia_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "cardiovascular",
+        "pgx"
+      ],
+      "title": "Contraception, estrogen exposure and inherited clotting context",
+      "context": "A consumer array may contain a small number of inherited clotting markers, but it is not a complete thrombophilia evaluation. The medication conversation depends on the exact product, personal and family history, and clinician-confirmed results.",
+      "questions": [
+        "What exact product, active ingredient or ingredients, dose, route, schedule, and start date are recorded on the package or prescribing label?",
+        "Has the person ever had a deep-vein thrombosis or pulmonary embolism, an estrogen- or pregnancy-associated clot, or a first-degree relative with an early or unexplained clot?",
+        "Is there a clinician-confirmed Factor V Leiden, prothrombin mutation, antiphospholipid syndrome, or another thrombophilia result? Are migraine with aura, smoking, recent surgery, immobilization, postpartum timing, or other risk factors relevant?"
+      ],
+      "support_options": [
+        "If the report contains a Factor V Leiden or prothrombin-pathway finding, treat it as a prompt for clinical confirmation and medication review—not as proof of thrombophilia, a current clot, or a reason to change contraception.",
+        "Use current contraceptive guidance to compare the exact method with the person's confirmed history and risk factors. Routine population thrombophilia screening is not implied by choosing contraception or by this DNA report.",
+        "Do not start, stop, skip, or substitute a contraceptive or hormone treatment from a raw-array result. A clinician or pharmacist should review the label, alternatives, benefits, risks, and the person's goals."
+      ],
+      "confirm_with": [
+        "exact product label and active ingredients",
+        "personal and first-degree family history of venous thromboembolism",
+        "clinician-directed Factor V Leiden/prothrombin or broader thrombophilia confirmation when indicated",
+        "prescriber or pharmacist review"
+      ],
+      "red_flags": [
+        "new one-sided leg swelling or pain",
+        "sudden shortness of breath, chest pain, coughing blood, fainting, or a new neurologic deficit",
+        "severe new headache or visual symptoms while using a hormone-containing product"
+      ],
+      "sources": [
+        "cdc_usmec_2024",
+        "acog_combined_contraception",
+        "acog_progestin_only_contraception",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
       ]
     },
     {

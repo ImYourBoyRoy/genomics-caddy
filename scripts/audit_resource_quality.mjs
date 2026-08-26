@@ -370,6 +370,42 @@ for (const [contextId, markerIds] of Object.entries(cycleSupport?.marker_context
     }
   }
 }
+const markerContextPackRoutes = cycleSupport?.marker_context_packs || {};
+const manifestPackIds = new Set((manifest?.packs || []).map((pack) => pack.id));
+const curatedMarkerPackIds = new Set(
+  allMarkers.map(({ marker }) => String(marker.rsid || '').trim().toLowerCase())
+);
+let markerContextPackRouteCount = 0;
+for (const [contextId, packMap] of Object.entries(markerContextPackRoutes)) {
+  if (!contextOptionIds.has(contextId)) {
+    errors.push(`cycle_support_guidance.json: marker_context_packs references unknown context ${contextId}`);
+  }
+  if (!packMap || typeof packMap !== 'object' || Array.isArray(packMap)) {
+    errors.push(`cycle_support_guidance.json: marker_context_packs.${contextId} must be an object`);
+    continue;
+  }
+  for (const [packId, markerIds] of Object.entries(packMap)) {
+    markerContextPackRouteCount += 1;
+    if (!manifestPackIds.has(packId)) {
+      errors.push(`cycle_support_guidance.json: marker_context_packs.${contextId} references unknown marker pack ${packId}`);
+    }
+    if (!isNonEmptyStringArray(markerIds)) {
+      errors.push(`cycle_support_guidance.json: marker_context_packs.${contextId}.${packId} must be a non-empty string array`);
+      continue;
+    }
+    for (const markerId of markerIds) {
+      if (!curatedMarkerPackIds.has(String(markerId).trim().toLowerCase())) {
+        errors.push(`cycle_support_guidance.json: marker_context_packs.${contextId}.${packId} references missing marker ${markerId}`);
+      }
+    }
+  }
+}
+if (markerContextPackRouteCount === 0) {
+  errors.push('cycle_support_guidance.json: marker_context_packs must contain at least one route');
+}
+if (runtimeSummary?.cycle_support_layer?.marker_context_pack_routes_count !== markerContextPackRouteCount) {
+  errors.push(`runtime_validation_summary.json: cycle_support_layer.marker_context_pack_routes_count is ${runtimeSummary?.cycle_support_layer?.marker_context_pack_routes_count ?? '(missing)'}, expected ${markerContextPackRouteCount}`);
+}
 
 const actionabilityGenes = new Set();
 const actionabilityCoverage = [];

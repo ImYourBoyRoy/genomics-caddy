@@ -37,6 +37,7 @@ describe('reproductive marker context routing', () => {
       'measured_hormone_context',
       'pmdd_like_mood_symptoms',
       'contraceptive_product_context',
+      'contraception_thrombophilia_context',
       'general_symptom_day_support',
     ]);
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
@@ -66,6 +67,8 @@ describe('reproductive marker context routing', () => {
     expect(reproductiveMarkerContextRank('GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP', 'suspected_adenomyosis')).toBe(3);
     expect(reproductiveMarkerContextRank('PANEL_ADENOMYOSIS_RESEARCH_GAP', 'suspected_adenomyosis')).toBe(3);
     expect(reproductiveMarkerContextRank('rs184700', 'suspected_adenomyosis')).toBe(3);
+    expect(reproductiveMarkerContextRank('rs6025', 'menstrual_cycle')).toBe(3);
+    expect(reproductiveMarkerContextIds('rs6025')).toContain('menstrual_cycle');
   });
 
   it('keeps unknown or unselected context non-directive', () => {
@@ -128,6 +131,7 @@ describe('reproductive marker context routing', () => {
     expect(option?.domain_ids).toEqual([
       'cycle_linked_pain_headache_context',
       'heavy_bleeding_pelvic_pain',
+      'contraception_thrombophilia_context',
       'cycle_nutrition_activity_context',
       'general_symptom_day_support',
     ]);
@@ -144,6 +148,7 @@ describe('reproductive marker context routing', () => {
       'natural_cycle_timing',
       'genetic_pathway_context',
       'hormone_product_label',
+      'thrombophilia_contraception_context',
       'adenomyosis_structural_workup',
     ]);
     expect(menstrualLayers.find((layer) => layer.id === 'natural_cycle_timing')?.summary)
@@ -166,10 +171,10 @@ describe('reproductive marker context routing', () => {
     const coverage = reproductiveDnaCoverageForReport(report, ['menstrual_cycle']);
 
     expect(coverage).toEqual(expect.objectContaining({
-      tracked_marker_count: 42,
+      tracked_marker_count: 44,
       present_marker_count: 2,
       callable_marker_count: 1,
-      unknown_marker_count: 40,
+      unknown_marker_count: 42,
     }));
     expect(coverage).not.toHaveProperty('genotype');
   });

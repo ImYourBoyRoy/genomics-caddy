@@ -6,6 +6,24 @@ export interface ReproductivePersonalContextLike {
   cycleDiary?: readonly unknown[] | null;
 }
 
+type MarkerContextPacks = Record<string, Record<string, string[]>>;
+
+function markerContextPacks(): MarkerContextPacks {
+  return (cycleSupport.marker_context_packs || {}) as MarkerContextPacks;
+}
+
+function externalMarkerIdsForContexts(contextIds: readonly string[]): string[] {
+  const byContext = markerContextPacks();
+  return contextIds.flatMap((contextId) =>
+    Object.values(byContext[contextId] || {}).flatMap((markerIds) => markerIds)
+  );
+}
+
+function markerIsInExternalContext(markerId: string, contextId: string): boolean {
+  return Object.values(markerContextPacks()[contextId] || {})
+    .some((markerIds) => markerIds.includes(markerId));
+}
+
 export type ReproductiveContextOption = typeof cycleSupport.context_options[number];
 
 export const REPRODUCTIVE_CONTEXT_STORAGE_PREFIX = 'genomics_reproductive_context:';
@@ -195,6 +213,7 @@ export function reproductiveDnaCoverageForReport(
   for (const contextId of contextIds) {
     for (const markerId of markerContexts[contextId] || []) relevantIds.add(markerId);
   }
+  for (const markerId of externalMarkerIdsForContexts(contextIds)) relevantIds.add(markerId);
 
   // Only count numeric rsIDs here. Guardrails, panels, and repeat callouts
   // are intentionally excluded because they are not single-SNP call targets.
@@ -254,24 +273,33 @@ export function reproductiveMarkerContextRank(
   const selectedMarkers = markerContexts[option.id] || [];
   const isShared = sharedMarkers.includes(markerId);
   const isSelected = selectedMarkers.includes(markerId);
+  const isExternalSelected = markerIsInExternalContext(markerId, option.id);
 
   // A marker authored for the selected context is the strongest match. Shared
   // reproductive biology remains useful in every selected reproductive route.
-  if (isSelected) return 3;
+  if (isSelected || isExternalSelected) return 3;
   if (isShared) return 2;
 
   // Unmapped markers remain visible but are placed after explicitly mapped
   // findings; a mapped marker for another context is placed last.
   const isMapped = Object.values(markerContexts).some((ids) => ids.includes(markerId));
-  return isMapped ? 0 : 1;
+  const isMappedExternally = Object.values(markerContextPacks())
+    .some((packMap) => Object.values(packMap).some((ids) => ids.includes(markerId)));
+  return isMapped || isMappedExternally ? 0 : 1;
 }
 
 export function reproductiveMarkerContextIds(rsid: string): string[] {
   const markerId = String(rsid || '').trim();
   const markerContexts = cycleSupport.marker_contexts as Record<string, string[]>;
-  return Object.entries(markerContexts)
+  const contextIds = Object.entries(markerContexts)
     .filter(([, ids]) => ids.includes(markerId))
     .map(([contextId]) => contextId);
+  for (const [contextId, packMap] of Object.entries(markerContextPacks())) {
+    if (Object.values(packMap).some((ids) => ids.includes(markerId)) && !contextIds.includes(contextId)) {
+      contextIds.push(contextId);
+    }
+  }
+  return contextIds;
 }
 
 /**

@@ -535,9 +535,9 @@
         <option value="default">Default order</option>
         <option value="severity">Highest priority first</option>
       </select>
-      <div class="filter-actions" aria-label="Section visibility">
-        <button class="view-mode-btn" onclick={expandAll}>Expand all</button>
-        <button class="view-mode-btn" onclick={collapseAll}>Collapse all</button>
+      <div class="filter-actions" role="group" aria-label="Section visibility">
+        <button type="button" class="view-mode-btn" onclick={expandAll}>Expand all</button>
+        <button type="button" class="view-mode-btn" onclick={collapseAll}>Collapse all</button>
       </div>
     </div>
 
@@ -549,31 +549,38 @@
       <span id="reproductive-priority-hint" class="filter-context-hint">This changes ordering only; all reproductive markers remain visible.</span>
     {/if}
     
-    <div class="mode-group">
-      <span class="filter-label">Reading mode</span>
+    <div class="mode-group" role="group" aria-labelledby="reading-mode-label">
+      <span id="reading-mode-label" class="filter-label">Reading mode</span>
       <div class="view-mode-buttons">
       <button
-        class="view-mode-btn" 
+        type="button"
+        class="view-mode-btn"
         class:view-mode-active={presentationMode === 'simple'}
+        aria-pressed={presentationMode === 'simple'}
         onclick={() => setPresentationMode('simple')}
       >
         🌱 Simple
       </button>
-      <button 
-        class="view-mode-btn" 
+      <button
+        type="button"
+        class="view-mode-btn"
         class:view-mode-active={presentationMode === 'clinical'}
+        aria-pressed={presentationMode === 'clinical'}
         onclick={() => setPresentationMode('clinical')}
       >
         🏥 Clinical
       </button>
-      <button 
-        class="view-mode-btn" 
+      <button
+        type="button"
+        class="view-mode-btn"
         class:view-mode-active={presentationMode === 'compare'}
+        aria-pressed={presentationMode === 'compare'}
         onclick={() => setPresentationMode('compare')}
       >
         👥 Compare
       </button>
       <button
+        type="button"
         class="view-mode-btn guide-mode-btn"
         onclick={openHelpGuide}
         aria-haspopup="dialog"

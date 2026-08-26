@@ -21,6 +21,21 @@ export type AgentUiTab =
   | 'research'
   | 'ai';
 
+export interface AgentUiLayoutMetrics {
+  viewportWidth: number;
+  viewportHeight: number;
+  documentClientWidth: number;
+  documentScrollWidth: number;
+  mainContentWidth: number | null;
+  mainContentScrollWidth: number | null;
+  sidebarWidth: number | null;
+  markerGridColumnCount: number | null;
+  markerCardCount: number;
+  clinicalTableCount: number;
+  activePresentationMode: 'simple' | 'clinical' | 'compare' | null;
+  focusMode: boolean;
+}
+
 export interface AgentUiSnapshot {
   title: string;
   activeTab: string;
@@ -35,6 +50,7 @@ export interface AgentUiSnapshot {
   dualExportButtonsPresent: boolean;
   urgentBadgeCount: number;
   visibleTextSample: string[];
+  layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
 }
@@ -101,6 +117,43 @@ function isPublicUiTextNode(node: Node): boolean {
 
   const style = getComputedStyle(element);
   return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+function getGridColumnCount(element: HTMLElement | null): number | null {
+  if (!element) return null;
+  const template = getComputedStyle(element).gridTemplateColumns.trim();
+  if (!template || template === 'none') return null;
+  return template.split(/\s+/).length;
+}
+
+function getActivePresentationMode(): AgentUiLayoutMetrics['activePresentationMode'] {
+  const activeButton = document.querySelector<HTMLElement>('.view-mode-btn[aria-pressed="true"]');
+  const label = (activeButton?.textContent || '').toLowerCase();
+  if (label.includes('simple')) return 'simple';
+  if (label.includes('clinical')) return 'clinical';
+  if (label.includes('compare')) return 'compare';
+  return null;
+}
+
+function collectLayoutMetrics(): AgentUiLayoutMetrics {
+  const mainContent = document.querySelector<HTMLElement>('.main-content');
+  const sidebar = document.querySelector<HTMLElement>('.sidebar');
+  const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
+
+  return {
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    documentClientWidth: document.documentElement.clientWidth,
+    documentScrollWidth: document.documentElement.scrollWidth,
+    mainContentWidth: mainContent?.getBoundingClientRect().width ?? null,
+    mainContentScrollWidth: mainContent?.scrollWidth ?? null,
+    sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
+    markerGridColumnCount: getGridColumnCount(markerGrid),
+    markerCardCount: document.querySelectorAll('.marker-card').length,
+    clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
+    activePresentationMode: getActivePresentationMode(),
+    focusMode: document.querySelector('.app-layout.focus-mode') !== null,
+  };
 }
 
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
@@ -173,6 +226,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           return /^\s*URGENT\s*$/i.test(direct);
         }).length,
         visibleTextSample: collectVisibleText(30),
+        layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),
       };

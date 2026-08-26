@@ -183,7 +183,7 @@ for (const pack of manifest?.packs || []) {
       });
     }
   }
-  packSummaries.push({
+packSummaries.push({
     id: packId,
     markers: doc.markers.length,
     source_backed: sourceBacked,
@@ -194,6 +194,25 @@ for (const pack of manifest?.packs || []) {
     evidence_tiers: tiers,
     variant_types: variants,
   });
+}
+
+// Keep the human-readable validation snapshot honest. This file is consumed
+// as repository metadata, so stale counts can misrepresent the active packs
+// even when the source and runtime mirrors are otherwise valid.
+const summaryPackCounts = runtimeSummary?.pack_counts || {};
+for (const summary of packSummaries) {
+  if (summaryPackCounts[summary.id] !== summary.markers) {
+    errors.push(`runtime_validation_summary.json: pack_counts.${summary.id} is ${summaryPackCounts[summary.id] ?? '(missing)'}, expected ${summary.markers}`);
+  }
+}
+if (runtimeSummary?.manifest_packs !== manifest?.packs?.length) {
+  errors.push(`runtime_validation_summary.json: manifest_packs is ${runtimeSummary?.manifest_packs ?? '(missing)'}, expected ${manifest?.packs?.length ?? 0}`);
+}
+if (runtimeSummary?.discovery_records !== discoveryCatalog?.markers?.length) {
+  errors.push(`runtime_validation_summary.json: discovery_records is ${runtimeSummary?.discovery_records ?? '(missing)'}, expected ${discoveryCatalog?.markers?.length ?? 0}`);
+}
+if (runtimeSummary?.cycle_support_layer?.domains_count !== cycleSupport?.domains?.length) {
+  errors.push(`runtime_validation_summary.json: cycle_support_layer.domains_count is ${runtimeSummary?.cycle_support_layer?.domains_count ?? '(missing)'}, expected ${cycleSupport?.domains?.length ?? 0}`);
 }
 
 for (const marker of discoveryCatalog?.markers || []) {

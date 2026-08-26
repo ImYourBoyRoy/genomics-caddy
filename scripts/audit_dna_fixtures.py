@@ -180,6 +180,7 @@ def audit(
     pack_coverage = {
         pack_id: {
             "present": len(rsids & rsid_set),
+            "called": len(called_rsids & rsid_set),
             "total": len(rsid_set),
         }
         for pack_id, rsid_set in pack_rsids_by_pack.items()
@@ -199,8 +200,10 @@ def audit(
         "rows": rows,
         "valid_rows": valid,
         "curated_rsids_present": len(pack_rsids & rsids),
+        "curated_rsids_called": len(pack_rsids & called_rsids),
         "curated_rsids_total": len(pack_rsids),
         "hormone_rsids_present": len(hormone_rsids & rsids),
+        "hormone_rsids_called": len(hormone_rsids & called_rsids),
         "hormone_rsids_total": len(hormone_rsids),
         "y_calls": y_calls,
         "chromosomes": ",".join(f"{key}:{value}" for key, value in chromosomes.most_common()),
@@ -227,25 +230,27 @@ def main() -> int:
             return 1
         print(
             f"{path.name}: rows={result['rows']} valid={result['valid_rows']} "
-            f"pack_rsids={result['curated_rsids_present']}/{result['curated_rsids_total']} "
-            f"hormone_rsids={result['hormone_rsids_present']}/{result['hormone_rsids_total']} "
+            f"pack_rsids_present={result['curated_rsids_present']}/{result['curated_rsids_total']} "
+            f"pack_rsids_called={result['curated_rsids_called']}/{result['curated_rsids_total']} "
+            f"hormone_rsids_present={result['hormone_rsids_present']}/{result['hormone_rsids_total']} "
+            f"hormone_rsids_called={result['hormone_rsids_called']}/{result['hormone_rsids_total']} "
             f"y_calls={result['y_calls']}"
         )
         coverage = result["pack_coverage"]
         low_coverage = [
-            f"{pack_id}={values['present']}/{values['total']}"
+            f"{pack_id}={values['called']}/{values['present']}/{values['total']}"
             for pack_id, values in coverage.items()
-            if values["total"] >= 10 and values["present"] / values["total"] < 0.5
+            if values["total"] >= 10 and values["called"] / values["total"] < 0.5
         ]
         print(
-            f"  pack_coverage="
+            f"  pack_coverage(called/present/total)="
             + ",".join(
-                f"{pack_id}:{values['present']}/{values['total']}"
+                f"{pack_id}:{values['called']}/{values['present']}/{values['total']}"
                 for pack_id, values in coverage.items()
             )
         )
         if low_coverage:
-            print(f"  low_coverage(<50%, >=10 markers)={','.join(low_coverage)}")
+            print(f"  low_callable_coverage(<50%, >=10 markers)={','.join(low_coverage)}")
         actionability_coverage = result["actionability_coverage"]
         callable_rules = [
             rule_id

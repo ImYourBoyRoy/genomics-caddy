@@ -29,6 +29,11 @@ describe('support resource context', () => {
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
+    const pmddDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms');
+    expect(pmddDomain?.support_options.join(' ')).toContain('SSRI');
+    expect(pmddDomain?.support_options.join(' ')).toContain('not on a DNA marker');
+    const contraceptiveDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'contraceptive_product_context');
+    expect(contraceptiveDomain?.support_options.join(' ')).toContain('no new adverse effects');
   });
 
   it('routes exogenous hormone therapy context with product and monitoring sources', () => {

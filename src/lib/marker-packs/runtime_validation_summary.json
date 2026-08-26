@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 48,
+    "hormones_reproductive": 50,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -77,7 +77,7 @@
     "new_support_files": [
       "cycle_support_guidance.json"
     ],
-    "domains_count": 5,
-    "note": "Cycle support separates phenotype timing, medication composition, symptom-day support, and gynecologic escalation from genetic interpretation."
+    "domains_count": 8,
+    "note": "Cycle support separates phase physiology, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, and gynecologic escalation from genetic interpretation."
   }
 }

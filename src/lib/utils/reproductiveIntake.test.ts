@@ -12,12 +12,14 @@ describe('resource-backed reproductive intake', () => {
     const normalized = normalizeReproductiveIntake({
       active_ingredients: '  norethindrone   0.35 mg  ',
       mood_behavior_symptoms: ' Just leave me alone; avoidant near bleeding ',
+      need_for_space_communication_pattern: ' Requests a check-in later; quiet helps ',
       unknown_private_field: 'should not persist',
     });
 
     expect(normalized).toEqual({
       active_ingredients: 'norethindrone 0.35 mg',
       mood_behavior_symptoms: 'Just leave me alone; avoidant near bleeding',
+      need_for_space_communication_pattern: 'Requests a check-in later; quiet helps',
     });
     expect(normalized).not.toHaveProperty('unknown_private_field');
   });
@@ -43,6 +45,7 @@ describe('resource-backed reproductive intake', () => {
       'active_ingredients',
       'route_dose_schedule',
       'question_or_belief_to_verify',
+      'hormone_lab_timing_context',
       'clinical_questions_or_findings',
     ]));
     expect(REPRODUCTIVE_INTAKE_SCHEMA.do_not_infer.join(' ')).toContain('adenomyosis');

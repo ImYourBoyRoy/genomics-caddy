@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
@@ -53,7 +53,25 @@
           "symptom_onset_timing",
           "symptom_resolution_timing",
           "mood_behavior_symptoms",
+          "need_for_space_communication_pattern",
           "pain_bleeding_headache_symptoms"
+        ]
+      },
+      {
+        "id": "measured_hormone_context",
+        "title": "Measured hormones and treatment timing",
+        "description": "Use when a person already has hormone or related laboratory results. Record the test date, units, reference range, cycle or bleeding timing, exact product timing, and clinician interpretation instead of asking DNA to estimate a current level.",
+        "context_ids": [
+          "menstrual_cycle",
+          "cyclic_mood_symptoms",
+          "ovarian_reproductive",
+          "menopause_hormone_therapy",
+          "hormone_therapy_context",
+          "preconception_fertility"
+        ],
+        "field_ids": [
+          "hormone_lab_results",
+          "hormone_lab_timing_context"
         ]
       },
       {
@@ -139,6 +157,13 @@
         "help": "Describe what is observed and its impact without using the field to diagnose PMDD or a psychiatric condition."
       },
       {
+        "id": "need_for_space_communication_pattern",
+        "label": "Need-for-space or communication pattern",
+        "input_type": "textarea",
+        "placeholder": "e.g. asks to be left alone, avoids contact, prefers a check-in later, or support that helps",
+        "help": "Record the person's words, timing, boundaries, and support preferences without treating avoidance as a character judgment or assigning a hormone cause."
+      },
+      {
         "id": "pain_bleeding_headache_symptoms",
         "label": "Pain, bleeding, or headache symptoms",
         "input_type": "textarea",
@@ -158,6 +183,13 @@
         "input_type": "textarea",
         "placeholder": "e.g. test name, date, value, units, reference range, and clinician interpretation",
         "help": "Measured results are clinical context; a DNA marker does not replace testing or establish current hormone levels."
+      },
+      {
+        "id": "hormone_lab_timing_context",
+        "label": "Cycle or treatment timing for labs",
+        "input_type": "textarea",
+        "placeholder": "e.g. cycle day or bleeding status, time of day, time since last dose, and current product",
+        "help": "Timing can affect interpretation. Use the laboratory report and clinician guidance; do not infer a level or treatment response from DNA."
       },
       {
         "id": "fertility_family_building_context",
@@ -234,7 +266,8 @@
       "Do not infer current estrogen, progesterone, progestin, allopregnanolone, ovulation, pregnancy, or medication response from DNA or from a symptom pattern.",
       "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
       "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker.",
-      "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context."
+      "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context.",
+      "Do not infer personality, intent, relationship meaning, or a fixed character trait from cyclic withdrawal, avoidance, irritability, or a request for space."
     ]
   },
   "diary_schema": {
@@ -331,7 +364,8 @@
     "do_not_infer": [
       "Do not infer estrogen, progesterone, ovulation, PMDD, adenomyosis, endometriosis, or medication response from diary scores or timing.",
       "Do not treat a missing diary entry as a symptom-free day or a normal result.",
-      "Do not use diary patterns to start, stop, dose, or switch medication or supplements."
+      "Do not use diary patterns to start, stop, dose, or switch medication or supplements.",
+      "Do not infer personality, intent, relationship meaning, or a fixed character trait from cyclic withdrawal, avoidance, irritability, or a request for space."
     ]
   },
   "context_options": [
@@ -341,6 +375,7 @@
       "description": "Use when the person reports an ongoing menstrual cycle or recurring cycle-linked symptoms.",
       "domain_ids": [
         "cycle_phase_and_symptom_timing",
+        "measured_hormone_context",
         "pmdd_like_mood_symptoms",
         "contraceptive_product_context",
         "heavy_bleeding_pelvic_pain",
@@ -372,6 +407,7 @@
       "description": "Use when the person reports recurring irritability, anger, avoidance, anxiety, depression, or a need for more space around a suspected cycle window. This is a symptom-timing route, not a PMDD diagnosis or a hormone-level inference.",
       "domain_ids": [
         "cycle_phase_and_symptom_timing",
+        "measured_hormone_context",
         "pmdd_like_mood_symptoms",
         "contraceptive_product_context",
         "general_symptom_day_support"
@@ -385,6 +421,7 @@
       "label": "Ovarian / reproductive care",
       "description": "Use when ovarian or reproductive care is relevant, without assuming a cycle, anatomy, fertility, or pregnancy status.",
       "domain_ids": [
+        "measured_hormone_context",
         "contraceptive_product_context",
         "general_symptom_day_support"
       ],
@@ -427,6 +464,7 @@
       "description": "Use when menopause or hormone-therapy context is relevant; record the exact product and ingredients.",
       "domain_ids": [
         "exogenous_hormone_medication_context",
+        "measured_hormone_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -439,6 +477,7 @@
       "description": "Use when estrogen, testosterone, progesterone/progestin, an antiandrogen, puberty suppression, or another prescribed hormone treatment is relevant. Record the exact product and monitoring context without assuming identity, anatomy, or goals.",
       "domain_ids": [
         "exogenous_hormone_medication_context",
+        "measured_hormone_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -463,6 +502,7 @@
       "description": "Use only when the person supplies a pregnancy-planning or fertility-evaluation goal. This route supports people with different bodies, partners, and family-building paths without inferring anatomy, identity, fertility, or pregnancy from DNA.",
       "domain_ids": [
         "preconception_fertility_context",
+        "measured_hormone_context",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -522,6 +562,7 @@
       "PANEL_ENDOMETRIOSIS_CONTEXT",
       "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
       "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
+      "GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE",
       "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
       "PANEL_ADENOMYOSIS_RESEARCH_GAP",
       "rs7521902",
@@ -533,6 +574,7 @@
       "rs10859871"
     ],
     "cyclic_mood_symptoms": [
+      "GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE",
       "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS",
       "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
       "PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY",
@@ -646,6 +688,43 @@
         "acog_premenstrual_disorders",
         "womenshealth_pmdd",
         "phenotype_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "measured_hormone_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "thyroid_autoimmune",
+        "metabolic"
+      ],
+      "title": "Measured hormones and treatment timing",
+      "context": "Current hormone levels and treatment response require clinical measurements interpreted with cycle or bleeding timing, exact product timing, age, relevant conditions, and the laboratory reference range.",
+      "questions": [
+        "What exact test was measured, on what date, in what units, and with what laboratory reference range and clinician interpretation?",
+        "What was the cycle day or bleeding status, time of day, pregnancy possibility, and time since the last medication dose when the sample was taken?",
+        "What exact hormone or contraceptive product, dose, route, and schedule were in use, and what question should the result help answer?"
+      ],
+      "support_options": [
+        "Bring the laboratory report, medication or product label, cycle diary, and symptom timeline to the clinician; a DNA marker cannot substitute for a current hormone measurement.",
+        "Treat a single result as time- and context-dependent rather than as a permanent baseline. Ask the clinician whether repeat testing, a different cycle or treatment time, or another test is appropriate.",
+        "Do not start, stop, skip, or change hormone or contraceptive treatment based on a DNA result, a symptom theory, or an isolated lab value."
+      ],
+      "confirm_with": [
+        "laboratory report with date, units, and reference range",
+        "cycle, bleeding, pregnancy, and treatment timing",
+        "clinician interpretation of the person's goal and symptoms"
+      ],
+      "red_flags": [
+        "severe or rapidly worsening symptoms",
+        "chest pain, fainting, severe shortness of breath, or one-sided leg swelling",
+        "suicidal thoughts or inability to remain safe"
+      ],
+      "sources": [
+        "menstrual_cycle_physiology",
+        "acog_premenstrual_disorders",
+        "user_declared_values_required",
+        "lab_confirmation_required",
         "clinical_confirmation_required"
       ]
     },

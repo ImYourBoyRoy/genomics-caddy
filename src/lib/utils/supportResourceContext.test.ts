@@ -30,7 +30,9 @@ describe('support resource context', () => {
     expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
     expect(context.cycle_support.intake_schema.fields.some((field) => field.id === 'active_ingredients')).toBe(true);
+    expect(context.cycle_support.intake_schema.fields.some((field) => field.id === 'hormone_lab_timing_context')).toBe(true);
     expect(context.cycle_support.intake_schema.do_not_infer.join(' ')).toContain('adenomyosis');
+    expect(context.cycle_support.intake_schema.do_not_infer.join(' ')).toContain('fixed character trait');
     expect(context.cycle_support.diary_schema.fields.some((field) => field.id === 'mood_behavior_score')).toBe(true);
     expect(context.cycle_support.diary_schema.retention_limit).toBe(180);
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
@@ -42,6 +44,7 @@ describe('support resource context', () => {
     expect(contraceptiveDomain?.support_options.join(' ')).toContain('no new adverse effects');
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_linked_pain_headache_context')).toBe(true);
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_nutrition_activity_context')).toBe(true);
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'measured_hormone_context')).toBe(true);
     const moodDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms');
     expect(moodDomain?.support_options.join(' ')).toContain('request space');
     expect(moodDomain?.support_options.join(' ')).toContain('not a diagnosis');
@@ -73,6 +76,7 @@ describe('support resource context', () => {
 
     expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
       'cycle_phase_and_symptom_timing',
+      'measured_hormone_context',
       'pmdd_like_mood_symptoms',
       'contraceptive_product_context',
       'general_symptom_day_support',
@@ -122,6 +126,7 @@ describe('support resource context', () => {
 
     expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
       'exogenous_hormone_medication_context',
+      'measured_hormone_context',
       'general_symptom_day_support',
     ]);
     expect(context.cycle_support.source_registry.endocrine_gender_affirming_hormone_therapy).toBeDefined();
@@ -154,6 +159,7 @@ describe('support resource context', () => {
 
     expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
       'preconception_fertility_context',
+      'measured_hormone_context',
       'general_symptom_day_support',
     ]);
     expect(context.cycle_support.source_registry.acog_preconception_counseling).toBeDefined();

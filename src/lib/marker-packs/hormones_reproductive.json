@@ -87,6 +87,49 @@
       ]
     },
     {
+      "rsid": "GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE",
+      "gene": "MULTI_GENE",
+      "variant_name": "Cyclic mood, avoidance, and need-for-space phenotype rule",
+      "effect_allele": "N/A",
+      "impact": "Prevents geneticizing cyclic behavior or relationship needs",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Irritability, anger, withdrawal, avoidance, or a request for space that recurs around a suspected cycle window is self-reported phenotype and communication context. DNA cannot establish a personality trait, intent, psychiatric diagnosis, hormone cause, or relationship meaning. Record timing, functioning, safety, and the person's preferred support without labeling the person.",
+      "do_not_claim": [
+        "personality or character trait from genotype",
+        "intent or relationship meaning from a symptom pattern",
+        "PMDD or psychiatric diagnosis",
+        "hormone cause or treatment response"
+      ],
+      "confirm_with": [
+        "prospective daily symptom and cycle tracking",
+        "symptom-free days and functioning impact",
+        "mental-health or primary-care review when impairment or safety concerns occur",
+        "a respectful communication and support plan made during a lower-symptom period"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Common DNA markers cannot explain an individual's behavior or current hormone state. A recurring pattern still needs lived-experience context, safety review, and clinical assessment when it causes impairment.",
+      "clinical_confirmation_required": true,
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "ACOG Clinical Practice Guideline: Management of Premenstrual Disorders",
+          "url": "https://www.acog.org/clinical/clinical-guidance/clinical-practice-guideline/articles/2023/12/management-of-premenstrual-disorders",
+          "accessed": "2026-08-25",
+          "evidence_type": "Professional clinical practice guideline",
+          "conflict_of_interest": "Professional medical society guideline",
+          "notes": "Use for prospective symptom assessment and functional-impact framing, not a genotype diagnosis."
+        },
+        {
+          "name": "Office on Women's Health: Premenstrual Dysphoric Disorder",
+          "url": "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome/premenstrual-dysphoric-disorder-pmdd",
+          "accessed": "2026-08-25",
+          "evidence_type": "U.S. government health information",
+          "conflict_of_interest": "U.S. Department of Health and Human Services public health resource",
+          "notes": "Use for symptom timing, diary, impairment, and mental-health safety prompts."
+        }
+      ]
+    },
+    {
       "rsid": "rs9340799",
       "gene": "ESR1",
       "variant_name": "XbaI estrogen receptor alpha marker",

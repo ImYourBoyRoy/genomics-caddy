@@ -25,6 +25,7 @@ describe('reproductive marker context routing', () => {
 
     expect(option?.domain_ids).toEqual([
       'cycle_phase_and_symptom_timing',
+      'measured_hormone_context',
       'pmdd_like_mood_symptoms',
       'contraceptive_product_context',
       'general_symptom_day_support',
@@ -32,6 +33,7 @@ describe('reproductive marker context routing', () => {
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY', 'cyclic_mood_symptoms')).toBe(3);
     expect(reproductiveMarkerContextRank('GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS', 'cyclic_mood_symptoms')).toBe(3);
+    expect(reproductiveMarkerContextRank('GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE', 'cyclic_mood_symptoms')).toBe(3);
   });
 
   it('routes an explicit adenomyosis concern to clinical workup rather than a DNA call', () => {
@@ -57,6 +59,7 @@ describe('reproductive marker context routing', () => {
 
     expect(option?.domain_ids).toEqual([
       'exogenous_hormone_medication_context',
+      'measured_hormone_context',
       'general_symptom_day_support',
     ]);
     expect(option?.medication_rule_ids).toContain('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
@@ -74,6 +77,7 @@ describe('reproductive marker context routing', () => {
 
     expect(option?.domain_ids).toEqual([
       'preconception_fertility_context',
+      'measured_hormone_context',
       'general_symptom_day_support',
     ]);
     expect(option?.medication_rule_ids).toContain('PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA');

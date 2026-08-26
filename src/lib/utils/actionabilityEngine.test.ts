@@ -319,6 +319,7 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('contraceptive product');
     expect(plan.cycleSupport.relevantDomains.map((domain) => domain.id)).toEqual([
       'exogenous_hormone_medication_context',
+      'measured_hormone_context',
       'general_symptom_day_support',
     ]);
   });

@@ -117,6 +117,8 @@ export type ActionabilityClass =
 interface ActionableRule {
   id?: string;
   genes: string[];
+  /** Optional exact curated marker IDs for drug/allele-specific routing. */
+  marker_ids?: string[];
   actionability_class?: ActionabilityClass;
   severity_classes?: SeverityClass[];
   interpretation_contains?: string[];
@@ -141,7 +143,11 @@ function normalizedGeneSymbols(value: string): string[] {
 
 function actionabilityRuleMatchesMarker(rule: ActionableRule, marker: EvaluatedMarker): boolean {
   const ruleGenes = new Set(rule.genes.map((gene) => gene.trim().toUpperCase()));
-  return normalizedGeneSymbols(marker.gene).some((gene) => ruleGenes.has(gene));
+  const geneMatches = normalizedGeneSymbols(marker.gene).some((gene) => ruleGenes.has(gene));
+  if (!geneMatches) return false;
+  if (!rule.marker_ids?.length) return true;
+  const markerIds = new Set(rule.marker_ids.map((id) => id.trim().toLowerCase()));
+  return markerIds.has(String(marker.rsid || '').trim().toLowerCase());
 }
 
 interface ActionabilityPolicy {

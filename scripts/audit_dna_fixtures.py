@@ -60,8 +60,8 @@ def curated_rsids_by_pack() -> dict[str, set[str]]:
     return packs
 
 
-def actionability_rsids() -> dict[str, set[str]]:
-    """Map support-layer actionability rules to callable standard rsIDs only."""
+def actionability_targets() -> dict[str, set[str]]:
+    """Map actionability rules to exact curated IDs or gene-matched rsIDs."""
     try:
         guidance = json.loads(
             (PACK_DIR / "actionability_guidance.json").read_text(encoding="utf-8")
@@ -93,12 +93,20 @@ def actionability_rsids() -> dict[str, set[str]]:
         }
         if not rule_id or not genes:
             continue
-        result[rule_id] = {
-            str(marker.get("rsid", "")).strip().lower()
-            for marker in marker_records
-            if str(marker.get("rsid", "")).strip().lower().startswith("rs")
-            and marker_gene_symbols(marker.get("gene")) & genes
+        exact_ids = {
+            str(marker_id).strip().lower()
+            for marker_id in rule.get("marker_ids", [])
+            if str(marker_id).strip()
         }
+        if exact_ids:
+            result[rule_id] = exact_ids
+        else:
+            result[rule_id] = {
+                str(marker.get("rsid", "")).strip().lower()
+                for marker in marker_records
+                if str(marker.get("rsid", "")).strip().lower().startswith("rs")
+                and marker_gene_symbols(marker.get("gene")) & genes
+            }
     return result
 
 
@@ -205,7 +213,7 @@ def main() -> int:
     packs = curated_rsids_by_pack()
     pack_rsids = set().union(*packs.values()) if packs else set()
     hormone_rsids = packs.get("hormones_reproductive", set())
-    actionability_by_rule = actionability_rsids()
+    actionability_by_rule = actionability_targets()
     paths = candidate_files()
     if not paths:
         print("No DNA fixtures found in the repository root.")
@@ -245,7 +253,7 @@ def main() -> int:
             if values["present"] > 0
         ]
         print(
-            f"  actionability_pathways_with_called_rsids={len(callable_rules)}"
+            f"  actionability_pathways_with_called_targets={len(callable_rules)}"
             f"/{len(actionability_coverage)}"
         )
         for rule_id in (
@@ -254,6 +262,9 @@ def main() -> int:
             "bche_succinylcholine_anesthesia",
             "ugt1a1_irinotecan_safety",
             "nat2_hydralazine_context",
+            "hla_b5701_abacavir_safety",
+            "hla_carbamazepine_oxcarbazepine_safety",
+            "hla_b5801_allopurinol_safety",
         ):
             values = actionability_coverage.get(rule_id)
             if values:

@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -556,12 +556,12 @@
       "notes": "Use for drug-specific HLA-B*57:01 clinical testing and abacavir safety; raw SNP proxies are not equivalent to clinical HLA typing."
     },
     "cpic_hla_carbamazepine": {
-      "name": "CPIC: HLA-B and Carbamazepine Guideline",
-      "url": "https://cpicpgx.org/content/guideline/publication/carbamazepine/2013/23695185.pdf",
-      "accessed": "2026-08-25",
+      "name": "CPIC: HLA-B/HLA-A and Carbamazepine/Oxcarbazepine Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/carbamazepine/2017/CPIC_HLA_CBZ_OXC.pdf",
+      "accessed": "2026-08-26",
       "evidence_type": "CPIC clinical pharmacogenomic guideline",
       "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
-      "notes": "Use for HLA-B*15:02 and carbamazepine clinical testing context, including severe cutaneous adverse-reaction boundaries."
+      "notes": "Use for HLA-B*15:02, HLA-A*31:01, and carbamazepine/oxcarbazepine clinical testing context, including severe cutaneous adverse-reaction boundaries."
     },
     "cpic_hla_allopurinol": {
       "name": "CPIC: HLA-B*58:01 and Allopurinol Guideline",

@@ -241,8 +241,12 @@ for (const [contextId, markerIds] of Object.entries(cycleSupport?.marker_context
 
 const actionabilityGenes = new Set();
 const actionabilityCoverage = [];
+const actionabilityMarkerReferenceGaps = [];
 for (const rule of actionability?.rules || []) {
   const genes = (rule.genes || []).map((gene) => String(gene).toUpperCase());
+  const markerIds = Array.isArray(rule.marker_ids)
+    ? rule.marker_ids.map((markerId) => String(markerId).trim().toLowerCase()).filter(Boolean)
+    : [];
   genes.forEach((gene) => actionabilityGenes.add(gene));
   if (!isNonEmptyStringArray(rule.sources)) {
     actionabilitySourceGaps.push({ id: rule.id || '(unnamed)', reason: 'sources_required' });
@@ -251,10 +255,22 @@ for (const rule of actionability?.rules || []) {
     && !isNonEmptyStringArray(rule.sources)) {
     actionabilitySourceGaps.push({ id: rule.id || '(unnamed)', reason: 'clinical_rule_requires_registered_sources' });
   }
-  const matchingMarkers = allMarkers.filter(({ marker }) => markerGenes(marker.gene).some((gene) => genes.includes(gene)));
+  const matchingMarkers = allMarkers.filter(({ marker }) => {
+    if (!markerGenes(marker.gene).some((gene) => genes.includes(gene))) return false;
+    return markerIds.length === 0 || markerIds.includes(String(marker.rsid || '').trim().toLowerCase());
+  });
+  if (markerIds.length > 0) {
+    const curatedMarkerIds = new Set(allMarkers.map(({ marker }) => String(marker.rsid || '').trim().toLowerCase()));
+    for (const markerId of markerIds) {
+      if (!curatedMarkerIds.has(markerId)) {
+        actionabilityMarkerReferenceGaps.push({ id: rule.id || '(unnamed)', marker_id: markerId });
+      }
+    }
+  }
   actionabilityCoverage.push({
     id: rule.id || '(unnamed)',
     genes,
+    marker_ids: markerIds,
     marker_matches: matchingMarkers.length,
     matched_packs: Array.from(new Set(matchingMarkers.map(({ packId }) => packId))),
   });
@@ -312,6 +328,7 @@ const summary = {
   discovery_language_review: discoveryLanguageReview,
   layperson_language_review: laypersonLanguageReview,
   actionability_source_gaps: actionabilitySourceGaps,
+  actionability_marker_reference_gaps: actionabilityMarkerReferenceGaps,
   uncovered_actionability_genes: uncoveredActionabilityGenes,
   pack_summaries: packSummaries,
   errors,
@@ -320,13 +337,13 @@ const summary = {
 
 if (outputJson) {
   console.log(JSON.stringify(summary, null, 2));
-  process.exit(errors.length > 0 || boundaryGaps.length > 0 ? 1 : 0);
+  process.exit(errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0 || actionabilityMarkerReferenceGaps.length > 0 ? 1 : 0);
 } else {
   console.log(`Audited ${summary.marker_packs} marker packs / ${summary.curated_markers} curated markers.`);
   console.log(`Audited ${summary.support_resources} support resources / ${summary.registered_sources} registered sources.`);
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
-  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
   }
@@ -334,5 +351,5 @@ if (outputJson) {
   for (const error of errors) console.error(`ERROR: ${error}`);
 }
 
-if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0) process.exit(1);
+if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0 || actionabilityMarkerReferenceGaps.length > 0) process.exit(1);
 console.log('Resource-quality audit passed; review warnings before treating coverage as complete.');

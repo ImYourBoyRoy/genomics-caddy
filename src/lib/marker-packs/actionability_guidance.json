@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -1155,6 +1155,92 @@
         "fda_pharmacogenomic_biomarkers",
         "clinical_confirmation_required",
         "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "hla_b5701_abacavir_safety",
+      "genes": [
+        "HLA-B"
+      ],
+      "marker_ids": [
+        "HLA-B*57:01"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HLA-B*57:01 typing before abacavir is considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a validated clinical HLA-B*57:01 result is positive and abacavir is being considered, the prescribing team should follow current HIV/CPIC guidance and select an appropriate alternative; do not start, stop, or switch abacavir from this report."
+      ],
+      "notes": "HLA-B*57:01 is a drug-specific abacavir hypersensitivity marker. A consumer-array label or inferred HLA result is not equivalent to validated clinical HLA typing.",
+      "sources": [
+        "cpic_hla_abacavir",
+        "clinical_confirmation_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hla_carbamazepine_oxcarbazepine_safety",
+      "genes": [
+        "HLA-A",
+        "HLA-B"
+      ],
+      "marker_ids": [
+        "HLA-B*15:02",
+        "HLA-A*31:01"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HLA-B*15:02 and HLA-A*31:01 review before carbamazepine or oxcarbazepine is considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If carbamazepine or oxcarbazepine is being considered, the prescriber should review validated HLA-B*15:02 and HLA-A*31:01 status and current CPIC guidance, especially before first exposure; do not start, stop, or switch an aromatic anticonvulsant from this report."
+      ],
+      "notes": "HLA-B*15:02 and HLA-A*31:01 have drug- and allele-specific cutaneous hypersensitivity relevance. A negative consumer-array proxy does not clear risk, and a positive label requires validated HLA interpretation.",
+      "sources": [
+        "cpic_hla_carbamazepine",
+        "clinical_confirmation_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hla_b5801_allopurinol_safety",
+      "genes": [
+        "HLA-B"
+      ],
+      "marker_ids": [
+        "HLA-B*58:01"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HLA-B*58:01 typing before allopurinol is considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If allopurinol is being considered, the prescriber should review validated HLA-B*58:01 status before initiation; a positive result requires alternative-therapy review under current CPIC guidance. Do not start, stop, or switch allopurinol from this report."
+      ],
+      "notes": "HLA-B*58:01 is drug-specific context for allopurinol severe cutaneous adverse reactions. A consumer-array proxy cannot clear or establish this risk without validated clinical HLA testing.",
+      "sources": [
+        "cpic_hla_allopurinol",
+        "clinical_confirmation_required",
+        "safety_guardrail"
       ]
     },
     {

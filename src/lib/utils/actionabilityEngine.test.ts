@@ -354,6 +354,31 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.rules.some((item) => item.includes('abacavir'))).toBe(true);
   });
 
+  it('routes exact HLA alleles to the matching drug pathway without cross-triggering allele rules', () => {
+    const abacavirPlan = deriveActionablePlan(report([marker({
+      rsid: 'HLA-B*57:01',
+      gene: 'HLA-B',
+      variant_name: 'HLA-B*57:01',
+      severity_class: 'confirmation_required',
+      clinical_confirmation_required: true,
+      interpretation: 'HLA-B*57:01 context; confirm with clinical HLA typing.',
+    })]));
+    const allopurinolPlan = deriveActionablePlan(report([marker({
+      rsid: 'HLA-B*58:01',
+      gene: 'HLA-B',
+      variant_name: 'HLA-B*58:01',
+      severity_class: 'confirmation_required',
+      clinical_confirmation_required: true,
+      interpretation: 'HLA-B*58:01 context; confirm with clinical HLA typing.',
+    })]));
+
+    expect(abacavirPlan.medication.rules.some((item) => item.includes('validated clinical HLA-B*57:01 result'))).toBe(true);
+    expect(abacavirPlan.labTests.some((test) => test.name.includes('HLA-B*57:01') && test.name.includes('abacavir'))).toBe(true);
+    expect(allopurinolPlan.medication.rules.some((item) => item.includes('validated HLA-B*58:01 status'))).toBe(true);
+    expect(allopurinolPlan.labTests.some((test) => test.name.includes('HLA-B*58:01') && test.name.includes('allopurinol'))).toBe(true);
+    expect(allopurinolPlan.medication.rules.some((item) => item.includes('validated clinical HLA-B*57:01 result'))).toBe(false);
+  });
+
   it('does not infer reproductive applicability from hormone marker text', () => {
     const plan = deriveActionablePlan(report([marker({
       rsid: 'rs2234693',

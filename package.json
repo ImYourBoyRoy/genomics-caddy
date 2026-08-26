@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite dev",
-    "build": "node ./scripts/run_tsc.mjs && vite build",
+    "build": "node ./scripts/run_tsc.mjs --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "node ./scripts/run_tsc.mjs --noEmit",
     "lint": "node ./scripts/run_tsc.mjs --noEmit",

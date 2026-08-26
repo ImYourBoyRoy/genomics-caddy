@@ -35,6 +35,11 @@
     highlightRsid !== "" && marker.rsid.toLowerCase() === highlightRsid.toLowerCase()
   );
 
+  function cardAccessibleName(): string {
+    if (viewMode === 'simple') return laypersonTranslation.simpleImpact;
+    return `${marker.gene}${marker.variant_name ? ` ${marker.variant_name}` : ''}`;
+  }
+
   function clinvarClass(sig: string): string {
     const s = sig.toLowerCase();
     if (s.includes('likely pathogenic')) return 'likely-pathogenic';
@@ -74,20 +79,21 @@
 
 </script>
 
-<div
+<article
   id="variant-{marker.rsid.toLowerCase()}"
   class="marker-card {severity.cssClass}"
   class:marker-card-collapsed={!isActiveFindings}
   class:marker-card-highlight={isHighlighted}
+  aria-label={cardAccessibleName()}
 >
   <!-- Header row: a plain-language title in Simple mode; technical identity stays below. -->
   <div class="marker-top">
     {#if viewMode === 'simple'}
-      <span class="gene-label simple-finding-title">
+      <h5 class="gene-label simple-finding-title">
         <strong>{laypersonTranslation.simpleImpact}</strong>
-      </span>
+      </h5>
     {:else}
-      <span class="gene-label">
+      <h5 class="gene-label">
         <strong>{marker.gene}</strong>
         {#if marker.variant_name}
           <span class="variant-sub">({marker.variant_name})</span>
@@ -109,7 +115,7 @@
             </span>
           {/if}
         </span>
-      </span>
+      </h5>
     {/if}
     <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
     {#if marker.sex_scope && marker.sex_scope !== 'all'}
@@ -349,7 +355,7 @@
       {/if}
     </div>
   {/if}
-</div>
+</article>
 
 <style>
   .research-explore-link {
@@ -369,6 +375,10 @@
   .simple-finding-title {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+
+  .marker-card .gene-label {
+    margin: 0;
   }
 
   .simple-finding-title strong {

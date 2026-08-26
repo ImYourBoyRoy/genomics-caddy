@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import hormonePack from '../marker-packs/hormones_reproductive.json';
-import { DEFAULT_LAYPERSON_TRANSLATION, LAYPERSON_MAP } from './layperson';
+import { DEFAULT_LAYPERSON_TRANSLATION, getLaypersonTranslation, LAYPERSON_MAP } from './layperson';
 
 describe('plain-English claim framing', () => {
   it('does not reintroduce deterministic or diagnosis-like wording', () => {
@@ -39,5 +39,21 @@ describe('plain-English claim framing', () => {
       expect(LAYPERSON_MAP[rsid]?.simpleMeaning, rsid).toBeTruthy();
     }
     expect(DEFAULT_LAYPERSON_TRANSLATION.simpleMeaning).toContain('probabilistic association');
+  });
+
+  it('derives a bounded fallback from the marker resource when no dedicated translation exists', () => {
+    const translation = getLaypersonTranslation({
+      rsid: 'rs-untranslated',
+      gene: 'EXAMPLE',
+      impact: 'Example pathway context',
+      interpretation: 'This marker has been studied in pathway research.',
+      raw_dna_limitation: 'This marker does not measure current pathway activity.',
+      clinical_confirmation_required: true,
+    });
+
+    expect(translation.simpleImpact).toBe('Example pathway context');
+    expect(translation.simpleMeaning).toContain('This marker has been studied in pathway research.');
+    expect(translation.simpleMeaning).toContain('does not measure current pathway activity');
+    expect(translation.simpleMeaning).toContain('Clinical confirmation is important');
   });
 });

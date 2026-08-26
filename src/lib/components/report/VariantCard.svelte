@@ -8,7 +8,7 @@
   import WarningBlocks from './WarningBlocks.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getSeverityInfo } from '../../utils/evidence';
-  import { DEFAULT_LAYPERSON_TRANSLATION, LAYPERSON_MAP } from '../../utils/layperson';
+  import { getLaypersonTranslation } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -24,7 +24,7 @@
   let effectCount = $derived(getEffectCount(marker));
   let effectAllele = $derived(getEffectAllele(marker));
   let severity = $derived(getSeverityInfo(marker.severity_class as SeverityClass));
-  let laypersonTranslation = $derived(LAYPERSON_MAP[marker.rsid] || DEFAULT_LAYPERSON_TRANSLATION);
+  let laypersonTranslation = $derived(getLaypersonTranslation(marker));
 
   /** True when the variant was actually detected (not benign / no_data) */
   let isActiveFindings = $derived(

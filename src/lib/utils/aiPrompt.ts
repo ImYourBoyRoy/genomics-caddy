@@ -22,7 +22,7 @@ import consultationModes from "../marker-packs/consultation_modes.json";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
 import { buildSupportResourceContext } from "./supportResourceContext";
-import { DEFAULT_LAYPERSON_TRANSLATION, type LaypersonTranslation } from "./layperson";
+import { getLaypersonTranslation, type LaypersonTranslation } from "./layperson";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 // ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ export function buildMarkerPayload(
   m: EvaluatedMarker,
   laypersonMap: Record<string, LaypersonTranslation>
 ) {
-  const layperson = laypersonMap[m.rsid] || DEFAULT_LAYPERSON_TRANSLATION;
+  const layperson = getLaypersonTranslation(m, laypersonMap);
   return {
     rsid: m.rsid,
     gene: m.gene,

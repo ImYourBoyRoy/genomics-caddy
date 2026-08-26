@@ -42,6 +42,8 @@ Responsibilities:
   --coverage-border: rgba(139, 92, 246, 0.22);
   --coverage-note-bg: rgba(148, 163, 184, 0.1);
   --coverage-note-text: #cbd5e1;
+  --control-group-bg: rgba(255, 255, 255, 0.03);
+  --control-hover-bg: rgba(255, 255, 255, 0.02);
 }
 
 :root[data-theme="system"] {
@@ -84,6 +86,8 @@ Responsibilities:
   --coverage-border: #c4b5fd;
   --coverage-note-bg: #f1f5f9;
   --coverage-note-text: #475569;
+  --control-group-bg: var(--surface-subtle);
+  --control-hover-bg: #e3f0ef;
 }
 
 @media (prefers-color-scheme: light) {
@@ -122,6 +126,8 @@ Responsibilities:
     --coverage-border: #c4b5fd;
     --coverage-note-bg: #f1f5f9;
     --coverage-note-text: #475569;
+    --control-group-bg: var(--surface-subtle);
+    --control-hover-bg: #e3f0ef;
   }
 }
 
@@ -1658,7 +1664,7 @@ h1, h2, h3, h4, h5, h6 {
 /* ===== View Mode Buttons ===== */
 .view-mode-buttons {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--control-group-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 2px;
@@ -1680,11 +1686,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 .view-mode-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--control-hover-bg);
 }
 .view-mode-btn.view-mode-active {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
@@ -1899,7 +1905,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 :root[data-theme="light"] .tab-btn,
-:root[data-theme="light"] .view-mode-btn,
+:root[data-theme="light"] .view-mode-btn:not(.view-mode-active),
 :root[data-theme="light"] .filter-toggle,
 :root[data-theme="light"] .filter-label,
 :root[data-theme="light"] .filter-select {

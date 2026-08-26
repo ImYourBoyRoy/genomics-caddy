@@ -89,6 +89,7 @@ const actionability = readJson(path.join(resourceDir, 'actionability_guidance.js
 const evidencePolicy = readJson(path.join(resourceDir, 'evidence_policy.json'));
 const callabilityRules = readJson(path.join(resourceDir, 'callability_rules.json'));
 const cycleSupport = readJson(path.join(resourceDir, 'cycle_support_guidance.json'));
+const safetyGuardrails = readJson(path.join(resourceDir, 'safety_guardrails.json'));
 const discoveryCatalog = readJson(path.join(resourceDir, 'discovery_catalog.json'));
 const runtimeDiscoveryCatalogPath = path.join(runtimeDir, 'discovery_catalog.json');
 
@@ -224,6 +225,20 @@ if (missingSourceIds.length > 0) errors.push(`unregistered support source ids: $
 const hormonePack = allMarkers.filter(({ packId }) => packId === 'hormones_reproductive');
 const hormoneMarkerIds = new Set(hormonePack.map(({ marker }) => marker.rsid));
 const contextOptionIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));
+const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
+const safetyRuleIds = new Set((safetyGuardrails?.rules || []).map((rule) => rule.id));
+for (const option of cycleSupport?.context_options || []) {
+  for (const domainId of option.domain_ids || []) {
+    if (!cycleDomainIds.has(domainId)) {
+      errors.push(`cycle_support_guidance.json: context ${option.id} references unknown domain ${domainId}`);
+    }
+  }
+  for (const ruleId of option.medication_rule_ids || []) {
+    if (!safetyRuleIds.has(ruleId)) {
+      errors.push(`cycle_support_guidance.json: context ${option.id} references unknown medication rule ${ruleId}`);
+    }
+  }
+}
 for (const [contextId, markerIds] of Object.entries(cycleSupport?.marker_contexts || {})) {
   if (contextId !== 'shared_reproductive' && !contextOptionIds.has(contextId)) {
     errors.push(`cycle_support_guidance.json: marker_contexts references unknown context ${contextId}`);

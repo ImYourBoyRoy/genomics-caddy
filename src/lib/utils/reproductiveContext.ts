@@ -46,8 +46,11 @@ export function cycleSupportDomainsForContext(
 ): typeof cycleSupport.domains {
   const option = selectedReproductiveContextOption(reproductiveContext);
   if (!option) return [];
-  const domainIds = new Set(option.domain_ids);
-  return cycleSupport.domains.filter((domain) => domainIds.has(domain.id));
+  const domainsById = new Map(cycleSupport.domains.map((domain) => [domain.id, domain]));
+  return option.domain_ids.flatMap((domainId) => {
+    const domain = domainsById.get(domainId);
+    return domain ? [domain] : [];
+  });
 }
 
 /**

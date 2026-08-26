@@ -25,4 +25,14 @@ describe('reproductive marker context routing', () => {
     expect(reproductiveMarkerContextRank('rs2234693', '')).toBe(0);
     expect(reproductiveMarkerContextRank('future_marker', 'menstrual_cycle')).toBe(1);
   });
+
+  it('routes exogenous hormone therapy without assuming identity or anatomy', () => {
+    const option = selectedReproductiveContextOption('hormone_therapy_context');
+
+    expect(option?.domain_ids).toEqual([
+      'exogenous_hormone_medication_context',
+      'general_symptom_day_support',
+    ]);
+    expect(option?.medication_rule_ids).toContain('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
+  });
 });

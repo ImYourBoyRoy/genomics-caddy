@@ -31,6 +31,22 @@ describe('support resource context', () => {
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
   });
 
+  it('routes exogenous hormone therapy context with product and monitoring sources', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'hormone_therapy_context',
+    });
+
+    expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
+      'exogenous_hormone_medication_context',
+      'general_symptom_day_support',
+    ]);
+    expect(context.cycle_support.source_registry.endocrine_gender_affirming_hormone_therapy).toBeDefined();
+    expect(context.cycle_support.source_registry.acog_transgender_gender_diverse_care).toBeDefined();
+    expect(context.safety_guardrails.some((rule) => rule.id === 'HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA')).toBe(true);
+  });
+
   it('keeps reproductive domains hidden until an explicit context is selected', () => {
     const hidden = buildSupportResourceContext({
       packIds: ['hormones_reproductive'],
@@ -54,6 +70,8 @@ describe('support resource context', () => {
     expect(context.lab_overlays.some((overlay) => overlay.domain === 'pgx')).toBe(true);
     expect(context.callability_rules.some((rule) => rule.id === 'STAR_ALLELE_DIPLOTYPE_REQUIRED')).toBe(true);
     expect(context.safety_guardrails.some((rule) => rule.id === 'PGX_NO_MED_CHANGE')).toBe(true);
+    const hlaPhenytoinRule = context.actionability_rules.find((rule) => rule.id === 'hla_b1502_phenytoin_safety');
+    expect(hlaPhenytoinRule?.marker_ids).toContain('HLA-B*15:02');
     expect(context.food_safety.priority_order[1]).toContain('medication');
     expect(context.supplement_safety.do_not_do.some((item) => item.includes('common SNP'))).toBe(true);
     expect(context.food_safety.nutrient_matrix.length).toBeGreaterThan(0);

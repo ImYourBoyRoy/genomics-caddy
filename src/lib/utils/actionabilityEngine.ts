@@ -438,9 +438,13 @@ function deriveMedicationSafety(
   // context signal. It does not establish anatomy, cycle status, or hormone
   // levels; it only makes the composition/label guardrail relevant.
   const hasHormonalMedication = (personalSafetyContext?.medications || []).some((name) =>
-    /contracept|birth control|estrogen|estradiol|progesterone|progestin|hormone therapy|hormonal/i.test(name)
+    /contracept|birth control|estrogen|estradiol|progesterone|progestin|testosterone|androgen|antiandrogen|hormone therapy|hormone replacement|gender[- ]affirming|puberty suppression|hormonal/i.test(name)
   );
-  if (hasHormonalMedication) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
+  const hasContraceptiveMedication = (personalSafetyContext?.medications || []).some((name) =>
+    /contracept|birth control|oral contraceptive|intrauterine device|\biud\b|nexplanon|nuvaring|depo[- ]?provera/i.test(name)
+  );
+  if (hasContraceptiveMedication) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
+  if (hasHormonalMedication) relevantRuleIds.add('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
   for (const ruleId of selectedReproductiveContextOption(reproductiveContext)?.medication_rule_ids || []) {
     relevantRuleIds.add(ruleId);
   }

@@ -259,6 +259,7 @@ export function buildSupportResourceContext({
     actionability_rules: actionabilityGuidance.rules.map((rule) => ({
       id: rule.id,
       genes: rule.genes,
+      marker_ids: rule.marker_ids,
       actionability_class: rule.actionability_class,
       severity_classes: rule.severity_classes,
       interpretation_contains: rule.interpretation_contains,

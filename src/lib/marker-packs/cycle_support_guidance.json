@@ -1,7 +1,7 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.1.0",
-  "last_updated": "2026-08-25",
+  "version": "1.2.0",
+  "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
@@ -70,10 +70,24 @@
       "label": "Menopause / hormone therapy",
       "description": "Use when menopause or hormone-therapy context is relevant; record the exact product and ingredients.",
       "domain_ids": [
-        "contraceptive_product_context",
+        "exogenous_hormone_medication_context",
         "general_symptom_day_support"
       ],
-      "medication_rule_ids": []
+      "medication_rule_ids": [
+        "HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA"
+      ]
+    },
+    {
+      "id": "hormone_therapy_context",
+      "label": "Exogenous hormone therapy / gender-affirming care",
+      "description": "Use when estrogen, testosterone, progesterone/progestin, an antiandrogen, puberty suppression, or another prescribed hormone treatment is relevant. Record the exact product and monitoring context without assuming identity, anatomy, or goals.",
+      "domain_ids": [
+        "exogenous_hormone_medication_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA"
+      ]
     },
     {
       "id": "pregnancy_postpartum",
@@ -164,8 +178,12 @@
       "PANEL_AR_CAG_REPEAT_CALLOUT"
     ],
     "menopause_hormone_therapy": [
+      "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA",
       "rs1799971",
       "rs324420"
+    ],
+    "hormone_therapy_context": [
+      "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA"
     ],
     "pregnancy_postpartum": []
   },
@@ -385,6 +403,41 @@
         "user_declared_values_required",
         "clinical_confirmation_required",
         "phenotype_required"
+      ]
+    },
+    {
+      "id": "exogenous_hormone_medication_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "pgx"
+      ],
+      "title": "Exogenous hormone therapy and monitoring",
+      "context": "People with different bodies and goals may use estrogen, testosterone, progesterone/progestin, antiandrogens, puberty suppression, or other hormone therapy. DNA cannot measure current hormone levels, determine the right product or dose, or predict an individual response.",
+      "questions": [
+        "What is the exact product name, active ingredient or ingredients, route, dose, schedule, indication or goal, and start date?",
+        "What clinician-directed monitoring is already being used, such as hormone levels, CBC/hematocrit, lipids, potassium/creatinine, prolactin, liver tests, or bone-health assessment when appropriate?",
+        "Did symptoms, bleeding, mood, pain, blood pressure, or other changes follow starting, stopping, missing, or switching the product?"
+      ],
+      "support_options": [
+        "Use the prescription label and treating clinician’s plan to identify composition and monitoring; do not infer hormone exposure from DNA, chromosome calls, or a symptom theory.",
+        "Track treatment timing, symptoms, and measured results to support shared decision-making; do not self-adjust, stop, or add hormone medication from this report.",
+        "Keep preventive screening, fertility-preservation, and anatomy-relevant care discussions with the appropriate clinician without assuming identity or anatomy from the genetic report."
+      ],
+      "confirm_with": [
+        "exact medication label, active ingredients, route, dose, and schedule",
+        "clinician-directed hormone and safety-laboratory monitoring",
+        "treatment goals, symptoms, and adverse-effect review"
+      ],
+      "red_flags": [
+        "chest pain, sudden severe shortness of breath, fainting, or one-sided leg swelling",
+        "severe new headache, neurologic symptoms, or markedly elevated blood pressure",
+        "suicidal thoughts or inability to remain safe"
+      ],
+      "sources": [
+        "endocrine_gender_affirming_hormone_therapy",
+        "acog_transgender_gender_diverse_care",
+        "user_declared_values_required",
+        "clinical_confirmation_required"
       ]
     }
   ],

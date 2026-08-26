@@ -1941,6 +1941,49 @@
           "notes": "Use for association provenance, not single-SNP prediction."
         }
       ]
+    },
+    {
+      "rsid": "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Current exogenous hormone regimen and monitoring are not callable from consumer DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates hormone-therapy product, monitoring, and goals from genetic context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "A consumer DNA file cannot identify whether someone currently uses estrogen, testosterone, progesterone/progestin, an antiandrogen, puberty suppression, or another hormone treatment. It cannot determine the product, active ingredients, route, dose, treatment goal, hormone level, or individual response. Use the exact label and clinician-directed monitoring, without assuming identity, anatomy, fertility, or goals.",
+      "do_not_claim": [
+        "current hormone-therapy product or ingredients",
+        "hormone level or treatment response",
+        "identity, anatomy, fertility, or treatment goals",
+        "hormone start, stop, or dose change from genotype"
+      ],
+      "confirm_with": [
+        "exact product label and active ingredients",
+        "route, dose, schedule, and prescriber instructions",
+        "clinician-directed hormone and safety-laboratory monitoring"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Exogenous hormone exposure and response are clinical medication and phenotype facts, not properties that can be recovered from a consumer SNP array.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "all_bodies_hormone_therapy_context",
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "Endocrine Society: Gender Dysphoria/Gender Incongruence Guideline Resources",
+          "url": "https://www.endocrine.org/clinical-practice-guidelines/gender-dysphoria-gender-incongruence",
+          "accessed": "2026-08-26",
+          "evidence_type": "Endocrine Society clinical practice guideline",
+          "conflict_of_interest": "Professional medical society guideline; review the guideline disclosures when using clinically",
+          "notes": "Use for clinician-directed hormone therapy, monitoring, fertility counseling, and long-term safety follow-up."
+        },
+        {
+          "name": "ACOG: Health Care for Transgender and Gender Diverse Individuals",
+          "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2021/03/health-care-for-transgender-and-gender-diverse-individuals",
+          "accessed": "2026-08-26",
+          "evidence_type": "Professional clinical guidance",
+          "conflict_of_interest": "American College of Obstetricians and Gynecologists clinical guidance; review the guidance disclosures when using clinically",
+          "notes": "Use for respectful, goal-directed hormone-care context and product-specific monitoring without assumptions about identity or anatomy."
+        }
+      ]
     }
   ]
 }

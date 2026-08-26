@@ -218,6 +218,27 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains).toHaveLength(0);
   });
 
+  it('separates general hormone therapy from contraceptive composition warnings', () => {
+    const plan = deriveActionablePlan(report([]), {
+      reproductiveContext: 'hormone_therapy_context',
+      personalSafetyContext: {
+        medications: ['testosterone cypionate'],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+      },
+    });
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(medicationText).toContain('current hormone-therapy product');
+    expect(medicationText).not.toContain('contraceptive product');
+    expect(plan.cycleSupport.relevantDomains.map((domain) => domain.id)).toEqual([
+      'exogenous_hormone_medication_context',
+      'general_symptom_day_support',
+    ]);
+  });
+
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {
     const plan = deriveActionablePlan({
       ...report([]),

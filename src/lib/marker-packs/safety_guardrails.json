@@ -1,7 +1,7 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.0.0",
-  "last_updated": "2026-08-25",
+  "version": "1.1.0",
+  "last_updated": "2026-08-26",
   "medication_context": {
     "ask_for": [
       "Exact medication name and active ingredient(s)",
@@ -12,7 +12,7 @@
     ],
     "do_not_do": [
       "Do not start, stop, skip, substitute, or change a medication because of raw DNA alone.",
-      "Do not infer a contraceptive product, dose, ovulation suppression, or hormone level from DNA.",
+      "Do not infer current medication composition, dose, hormone exposure, or medication response from DNA.",
       "Do not treat a single SNP as a complete PGx diplotype, copy-number call, HLA type, or clinical phenotype."
     ],
     "pgx_context_keywords": [
@@ -38,10 +38,16 @@
       "uterine",
       "contracept",
       "estrogen",
+      "testosterone",
       "progesterone",
       "esr1",
       "esr2",
-      "pgr"
+      "pgr",
+      "androgen",
+      "antiandrogen",
+      "hormone replacement",
+      "gender affirming",
+      "puberty suppression"
     ]
   },
   "rules": [
@@ -109,6 +115,11 @@
       "id": "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA",
       "severity": "critical",
       "text": "Raw DNA cannot identify a person's contraceptive product, active ingredients, dose, ovulation suppression, or medication response. Ask for the exact product label and do not recommend starting, stopping, or changing it from genotype."
+    },
+    {
+      "id": "HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA",
+      "severity": "critical",
+      "text": "Raw DNA cannot identify a person's current hormone-therapy product, active ingredients, route, dose, treatment goal, hormone level, or response. Ask for the exact label and clinician monitoring plan; do not start, stop, add, or change hormone treatment from genotype."
     },
     {
       "id": "PMDD_REQUIRES_SYMPTOM_TIMING",

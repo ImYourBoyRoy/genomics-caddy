@@ -190,6 +190,31 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
   }
 }
 
+const cycleSupport = readJson(path.join(sourceDir, 'cycle_support_guidance.json'));
+const safetyGuardrails = readJson(path.join(sourceDir, 'safety_guardrails.json'));
+const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
+const safetyRuleIds = new Set((safetyGuardrails?.rules || []).map((rule) => rule.id));
+for (const option of cycleSupport?.context_options || []) {
+  if (!isStringArray(option.domain_ids)) {
+    errors.push(`cycle_support_guidance.json context ${option.id || '(unnamed)'}: domain_ids must be a string array`);
+  } else {
+    for (const domainId of option.domain_ids) {
+      if (!cycleDomainIds.has(domainId)) {
+        errors.push(`cycle_support_guidance.json context ${option.id || '(unnamed)'} references unknown domain ${domainId}`);
+      }
+    }
+  }
+  if (!isStringArray(option.medication_rule_ids)) {
+    errors.push(`cycle_support_guidance.json context ${option.id || '(unnamed)'}: medication_rule_ids must be a string array`);
+  } else {
+    for (const ruleId of option.medication_rule_ids) {
+      if (!safetyRuleIds.has(ruleId)) {
+        errors.push(`cycle_support_guidance.json context ${option.id || '(unnamed)'} references unknown medication rule ${ruleId}`);
+      }
+    }
+  }
+}
+
 for (const id of manifestIds) {
   const sourceFile = path.join(sourceDir, `${id}.json`);
   const runtimeFile = path.join(runtimeDir, `${id}.json`);

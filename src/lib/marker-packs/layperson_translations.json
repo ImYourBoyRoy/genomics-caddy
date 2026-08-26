@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "last_updated": "2026-08-26",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -677,6 +677,106 @@
       "rsid": "rs4633",
       "simpleImpact": "COMT haplotype research marker",
       "simpleMeaning": "This COMT marker is interpreted with other variants in some catecholamine and hormone-response research. It does not measure estrogen, dopamine, mood, or medication response on its own."
+    },
+    {
+      "rsid": "rs1065852",
+      "simpleImpact": "CYP2D6*10 decreased-function allele component",
+      "simpleMeaning": "This marker can be one part of the CYP2D6*10 allele. It may affect how some medicines are processed, but a complete CYP2D6 diplotype and clinical drug guidance are required; this SNP alone does not select or dose a medicine."
+    },
+    {
+      "rsid": "rs28371725",
+      "simpleImpact": "CYP2D6*41 decreased-function allele component",
+      "simpleMeaning": "This marker can contribute to a decreased-function CYP2D6 star allele. It must be interpreted with the other chromosome, additional variants, and copy-number status before any medication decision."
+    },
+    {
+      "rsid": "rs28371706",
+      "simpleImpact": "CYP2D6*17 decreased-function allele component",
+      "simpleMeaning": "This marker can contribute to CYP2D6*17, which is more common in some African-ancestry populations. Use a complete, clinically interpreted CYP2D6 diplotype; the marker alone does not predict an individual medicine response."
+    },
+    {
+      "rsid": "rs28399504",
+      "simpleImpact": "CYP2C19*4 no-function allele component",
+      "simpleMeaning": "This marker can be part of a no-function CYP2C19 allele. A full CYP2C19 diplotype and the specific medicine are needed; do not start, stop, or change a medicine from this SNP alone."
+    },
+    {
+      "rsid": "rs28371686",
+      "simpleImpact": "CYP2C9*5 decreased-function allele component",
+      "simpleMeaning": "This marker can contribute to reduced CYP2C9 activity for some medicines. Interpret it with a complete CYP2C9 diplotype and drug-specific clinical guidance, not as a standalone dosing instruction."
+    },
+    {
+      "rsid": "rs7900194",
+      "simpleImpact": "CYP2C9*8 decreased-function allele component",
+      "simpleMeaning": "This marker can contribute to CYP2C9*8, an allele that may be missed by limited ancestry-focused panels. A complete clinical diplotype and the medicine being considered are required before acting."
+    },
+    {
+      "rsid": "rs2306283",
+      "simpleImpact": "SLCO1B1 transporter-haplotype component",
+      "simpleMeaning": "This marker contributes to SLCO1B1 transporter haplotypes that can affect exposure to some medicines. Interpret it with rs4149056 or a validated haplotype result and drug-specific guidance; it is not a statin-safety verdict by itself."
+    },
+    {
+      "rsid": "rs4363657",
+      "simpleImpact": "SLCO1B1 statin-risk proxy marker",
+      "simpleMeaning": "This proxy marker has been studied in relation to simvastatin-associated muscle risk. Direct SLCO1B1 haplotype testing, the exact statin, symptoms, and clinician review are more informative than this proxy alone."
+    },
+    {
+      "rsid": "rs75017182",
+      "simpleImpact": "DPYD HapB3 toxicity-risk haplotype component",
+      "simpleMeaning": "This marker can be part of a DPYD haplotype associated with fluoropyrimidine toxicity risk. Because the decision is high-stakes, confirm the complete DPYD result clinically before treatment; this SNP is not a diagnosis or treatment order."
+    },
+    {
+      "rsid": "rs1800462",
+      "simpleImpact": "TPMT*2 thiopurine-safety allele component",
+      "simpleMeaning": "This marker can reduce TPMT activity and may matter when thiopurines are considered. Clinical TPMT/NUDT15 interpretation and, when appropriate, enzyme testing are required; it does not set a dose by itself."
+    },
+    {
+      "rsid": "rs147390019",
+      "simpleImpact": "NUDT15 thiopurine-safety marker",
+      "simpleMeaning": "This rare NUDT15 marker may contribute to thiopurine intolerance risk. Rare consumer-data calls need clinical confirmation and full NUDT15/TPMT guidance before treatment decisions."
+    },
+    {
+      "rsid": "rs1050828",
+      "simpleImpact": "G6PD oxidative-medication-safety component",
+      "simpleMeaning": "This is one component of G6PD deficiency interpretation. Enzyme activity, ancestry-relevant variants, the exact medicine, and clinical review may be needed; this marker alone cannot clear or prohibit an exposure."
+    },
+    {
+      "rsid": "rs1799807",
+      "simpleImpact": "BCHE anesthesia-response marker",
+      "simpleMeaning": "BCHE variation can contribute to prolonged response to certain anesthetic medicines. A complete clinical history and, when indicated, enzyme or dibucaine testing are more useful than this marker alone; tell the anesthesia team about any confirmed result."
+    },
+    {
+      "rsid": "rs1041983",
+      "simpleImpact": "NAT2 acetylator-haplotype component",
+      "simpleMeaning": "This marker contributes to NAT2 haplotypes that may affect metabolism of isoniazid and other compounds. A full haplotype and medicine-specific clinical guidance are required; it does not predict toxicity by itself."
+    },
+    {
+      "rsid": "rs35599367",
+      "simpleImpact": "CYP3A4*22 decreased-expression allele component",
+      "simpleMeaning": "This marker can be part of CYP3A4*22 and may alter exposure to some CYP3A medicines. Drug interactions, organ function, and the exact medicine often matter more; use clinical PGx guidance rather than changing treatment from this SNP."
+    },
+    {
+      "rsid": "rs10509681",
+      "simpleImpact": "CYP2C8*3 haplotype component",
+      "simpleMeaning": "This marker can contribute to the CYP2C8*3 haplotype, which has been studied for some NSAIDs and oncology medicines. Confirm the haplotype and use medicine-specific guidance; it is not a general NSAID or cancer-treatment instruction."
+    },
+    {
+      "rsid": "rs1801272",
+      "simpleImpact": "CYP2A6 nicotine-metabolism marker",
+      "simpleMeaning": "This marker has been studied in nicotine metabolism and smoking-cessation research. The phenotype may require additional variants or copy-number information, and it does not determine smoking behavior or a treatment choice."
+    },
+    {
+      "rsid": "rs2244613",
+      "simpleImpact": "CES1 dabigatran-exposure research marker",
+      "simpleMeaning": "This CES1 marker has been associated with dabigatran exposure in some studies. Kidney function, age, dose, interactions, and current clinical guidance are essential; the SNP alone is not a bleeding-risk calculation."
+    },
+    {
+      "rsid": "rs71647871",
+      "simpleImpact": "CES1 methylphenidate-metabolism marker",
+      "simpleMeaning": "This rare CES1 marker may affect metabolism of methylphenidate or other ester prodrugs. Confirm a rare call clinically and combine it with medication response and prescriber guidance; it does not establish a dose or diagnosis."
+    },
+    {
+      "rsid": "rs12979860",
+      "simpleImpact": "IFNL3/IFNL4 antiviral-response context marker",
+      "simpleMeaning": "This marker was important in older interferon-based hepatitis C treatment research. Modern direct-acting antivirals have changed its relevance, so current hepatology guidance matters more than this SNP alone."
     }
   ]
 }

@@ -43,7 +43,9 @@
         role: source.evidence_type || 'Marker-pack reference',
         url: source.url,
       };
-      const key = [reference.title, reference.url || '', reference.role].join('|').toLowerCase();
+      const key = reference.url
+        ? `url:${reference.url.trim().replace(/\/$/, '').toLowerCase()}`
+        : [reference.title, reference.role].join('|').toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
         references.push(reference);
@@ -58,7 +60,9 @@
         role: source.details || 'Catalog evidence',
         url: source.url,
       };
-      const key = [reference.title, reference.url || '', reference.role].join('|').toLowerCase();
+      const key = reference.url
+        ? `url:${reference.url.trim().replace(/\/$/, '').toLowerCase()}`
+        : [reference.title, reference.role].join('|').toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
         references.push(reference);

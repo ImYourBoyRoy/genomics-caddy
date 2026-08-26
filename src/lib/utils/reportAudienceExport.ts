@@ -81,6 +81,10 @@ function safeFilePart(value: string): string {
 }
 
 function sourceKey(source: MarkerSource | EnrichedSource): string {
+  const url = 'name' in source ? source.url : source.url;
+  if (url?.trim()) {
+    return `url:${url.trim().replace(/\/$/, '').toLowerCase()}`;
+  }
   if ('name' in source) {
     return [source.name, source.url || '', source.evidence_type || '', source.notes || '']
       .map((value) => clean(value))

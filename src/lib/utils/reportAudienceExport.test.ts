@@ -112,7 +112,7 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
     expect(output).toContain('Technical interpretation: Clinical interpretation text');
     expect(output.match(/### REF-001 —/g)).toHaveLength(1);
-    expect(output.match(/### REF-002 —/g)).toHaveLength(1);
+    expect(output).not.toContain('REF-002');
   });
 
   it('includes explicit anti-diagnosis instructions in AI Review exports', () => {
@@ -126,7 +126,7 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('# AI Review');
     expect(output).toContain('Do not diagnose');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
-    expect(output).toContain('Reference IDs: REF-001, REF-002');
+    expect(output).toContain('Reference IDs: REF-001');
   });
 
   it('creates safe deterministic filenames', () => {

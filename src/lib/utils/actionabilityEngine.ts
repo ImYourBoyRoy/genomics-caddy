@@ -16,7 +16,11 @@ import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
-import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
+import {
+  activeReproductiveContextIds,
+  cycleSupportDomainsForContextIds,
+  selectedReproductiveContextOption,
+} from './reproductiveContext';
 import { activityDomainMatches, activityPersonalContextText } from './activityContext';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import type { ReproductiveIntakeValues } from './reproductiveIntake';
@@ -328,6 +332,7 @@ function deriveMedicationSafety(
   sectionNames: string[],
   reproductiveContext?: string,
   personalSafetyContext?: PersonalSafetyContext,
+  activeContextIds: readonly string[] = [],
 ): MedicationSafetyGuidance {
   const structuredMedicationNames = Object.entries(personalSafetyContext?.reproductiveIntake || {})
     .filter(([fieldId]) => safetyGuardrails.medication_context.reproductive_intake_field_ids.includes(fieldId))
@@ -365,8 +370,14 @@ function deriveMedicationSafety(
   );
   if (hasContraceptiveMedication) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
   if (hasHormonalMedication) relevantRuleIds.add('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
-  for (const ruleId of selectedReproductiveContextOption(reproductiveContext)?.medication_rule_ids || []) {
-    relevantRuleIds.add(ruleId);
+  const relevantContextIds = activeContextIds.length > 0
+    ? activeContextIds
+    : selectedReproductiveContextOption(reproductiveContext)?.id
+      ? [selectedReproductiveContextOption(reproductiveContext)!.id]
+      : [];
+  for (const option of cycleSupport.context_options) {
+    if (!relevantContextIds.includes(option.id)) continue;
+    for (const ruleId of option.medication_rule_ids || []) relevantRuleIds.add(ruleId);
   }
 
   const rules = [
@@ -388,12 +399,17 @@ function selectSupplementSafetyRules(
   medicationNames: string[],
   allergyTerms: string[],
   reproductiveContext?: string,
+  activeContextIds: readonly string[] = [],
 ): typeof supplementSafety.rules {
   const markerGenes = new Set(markers.flatMap((marker) => marker.gene.split(/[\s/]+/).map((gene) => gene.toLowerCase())));
   const supplementContext = supplementNames.join(' ').toLowerCase();
   const medicationContext = medicationNames.join(' ').toLowerCase();
   const allergyContext = allergyTerms.join(' ').toLowerCase();
-  const selectedContextId = selectedReproductiveContextOption(reproductiveContext)?.id;
+  const contextIds = activeContextIds.length > 0
+    ? activeContextIds
+    : selectedReproductiveContextOption(reproductiveContext)?.id
+      ? [selectedReproductiveContextOption(reproductiveContext)!.id]
+      : [];
   return supplementSafety.rules.filter((rule) => {
     const geneMatch = rule.signal_genes.some((gene) => markerGenes.has(gene.toLowerCase()));
     const termMatch = rule.match_terms.some((term) => supplementContext.includes(term.toLowerCase()));
@@ -403,7 +419,7 @@ function selectSupplementSafetyRules(
     const allergyMatch = (rule as typeof rule & { allergy_terms?: string[] }).allergy_terms?.some((term) =>
       allergyContext.includes(term.toLowerCase())
     ) || false;
-    const contextMatch = (rule as typeof rule & { context_ids?: string[] }).context_ids?.includes(selectedContextId || '') || false;
+    const contextMatch = (rule as typeof rule & { context_ids?: string[] }).context_ids?.some((contextId) => contextIds.includes(contextId)) || false;
     return geneMatch || termMatch || medicationMatch || allergyMatch || contextMatch;
   });
 }
@@ -636,6 +652,10 @@ export function deriveActionablePlan(
   const markerValues = allMarkers.map(({ marker }) => marker);
   const sectionNames = allMarkers.map(({ sectionName }) => sectionName);
   const personalSafetyContext = actionabilityContext.personalSafetyContext;
+  const activeContextIds = activeReproductiveContextIds(
+    actionabilityContext.reproductiveContext,
+    personalSafetyContext,
+  );
   const personalActivityContext = activityPersonalContextText(personalSafetyContext);
   const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
     activityDomainMatches(
@@ -644,9 +664,10 @@ export function deriveActionablePlan(
       sectionNames,
       personalActivityContext,
       actionabilityContext.reproductiveContext,
+      activeContextIds,
     )
   );
-  const relevantCycleDomains = cycleSupportDomainsForContext(actionabilityContext.reproductiveContext);
+  const relevantCycleDomains = cycleSupportDomainsForContextIds(activeContextIds);
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [
@@ -658,12 +679,14 @@ export function deriveActionablePlan(
       ...(personalSafetyContext?.allergies || []),
     ],
     actionabilityContext.reproductiveContext,
+    activeContextIds,
   );
   const medicationSafety = deriveMedicationSafety(
     markerValues,
     sectionNames,
     actionabilityContext.reproductiveContext,
-    personalSafetyContext
+    personalSafetyContext,
+    activeContextIds,
   );
   const personalContext = derivePersonalContextGuidance(personalSafetyContext);
 

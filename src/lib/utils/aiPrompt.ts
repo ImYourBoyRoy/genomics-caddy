@@ -219,6 +219,17 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     consultationMode,
     reproductiveContext,
     personalSafetyContext,
+    profileContext: userProfile.injectProfile
+      ? [
+          userProfile.goals,
+          userProfile.challenges,
+          userProfile.relevantBodySystems,
+          userProfile.reproductiveHormoneContext,
+          userProfile.bloodwork,
+          userProfile.diagnoses,
+          userProfile.supportiveTests,
+        ].join(' ')
+      : undefined,
   });
 
   // --- Construct Payload JSON ---

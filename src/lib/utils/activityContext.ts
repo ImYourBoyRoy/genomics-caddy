@@ -1,5 +1,5 @@
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
-import { selectedReproductiveContextOption } from './reproductiveContext';
+import { activeReproductiveContextIds, selectedReproductiveContextOption } from './reproductiveContext';
 import type { EvaluatedMarker } from '../types/genomics';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
@@ -33,10 +33,13 @@ export function activityDomainMatchesPersonalContext(
   domain: typeof activityGuardrails.domains[number],
   personalContextText: string,
   reproductiveContext?: string,
+  activeContextIds: readonly string[] = [],
 ): boolean {
   const routing = routingFields(domain);
-  const selectedContextId = selectedReproductiveContextOption(reproductiveContext)?.id;
-  if (selectedContextId && routing.context_ids?.includes(selectedContextId)) return true;
+  const contextIds = activeContextIds.length > 0
+    ? activeContextIds
+    : activeReproductiveContextIds(reproductiveContext);
+  if (contextIds.some((contextId) => routing.context_ids?.includes(contextId))) return true;
 
   return (routing.personal_context_keywords || []).some((keyword) =>
     personalContextText.includes(String(keyword).toLowerCase())
@@ -50,6 +53,7 @@ export function activityDomainMatches(
   sectionNames: string[],
   personalContextText: string,
   reproductiveContext?: string,
+  activeContextIds: readonly string[] = [],
 ): boolean {
   const context = [
     ...sectionNames,
@@ -57,5 +61,5 @@ export function activityDomainMatches(
   ].join(' ').toLowerCase();
   const keywords = Array.isArray(domain.section_keywords) ? domain.section_keywords : [];
   return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()))
-    || activityDomainMatchesPersonalContext(domain, personalContextText, reproductiveContext);
+    || activityDomainMatchesPersonalContext(domain, personalContextText, reproductiveContext, activeContextIds);
 }

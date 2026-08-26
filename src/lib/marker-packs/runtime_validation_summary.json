@@ -85,7 +85,7 @@
     ],
     "domains_count": 12,
     "context_options_count": 12,
-    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation."
+      "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise only populated resource-declared intake or diary context activates corresponding domains."
   },
   "phenotype_prompt_layer": {
     "version": "1.2.0",

@@ -304,6 +304,49 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
     }
   }
+  if (resourceId === 'cycle_support_guidance') {
+    const contextIds = new Set((resource.context_options || []).map((option) => option.id));
+    const domainIds = new Set((resource.domains || []).map((domain) => domain.id));
+    const intakeFieldIds = new Set((resource.intake_schema?.fields || []).map((field) => field.id));
+    const checkContextIds = (values, location) => {
+      if (values === undefined) return;
+      if (!isStringArray(values)) {
+        errors.push(`${location}: context_ids must be a string array when present`);
+        return;
+      }
+      for (const contextId of values) {
+        if (!contextIds.has(contextId)) errors.push(`${location}: references unknown context ${contextId}`);
+      }
+    };
+    for (const [index, option] of (resource.context_options || []).entries()) {
+      const location = `cycle_support_guidance.json context option ${index + 1}`;
+      for (const field of ['id', 'label', 'description']) {
+        if (typeof option[field] !== 'string' || option[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['domain_ids', 'medication_rule_ids']) {
+        if (!isStringArray(option[field])) errors.push(`${location}: ${field} must be a string array`);
+      }
+      for (const domainId of option.domain_ids || []) {
+        if (!domainIds.has(domainId)) errors.push(`${location}: references unknown domain ${domainId}`);
+      }
+    }
+    for (const [index, group] of (resource.intake_schema?.groups || []).entries()) {
+      const location = `cycle_support_guidance.json intake group ${index + 1}`;
+      for (const field of ['id', 'title', 'description']) {
+        if (typeof group[field] !== 'string' || group[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (!isStringArray(group.field_ids)) errors.push(`${location}: field_ids must be a string array`);
+      for (const fieldId of group.field_ids || []) {
+        if (!intakeFieldIds.has(fieldId)) errors.push(`${location}: references unknown intake field ${fieldId}`);
+      }
+      checkContextIds(group.context_ids, location);
+    }
+    checkContextIds(resource.diary_schema?.context_ids, 'cycle_support_guidance.json diary_schema');
+  }
   if (resourceId === 'actionability_guidance') {
     const labCategoryIds = new Set();
     for (const [index, category] of (resource.lab_categories || []).entries()) {

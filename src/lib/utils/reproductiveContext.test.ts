@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import hormonesReproductive from '../marker-packs/hormones_reproductive.json';
 import {
+  activeReproductiveContextIds,
+  cycleSupportDomainsForPersonalContext,
+  reproductiveContextIdsForPersonalContext,
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
   reproductiveSectionHasContext,
@@ -114,5 +117,35 @@ describe('reproductive marker context routing', () => {
     ]);
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION', 'cycle_linked_pain_headache')).toBe(3);
+  });
+
+  it('activates only resource-declared contexts from self-reported intake or diary data', () => {
+    const hormoneContext = {
+      reproductiveIntake: {
+        active_ingredients: 'norethindrone 0.35 mg',
+        hormone_lab_timing_context: 'cycle day 24; before morning dose',
+      },
+    };
+    const contextIds = reproductiveContextIdsForPersonalContext(hormoneContext);
+
+    expect(contextIds).toEqual(expect.arrayContaining([
+      'menstrual_cycle',
+      'cyclic_mood_symptoms',
+      'ovarian_reproductive',
+      'menopause_hormone_therapy',
+      'hormone_therapy_context',
+      'preconception_fertility',
+    ]));
+    expect(activeReproductiveContextIds('', hormoneContext)).toEqual(contextIds);
+    expect(activeReproductiveContextIds('androgen_reproductive', hormoneContext)).toEqual(['androgen_reproductive']);
+
+    const diaryDomains = cycleSupportDomainsForPersonalContext({
+      cycleDiary: [{ id: 'day-1' }],
+    });
+    expect(diaryDomains.map((domain) => domain.id)).toEqual(expect.arrayContaining([
+      'cycle_phase_and_symptom_timing',
+      'pmdd_like_mood_symptoms',
+      'heavy_bleeding_pelvic_pain',
+    ]));
   });
 });

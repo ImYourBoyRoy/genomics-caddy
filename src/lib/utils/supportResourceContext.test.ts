@@ -189,6 +189,48 @@ describe('support resource context', () => {
     expect(androgen.cycle_support.selected_context_id).toBe('androgen_reproductive');
   });
 
+  it('routes self-reported reproductive intake when the selector is blank', () => {
+    const context = buildSupportResourceContext({
+      packIds: [],
+      consultationMode: 'general',
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        reproductiveIntake: {
+          active_ingredients: 'norethindrone 0.35 mg',
+          hormone_lab_timing_context: 'cycle day 24',
+        },
+      },
+    });
+
+    expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
+    expect(context.cycle_support.selected_context_id).toBeNull();
+    expect(context.cycle_support.context_activation).toBe('self_reported_context');
+    expect(context.cycle_support.active_context_ids).toEqual(expect.arrayContaining([
+      'menstrual_cycle',
+      'hormone_therapy_context',
+    ]));
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'measured_hormone_context')).toBe(true);
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'contraceptive_product_context')).toBe(true);
+  });
+
+  it('routes explicit user goals through taxonomy without inferring body or identity', () => {
+    const context = buildSupportResourceContext({
+      packIds: [],
+      consultationMode: 'general',
+      profileContext: 'I want to understand prostate screening and testosterone treatment questions.',
+    });
+
+    expect(context.phenotype_prompts.some((domain) => domain.id === 'hormones_reproductive')).toBe(true);
+    expect(context.cycle_support.relevant_domains).toHaveLength(0);
+    expect(context.cycle_support.context_activation).toBe('none');
+    expect(context.context_routing.profile_category_ids).toContain('hormones_reproductive');
+    expect(context.context_routing.profile_pack_ids).toContain('hormones_reproductive');
+  });
+
   it('routes explicit reproductive and personal safety context into the AI activity resources', () => {
     const context = buildSupportResourceContext({
       packIds: [],

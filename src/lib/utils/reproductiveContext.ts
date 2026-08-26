@@ -1,5 +1,10 @@
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 
+export interface ReproductivePersonalContextLike {
+  reproductiveIntake?: Record<string, unknown> | null;
+  cycleDiary?: readonly unknown[] | null;
+}
+
 export type ReproductiveContextOption = typeof cycleSupport.context_options[number];
 
 export const REPRODUCTIVE_CONTEXT_STORAGE_PREFIX = 'genomics_reproductive_context:';
@@ -45,12 +50,84 @@ export function cycleSupportDomainsForContext(
   reproductiveContext?: string | null,
 ): typeof cycleSupport.domains {
   const option = selectedReproductiveContextOption(reproductiveContext);
-  if (!option) return [];
+  return cycleSupportDomainsForContextIds(option ? [option.id] : []);
+}
+
+/**
+ * Resolve context options from explicitly supplied intake fields and diary
+ * entries. This is a routing aid only: it never infers anatomy, identity,
+ * fertility, pregnancy, hormones, or a diagnosis from DNA or from free text.
+ */
+export function reproductiveContextIdsForPersonalContext(
+  personalContext?: ReproductivePersonalContextLike,
+): string[] {
+  const populatedFieldIds = new Set(
+    Object.entries(personalContext?.reproductiveIntake || {})
+      .filter(([, value]) => String(value ?? '').trim() !== '')
+      .map(([fieldId]) => fieldId),
+  );
+  const contextIds = new Set<string>();
+
+  for (const group of cycleSupport.intake_schema.groups) {
+    if (!group.field_ids.some((fieldId) => populatedFieldIds.has(fieldId))) continue;
+    for (const contextId of group.context_ids || []) contextIds.add(contextId);
+  }
+
+  if ((personalContext?.cycleDiary?.length || 0) > 0) {
+    for (const contextId of cycleSupport.diary_schema.context_ids || []) contextIds.add(contextId);
+  }
+
+  const knownContextIds = new Set(cycleSupport.context_options.map((option) => option.id));
+  return cycleSupport.context_options
+    .filter((option) => contextIds.has(option.id) && knownContextIds.has(option.id))
+    .map((option) => option.id);
+}
+
+export function hasReproductivePersonalContext(
+  personalContext?: ReproductivePersonalContextLike,
+): boolean {
+  return Object.values(personalContext?.reproductiveIntake || {})
+    .some((value) => String(value ?? '').trim() !== '')
+    || (personalContext?.cycleDiary?.length || 0) > 0;
+}
+
+/**
+ * An explicit selector takes precedence. If it is blank, only populated
+ * resource-declared intake/diary context can activate reproductive support.
+ */
+export function activeReproductiveContextIds(
+  reproductiveContext?: string | null,
+  personalContext?: ReproductivePersonalContextLike,
+): string[] {
+  const selected = selectedReproductiveContextOption(reproductiveContext);
+  return selected ? [selected.id] : reproductiveContextIdsForPersonalContext(personalContext);
+}
+
+export function cycleSupportDomainsForContextIds(
+  contextIds: readonly string[],
+): typeof cycleSupport.domains {
+  if (contextIds.length === 0) return [];
   const domainsById = new Map(cycleSupport.domains.map((domain) => [domain.id, domain]));
-  return option.domain_ids.flatMap((domainId) => {
+  const selectedDomainIds: string[] = [];
+  const seen = new Set<string>();
+  for (const option of cycleSupport.context_options) {
+    if (!contextIds.includes(option.id)) continue;
+    for (const domainId of option.domain_ids) {
+      if (seen.has(domainId)) continue;
+      seen.add(domainId);
+      selectedDomainIds.push(domainId);
+    }
+  }
+  return selectedDomainIds.flatMap((domainId) => {
     const domain = domainsById.get(domainId);
     return domain ? [domain] : [];
   });
+}
+
+export function cycleSupportDomainsForPersonalContext(
+  personalContext?: ReproductivePersonalContextLike,
+): typeof cycleSupport.domains {
+  return cycleSupportDomainsForContextIds(reproductiveContextIdsForPersonalContext(personalContext));
 }
 
 /**

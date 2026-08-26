@@ -76,6 +76,32 @@ describe('plain-English claim framing', () => {
     expect(LAYPERSON_MAP.rs12190287.simpleMeaning).toContain('not a diagnosis');
   });
 
+  it('uses authored pack-scoped copy for markers without marker-specific wording', () => {
+    const metabolic = getLaypersonTranslation({
+      rsid: 'rs7754840',
+      gene: 'CDKAL1',
+      impact: 'Beta-cell insulin secretion risk locus',
+      interpretation: 'Association context only.',
+      raw_dna_limitation: 'Clinical context is required.',
+      clinical_confirmation_required: false,
+    });
+    const reproductive = getLaypersonTranslation({
+      rsid: 'rs4704397',
+      gene: 'TPO',
+      impact: 'Thyroid regulation context',
+      interpretation: 'Association context only.',
+      raw_dna_limitation: 'Clinical context is required.',
+      clinical_confirmation_required: false,
+    });
+
+    expect(metabolic.simpleImpact).toBe('Blood sugar and metabolism research context');
+    expect(reproductive.simpleImpact).toBe('Thyroid and immune research context');
+    expect(metabolic.simpleMeaning).toContain('does not diagnose diabetes');
+    expect(reproductive.simpleMeaning).toContain('does not diagnose thyroid disease');
+    expect(metabolic.isFallback).not.toBe(true);
+    expect(reproductive.isFallback).not.toBe(true);
+  });
+
   it('uses a safe non-clinical fallback when no dedicated translation exists', () => {
     const translation = getLaypersonTranslation({
       rsid: 'rs-untranslated',

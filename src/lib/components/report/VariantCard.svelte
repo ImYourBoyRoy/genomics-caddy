@@ -153,9 +153,18 @@
         {severity.description}
       </div>
     {/if}
-    <div class="claim-frame" role="note">
-      {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
-    </div>
+    {#if viewMode === 'simple'}
+      <details class="claim-details">
+        <summary>Why this is shown</summary>
+        <div class="claim-frame" role="note">
+          {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
+        </div>
+      </details>
+    {:else}
+      <div class="claim-frame" role="note">
+        {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
+      </div>
+    {/if}
 
     <div class="marker-body">
       <!-- Direction badge: only when variant IS detected -->
@@ -412,6 +421,35 @@
     color: var(--text-secondary);
     font-size: 0.75rem;
     line-height: 1.4;
+  }
+
+  .claim-details {
+    margin: 0.15rem 0 0.35rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .claim-details summary {
+    width: fit-content;
+    max-width: 100%;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .claim-details summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+
+  .claim-details[open] summary {
+    color: var(--text-primary);
+  }
+
+  .claim-details .claim-frame {
+    margin-bottom: 0;
   }
 
   /* Reference enrichment chips */

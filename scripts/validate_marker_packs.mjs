@@ -147,7 +147,7 @@ const supportContracts = {
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
   lab_overlays: { arrays: ['overlays'] },
-  layperson_translations: { arrays: ['translations'], objects: ['fallback'] },
+  layperson_translations: { arrays: ['translations', 'translation_groups'], objects: ['fallback'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
   pgx_diplotype_guidance: { arrays: ['genes', 'do_not_do'], objects: ['policy'] },
@@ -827,8 +827,37 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       translationIds.add(normalizedRsid);
     }
+    const groupIds = new Set();
+    for (const [index, group] of (resource.translation_groups || []).entries()) {
+      const location = `layperson_translations.json translation group ${index + 1}`;
+      if (typeof group.id !== 'string' || group.id.trim() === '') {
+        errors.push(`${location}: id must be a non-empty string`);
+      } else if (groupIds.has(group.id)) {
+        errors.push(`${location}: duplicate id ${group.id}`);
+      }
+      groupIds.add(group.id);
+      if (!isStringArray(group.rsids) || group.rsids.length === 0) {
+        errors.push(`${location}: rsids must be a non-empty string array`);
+      }
+      for (const field of ['simpleImpact', 'simpleMeaning']) {
+        if (typeof group[field] !== 'string' || group[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const rsid of group.rsids || []) {
+        const normalizedRsid = String(rsid || '').trim().toLowerCase();
+        if (!/^rs\d+$/.test(normalizedRsid)) {
+          errors.push(`${location}: rsid must be a numeric rsID such as rs12345`);
+        } else if (!curatedStandardRsids.has(normalizedRsid)) {
+          errors.push(`${location}: rsid ${rsid} is not present in curated marker packs`);
+        }
+        translationIds.add(normalizedRsid);
+      }
+    }
     const translatedCount = [...translationIds].filter((rsid) => curatedStandardRsids.has(rsid)).length;
-    warnings.push(`layperson_translations.json: ${translatedCount}/${curatedStandardRsids.size} curated standard rsIDs have dedicated plain-English translations`);
+    if (translatedCount < curatedStandardRsids.size) {
+      warnings.push(`layperson_translations.json: ${translatedCount}/${curatedStandardRsids.size} curated standard rsIDs have dedicated plain-English translations`);
+    }
   }
   if (resourceId === 'lab_overlays') {
     for (const [index, overlay] of (resource.overlays || []).entries()) {

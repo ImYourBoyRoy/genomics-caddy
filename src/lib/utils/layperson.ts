@@ -20,12 +20,41 @@ export interface LaypersonTranslation {
   isFallback?: boolean;
 }
 
-export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = Object.fromEntries(
-  laypersonTranslations.translations.map(({ rsid, simpleImpact, simpleMeaning }) => [
-    rsid,
-    { simpleImpact, simpleMeaning },
-  ]),
-) as Record<string, LaypersonTranslation>;
+interface LaypersonTranslationGroup {
+  id: string;
+  rsids: string[];
+  simpleImpact: string;
+  simpleMeaning: string;
+}
+
+function buildLaypersonMap(): Record<string, LaypersonTranslation> {
+  const map: Record<string, LaypersonTranslation> = {};
+  for (const translation of laypersonTranslations.translations) {
+    map[translation.rsid.trim().toLowerCase()] = {
+      simpleImpact: translation.simpleImpact,
+      simpleMeaning: translation.simpleMeaning,
+    };
+  }
+
+  // Pack-scoped copy is an authored plain-language layer for markers that do
+  // not yet have marker-specific wording. Explicit marker translations above
+  // always win, so adding a group can never replace reviewed copy.
+  const groups = (laypersonTranslations.translation_groups ?? []) as LaypersonTranslationGroup[];
+  for (const group of groups) {
+    for (const rsid of group.rsids) {
+      const key = rsid.trim().toLowerCase();
+      if (!map[key]) {
+        map[key] = {
+          simpleImpact: group.simpleImpact,
+          simpleMeaning: group.simpleMeaning,
+        };
+      }
+    }
+  }
+  return map;
+}
+
+export const LAYPERSON_MAP = buildLaypersonMap();
 
 export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTranslations.fallback;
 
@@ -48,7 +77,7 @@ export function getLaypersonTranslation(
   >,
   translations: Record<string, LaypersonTranslation> = LAYPERSON_MAP,
 ): LaypersonTranslation {
-  const explicit = translations[marker.rsid];
+  const explicit = translations[marker.rsid] || translations[marker.rsid.trim().toLowerCase()];
   if (explicit) return explicit;
 
   if (marker.clinical_confirmation_required) {

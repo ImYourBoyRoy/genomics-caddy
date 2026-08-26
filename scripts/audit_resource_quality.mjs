@@ -473,6 +473,15 @@ for (const translation of laypersonTranslations?.translations || []) {
     laypersonLanguageReview.push({ rsid, simple_meaning: meaning });
   }
 }
+for (const group of laypersonTranslations?.translation_groups || []) {
+  const meaning = String(group.simpleMeaning || '');
+  if (hasUnqualifiedStrongLanguage(meaning)) {
+    laypersonLanguageReview.push({ group_id: String(group.id || ''), simple_meaning: meaning });
+  }
+  for (const rsid of group.rsids || []) {
+    translationIds.add(String(rsid || '').trim().toLowerCase());
+  }
+}
 const translatedLaypersonCount = [...translationIds].filter((rsid) => curatedStandardRsids.has(rsid)).length;
 const laypersonTranslationCoverage = {
   translated: translatedLaypersonCount,
@@ -538,4 +547,6 @@ if (outputJson) {
 }
 
 if (errors.length > 0 || boundaryGaps.length > 0 || actionabilitySourceGaps.length > 0 || actionabilityMarkerReferenceGaps.length > 0 || clinicalAlleleConflicts.length > 0) process.exit(1);
-console.log('Resource-quality audit passed; review warnings before treating coverage as complete.');
+console.log(warnings.length > 0
+  ? 'Resource-quality audit passed; review warnings before treating coverage as complete.'
+  : 'Resource-quality audit passed; no review warnings.');

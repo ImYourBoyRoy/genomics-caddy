@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "last_updated": "2026-08-26",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -1152,6 +1152,122 @@
       "rsid": "rs12190287",
       "simpleImpact": "TCF21 coronary-artery disease context marker",
       "simpleMeaning": "This TCF21 locus has been studied in coronary-artery disease and vascular-remodeling research. It is a small-effect association, not a diagnosis or a personal event prediction; blood pressure, lipids, smoking, diabetes, family history, and clinical care matter more."
+    }
+  ],
+  "translation_groups": [
+    {
+      "id": "core_context",
+      "rsids": ["rs671", "rs1229984", "rs174547", "rs4880", "rs1800566", "rs1695", "rs4986790", "rs4343"],
+      "simpleImpact": "Everyday physiology research context",
+      "simpleMeaning": "This marker has been studied in research about how the body processes food, alcohol, fats, or other everyday exposures. Any association is probabilistic and does not diagnose a condition or tell you what to consume; symptoms, measured tests, and clinical context matter more."
+    },
+    {
+      "id": "metabolic_context",
+      "rsids": ["rs7754840", "rs10811661", "rs4402960", "rs1111875", "rs864745", "rs11708067", "rs340874", "rs10010131", "rs2943641", "rs266729", "rs2241766", "rs1137101", "rs7799039", "rs7498665", "rs10913469", "rs5082", "rs1800592", "rs659366", "rs4841132", "rs16890979", "rs1805097", "rs3792267", "rs972283", "rs1169288", "rs7034200", "rs2854116", "rs1800588", "rs11212617", "rs622342", "rs72552763", "rs2289669", "rs316019"],
+      "simpleImpact": "Blood sugar and metabolism research context",
+      "simpleMeaning": "This marker has been studied in research about blood sugar, insulin, appetite, body weight, or metabolism. Any association is probabilistic and does not diagnose diabetes or predict your weight; measured labs, health history, and clinical care matter more."
+    },
+    {
+      "id": "nutrient_context",
+      "rsids": ["rs1051266", "rs1979277", "rs3733890", "rs234706", "rs1801181", "rs4920037", "rs651852", "rs11254363", "rs1801222", "rs1801223", "rs731236", "rs7975232", "rs6013897", "rs10877012", "rs12934922", "rs7501331", "rs2115763", "rs33972313", "rs6139591", "rs855791", "rs3811647", "rs7385804", "rs3877899", "rs7579", "rs1001179", "rs174575", "rs1535", "rs3750425", "rs3740393", "rs8052394"],
+      "simpleImpact": "Nutrition and nutrient-processing research context",
+      "simpleMeaning": "This marker has been studied in research about how the body handles nutrients such as folate, vitamins, minerals, or dietary fats. Any association is probabilistic and does not prove a deficiency or tell you to take a supplement; measured labs and diet context matter more."
+    },
+    {
+      "id": "neuropsych_context",
+      "rsids": ["rs25531", "rs6295", "rs7997012", "rs6296", "rs4570625", "rs7305115", "rs5569", "rs28386840", "rs27072", "rs1800955", "rs1076560", "rs2283265", "rs6280", "rs4532", "rs1049353", "rs2023239", "rs2501432", "rs110402", "rs242924", "rs7209436", "rs41423247", "rs6198", "rs2254298", "rs1042778", "rs33911258", "rs279858", "rs3749034", "rs1006737", "rs10994336", "rs1344706", "rs1625579", "rs6994992", "rs821616", "rs16944", "rs1205", "rs17070145", "rs9536314", "rs9527025", "rs1044396", "rs2072661", "rs363371", "rs921451", "rs6356", "rs1042713", "rs1042714", "rs16147", "rs4818"],
+      "simpleImpact": "Brain and mood research context",
+      "simpleMeaning": "This marker has been studied in research about serotonin, dopamine, stress response, memory, or other brain-related traits. Any association is probabilistic and does not diagnose a mental-health condition or predict medication response; symptoms, treatment history, and clinician assessment matter more."
+    },
+    {
+      "id": "sleep_context",
+      "rsids": ["rs516134", "rs55694368", "rs121912617", "rs11046205", "rs1823125", "rs113851554", "rs1154155", "rs2305795", "rs5770917", "rs2300478", "rs3923809", "rs9296249", "rs3784709", "rs4626664", "rs8050136", "rs2229918", "rs3756059", "rs12752133", "rs76763715"],
+      "simpleImpact": "Sleep and body-clock research context",
+      "simpleMeaning": "This marker has been studied in research about sleep timing, sleep duration, or sleep-related traits. Any association is probabilistic and does not diagnose a sleep disorder or say how much sleep you need; sleep history and clinical evaluation matter more."
+    },
+    {
+      "id": "connective_tissue_context",
+      "rsids": ["rs1107946", "rs42524", "rs13946", "rs2104772", "rs2010963", "rs699947", "rs1800470", "rs1800471", "rs4988321", "rs3801382", "rs2707466", "rs1230399", "rs2073618", "rs1799750", "rs2252070", "rs8179090", "rs2071307", "rs1800449", "rs10160518", "rs11225395", "rs1718119", "rs9671286"],
+      "simpleImpact": "Joint and connective-tissue research context",
+      "simpleMeaning": "This marker has been studied in research about connective tissue, joints, tendons, or musculoskeletal traits. Any association is probabilistic and does not diagnose a connective-tissue disorder, arthritis, or injury; symptoms and an appropriate clinical examination matter more."
+    },
+    {
+      "id": "thyroid_immune_context",
+      "rsids": ["rs4704397", "rs965513", "rs10917469", "rs12045440", "rs3087243", "rs5742909", "rs2104286", "rs12722495", "rs907715", "rs3761548", "rs7528684", "rs1990760", "rs7574865", "rs1800872", "rs1800896", "rs1143634", "rs2069762", "rs713041", "rs28665122", "rs3740066", "rs11206244", "rs853326", "rs2071400", "rs11675434", "rs3783949", "rs780094"],
+      "simpleImpact": "Thyroid and immune research context",
+      "simpleMeaning": "This marker has been studied in research about thyroid regulation or immune traits. Any association is probabilistic and does not diagnose thyroid disease or an autoimmune condition; symptoms and measured thyroid or immune tests matter more."
+    },
+    {
+      "id": "cardiovascular_context",
+      "rsids": ["rs12916", "rs9349379", "rs9818870", "rs501120", "rs579459", "rs11191548", "rs2681472", "rs13333226", "rs699", "rs1799889", "rs2200733", "rs2106261", "rs13376333", "rs6795970", "rs10494366", "rs2107595"],
+      "simpleImpact": "Heart and circulation research context",
+      "simpleMeaning": "This marker has been studied in research about blood pressure, cholesterol, blood vessels, or heart traits. Any association is probabilistic and does not diagnose heart disease or determine medication; measured lipids, blood pressure, history, and clinical care matter more."
+    },
+    {
+      "id": "allergy_context",
+      "rsids": ["rs61816761", "rs1801275", "rs20541", "rs2243250", "rs7216389", "rs1837253", "rs2251746", "rs61839660", "rs3771166", "rs3939286", "rs4794820", "rs7212938", "rs17513503", "rs7775228", "rs730012", "rs2289276", "rs763361", "rs2201841", "rs10760117", "rs9500927", "rs2305480", "rs9273349", "rs1295686", "rs2070874", "rs1805010", "rs2228145", "rs755622", "rs1051931"],
+      "simpleImpact": "Allergy and immune-response research context",
+      "simpleMeaning": "This marker has been studied in research about allergy, airway, skin, or immune responses. Any association is probabilistic and does not diagnose an allergy, asthma, or mast-cell disorder; symptoms and appropriate clinical tests matter more."
+    },
+    {
+      "id": "digestive_context",
+      "rsids": ["rs713875", "rs281379"],
+      "simpleImpact": "Digestive research context",
+      "simpleMeaning": "This marker has been studied in research about digestion, the gut, or inflammation. Any association is probabilistic and does not diagnose a digestive condition or prescribe a restrictive diet; symptoms, nutrition, and clinical evaluation matter more."
+    },
+    {
+      "id": "muscle_context",
+      "rsids": ["rs8192678", "rs17602729", "rs1049434", "rs4994", "rs35767", "rs1805086", "rs28497577", "rs8111989", "rs11549465", "rs2073711", "rs8192673", "rs1042719", "rs11549467", "rs1800796", "rs361525", "rs174537", "rs1051730"],
+      "simpleImpact": "Muscle and exercise research context",
+      "simpleMeaning": "This marker has been studied in research about muscle performance, oxygen use, or recovery. Any association is probabilistic and does not predict performance or tell you how to train, eat, or supplement; your training history and health context matter more."
+    },
+    {
+      "id": "skin_context",
+      "rsids": ["rs2228479", "rs885479", "rs1426654", "rs16891982", "rs12913832", "rs1129038", "rs12203592", "rs6059655", "rs1042602", "rs1393350", "rs1126809", "rs1800407", "rs12191877", "rs4085613", "rs17728338", "rs610604", "rs11568818", "rs6152", "rs1385699", "rs1160312", "rs7349332", "rs12350739"],
+      "simpleImpact": "Skin and appearance research context",
+      "simpleMeaning": "This marker has been studied in research about pigmentation, skin, hair, or related traits. Any association is probabilistic and does not diagnose a skin condition or determine your appearance; clinical examination and personal context matter more."
+    },
+    {
+      "id": "bone_context",
+      "rsids": ["rs7117858", "rs4727338", "rs16945612", "rs430727", "rs17724206", "rs1107748"],
+      "simpleImpact": "Bone and skeletal research context",
+      "simpleMeaning": "This marker has been studied in research about bone density, growth, or skeletal traits. Any association is probabilistic and does not diagnose osteoporosis or predict a fracture; age, nutrition, activity, medications, and measured bone health matter more."
+    },
+    {
+      "id": "kidney_context",
+      "rsids": ["rs12498742", "rs12917707", "rs4293393", "rs219780", "rs17251221", "rs219778", "rs3752472", "rs4961", "rs1799998", "rs5186", "rs880054", "rs13107325", "rs1047891", "rs17300741", "rs653178", "rs13038305", "rs837763"],
+      "simpleImpact": "Kidney and fluid-balance research context",
+      "simpleMeaning": "This marker has been studied in research about kidney function, blood pressure, uric acid, minerals, or fluid balance. Any association is probabilistic and does not diagnose kidney disease or stones or justify changing salt or medication; measured tests and clinical history matter more."
+    },
+    {
+      "id": "respiratory_context",
+      "rsids": ["rs28929474", "rs17580", "rs8034191", "rs10516526", "rs13118928", "rs2070600", "rs2284746", "rs7671167", "rs2276109"],
+      "simpleImpact": "Lung and airway research context",
+      "simpleMeaning": "This marker has been studied in research about lung function, airway inflammation, oxygen use, or smoking-related traits. Any association is probabilistic and does not diagnose asthma, COPD, or an inherited lung condition; symptoms and clinical testing matter more."
+    },
+    {
+      "id": "immune_context",
+      "rsids": ["rs2304256", "rs34536443", "rs6920220", "rs2230926", "rs9273363", "rs2187668", "rs7454108", "rs660895", "rs3135388", "rs2395029", "rs11650354", "rs1143679", "rs2233287", "rs10516487", "rs13277113", "rs548234"],
+      "simpleImpact": "Immune-system research context",
+      "simpleMeaning": "This marker has been studied in research about immune regulation and autoimmune conditions. Any association is probabilistic and does not diagnose an autoimmune disease or justify immune treatment; symptoms, laboratory testing, and clinician assessment matter more."
+    },
+    {
+      "id": "pain_context",
+      "rsids": ["rs10166942", "rs11172113", "rs2651899", "rs6790925", "rs4379368", "rs13208321", "rs806368", "rs222747", "rs8065080", "rs6746030", "rs41268673", "rs2952768", "rs5443", "rs713598", "rs1726866", "rs10246939"],
+      "simpleImpact": "Pain and sensory research context",
+      "simpleMeaning": "This marker has been studied in research about pain, migraine, temperature, taste, or other sensory traits. Any association is probabilistic and does not diagnose migraine or a pain disorder or dictate an analgesic; symptoms and clinical assessment matter more."
+    },
+    {
+      "id": "dental_context",
+      "rsids": ["rs12640848", "rs3796704", "rs17878486", "rs11362", "rs1800587", "rs35874116", "rs307355", "rs3827760"],
+      "simpleImpact": "Oral-health research context",
+      "simpleMeaning": "This marker has been studied in research about teeth, enamel, gums, or taste. Any association is probabilistic and does not diagnose dental disease; dental examination, hygiene, diet, and personal history matter more."
+    },
+    {
+      "id": "longevity_context",
+      "rsids": ["rs2802292", "rs1935949", "rs1042522", "rs2736100", "rs2853677", "rs10936599", "rs7675998", "rs755017", "rs5882", "rs662", "rs854560", "rs1800469"],
+      "simpleImpact": "Aging and resilience research context",
+      "simpleMeaning": "This marker has been studied in research about aging, inflammation, cell maintenance, or resilience. Any association is probabilistic and does not predict lifespan or current health; prevention, measured health factors, and clinical care matter more."
     }
   ]
 }

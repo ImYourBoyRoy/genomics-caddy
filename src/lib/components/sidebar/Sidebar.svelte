@@ -24,6 +24,7 @@
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
   import { formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
+  import Tooltip from '../common/Tooltip.svelte';
   import '$lib/styles/components/sidebar.css';
 
   /*
@@ -69,6 +70,7 @@
     onSelectSample: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
     onOpenConnections?: () => void;
+    onResourcesUpdated?: () => void | Promise<void>;
   }
 
   let {
@@ -94,6 +96,7 @@
     onSelectSample,
     onDeleteSample,
     onOpenConnections,
+    onResourcesUpdated,
   }: Props = $props();
 
   interface DownloadProgress {
@@ -134,10 +137,33 @@
   }
   let syncPhase = $state<Record<string, SyncPhaseInfo>>({});
   let isCheckingStatus = $state(false);
+  type ResourceUpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'validating' | 'installed' | 'reloading' | 'ready' | 'error';
+  let updatePhase = $state<ResourceUpdatePhase>('idle');
+  let updateMessage = $state('');
+  let lastSuccessfulUpdateAt = $state<number | null>(null);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
   let gnomadReadiness = $state<GnomadReadinessStatus | null>(null);
   let gnomadBusy = $state(false);
   let gnomadHint = $state('');
+
+  function updatePhaseLabel(phase: ResourceUpdatePhase): string {
+    switch (phase) {
+      case 'checking': return 'Checking resources';
+      case 'available': return 'Updates available';
+      case 'downloading': return 'Downloading resources';
+      case 'validating': return 'Validating local resources';
+      case 'installed': return 'Resources installed';
+      case 'reloading': return 'Reloading report';
+      case 'ready': return 'Resources ready';
+      case 'error': return 'Update error';
+      default: return '';
+    }
+  }
+
+  function setUpdateState(phase: ResourceUpdatePhase, message = '') {
+    updatePhase = phase;
+    updateMessage = message;
+  }
 
   $effect(() => {
     if (expandDatabases) {
@@ -199,9 +225,16 @@
 
   async function loadSettingsAndStatus() {
     isCheckingStatus = true;
+    setUpdateState('checking', 'Checking local inventory and remote identities…');
     try {
       customDir = await getCustomDownloadDir();
       offlineStatus = await checkOfflineDataUpdates();
+      setUpdateState(
+        offlineStatus.total_updates_available > 0 ? 'available' : 'ready',
+        offlineStatus.total_updates_available > 0
+          ? `${offlineStatus.total_updates_available} resource update(s) available.`
+          : 'Local resources are current.',
+      );
       // The backend fires network probes in the background after returning
       // the local inventory. Re-poll after 3 s to pick up accurate remote
       // sizes and update badges without making the user wait for them.
@@ -209,6 +242,7 @@
     } catch (err) {
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
+      setUpdateState('error', 'Could not check offline resource status. Retry from Reference Databases.');
     } finally {
       isCheckingStatus = false;
     }
@@ -216,12 +250,20 @@
 
   /** Refresh inventory without blocking UI; never await inside sync finally. */
   function refreshStatusInBackground() {
+    setUpdateState('checking', 'Refreshing resource status…');
     void checkOfflineDataUpdates()
       .then((status) => {
         offlineStatus = status;
+        setUpdateState(
+          status.total_updates_available > 0 ? 'available' : 'ready',
+          status.total_updates_available > 0
+            ? `${status.total_updates_available} resource update(s) available.`
+            : 'Local resources are current.',
+        );
       })
       .catch((err) => {
         console.error('Background offline status refresh failed:', err);
+        setUpdateState('error', 'Resource status refresh failed. The last known local resources remain available.');
       });
   }
 
@@ -237,6 +279,7 @@
   async function handleSyncAllMissing() {
     if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
     syncingAll = true;
+    setUpdateState('downloading', 'Syncing missing resources…');
     bulkSyncMessage = 'Sync All Missing · starting…';
     bulkActiveAssetId = null;
     syncErrors = {};
@@ -254,6 +297,7 @@
       });
       if (allErrors.length) {
         syncErrors = { __all__: allErrors.join('\n') };
+        setUpdateState('error', 'Some resources could not be synced. Review the error details and retry.');
       }
       if (allMessages.length) {
         const skipped = allMessages.filter((m) => m.includes('up to date') || m.includes('already')).length;
@@ -264,8 +308,17 @@
             : `Nothing missing — ${skipped} asset(s) already current`,
         };
       }
+      if (allErrors.length === 0) {
+        setUpdateState('validating', 'Validating synced resources…');
+        setUpdateState('installed', 'Resources installed and indexed.');
+        setUpdateState('reloading', 'Refreshing the selected profile report…');
+        await onResourcesUpdated?.();
+        lastSuccessfulUpdateAt = Date.now();
+        setUpdateState('ready', 'Resources ready; report refreshed.');
+      }
     } catch (err) {
       syncErrors = { __all__: String(err) };
+      setUpdateState('error', 'Sync failed. The previous local resources remain available.');
     } finally {
       syncingAll = false;
       bulkSyncMessage = '';
@@ -411,6 +464,7 @@
         message: 'Step 1/2 · Starting…',
       },
     };
+    setUpdateState('downloading', `Updating ${assetId}…`);
 
     try {
       const result = await syncSingleOfflineAsset(
@@ -420,11 +474,19 @@
       );
       if (result.errors?.length) {
         syncErrors = { ...syncErrors, [assetId]: result.errors.join('\n') };
+        setUpdateState('error', `${assetId} failed validation or import. The previous local resource remains available.`);
       } else if (result.messages?.length) {
         syncMessages = { ...syncMessages, [assetId]: result.messages.join('\n') };
+        setUpdateState('validating', `Validating ${assetId}…`);
+        setUpdateState('installed', `${assetId} installed and indexed.`);
+        setUpdateState('reloading', 'Refreshing the selected profile report…');
+        await onResourcesUpdated?.();
+        lastSuccessfulUpdateAt = Date.now();
+        setUpdateState('ready', 'Resource ready; report refreshed.');
       }
     } catch (err) {
       syncErrors = { ...syncErrors, [assetId]: String(err) };
+      setUpdateState('error', `${assetId} update failed. The previous local resource remains available.`);
     } finally {
       // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
@@ -756,7 +818,7 @@
         {#if missingPrimaryCount > 0}
           <span
             class="missing-pill"
-            title="{[
+            aria-label="{[
               notDownloadedPrimary.length ? `${notDownloadedPrimary.join(', ')} not downloaded` : '',
               notIndexedPrimary.length ? `${notIndexedPrimary.join(', ')} downloaded but not indexed` : '',
             ].filter(Boolean).join(' · ')}"
@@ -765,7 +827,7 @@
         {#if updatesAvailable > 0}
           <span
             class="update-pill"
-            title={updateBadgeTitle || `${updatesAvailable} database update(s) available`}
+            aria-label={updateBadgeTitle || `${updatesAvailable} database update(s) available`}
           >
             {updatesAvailable} update{updatesAvailable === 1 ? '' : 's'}
             {#if pendingUpdates.length === 1}
@@ -779,6 +841,21 @@
 
     {#if !isPanelCollapsed}
       <div class="card-body" style="margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.75rem;">
+
+        {#if updatePhase !== 'idle'}
+          <div class="resource-update-state" class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
+            <div class="resource-update-state-heading">
+              <span class="resource-update-state-dot" aria-hidden="true"></span>
+              <strong>{updatePhaseLabel(updatePhase)}</strong>
+            </div>
+            {#if updateMessage}
+              <div class="resource-update-state-message">{updateMessage}</div>
+            {/if}
+            {#if lastSuccessfulUpdateAt}
+              <div class="resource-update-state-time">Last successful update: {new Date(lastSuccessfulUpdateAt).toLocaleString()}</div>
+            {/if}
+          </div>
+        {/if}
 
         {#if needsAttention || importingAny}
           <div class="db-attention-banner">
@@ -973,9 +1050,13 @@
                   <span style="font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
                     <strong style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{db.label}</strong>
                     {#if findAsset(db.tierNum, db.assetId)?.update_available || companionNeedsUpdate(db)}
-                      <span class="update-pill" title="Newer file available on server (primary and/or companion assets)">update</span>
+                      <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
+                        <span class="update-pill">update</span>
+                      </Tooltip>
                     {/if}
-                    <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;" title={assetTooltip(db)}>ⓘ</span>
+                    <Tooltip label={db.label} description={assetTooltip(db)}>
+                      <span class="info-icon" style="cursor: help; opacity: 0.6; font-size: 0.75rem;">ⓘ</span>
+                    </Tooltip>
                   </span>
                   <span style="font-size: 0.65rem; opacity: 0.7; margin-top: 0.1rem;">
                     {getAssetStatusLine(db.tierNum, db.assetId)}
@@ -1045,7 +1126,9 @@
                         <span class="db-companion-label">
                           {c.label}
                           {#if companion?.update_available}
-                            <span class="update-pill" title="Newer remote file for this companion">update</span>
+                            <Tooltip label="Update available" description="A newer supporting file is available on the server.">
+                              <span class="update-pill">update</span>
+                            </Tooltip>
                           {/if}
                         </span>
                         <span class="db-companion-status">

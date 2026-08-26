@@ -556,6 +556,9 @@
       onSelectSample={selectSample}
       onDeleteSample={deleteSample}
       onOpenConnections={() => selectTab("connections")}
+      onResourcesUpdated={async () => {
+        await triggerReport();
+      }}
     />
   {/snippet}
   {#snippet children()}

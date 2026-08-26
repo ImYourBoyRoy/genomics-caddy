@@ -117,6 +117,63 @@
   gap: 0.25rem;
 }
 
+.resource-update-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border-color));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.resource-update-state-error {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.resource-update-state-ready {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--success) 9%, transparent);
+}
+
+.resource-update-state-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.resource-update-state-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.resource-update-state-error .resource-update-state-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
+.resource-update-state-ready .resource-update-state-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 16%, transparent);
+}
+
+.resource-update-state-message,
+.resource-update-state-time {
+  color: var(--text-secondary);
+}
+
+.resource-update-state-time {
+  font-size: 0.62rem;
+}
+
 .status-warn {
   margin-top: 0.35rem;
   font-size: 0.65rem;

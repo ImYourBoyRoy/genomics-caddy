@@ -23,9 +23,11 @@
   let isHovered = $state(false);
   let isFocused = $state(false);
   let isClicked = $state(false);
+  let hostElement: HTMLSpanElement;
   let triggerElement: HTMLButtonElement;
+  let panelElement = $state<HTMLSpanElement | undefined>(undefined);
   let panelStyle = $state('');
-  const tooltipId = `genomics-tooltip-${Math.random().toString(36).slice(2, 10)}`;
+  let tooltipId = $state('');
 
   function refreshOpenState() {
     isOpen = isHovered || isFocused || isClicked;
@@ -53,23 +55,31 @@
   function updatePosition() {
     if (!isOpen || !triggerElement) return;
     const rect = triggerElement.getBoundingClientRect();
-    const width = Math.min(288, window.innerWidth - 32);
-    const estimatedHeight = 120;
+    const panelRect = panelElement?.getBoundingClientRect();
+    const width = Math.min(panelRect?.width || 288, window.innerWidth - 16);
+    const height = panelRect?.height || 120;
     const gap = 8;
     let left = rect.left + (rect.width / 2) - (width / 2);
     let top = placement === 'bottom'
       ? rect.bottom + gap
       : placement === 'left' || placement === 'right'
-        ? rect.top + (rect.height / 2) - (estimatedHeight / 2)
-        : rect.top - estimatedHeight - gap;
+        ? rect.top + (rect.height / 2) - (height / 2)
+        : rect.top - height - gap;
 
     if (placement === 'left') left = rect.left - width - gap;
     if (placement === 'right') left = rect.right + gap;
     if (placement === 'top' && top < 8) top = rect.bottom + gap;
-    if (placement === 'bottom' && top + estimatedHeight > window.innerHeight - 8) top = rect.top - estimatedHeight - gap;
+    if (placement === 'bottom' && top + height > window.innerHeight - 8) top = rect.top - height - gap;
     left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
-    top = Math.max(8, Math.min(top, window.innerHeight - estimatedHeight - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - height - 8));
     panelStyle = `left: ${Math.round(left)}px; top: ${Math.round(top)}px; width: ${Math.round(width)}px;`;
+  }
+
+  function handleHostFocusOut(event: FocusEvent) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && hostElement?.contains(nextTarget)) return;
+    isFocused = false;
+    refreshOpenState();
   }
 
   $effect(() => {
@@ -77,6 +87,7 @@
   });
 
   onMount(() => {
+    tooltipId = `genomics-tooltip-${Math.random().toString(36).slice(2, 10)}`;
     document.addEventListener('pointerdown', handleDocumentPointerDown);
     document.addEventListener('keydown', handleKeydown);
     window.addEventListener('resize', updatePosition);
@@ -91,7 +102,17 @@
 
 </script>
 
-<span class="tooltip-host" data-tooltip-id={tooltipId}>
+<div
+  class="tooltip-host"
+  bind:this={hostElement}
+  data-tooltip-id={tooltipId}
+  role="group"
+  aria-label={label}
+  onmouseenter={() => { isHovered = true; refreshOpenState(); }}
+  onmouseleave={() => { isHovered = false; refreshOpenState(); }}
+  onfocusin={() => { isFocused = true; refreshOpenState(); }}
+  onfocusout={handleHostFocusOut}
+>
   <button
     type="button"
     class="tooltip-trigger"
@@ -103,15 +124,11 @@
       isClicked = !isClicked;
       refreshOpenState();
     }}
-    onmouseenter={() => { isHovered = true; refreshOpenState(); }}
-    onmouseleave={() => { isHovered = false; refreshOpenState(); }}
-    onfocus={() => { isFocused = true; refreshOpenState(); }}
-    onblur={() => { isFocused = false; refreshOpenState(); }}
   >
     {@render children()}
   </button>
   {#if isOpen}
-    <span class="tooltip-panel tooltip-{placement}" id={tooltipId} role="tooltip" style={panelStyle}>
+    <span bind:this={panelElement} class="tooltip-panel tooltip-{placement}" id={tooltipId} role="tooltip" style={panelStyle}>
       <strong>{label}</strong>
       <span>{description}</span>
       {#if learnMoreHref}
@@ -119,7 +136,7 @@
       {/if}
     </span>
   {/if}
-</span>
+</div>
 
 <style>
   .tooltip-host {

@@ -49,7 +49,8 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **View Modes:** Toggle dynamically between:
   * **Simple Mode 🌱:** Hides all complex terminology and evidence lists for average users.
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
-  * **Dual Mode 👥 (Default):** Stacks both views, placing the plain-English translation in a highlighted summary box above the clinical card.
+  * **Compare Mode 👥:** Opt-in side-by-side comparison of the Simple and Clinical explanations.
+  * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
 
 ### 4. Local RAG Evidence Library & Search Engine
 * **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.
@@ -115,7 +116,13 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Multiple Filtering Criteria:** Toggle between showing undetected benign markers, filtering strictly to active risk findings, and selecting specific evidence tiers (Tier A/B only).
 * **Severity Ranking Sort:** Reorders markers dynamically within each section to bubble up High Risk and Needs Confirmation markers to the top.
 * **Wrapped Exports:** JSON exports wrap raw reports in metadata envelopes containing version numbers, timestamps, and sample chromosome-call context.
+* **Audience-specific exports:** The report can save Personal Simple, Clinician Handoff, and AI Review Markdown exports. Each keeps personal context separate from genetic evidence, includes a local-only privacy warning, and ends with a deduplicated source index. Raw genotype calls are limited to the technical export audiences and require an explicit export choice.
 * **Conservative chromosome context:** Missing Y calls remain unknown rather than being treated as proof of XX. Chromosome-call context is a biological hint only; it is not gender identity, anatomy, fertility, pregnancy status, or hormone status. Marker packs can declare biological applicability such as `xx_reproductive`, `xy_reproductive`, `x_linked`, or `y_linked`.
+
+### 12. Presentation, theme, and resource-update controls
+* The report uses a Simple-first hierarchy with an action queue capped at five items; Clinical and Compare remain available for advanced review.
+* A bottom-left Theme control supports System, Light, and Dark preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
+* Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
 
 ---
 

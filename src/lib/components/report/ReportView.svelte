@@ -359,6 +359,25 @@
     </div>
   </header>
 
+  <!-- Start with profile/data quality, then the bounded action queue. -->
+  <ReportHeader
+    {generatedReport}
+    geneticSex={selectedSample.genetic_sex}
+    {foundMarkersCount}
+    {totalMarkersChecked}
+    presentationMode={presentationMode}
+  />
+
+  {#if generatedReport}
+    <DashboardSummaryPanel
+      report={generatedReport}
+      sampleId={selectedSample.id}
+      bind:personalSafetyContext
+      bind:reproductiveContext
+      onJumpToMarker={handleJumpToMarker}
+    />
+  {/if}
+
   <!-- Disclaimer Banner -->
   <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
   <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
@@ -517,25 +536,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Health Summary Panel -->
-  <ReportHeader
-    {generatedReport}
-    geneticSex={selectedSample.genetic_sex}
-    {foundMarkersCount}
-    {totalMarkersChecked}
-    presentationMode={presentationMode}
-  />
-
-  {#if generatedReport}
-    <DashboardSummaryPanel
-      report={generatedReport}
-      sampleId={selectedSample.id}
-      bind:personalSafetyContext
-      bind:reproductiveContext
-      onJumpToMarker={handleJumpToMarker}
-    />
-  {/if}
 
   <div class="sections-container">
     {#each filteredSections as section}

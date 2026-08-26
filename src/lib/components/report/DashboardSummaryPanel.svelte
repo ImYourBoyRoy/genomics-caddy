@@ -145,24 +145,6 @@
 </script>
 
 <div class="dashboard-v2">
-  <div class="disclaimer-banner">
-    <span class="warning-icon">⚠️</span>
-    <p>
-      <strong>Educational Information Only:</strong> This dashboard summarizes curated genetic associations from your raw genotype calls and local research registries. It is not medical advice, diagnosis, or a treatment plan. Always review these markers and any suggested testing with a qualified healthcare provider.
-    </p>
-  </div>
-
-  {#if plan.safetyNotes.length > 0}
-    <div class="actionability-safety" role="note">
-      <strong>🧭 How to use actionability guidance</strong>
-      <ul>
-        {#each plan.safetyNotes as note (note)}
-          <li>{note}</li>
-        {/each}
-      </ul>
-    </div>
-  {/if}
-
   <section class="action-queue summary-card card" aria-labelledby="action-queue-title">
     <div class="action-queue-header">
       <div>
@@ -201,6 +183,24 @@
       </div>
     {/if}
   </section>
+
+  <div class="disclaimer-banner">
+    <span class="warning-icon">⚠️</span>
+    <p>
+      <strong>Educational Information Only:</strong> This dashboard summarizes curated genetic associations from your raw genotype calls and local research registries. It is not medical advice, diagnosis, or a treatment plan. Always review these markers and any suggested testing with a qualified healthcare provider.
+    </p>
+  </div>
+
+  {#if plan.safetyNotes.length > 0}
+    <div class="actionability-safety" role="note">
+      <strong>🧭 How to use actionability guidance</strong>
+      <ul>
+        {#each plan.safetyNotes as note (note)}
+          <li>{note}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 
   <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
     <div class="context-selector-copy">

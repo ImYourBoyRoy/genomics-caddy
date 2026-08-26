@@ -1,5 +1,11 @@
 <!-- ./src/lib/components/ai/BiohackingProfileSection.svelte -->
 <script lang="ts">
+  import {
+    parseContextList,
+    savePersonalSafetyContext,
+    type PersonalSafetyContext,
+  } from '../../utils/personalSafetyContext';
+
   interface UserBiohackingProfile {
     goals: string;
     challenges: string;
@@ -16,9 +22,25 @@
 
   interface Props {
     userProfile: UserBiohackingProfile;
+    personalSafetyContext: PersonalSafetyContext;
+    sampleId?: number;
   }
 
-  let { userProfile = $bindable() }: Props = $props();
+  let {
+    userProfile = $bindable(),
+    personalSafetyContext = $bindable(),
+    sampleId,
+  }: Props = $props();
+
+  function contextText(field: keyof PersonalSafetyContext): string {
+    return personalSafetyContext[field].join('\n');
+  }
+
+  function updateContextList(field: keyof PersonalSafetyContext, event: Event): void {
+    const value = (event.currentTarget as HTMLTextAreaElement).value;
+    personalSafetyContext[field] = parseContextList(value);
+    savePersonalSafetyContext(sampleId, personalSafetyContext);
+  }
 </script>
 
 <div class="settings-details-content" style="gap: 10px; padding: 0;">
@@ -69,6 +91,31 @@
     <label for="profile-supportive">Supportive Tests</label>
     <textarea id="profile-supportive" bind:value={userProfile.supportiveTests} placeholder="e.g. Sleep study showing mild apnea..." class="profile-textarea"></textarea>
   </div>
+
+  <div class="structured-context-divider">
+    <strong>Structured safety context for this DNA profile</strong>
+    <small>One item per line. These entries are self-reported context, not DNA findings. Exact names, active ingredients, dates, units, and reference ranges improve safety review.</small>
+  </div>
+  <div class="input-row">
+    <label for="context-medications">Current medications</label>
+    <textarea id="context-medications" value={contextText('medications')} oninput={(event) => updateContextList('medications', event)} placeholder="e.g. exact birth-control product and active ingredient; levothyroxine" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="context-supplements">Current supplements / OTC products</label>
+    <textarea id="context-supplements" value={contextText('supplements')} oninput={(event) => updateContextList('supplements', event)} placeholder="e.g. magnesium glycinate; fish oil; multivitamin" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="context-allergies">Allergies / intolerances</label>
+    <textarea id="context-allergies" value={contextText('allergies')} oninput={(event) => updateContextList('allergies', event)} placeholder="e.g. fish; penicillin; lactose intolerance" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="context-symptoms">Symptoms and timing</label>
+    <textarea id="context-symptoms" value={contextText('symptoms')} oninput={(event) => updateContextList('symptoms', event)} placeholder="e.g. pelvic pain; heavy bleeding; mood changes in the late luteal phase" class="profile-textarea"></textarea>
+  </div>
+  <div class="input-row">
+    <label for="context-labs">Recent labs / clinician findings</label>
+    <textarea id="context-labs" value={contextText('labObservations')} oninput={(event) => updateContextList('labObservations', event)} placeholder="e.g. ferritin 18 ng/mL (2026-05-10), reference range ..." class="profile-textarea"></textarea>
+  </div>
 </div>
 
 <style>
@@ -81,6 +128,26 @@
   .input-row label {
     font-size: 0.75rem;
     color: var(--text-secondary);
+  }
+
+  .structured-context-divider {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .structured-context-divider strong {
+    color: var(--text-primary);
+    font-size: 0.8rem;
+  }
+
+  .structured-context-divider small {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    line-height: 1.4;
   }
 
   .profile-textarea {

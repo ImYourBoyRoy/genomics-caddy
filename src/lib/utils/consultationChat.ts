@@ -23,6 +23,7 @@ import {
   type ConsultationMode,
   type UserBiohackingProfile,
 } from "./aiPrompt";
+import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { stripThinkingTokens } from "./chatParser";
 import { LAYPERSON_MAP } from "./layperson";
 import {
@@ -53,6 +54,7 @@ export interface ConsultationTurnInput {
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
   reproductiveContext?: string;
+  personalSafetyContext?: PersonalSafetyContext;
   systemInstructions: string;
 }
 
@@ -112,6 +114,7 @@ export async function runConsultationTurn(
     consultationMode,
     userProfile,
     reproductiveContext,
+    personalSafetyContext,
     systemInstructions,
   } = input;
 
@@ -173,6 +176,7 @@ export async function runConsultationTurn(
     consultationMode,
     userProfile,
     reproductiveContext,
+    personalSafetyContext,
     systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS,
     laypersonMap: LAYPERSON_MAP,
     qdrantHits,

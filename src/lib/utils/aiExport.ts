@@ -1,6 +1,7 @@
 // ./src/lib/utils/aiExport.ts
 import type { GenomeSample } from "../types/genomics";
 import { parseThinking } from "./chatParser";
+import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -47,6 +48,7 @@ export function buildClinicalHandoffMarkdown(
   selectedSample: GenomeSample | null,
   selectedModel: string,
   userProfile: any,
+  personalSafetyContext: PersonalSafetyContext | undefined,
   currentSystemPrompt: string,
   generatedReport: any,
   includeTrace: boolean = false
@@ -70,6 +72,15 @@ export function buildClinicalHandoffMarkdown(
   md += `* **Blood Work History:** ${userProfile.bloodwork || "None provided"}\n`;
   md += `* **Diagnosis List:** ${userProfile.diagnoses || "None declared"}\n`;
   md += `* **Supportive Tests:** ${userProfile.supportiveTests || "None"}\n\n`;
+  if (personalSafetyContext) {
+    md += `### Structured safety context for this DNA profile (self-reported)\n`;
+    md += `* **Current medications:** ${personalSafetyContext.medications.join("; ") || "None recorded"}\n`;
+    md += `* **Current supplements / OTC products:** ${personalSafetyContext.supplements.join("; ") || "None recorded"}\n`;
+    md += `* **Allergies / intolerances:** ${personalSafetyContext.allergies.join("; ") || "None recorded"}\n`;
+    md += `* **Symptoms and timing:** ${personalSafetyContext.symptoms.join("; ") || "None recorded"}\n`;
+    md += `* **Recent labs / clinician findings:** ${personalSafetyContext.labObservations.join("; ") || "None recorded"}\n`;
+    md += `*This context is not genetic evidence and does not establish a diagnosis or medication recommendation.*\n\n`;
+  }
   md += `---\n\n`;
 
   md += `## 🧬 Clinical Findings Summary (Active Variants of Interest)\n`;

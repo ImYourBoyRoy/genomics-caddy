@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { deriveActionablePlan } from './actionabilityEngine';
 import type { GeneratedReport, EvaluatedMarker } from '../types/genomics';
+import type { PersonalSafetyContext } from './personalSafetyContext';
 
 function marker(overrides: Partial<EvaluatedMarker>): EvaluatedMarker {
   return {
@@ -151,6 +152,28 @@ describe('actionability engine safety policy', () => {
     const ruleIds = plan.supplementSafety.relevantRules.map((rule) => rule.id);
 
     expect(ruleIds).toEqual(expect.arrayContaining(['iodine', 'calcium', 'zinc', 'potassium', 'vitamin_k']));
+  });
+
+  it('applies per-profile medication, supplement, allergy, symptom, and lab context', () => {
+    const personalSafetyContext: PersonalSafetyContext = {
+      medications: ['Norethindrone progestin-only birth control', 'warfarin'],
+      supplements: ['zinc'],
+      allergies: ['fish allergy'],
+      symptoms: ['mood changes in the late luteal phase'],
+      labObservations: ['ferritin 18 ng/mL (2026-05-10)'],
+    };
+    const plan = deriveActionablePlan(report([]), { personalSafetyContext });
+    const medicationText = plan.medication.rules.join(' ');
+    const supplementRuleIds = plan.supplementSafety.relevantRules.map((rule) => rule.id);
+
+    expect(medicationText).toContain('contraceptive product');
+    expect(supplementRuleIds).toContain('zinc');
+    expect(supplementRuleIds).toContain('omega3');
+    expect(supplementRuleIds).toContain('vitamin_k');
+    expect(plan.personalContext.medications).toEqual(personalSafetyContext.medications);
+    expect(plan.personalContext.symptoms).toEqual(personalSafetyContext.symptoms);
+    expect(plan.personalContext.priorityNotes.join(' ')).toContain('measured phenotype outranks');
+    expect(plan.cycleSupport.relevantDomains).toHaveLength(0);
   });
 
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {

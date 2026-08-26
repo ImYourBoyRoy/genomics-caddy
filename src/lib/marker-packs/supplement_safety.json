@@ -1,6 +1,6 @@
 {
   "name": "Supplement Safety & Interaction Guardrails",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits.",
@@ -16,6 +16,7 @@
       "label": "Selenium / Brazil-nut safety",
       "signal_genes": ["GPX1"],
       "match_terms": ["selenium", "brazil nuts"],
+      "medication_terms": ["thyroid", "levothyroxine", "warfarin"],
       "food_first": [
         "Prefer ordinary food sources and measured clinical context over a genotype-driven selenium supplement."
       ],
@@ -35,6 +36,7 @@
       "label": "Magnesium food and interaction safety",
       "signal_genes": ["COMT"],
       "match_terms": ["magnesium"],
+      "medication_terms": ["antibiotic", "bisphosphonate", "diuretic", "acid suppressant", "omeprazole"],
       "food_first": [
         "Favor magnesium-rich foods before a supplement when they fit the user's diet and medical needs."
       ],
@@ -54,6 +56,8 @@
       "label": "Omega-3 food versus supplement safety",
       "signal_genes": ["FADS1", "FADS2"],
       "match_terms": ["omega-3", "omega 3", "dha", "epa", "fish oil", "algae oil"],
+      "allergy_terms": ["fish", "seafood", "shellfish"],
+      "medication_terms": ["warfarin", "heparin", "apixaban", "rivaroxaban", "anticoagulant", "antiplatelet"],
       "food_first": [
         "Prefer appropriate fish or algal food sources when compatible with allergy, pregnancy, mercury, and dietary constraints."
       ],
@@ -73,6 +77,7 @@
       "label": "Iron supplementation requires evidence",
       "signal_genes": ["HFE"],
       "match_terms": ["iron"],
+      "medication_terms": ["antacid", "levothyroxine", "antibiotic"],
       "food_first": [
         "Use allowed iron-containing foods while confirming whether the problem is deficiency, excess, blood loss, or another cause."
       ],
@@ -91,6 +96,7 @@
       "label": "Vitamin D dose and lab safety",
       "signal_genes": ["VDR", "GC", "DHCR7", "CYP2R1"],
       "match_terms": ["vitamin d", "25(oh)d"],
+      "medication_terms": ["steroid", "corticosteroid", "orlistat"],
       "food_first": [
         "Use measured 25(OH)D and clinical context to guide vitamin D decisions rather than a receptor SNP alone."
       ],
@@ -110,6 +116,7 @@
       "label": "Vitamin A and retinoid safety",
       "signal_genes": [],
       "match_terms": ["vitamin a", "retinol", "retinyl", "cod liver oil", "beta-carotene", "isotretinoin", "acitretin", "bexarotene"],
+      "medication_terms": ["isotretinoin", "acitretin", "bexarotene", "retinoid"],
       "food_first": [
         "Use ordinary food sources and read the label carefully, distinguishing preformed vitamin A from provitamin A carotenoids before considering a supplement."
       ],
@@ -129,6 +136,7 @@
       "label": "Iodine and thyroid-context safety",
       "signal_genes": ["DIO1", "DIO2", "TSHR", "SLC5A5", "TPO", "GPX1"],
       "match_terms": ["iodine", "iodide", "kelp", "sea moss", "seaweed"],
+      "medication_terms": ["methimazole", "propylthiouracil", "lisinopril", "spironolactone", "potassium-sparing"],
       "food_first": [
         "Review ordinary dietary iodine sources, iodized-salt use, geography, and life stage before considering an iodine product."
       ],
@@ -148,6 +156,7 @@
       "label": "Zinc dose and interaction safety",
       "signal_genes": ["SLC30A8", "SLC39A8"],
       "match_terms": ["zinc", "zinc picolinate", "zinc gluconate", "zinc acetate"],
+      "medication_terms": ["tetracycline", "quinolone", "ciprofloxacin", "doxycycline", "penicillamine", "antibiotic"],
       "food_first": [
         "Favor zinc-containing foods and measured clinical context rather than treating a zinc-transport marker as proof that a supplement is needed."
       ],
@@ -167,6 +176,7 @@
       "label": "Potassium and electrolyte safety",
       "signal_genes": ["SLC12A3", "SLC12A1", "KCNJ1", "CLCNKB", "WNK1", "WNK4", "UMOD"],
       "match_terms": ["potassium", "potassium chloride", "potassium salt", "salt substitute", "electrolyte powder"],
+      "medication_terms": ["ace inhibitor", "arb", "lisinopril", "losartan", "spironolactone", "potassium-sparing", "eplerenone"],
       "food_first": [
         "Use food and measured electrolyte context first; a high-potassium diet or product is not automatically appropriate for everyone."
       ],
@@ -186,6 +196,7 @@
       "label": "Calcium, kidney-stone, and medication safety",
       "signal_genes": ["VDR", "CASR", "CYP24A1", "SLC34A1"],
       "match_terms": ["calcium", "calcium citrate", "calcium carbonate", "bone meal"],
+      "medication_terms": ["levothyroxine", "dolutegravir", "lithium", "quinolone", "ciprofloxacin"],
       "food_first": [
         "Prefer dietary calcium and measured vitamin-D, kidney, and bone context before considering a calcium supplement."
       ],
@@ -205,6 +216,7 @@
       "label": "Vitamin K and anticoagulant consistency",
       "signal_genes": ["VKORC1", "CYP2C9", "CYP4F2"],
       "match_terms": ["vitamin k", "vitamin k1", "vitamin k2", "mk-7", "menaquinone", "phytonadione"],
+      "medication_terms": ["warfarin", "anticoagulant"],
       "food_first": [
         "Use a consistent, ordinary dietary pattern and disclose vitamin-K supplements rather than treating a VKORC1 result as a dosing instruction."
       ],

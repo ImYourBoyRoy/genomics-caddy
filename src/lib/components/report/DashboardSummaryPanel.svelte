@@ -5,17 +5,25 @@
   import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
   import { saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
+  import type { PersonalSafetyContext } from '../../utils/personalSafetyContext';
 
   interface Props {
     report: GeneratedReport;
     sampleId?: number;
     onJumpToMarker?: (linkId: string) => void;
     reproductiveContext?: string;
+    personalSafetyContext?: PersonalSafetyContext;
   }
 
-  let { report, sampleId, onJumpToMarker, reproductiveContext = $bindable('') }: Props = $props();
+  let {
+    report,
+    sampleId,
+    onJumpToMarker,
+    reproductiveContext = $bindable(''),
+    personalSafetyContext,
+  }: Props = $props();
 
-  let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext }));
+  let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
 
   // Collapsible states with localStorage persistence
   let collapsed = $state({
@@ -138,6 +146,35 @@
       {/each}
     </select>
   </div>
+
+  {#if plan.personalContext.priorityNotes.length > 0}
+    <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">
+      <div class="context-selector-copy">
+        <strong id="personal-context-label">🧾 Personal safety context applied</strong>
+        <span>This information is self-reported for this DNA profile. It is not genetic evidence, and it is kept separate from the genotype interpretation.</span>
+      </div>
+      <ul class="guardrail-list personal-context-notes">
+        {#each plan.personalContext.priorityNotes as note (note)}<li>{note}</li>{/each}
+      </ul>
+      <div class="personal-context-grid">
+        {#if plan.personalContext.medications.length > 0}
+          <div><strong>Medications</strong><span>{plan.personalContext.medications.join(' · ')}</span></div>
+        {/if}
+        {#if plan.personalContext.supplements.length > 0}
+          <div><strong>Supplements</strong><span>{plan.personalContext.supplements.join(' · ')}</span></div>
+        {/if}
+        {#if plan.personalContext.allergies.length > 0}
+          <div><strong>Allergies / intolerances</strong><span>{plan.personalContext.allergies.join(' · ')}</span></div>
+        {/if}
+        {#if plan.personalContext.symptoms.length > 0}
+          <div><strong>Symptoms / timing</strong><span>{plan.personalContext.symptoms.join(' · ')}</span></div>
+        {/if}
+        {#if plan.personalContext.labObservations.length > 0}
+          <div><strong>Recent labs / findings</strong><span>{plan.personalContext.labObservations.join(' · ')}</span></div>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   <div class="grid-layout">
     <!-- Panel 1: Top Concerns — full width, compact 2-col findings -->
@@ -501,6 +538,39 @@
 
   .context-selector-copy span {
     color: var(--text-secondary);
+  }
+
+  .personal-context-card {
+    gap: 0.65rem;
+    border-color: rgba(52, 211, 153, 0.28);
+    background: rgba(16, 185, 129, 0.06);
+  }
+
+  .personal-context-notes {
+    margin: 0;
+  }
+
+  .personal-context-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.6rem 1rem;
+    font-size: 0.72rem;
+  }
+
+  .personal-context-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .personal-context-grid strong {
+    color: #a7f3d0;
+  }
+
+  .personal-context-grid span {
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
   }
 
   .context-selector select {

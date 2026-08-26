@@ -66,10 +66,16 @@
 
   import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
+  import {
+    loadPersonalSafetyContext,
+    type PersonalSafetyContext,
+  } from "$lib/utils/personalSafetyContext";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
   let selectedSample = $state<GenomeSample | null>(null);
+  let personalSafetyContext = $state<PersonalSafetyContext>(loadPersonalSafetyContext());
+  let loadedPersonalSafetyContextKey = $state("");
   let filePath = $state("");
   let sampleNameInput = $state("");
   let appPaths = $state<AppPaths | null>(null);
@@ -110,6 +116,13 @@
   ] as const;
 
   let advancedActive = $derived(ADVANCED_TABS.some((t) => t.id === activeTab));
+
+  $effect(() => {
+    const contextKey = selectedSample?.id == null ? "none" : String(selectedSample.id);
+    if (loadedPersonalSafetyContextKey === contextKey) return;
+    loadedPersonalSafetyContextKey = contextKey;
+    personalSafetyContext = loadPersonalSafetyContext(selectedSample?.id);
+  });
 
   function selectTab(tab: string) {
     activeTab = tab;
@@ -644,6 +657,7 @@
               {foundMarkersCount}
               {totalMarkersChecked}
               {reportError}
+              {personalSafetyContext}
               {highlightRsid}
               onExploreResearch={handleExploreResearch}
               onNavigateToVariant={navigateToVariant}
@@ -695,6 +709,7 @@
             <AiAssistantPanel
               {selectedSample}
               {generatedReport}
+              bind:personalSafetyContext
               bind:ollamaUrl={aiOllamaUrl}
               bind:ollamaToken={aiOllamaToken}
               bind:selectedModel={aiSelectedModel}

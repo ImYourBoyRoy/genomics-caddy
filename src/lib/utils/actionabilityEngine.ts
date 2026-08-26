@@ -17,6 +17,7 @@ import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
+import type { PersonalSafetyContext } from './personalSafetyContext';
 
 export interface TopFinding {
   rsid: string;
@@ -77,6 +78,15 @@ export interface SupplementSafetyGuidance {
   relevantRules: typeof supplementSafety.rules;
 }
 
+export interface PersonalContextGuidance {
+  medications: string[];
+  supplements: string[];
+  allergies: string[];
+  symptoms: string[];
+  labObservations: string[];
+  priorityNotes: string[];
+}
+
 export interface ActionablePlan {
   topFindings: TopFinding[];
   diet: DietaryGuidance;
@@ -87,6 +97,7 @@ export interface ActionablePlan {
   medication: MedicationSafetyGuidance;
   cycleSupport: CycleSupportGuidance;
   supplementSafety: SupplementSafetyGuidance;
+  personalContext: PersonalContextGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
 }
@@ -94,6 +105,8 @@ export interface ActionablePlan {
 export interface ActionabilityContext {
   /** User-supplied applicability context; never inferred from genotype or chromosome calls. */
   reproductiveContext?: string;
+  /** Per-profile context used only to prioritize safety questions and follow-up. */
+  personalSafetyContext?: PersonalSafetyContext;
 }
 
 export type ActionabilityClass =
@@ -398,11 +411,13 @@ function activityContextMatches(
 function deriveMedicationSafety(
   markers: EvaluatedMarker[],
   sectionNames: string[],
-  reproductiveContext?: string
+  reproductiveContext?: string,
+  personalSafetyContext?: PersonalSafetyContext,
 ): MedicationSafetyGuidance {
   const context = [
     ...sectionNames,
     ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+    ...(personalSafetyContext?.medications || []),
   ].join(' ').toLowerCase();
   const pgxContext = safetyGuardrails.medication_context.pgx_context_keywords.some((keyword) =>
     context.includes(String(keyword).toLowerCase())
@@ -412,6 +427,14 @@ function deriveMedicationSafety(
     relevantRuleIds.add('HLA_TAGS_NOT_TYPING');
     relevantRuleIds.add('CNV_STR_VNTR_NOT_ARRAY_SAFE');
   }
+
+  // A user-supplied hormonal medication name is an explicit medication
+  // context signal. It does not establish anatomy, cycle status, or hormone
+  // levels; it only makes the composition/label guardrail relevant.
+  const hasHormonalMedication = (personalSafetyContext?.medications || []).some((name) =>
+    /contracept|birth control|estrogen|estradiol|progesterone|progestin|hormone therapy|hormonal/i.test(name)
+  );
+  if (hasHormonalMedication) relevantRuleIds.add('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
   for (const ruleId of selectedReproductiveContextOption(reproductiveContext)?.medication_rule_ids || []) {
     relevantRuleIds.add(ruleId);
   }
@@ -431,15 +454,72 @@ function deriveMedicationSafety(
 
 function selectSupplementSafetyRules(
   markers: EvaluatedMarker[],
-  supplementNames: string[]
+  supplementNames: string[],
+  medicationNames: string[],
+  allergyTerms: string[],
 ): typeof supplementSafety.rules {
   const markerGenes = new Set(markers.flatMap((marker) => marker.gene.split(/[\s/]+/).map((gene) => gene.toLowerCase())));
   const supplementContext = supplementNames.join(' ').toLowerCase();
+  const medicationContext = medicationNames.join(' ').toLowerCase();
+  const allergyContext = allergyTerms.join(' ').toLowerCase();
   return supplementSafety.rules.filter((rule) => {
     const geneMatch = rule.signal_genes.some((gene) => markerGenes.has(gene.toLowerCase()));
     const termMatch = rule.match_terms.some((term) => supplementContext.includes(term.toLowerCase()));
-    return geneMatch || termMatch;
+    const medicationMatch = (rule as typeof rule & { medication_terms?: string[] }).medication_terms?.some((term) =>
+      medicationContext.includes(term.toLowerCase())
+    ) || false;
+    const allergyMatch = (rule as typeof rule & { allergy_terms?: string[] }).allergy_terms?.some((term) =>
+      allergyContext.includes(term.toLowerCase())
+    ) || false;
+    return geneMatch || termMatch || medicationMatch || allergyMatch;
   });
+}
+
+function derivePersonalContextGuidance(
+  personalSafetyContext?: PersonalSafetyContext,
+): PersonalContextGuidance {
+  const context = personalSafetyContext || {
+    medications: [],
+    supplements: [],
+    allergies: [],
+    symptoms: [],
+    labObservations: [],
+  };
+  const priorityNotes: string[] = [];
+  if (context.allergies.length > 0) {
+    priorityNotes.push(
+      'Reported allergies or intolerances take priority over genotype-based food and supplement prompts; never use raw DNA to clear an exposure.'
+    );
+  }
+  if (context.medications.length > 0) {
+    priorityNotes.push(
+      'Current medication names are safety context only. Confirm the exact product, active ingredients, dose, timing, indication, and prescriber instructions before acting.'
+    );
+  }
+  if (context.supplements.length > 0) {
+    priorityNotes.push(
+      'Current supplements are included for interaction and duplicate-nutrient review; a genotype match is not proof that another supplement is needed.'
+    );
+  }
+  if (context.symptoms.length > 0) {
+    priorityNotes.push(
+      'Symptoms and timing are phenotype evidence to track and discuss; do not convert them into a DNA diagnosis or a hormone-level claim.'
+    );
+  }
+  if (context.labObservations.length > 0) {
+    priorityNotes.push(
+      'User-recorded labs and clinician findings should be interpreted with dates, units, reference ranges, and clinical context; measured phenotype outranks a generic SNP prompt.'
+    );
+  }
+
+  return {
+    medications: [...context.medications],
+    supplements: [...context.supplements],
+    allergies: [...context.allergies],
+    symptoms: [...context.symptoms],
+    labObservations: [...context.labObservations],
+    priorityNotes,
+  };
 }
 
 export function deriveActionablePlan(
@@ -628,15 +708,25 @@ export function deriveActionablePlan(
     activityContextMatches(domain, markerValues, sectionNames)
   );
   const relevantCycleDomains = cycleSupportDomainsForContext(actionabilityContext.reproductiveContext);
+  const personalSafetyContext = actionabilityContext.personalSafetyContext;
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
-    supplements.map((item) => item.name)
+    [
+      ...supplements.map((item) => item.name),
+      ...(personalSafetyContext?.supplements || []),
+    ],
+    personalSafetyContext?.medications || [],
+    [
+      ...(personalSafetyContext?.allergies || []),
+    ]
   );
   const medicationSafety = deriveMedicationSafety(
     markerValues,
     sectionNames,
-    actionabilityContext.reproductiveContext
+    actionabilityContext.reproductiveContext,
+    personalSafetyContext
   );
+  const personalContext = derivePersonalContextGuidance(personalSafetyContext);
 
   return {
     topFindings,
@@ -665,6 +755,7 @@ export function deriveActionablePlan(
       principles: supplementSafety.principles,
       relevantRules: supplementSafetyRules,
     },
+    personalContext,
     safetyNotes: Array.from(safetyNotes),
   };
 }

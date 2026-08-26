@@ -167,6 +167,24 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
     }
   }
+  if (resourceId === 'supplement_safety') {
+    for (const [index, rule] of (resource.rules || []).entries()) {
+      const location = `supplement_safety.json rule ${index + 1}`;
+      for (const field of ['id', 'label']) {
+        if (typeof rule[field] !== 'string' || rule[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['signal_genes', 'match_terms', 'avoid', 'confirm_with', 'sources']) {
+        if (!isStringArray(rule[field])) errors.push(`${location}: ${field} must be a string array`);
+      }
+      for (const field of ['medication_terms', 'allergy_terms']) {
+        if (rule[field] !== undefined && !isStringArray(rule[field])) {
+          errors.push(`${location}: optional ${field} must be a string array`);
+        }
+      }
+    }
+  }
 }
 
 for (const id of manifestIds) {

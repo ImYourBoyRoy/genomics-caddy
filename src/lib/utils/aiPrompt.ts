@@ -19,6 +19,7 @@ import type { QdrantHit } from "../types/research";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
   import { buildSupportResourceContext } from "./supportResourceContext";
+import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 // ---------------------------------------------------------------------------
 // Shared Interfaces (re-exported for convenience)
@@ -163,6 +164,7 @@ interface PromptBuildParams {
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
   reproductiveContext?: string;
+  personalSafetyContext?: PersonalSafetyContext;
   systemInstructions: string;
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>;
   qdrantHits?: QdrantHit[];
@@ -215,6 +217,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     consultationMode = "general",
     userProfile, systemInstructions, laypersonMap,
     reproductiveContext,
+    personalSafetyContext,
     qdrantHits = [],
     vectorSearchMeta,
   } = params;
@@ -296,6 +299,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         sample_name: selectedSample.name,
         chromosome_call_context: selectedSample.genetic_sex,
         profile: userProfile.injectProfile ? userProfile : undefined,
+        personal_safety_context: userProfile.injectProfile ? personalSafetyContext : undefined,
         raw_report: generatedReport,
         support_resources: supportResources
       }
@@ -332,6 +336,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
           diagnoses: userProfile.diagnoses.trim() || undefined,
           supportiveTests: userProfile.supportiveTests.trim() || undefined
         } : undefined,
+        personal_safety_context: userProfile.injectProfile ? personalSafetyContext : undefined,
         sections: sectionsData
       },
       support_resources: supportResources,
@@ -340,6 +345,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         "Use sample_context.sections for curated trait report markers AND vector_research for semantically retrieved enriched evidence when present.",
         "Use support_resources as the operational safety layer: ask the listed phenotype questions, use the listed lab overlays, respect callability limits, and apply food/medication safety priorities before genotype context.",
         "For reproductive topics, use only support_resources.cycle_support.relevant_domains. It is empty until the person supplies an explicit context; never infer reproductive context from DNA, chromosome calls, or the hormone pack.",
+        "personal_safety_context is self-reported context for this DNA profile, not genotype evidence. Prioritize allergies, current medications, symptoms, and measured labs over generic genetic prompts; ask for missing exact names, ingredients, dates, units, and reference ranges.",
         "When vector_research.status is ok, cite rsIDs from vector_research.hits — do not claim lack of database access.",
         "Use simple, layperson-friendly language. Heavily rely on layperson_summary fields when present.",
         "If a gene or condition is absent from both sample_context and vector_research, politely push back and refuse to speculate.",

@@ -12,6 +12,7 @@ import {
   type ConsultationMode,
   type UserBiohackingProfile,
 } from "./aiPrompt";
+import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { runConsultationTurn } from "./consultationChat";
 
 export interface SendConsultationPromptParams {
@@ -39,6 +40,7 @@ export interface SendConsultationPromptParams {
   consultationMode: ConsultationMode;
   userProfile: UserBiohackingProfile;
   reproductiveContext: string;
+  personalSafetyContext: PersonalSafetyContext;
   systemInstructions: string;
   alert: (message: string) => void;
   onExportModal: () => void;
@@ -130,6 +132,7 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
         consultationMode: params.consultationMode,
         userProfile: params.userProfile,
         reproductiveContext: params.reproductiveContext,
+        personalSafetyContext: params.personalSafetyContext,
         systemInstructions: params.systemInstructions,
       },
       {

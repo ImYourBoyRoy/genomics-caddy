@@ -15,7 +15,11 @@
     deleteConsultationSession,
   } from "../../utils/aiAssistantSessionActions";
   import { loadOllamaModelDetails, scanChatModels } from "../../utils/aiAssistantModelActions";
-  import { loadAiAssistantPreferences, persistAiAssistantPreferences } from "../../utils/aiAssistantPreferences";
+  import {
+    loadAiAssistantPreferences,
+    persistAiAssistantPreferences,
+    persistUserBiohackingProfile,
+  } from "../../utils/aiAssistantPreferences";
   import { fetchVectorResearchDiagnostics } from "../../utils/aiAssistantVectorDiagnostics";
   import { sendConsultationPrompt, stopConsultationGeneration } from "../../utils/aiAssistantSendActions";
   import { saveOllamaUrl, loadOllamaUrl } from "../../utils/ollamaSettings";
@@ -29,6 +33,10 @@
   } from "../../utils/aiPrompt";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
   import { loadReproductiveContext, reproductiveContextStorageKey } from "../../utils/reproductiveContext";
+  import {
+    EMPTY_PERSONAL_SAFETY_CONTEXT,
+    type PersonalSafetyContext,
+  } from "../../utils/personalSafetyContext";
   import "$lib/styles/components/ai-assistant-panel.css";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
@@ -48,6 +56,7 @@
     temperature: number;
     initialSearchQuery?: string;
     activeView?: "chat" | "evidence";
+    personalSafetyContext: PersonalSafetyContext;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
   let {
@@ -61,6 +70,7 @@
     temperature = $bindable(0.0),
     initialSearchQuery = $bindable(""),
     activeView = $bindable("chat"),
+    personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
     onNavigateToVariant,
   }: Props = $props();
 
@@ -113,6 +123,7 @@
   let modelDetails = $state<any>(null), contextWindow = $state<number>(4096), isVisionCapable = $state<boolean>(false);
   let attachedImages = $state<{ name: string; base64: string; previewUrl: string }[]>([]);
   let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", relevantBodySystems: "", reproductiveHormoneContext: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
+  let userProfileHydrated = $state(false);
   let systemInstructions = $state("");
   let reproductiveContext = $state("");
   let loadedReproductiveContextKey = $state("");
@@ -172,6 +183,7 @@
       selectedSample,
       selectedModel,
       userProfile,
+      personalSafetyContext,
       currentSystemPrompt,
       generatedReport,
       includeTraceInExport,
@@ -222,6 +234,7 @@
       consultationMode,
       userProfile,
       reproductiveContext,
+      personalSafetyContext,
       systemInstructions,
       alert: (message) => dialogStore.alert(message),
       onExportModal: () => { showExportModal = true; },
@@ -331,7 +344,7 @@
 
   $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, reproductiveContext, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
+  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, reproductiveContext, personalSafetyContext, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
   let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
   let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : { metabolicMethylation: false, histamineCaffeine: false, pgxDrug: false, clinicalConfirmation: false });
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
@@ -367,6 +380,7 @@
     reviewModel = prefs.reviewModel;
     twoModelReview = prefs.twoModelReview;
     userProfile = prefs.userProfile as UserBiohackingProfile;
+    userProfileHydrated = true;
     systemInstructions = prefs.systemInstructions;
     sessionStore.load(selectedSample, selectedModel, models, markerPacksStore.manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
@@ -392,6 +406,11 @@
       reviewModel,
       twoModelReview,
     });
+  });
+
+  $effect(() => {
+    const profileSnapshot = JSON.stringify(userProfile);
+    if (userProfileHydrated && profileSnapshot) persistUserBiohackingProfile(userProfile);
   });
 </script>
 
@@ -451,7 +470,7 @@
   {/if}
 
   {#if showSettingsDrawer}
-    <ChatSettingsDrawer
+      <ChatSettingsDrawer
       bind:ollamaUrl={ollamaUrl}
       bind:ollamaToken={ollamaToken}
       bind:selectedModel={selectedModel}
@@ -471,7 +490,9 @@
       bind:selectedPacks={selectedPacks}
       bind:onlyActiveFindings={onlyActiveFindings}
       contextStats={contextStats}
-      bind:userProfile={userProfile}
+        bind:userProfile={userProfile}
+        bind:personalSafetyContext
+        sampleId={selectedSample?.id}
       bind:systemInstructions={systemInstructions}
       defaultInstructions={DEFAULT_INSTRUCTIONS}
       bind:showThinkingProcess={showThinkingProcess}

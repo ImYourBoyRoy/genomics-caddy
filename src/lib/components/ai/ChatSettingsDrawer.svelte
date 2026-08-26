@@ -8,6 +8,7 @@
   import SystemPromptSection from "./settings/SystemPromptSection.svelte";
   import BiohackingProfileSection from "./BiohackingProfileSection.svelte";
   import type { AiContextMode, ConsultationMode } from "../../utils/aiPrompt";
+  import type { PersonalSafetyContext } from "../../utils/personalSafetyContext";
 
   interface UserBiohackingProfile {
     goals: string;
@@ -44,6 +45,8 @@
     onlyActiveFindings: boolean;
     contextStats: { included: number; total: number };
     userProfile: UserBiohackingProfile;
+    personalSafetyContext: PersonalSafetyContext;
+    sampleId?: number;
     systemInstructions: string;
     defaultInstructions: string;
     showThinkingProcess: boolean;
@@ -80,6 +83,8 @@
     onlyActiveFindings = $bindable(),
     contextStats,
     userProfile = $bindable(),
+    personalSafetyContext = $bindable(),
+    sampleId,
     systemInstructions = $bindable(),
     defaultInstructions,
     showThinkingProcess = $bindable(),
@@ -151,7 +156,11 @@
       <details class="settings-details-group">
         <summary class="settings-details-summary">👤 Biohacking &amp; Health Profile</summary>
         <div class="settings-details-content">
-          <BiohackingProfileSection bind:userProfile={userProfile} />
+          <BiohackingProfileSection
+            bind:userProfile={userProfile}
+            bind:personalSafetyContext
+            {sampleId}
+          />
         </div>
       </details>
 

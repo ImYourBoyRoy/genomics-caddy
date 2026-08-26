@@ -18,6 +18,7 @@
     reproductiveContextStorageKey,
     selectedReproductiveContextOption,
   } from '../../utils/reproductiveContext';
+  import type { PersonalSafetyContext } from '../../utils/personalSafetyContext';
 
   /*
   Module Docstring:
@@ -39,6 +40,7 @@
     foundMarkersCount: number;
     totalMarkersChecked: number;
     reportError?: string;
+    personalSafetyContext?: PersonalSafetyContext;
     highlightRsid?: string;
     onExploreResearch?: (rsid: string) => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
@@ -53,6 +55,7 @@
     foundMarkersCount,
     totalMarkersChecked,
     reportError,
+    personalSafetyContext,
     highlightRsid = "",
     onExploreResearch,
     onNavigateToVariant,
@@ -485,6 +488,7 @@
     <DashboardSummaryPanel
       report={generatedReport}
       sampleId={selectedSample.id}
+      {personalSafetyContext}
       bind:reproductiveContext
       onJumpToMarker={handleJumpToMarker}
     />

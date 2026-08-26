@@ -9,6 +9,7 @@ import type { GenomeSample, GeneratedReport } from "../types/genomics";
 import { buildStandardMarkdown, buildClinicalHandoffMarkdown } from "./aiExport";
 import { stripThinkingTokens } from "./chatParser";
 import type { UserBiohackingProfile } from "./aiPrompt";
+import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 export interface CopyToClipboardParams {
   text: string;
@@ -33,6 +34,7 @@ export interface ExportConversationParams {
   selectedSample: GenomeSample | null;
   selectedModel: string;
   userProfile: UserBiohackingProfile;
+  personalSafetyContext: PersonalSafetyContext;
   currentSystemPrompt: string;
   generatedReport: GeneratedReport | null;
   includeTraceInExport: boolean;
@@ -45,6 +47,7 @@ export async function exportConsultationMarkdown({
   selectedSample,
   selectedModel,
   userProfile,
+  personalSafetyContext,
   currentSystemPrompt,
   generatedReport,
   includeTraceInExport,
@@ -61,6 +64,7 @@ export async function exportConsultationMarkdown({
           selectedSample,
           selectedModel,
           userProfile,
+          personalSafetyContext,
           currentSystemPrompt,
           generatedReport,
           includeTraceInExport,

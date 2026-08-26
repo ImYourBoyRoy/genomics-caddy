@@ -44,6 +44,34 @@ Responsibilities:
   --coverage-note-text: #cbd5e1;
   --control-group-bg: rgba(255, 255, 255, 0.03);
   --control-hover-bg: rgba(255, 255, 255, 0.02);
+  --report-accent-muted: #a5b4fc;
+  --report-claim-bg: rgba(96, 165, 250, 0.07);
+  --report-claim-border: #60a5fa;
+  --report-result-bg: rgba(0, 0, 0, 0.15);
+  --report-result-border: rgba(255, 255, 255, 0.03);
+  --report-explainer-bg: rgba(255, 255, 255, 0.015);
+  --report-explainer-border: rgba(255, 255, 255, 0.06);
+  --report-tier-a-bg: rgba(59, 130, 246, 0.15);
+  --report-tier-a-text: #60a5fa;
+  --report-tier-a-border: rgba(59, 130, 246, 0.3);
+  --report-tier-b-bg: rgba(16, 185, 129, 0.15);
+  --report-tier-b-text: #34d399;
+  --report-tier-b-border: rgba(16, 185, 129, 0.3);
+  --report-tier-c-bg: rgba(139, 92, 246, 0.15);
+  --report-tier-c-text: #a78bfa;
+  --report-tier-c-border: rgba(139, 92, 246, 0.3);
+  --report-tier-d-bg: rgba(245, 158, 11, 0.15);
+  --report-tier-d-text: #fbbf24;
+  --report-tier-d-border: rgba(245, 158, 11, 0.3);
+  --report-tier-e-bg: rgba(148, 163, 184, 0.15);
+  --report-tier-e-text: #cbd5e1;
+  --report-tier-e-border: rgba(148, 163, 184, 0.3);
+  --report-tier-unknown-bg: rgba(239, 68, 68, 0.12);
+  --report-tier-unknown-text: #fca5a5;
+  --report-tier-unknown-border: rgba(239, 68, 68, 0.3);
+  --report-scope-bg: rgba(124, 58, 237, 0.12);
+  --report-scope-text: #c4b5fd;
+  --report-scope-border: rgba(124, 58, 237, 0.28);
 }
 
 :root[data-theme="system"] {
@@ -88,6 +116,34 @@ Responsibilities:
   --coverage-note-text: #475569;
   --control-group-bg: var(--surface-subtle);
   --control-hover-bg: #e3f0ef;
+  --report-accent-muted: #3730a3;
+  --report-claim-bg: #eff6ff;
+  --report-claim-border: #2563eb;
+  --report-result-bg: #f1f5f9;
+  --report-result-border: rgba(15, 23, 42, 0.12);
+  --report-explainer-bg: #f8fafc;
+  --report-explainer-border: #cbd5e1;
+  --report-tier-a-bg: #eff6ff;
+  --report-tier-a-text: #1d4ed8;
+  --report-tier-a-border: #93c5fd;
+  --report-tier-b-bg: #ecfdf5;
+  --report-tier-b-text: #047857;
+  --report-tier-b-border: #86efac;
+  --report-tier-c-bg: #f5f3ff;
+  --report-tier-c-text: #6d28d9;
+  --report-tier-c-border: #c4b5fd;
+  --report-tier-d-bg: #fffbeb;
+  --report-tier-d-text: #92400e;
+  --report-tier-d-border: #fcd34d;
+  --report-tier-e-bg: #f1f5f9;
+  --report-tier-e-text: #475569;
+  --report-tier-e-border: #cbd5e1;
+  --report-tier-unknown-bg: #fef2f2;
+  --report-tier-unknown-text: #b42318;
+  --report-tier-unknown-border: #fca5a5;
+  --report-scope-bg: #f5f3ff;
+  --report-scope-text: #6d28d9;
+  --report-scope-border: #c4b5fd;
 }
 
 @media (prefers-color-scheme: light) {
@@ -128,6 +184,34 @@ Responsibilities:
     --coverage-note-text: #475569;
     --control-group-bg: var(--surface-subtle);
     --control-hover-bg: #e3f0ef;
+    --report-accent-muted: #3730a3;
+    --report-claim-bg: #eff6ff;
+    --report-claim-border: #2563eb;
+    --report-result-bg: #f1f5f9;
+    --report-result-border: rgba(15, 23, 42, 0.12);
+    --report-explainer-bg: #f8fafc;
+    --report-explainer-border: #cbd5e1;
+    --report-tier-a-bg: #eff6ff;
+    --report-tier-a-text: #1d4ed8;
+    --report-tier-a-border: #93c5fd;
+    --report-tier-b-bg: #ecfdf5;
+    --report-tier-b-text: #047857;
+    --report-tier-b-border: #86efac;
+    --report-tier-c-bg: #f5f3ff;
+    --report-tier-c-text: #6d28d9;
+    --report-tier-c-border: #c4b5fd;
+    --report-tier-d-bg: #fffbeb;
+    --report-tier-d-text: #92400e;
+    --report-tier-d-border: #fcd34d;
+    --report-tier-e-bg: #f1f5f9;
+    --report-tier-e-text: #475569;
+    --report-tier-e-border: #cbd5e1;
+    --report-tier-unknown-bg: #fef2f2;
+    --report-tier-unknown-text: #b42318;
+    --report-tier-unknown-border: #fca5a5;
+    --report-scope-bg: #f5f3ff;
+    --report-scope-text: #6d28d9;
+    --report-scope-border: #c4b5fd;
   }
 }
 
@@ -793,7 +877,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .variant-sub {
   font-size: 0.8rem;
-  color: #a5b4fc;
+  color: var(--report-accent-muted);
   margin-left: 4px;
   font-weight: 500;
 }
@@ -813,34 +897,34 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 .tier-a {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--report-tier-a-bg);
+  color: var(--report-tier-a-text);
+  border: 1px solid var(--report-tier-a-border);
 }
 .tier-b {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--report-tier-b-bg);
+  color: var(--report-tier-b-text);
+  border: 1px solid var(--report-tier-b-border);
 }
 .tier-c {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: var(--report-tier-c-bg);
+  color: var(--report-tier-c-text);
+  border: 1px solid var(--report-tier-c-border);
 }
 .tier-d {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--report-tier-d-bg);
+  color: var(--report-tier-d-text);
+  border: 1px solid var(--report-tier-d-border);
 }
 .tier-e {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--report-tier-e-bg);
+  color: var(--report-tier-e-text);
+  border: 1px solid var(--report-tier-e-border);
 }
 .tier-unknown {
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--report-tier-unknown-bg);
+  color: var(--report-tier-unknown-text);
+  border: 1px solid var(--report-tier-unknown-border);
 }
 .scope-badge {
   padding: 3px 8px;
@@ -848,19 +932,19 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #c4b5fd;
-  background: rgba(124, 58, 237, 0.12);
-  border: 1px solid rgba(124, 58, 237, 0.28);
+  color: var(--report-scope-text);
+  background: var(--report-scope-bg);
+  border: 1px solid var(--report-scope-border);
   white-space: nowrap;
 }
 .marker-middle {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--report-result-bg);
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--report-result-border);
 }
 .genotype-val {
   font-size: 0.8rem;
@@ -884,9 +968,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
   line-height: 1.4;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--report-explainer-bg);
   border-radius: 6px;
-  border-left: 3px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--report-explainer-border);
 }
 
 /* ===== Severity-class card styles ===== */

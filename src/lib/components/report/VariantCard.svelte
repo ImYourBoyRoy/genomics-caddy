@@ -407,8 +407,8 @@
   .claim-frame {
     margin: 0.45rem 0 0.7rem;
     padding: 0.45rem 0.6rem;
-    border-left: 3px solid var(--accent-color, #60a5fa);
-    background: rgba(96, 165, 250, 0.07);
+    border-left: 3px solid var(--report-claim-border);
+    background: var(--report-claim-bg);
     color: var(--text-secondary);
     font-size: 0.75rem;
     line-height: 1.4;

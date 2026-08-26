@@ -18,6 +18,11 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   import type { GenomeSample } from "../../types/genomics";
   import type { VariantEvidence } from "../../types/agent";
   import { dialogStore } from "../../utils/dialogState.svelte";
+  import {
+    buildCatalogCategories,
+    defaultCatalogCategorySelection,
+    selectedCatalogCategoryIds
+  } from "../../utils/catalogCategoryRouting";
   import catalogData from "../../marker-packs/discovery_catalog.json";
   import DiscoveredVariantsList from "./DiscoveredVariantsList.svelte";
 
@@ -47,25 +52,10 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   let geneSymbolInput = $state("MTHFR");
   let customExportPath = $state("");
 
-  const categories = [
-    { id: "neurotype_mood", catalogCategories: ["neuropsych"], label: "🧠 Neurotype & Mood" },
-    { id: "cardiovascular", catalogCategories: ["cardiovascular"], label: "🫀 Cardiovascular" },
-    { id: "drug_metabolism", catalogCategories: ["pgx"], label: "💊 Drug Metabolism" },
-    { id: "cancer_risk", catalogCategories: ["cancer_confirmation_only"], label: "🎗️ Cancer Risk" },
-    { id: "carrier_status", catalogCategories: ["core"], label: "🧬 Carrier & Core Traits" },
-    { id: "metabolic_diet", catalogCategories: ["metabolic", "nutrients"], label: "🥗 Metabolic & Diet" },
-    { id: "hormones_reproductive", catalogCategories: ["hormones_reproductive"], label: "🌙 Hormones & Reproductive" }
-  ];
-
-  let selectedCategories = $state<Record<string, boolean>>({
-    neurotype_mood: true,
-    cardiovascular: true,
-    drug_metabolism: true,
-    cancer_risk: true,
-    carrier_status: true,
-    metabolic_diet: true,
-    hormones_reproductive: true
-  });
+  const categories = buildCatalogCategories(catalogData.markers);
+  let selectedCategories = $state<Record<string, boolean>>(
+    defaultCatalogCategorySelection(categories)
+  );
 
   async function selectExportFile() {
     try {
@@ -91,11 +81,7 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     totalToScan = 0;
 
     try {
-      const activeCatalogCategories = new Set(
-        categories
-          .filter(category => selectedCategories[category.id])
-          .flatMap(category => category.catalogCategories)
-      );
+      const activeCatalogCategories = selectedCatalogCategoryIds(categories, selectedCategories);
       const catalogMarkers = catalogData.markers.filter(m => activeCatalogCategories.has(m.category));
       const rsids = catalogMarkers.map(m => m.rsid);
       totalToScan = rsids.length;
@@ -223,6 +209,12 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   function toggleCategory(catId: string) {
     selectedCategories[catId] = !selectedCategories[catId];
   }
+
+  function setAllCategories(selected: boolean) {
+    for (const category of categories) {
+      selectedCategories[category.id] = selected;
+    }
+  }
 </script>
 
 <!-- Discovery Mode Tabs -->
@@ -277,6 +269,9 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
   <!-- Category Filter Checklist -->
   <div class="category-filters-container">
     <span class="label-header">Filter Catalog Categories</span>
+    <p class="input-hint">
+      {categories.length} catalog domains · {categories.reduce((total, category) => total + category.count, 0)} research entries. Select all or focus the scan to a smaller area.
+    </p>
     <div class="categories-grid">
       {#each categories as cat}
         <button
@@ -285,9 +280,19 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
           class:active={selectedCategories[cat.id]}
           onclick={() => toggleCategory(cat.id)}
         >
-          <span class="status-dot">{selectedCategories[cat.id] ? "●" : "○"}</span> {cat.label}
+          <span class="status-dot">{selectedCategories[cat.id] ? "●" : "○"}</span>
+          <span>{cat.label}</span>
+          <span class="category-count">{cat.count}</span>
         </button>
       {/each}
+    </div>
+    <div class="catalog-selection-actions">
+      <button type="button" class="btn btn-secondary" onclick={() => setAllCategories(true)} disabled={isScanningDb}>
+        Select all
+      </button>
+      <button type="button" class="btn btn-secondary" onclick={() => setAllCategories(false)} disabled={isScanningDb}>
+        Clear all
+      </button>
     </div>
     <div class="catalog-actions">
       <button
@@ -424,7 +429,19 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     flex-direction: column;
     gap: 6px;
   }
+  .catalog-selection-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .catalog-selection-actions button {
+    padding: 5px 9px;
+    font-size: 0.68rem;
+  }
   .category-tag-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -445,9 +462,15 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     color: var(--text-primary);
   }
   .status-dot {
-    margin-right: 4px;
+    flex: 0 0 auto;
     font-size: 0.85rem;
     transition: color 0.2s;
+  }
+  .category-count {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 0.64rem;
+    font-variant-numeric: tabular-nums;
   }
   .category-tag-btn.active .status-dot {
     color: var(--success);

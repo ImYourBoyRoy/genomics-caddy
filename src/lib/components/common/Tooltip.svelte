@@ -29,6 +29,8 @@
   let panelStyle = $state('');
   let tooltipId = $state('');
   let hoverCloseTimer: ReturnType<typeof setTimeout> | undefined;
+  let panelLabelId = $derived(tooltipId ? `${tooltipId}-label` : undefined);
+  let panelDescriptionId = $derived(tooltipId ? `${tooltipId}-description` : undefined);
 
   function refreshOpenState() {
     isOpen = isHovered || isFocused || isClicked;
@@ -144,9 +146,12 @@
     class="tooltip-trigger"
     bind:this={triggerElement}
     aria-label={label}
-    aria-describedby={isOpen ? tooltipId : undefined}
+    aria-describedby={isOpen ? panelDescriptionId : undefined}
+    aria-controls={isOpen && learnMoreHref ? tooltipId : undefined}
+    aria-haspopup={learnMoreHref ? 'dialog' : undefined}
     aria-expanded={isOpen}
-    onclick={() => {
+    onclick={(event) => {
+      event.stopPropagation();
       isClicked = !isClicked;
       refreshOpenState();
     }}
@@ -158,13 +163,17 @@
       bind:this={panelElement}
       class="tooltip-panel tooltip-{placement}"
       id={tooltipId}
-      role="tooltip"
+      role={learnMoreHref ? 'dialog' : 'tooltip'}
+      aria-labelledby={panelLabelId}
+      aria-describedby={panelDescriptionId}
+      aria-modal={learnMoreHref ? 'false' : undefined}
       style={panelStyle}
       onmouseenter={handleHoverEnter}
       onmouseleave={handleHoverLeave}
+      onclick={(event) => event.stopPropagation()}
     >
-      <strong>{label}</strong>
-      <span>{description}</span>
+      <strong id={panelLabelId}>{label}</strong>
+      <span id={panelDescriptionId}>{description}</span>
       {#if learnMoreHref}
         <a href={learnMoreHref} target="_blank" rel="noopener noreferrer">Learn more</a>
       {/if}
@@ -200,6 +209,7 @@
     position: fixed;
     z-index: 1000;
     display: flex;
+    box-sizing: border-box;
     width: min(18rem, calc(100vw - 2rem));
     flex-direction: column;
     gap: 0.35rem;
@@ -212,6 +222,12 @@
     font-size: 0.75rem;
     line-height: 1.4;
     pointer-events: auto;
+  }
+
+  .tooltip-panel strong,
+  .tooltip-panel span,
+  .tooltip-panel a {
+    overflow-wrap: anywhere;
   }
 
   .tooltip-panel strong {

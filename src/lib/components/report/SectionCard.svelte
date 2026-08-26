@@ -136,13 +136,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    flex-wrap: wrap;
     min-height: 2.75rem;
     user-select: none;
   }
 
   .section-title-area {
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 30rem;
     min-width: 0;
     align-items: center;
     gap: 0.5rem;
@@ -185,6 +186,7 @@
     margin: 0;
     color: var(--text-primary);
     font-size: 1rem;
+    overflow-wrap: anywhere;
   }
 
   .section-count-pill,
@@ -205,12 +207,19 @@
 
   .section-score-area {
     display: flex;
+    flex: 0 1 22rem;
+    max-width: 100%;
     min-width: 0;
     align-items: center;
     justify-content: flex-end;
     gap: 0.4rem;
     flex-wrap: wrap;
     text-align: right;
+  }
+
+  .section-score-area > * {
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 
   .section-body {

@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "last_updated": "2026-08-26",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -867,6 +867,11 @@
       "rsid": "rs8175347",
       "simpleImpact": "UGT1A1*28 repeat and irinotecan-safety context",
       "simpleMeaning": "This repeat marker can contribute to UGT1A1*28 and may matter for irinotecan toxicity in a drug- and dose-specific context. Consumer SNP data may not represent repeat length reliably; use clinical PGx guidance."
+    },
+    {
+      "rsid": "rs184700",
+      "simpleImpact": "HRH1 preliminary adenomyosis research locus",
+      "simpleMeaning": "This HRH1 marker was associated with adenomyosis in a recent large research study, but it is not a diagnostic test. Results may vary by ancestry and phenotype definition; clinical history and indicated imaging matter more than this SNP, and an uncalled result is unknown."
     }
   ]
 }

@@ -1853,12 +1853,12 @@
     },
     {
       "rsid": "PANEL_ADENOMYOSIS_RESEARCH_GAP",
-      "gene": "ESR1/PGR/WNT4/VEZT/MULTI_GENE",
+      "gene": "ESR1/PGR/WNT4/VEZT/HRH1/SSPN/MULTI_GENE",
       "variant_name": "Adenomyosis research biology—not a callable SNP panel",
       "effect_allele": "N/A",
       "impact": "Research context around hormonally responsive uterine tissue",
       "evidence_tier": "E_negative_evidence_or_gap",
-      "interpretation": "Adenomyosis research includes hormonally responsive tissue, somatic mutations, epigenetic regulation, and possible inherited susceptibility, but there is no validated consumer-DNA panel that can diagnose or exclude the condition. Keep this as an evidence-gap note rather than a score.",
+      "interpretation": "Adenomyosis research includes hormonally responsive tissue, somatic mutations, epigenetic regulation, and possible inherited susceptibility. A 2026 large GWAS reported five associated loci, including newly reported HRH1 and SSPN signals, but there is still no validated consumer-DNA panel that can diagnose or exclude the condition. Keep these as evidence-gap and research notes rather than a score.",
       "do_not_claim": [
         "adenomyosis diagnosis",
         "adenomyosis exclusion",
@@ -1882,6 +1882,50 @@
           "evidence_type": "Peer-reviewed review",
           "conflict_of_interest": "Review article",
           "notes": "Use to distinguish tissue-level/somatic research from consumer germline SNP interpretation."
+        },
+        {
+          "name": "Multi-ancestry genome-wide association and integrated multi-omics analyses of endometriosis and its clinical manifestations",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13195585/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed multi-ancestry genome-wide association study",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the preliminary adenomyosis GWAS loci and research context only. The study reports five adenomyosis loci, but predictive performance remains insufficient for diagnosis and the cohorts were primarily European for the adenomyosis analysis."
+        }
+      ]
+    },
+    {
+      "rsid": "rs184700",
+      "gene": "HRH1",
+      "variant_name": "HRH1 adenomyosis GWAS research locus",
+      "effect_allele": "T",
+      "impact": "Preliminary adenomyosis susceptibility research context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "The T allele at HRH1 rs184700 was associated with adenomyosis in a 2026 GWAS and the signal was not a validated clinical test. It is a cohort-level research association that may differ by ancestry, phenotype definition, and replication; it cannot diagnose or exclude adenomyosis or explain an individual's pain or bleeding.",
+      "do_not_claim": [
+        "adenomyosis diagnosis",
+        "adenomyosis exclusion",
+        "individual risk percentage",
+        "pain or bleeding cause"
+      ],
+      "confirm_with": [
+        "bleeding and pain history",
+        "pelvic examination when appropriate",
+        "transvaginal ultrasound or MRI when clinically indicated",
+        "gynecology review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a preliminary research locus from a GWAS using clinical or self-reported phenotypes, not a validated consumer test. A present or absent array call cannot diagnose or rule out adenomyosis, and an uncalled marker remains unknown.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Multi-ancestry genome-wide association and integrated multi-omics analyses of endometriosis and its clinical manifestations",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13195585/",
+          "accessed": "2026-08-26",
+          "evidence_type": "Peer-reviewed multi-ancestry genome-wide association study",
+          "conflict_of_interest": "Research publication; review article disclosures when using clinically",
+          "notes": "Use for the HRH1 rs184700 adenomyosis association only. Do not treat the study allele or effect estimate as a clinical risk prediction."
         }
       ]
     },

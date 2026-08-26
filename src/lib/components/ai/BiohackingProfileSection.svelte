@@ -24,6 +24,7 @@
   interface Props {
     userProfile: UserBiohackingProfile;
     personalSafetyContext: PersonalSafetyContext;
+    reproductiveContext?: string;
     sampleId?: number;
   }
 
@@ -32,6 +33,7 @@
   let {
     userProfile = $bindable(),
     personalSafetyContext = $bindable(),
+    reproductiveContext = '',
     sampleId,
   }: Props = $props();
 
@@ -71,7 +73,7 @@
     <small>Exact medication names and active ingredients are more useful than a genetic-sex label.</small>
   </div>
 
-  <ReproductiveContextEditor bind:personalSafetyContext {sampleId} />
+  <ReproductiveContextEditor bind:personalSafetyContext {reproductiveContext} {sampleId} />
 
   <div class="input-row">
     <label for="profile-diet">Average Diet</label>

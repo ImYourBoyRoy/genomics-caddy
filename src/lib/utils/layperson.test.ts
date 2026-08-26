@@ -34,7 +34,7 @@ describe('plain-English claim framing', () => {
       .map((marker) => marker.rsid)
       .filter((rsid) => /^rs\d+$/i.test(rsid));
 
-    expect(hormoneRsids).toHaveLength(43);
+    expect(hormoneRsids).toHaveLength(44);
     for (const rsid of hormoneRsids) {
       expect(LAYPERSON_MAP[rsid]?.simpleMeaning, rsid).toBeTruthy();
     }

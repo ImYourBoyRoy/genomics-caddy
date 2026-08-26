@@ -58,6 +58,7 @@ describe('reproductive marker context routing', () => {
     expect(option?.medication_rule_ids).toEqual([]);
     expect(reproductiveMarkerContextRank('GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP', 'suspected_adenomyosis')).toBe(3);
     expect(reproductiveMarkerContextRank('PANEL_ADENOMYOSIS_RESEARCH_GAP', 'suspected_adenomyosis')).toBe(3);
+    expect(reproductiveMarkerContextRank('rs184700', 'suspected_adenomyosis')).toBe(3);
   });
 
   it('keeps unknown or unselected context non-directive', () => {

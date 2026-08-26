@@ -492,6 +492,7 @@
       contextStats={contextStats}
         bind:userProfile={userProfile}
         bind:personalSafetyContext
+        bind:reproductiveContext={reproductiveContext}
         sampleId={selectedSample?.id}
       bind:systemInstructions={systemInstructions}
       defaultInstructions={DEFAULT_INSTRUCTIONS}

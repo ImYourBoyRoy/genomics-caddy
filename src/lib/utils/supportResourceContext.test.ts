@@ -29,6 +29,7 @@ describe('support resource context', () => {
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'pmdd_like_mood_symptoms')).toBe(true);
     expect(context.cycle_support.source_registry.acog_premenstrual_disorders).toBeDefined();
     expect(context.cycle_support.source_registry.cdc_usmec_2024).toBeDefined();
+    expect(context.cycle_support.source_registry.adenomyosis_2026_gwas).toBeDefined();
     expect(context.cycle_support.context_options.some((option) => option.id === 'menstrual_cycle')).toBe(true);
     expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');

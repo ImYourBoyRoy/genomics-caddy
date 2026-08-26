@@ -7754,12 +7754,21 @@
     },
     {
       "rsid": "PANEL_ADENOMYOSIS_RESEARCH_GAP",
-      "gene": "ESR1/PGR/WNT4/VEZT/MULTI_GENE",
+      "gene": "ESR1/PGR/WNT4/VEZT/HRH1/SSPN/MULTI_GENE",
       "category": "hormones_reproductive",
       "name": "Adenomyosis research biology—not a callable SNP panel",
       "risk_allele": "N/A",
       "impact": "Research context around hormonally responsive uterine tissue",
       "description": "Adenomyosis research includes tissue-specific, somatic, epigenetic, and possible inherited biology, but no validated consumer-DNA panel can diagnose or exclude it. Keep this as an evidence-gap note rather than a score."
+    },
+    {
+      "rsid": "rs184700",
+      "gene": "HRH1",
+      "category": "hormones_reproductive",
+      "name": "HRH1 adenomyosis GWAS research locus",
+      "risk_allele": "T",
+      "impact": "Preliminary adenomyosis susceptibility research context",
+      "description": "HRH1 rs184700 T was associated with adenomyosis in a 2026 GWAS, but it is not a diagnostic test. Results may vary by ancestry and phenotype definition; clinical history and indicated imaging matter more than this SNP, and an uncalled result is unknown."
     }
   ]
 }

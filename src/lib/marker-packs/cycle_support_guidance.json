@@ -571,7 +571,8 @@
       "rs4141819",
       "rs7739264",
       "rs1537377",
-      "rs10859871"
+      "rs10859871",
+      "rs184700"
     ],
     "cyclic_mood_symptoms": [
       "GUARDRAIL_CYCLIC_BEHAVIOR_IS_PHENOTYPE",
@@ -605,7 +606,8 @@
       "rs4141819",
       "rs7739264",
       "rs1537377",
-      "rs10859871"
+      "rs10859871",
+      "rs184700"
     ],
     "suspected_adenomyosis": [
       "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
@@ -618,7 +620,8 @@
       "rs4141819",
       "rs7739264",
       "rs1537377",
-      "rs10859871"
+      "rs10859871",
+      "rs184700"
     ],
     "androgen_reproductive": [
       "rs523349",
@@ -833,6 +836,7 @@
       "sources": [
         "nice_adenomyosis_heavy_bleeding",
         "medlineplus_adenomyosis",
+        "adenomyosis_2026_gwas",
         "clinical_confirmation_required",
         "lab_confirmation_required"
       ]

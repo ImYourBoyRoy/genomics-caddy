@@ -46,6 +46,7 @@
     contextStats: { included: number; total: number };
     userProfile: UserBiohackingProfile;
     personalSafetyContext: PersonalSafetyContext;
+    reproductiveContext: string;
     sampleId?: number;
     systemInstructions: string;
     defaultInstructions: string;
@@ -84,6 +85,7 @@
     contextStats,
     userProfile = $bindable(),
     personalSafetyContext = $bindable(),
+    reproductiveContext = $bindable(),
     sampleId,
     systemInstructions = $bindable(),
     defaultInstructions,
@@ -159,6 +161,7 @@
           <BiohackingProfileSection
             bind:userProfile={userProfile}
             bind:personalSafetyContext
+            {reproductiveContext}
             {sampleId}
           />
         </div>

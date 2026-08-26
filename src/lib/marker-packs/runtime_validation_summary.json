@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 58,
+    "hormones_reproductive": 59,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -24,7 +24,7 @@
     "longevity_aging_resilience": 35,
     "research_found": 0
   },
-  "discovery_records": 862,
+  "discovery_records": 863,
   "manifest_packs": 23,
   "duplicate_rsids_skipped_from_discovery_catalog": 269,
   "validation_errors": [],

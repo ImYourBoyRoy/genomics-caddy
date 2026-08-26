@@ -89,6 +89,46 @@ Responsibilities:
   --report-scope-bg: rgba(124, 58, 237, 0.12);
   --report-scope-text: #c4b5fd;
   --report-scope-border: rgba(124, 58, 237, 0.28);
+  --report-severity-high-bg: var(--status-danger-bg);
+  --report-severity-high-border: var(--status-danger-border);
+  --report-severity-high-text: var(--status-danger-strong-text);
+  --report-severity-high-explainer-border: var(--status-danger-border);
+  --report-severity-high-glyph-bg: var(--danger);
+  --report-severity-moderate-bg: var(--status-warning-bg);
+  --report-severity-moderate-border: var(--status-warning-border);
+  --report-severity-moderate-text: var(--status-warning-text);
+  --report-severity-moderate-explainer-border: var(--status-warning-border);
+  --report-severity-moderate-glyph-bg: var(--warning);
+  --report-severity-low-bg: var(--status-warning-bg);
+  --report-severity-low-border: var(--status-warning-border);
+  --report-severity-low-text: var(--status-warning-text);
+  --report-severity-low-explainer-border: var(--status-warning-border);
+  --report-severity-low-glyph-bg: var(--warning);
+  --report-severity-protective-bg: var(--status-success-bg);
+  --report-severity-protective-border: var(--status-success-border);
+  --report-severity-protective-text: var(--status-success-text);
+  --report-severity-protective-explainer-border: var(--status-success-border);
+  --report-severity-protective-glyph-bg: var(--success);
+  --report-severity-trait-bg: var(--status-info-soft-bg);
+  --report-severity-trait-border: var(--status-info-soft-border);
+  --report-severity-trait-text: var(--status-info-soft-text);
+  --report-severity-trait-explainer-border: var(--status-info-soft-border);
+  --report-severity-trait-glyph-bg: var(--accent);
+  --report-severity-context-bg: var(--status-accent-soft-bg);
+  --report-severity-context-border: var(--status-accent-soft-border);
+  --report-severity-context-text: var(--status-accent-soft-text);
+  --report-severity-context-explainer-border: var(--status-accent-soft-border);
+  --report-severity-context-glyph-bg: var(--report-accent-muted);
+  --report-severity-confirm-bg: var(--status-warning-bg);
+  --report-severity-confirm-border: var(--status-warning-border);
+  --report-severity-confirm-text: var(--status-warning-text);
+  --report-severity-confirm-explainer-border: var(--status-warning-border);
+  --report-severity-confirm-glyph-bg: var(--accent);
+  --report-severity-neutral-bg: var(--surface-subtle);
+  --report-severity-neutral-border: var(--border-color);
+  --report-severity-neutral-text: var(--text-secondary);
+  --report-severity-neutral-glyph-bg: var(--text-secondary);
+  --report-severity-glyph-text: #0f172a;
 }
 
 :root[data-theme="system"] {
@@ -1026,78 +1066,78 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===== Severity-class card styles ===== */
 
-/* High risk: red glow (two risk alleles) */
+/* High risk: two risk alleles; association context is not a diagnosis. */
 .marker-card.signal-high-risk {
-  border-color: rgba(239, 68, 68, 0.3);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.04), rgba(239, 68, 68, 0.005));
+  border-color: var(--report-severity-high-border);
+  background: var(--report-severity-high-bg);
 }
-.marker-card.signal-high-risk .marker-severity-label { color: var(--danger); }
-.marker-card.signal-high-risk .severity-explainer { border-left-color: rgba(239, 68, 68, 0.4); }
+.marker-card.signal-high-risk .marker-severity-label { color: var(--report-severity-high-text); }
+.marker-card.signal-high-risk .severity-explainer { border-left-color: var(--report-severity-high-explainer-border); }
 
-/* Moderate risk: amber (one risk allele) */
+/* Moderate risk: one risk allele; association context is not a diagnosis. */
 .marker-card.signal-moderate-risk {
-  border-color: rgba(245, 158, 11, 0.3);
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.04), rgba(245, 158, 11, 0.005));
+  border-color: var(--report-severity-moderate-border);
+  background: var(--report-severity-moderate-bg);
 }
-.marker-card.signal-moderate-risk .marker-severity-label { color: var(--warning); }
-.marker-card.signal-moderate-risk .severity-explainer { border-left-color: rgba(245, 158, 11, 0.4); }
+.marker-card.signal-moderate-risk .marker-severity-label { color: var(--report-severity-moderate-text); }
+.marker-card.signal-moderate-risk .severity-explainer { border-left-color: var(--report-severity-moderate-explainer-border); }
 
-/* Low risk: muted amber — weak/preliminary risk signal (Tier D/E) */
+/* Low risk: weak/preliminary association context (Tier D/E). */
 .marker-card.signal-low-risk {
-  border-left-color: #d97706;
-  border-color: rgba(217, 119, 6, 0.2);
-  background: rgba(217, 119, 6, 0.04);
+  border-left-color: var(--report-severity-low-border);
+  border-color: var(--report-severity-low-border);
+  background: var(--report-severity-low-bg);
 }
-.marker-card.signal-low-risk .marker-severity-label { color: #d97706; }
-.marker-card.signal-low-risk .severity-explainer { border-left-color: rgba(217, 119, 6, 0.35); }
-.marker-card-collapsed.signal-low-risk { border-left-color: rgba(217, 119, 6, 0.15); }
+.marker-card.signal-low-risk .marker-severity-label { color: var(--report-severity-low-text); }
+.marker-card.signal-low-risk .severity-explainer { border-left-color: var(--report-severity-low-explainer-border); }
+.marker-card-collapsed.signal-low-risk { border-left-color: var(--report-severity-low-border); }
 
 /* Protective: green */
 .marker-card.signal-protective {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04), rgba(16, 185, 129, 0.005));
+  border-color: var(--report-severity-protective-border);
+  background: var(--report-severity-protective-bg);
 }
-.marker-card.signal-protective .marker-severity-label { color: var(--success); }
-.marker-card.signal-protective .severity-explainer { border-left-color: rgba(16, 185, 129, 0.4); }
+.marker-card.signal-protective .marker-severity-label { color: var(--report-severity-protective-text); }
+.marker-card.signal-protective .severity-explainer { border-left-color: var(--report-severity-protective-explainer-border); }
 
-/* Trait: blue/neutral */
+/* Trait: informational context */
 .marker-card.signal-trait {
-  border-color: rgba(59, 130, 246, 0.3);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.04), rgba(59, 130, 246, 0.005));
+  border-color: var(--report-severity-trait-border);
+  background: var(--report-severity-trait-bg);
 }
-.marker-card.signal-trait .marker-severity-label { color: #60a5fa; }
-.marker-card.signal-trait .severity-explainer { border-left-color: rgba(59, 130, 246, 0.4); }
+.marker-card.signal-trait .marker-severity-label { color: var(--report-severity-trait-text); }
+.marker-card.signal-trait .severity-explainer { border-left-color: var(--report-severity-trait-explainer-border); }
 
-/* Context-dependent: purple */
+/* Context-dependent: contextual modifier, not a diagnosis */
 .marker-card.signal-context {
-  border-color: rgba(139, 92, 246, 0.3);
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.04), rgba(139, 92, 246, 0.005));
+  border-color: var(--report-severity-context-border);
+  background: var(--report-severity-context-bg);
 }
-.marker-card.signal-context .marker-severity-label { color: #a78bfa; }
-.marker-card.signal-context .severity-explainer { border-left-color: rgba(139, 92, 246, 0.4); }
+.marker-card.signal-context .marker-severity-label { color: var(--report-severity-context-text); }
+.marker-card.signal-context .severity-explainer { border-left-color: var(--report-severity-context-explainer-border); }
 
 /* Confirmation required: amber dashed */
 .marker-card.signal-confirm {
-  border-color: rgba(245, 158, 11, 0.35);
+  border-color: var(--report-severity-confirm-border);
   border-style: dashed;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.035), rgba(245, 158, 11, 0.005));
+  background: var(--report-severity-confirm-bg);
 }
-.marker-card.signal-confirm .marker-severity-label { color: #fbbf24; }
-.marker-card.signal-confirm .severity-explainer { border-left-color: rgba(245, 158, 11, 0.5); }
+.marker-card.signal-confirm .marker-severity-label { color: var(--report-severity-confirm-text); }
+.marker-card.signal-confirm .severity-explainer { border-left-color: var(--report-severity-confirm-explainer-border); }
 
 /* No data: muted gray */
 .marker-card.signal-nodata {
   opacity: 0.6;
-  border-color: rgba(156, 163, 175, 0.15);
+  border-color: var(--report-severity-neutral-border);
 }
-.marker-card.signal-nodata .marker-severity-label { color: var(--text-secondary); }
+.marker-card.signal-nodata .marker-severity-label { color: var(--report-severity-neutral-text); }
 
 /* Benign: neutral, de-emphasized — NOT a positive finding */
 .marker-card.signal-benign {
-  border-color: rgba(255, 255, 255, 0.04);
-  background: rgba(255, 255, 255, 0.005);
+  border-color: var(--report-severity-neutral-border);
+  background: var(--report-severity-neutral-bg);
 }
-.marker-card.signal-benign .marker-severity-label { color: var(--text-secondary); }
+.marker-card.signal-benign .marker-severity-label { color: var(--report-severity-neutral-text); }
 
 /* Collapsed cards (benign / no_data): visually minimal so active findings stand out */
 .marker-card-collapsed {
@@ -1995,24 +2035,23 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 800;
-  color: #0f172a;
-  background: #94a3b8;
+  color: var(--report-severity-glyph-text);
+  background: var(--report-severity-neutral-glyph-bg);
   vertical-align: middle;
 }
 
-.marker-card.signal-high-risk .severity-glyph { background: #ff8a80; }
-.marker-card.signal-moderate-risk .severity-glyph,
-.marker-card.signal-low-risk .severity-glyph { background: #fbbf24; }
-.marker-card.signal-confirm .severity-glyph { background: #38bdf8; }
-.marker-card.signal-protective .severity-glyph { background: #4ade80; }
-.marker-card.signal-trait .severity-glyph { background: #38bdf8; }
-.marker-card.signal-context .severity-glyph { background: #cbd5e1; }
+.marker-card.signal-high-risk .severity-glyph { background: var(--report-severity-high-glyph-bg); }
+.marker-card.signal-moderate-risk .severity-glyph { background: var(--report-severity-moderate-glyph-bg); }
+.marker-card.signal-low-risk .severity-glyph { background: var(--report-severity-low-glyph-bg); }
+.marker-card.signal-confirm .severity-glyph { background: var(--report-severity-confirm-glyph-bg); }
+.marker-card.signal-protective .severity-glyph { background: var(--report-severity-protective-glyph-bg); }
+.marker-card.signal-trait .severity-glyph { background: var(--report-severity-trait-glyph-bg); }
+.marker-card.signal-context .severity-glyph { background: var(--report-severity-context-glyph-bg); }
 
 /* Theme-aware report surfaces. Legacy pack colors remain meaningful, while
    shared surfaces, text, controls, and focus states follow the selected theme. */
 :root[data-theme="light"] .card,
 :root[data-theme="light"] .summary-card,
-:root[data-theme="light"] .marker-card,
 :root[data-theme="light"] .section-card,
 :root[data-theme="light"] .filter-bar,
 :root[data-theme="light"] .report-header,

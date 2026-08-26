@@ -42,4 +42,15 @@ describe('reproductive marker context routing', () => {
     expect(option?.domain_ids).toContain('pregnancy_postpartum_lactation_context');
     expect(option?.medication_rule_ids).toContain('PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA');
   });
+
+  it('routes explicit preconception and fertility goals without making fertility claims', () => {
+    const option = selectedReproductiveContextOption('preconception_fertility');
+
+    expect(option?.domain_ids).toEqual([
+      'preconception_fertility_context',
+      'general_symptom_day_support',
+    ]);
+    expect(option?.medication_rule_ids).toContain('PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA');
+    expect(reproductiveMarkerContextRank('GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA', 'preconception_fertility')).toBe(3);
+  });
 });

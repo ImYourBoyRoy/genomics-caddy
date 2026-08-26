@@ -1943,6 +1943,60 @@
       ]
     },
     {
+      "rsid": "GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Fertility and preconception status are not predictable from consumer DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates fertility goals and clinical evaluation from inherited SNP context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Consumer DNA cannot measure ovarian reserve, ovulation, sperm quality, embryo health, pregnancy ability, miscarriage probability, or response to fertility treatment. A genetic result may prompt family-history, carrier-screening, or clinician questions, but it cannot diagnose infertility or determine a person's reproductive goals, anatomy, partner configuration, or family-building path.",
+      "do_not_claim": [
+        "fertility prediction",
+        "ovarian-reserve prediction",
+        "sperm-quality prediction",
+        "infertility diagnosis",
+        "pregnancy or miscarriage prediction",
+        "fertility medication or treatment selection from genotype"
+      ],
+      "confirm_with": [
+        "user-supplied reproductive goals and timeline",
+        "preconception or fertility clinician review",
+        "clinically indicated cycle/ovulation evaluation or semen analysis",
+        "genetic counseling and validated clinical testing when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Fertility depends on age, anatomy, gamete and partner factors, medical history, medications, exposures, and chance. Consumer SNP arrays are not a complete fertility, carrier, HLA, structural-variant, or reproductive-endocrinology evaluation.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "all_bodies_preconception_fertility_context",
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "ACOG: Prepregnancy Counseling",
+          "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2019/01/prepregnancy-counseling",
+          "accessed": "2026-08-26",
+          "evidence_type": "Professional clinical guidance",
+          "conflict_of_interest": "American College of Obstetricians and Gynecologists committee opinion developed with the American Society for Reproductive Medicine; review disclosures when using clinically",
+          "notes": "Use for explicit preconception counseling, medication and supplement review, chronic-condition optimization, and family/genetic history."
+        },
+        {
+          "name": "ASRM: Fertility Evaluation of Infertile Women",
+          "url": "https://www.asrm.org/practice-guidance/practice-committee-documents/fertility-evaluation-of-infertile-women-a-committee-opinion-2021/",
+          "accessed": "2026-08-26",
+          "evidence_type": "American Society for Reproductive Medicine committee opinion",
+          "conflict_of_interest": "Professional medical society guidance; review document disclosures when using clinically",
+          "notes": "Use for systematic clinical fertility evaluation and interpretation of tests in the full clinical picture."
+        },
+        {
+          "name": "AUA/ASRM: Diagnosis and Treatment of Infertility in Men",
+          "url": "https://www.auanet.org/documents/guidelines/pdf/male-infertility-guideline.pdf",
+          "accessed": "2026-08-26",
+          "evidence_type": "American Urological Association/American Society for Reproductive Medicine clinical guideline",
+          "conflict_of_interest": "Professional medical society guideline; review current document disclosures",
+          "notes": "Use for concurrent partner evaluation and male-factor clinical context; consumer SNP data do not replace semen analysis or specialist evaluation."
+        }
+      ]
+    },
+    {
       "rsid": "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA",
       "gene": "MULTI_GENE",
       "variant_name": "Current exogenous hormone regimen and monitoring are not callable from consumer DNA",

@@ -16,6 +16,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PACK_DIR = ROOT / "src" / "lib" / "marker-packs"
+STANDARD_RSID_RE = re.compile(r"^rs\d+$", re.IGNORECASE)
+
+
+def is_standard_rsid(value: object) -> bool:
+    """Return true only for a numeric dbSNP identifier callable from array rows."""
+    return bool(STANDARD_RSID_RE.fullmatch(str(value or "").strip()))
 
 
 def manifest_pack_paths() -> list[Path]:
@@ -54,7 +60,7 @@ def curated_rsids_by_pack() -> dict[str, set[str]]:
         pack_rsids: set[str] = set()
         for marker in doc.get("markers", []):
             rsid = str(marker.get("rsid", "")).lower()
-            if rsid.startswith("rs"):
+            if is_standard_rsid(rsid):
                 pack_rsids.add(rsid)
         packs[path.stem] = pack_rsids
     return packs
@@ -167,7 +173,7 @@ def audit(
             continue
         genotype = "".join(columns[3:5]).strip() if len(columns) >= 5 else columns[3].strip()
         rows += 1
-        if not rsid or not rsid.startswith("rs") or position <= 0:
+        if not rsid or not is_standard_rsid(rsid) or position <= 0:
             continue
         valid += 1
         rsids.add(rsid)

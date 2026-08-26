@@ -68,6 +68,23 @@ describe('support resource context', () => {
     expect(context.safety_guardrails.some((rule) => rule.id === 'PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA')).toBe(true);
   });
 
+  it('routes preconception and fertility context across body and partner factors', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'preconception_fertility',
+    });
+
+    expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
+      'preconception_fertility_context',
+      'general_symptom_day_support',
+    ]);
+    expect(context.cycle_support.source_registry.acog_preconception_counseling).toBeDefined();
+    expect(context.cycle_support.source_registry.asrm_fertility_evaluation_women_2021).toBeDefined();
+    expect(context.cycle_support.source_registry.aua_asrm_male_infertility_2024).toBeDefined();
+    expect(context.safety_guardrails.some((rule) => rule.id === 'PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA')).toBe(true);
+  });
+
   it('keeps reproductive domains hidden until an explicit context is selected', () => {
     const hidden = buildSupportResourceContext({
       packIds: ['hormones_reproductive'],

@@ -239,6 +239,16 @@ describe('actionability engine safety policy', () => {
     ]);
   });
 
+  it('keeps preconception medication review separate from fertility prediction', () => {
+    const plan = deriveActionablePlan(report([]), { reproductiveContext: 'preconception_fertility' });
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(medicationText).toContain('planning pregnancy or pursuing fertility care');
+    expect(plan.cycleSupport.relevantDomains.map((domain) => domain.id)).toContain('preconception_fertility_context');
+    expect(plan.cycleSupport.relevantDomains.find((domain) => domain.id === 'preconception_fertility_context')?.context)
+      .toContain('cannot measure ovarian reserve');
+  });
+
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {
     const plan = deriveActionablePlan({
       ...report([]),

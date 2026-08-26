@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
@@ -14,6 +14,10 @@
     "contracept",
     "estrogen",
     "progesterone",
+    "fertility",
+    "preconception",
+    "conception",
+    "semen",
     "esr1",
     "esr2",
     "pgr"
@@ -99,6 +103,18 @@
       ],
       "medication_rule_ids": [
         "PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA"
+      ]
+    },
+    {
+      "id": "preconception_fertility",
+      "label": "Preconception / fertility evaluation",
+      "description": "Use only when the person supplies a pregnancy-planning or fertility-evaluation goal. This route supports people with different bodies, partners, and family-building paths without inferring anatomy, identity, fertility, or pregnancy from DNA.",
+      "domain_ids": [
+        "preconception_fertility_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA"
       ]
     },
     {
@@ -190,6 +206,9 @@
     ],
     "pregnancy_postpartum": [
       "GUARDRAIL_PREGNANCY_LACTATION_CONTEXT_NOT_IN_DNA"
+    ],
+    "preconception_fertility": [
+      "GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA"
     ]
   },
   "principles": [
@@ -486,11 +505,54 @@
         "user_declared_values_required",
         "clinical_confirmation_required"
       ]
+    },
+    {
+      "id": "preconception_fertility_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "pgx",
+        "nutrients",
+        "thyroid_autoimmune",
+        "metabolic"
+      ],
+      "title": "Preconception and fertility-care context",
+      "context": "A fertility or preconception goal is a user-supplied care context. Consumer DNA may organize questions about known variants or family history, but it cannot measure ovarian reserve, ovulation, sperm quality, embryo health, pregnancy ability, or the safety of a medication or supplement.",
+      "questions": [
+        "What is the goal and time horizon: preparing for a possible pregnancy, trying to conceive, fertility preservation, donor or assisted reproduction, or evaluation after difficulty conceiving?",
+        "Which body functions or partner factors are relevant to the person's goal, such as cycle/ovulation history, pelvic symptoms, semen or testicular history, prior pregnancies, or prior fertility treatment? Ask only what is relevant and do not assume anatomy, partner configuration, or family-building route.",
+        "What are the exact prescription, OTC, supplement, herbal, topical, nicotine, alcohol, and other exposure details, and what medical, surgical, psychiatric, family, or genetic history should the clinician know?"
+      ],
+      "support_options": [
+        "Arrange preconception or fertility counseling when the person wants it; bring the complete medication and supplement list, because products that seem unrelated to reproduction can still require review.",
+        "When infertility is being evaluated, ask how the relevant partners will be assessed concurrently and which least-invasive tests fit the person's history; the appropriate workup is not a consumer SNP panel.",
+        "Use the DNA report only to prompt questions about confirmed variants, family history, or clinically indicated carrier testing. Do not use common SNPs to predict fertility, ovarian reserve, sperm quality, miscarriage, embryo health, or pregnancy outcome.",
+        "Discuss nutrition, folic-acid/prenatal supplementation, activity, chronic-condition control, immunizations, and substance or environmental exposures with the clinician; do not let a common MTHFR or hormone marker override current public-health guidance."
+      ],
+      "confirm_with": [
+        "preconception clinician or reproductive-endocrinology review",
+        "exact medication, supplement, herbal, and topical-product list",
+        "cycle/ovulation evaluation, semen analysis, or other testing only when clinically indicated",
+        "genetic counseling or validated clinical carrier testing when indicated"
+      ],
+      "red_flags": [
+        "severe or sudden pelvic, abdominal, testicular, or scrotal pain",
+        "heavy bleeding, fainting, or severe shortness of breath",
+        "suicidal thoughts, coercion, or inability to remain safe"
+      ],
+      "sources": [
+        "acog_preconception_counseling",
+        "cdc_planning_for_pregnancy",
+        "asrm_fertility_evaluation_women_2021",
+        "aua_asrm_male_infertility_2024",
+        "user_declared_values_required",
+        "clinical_confirmation_required",
+        "phenotype_required"
+      ]
     }
   ],
   "do_not_do": [
     "Do not infer menstruation, reproductive anatomy, pregnancy, menopause, or contraceptive use from sex chromosomes or autosomal DNA.",
-    "Do not call an estrogen spike, progesterone intolerance, PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric condition from consumer DNA.",
+    "Do not call an estrogen spike, progesterone intolerance, PMDD, adenomyosis, endometriosis, PCOS, infertility, ovarian reserve, sperm quality, or a psychiatric condition from consumer DNA.",
     "Do not recommend a medication start, stop, or dose change from raw DNA, a reported hormone theory, or a symptom-day communication problem.",
     "Do not use a negative or missing SNP call to rule out adenomyosis or another clinical condition.",
     "Do not present symptom-day support options as cures, genotype-specific prescriptions, or substitutes for urgent care."

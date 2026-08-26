@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -154,6 +154,38 @@
       "evidence_type": "Medical reference chapter",
       "conflict_of_interest": "NCBI Bookshelf medical reference; verify current clinical guidance for patient care",
       "notes": "Use to explain that the late-luteal transition is characterized by withdrawal/fall of estradiol and progesterone in a natural cycle, not a presumed estrogen spike."
+    },
+    "acog_preconception_counseling": {
+      "name": "ACOG: Prepregnancy Counseling",
+      "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2019/01/prepregnancy-counseling",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional clinical guidance",
+      "conflict_of_interest": "American College of Obstetricians and Gynecologists committee opinion developed with the American Society for Reproductive Medicine; review disclosures when using clinically",
+      "notes": "Use for explicit preconception context, medication and supplement review, chronic-condition optimization, family/genetic history, nutrition, activity, substance, and safety screening. Do not infer pregnancy intent, anatomy, identity, or fertility from DNA."
+    },
+    "cdc_planning_for_pregnancy": {
+      "name": "CDC: Planning for Pregnancy",
+      "url": "https://www.cdc.gov/pregnancy/about/index.html",
+      "accessed": "2026-08-26",
+      "evidence_type": "U.S. Centers for Disease Control and Prevention public-health guidance",
+      "conflict_of_interest": "U.S. federal public-health resource",
+      "notes": "Use for plain-language preconception prompts, including medical history and review of prescriptions, over-the-counter medicines, supplements, and vitamins."
+    },
+    "asrm_fertility_evaluation_women_2021": {
+      "name": "ASRM: Fertility Evaluation of Infertile Women",
+      "url": "https://www.asrm.org/practice-guidance/practice-committee-documents/fertility-evaluation-of-infertile-women-a-committee-opinion-2021/",
+      "accessed": "2026-08-26",
+      "evidence_type": "American Society for Reproductive Medicine committee opinion",
+      "conflict_of_interest": "Professional medical society guidance; review the document disclosures when using clinically",
+      "notes": "Use for clinician-directed fertility evaluation. Tests must be interpreted in the full clinical context; do not convert consumer SNPs into ovarian-reserve, ovulation, or fertility predictions."
+    },
+    "aua_asrm_male_infertility_2024": {
+      "name": "AUA/ASRM: Diagnosis and Treatment of Infertility in Men",
+      "url": "https://www.auanet.org/documents/guidelines/pdf/male-infertility-guideline.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "American Urological Association/American Society for Reproductive Medicine clinical guideline",
+      "conflict_of_interest": "Professional medical society guideline; AUA index identifies the guideline as amended in 2024; review current document disclosures",
+      "notes": "Use for concurrent partner evaluation, semen-analysis and male-factor clinical context, and fertility-preserving medication review. Do not infer sperm quality, fertility, or treatment suitability from consumer SNPs."
     },
     "dietary_guidelines_2025_2030": {
       "name": "Dietary Guidelines for Americans, 2025-2030",

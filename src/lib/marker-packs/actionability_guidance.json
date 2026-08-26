@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -1421,6 +1421,124 @@
         "clinical_confirmation_required",
         "phenotype_required",
         "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp2c19_proton_pump_inhibitor_context",
+      "genes": [
+        "CYP2C19"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx",
+        "digestive_gut_microbiome"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2C19 diplotype/phenotype review when omeprazole, lansoprazole, pantoprazole, or dexlansoprazole is being considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If a first-generation proton-pump inhibitor or dexlansoprazole is being considered or used, a complete clinical CYP2C19 phenotype may inform the prescriber’s discussion of exposure and treatment response; indication, duration, interactions, and measured symptoms still matter. Do not start, stop, select, or dose a PPI from raw-array data."
+      ],
+      "notes": "CPIC reports stronger CYP2C19 evidence for omeprazole, lansoprazole, pantoprazole, and dexlansoprazole than for esomeprazole or rabeprazole, for which the guideline makes no recommendation. A single SNP cannot establish a CYP2C19 phenotype or a treatment decision.",
+      "sources": [
+        "cpic_cyp2c19_ppi_2020",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp2b6_efavirenz_context",
+      "genes": [
+        "CYP2B6"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2B6 diplotype/phenotype review when efavirenz is being considered or used in HIV care",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If efavirenz is being considered or used, the HIV prescriber should review a complete clinical CYP2B6 phenotype, current HIV guidance, treatment history, and adverse effects; do not start, stop, or change an efavirenz regimen or dose from raw-array data."
+      ],
+      "notes": "CPIC links CYP2B6 phenotype with efavirenz exposure and CNS-adverse-effect context, but the CYP2B6*6 component alone cannot assign a complete phenotype or prescribe a dose. This pathway is limited to clinical efavirenz care.",
+      "sources": [
+        "cpic_cyp2b6_efavirenz_2019",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "cyp2c9_phenytoin_safety",
+      "genes": [
+        "CYP2C9"
+      ],
+      "marker_ids": [
+        "rs1057910",
+        "rs1799853",
+        "rs28371686",
+        "rs9332131",
+        "rs7900194",
+        "rs28371685"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical CYP2C9 diplotype/phenotype review before phenytoin is considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If phenytoin is being considered or used, the prescriber should review a validated CYP2C9 phenotype, relevant HLA-B*15:02 status, serum-level monitoring, interactions, and clinical response because phenytoin has a narrow therapeutic index. Do not start, stop, or dose phenytoin from raw-array data."
+      ],
+      "notes": "CPIC links CYP2C9 genotype with phenytoin exposure and includes HLA-B*15:02 severe cutaneous adverse-reaction context. A limited consumer-array result cannot establish the complete phenotype, clear HLA risk, or determine a phenytoin dose.",
+      "sources": [
+        "cpic_cyp2c9_hla_phenytoin_2020",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hla_b1502_phenytoin_safety",
+      "genes": [
+        "HLA-B"
+      ],
+      "marker_ids": [
+        "HLA-B*15:02"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pgx"
+      ],
+      "lab_tests": [
+        {
+          "name": "Validated clinical HLA-B*15:02 typing before phenytoin is considered",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "If phenytoin is being considered and a validated clinical HLA-B*15:02 result is positive, the prescriber should follow current CPIC guidance before initiation; a consumer-array label cannot clear severe cutaneous-reaction risk or choose an alternative anticonvulsant."
+      ],
+      "notes": "HLA-B*15:02 is drug-specific severe cutaneous adverse-reaction context for phenytoin. This exact allele requires validated HLA testing and must not be inferred from a broad HLA gene match or a missing consumer-array call.",
+      "sources": [
+        "cpic_cyp2c9_hla_phenytoin_2020",
+        "clinical_confirmation_required",
         "safety_guardrail"
       ]
     }

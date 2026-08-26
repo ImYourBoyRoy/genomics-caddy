@@ -389,6 +389,25 @@ describe('actionability engine safety policy', () => {
     expect(carbamazepinePlan.labTests.some((test) => test.name.includes('HLA-B*15:02') && test.name.includes('HLA-A*31:01'))).toBe(true);
   });
 
+  it('routes additional clinical PGx pathways without turning them into raw-array prescriptions', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'CYP2C19', rsid: 'rs4244285' }),
+      marker({ gene: 'CYP2B6', rsid: 'rs3745274' }),
+      marker({ gene: 'CYP2C9', rsid: 'rs1057910' }),
+      marker({ gene: 'HLA-B', rsid: 'HLA-B*15:02' }),
+    ]));
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('CYP2C19') && test.name.includes('omeprazole'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('CYP2B6') && test.name.includes('efavirenz'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('CYP2C9') && test.name.includes('phenytoin'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('HLA-B*15:02') && test.name.includes('phenytoin'))).toBe(true);
+    expect(medicationText).toContain('proton-pump inhibitor');
+    expect(medicationText).toContain('efavirenz');
+    expect(medicationText).toContain('phenytoin');
+    expect(medicationText).not.toContain('Change phenytoin dose to');
+  });
+
   it('does not infer reproductive applicability from hormone marker text', () => {
     const plan = deriveActionablePlan(report([marker({
       rsid: 'rs2234693',

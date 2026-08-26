@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only audit of local DNA fixtures against curated rsID coverage.
+"""Read-only audit of local DNA fixtures against curated marker coverage.
 
 The audit intentionally reports counts and coverage only. It never prints or
 persists raw genotype values, and it does not create/import app database rows.
@@ -104,7 +104,7 @@ def actionability_targets() -> dict[str, set[str]]:
             result[rule_id] = {
                 str(marker.get("rsid", "")).strip().lower()
                 for marker in marker_records
-                if str(marker.get("rsid", "")).strip().lower().startswith("rs")
+                if str(marker.get("rsid", "")).strip()
                 and marker_gene_symbols(marker.get("gene")) & genes
             }
     return result
@@ -256,22 +256,11 @@ def main() -> int:
             f"  actionability_pathways_with_called_targets={len(callable_rules)}"
             f"/{len(actionability_coverage)}"
         )
-        for rule_id in (
-            "cyp2c9_nsaid_context",
-            "cyp3a5_tacrolimus_context",
-            "bche_succinylcholine_anesthesia",
-            "ugt1a1_irinotecan_safety",
-            "nat2_hydralazine_context",
-            "hla_b5701_abacavir_safety",
-            "hla_carbamazepine_oxcarbazepine_safety",
-            "hla_b5801_allopurinol_safety",
-        ):
-            values = actionability_coverage.get(rule_id)
-            if values:
-                print(
-                    f"  actionability_coverage={rule_id}:"
-                    f"{values['present']}/{values['total']}"
-                )
+        for rule_id, values in actionability_coverage.items():
+            print(
+                f"  actionability_coverage={rule_id}:"
+                f"{values['present']}/{values['total']}"
+            )
     print("Raw genotype values were not emitted or persisted.")
     return 0
 

@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -354,6 +354,30 @@
       "evidence_type": "CPIC clinical pharmacogenomic guideline",
       "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
       "notes": "Use for validated clinical NAT2 diplotype/phenotype context during hydralazine care. Consumer-array markers cannot independently assign phenotype or direct a dose or medication change."
+    },
+    "cpic_cyp2c19_ppi_2020": {
+      "name": "CPIC: CYP2C19 and Proton Pump Inhibitor Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/PPI/2020/32770672.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for first-generation PPI and dexlansoprazole exposure/response context; the guideline makes no recommendation for esomeprazole or rabeprazole and a complete CYP2C19 phenotype is required."
+    },
+    "cpic_cyp2b6_efavirenz_2019": {
+      "name": "CPIC: CYP2B6 and Efavirenz Guideline",
+      "url": "https://cpicpgx.org/content/guideline/publication/efavirenz/2019/31006110.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for CYP2B6 phenotype, efavirenz exposure, and CNS-adverse-effect context in clinical HIV care; raw single-SNP calls do not assign a complete phenotype or dose."
+    },
+    "cpic_cyp2c9_hla_phenytoin_2020": {
+      "name": "CPIC: CYP2C9/HLA-B and Phenytoin Guideline",
+      "url": "https://files.cpicpgx.org/data/guideline/publication/phenytoin/2020/32779747.pdf",
+      "accessed": "2026-08-26",
+      "evidence_type": "CPIC clinical pharmacogenomic guideline",
+      "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+      "notes": "Use for phenytoin narrow-therapeutic-index, CYP2C9 exposure, and HLA-B*15:02 severe cutaneous-reaction context; validated clinical genotype/phenotype and monitoring are required."
     },
     "nih_ods_supplements": {
       "name": "NIH Office of Dietary Supplements Fact Sheets",

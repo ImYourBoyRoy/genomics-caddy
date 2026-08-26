@@ -453,6 +453,7 @@
         🔒 Everything stays on your computer. No data is uploaded.
       </span>
       <button
+        type="button"
         class="btn btn-primary btn-sm"
         onclick={exportCuratedJson}
       >
@@ -460,24 +461,25 @@
       </button>
       <div class="export-audience-group" aria-label="Audience-specific markdown exports">
         <span class="export-audience-label">Audience exports</span>
-        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
           {audienceExportBusy === 'personal' ? 'Saving…' : 'Personal Simple'}
         </button>
-        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
           {audienceExportBusy === 'clinician' ? 'Saving…' : 'Clinician Handoff'}
         </button>
-        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
           {audienceExportBusy === 'ai' ? 'Saving…' : 'AI Review'}
         </button>
       </div>
       <button
+        type="button"
         class="btn btn-secondary btn-sm"
         onclick={exportFullCatalogJson}
         disabled={discoveryExportBusy}
       >
         {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
       </button>
-      <button class="btn btn-primary btn-sm" onclick={() => window.print()}>
+      <button type="button" class="btn btn-primary btn-sm" onclick={() => window.print()}>
         Export PDF
       </button>
     </div>
@@ -620,7 +622,7 @@
       >
         <div class="modal-header">
           <h3 id="genomics-guide-title">📖 Genomics &amp; Genetics Guide</h3>
-          <button class="modal-close" bind:this={helpCloseButton} aria-label="Close genetics guide" onclick={closeHelpGuide}>&times;</button>
+          <button type="button" class="modal-close" bind:this={helpCloseButton} aria-label="Close genetics guide" onclick={closeHelpGuide}>&times;</button>
         </div>
         <div class="modal-body help-body">
           <p id="genomics-guide-description" class="sr-only">Plain-language explanations of DNA results, evidence tiers, and the limits of this report.</p>
@@ -667,7 +669,7 @@
           </section>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-accent" onclick={closeHelpGuide}>Got it, thank you!</button>
+          <button type="button" class="btn btn-accent" onclick={closeHelpGuide}>Got it, thank you!</button>
         </div>
       </div>
     </div>

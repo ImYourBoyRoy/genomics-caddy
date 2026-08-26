@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
@@ -28,6 +28,170 @@
     "esr2",
     "pgr"
   ],
+  "intake_schema": {
+    "id": "reproductive_context_intake",
+    "title": "Optional cycle and hormone context",
+    "description": "Use this small, private, self-reported context record to organize cycle timing, symptoms, and exact hormone or contraceptive product details. Leave any field blank when it is not relevant.",
+    "privacy_note": "Stored locally per DNA profile. These values are phenotype and medication context, not genetic evidence, and they do not establish anatomy, identity, pregnancy, hormone levels, a diagnosis, or treatment response.",
+    "groups": [
+      {
+        "id": "cycle_timing_symptoms",
+        "title": "Cycle timing and symptoms",
+        "description": "Prospective timing is more useful than a single retrospective impression. Record symptom-free days as well as difficult days when possible.",
+        "field_ids": [
+          "most_recent_bleeding_start",
+          "typical_cycle_length_days",
+          "typical_bleeding_length_days",
+          "symptom_onset_timing",
+          "symptom_resolution_timing",
+          "mood_behavior_symptoms",
+          "pain_bleeding_headache_symptoms"
+        ]
+      },
+      {
+        "id": "hormone_product_review",
+        "title": "Hormone or contraceptive product review",
+        "description": "Use the package, pharmacy, or prescribing label. Do not guess whether a product contains estrogen, progestin, progesterone, or another active ingredient.",
+        "field_ids": [
+          "hormone_product_name",
+          "active_ingredients",
+          "route_dose_schedule",
+          "treatment_start_date",
+          "treatment_goal",
+          "benefits_noted",
+          "adverse_effects_or_none",
+          "question_or_belief_to_verify"
+        ]
+      },
+      {
+        "id": "clinical_follow_up",
+        "title": "Clinical questions and follow-up",
+        "description": "Capture what should be discussed with a clinician; do not turn a suspected condition into a confirmed diagnosis.",
+        "field_ids": [
+          "clinical_questions_or_findings"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "most_recent_bleeding_start",
+        "label": "First day of most recent bleeding",
+        "input_type": "date",
+        "placeholder": "YYYY-MM-DD",
+        "help": "Optional. Day 1 means the first day of menstrual bleeding when that definition is relevant to the person."
+      },
+      {
+        "id": "typical_cycle_length_days",
+        "label": "Typical cycle length (days)",
+        "input_type": "number",
+        "placeholder": "e.g. 28",
+        "help": "Optional; record an approximate value if cycles are regular enough to estimate."
+      },
+      {
+        "id": "typical_bleeding_length_days",
+        "label": "Typical bleeding length (days)",
+        "input_type": "number",
+        "placeholder": "e.g. 5",
+        "help": "Optional; also note unusual or changing bleeding in the symptom field."
+      },
+      {
+        "id": "symptom_onset_timing",
+        "label": "When symptoms usually begin",
+        "input_type": "text",
+        "placeholder": "e.g. about 5 days before bleeding",
+        "help": "Describe timing relative to bleeding or another event; do not label the cause from DNA."
+      },
+      {
+        "id": "symptom_resolution_timing",
+        "label": "When symptoms usually ease",
+        "input_type": "text",
+        "placeholder": "e.g. within 2 days after bleeding starts",
+        "help": "Include symptom-free days when known."
+      },
+      {
+        "id": "mood_behavior_symptoms",
+        "label": "Mood, behavior, or need-for-space symptoms",
+        "input_type": "textarea",
+        "placeholder": "e.g. irritability, anger, avoidance, need for quiet, anxiety, depression, relationship or work impact",
+        "help": "Describe what is observed and its impact without using the field to diagnose PMDD or a psychiatric condition."
+      },
+      {
+        "id": "pain_bleeding_headache_symptoms",
+        "label": "Pain, bleeding, or headache symptoms",
+        "input_type": "textarea",
+        "placeholder": "e.g. cramps, pelvic pain, heavy bleeding, headache, possible aura, faintness",
+        "help": "Record severity and functional impact when useful; urgent symptoms still need timely care."
+      },
+      {
+        "id": "hormone_product_name",
+        "label": "Exact product name",
+        "input_type": "text",
+        "placeholder": "e.g. product name from package or pharmacy record",
+        "help": "A DNA file cannot identify a medication product."
+      },
+      {
+        "id": "active_ingredients",
+        "label": "Active ingredient(s) exactly as labeled",
+        "input_type": "text",
+        "placeholder": "e.g. norethindrone 0.35 mg; or estradiol / progestin",
+        "help": "This is the key field for distinguishing a product label from a belief about estrogen or progesterone exposure."
+      },
+      {
+        "id": "route_dose_schedule",
+        "label": "Route, dose, and schedule",
+        "input_type": "text",
+        "placeholder": "e.g. oral, one tablet daily; or patch changed weekly",
+        "help": "Include the prescribed schedule; do not change it from a DNA result."
+      },
+      {
+        "id": "treatment_start_date",
+        "label": "Started or changed on",
+        "input_type": "date",
+        "placeholder": "YYYY-MM-DD",
+        "help": "Useful for comparing symptom or bleeding changes before and after a product change."
+      },
+      {
+        "id": "treatment_goal",
+        "label": "Goal for the product",
+        "input_type": "textarea",
+        "placeholder": "e.g. contraception, fewer or lighter periods, pain control, hormone therapy, another clinician-defined goal",
+        "help": "A product can have more than one goal; the goal is user-supplied context."
+      },
+      {
+        "id": "benefits_noted",
+        "label": "Benefits noticed",
+        "input_type": "textarea",
+        "placeholder": "e.g. less bleeding, fewer painful days, no new adverse effects",
+        "help": "Record observed benefits separately from genetic interpretation."
+      },
+      {
+        "id": "adverse_effects_or_none",
+        "label": "Adverse effects or none noticed",
+        "input_type": "textarea",
+        "placeholder": "e.g. headache, spotting, mood change, or none noticed",
+        "help": "No new adverse effects is useful information, but it does not identify the product composition or prove future safety."
+      },
+      {
+        "id": "question_or_belief_to_verify",
+        "label": "Question or belief to verify",
+        "input_type": "textarea",
+        "placeholder": "e.g. I think this is progesterone-only; please verify against the label",
+        "help": "Keep uncertainty visible. The tool should compare this statement with the exact label, not treat it as established fact."
+      },
+      {
+        "id": "clinical_questions_or_findings",
+        "label": "Clinical questions or findings to discuss",
+        "input_type": "textarea",
+        "placeholder": "e.g. heavy bleeding, suspected adenomyosis, CBC/ferritin, ultrasound, migraine assessment",
+        "help": "Use this to prepare for clinical care; a consumer DNA file cannot diagnose or exclude adenomyosis."
+      }
+    ],
+    "do_not_infer": [
+      "Do not infer current estrogen, progesterone, progestin, allopregnanolone, ovulation, pregnancy, or medication response from DNA or from a symptom pattern.",
+      "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
+      "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker."
+    ]
+  },
   "context_options": [
     {
       "id": "menstrual_cycle",

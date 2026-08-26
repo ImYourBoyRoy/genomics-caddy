@@ -55,7 +55,7 @@
     foundMarkersCount,
     totalMarkersChecked,
     reportError,
-    personalSafetyContext,
+    personalSafetyContext = $bindable(),
     highlightRsid = "",
     onExploreResearch,
     onNavigateToVariant,
@@ -488,7 +488,7 @@
     <DashboardSummaryPanel
       report={generatedReport}
       sampleId={selectedSample.id}
-      {personalSafetyContext}
+      bind:personalSafetyContext
       bind:reproductiveContext
       onJumpToMarker={handleJumpToMarker}
     />

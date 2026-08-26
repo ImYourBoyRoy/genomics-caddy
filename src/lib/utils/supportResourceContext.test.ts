@@ -29,6 +29,8 @@ describe('support resource context', () => {
     expect(context.cycle_support.context_options.some((option) => option.id === 'menstrual_cycle')).toBe(true);
     expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
+    expect(context.cycle_support.intake_schema.fields.some((field) => field.id === 'active_ingredients')).toBe(true);
+    expect(context.cycle_support.intake_schema.do_not_infer.join(' ')).toContain('adenomyosis');
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
     const pmddDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms');

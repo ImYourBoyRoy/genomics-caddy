@@ -7,12 +7,15 @@
  * cannot silently follow a different person's sample.
  */
 
+import { normalizeReproductiveIntake, type ReproductiveIntakeValues } from './reproductiveIntake';
+
 export interface PersonalSafetyContext {
   medications: string[];
   supplements: string[];
   allergies: string[];
   symptoms: string[];
   labObservations: string[];
+  reproductiveIntake?: ReproductiveIntakeValues;
 }
 
 export const EMPTY_PERSONAL_SAFETY_CONTEXT: PersonalSafetyContext = {
@@ -66,12 +69,14 @@ export function normalizePersonalSafetyContext(value: unknown): PersonalSafetyCo
     return [];
   };
 
+  const reproductiveIntake = normalizeReproductiveIntake(source.reproductiveIntake);
   return {
     medications: list('medications'),
     supplements: list('supplements'),
     allergies: list('allergies'),
     symptoms: list('symptoms'),
     labObservations: list('labObservations'),
+    ...(Object.keys(reproductiveIntake).length > 0 ? { reproductiveIntake } : {}),
   };
 }
 

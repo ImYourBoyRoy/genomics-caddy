@@ -106,6 +106,12 @@ describe('AI marker payload claim boundaries', () => {
       allergies: ['fish'],
       symptoms: ['cycle-linked mood changes'],
       labObservations: ['ferritin 18 ng/mL'],
+      reproductiveIntake: {
+        symptom_onset_timing: 'about 5 days before bleeding',
+        mood_behavior_symptoms: 'needs quiet and becomes avoidant',
+        active_ingredients: 'norethindrone 0.35 mg',
+        question_or_belief_to_verify: 'I think this is progesterone-only; verify the label',
+      },
     };
     const prompt = buildSystemPrompt({
       selectedSample: { id: 7, name: 'Example', genetic_sex: 'unknown' } as unknown as GenomeSample,
@@ -134,6 +140,9 @@ describe('AI marker payload claim boundaries', () => {
 
     expect(prompt).toContain('personal_safety_context');
     expect(prompt).toContain('norethindrone');
+    expect(prompt).toContain('active_ingredients');
+    expect(prompt).toContain('I think this is progesterone-only');
+    expect(prompt).toContain('reproductive_context_intake');
     expect(prompt).toContain('self-reported context for this DNA profile, not genotype evidence');
   });
 });

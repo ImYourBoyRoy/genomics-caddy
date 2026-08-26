@@ -657,7 +657,7 @@
               {foundMarkersCount}
               {totalMarkersChecked}
               {reportError}
-              {personalSafetyContext}
+              bind:personalSafetyContext
               {highlightRsid}
               onExploreResearch={handleExploreResearch}
               onNavigateToVariant={navigateToVariant}

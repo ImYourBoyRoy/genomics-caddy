@@ -20,12 +20,21 @@ describe('personal safety context', () => {
       allergies: null,
       symptoms: 42,
       labObservations: ['ferritin 18 ng/mL'],
+      reproductiveIntake: {
+        active_ingredients: ' norethindrone  0.35 mg ',
+        question_or_belief_to_verify: 'I think this is progesterone-only',
+        unknown_field: 'drop me',
+      },
     })).toEqual({
       medications: ['norethindrone', 'levothyroxine'],
       supplements: ['magnesium'],
       allergies: [],
       symptoms: [],
       labObservations: ['ferritin 18 ng/mL'],
+      reproductiveIntake: {
+        active_ingredients: 'norethindrone 0.35 mg',
+        question_or_belief_to_verify: 'I think this is progesterone-only',
+      },
     });
   });
 

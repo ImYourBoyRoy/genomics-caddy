@@ -262,6 +262,29 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('contraceptive product');
   });
 
+  it('uses structured ingredient context for label review without inferring contraception', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        reproductiveIntake: {
+          active_ingredients: 'norethindrone 0.35 mg',
+          question_or_belief_to_verify: 'I think this is progesterone-only',
+        },
+      },
+    });
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(medicationText).toContain('current hormone-therapy product');
+    expect(medicationText).toContain('active ingredients');
+    expect(medicationText).not.toContain('contraceptive product');
+    expect(plan.personalContext.reproductiveIntake?.active_ingredients).toBe('norethindrone 0.35 mg');
+    expect(plan.personalContext.priorityNotes.join(' ')).toContain('Structured cycle and hormone details');
+  });
+
   it('separates general hormone therapy from contraceptive composition warnings', () => {
     const plan = deriveActionablePlan(report([]), {
       reproductiveContext: 'hormone_therapy_context',

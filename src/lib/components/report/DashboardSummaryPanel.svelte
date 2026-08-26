@@ -5,7 +5,9 @@
   import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
   import { saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
-  import type { PersonalSafetyContext } from '../../utils/personalSafetyContext';
+  import ReproductiveContextEditor from '../ai/ReproductiveContextEditor.svelte';
+  import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
+  import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
 
   interface Props {
     report: GeneratedReport;
@@ -20,7 +22,7 @@
     sampleId,
     onJumpToMarker,
     reproductiveContext = $bindable(''),
-    personalSafetyContext,
+    personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
   }: Props = $props();
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
@@ -147,6 +149,8 @@
     </select>
   </div>
 
+  <ReproductiveContextEditor bind:personalSafetyContext sampleId={sampleId} />
+
   {#if plan.personalContext.priorityNotes.length > 0}
     <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">
       <div class="context-selector-copy">
@@ -172,6 +176,9 @@
         {#if plan.personalContext.labObservations.length > 0}
           <div><strong>Recent labs / findings</strong><span>{plan.personalContext.labObservations.join(' · ')}</span></div>
         {/if}
+        {#each populatedReproductiveIntake(plan.personalContext.reproductiveIntake) as item (item.field.id)}
+          <div><strong>{item.field.label}</strong><span>{item.value}</span></div>
+        {/each}
       </div>
     </div>
   {/if}

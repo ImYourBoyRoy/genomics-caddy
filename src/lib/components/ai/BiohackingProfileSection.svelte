@@ -5,6 +5,7 @@
     savePersonalSafetyContext,
     type PersonalSafetyContext,
   } from '../../utils/personalSafetyContext';
+  import ReproductiveContextEditor from './ReproductiveContextEditor.svelte';
 
   interface UserBiohackingProfile {
     goals: string;
@@ -26,17 +27,19 @@
     sampleId?: number;
   }
 
+  type ContextListField = 'medications' | 'supplements' | 'allergies' | 'symptoms' | 'labObservations';
+
   let {
     userProfile = $bindable(),
     personalSafetyContext = $bindable(),
     sampleId,
   }: Props = $props();
 
-  function contextText(field: keyof PersonalSafetyContext): string {
+  function contextText(field: ContextListField): string {
     return personalSafetyContext[field].join('\n');
   }
 
-  function updateContextList(field: keyof PersonalSafetyContext, event: Event): void {
+  function updateContextList(field: ContextListField, event: Event): void {
     const value = (event.currentTarget as HTMLTextAreaElement).value;
     personalSafetyContext[field] = parseContextList(value);
     savePersonalSafetyContext(sampleId, personalSafetyContext);
@@ -67,6 +70,9 @@
     <textarea id="profile-reproductive-context" bind:value={userProfile.reproductiveHormoneContext} placeholder="e.g. cycle timing, contraception name/ingredients, menopause, pregnancy/postpartum, hormone therapy, none/unknown..." class="profile-textarea"></textarea>
     <small>Exact medication names and active ingredients are more useful than a genetic-sex label.</small>
   </div>
+
+  <ReproductiveContextEditor bind:personalSafetyContext {sampleId} />
+
   <div class="input-row">
     <label for="profile-diet">Average Diet</label>
     <textarea id="profile-diet" bind:value={userProfile.diet} placeholder="e.g. low carb, high protein, vegetarian, average diet..." class="profile-textarea"></textarea>

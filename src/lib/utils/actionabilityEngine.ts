@@ -18,6 +18,7 @@ import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
 import type { PersonalSafetyContext } from './personalSafetyContext';
+import type { ReproductiveIntakeValues } from './reproductiveIntake';
 
 export interface TopFinding {
   rsid: string;
@@ -84,6 +85,7 @@ export interface PersonalContextGuidance {
   allergies: string[];
   symptoms: string[];
   labObservations: string[];
+  reproductiveIntake?: ReproductiveIntakeValues;
   priorityNotes: string[];
 }
 
@@ -336,10 +338,19 @@ function deriveMedicationSafety(
   reproductiveContext?: string,
   personalSafetyContext?: PersonalSafetyContext,
 ): MedicationSafetyGuidance {
+  const structuredMedicationNames = Object.entries(personalSafetyContext?.reproductiveIntake || {})
+    .filter(([fieldId]) => [
+      'hormone_product_name',
+      'active_ingredients',
+      'route_dose_schedule',
+      'treatment_goal',
+    ].includes(fieldId))
+    .map(([, value]) => value);
   const context = [
     ...sectionNames,
     ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
     ...(personalSafetyContext?.medications || []),
+    ...structuredMedicationNames,
   ].join(' ').toLowerCase();
   const pgxContext = safetyGuardrails.medication_context.pgx_context_keywords.some((keyword) =>
     context.includes(String(keyword).toLowerCase())
@@ -353,7 +364,10 @@ function deriveMedicationSafety(
   // A user-supplied hormonal medication name is an explicit medication
   // context signal. It does not establish anatomy, cycle status, or hormone
   // levels; it only makes the composition/label guardrail relevant.
-  const medicationNames = personalSafetyContext?.medications || [];
+  const medicationNames = [
+    ...(personalSafetyContext?.medications || []),
+    ...structuredMedicationNames,
+  ];
   const medicationMatchesKeywords = (keywords: readonly string[]) => medicationNames.some((name) => {
     const lowerName = String(name).toLowerCase();
     return keywords.some((keyword) => lowerName.includes(String(keyword).toLowerCase()));
@@ -445,6 +459,11 @@ function derivePersonalContextGuidance(
       'User-recorded labs and clinician findings should be interpreted with dates, units, reference ranges, and clinical context; measured phenotype outranks a generic SNP prompt.'
     );
   }
+  if (context.reproductiveIntake && Object.keys(context.reproductiveIntake).length > 0) {
+    priorityNotes.push(
+      'Structured cycle and hormone details are self-reported context. Verify product composition, dose, and schedule from the exact label; timing and symptoms do not establish hormone levels or a diagnosis.'
+    );
+  }
 
   return {
     medications: [...context.medications],
@@ -452,6 +471,7 @@ function derivePersonalContextGuidance(
     allergies: [...context.allergies],
     symptoms: [...context.symptoms],
     labObservations: [...context.labObservations],
+    ...(context.reproductiveIntake ? { reproductiveIntake: { ...context.reproductiveIntake } } : {}),
     priorityNotes,
   };
 }

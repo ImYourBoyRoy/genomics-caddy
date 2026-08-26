@@ -137,7 +137,7 @@ const supportContracts = {
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
-  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts'] },
+  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts', 'intake_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },
@@ -342,6 +342,50 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (typeof resource.date_warning !== 'string' || resource.date_warning.trim() === '') {
       errors.push('ai_prompt_policy.json: date_warning must be a non-empty string');
+    }
+  }
+  if (resourceId === 'cycle_support_guidance') {
+    const schema = resource.intake_schema;
+    const fields = schema?.fields || [];
+    const fieldIds = new Set();
+    const allowedInputTypes = new Set(['date', 'number', 'text', 'textarea']);
+    for (const [index, field] of fields.entries()) {
+      const location = `cycle_support_guidance.json intake field ${index + 1}`;
+      for (const key of ['id', 'label', 'input_type', 'help']) {
+        if (typeof field[key] !== 'string' || field[key].trim() === '') {
+          errors.push(`${location}: ${key} must be a non-empty string`);
+        }
+      }
+      if (!allowedInputTypes.has(field.input_type)) {
+        errors.push(`${location}: unsupported input_type ${field.input_type}`);
+      }
+      if (fieldIds.has(field.id)) errors.push(`${location}: duplicate id ${field.id}`);
+      fieldIds.add(field.id);
+    }
+    const groupIds = new Set();
+    for (const [index, group] of (schema?.groups || []).entries()) {
+      const location = `cycle_support_guidance.json intake group ${index + 1}`;
+      for (const key of ['id', 'title', 'description']) {
+        if (typeof group[key] !== 'string' || group[key].trim() === '') {
+          errors.push(`${location}: ${key} must be a non-empty string`);
+        }
+      }
+      if (!isStringArray(group.field_ids) || group.field_ids.length === 0) {
+        errors.push(`${location}: field_ids must be a non-empty string array`);
+      }
+      for (const fieldId of group.field_ids || []) {
+        if (!fieldIds.has(fieldId)) errors.push(`${location}: field_ids references unknown field ${fieldId}`);
+      }
+      if (groupIds.has(group.id)) errors.push(`${location}: duplicate id ${group.id}`);
+      groupIds.add(group.id);
+    }
+    for (const key of ['id', 'title', 'description', 'privacy_note']) {
+      if (typeof schema?.[key] !== 'string' || schema[key].trim() === '') {
+        errors.push(`cycle_support_guidance.json intake_schema.${key} must be a non-empty string`);
+      }
+    }
+    if (!isStringArray(schema?.do_not_infer) || schema.do_not_infer.length === 0) {
+      errors.push('cycle_support_guidance.json intake_schema.do_not_infer must be a non-empty string array');
     }
   }
   if (resourceId === 'layperson_translations') {

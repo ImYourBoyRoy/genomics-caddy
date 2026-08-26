@@ -2,6 +2,7 @@
 import type { GenomeSample } from "../types/genomics";
 import { parseThinking } from "./chatParser";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
+import { populatedReproductiveIntake } from "./reproductiveIntake";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -79,6 +80,14 @@ export function buildClinicalHandoffMarkdown(
     md += `* **Allergies / intolerances:** ${personalSafetyContext.allergies.join("; ") || "None recorded"}\n`;
     md += `* **Symptoms and timing:** ${personalSafetyContext.symptoms.join("; ") || "None recorded"}\n`;
     md += `* **Recent labs / clinician findings:** ${personalSafetyContext.labObservations.join("; ") || "None recorded"}\n`;
+    const reproductiveIntake = populatedReproductiveIntake(personalSafetyContext.reproductiveIntake);
+    if (reproductiveIntake.length > 0) {
+      md += `### Structured cycle and hormone context (self-reported)\n`;
+      for (const { field, value } of reproductiveIntake) {
+        md += `* **${field.label}:** ${value}\n`;
+      }
+      md += `*This context is not genetic evidence and does not establish a diagnosis, hormone level, medication composition, or treatment recommendation.*\n`;
+    }
     md += `*This context is not genetic evidence and does not establish a diagnosis or medication recommendation.*\n\n`;
   }
   md += `---\n\n`;

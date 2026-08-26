@@ -80,6 +80,7 @@ export interface SupportResourceContext {
     principles: typeof cycleSupport.principles;
     context_options: typeof cycleSupport.context_options;
     marker_contexts: typeof cycleSupport.marker_contexts;
+    intake_schema: typeof cycleSupport.intake_schema;
     selected_context_id: string | null;
     domains: typeof cycleSupport.domains;
     relevant_domains: typeof cycleSupport.domains;
@@ -286,6 +287,7 @@ export function buildSupportResourceContext({
       principles: cycleSupport.principles,
       context_options: cycleSupport.context_options,
       marker_contexts: cycleSupport.marker_contexts,
+      intake_schema: cycleSupport.intake_schema,
       selected_context_id: selectedReproductiveContextOption(reproductiveContext)?.id || null,
       domains: cycleSupport.domains,
       relevant_domains: relevantCycleDomains,

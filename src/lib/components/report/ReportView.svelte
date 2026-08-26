@@ -11,7 +11,7 @@
   import PanelLoadingState from '../common/loading/PanelLoadingState.svelte';
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getSeverityInfo } from '../../utils/evidence';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { browser } from '$app/environment';
   import {
     loadReproductiveContext,
@@ -82,6 +82,9 @@
   let presentationMode = $state<PresentationMode>(DEFAULT_PRESENTATION_MODE);
   let loadedPresentationModeKey = $state("");
   let showHelpGuide = $state(false);
+  let helpDialogElement = $state<HTMLDivElement | undefined>(undefined);
+  let helpCloseButton = $state<HTMLButtonElement | undefined>(undefined);
+  let previousHelpFocus: HTMLElement | null = null;
   let collapsedSections = $state<Record<string, boolean>>({});
   let reproductiveContext = $state('');
   let loadedReproductiveContextKey = $state('');
@@ -103,6 +106,52 @@
     presentationMode = mode;
     if (browser && selectedSample?.id) {
       writePresentationMode(localStorage, presentationModeStorageKey(selectedSample.id), mode);
+    }
+  }
+
+  function openHelpGuide() {
+    previousHelpFocus = browser && document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    showHelpGuide = true;
+    void tick().then(() => helpCloseButton?.focus());
+  }
+
+  function closeHelpGuide() {
+    showHelpGuide = false;
+    const focusTarget = previousHelpFocus;
+    previousHelpFocus = null;
+    void tick().then(() => focusTarget?.focus());
+  }
+
+  function handleHelpKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeHelpGuide();
+      return;
+    }
+    if (event.key !== 'Tab' || !helpDialogElement) return;
+
+    const focusable = Array.from(
+      helpDialogElement.querySelectorAll<HTMLElement>(
+        'button, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((element) => !element.hasAttribute('aria-hidden') && element.offsetParent !== null);
+
+    if (focusable.length === 0) {
+      event.preventDefault();
+      helpDialogElement.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 
@@ -526,7 +575,9 @@
       </button>
       <button
         class="view-mode-btn guide-mode-btn"
-        onclick={() => showHelpGuide = true}
+        onclick={openHelpGuide}
+        aria-haspopup="dialog"
+        aria-expanded={showHelpGuide}
       >
         📖 Guide
       </button>
@@ -548,17 +599,28 @@
   </div>
 
   {#if showHelpGuide}
-    <div class="modal-backdrop help-backdrop" onclick={() => showHelpGuide = false} role="presentation">
-      <div class="modal-content help-content" onclick={(e) => e.stopPropagation()} role="presentation">
+    <div class="modal-backdrop help-backdrop" onclick={closeHelpGuide} role="presentation">
+      <div
+        class="modal-content help-content"
+        bind:this={helpDialogElement}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="genomics-guide-title"
+        aria-describedby="genomics-guide-description"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={handleHelpKeydown}
+      >
         <div class="modal-header">
-          <h3>📖 Genomics &amp; Genetics Guide</h3>
-          <button class="modal-close" onclick={() => showHelpGuide = false}>&times;</button>
+          <h3 id="genomics-guide-title">📖 Genomics &amp; Genetics Guide</h3>
+          <button class="modal-close" bind:this={helpCloseButton} aria-label="Close genetics guide" onclick={closeHelpGuide}>&times;</button>
         </div>
         <div class="modal-body help-body">
+          <p id="genomics-guide-description" class="sr-only">Plain-language explanations of DNA results, evidence tiers, and the limits of this report.</p>
           <section class="help-section">
             <h5>🧬 What are DNA Letters and Genotypes?</h5>
             <p>
-              Your DNA contains genetic instruction markers called **SNPs** (Single Nucleotide Polymorphisms). For each marker, you inherit two DNA letters (one from your mother, one from your father). This pair of letters is called your **Genotype** (e.g. <code>AG</code> or <code>GG</code>).
+              Your DNA contains genetic instruction markers called <strong>SNPs</strong> (Single Nucleotide Polymorphisms). For each marker, you inherit two DNA letters (one from each biological parent). This pair of letters is called your <strong>genotype</strong> (e.g. <code>AG</code> or <code>GG</code>).
             </p>
           </section>
 
@@ -598,7 +660,7 @@
           </section>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-accent" onclick={() => showHelpGuide = false}>Got it, thank you!</button>
+          <button class="btn btn-accent" onclick={closeHelpGuide}>Got it, thank you!</button>
         </div>
       </div>
     </div>
@@ -636,7 +698,8 @@
   }
 
   .help-content {
-    background: rgba(18, 20, 32, 0.96);
+    background: var(--surface-raised);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
     border-radius: 12px;
@@ -654,7 +717,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    color: #cbd5e1;
+    color: var(--text-primary);
     font-size: 0.9rem;
     line-height: 1.6;
     text-align: left;
@@ -671,7 +734,7 @@
 
   .help-section p {
     margin: 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
 
   .help-section ul {
@@ -680,26 +743,26 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    color: #94a3b8;
+    color: var(--text-secondary);
   }
 
   .warning-section {
-    background: rgba(239, 68, 68, 0.08);
+    background: color-mix(in srgb, var(--danger) 10%, var(--surface-raised));
     border-left: 4px solid var(--danger);
     padding: 12px 16px;
     border-radius: 6px;
   }
 
   .warning-section h5 {
-    color: #f87171;
+    color: var(--danger);
   }
 
   .warning-section p {
-    color: #cbd5e1;
+    color: var(--text-primary);
   }
 
   .warning-section em {
-    color: #fca5a5;
+    color: var(--danger);
     font-weight: 600;
   }
 
@@ -710,7 +773,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--surface-subtle);
   }
 
   .modal-header h3 {
@@ -720,7 +783,9 @@
   }
 
   .modal-close {
-    background: none;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
     border: none;
     color: var(--text-secondary);
     font-size: 1.5rem;
@@ -734,12 +799,29 @@
     color: var(--danger);
   }
 
+  .modal-close:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   .modal-footer {
     padding: 16px 20px;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--surface-subtle);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 </style>

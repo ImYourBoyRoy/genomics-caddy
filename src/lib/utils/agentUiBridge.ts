@@ -69,11 +69,38 @@ function collectVisibleText(limit = 40): string[] {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode();
   while (node && out.length < limit) {
+    if (!isPublicUiTextNode(node)) {
+      node = walker.nextNode();
+      continue;
+    }
     const text = (node.textContent || '').replace(/\s+/g, ' ').trim();
     if (text.length >= 3) out.push(text.slice(0, 120));
     node = walker.nextNode();
   }
   return out;
+}
+
+/**
+ * Keep automation output useful without exposing raw genetic values.
+ * Technical disclosures and clinical finding rows can contain genotype calls,
+ * including when a <details> element is collapsed or visually clipped.
+ */
+const PRIVATE_UI_SELECTORS = [
+  '.genotype-val',
+  '.genotype-tag',
+  '.technical-details',
+  '.clinical-table-wrap',
+  '[data-private-genetic-value="true"]',
+  '[data-sensitive-genotype="true"]',
+].join(', ');
+
+function isPublicUiTextNode(node: Node): boolean {
+  const element = node.parentElement;
+  if (!element || element.closest(PRIVATE_UI_SELECTORS)) return false;
+  if (element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
+
+  const style = getComputedStyle(element);
+  return style.display !== 'none' && style.visibility !== 'hidden';
 }
 
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
@@ -86,7 +113,9 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   // Prefer enabled matches so automation does not "click" disabled Start/Cancel shells.
   const ranked = candidates
     .map((el) => {
-      const visibleLabel = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+      const visibleLabel = el.closest(PRIVATE_UI_SELECTORS)
+        ? ''
+        : (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
       const accessibleLabel = el.getAttribute('aria-label')?.replace(/\s+/g, ' ').trim() || '';
       const label = [visibleLabel, accessibleLabel]
         .filter(Boolean)
@@ -178,6 +207,10 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
       while (node) {
+        if (!isPublicUiTextNode(node)) {
+          node = walker.nextNode();
+          continue;
+        }
         const value = (node.textContent || '').replace(/\s+/g, ' ').trim();
         if (value.length >= 2 && value.toLowerCase().includes(needle)) {
           hits.push(value.slice(0, 160));

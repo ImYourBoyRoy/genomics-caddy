@@ -43,6 +43,7 @@
     "diet_pattern_profiles.json",
     "meal_planning_rules.json",
     "food_requirement_prompts.json",
+    "supplement_safety.json",
     "user_diet_profile_schema.json"
   ],
   "food_decision_layer": {
@@ -61,5 +62,13 @@
     "food_groups_count": 33,
     "diet_profiles_count": 16,
     "note": "Food requirement logic is a support layer, not a genetic marker pack; manifest pack count is unchanged."
+  },
+  "supplement_safety_layer": {
+    "added": true,
+    "new_support_files": [
+      "supplement_safety.json"
+    ],
+    "rules_count": 7,
+    "note": "Supplement guidance is a food-first, medication-aware safety layer; genotype can prompt a question but cannot establish need, dose, or safety."
   }
 }

@@ -44,6 +44,10 @@
           "name": "Serum Folate & Vitamin B12",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "cdc_mthfr_folic_acid",
+        "nih_ods_folate"
       ]
     },
     {
@@ -118,6 +122,9 @@
           "name": "Omega-3 Index (red blood cell membrane)",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "nih_ods_omega3"
       ]
     },
     {
@@ -155,6 +162,10 @@
           "name": "Total Iron Binding Capacity (TIBC)",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "gene_reviews_hemochromatosis",
+        "nih_ods_iron"
       ]
     },
     {
@@ -330,8 +341,7 @@
       ],
       "avoid": [
         "Excessive caffeine",
-        "Chronic sleep deprivation",
-        "High-stress environments"
+        "Chronic sleep deprivation"
       ],
       "supplements": [],
       "lab_tests": [
@@ -339,6 +349,9 @@
           "name": "Salivary Cortisol Rhythm (4-point)",
           "urgency": "consider"
         }
+      ],
+      "sources": [
+        "nih_ods_magnesium"
       ]
     },
     {
@@ -359,7 +372,10 @@
         "Caffeine after 12:00 PM",
         "High-dose caffeine stimulants"
       ],
-      "notes": "Slow caffeine clearance increases arterial stiffness and cardiovascular risk when consuming >200mg daily"
+      "notes": "Caffeine response varies. Use sleep, anxiety, blood-pressure, pregnancy, medication, and personal-response context; this marker does not establish a fixed personal limit.",
+      "sources": [
+        "nih_caffeine_general_context"
+      ]
     },
     {
       "id": "nos3_nitric_oxide",
@@ -401,7 +417,7 @@
         "nutrients"
       ],
       "favor": [
-        "Brazil nuts (1-2 daily)",
+        "Selenium-containing foods in ordinary portions (Brazil nuts vary widely; avoid stacking sources)",
         "Seafood",
         "Sunflower seeds"
       ],
@@ -411,6 +427,9 @@
           "name": "Selenium level (blood)",
           "urgency": "routine"
         }
+      ],
+      "sources": [
+        "nih_ods_selenium"
       ]
     },
     {

@@ -187,6 +187,30 @@
       "conflict_of_interest": "U.S. NIH public health resource",
       "notes": "Use for ALA/EPA/DHA distinctions, fish/algal sources and omega-3 supplement caveats."
     },
+    "nih_ods_selenium": {
+      "name": "NIH Office of Dietary Supplements Selenium Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Selenium-Consumer/",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH nutrient safety fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for selenium food sources, Brazil-nut variability, upper-limit and toxicity guardrails."
+    },
+    "nih_ods_magnesium": {
+      "name": "NIH Office of Dietary Supplements Magnesium Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH nutrient and medication-interaction fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for food-first magnesium context, supplemental upper-limit framing, kidney caution, and medication interactions."
+    },
+    "nih_ods_iron": {
+      "name": "NIH Office of Dietary Supplements Iron Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH nutrient fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for iron food/supplement context and deficiency/excess assessment; genotype does not replace iron studies."
+    },
     "nih_ods_folate": {
       "name": "NIH Office of Dietary Supplements Folate Fact Sheet",
       "url": "https://ods.od.nih.gov/factsheets/Folate-HealthProfessional/",
@@ -274,6 +298,52 @@
       "evidence_type": "CDC physical-activity safety education",
       "conflict_of_interest": "U.S. CDC public health resource",
       "notes": "Use as a general activity safety guardrail; raw DNA never clears a user to ignore symptoms."
+    },
+    "gene_reviews_hemochromatosis": {
+      "name": "GeneReviews: HFE-Related Hemochromatosis",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1440/",
+      "accessed": "2026-08-25",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for incomplete penetrance, sex/life-stage differences, and iron-study context. A common HFE result is not a diagnosis and does not establish iron excess."
+    },
+    "nih_caffeine_general_context": {
+      "name": "FDA Consumer Caffeine Guidance",
+      "url": "https://www.fda.gov/consumers/consumer-updates/spilling-beans-how-much-caffeine-too-much",
+      "accessed": "2026-08-25",
+      "evidence_type": "FDA consumer health guidance",
+      "conflict_of_interest": "U.S. Food and Drug Administration public health resource",
+      "notes": "Use for general caffeine context and the need to account for individual sensitivity, health conditions, medicines, and pregnancy; do not convert a CYP1A2 signal into a fixed personal limit."
+    },
+    "user_declared_values_required": {
+      "name": "DNA Tools support policy: user-declared values required",
+      "evidence_type": "Local support-engine policy",
+      "conflict_of_interest": "Project safety contract; not an external clinical source",
+      "notes": "Used when a recommendation depends on a value the DNA file cannot provide, such as current medication, diet, allergy, pregnancy/lactation, or personal goal."
+    },
+    "clinical_confirmation_required": {
+      "name": "DNA Tools support policy: clinical confirmation required",
+      "evidence_type": "Local support-engine policy",
+      "conflict_of_interest": "Project safety contract; not an external clinical source",
+      "notes": "Used to prevent a raw-array observation from being presented as a diagnosis, treatment instruction, or medication change."
+    },
+    "phenotype_required": {
+      "name": "DNA Tools support policy: phenotype required",
+      "evidence_type": "Local support-engine policy",
+      "conflict_of_interest": "Project safety contract; not an external clinical source",
+      "notes": "Used when symptoms, timing, exposure, family history, or other observed phenotype is required to interpret a genetic signal."
+    },
+    "lab_confirmation_required": {
+      "name": "DNA Tools support policy: laboratory confirmation required",
+      "evidence_type": "Local support-engine policy",
+      "conflict_of_interest": "Project safety contract; not an external clinical source",
+      "notes": "Used when an actionable question depends on a laboratory result rather than genotype alone."
+    },
+    "safety_guardrail": {
+      "name": "DNA Tools support policy: safety guardrail",
+      "evidence_type": "Local support-engine policy",
+      "conflict_of_interest": "Project safety contract; not an external clinical source",
+      "notes": "Used for stop, avoid, escalation, interaction, and uncertainty language that must remain visible even when the genetic signal is weak or incomplete."
     }
   }
 }

@@ -14,6 +14,7 @@ import type { GeneratedReport, EvaluatedMarker, SeverityClass } from '../types/g
 import guidanceDoc from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
+import supplementSafety from '../marker-packs/supplement_safety.json';
 
 export interface TopFinding {
   rsid: string;
@@ -64,6 +65,11 @@ export interface MedicationSafetyGuidance {
   askFor: string[];
 }
 
+export interface SupplementSafetyGuidance {
+  principles: typeof supplementSafety.principles;
+  relevantRules: typeof supplementSafety.rules;
+}
+
 export interface ActionablePlan {
   topFindings: TopFinding[];
   diet: DietaryGuidance;
@@ -72,6 +78,7 @@ export interface ActionablePlan {
   labGroups: LabTestGroup[];
   activity: ActivityGuidance;
   medication: MedicationSafetyGuidance;
+  supplementSafety: SupplementSafetyGuidance;
   /** Guardrails shown with every generated actionability plan. */
   safetyNotes: string[];
 }
@@ -386,6 +393,19 @@ function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string
   };
 }
 
+function selectSupplementSafetyRules(
+  markers: EvaluatedMarker[],
+  supplementNames: string[]
+): typeof supplementSafety.rules {
+  const markerGenes = new Set(markers.flatMap((marker) => marker.gene.split(/[\s/]+/).map((gene) => gene.toLowerCase())));
+  const supplementContext = supplementNames.join(' ').toLowerCase();
+  return supplementSafety.rules.filter((rule) => {
+    const geneMatch = rule.signal_genes.some((gene) => markerGenes.has(gene.toLowerCase()));
+    const termMatch = rule.match_terms.some((term) => supplementContext.includes(term.toLowerCase()));
+    return geneMatch || termMatch;
+  });
+}
+
 export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const topFindings: TopFinding[] = [];
   const favorSet = new Set<string>();
@@ -566,6 +586,10 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const relevantActivityDomains = activityGuardrails.domains.filter((domain) =>
     activityContextMatches(domain, markerValues, sectionNames)
   );
+  const supplementSafetyRules = selectSupplementSafetyRules(
+    markerValues,
+    supplements.map((item) => item.name)
+  );
 
   return {
     topFindings,
@@ -583,6 +607,10 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
       relevantDomains: relevantActivityDomains,
     },
     medication: deriveMedicationSafety(markerValues, sectionNames),
+    supplementSafety: {
+      principles: supplementSafety.principles,
+      relevantRules: supplementSafetyRules,
+    },
     safetyNotes: Array.from(safetyNotes),
   };
 }

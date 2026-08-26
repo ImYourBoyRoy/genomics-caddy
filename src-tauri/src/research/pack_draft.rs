@@ -57,6 +57,7 @@ static PROTECTED_PACK_IDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         "food_nutrient_matrix",
         "dietary_requirements",
         "diet_pattern_profiles",
+        "supplement_safety",
         // Legacy draft target — keep protected so old UI cannot pollute it into curated space.
         "research_candidates",
     ])

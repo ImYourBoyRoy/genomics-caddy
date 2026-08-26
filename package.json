@@ -20,6 +20,7 @@
     "clean:fresh": "npm run clean:deep && npm install",
     "test": "vitest run",
     "validate:packs": "node ./scripts/validate_marker_packs.mjs",
+    "audit:resources": "node ./scripts/audit_resource_quality.mjs",
     "audit:dna-fixtures": "python3 ./scripts/audit_dna_fixtures.py",
     "test:watch": "vitest",
     "smoke": "python scripts/smoke_test.py",

@@ -190,7 +190,7 @@
       {/if}
 
       <!-- Panel 3: Supplements to Discuss -->
-      {#if plan.supplements.length > 0}
+      {#if plan.supplements.length > 0 || plan.supplementSafety.relevantRules.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
           <div class="card-header" onclick={() => toggle('supplements')} role="button" tabindex="0" onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle('supplements'))}>
             <h3>💊 Supplements to Discuss</h3>
@@ -199,14 +199,37 @@
           {#if !collapsed.supplements}
             <div class="card-body">
               <p class="section-hint">Every supplement item is a discussion prompt, not a prescription. Check medications, pregnancy/lactation status, kidney/liver health, and labs before starting anything.</p>
-              <div class="supplements-list">
-                {#each plan.supplements as s (`${s.name}:${s.reason}`)}
-                  <div class="supplement-item">
-                    <span class="supp-name">{s.name}</span>
-                    <span class="supp-reason">{s.reason}</span>
-                  </div>
-                {/each}
-              </div>
+              {#if plan.supplements.length > 0}
+                <div class="supplements-list">
+                  {#each plan.supplements as s (`${s.name}:${s.reason}`)}
+                    <div class="supplement-item">
+                      <span class="supp-name">{s.name}</span>
+                      <span class="supp-reason">{s.reason}</span>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+              {#if plan.supplementSafety.relevantRules.length > 0}
+                <div class="supplement-safety">
+                  <strong>Safety checks before any supplement</strong>
+                  <ul class="guardrail-list">
+                    {#each plan.supplementSafety.principles as principle (principle)}<li>{principle}</li>{/each}
+                  </ul>
+                  {#each plan.supplementSafety.relevantRules as rule (rule.id)}
+                    <div class="supplement-safety-rule">
+                      <strong>{rule.label}</strong>
+                      {#if rule.avoid?.length}
+                        <ul class="guardrail-list">
+                          {#each rule.avoid as item (item)}<li>{item}</li>{/each}
+                        </ul>
+                      {/if}
+                      {#if rule.confirm_with?.length}
+                        <span class="supp-reason">Confirm with: {rule.confirm_with.join('; ')}</span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/if}
         </div>
@@ -734,6 +757,19 @@
     font-size: 0.68rem;
     opacity: 0.75;
     margin-top: 0.1rem;
+  }
+  .supplement-safety {
+    margin-top: 0.85rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .supplement-safety-rule {
+    margin-top: 0.65rem;
+    padding: 0.45rem 0.55rem;
+    border-left: 2px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.04);
+    border-radius: 4px;
+    font-size: 0.72rem;
   }
 
   .guardrail-list {

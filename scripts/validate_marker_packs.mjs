@@ -123,6 +123,7 @@ const supportContracts = {
   phenotype_prompts: { arrays: ['domains'] },
   prs_registry: { arrays: ['prs_modules'] },
   safety_guardrails: { arrays: ['rules'], objects: ['medication_context'], nested_arrays: { medication_context: ['ask_for', 'do_not_do'] } },
+  supplement_safety: { arrays: ['principles', 'rules', 'do_not_do'] },
   source_registry: { objects: ['sources'] },
   user_diet_profile_schema: { arrays: ['minimum_required_for_food_advice', 'do_not_infer'], objects: ['schema'] },
 };

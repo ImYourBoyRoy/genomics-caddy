@@ -19,7 +19,14 @@ PACK_DIR = ROOT / "src" / "lib" / "marker-packs"
 
 def curated_rsids_by_pack() -> dict[str, set[str]]:
     packs: dict[str, set[str]] = {}
-    for path in PACK_DIR.glob("*.json"):
+    manifest_path = PACK_DIR / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        pack_paths = [PACK_DIR / f"{pack['id']}.json" for pack in manifest.get("packs", [])]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        pack_paths = sorted(PACK_DIR.glob("*.json"))
+
+    for path in pack_paths:
         if path.name in {"discovery_catalog.json", "manifest.json"}:
             continue
         try:
@@ -57,7 +64,12 @@ def iter_lines(path: Path):
             yield from handle
 
 
-def audit(path: Path, pack_rsids: set[str], hormone_rsids: set[str]) -> dict[str, object]:
+def audit(
+    path: Path,
+    pack_rsids_by_pack: dict[str, set[str]],
+    pack_rsids: set[str],
+    hormone_rsids: set[str],
+) -> dict[str, object]:
     rows = 0
     valid = 0
     rsids: set[str] = set()
@@ -93,6 +105,15 @@ def audit(path: Path, pack_rsids: set[str], hormone_rsids: set[str]) -> dict[str
         if chromosome == "Y" and genotype and not any(token in genotype for token in ("-", "0", "?")):
             y_calls += 1
 
+    pack_coverage = {
+        pack_id: {
+            "present": len(rsids & rsid_set),
+            "total": len(rsid_set),
+        }
+        for pack_id, rsid_set in pack_rsids_by_pack.items()
+        if rsid_set
+    }
+
     return {
         "rows": rows,
         "valid_rows": valid,
@@ -102,6 +123,7 @@ def audit(path: Path, pack_rsids: set[str], hormone_rsids: set[str]) -> dict[str
         "hormone_rsids_total": len(hormone_rsids),
         "y_calls": y_calls,
         "chromosomes": ",".join(f"{key}:{value}" for key, value in chromosomes.most_common()),
+        "pack_coverage": pack_coverage,
     }
 
 
@@ -116,7 +138,7 @@ def main() -> int:
     print(f"Curated standard rsID markers: {len(pack_rsids)}")
     for path in paths:
         try:
-            result = audit(path, pack_rsids, hormone_rsids)
+            result = audit(path, packs, pack_rsids, hormone_rsids)
         except (OSError, ValueError, zipfile.BadZipFile) as error:
             print(f"{path.name}: ERROR {error}")
             return 1
@@ -126,6 +148,21 @@ def main() -> int:
             f"hormone_rsids={result['hormone_rsids_present']}/{result['hormone_rsids_total']} "
             f"y_calls={result['y_calls']}"
         )
+        coverage = result["pack_coverage"]
+        low_coverage = [
+            f"{pack_id}={values['present']}/{values['total']}"
+            for pack_id, values in coverage.items()
+            if values["total"] >= 10 and values["present"] / values["total"] < 0.5
+        ]
+        print(
+            f"  pack_coverage="
+            + ",".join(
+                f"{pack_id}:{values['present']}/{values['total']}"
+                for pack_id, values in coverage.items()
+            )
+        )
+        if low_coverage:
+            print(f"  low_coverage(<50%, >=10 markers)={','.join(low_coverage)}")
     print("Raw genotype values were not emitted or persisted.")
     return 0
 

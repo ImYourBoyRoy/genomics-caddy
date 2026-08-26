@@ -12,14 +12,19 @@
 import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import callabilityRules from '../marker-packs/callability_rules.json';
+import dietPatternProfiles from '../marker-packs/diet_pattern_profiles.json';
 import dietaryRequirements from '../marker-packs/dietary_requirements.json';
 import evidencePolicy from '../marker-packs/evidence_policy.json';
+import foodNutrientMatrix from '../marker-packs/food_nutrient_matrix.json';
 import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
 import labOverlays from '../marker-packs/lab_overlays.json';
 import mealPlanningRules from '../marker-packs/meal_planning_rules.json';
 import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
 import prsRegistry from '../marker-packs/prs_registry.json';
 import safetyGuardrails from '../marker-packs/safety_guardrails.json';
+import supplementSafety from '../marker-packs/supplement_safety.json';
+import sourceRegistry from '../marker-packs/source_registry.json';
+import userDietProfileSchema from '../marker-packs/user_diet_profile_schema.json';
 
 export type SupportConsultationMode =
   | 'general'
@@ -40,6 +45,11 @@ export interface SupportResourceContext {
   };
   safety_guardrails: typeof safetyGuardrails.rules;
   medication_context: typeof safetyGuardrails.medication_context;
+  supplement_safety: {
+    principles: typeof supplementSafety.principles;
+    rules: typeof supplementSafety.rules;
+    do_not_do: typeof supplementSafety.do_not_do;
+  };
   callability_rules: typeof callabilityRules.rules;
   phenotype_prompts: typeof phenotypePrompts.domains;
   lab_overlays: Array<Record<string, unknown>>;
@@ -53,6 +63,12 @@ export interface SupportResourceContext {
     meal_decision_pipeline: typeof mealPlanningRules.decision_pipeline;
     priority_weights: typeof mealPlanningRules.priority_weights;
     relevant_rules: Array<Record<string, unknown>>;
+    nutrient_matrix: typeof foodNutrientMatrix.food_groups;
+    diet_pattern_profiles: typeof dietPatternProfiles.profiles;
+    profile_schema: typeof userDietProfileSchema.schema;
+    profile_minimum_required: typeof userDietProfileSchema.minimum_required_for_food_advice;
+    profile_do_not_infer: typeof userDietProfileSchema.do_not_infer;
+    source_registry: Record<string, unknown>;
     do_not_do: typeof mealPlanningRules.do_not_do;
     intake_questions: typeof foodRequirementPrompts.global_first_run_questions;
     conditional_questions: Record<string, string[]>;
@@ -130,8 +146,35 @@ function selectDietaryRules(packIds: Set<string>): Array<Record<string, unknown>
       confirm_with: rule.confirm_with,
       conflict_resolution: rule.conflict_resolution,
       do_not_claim: rule.do_not_claim,
+      sources: rule.sources,
     }))
     .slice(0, 18) as Array<Record<string, unknown>>;
+}
+
+function selectSourceRecords(sourceIds: string[]): Record<string, unknown> {
+  const registry = sourceRegistry.sources as Record<string, unknown>;
+  const selected: Record<string, unknown> = {};
+  for (const sourceId of uniqueStrings(sourceIds)) {
+    if (registry[sourceId]) selected[sourceId] = registry[sourceId];
+  }
+  return selected;
+}
+
+function supportSourceIds(selectedPackIds: Set<string>): string[] {
+  const ids = new Set<string>([
+    ...foodNutrientMatrix.sources,
+    ...activityGuardrails.sources,
+    ...actionabilityGuidance.rules.flatMap((rule) => rule.sources || []),
+    ...supplementSafety.rules.flatMap((rule) => rule.sources),
+  ]);
+  for (const rule of selectDietaryRules(selectedPackIds)) {
+    if (Array.isArray(rule.sources)) {
+      for (const sourceId of rule.sources) {
+        if (typeof sourceId === 'string') ids.add(sourceId);
+      }
+    }
+  }
+  return Array.from(ids);
 }
 
 function selectConditionalQuestions(packIds: Set<string>): Record<string, string[]> {
@@ -165,6 +208,7 @@ export function buildSupportResourceContext({
   const selectedPackIds = relevantPackIds(packIds, consultationMode);
   const phenotype = selectPhenotypeDomains(selectedPackIds);
   const overlays = selectLabOverlays(selectedPackIds);
+  const selectedSourceRecords = selectSourceRecords(supportSourceIds(selectedPackIds));
 
   return {
     evidence_policy: {
@@ -173,6 +217,11 @@ export function buildSupportResourceContext({
     },
     safety_guardrails: safetyGuardrails.rules,
     medication_context: safetyGuardrails.medication_context,
+    supplement_safety: {
+      principles: supplementSafety.principles,
+      rules: supplementSafety.rules,
+      do_not_do: supplementSafety.do_not_do,
+    },
     callability_rules: callabilityRules.rules,
     phenotype_prompts: phenotype,
     lab_overlays: overlays,
@@ -189,12 +238,19 @@ export function buildSupportResourceContext({
       supplements: rule.supplements,
       lab_tests: rule.lab_tests,
       notes: rule.notes,
+      sources: rule.sources,
     })),
     food_safety: {
       priority_order: dietaryRequirements.priority_order,
       meal_decision_pipeline: mealPlanningRules.decision_pipeline,
       priority_weights: mealPlanningRules.priority_weights,
       relevant_rules: selectDietaryRules(selectedPackIds),
+      nutrient_matrix: foodNutrientMatrix.food_groups,
+      diet_pattern_profiles: dietPatternProfiles.profiles,
+      profile_schema: userDietProfileSchema.schema,
+      profile_minimum_required: userDietProfileSchema.minimum_required_for_food_advice,
+      profile_do_not_infer: userDietProfileSchema.do_not_infer,
+      source_registry: selectedSourceRecords,
       do_not_do: mealPlanningRules.do_not_do,
       intake_questions: foodRequirementPrompts.global_first_run_questions,
       conditional_questions: selectConditionalQuestions(selectedPackIds),

@@ -1,0 +1,148 @@
+{
+  "name": "Supplement Safety & Interaction Guardrails",
+  "version": "1.0.0",
+  "last_updated": "2026-08-25",
+  "type": "support_engine",
+  "purpose": "Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits.",
+  "principles": [
+    "A genotype can suggest a question; it cannot establish that a person needs a supplement.",
+    "Prefer food and measured deficiency/excess context before supplements when medically appropriate.",
+    "Review medications, pregnancy/lactation, kidney/liver disease, allergies, and total intake before starting a supplement.",
+    "Do not stack multiple products containing the same nutrient without checking the total amount and upper limits."
+  ],
+  "rules": [
+    {
+      "id": "selenium",
+      "label": "Selenium / Brazil-nut safety",
+      "signal_genes": ["GPX1"],
+      "match_terms": ["selenium", "brazil nuts"],
+      "food_first": [
+        "Prefer ordinary food sources and measured clinical context over a genotype-driven selenium supplement."
+      ],
+      "avoid": [
+        "Do not combine Brazil nuts, multivitamins, thyroid products, and selenium supplements without totaling selenium intake.",
+        "Do not use GPX1 genotype alone to justify selenium supplementation."
+      ],
+      "confirm_with": [
+        "medication and supplement list",
+        "thyroid, kidney, pregnancy/lactation, and clinical context",
+        "selenium testing only when clinically indicated"
+      ],
+      "sources": ["nih_ods_selenium"]
+    },
+    {
+      "id": "magnesium",
+      "label": "Magnesium food and interaction safety",
+      "signal_genes": ["COMT"],
+      "match_terms": ["magnesium"],
+      "food_first": [
+        "Favor magnesium-rich foods before a supplement when they fit the user's diet and medical needs."
+      ],
+      "avoid": [
+        "Do not exceed the adult upper limit for magnesium from supplements and medicines without clinician guidance.",
+        "Do not use supplemental magnesium casually with kidney disease or without reviewing antibiotic, bisphosphonate, diuretic, and acid-suppressing medication context."
+      ],
+      "confirm_with": [
+        "kidney function",
+        "medication timing and interaction review",
+        "symptoms or labs when deficiency is suspected"
+      ],
+      "sources": ["nih_ods_magnesium"]
+    },
+    {
+      "id": "omega3",
+      "label": "Omega-3 food versus supplement safety",
+      "signal_genes": ["FADS1", "FADS2"],
+      "match_terms": ["omega-3", "omega 3", "dha", "epa", "fish oil", "algae oil"],
+      "food_first": [
+        "Prefer appropriate fish or algal food sources when compatible with allergy, pregnancy, mercury, and dietary constraints."
+      ],
+      "avoid": [
+        "Do not treat a FADS genotype as proof that a high-dose omega-3 supplement is needed.",
+        "Do not start high-dose omega-3 supplements without reviewing anticoagulants, bleeding risk, cardiovascular history, and other medicines."
+      ],
+      "confirm_with": [
+        "fish allergy and pregnancy/mercury context",
+        "anticoagulants and bleeding-risk medications",
+        "dietary intake and lipid/clinical goals"
+      ],
+      "sources": ["nih_ods_omega3"]
+    },
+    {
+      "id": "iron",
+      "label": "Iron supplementation requires evidence",
+      "signal_genes": ["HFE"],
+      "match_terms": ["iron"],
+      "food_first": [
+        "Use allowed iron-containing foods while confirming whether the problem is deficiency, excess, blood loss, or another cause."
+      ],
+      "avoid": [
+        "Do not start iron supplements from fatigue, HFE genotype, or a single SNP without iron studies and clinical context.",
+        "Do not take iron alongside interacting medicines without pharmacist guidance."
+      ],
+      "confirm_with": [
+        "CBC, ferritin, transferrin saturation, and clinician interpretation",
+        "bleeding, gastrointestinal, kidney, pregnancy, and medication context"
+      ],
+      "sources": ["nih_ods_iron", "nih_ods_supplements"]
+    },
+    {
+      "id": "vitamin_d",
+      "label": "Vitamin D dose and lab safety",
+      "signal_genes": ["VDR", "GC", "DHCR7", "CYP2R1"],
+      "match_terms": ["vitamin d", "25(oh)d"],
+      "food_first": [
+        "Use measured 25(OH)D and clinical context to guide vitamin D decisions rather than a receptor SNP alone."
+      ],
+      "avoid": [
+        "Do not use VDR, GC, DHCR7, or CYP2R1 genotype alone to justify megadose vitamin D.",
+        "Do not ignore calcium, kidney, parathyroid, pregnancy, or medication context."
+      ],
+      "confirm_with": [
+        "25(OH)D",
+        "calcium and kidney context when clinically indicated",
+        "medication and pregnancy/lactation review"
+      ],
+      "sources": ["nih_ods_vitamin_d"]
+    },
+    {
+      "id": "folate",
+      "label": "Folate and MTHFR guardrail",
+      "signal_genes": ["MTHFR", "MTHFD1", "PEMT"],
+      "match_terms": ["folate", "folic acid", "methylfolate"],
+      "food_first": [
+        "Favor folate-rich foods and clinically appropriate fortified foods; do not create a permanent folic-acid avoidance rule from MTHFR."
+      ],
+      "avoid": [
+        "Do not avoid folic acid or switch to high-dose methylfolate solely because of an MTHFR SNP.",
+        "Do not use high-dose folate without checking B12, medications, pregnancy, and clinician guidance."
+      ],
+      "confirm_with": [
+        "folate, B12, CBC/MCV, and homocysteine when clinically relevant",
+        "pregnancy or preconception guidance"
+      ],
+      "sources": ["cdc_mthfr_folic_acid", "nih_ods_folate"]
+    },
+    {
+      "id": "creatine",
+      "label": "Creatine and kidney-context safety",
+      "signal_genes": ["CKM", "SLC6A8"],
+      "match_terms": ["creatine"],
+      "food_first": [
+        "Treat creatine as a goal- and training-context option, not a genetic requirement."
+      ],
+      "avoid": [
+        "Do not use genotype to prescribe a creatine dose or override kidney disease, abnormal kidney tests, pregnancy, or clinician restrictions."
+      ],
+      "confirm_with": [
+        "training goal, hydration, kidney function, and current medications"
+      ],
+      "sources": ["nih_ods_supplements"]
+    }
+  ],
+  "do_not_do": [
+    "Do not infer supplement need, safety, dose, or efficacy from a common SNP alone.",
+    "Do not treat supplement ideas as medication substitutes or use them to counteract a prescribed treatment.",
+    "Do not recommend a supplement while ignoring a user's allergy, eating-disorder risk, kidney/liver disease, pregnancy/lactation, or medication list."
+  ]
+}

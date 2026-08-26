@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
-  "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
+  "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive, menstrual, pain, or headache context is relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
     "menstrual",
     "hormone",
@@ -18,6 +18,12 @@
     "preconception",
     "conception",
     "semen",
+    "migraine",
+    "headache",
+    "aura",
+    "dysmenorrhea",
+    "cramps",
+    "pelvic pain",
     "esr1",
     "esr2",
     "pgr"
@@ -31,6 +37,20 @@
         "cycle_phase_and_symptom_timing",
         "pmdd_like_mood_symptoms",
         "contraceptive_product_context",
+        "heavy_bleeding_pelvic_pain",
+        "cycle_linked_pain_headache_context",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": [
+        "CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA"
+      ]
+    },
+    {
+      "id": "cycle_linked_pain_headache",
+      "label": "Cycle-linked pain or migraine",
+      "description": "Use only when a person reports recurring pelvic pain, headache, or migraine around a user-supplied bleeding or cycle pattern. This route does not infer menstruation, anatomy, migraine, or contraceptive safety from DNA.",
+      "domain_ids": [
+        "cycle_linked_pain_headache_context",
         "heavy_bleeding_pelvic_pain",
         "general_symptom_day_support"
       ],
@@ -209,6 +229,10 @@
     ],
     "preconception_fertility": [
       "GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA"
+    ],
+    "cycle_linked_pain_headache": [
+      "GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION",
+      "GUARDRAIL_PMDD_STEROID_SENSITIVITY_NOT_LEVELS"
     ]
   },
   "principles": [
@@ -216,6 +240,7 @@
     "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",
     "Hormonal contraception can change bleeding and hormone patterns. Identify the exact product and active ingredients before discussing cycle effects; progestin is not the same chemical as endogenous progesterone.",
     "Cyclic irritability, avoidance, anxiety, depression, pain, or bleeding are reasons to organize timing and clinical questions, not reasons to infer PMDD, adenomyosis, endometriosis, or a medication problem from DNA.",
+    "Cycle-linked pelvic pain, headache, or migraine should be tracked against bleeding and other symptoms; timing can guide clinical questions, but DNA cannot diagnose dysmenorrhea, menstrual-related migraine, or the cause of pelvic pain.",
     "When symptoms are present, use sleep, regular meals, hydration, and activity scaled to symptoms as general supportive options; do not present them as genotype-specific treatment."
   ],
   "domains": [
@@ -360,6 +385,46 @@
         "medlineplus_adenomyosis",
         "clinical_confirmation_required",
         "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "cycle_linked_pain_headache_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "pain_migraine_sensory"
+      ],
+      "title": "Cycle-linked pelvic pain, headache and migraine context",
+      "context": "A recurring relationship between bleeding or a user-supplied cycle and pain or headache is clinical context. A consumer DNA file cannot diagnose dysmenorrhea, menstrual-related migraine, migraine with aura, endometriosis, adenomyosis, or medication-overuse headache.",
+      "questions": [
+        "On which days relative to bleeding or another cycle event do pelvic pain, cramps, headache, or migraine begin and end, and does the pattern repeat across at least two or three cycles?",
+        "For headaches, are there features such as throbbing pain, nausea, light or sound sensitivity, or aura symptoms such as flashing lights, blind spots, numbness, or speech difficulty? Has a clinician assessed the headache type?",
+        "Is pelvic pain worsening, lasting beyond the first days of bleeding, occurring between periods, or associated with pain during sex, bowel movements, urination, heavy bleeding, fever, or faintness?",
+        "How often are pain medicines, triptans, opioids, caffeine products, or other remedies used, and did symptoms change after starting, stopping, missing, or switching a medication or contraceptive?"
+      ],
+      "support_options": [
+        "Keep a daily headache, pain, bleeding, medication-use, and functional-impact diary for at least two cycles; prospective timing is more useful than relying on memory alone.",
+        "Use symptom-scaled movement, sleep opportunity, regular meals, hydration, and heat for cramps when tolerated; these are general supportive options, not genotype-specific treatment or a substitute for evaluation.",
+        "Ask a clinician about evidence-based acute or preventive treatment when symptoms impair life or recur predictably. Do not self-select NSAIDs, triptans, opioids, hormonal treatment, or supplements from a DNA result; pregnancy, kidney/liver disease, bleeding risk, interactions, and the exact product matter.",
+        "If migraine with aura is possible, document that distinction before discussing combined hormonal contraception; the exact method and medical history require clinician review, and DNA cannot clear or contraindicate a contraceptive method."
+      ],
+      "confirm_with": [
+        "prospective headache, pain, bleeding, and medication-use diary across at least two cycles",
+        "clinical assessment of migraine with or without aura when relevant",
+        "exact medication and contraceptive product label with active ingredients",
+        "gynecology, primary-care, neurology, or pain review as appropriate"
+      ],
+      "red_flags": [
+        "first or worst sudden headache, new neurologic deficit, confusion, fainting, seizure, or severe vision or speech change",
+        "new or changing aura, severe headache during pregnancy or postpartum, or headache with markedly elevated blood pressure",
+        "severe or sudden pelvic pain, fever, possible pregnancy with pain or bleeding, or heavy bleeding with dizziness, fainting, weakness, or shortness of breath"
+      ],
+      "sources": [
+        "acog_dysmenorrhea_painful_periods",
+        "nice_menstrual_related_migraine",
+        "cdc_migraine_contraception_safety",
+        "acog_chronic_pelvic_pain",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
       ]
     },
     {
@@ -555,6 +620,7 @@
     "Do not call an estrogen spike, progesterone intolerance, PMDD, adenomyosis, endometriosis, PCOS, infertility, ovarian reserve, sperm quality, or a psychiatric condition from consumer DNA.",
     "Do not recommend a medication start, stop, or dose change from raw DNA, a reported hormone theory, or a symptom-day communication problem.",
     "Do not use a negative or missing SNP call to rule out adenomyosis or another clinical condition.",
+    "Do not infer migraine with aura, dysmenorrhea, medication-overuse headache, or contraceptive safety from DNA.",
     "Do not present symptom-day support options as cures, genotype-specific prescriptions, or substitutes for urgent care."
   ]
 }

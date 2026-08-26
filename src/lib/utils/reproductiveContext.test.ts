@@ -53,4 +53,16 @@ describe('reproductive marker context routing', () => {
     expect(option?.medication_rule_ids).toContain('PRECONCEPTION_MEDICATION_REVIEW_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA', 'preconception_fertility')).toBe(3);
   });
+
+  it('routes explicit cycle-linked pain and migraine context without using DNA diagnostically', () => {
+    const option = selectedReproductiveContextOption('cycle_linked_pain_headache');
+
+    expect(option?.domain_ids).toEqual([
+      'cycle_linked_pain_headache_context',
+      'heavy_bleeding_pelvic_pain',
+      'general_symptom_day_support',
+    ]);
+    expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
+    expect(reproductiveMarkerContextRank('GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION', 'cycle_linked_pain_headache')).toBe(3);
+  });
 });

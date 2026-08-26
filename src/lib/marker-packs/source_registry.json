@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -154,6 +154,38 @@
       "evidence_type": "Medical reference chapter",
       "conflict_of_interest": "NCBI Bookshelf medical reference; verify current clinical guidance for patient care",
       "notes": "Use to explain that the late-luteal transition is characterized by withdrawal/fall of estradiol and progesterone in a natural cycle, not a presumed estrogen spike."
+    },
+    "acog_dysmenorrhea_painful_periods": {
+      "name": "ACOG: Dysmenorrhea and Painful Periods",
+      "url": "https://www.acog.org/womens-health/faqs/dysmenorrhea-painful-periods",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "Professional medical society patient guidance; review current clinical advice when using clinically",
+      "notes": "Use for symptom timing, primary versus secondary period pain, evaluation prompts, and general supportive options. Do not convert painful-period symptoms or DNA into a diagnosis or medication plan."
+    },
+    "acog_chronic_pelvic_pain": {
+      "name": "ACOG: Chronic Pelvic Pain",
+      "url": "https://www.acog.org/womens-health/faqs/chronic-pelvic-pain",
+      "accessed": "2026-08-26",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "Professional medical society patient guidance; review current clinical advice when using clinically",
+      "notes": "Use for escalation questions involving worsening or persistent pelvic pain, bowel/bladder symptoms, bleeding, fever, pregnancy possibility, and urgent warning signs."
+    },
+    "nice_menstrual_related_migraine": {
+      "name": "NICE CG150: Headaches and Menstrual-Related Migraine",
+      "url": "https://www.nice.org.uk/guidance/cg150/chapter/recommendations",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical guideline",
+      "conflict_of_interest": "UK National Institute for Health and Care Excellence guideline; review current prescribing advice when using clinically",
+      "notes": "Use for headache-diary timing, menstrual-related migraine assessment, medication-overuse awareness, aura differentiation, and pregnancy/contraception safety prompts. Do not provide drug doses or select treatment from DNA."
+    },
+    "cdc_migraine_contraception_safety": {
+      "name": "CDC U.S. MEC 2024: Migraine and Contraceptive Method Classification",
+      "url": "https://www.cdc.gov/contraception/hcp/usmec/summary-contraceptive.html",
+      "accessed": "2026-08-26",
+      "evidence_type": "U.S. public-health clinical guidance",
+      "conflict_of_interest": "U.S. Centers for Disease Control and Prevention public-health guidance",
+      "notes": "Use to prompt clinician review of migraine type, especially aura, and the exact contraceptive method. The app must not infer migraine type or contraception safety from raw DNA."
     },
     "acog_preconception_counseling": {
       "name": "ACOG: Prepregnancy Counseling",

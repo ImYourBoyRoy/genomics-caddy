@@ -106,6 +106,7 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.askFor.some((item) => item.includes('active ingredient'))).toBe(true);
     expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_phase_and_symptom_timing')).toBe(true);
     expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'heavy_bleeding_pelvic_pain')).toBe(true);
+    expect(plan.cycleSupport.relevantDomains.some((domain) => domain.id === 'cycle_linked_pain_headache_context')).toBe(true);
   });
 
   it('keeps PGx medication guidance at the review boundary', () => {
@@ -247,6 +248,15 @@ describe('actionability engine safety policy', () => {
     expect(plan.cycleSupport.relevantDomains.map((domain) => domain.id)).toContain('preconception_fertility_context');
     expect(plan.cycleSupport.relevantDomains.find((domain) => domain.id === 'preconception_fertility_context')?.context)
       .toContain('cannot measure ovarian reserve');
+  });
+
+  it('keeps cycle-linked pain and migraine support at the clinical-context boundary', () => {
+    const plan = deriveActionablePlan(report([]), { reproductiveContext: 'cycle_linked_pain_headache' });
+    const domain = plan.cycleSupport.relevantDomains.find((item) => item.id === 'cycle_linked_pain_headache_context');
+
+    expect(domain?.context).toContain('cannot diagnose');
+    expect(domain?.support_options.join(' ')).toContain('DNA result');
+    expect(plan.medication.rules.join(' ')).toContain('contraceptive product');
   });
 
   it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {

@@ -34,6 +34,24 @@ describe('support resource context', () => {
     expect(pmddDomain?.support_options.join(' ')).toContain('not on a DNA marker');
     const contraceptiveDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'contraceptive_product_context');
     expect(contraceptiveDomain?.support_options.join(' ')).toContain('no new adverse effects');
+    expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'cycle_linked_pain_headache_context')).toBe(true);
+  });
+
+  it('routes cycle-linked pain and migraine to diary, aura, and safety resources', () => {
+    const context = buildSupportResourceContext({
+      packIds: ['hormones_reproductive', 'pain_migraine_sensory'],
+      consultationMode: 'hormones_reproductive',
+      reproductiveContext: 'cycle_linked_pain_headache',
+    });
+    const domain = context.cycle_support.relevant_domains.find((item) => item.id === 'cycle_linked_pain_headache_context');
+
+    expect(domain).toBeDefined();
+    expect(domain?.questions.join(' ')).toContain('aura');
+    expect(domain?.support_options.join(' ')).toContain('medication-use');
+    expect(domain?.support_options.join(' ')).toContain('combined hormonal contraception');
+    expect(context.cycle_support.source_registry.nice_menstrual_related_migraine).toBeDefined();
+    expect(context.cycle_support.source_registry.cdc_migraine_contraception_safety).toBeDefined();
+    expect(context.safety_guardrails.some((rule) => rule.id === 'CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA')).toBe(true);
   });
 
   it('routes exogenous hormone therapy context with product and monitoring sources', () => {

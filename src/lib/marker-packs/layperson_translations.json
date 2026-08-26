@@ -982,6 +982,136 @@
       "rsid": "rs1805009",
       "simpleImpact": "MC1R pigmentation and UV-sensitivity context",
       "simpleMeaning": "This MC1R marker is part of pigmentation and melanoma-susceptibility research. Any effect is probabilistic and not diagnostic; dermatology assessment, skin findings, UV exposure, and family history remain important."
+    },
+    {
+      "rsid": "rs3736228",
+      "simpleImpact": "LRP5 bone-density association marker",
+      "simpleMeaning": "This LRP5 marker has been associated with small differences in bone mineral density in some studies. It does not diagnose osteoporosis or predict a fracture; age, fracture history, loading, hormones, medications, and DXA are more informative."
+    },
+    {
+      "rsid": "rs599083",
+      "simpleImpact": "LRP5 bone-density context marker",
+      "simpleMeaning": "This LRP5 marker is part of bone mineral-density research. Any association is small and probabilistic; it does not measure your bone density or replace clinical risk assessment and DXA when indicated."
+    },
+    {
+      "rsid": "rs6426749",
+      "simpleImpact": "WNT16 cortical-bone association marker",
+      "simpleMeaning": "This WNT16 marker has been studied in cortical bone density and fracture-related traits. It does not establish fragile bones or fracture risk for one person; bone history, mineral status, activity, and clinical testing matter more."
+    },
+    {
+      "rsid": "rs3801387",
+      "simpleImpact": "WNT16 bone-density context marker",
+      "simpleMeaning": "This WNT16 marker contributes to research on bone density. It is not an osteoporosis test and does not determine whether resistance or weight-bearing activity is safe; symptoms, history, and clinical assessment lead."
+    },
+    {
+      "rsid": "rs4792909",
+      "simpleImpact": "SOST bone-remodeling association marker",
+      "simpleMeaning": "This SOST marker has been studied in Wnt signaling and bone mineral-density traits. Effects are probabilistic and do not diagnose osteoporosis or determine a bone treatment or supplement dose."
+    },
+    {
+      "rsid": "rs851056",
+      "simpleImpact": "TNFRSF11B/OPG bone-remodeling marker",
+      "simpleMeaning": "This TNFRSF11B marker is part of research on bone resorption and remodeling. It does not measure bone turnover or establish fracture risk; clinical history, mineral labs, and DXA are more useful when indicated."
+    },
+    {
+      "rsid": "rs9594738",
+      "simpleImpact": "RANKL bone-resorption context marker",
+      "simpleMeaning": "This RANKL/TNFSF11-region marker has been studied in bone density and remodeling. It is a small-effect association, not a diagnosis or a reason to start, stop, or change osteoporosis treatment."
+    },
+    {
+      "rsid": "rs1042636",
+      "simpleImpact": "CASR calcium-sensing context marker",
+      "simpleMeaning": "This CASR marker is part of calcium-sensing and mineral-balance research. It does not diagnose a calcium or parathyroid disorder; measured calcium, PTH, kidney context, symptoms, and clinician review are more informative."
+    },
+    {
+      "rsid": "rs2016266",
+      "simpleImpact": "SP7/OSX bone-formation association marker",
+      "simpleMeaning": "This SP7 marker has been studied in bone formation and mineral-density traits. Effects are probabilistic and do not diagnose osteoporosis, predict a fracture, or determine a supplement or treatment."
+    },
+    {
+      "rsid": "rs13245690",
+      "simpleImpact": "CPED1/WNT16 bone-density context marker",
+      "simpleMeaning": "This CPED1/WNT16 marker has been studied in bone mineral density and fracture-related traits. It does not measure bone density or establish osteoporosis; fracture history, mineral status, and clinical assessment matter more."
+    },
+    {
+      "rsid": "rs1801725",
+      "simpleImpact": "CASR calcium-sensing context marker",
+      "simpleMeaning": "This CASR marker is part of calcium-sensing and mineral-balance research. It does not diagnose a calcium or parathyroid disorder; measured calcium, PTH, kidney context, symptoms, and clinician review are more informative."
+    },
+    {
+      "rsid": "rs13204965",
+      "simpleImpact": "ESR1 bone and estrogen-response context marker",
+      "simpleMeaning": "This ESR1 marker has been studied in estrogen signaling and bone-density traits. It does not measure current estrogen, menopause status, or hormone response, and it does not prescribe hormone therapy or a bone treatment."
+    },
+    {
+      "rsid": "rs2066844",
+      "simpleImpact": "NOD2 Crohn-disease susceptibility marker",
+      "simpleMeaning": "This NOD2 marker is a replicated Crohn-disease susceptibility association, especially in some ancestry groups. It does not diagnose Crohn disease or explain symptoms by itself; GI symptoms, family history, blood/stool tests, and clinical evaluation matter more."
+    },
+    {
+      "rsid": "rs2066845",
+      "simpleImpact": "NOD2 intestinal-immune context marker",
+      "simpleMeaning": "This NOD2 marker has been studied in intestinal immune response and Crohn-disease susceptibility. Any association is probabilistic and ancestry-dependent; it is not a diagnosis or a reason to begin a restrictive diet or medicine."
+    },
+    {
+      "rsid": "rs2066847",
+      "simpleImpact": "NOD2 high-priority Crohn context marker",
+      "simpleMeaning": "This NOD2 frameshift marker can be clinically important in Crohn-disease genetics, but a consumer-array result still requires validated testing and clinical interpretation. It does not diagnose IBD or determine treatment."
+    },
+    {
+      "rsid": "rs2241880",
+      "simpleImpact": "ATG16L1 intestinal-autophagy marker",
+      "simpleMeaning": "This ATG16L1 marker has been associated with Crohn-disease susceptibility and intestinal immune handling. It is a modest context signal, not a diagnosis; symptoms, inflammatory markers, stool testing, and GI review remain more useful."
+    },
+    {
+      "rsid": "rs11209026",
+      "simpleImpact": "IL23R inflammatory-bowel context marker",
+      "simpleMeaning": "This IL23R marker is part of research on IBD and Th17 immune signaling. Associations can vary by population and model; it does not diagnose IBD or predict whether an immune medicine will work."
+    },
+    {
+      "rsid": "rs601338",
+      "simpleImpact": "FUT2 secretor-status and gut context marker",
+      "simpleMeaning": "This FUT2 marker can contribute to secretor-status and mucosal-glycan research, including some microbiome, infection, and B12 associations. It does not diagnose gut disease, determine a microbiome state, or prove B12 deficiency."
+    },
+    {
+      "rsid": "rs11887534",
+      "simpleImpact": "ABCG8 gallstone and sterol-transport marker",
+      "simpleMeaning": "This ABCG8 marker has been studied in sterol transport and gallstone-related traits. It does not diagnose gallstones or determine a diet or surgery; symptoms and medical evaluation are more informative."
+    },
+    {
+      "rsid": "rs6756629",
+      "simpleImpact": "ABCG5/ABCG8 sterol-transport context marker",
+      "simpleMeaning": "This sterol-transporter marker has been studied in cholesterol handling and gallstone-related traits. Effects are probabilistic and do not establish a gallbladder disorder or prescribe a low-fat diet."
+    },
+    {
+      "rsid": "rs738409",
+      "simpleImpact": "PNPLA3 liver-fat association marker",
+      "simpleMeaning": "This PNPLA3 marker has been associated with liver-fat or liver-injury traits in some populations. It does not diagnose fatty liver or steatohepatitis; metabolic health, alcohol exposure, liver tests, and imaging provide the actionable context."
+    },
+    {
+      "rsid": "rs58542926",
+      "simpleImpact": "TM6SF2 liver-lipid trade-off marker",
+      "simpleMeaning": "This TM6SF2 marker has been studied in liver fat and blood-lipid traits. Associations can involve different phenotypes and do not diagnose liver disease or determine a medication; lipid and liver evaluation matter more."
+    },
+    {
+      "rsid": "rs641738",
+      "simpleImpact": "MBOAT7 liver and lipid context marker",
+      "simpleMeaning": "This MBOAT7 marker is part of research on liver fat, inflammation, and lipid handling. It does not diagnose fatty liver or determine a detox product, supplement, or treatment; measured tests and clinical history lead."
+    },
+    {
+      "rsid": "rs72613567",
+      "simpleImpact": "HSD17B13 liver-response context marker",
+      "simpleMeaning": "This HSD17B13 splice-region marker has been studied in liver-fat and liver-injury outcomes. It does not establish protection or disease for one person; liver tests, imaging, metabolic factors, and clinician review remain important."
+    },
+    {
+      "rsid": "rs1801274",
+      "simpleImpact": "FCGR2A immune-response context marker",
+      "simpleMeaning": "This FCGR2A marker has been studied in immune-complex handling and inflammatory disease associations. Effects vary and do not diagnose IBD or determine immune-treatment response; symptoms and clinical testing matter more."
+    },
+    {
+      "rsid": "rs3024505",
+      "simpleImpact": "IL10 inflammatory-bowel context marker",
+      "simpleMeaning": "This IL10-region marker has been studied in immune regulation and inflammatory-bowel traits. It is probabilistic research context, not an IBD diagnosis or a reason to start an immune medicine or restrictive diet."
     }
   ]
 }

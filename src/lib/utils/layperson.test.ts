@@ -41,6 +41,22 @@ describe('plain-English claim framing', () => {
     expect(DEFAULT_LAYPERSON_TRANSLATION.simpleMeaning).toContain('probabilistic association');
   });
 
+  it('covers high-value bone and digestive markers with dedicated boundaries', () => {
+    for (const rsid of [
+      'rs3736228',
+      'rs6426749',
+      'rs2066844',
+      'rs2066847',
+      'rs2241880',
+      'rs738409',
+    ]) {
+      expect(LAYPERSON_MAP[rsid]?.simpleMeaning, rsid).toBeTruthy();
+    }
+    expect(LAYPERSON_MAP.rs3736228.simpleMeaning).toContain('does not diagnose osteoporosis');
+    expect(LAYPERSON_MAP.rs2066844.simpleMeaning).toContain('does not diagnose Crohn disease');
+    expect(LAYPERSON_MAP.rs738409.simpleMeaning).toContain('does not diagnose fatty liver');
+  });
+
   it('derives a bounded fallback from the marker resource when no dedicated translation exists', () => {
     const translation = getLaypersonTranslation({
       rsid: 'rs-untranslated',

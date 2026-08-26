@@ -87,8 +87,8 @@
     "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation."
   },
   "phenotype_prompt_layer": {
-    "version": "1.1.0",
-    "domains_count": 17,
+    "version": "1.2.0",
+    "domains_count": 22,
     "new_domains": [
       "metabolic",
       "cardiovascular",
@@ -96,9 +96,14 @@
       "sleep",
       "pgx",
       "neuropsych",
-      "connective_tissue"
+      "connective_tissue",
+      "core",
+      "nutrients",
+      "cancer_confirmation_only",
+      "dental_oral_health",
+      "longevity_aging_resilience"
     ],
-    "note": "Phenotype prompts are selected by manifest pack ID and carry source-registry IDs into the support payload; they request observed context and confirmation rather than diagnosing from common DNA markers."
+    "note": "Phenotype prompts are selected by manifest pack ID and carry source-registry IDs into the support payload; all user-facing manifest packs except the protected research_found draft container now have a prompt domain. They request observed context and confirmation rather than diagnosing from common DNA markers."
   },
   "research_taxonomy_layer": {
     "added": true,

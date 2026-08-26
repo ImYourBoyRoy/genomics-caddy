@@ -1,6 +1,6 @@
 {
   "name": "Phenotype Prompt Library",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-08-26",
   "domains": [
     {
@@ -536,6 +536,173 @@
         "genereviews",
         "hpo",
         "phenotype_required"
+      ]
+    },
+    {
+      "id": "core",
+      "trigger": [
+        "core markers",
+        "caffeine or alcohol response markers",
+        "HFE iron markers",
+        "MTHFR or folate context"
+      ],
+      "questions": [
+        "Which observed traits or symptoms are you trying to understand: caffeine response, alcohol flushing, lactose digestion, iron-related symptoms, folate use, or something else?",
+        "What are the exact exposures, amounts, timing, and repeatable responses, and do they occur every time or only under certain conditions?",
+        "Any family history of iron overload, liver disease, unusual alcohol reactions, anemia, or a clinician-documented nutrient problem?",
+        "What medications, supplements, diet pattern, pregnancy possibility, or medical conditions could change the interpretation?"
+      ],
+      "red_flags": [
+        "jaundice, dark urine, or severe abdominal swelling",
+        "fainting, trouble breathing, or swelling after a food or medication exposure",
+        "severe confusion or loss of coordination after alcohol or another exposure",
+        "rapidly worsening symptoms with abnormal laboratory results"
+      ],
+      "confirmations": [
+        "ferritin and transferrin saturation when iron overload is a concern",
+        "CBC, targeted nutrient testing, or clinician review when symptoms warrant",
+        "exposure and symptom log with amount and timing",
+        "food, supplement, and medication label review rather than genotype-only avoidance"
+      ],
+      "sources": [
+        "gene_reviews_hemochromatosis",
+        "nih_caffeine_general_context",
+        "cdc_mthfr_folic_acid",
+        "phenotype_required",
+        "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "nutrients",
+      "trigger": [
+        "nutrient or methylation markers",
+        "MTHFR/folate context",
+        "B12, iron, vitamin D, or mineral markers",
+        "supplement question"
+      ],
+      "questions": [
+        "What is the current diet pattern, restriction, appetite, absorption history, and reason for considering a nutrient or supplement?",
+        "Which recent lab results are available, with dates, units, reference ranges, and relevant symptoms?",
+        "What exact supplement or fortified product, active ingredient, dose, serving size, and schedule is being used or considered?",
+        "Any kidney or liver disease, pregnancy or lactation, thyroid treatment, anticoagulant, neurologic symptom, allergy, or medication interaction concern?"
+      ],
+      "red_flags": [
+        "severe weakness, fainting, confusion, or shortness of breath",
+        "persistent vomiting, dehydration, or inability to keep food or medication down",
+        "new neurologic symptoms or rapidly worsening neuropathy",
+        "suspected supplement toxicity or a serious allergic reaction"
+      ],
+      "confirmations": [
+        "clinician-ordered laboratory testing matched to the symptom or question",
+        "dietitian or clinician review of diet, absorption, life stage, and medical history",
+        "exact product label and total intake from all sources",
+        "food-first and reversible changes; do not use a common SNP to choose a megadose or restrictive diet"
+      ],
+      "sources": [
+        "nih_ods_supplements",
+        "user_declared_values_required",
+        "lab_confirmation_required",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "cancer_confirmation_only",
+      "trigger": [
+        "cancer-confirmation markers",
+        "BRCA or Lynch context",
+        "pathogenic or likely-pathogenic report",
+        "personal or family cancer history"
+      ],
+      "questions": [
+        "What exact clinical report, laboratory, genome build, variant nomenclature, and classification are available, and was the result from a validated clinical test?",
+        "What personal cancer history, diagnosis age, tumor pathology, prior treatments, and screening history are relevant?",
+        "Which relatives had cancer, at what ages, and on which side of the family?",
+        "Has a genetic counselor or specialist reviewed whether the test covered deletions, duplications, phasing, and other clinically important variants?"
+      ],
+      "red_flags": [
+        "new unexplained lump or mass",
+        "persistent unusual bleeding or a non-healing lesion",
+        "unintentional weight loss with progressive symptoms",
+        "urgent symptoms related to a known cancer or treatment complication"
+      ],
+      "confirmations": [
+        "clinical-grade germline testing or confirmatory laboratory testing",
+        "genetic-counselor review of the full report, coverage, and family history",
+        "pathology or tumor-testing review when relevant",
+        "screening and preventive-care plan from the appropriate clinician"
+      ],
+      "sources": [
+        "clingen",
+        "clinvar",
+        "genereviews",
+        "clinical_confirmation_required",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "dental_oral_health",
+      "trigger": [
+        "dental or oral-health markers",
+        "enamel or dentin markers",
+        "periodontal markers",
+        "dry mouth or oral-lesion concern"
+      ],
+      "questions": [
+        "How often do cavities, enamel or dentin problems, gum bleeding, infections, tooth sensitivity, jaw symptoms, or tooth loss occur?",
+        "Any persistent dry mouth, mouth sores, altered taste, medication-related dryness, tobacco or vaping, alcohol, or frequent sugar/acid exposure?",
+        "What did the last dental examination, periodontal measurements, radiographs, or treatment plan show?",
+        "Any family history of unusual tooth development, severe early periodontal disease, oral cancer, or craniofacial disorder?"
+      ],
+      "red_flags": [
+        "facial or neck swelling with fever",
+        "trouble breathing, swallowing, or opening the mouth",
+        "uncontrolled oral bleeding",
+        "a mouth sore, lump, or area of unusual bleeding that does not heal"
+      ],
+      "confirmations": [
+        "routine dental examination and radiographs when indicated",
+        "periodontal examination and professional cleaning when appropriate",
+        "medication and dry-mouth review with a dentist or clinician",
+        "oral-lesion evaluation rather than a DNA-based cancer conclusion"
+      ],
+      "sources": [
+        "nidcr_oral_hygiene",
+        "nidcr_dry_mouth",
+        "cdc_oral_cancer",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "longevity_aging_resilience",
+      "trigger": [
+        "longevity or aging markers",
+        "resilience or recovery markers",
+        "inflammation or frailty context",
+        "healthy-aging question"
+      ],
+      "questions": [
+        "What is the practical goal: maintaining mobility, cognitive function, cardiovascular health, metabolic health, independence, or recovery?",
+        "What are the current activity, sleep, nutrition, tobacco/alcohol, blood-pressure, glucose, lipid, and preventive-care patterns?",
+        "Any falls, frailty, loss of strength, memory change, persistent fatigue, mood change, or reduced ability to perform daily activities?",
+        "What family history, medications, chronic conditions, or social factors should shape a realistic and accessible plan?"
+      ],
+      "red_flags": [
+        "new chest pain, fainting, or severe shortness of breath",
+        "rapid unexplained loss of strength, weight, or function",
+        "new confusion, one-sided weakness, or repeated falls",
+        "inability to safely complete essential daily activities"
+      ],
+      "confirmations": [
+        "routine preventive-care and age-appropriate screening review",
+        "blood pressure, glucose, lipid, kidney, and other targeted labs when indicated",
+        "functional assessment, strength or mobility evaluation, and fall-risk review",
+        "clinician-guided goals; no lifespan or biological-age estimate from common SNPs alone"
+      ],
+      "sources": [
+        "gwas_catalog",
+        "hpo",
+        "phenotype_required",
+        "clinical_confirmation_required"
       ]
     }
   ]

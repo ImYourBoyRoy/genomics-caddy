@@ -779,6 +779,30 @@
       "conflict_of_interest": "NCBI Bookshelf clinical genetics resource",
       "notes": "Use for UGT1A1/irinotecan toxicity context and the distinction between a clinical UGT1A1 result and a consumer-array proxy."
     },
+    "nidcr_oral_hygiene": {
+      "name": "NIDCR: Oral Hygiene",
+      "url": "https://www.nidcr.nih.gov/health-info/oral-hygiene",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH dental and craniofacial health guidance",
+      "conflict_of_interest": "U.S. National Institute of Dental and Craniofacial Research public-health resource",
+      "notes": "Use for symptom-aware oral-hygiene, fluoride, dental examination, tooth-decay, gum-disease, and professional follow-up prompts."
+    },
+    "nidcr_dry_mouth": {
+      "name": "NIDCR: Dry Mouth",
+      "url": "https://www.nidcr.nih.gov/health-info/dry-mouth",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH dental and craniofacial health guidance",
+      "conflict_of_interest": "U.S. National Institute of Dental and Craniofacial Research public-health resource",
+      "notes": "Use for medication-related dry-mouth prompts, oral-health risk context, and clinician or dentist evaluation; do not infer medication causality from DNA."
+    },
+    "cdc_oral_cancer": {
+      "name": "CDC: About Oral Cancer",
+      "url": "https://www.cdc.gov/oral-health/about/about-oral-cancer.html",
+      "accessed": "2026-08-26",
+      "evidence_type": "U.S. public-health oral-cancer guidance",
+      "conflict_of_interest": "U.S. Centers for Disease Control and Prevention public-health resource",
+      "notes": "Use for persistent oral lesions, unusual bleeding or swelling, swallowing/breathing difficulty, and dental or medical evaluation prompts."
+    },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",
       "evidence_type": "Local support-engine policy",

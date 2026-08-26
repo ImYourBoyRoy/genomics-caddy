@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
+import manifest from '../marker-packs/manifest.json';
 import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
 import { buildSupportResourceContext } from './supportResourceContext';
 
@@ -231,6 +232,12 @@ describe('support resource context', () => {
       for (const sourceId of domain.sources) {
         expect(context.food_safety.source_registry[sourceId]).toBeDefined();
       }
+    }
+
+    const phenotypeIds = new Set(phenotypePrompts.domains.map((domain) => domain.id));
+    for (const pack of manifest.packs) {
+      if (pack.id === 'research_found') continue;
+      expect(phenotypeIds.has(pack.id)).toBe(true);
     }
   });
 

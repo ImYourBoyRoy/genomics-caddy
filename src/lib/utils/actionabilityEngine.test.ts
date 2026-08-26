@@ -79,7 +79,7 @@ describe('actionability engine safety policy', () => {
         severity_class: 'high_risk',
       }),
     ]));
-    expect(plan.diet.avoid.some((item) => item.startsWith('Do not avoid solely from raw DNA'))).toBe(true);
+    expect(plan.diet.avoid.some((item) => item.startsWith('Do not make this change from raw DNA'))).toBe(true);
     expect(plan.supplements.some((item) => item.reason.includes('Discuss with a clinician or pharmacist'))).toBe(true);
   });
 
@@ -226,6 +226,85 @@ describe('actionability engine safety policy', () => {
     expect(avoidance).toContain('osteogenesis imperfecta');
     expect(medicationText).toContain('consumer-array panel');
     expect(medicationText).not.toContain('Start enzyme');
+  });
+
+  it('routes rare allergy, kidney, metabolic, nutrient, and neurologic panels safely', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'PANEL_MAST_CELL_MEDIATOR_CONTEXT',
+        gene: 'TPSAB1/KIT/CPA3/HDC',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_HEREDITARY_ANGIOEDEMA',
+        gene: 'SERPING1/F12/PLG/ANGPT1/KNG1',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_ALPHA1_ANTITRYPSIN_DEFICIENCY',
+        gene: 'SERPINA1',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_APOL1_KIDNEY_RISK',
+        gene: 'APOL1',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_MONOGENIC_RENAL_TUBULOPATHY',
+        gene: 'SLC12A3/SLC12A1/KCNJ1/CLCNKB/WNK1/WNK4',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_MODY_MONOGENIC_DIABETES',
+        gene: 'GCK/HNF1A/HNF4A/HNF1B/INS/PDX1/NEUROD1',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_NON_HFE_IRON_OVERLOAD',
+        gene: 'HAMP/HJV/TFR2/SLC40A1',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_WILSON_DISEASE',
+        gene: 'ATP7B',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_RARE_NUTRIENT_TRANSPORT_DISORDERS',
+        gene: 'SLC19A2/SLC19A3/SLC46A1/SLC52A2/SLC52A3',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_MONOGENIC_MIGRAINE_RED_FLAGS',
+        gene: 'CACNA1A/ATP1A2/SCN1A/PRRT2',
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'PANEL_PAIN_CHANNELopathy_RED_FLAGS',
+        gene: 'SCN9A/SCN10A/SCN11A/TRPA1/TRPV1',
+        severity_class: 'confirmation_required',
+      }),
+    ]));
+    const avoidance = plan.diet.avoid.join(' ');
+    const medicationText = plan.medication.rules.join(' ');
+
+    expect(plan.labTests.some((test) => test.name.includes('serum tryptase'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('C4'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('alpha-1 antitrypsin'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('APOL1 G1/G2'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('potassium'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('HbA1c'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('transferrin saturation'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('Ceruloplasmin'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('pain-neuropathy sequencing'))).toBe(true);
+    expect(avoidance).toContain('low-histamine diet');
+    expect(avoidance).toContain('diagnose or exclude Wilson disease');
+    expect(avoidance).toContain('megadose vitamins');
+    expect(avoidance).not.toContain('Do not avoid solely');
+    expect(avoidance).toContain('Do not make this change from raw DNA');
+    expect(medicationText).toContain('raw DNA');
+    expect(medicationText).not.toContain('select therapy');
   });
 
   it('routes high-impact cardiovascular and hereditary-cancer markers to confirmation', () => {

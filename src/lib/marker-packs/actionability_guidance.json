@@ -1,6 +1,6 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
@@ -2669,6 +2669,521 @@
         "clinical_confirmation_required",
         "phenotype_required",
         "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "mast_cell_mediator_clinical_context",
+      "genes": [
+        "TPSAB1",
+        "KIT",
+        "CPA3",
+        "HDC"
+      ],
+      "marker_ids": [
+        "PANEL_MAST_CELL_MEDIATOR_CONTEXT"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "allergy_atopy_mast_cell"
+      ],
+      "favor": [
+        "If recurrent flushing, hives or swelling, unexplained anaphylaxis-like episodes, gastrointestinal attacks, faintness, or persistently elevated baseline tryptase is present, bring the episode history and exact medication list to an allergy/immunology clinician"
+      ],
+      "avoid": [
+        "Using a consumer-array panel to diagnose mast-cell activation syndrome, systemic mastocytosis, or hereditary alpha-tryptasemia, or starting a restrictive low-histamine diet, antihistamine regimen, or supplement protocol from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Baseline serum tryptase and event-related mediator testing when an allergist indicates",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical TPSAB1 copy-number assessment and phenotype-focused sequencing when indicated",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Keep a dated record of episodes, triggers, hives or swelling, breathing or gastrointestinal symptoms, and medication response; do not change epinephrine, antihistamine, mast-cell, or other medication from a consumer-array panel."
+      ],
+      "notes": "Mast-cell mediator disorders and hereditary alpha-tryptasemia depend on symptoms, measured mediators, copy number, and clinical interpretation. A common SNP-array result cannot establish or exclude these conditions.",
+      "sources": [
+        "hereditary_alpha_tryptasemia_review",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "hereditary_angioedema_red_flag_context",
+      "genes": [
+        "SERPING1",
+        "F12",
+        "PLG",
+        "ANGPT1",
+        "KNG1"
+      ],
+      "marker_ids": [
+        "PANEL_HEREDITARY_ANGIOEDEMA"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "allergy_atopy_mast_cell",
+        "hormones_reproductive"
+      ],
+      "favor": [
+        "If recurrent swelling without hives, unexplained abdominal attacks, a family history of similar episodes, or symptoms after estrogen or other medication exposure is present, discuss hereditary angioedema evaluation with an allergy/immunology clinician"
+      ],
+      "avoid": [
+        "Treating a panel label as a diagnosis, assuming recurrent swelling is an IgE food allergy, or starting, stopping, or selecting an ACE inhibitor, estrogen-containing product, or angioedema medicine from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "C4, C1-inhibitor protein level, and C1-inhibitor functional assay when hereditary angioedema is suspected",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical HAE gene-panel or sequencing review with deletion/duplication and variant classification",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Recurrent tongue or throat swelling or breathing difficulty is an emergency independent of DNA interpretation; bring the exact medication and hormone-product list to the treating clinician, and do not self-change therapy from this panel."
+      ],
+      "notes": "Hereditary angioedema has bradykinin-mediated and other genetic forms that overlap with acquired or medication-related angioedema. Diagnosis requires phenotype and biochemical testing, with clinical genetics when appropriate; an array panel cannot rule it in or out.",
+      "sources": [
+        "wao_hae_guideline_2025",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "alpha1_antitrypsin_lung_liver_confirmation",
+      "genes": [
+        "SERPINA1"
+      ],
+      "marker_ids": [
+        "PANEL_ALPHA1_ANTITRYPSIN_DEFICIENCY"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "respiratory_airway",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "If early emphysema, unexplained airflow obstruction, bronchiectasis, liver disease, or a family history of alpha-1 antitrypsin deficiency is present, discuss serum AAT and clinical SERPINA1 testing with a clinician"
+      ],
+      "avoid": [
+        "Using a consumer-array signal to diagnose lung or liver disease, treating one allele as a complete SERPINA1 genotype, or selecting respiratory, liver, or augmentation treatment from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Serum alpha-1 antitrypsin concentration with phenotype or targeted clinical genotype testing",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical SERPINA1 sequencing with deletion/duplication review when indicated",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "A respiratory or liver clinician should integrate the exact SERPINA1 result with smoking or inhalational exposure, lung function, liver tests, imaging, and family history; do not change medication from raw DNA."
+      ],
+      "notes": "Alpha-1 antitrypsin deficiency has variable lung and liver expression and depends on serum protein level, allele combination, exposures, and clinical findings. Consumer coverage of a few SNPs is incomplete.",
+      "sources": [
+        "gene_reviews_alpha1_antitrypsin",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "apol1_kidney_risk_context",
+      "genes": [
+        "APOL1"
+      ],
+      "marker_ids": [
+        "PANEL_APOL1_KIDNEY_RISK"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "kidney_fluid_electrolytes"
+      ],
+      "favor": [
+        "If recent African ancestry, chronic kidney disease, protein in the urine, unexplained kidney decline, or a relevant family history is present, discuss measured kidney function and whether clinical APOL1 testing would change care"
+      ],
+      "avoid": [
+        "Using APOL1 to infer race or ancestry, treating a risk genotype as kidney disease, making a kidney-donation or transplant decision from raw DNA, or changing blood-pressure or kidney medication from this panel"
+      ],
+      "lab_tests": [
+        {
+          "name": "Creatinine/eGFR, urine albumin or protein assessment, and blood-pressure review when clinically indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical APOL1 G1/G2 diplotype testing and genetic counseling when kidney phenotype warrants",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "APOL1 interpretation is ancestry-, phenotype-, and context-dependent; nephrology should integrate kidney function, urine findings, blood pressure, infections or inflammatory exposures, and family history rather than use raw DNA to select treatment."
+      ],
+      "notes": "APOL1 G1/G2 risk is not a diagnosis and is not a universal ancestry label. The strongest clinical relevance is in particular kidney phenotypes and populations with recent African ancestry; many people with risk alleles do not develop kidney disease.",
+      "sources": [
+        "nih_apol1_kidney_review",
+        "niddk_apol1_ckd_context",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "monogenic_renal_tubulopathy_context",
+      "genes": [
+        "SLC12A3",
+        "SLC12A1",
+        "KCNJ1",
+        "CLCNKB",
+        "WNK1",
+        "WNK4"
+      ],
+      "marker_ids": [
+        "PANEL_MONOGENIC_RENAL_TUBULOPATHY"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "kidney_fluid_electrolytes"
+      ],
+      "favor": [
+        "If persistent unexplained low potassium, low magnesium, metabolic alkalosis, salt wasting, unusual blood pressure, recurrent cramps, or a family history is present, bring serial laboratory results and medication history to nephrology"
+      ],
+      "avoid": [
+        "Using a consumer panel to diagnose Gitelman or Bartter syndrome, self-prescribing potassium, magnesium, salt, diuretics, or extreme hydration, or changing kidney medication from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Repeat electrolytes including potassium, magnesium, bicarbonate, calcium, creatinine/eGFR, and urine-electrolyte review when indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical renal-tubulopathy sequencing with expert variant and copy-number review",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Nephrology should separate inherited tubulopathy from diuretic use, vomiting, endocrine causes, and other acquired conditions; do not change electrolyte or blood-pressure medication from an array result."
+      ],
+      "notes": "Renal salt-wasting disorders require biochemical phenotype, medication review, and clinical interpretation. Similar laboratory patterns can have different causes, and consumer SNP data cannot exclude rare pathogenic variants.",
+      "sources": [
+        "ncbi_gitelman_bartter_context",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "mody_monogenic_diabetes_context",
+      "genes": [
+        "GCK",
+        "HNF1A",
+        "HNF4A",
+        "HNF1B",
+        "INS",
+        "PDX1",
+        "NEUROD1"
+      ],
+      "marker_ids": [
+        "PANEL_MODY_MONOGENIC_DIABETES"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "metabolic",
+        "hormones_reproductive"
+      ],
+      "favor": [
+        "If diabetes began unusually early, is non-autoimmune, shows persistent C-peptide, has atypical treatment needs, or spans multiple generations, discuss monogenic-diabetes evaluation with an endocrinology or genetics team"
+      ],
+      "avoid": [
+        "Using a consumer panel to label diabetes as MODY, type 1, or type 2, assuming a family-history pattern proves a subtype, or starting, stopping, or switching insulin, metformin, or a sulfonylurea from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "HbA1c and fasting or clinically indicated glucose assessment",
+          "urgency": "consider"
+        },
+        {
+          "name": "Diabetes classification review including islet autoantibodies and C-peptide when clinically indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical monogenic-diabetes sequencing with deletion/duplication and variant classification",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Endocrinology should integrate age at onset, glucose pattern, autoantibodies, C-peptide, family history, pregnancy or life-stage context, and the confirmed gene before changing diabetes treatment; raw DNA cannot choose therapy."
+      ],
+      "notes": "MODY is a group of rare disorders with overlapping type 1 and type 2 features. The candidate gene list and variant classification require current clinical genetics review; an ordinary SNP array does not diagnose monogenic diabetes.",
+      "sources": [
+        "gene_reviews_mody",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "non_hfe_iron_overload_context",
+      "genes": [
+        "HAMP",
+        "HJV",
+        "TFR2",
+        "SLC40A1"
+      ],
+      "marker_ids": [
+        "PANEL_NON_HFE_IRON_OVERLOAD"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "nutrients",
+        "digestive_gut_microbiome",
+        "hormones_reproductive"
+      ],
+      "favor": [
+        "If repeated high transferrin saturation or ferritin, unexplained liver disease, early endocrine or cardiac findings, or a family history of iron overload is present, discuss a full iron-overload workup with a clinician"
+      ],
+      "avoid": [
+        "Using a rare-panel label to diagnose iron overload, starting iron, stopping needed iron without laboratory review, or performing therapeutic phlebotomy or chelation changes from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Repeat fasting transferrin saturation and ferritin with CBC and liver-test context when indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical non-HFE iron-overload sequencing with liver or hematology review when biochemical overload is confirmed",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Interpret iron results with menstrual or other blood loss, inflammation, alcohol, metabolic liver disease, transfusions, pregnancy, supplements, and medication history; do not start iron or alter treatment from consumer DNA."
+      ],
+      "notes": "Non-HFE iron overload is rare and includes different inheritance and biochemical patterns. Transferrin saturation, ferritin, organ assessment, and clinical molecular testing are required; an array panel cannot confirm or exclude it.",
+      "sources": [
+        "gene_reviews_hamp_hjv_hemochromatosis",
+        "gene_reviews_tfr2_hemochromatosis",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "wilson_copper_transport_confirmation",
+      "genes": [
+        "ATP7B"
+      ],
+      "marker_ids": [
+        "PANEL_WILSON_DISEASE"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "nutrients",
+        "digestive_gut_microbiome",
+        "neuropsych"
+      ],
+      "favor": [
+        "If unexplained liver disease, neurologic or movement symptoms, psychiatric changes with relevant medical findings, hemolysis, or a family history is present, discuss Wilson-disease evaluation with a clinician"
+      ],
+      "avoid": [
+        "Using a consumer ATP7B signal to diagnose or exclude Wilson disease, taking copper or zinc supplements for treatment, attempting chelation, or changing liver or neurologic medication from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Ceruloplasmin, liver tests, serum copper, and 24-hour urinary copper when clinically indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical ATP7B sequencing with deletion/duplication, phase, and variant-classification review",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Hepatology or neurology should interpret copper tests, liver or neurologic findings, age, family history, and the complete ATP7B result; do not self-treat with copper, zinc, chelation, or medication changes from raw DNA."
+      ],
+      "notes": "Wilson disease generally requires compatible clinical or biochemical findings plus appropriate ATP7B interpretation; biallelic status and variant classification matter. Most pathogenic variants are not represented on consumer arrays.",
+      "sources": [
+        "gene_reviews_wilson",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "rare_nutrient_transport_context",
+      "genes": [
+        "SLC19A2",
+        "SLC19A3",
+        "SLC46A1",
+        "SLC52A2",
+        "SLC52A3"
+      ],
+      "marker_ids": [
+        "PANEL_RARE_NUTRIENT_TRANSPORT_DISORDERS"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "nutrients",
+        "neuropsych",
+        "muscle_performance_recovery"
+      ],
+      "favor": [
+        "If severe or unusual anemia, neuropathy, hearing or vision loss, seizures, movement symptoms, cardiomyopathy, or a childhood-onset nutrient-responsive syndrome is present, discuss metabolic or clinical-genetics evaluation"
+      ],
+      "avoid": [
+        "Using a rare transporter panel to diagnose a deficiency, taking megadose vitamins, restricting foods, or changing neurologic, cardiac, or metabolic medication from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinician-directed blood-count, nutrient-status, metabolic, and neurologic testing based on the observed phenotype",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical inborn-error or phenotype-focused sequencing with biallelic and copy-number review when indicated",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "A metabolic or neurology team should decide whether a nutrient trial is appropriate only after phenotype, biochemical testing, interactions, pregnancy or life-stage context, and clinical genetics review; do not use the array to select a supplement dose or medication."
+      ],
+      "notes": "Rare nutrient transporter disorders are high-effect, uncommon conditions that depend on phenotype and clinical biochemical/genetic testing. A common SNP array usually misses the pathogenic variants and cannot establish nutritional need.",
+      "sources": [
+        "gene_reviews_riboflavin_transport",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "monogenic_migraine_red_flag_context",
+      "genes": [
+        "CACNA1A",
+        "ATP1A2",
+        "SCN1A",
+        "PRRT2"
+      ],
+      "marker_ids": [
+        "PANEL_MONOGENIC_MIGRAINE_RED_FLAGS"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pain_migraine_sensory",
+        "neuropsych"
+      ],
+      "favor": [
+        "If hemiplegic episodes, seizures, ataxia, progressive neurologic findings, unusual early-onset migraine, or a strong family history is present, discuss neurology evaluation and clinical sequencing"
+      ],
+      "avoid": [
+        "Using a consumer panel to diagnose a migraine syndrome, interpreting a new severe neurologic symptom as genetic, or starting, stopping, or escalating migraine or seizure medication from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Neurologic examination and clinician-directed brain imaging or other urgent evaluation for new or severe neurologic symptoms",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical migraine or epilepsy gene-panel sequencing with expert variant classification",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Neurology should integrate attack pattern, examination, family history, imaging, triggers, pregnancy or life-stage context, and a clinically interpreted variant before changing treatment; raw DNA cannot determine migraine type or medication response."
+      ],
+      "notes": "Rare CACNA1A, ATP1A2, SCN1A, and PRRT2 disorders have overlapping neurologic phenotypes and variable expression. Clinical assessment and sequencing are required; consumer SNP data cannot rule them in or out.",
+      "sources": [
+        "genereviews",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "pain_channelopathy_red_flag_context",
+      "genes": [
+        "SCN9A",
+        "SCN10A",
+        "SCN11A",
+        "TRPA1",
+        "TRPV1"
+      ],
+      "marker_ids": [
+        "PANEL_PAIN_CHANNELopathy_RED_FLAGS"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "pack_hints": [
+        "pain_migraine_sensory",
+        "neuropathy"
+      ],
+      "favor": [
+        "If lifelong extreme pain insensitivity, erythromelalgia, severe unexplained neuropathic pain, recurrent injuries, or a family history is present, discuss neurology, pain, or clinical-genetics evaluation"
+      ],
+      "avoid": [
+        "Using a consumer panel to diagnose an inherited pain disorder, ignoring burns or injuries because pain feels different, or escalating, stopping, or selecting analgesic medication from raw DNA"
+      ],
+      "lab_tests": [
+        {
+          "name": "Neurologic and pain examination with clinician-directed nerve, autonomic, or other testing when indicated",
+          "urgency": "consider"
+        },
+        {
+          "name": "Clinical pain-neuropathy sequencing with expert variant classification",
+          "urgency": "consider",
+          "requires_counselor": true
+        }
+      ],
+      "medication_context": [
+        "Pain treatment must account for examination, injury risk, mental health, kidney/liver function, interactions, and the confirmed diagnosis; an array result cannot establish analgesic response or justify a medication change."
+      ],
+      "notes": "Inherited pain channelopathies are rare and phenotype-specific. Consumer arrays miss many pathogenic variants and cannot replace neurologic examination, injury prevention, or clinical sequencing.",
+      "sources": [
+        "genereviews",
+        "clinvar",
+        "clinical_confirmation_required",
+        "phenotype_required",
         "user_declared_values_required",
         "safety_guardrail"
       ]

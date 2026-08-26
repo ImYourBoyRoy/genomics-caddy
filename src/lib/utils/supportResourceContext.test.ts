@@ -176,6 +176,39 @@ describe('support resource context', () => {
     expect(context.safety_guardrails.some((rule) => rule.id === 'PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA')).toBe(true);
   });
 
+  it('includes rare clinical-panel routes and their registered sources', () => {
+    const context = buildSupportResourceContext({
+      packIds: [
+        'allergy_atopy_mast_cell',
+        'kidney_fluid_electrolytes',
+        'metabolic',
+        'nutrients',
+        'pain_migraine_sensory',
+        'respiratory_airway',
+      ],
+      consultationMode: 'general',
+    });
+    const ruleIds = context.actionability_rules.map((rule) => rule.id);
+
+    expect(ruleIds).toEqual(expect.arrayContaining([
+      'mast_cell_mediator_clinical_context',
+      'hereditary_angioedema_red_flag_context',
+      'alpha1_antitrypsin_lung_liver_confirmation',
+      'apol1_kidney_risk_context',
+      'monogenic_renal_tubulopathy_context',
+      'mody_monogenic_diabetes_context',
+      'non_hfe_iron_overload_context',
+      'wilson_copper_transport_confirmation',
+      'rare_nutrient_transport_context',
+      'monogenic_migraine_red_flag_context',
+      'pain_channelopathy_red_flag_context',
+    ]));
+    expect(context.cycle_support.source_registry.wao_hae_guideline_2025).toBeDefined();
+    expect(context.cycle_support.source_registry.gene_reviews_alpha1_antitrypsin).toBeDefined();
+    expect(context.cycle_support.source_registry.gene_reviews_wilson).toBeDefined();
+    expect(context.cycle_support.source_registry.gene_reviews_riboflavin_transport).toBeDefined();
+  });
+
   it('routes preconception and fertility context across body and partner factors', () => {
     const context = buildSupportResourceContext({
       packIds: ['hormones_reproductive'],

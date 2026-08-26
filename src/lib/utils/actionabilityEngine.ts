@@ -240,11 +240,11 @@ function qualifyGuidance(
   switch (actionabilityClass) {
     case 'clinical_confirmation':
       return kind === 'avoid'
-        ? `Do not avoid solely from raw DNA; confirm the finding clinically first: ${clean}`
+        ? `Do not make this change from raw DNA; confirm the finding clinically first: ${clean}`
         : `Only consider after clinical confirmation and individualized advice: ${clean}`;
     case 'symptom_or_lab_conditioned':
       return kind === 'avoid'
-        ? `Consider limiting only if symptoms, labs, or clinician guidance support it: ${clean}`
+        ? `Do not make this change unless symptoms, labs, or clinician guidance support it: ${clean}`
         : `Consider only if symptoms, labs, or personal goals support it: ${clean}`;
     case 'general_wellness':
     default:

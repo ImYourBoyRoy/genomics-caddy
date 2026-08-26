@@ -1,6 +1,6 @@
 {
   "name": "Source Registry",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "last_updated": "2026-08-26",
   "sources": {
     "gwas_catalog": {
@@ -850,6 +850,94 @@
       "evidence_type": "Cardiology patient and clinician education",
       "conflict_of_interest": "American Heart Association public health resource",
       "notes": "Use for symptom, cardiac-testing, and genetic-evaluation context; a genetic signal does not establish current amyloid cardiomyopathy."
+    },
+    "wao_hae_guideline_2025": {
+      "name": "World Allergy Organization: 2025 Hereditary Angioedema Guideline",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13184495/",
+      "accessed": "2026-08-26",
+      "evidence_type": "International clinical practice guideline",
+      "conflict_of_interest": "World Allergy Organization guideline; review published disclosures when using clinically",
+      "notes": "Use for recurrent swelling without hives, C4/C1-inhibitor evaluation, medication-trigger context, and the limits of genetic testing across HAE subtypes."
+    },
+    "hereditary_alpha_tryptasemia_review": {
+      "name": "NIH/PMC: Hereditary Alpha-Tryptasemia Genotyping and Clinical Features",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6411063/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Peer-reviewed clinical genetics study",
+      "conflict_of_interest": "Peer-reviewed research publication; review article disclosures when using clinically",
+      "notes": "Use for TPSAB1 copy-number and baseline-tryptase context. Consumer SNP arrays do not establish copy number or mast-cell disease."
+    },
+    "gene_reviews_alpha1_antitrypsin": {
+      "name": "GeneReviews: Alpha-1 Antitrypsin Deficiency",
+      "url": "https://www.ncbi.nlm.nih.gov/sites/books/NBK1519/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for SERPINA1 clinical phenotype, serum AAT measurement, targeted and sequence testing, and lung/liver evaluation boundaries."
+    },
+    "nih_apol1_kidney_review": {
+      "name": "NIH/PMC: APOL1 Kidney Disease Risk Variants",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4562465/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Peer-reviewed NIH-supported review",
+      "conflict_of_interest": "Peer-reviewed research review; review article disclosures when using clinically",
+      "notes": "Use for the ancestry- and phenotype-dependent APOL1 G1/G2 risk model. Do not equate a risk genotype with kidney disease or use it as a stand-alone prognosis."
+    },
+    "niddk_apol1_ckd_context": {
+      "name": "NIDDK: APOL1 Kidney Disease Research Context",
+      "url": "https://www.niddk.nih.gov/about-niddk/research-areas/kidney-disease/effects-chronic-kidney-disease-adults-study-cric",
+      "accessed": "2026-08-26",
+      "evidence_type": "NIH kidney-disease research resource",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public research resource",
+      "notes": "Use for APOL1 kidney-risk context alongside kidney phenotype and measured kidney-function evaluation; not for ancestry inference or diagnosis."
+    },
+    "ncbi_gitelman_bartter_context": {
+      "name": "NCBI Bookshelf: Gitelman Syndrome",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK459304/",
+      "accessed": "2026-08-26",
+      "evidence_type": "NCBI clinical review",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for renal salt-wasting phenotype, potassium/magnesium and acid-base context, and the danger of treating a consumer panel as a diagnosis."
+    },
+    "gene_reviews_mody": {
+      "name": "GeneReviews: Maturity-Onset Diabetes of the Young",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK500456/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for early-onset non-autoimmune diabetes, family history, C-peptide/autoantibody context, and molecular confirmation of monogenic diabetes."
+    },
+    "gene_reviews_hamp_hjv_hemochromatosis": {
+      "name": "GeneReviews: HAMP- and HJV-Related Hemochromatosis",
+      "url": "https://www.ncbi.nlm.nih.gov/sites/books/NBK1170/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for early-onset severe iron overload, transferrin-saturation/ferritin context, and non-HFE molecular confirmation."
+    },
+    "gene_reviews_tfr2_hemochromatosis": {
+      "name": "GeneReviews: TFR2-Related Hemochromatosis",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1349/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for biochemical iron-overload workup, TFR2 testing, liver assessment, and the distinction between a clinical diagnosis and consumer SNP coverage."
+    },
+    "gene_reviews_wilson": {
+      "name": "GeneReviews: Wilson Disease",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1512/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for ATP7B biallelic-variant interpretation, ceruloplasmin/copper and liver-neurologic assessment, and clinical confirmation boundaries."
+    },
+    "gene_reviews_riboflavin_transport": {
+      "name": "GeneReviews: Riboflavin Transporter Deficiency",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK299312/",
+      "accessed": "2026-08-26",
+      "evidence_type": "Clinical genetics review resource",
+      "conflict_of_interest": "NCBI Bookshelf clinical review resource",
+      "notes": "Use for SLC52A2/SLC52A3 biallelic disease, neurologic/hearing/respiratory phenotype, and the need for clinical sequencing rather than ordinary SNP-array inference."
     },
     "cdc_oral_cancer": {
       "name": "CDC: About Oral Cancer",

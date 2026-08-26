@@ -21,65 +21,79 @@
   }
 
   let { sources = [], dbSources = [] }: Props = $props();
-  let sourceCount = $derived((sources?.length ?? 0) + (dbSources?.length ?? 0));
+
+  interface DisplayReference {
+    kind: 'Evidence' | 'Catalog';
+    title: string;
+    organization: string;
+    date: string;
+    role: string;
+    url?: string;
+  }
+
+  function buildReferences(curated: MarkerSource[], catalog: EnrichedSource[]): DisplayReference[] {
+    const references: DisplayReference[] = [];
+    const seen = new Set<string>();
+    for (const source of curated) {
+      const reference: DisplayReference = {
+        kind: 'Evidence',
+        title: source.name,
+        organization: source.name,
+        date: source.accessed || 'Access date not recorded',
+        role: source.evidence_type || 'Marker-pack reference',
+        url: source.url,
+      };
+      const key = [reference.title, reference.url || '', reference.role].join('|').toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        references.push(reference);
+      }
+    }
+    for (const source of catalog) {
+      const reference: DisplayReference = {
+        kind: 'Catalog',
+        title: source.citation,
+        organization: source.source_type,
+        date: 'Local catalog record',
+        role: source.details || 'Catalog evidence',
+        url: source.url,
+      };
+      const key = [reference.title, reference.url || '', reference.role].join('|').toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        references.push(reference);
+      }
+    }
+    return references;
+  }
+
+  let references = $derived(buildReferences(sources, dbSources));
 </script>
 
-{#if sourceCount > 0}
+{#if references.length > 0}
   <details class="marker-sources-details">
-    <summary>📚 References ({sourceCount})</summary>
-    {#if sources && sources.length > 0}
-      <div class="marker-sources">
-        <span class="sec-title">Evidence sources</span>
-        <ul class="sources-list">
-          {#each sources as source}
-            <li>
-              {#if source.url}
-                {@const safeUrl = safeExternalHref(source.url)}
-                {#if safeUrl}
-                  <a href={safeUrl} target="_blank" rel="noopener noreferrer" class="source-link">{source.name}</a>
-                {:else}
-                  {source.name}
-                {/if}
+    <summary>📚 References ({references.length})</summary>
+    <div class="marker-sources">
+      <ul class="sources-list">
+        {#each references as reference}
+          <li>
+            <span class="db-source-type">{reference.kind}</span>
+            {#if reference.url}
+              {@const safeUrl = safeExternalHref(reference.url)}
+              {#if safeUrl}
+                <a href={safeUrl} target="_blank" rel="noopener noreferrer" class="source-link">{reference.title}</a>
               {:else}
-                {source.name}
+                {reference.title}
               {/if}
-              {#if source.evidence_type}
-                <span class="source-type">({source.evidence_type})</span>
-              {/if}
-              {#if source.notes}
-                <span class="source-notes">— {source.notes}</span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
-    {#if dbSources && dbSources.length > 0}
-      <div class="marker-sources db-sources">
-        <span class="sec-title">Reference database citations</span>
-        <ul class="sources-list">
-          {#each dbSources as src}
-            <li>
-              <span class="db-source-type">{src.source_type}</span>
-              {#if src.url}
-                {@const safeUrl = safeExternalHref(src.url)}
-                {#if safeUrl}
-                  <a href={safeUrl} target="_blank" rel="noopener noreferrer" class="source-link">{src.citation}</a>
-                {:else}
-                  {src.citation}
-                {/if}
-              {:else}
-                {src.citation}
-              {/if}
-              {#if src.details}
-                <span class="source-notes">— {src.details}</span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
+            {:else}
+              {reference.title}
+            {/if}
+            <span class="source-type">— {reference.organization}</span>
+            <span class="source-notes">— {reference.role}; {reference.date}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
   </details>
 {/if}
 
@@ -102,11 +116,6 @@
     margin-bottom: 0.6rem;
   }
 
-  .db-sources {
-    margin-top: 0.5rem;
-    padding-top: 0.4rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
   .db-source-type {
     font-size: 0.65rem;
     font-weight: 700;

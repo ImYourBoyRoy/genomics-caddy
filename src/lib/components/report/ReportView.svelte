@@ -27,6 +27,11 @@
     writePresentationMode,
     type PresentationMode,
   } from '../../utils/presentationPreferences';
+  import {
+    buildReportAudienceMarkdown,
+    reportAudienceFilename,
+    type ReportExportAudience,
+  } from '../../utils/reportAudienceExport';
 
   /*
   Module Docstring:
@@ -234,6 +239,8 @@
 
   let discoveryExportBusy = $state(false);
   let discoveryExportHint = $state('');
+  let audienceExportBusy = $state<ReportExportAudience | ''>('');
+  let audienceExportHint = $state('');
 
   /** Curated pack report (same shape as roy_ancestrydna_report_v3/v4). */
   async function exportCuratedJson() {
@@ -284,6 +291,31 @@
       dialogStore.alert("Full catalog export failed: " + String(e));
     } finally {
       discoveryExportBusy = false;
+    }
+  }
+
+  async function exportAudienceReport(audience: ReportExportAudience) {
+    if (!generatedReport || audienceExportBusy) return;
+    audienceExportBusy = audience;
+    audienceExportHint = '';
+    try {
+      const content = buildReportAudienceMarkdown({
+        audience,
+        report: generatedReport,
+        sample: selectedSample,
+        includeRawGenotypes: audience !== 'personal',
+        reproductiveContext,
+        personalSafetyContext,
+      });
+      const saved = await saveReportJson(content, reportAudienceFilename(selectedSample.name, audience));
+      audienceExportHint = saved
+        ? `${audience === 'personal' ? 'Personal Simple' : audience === 'clinician' ? 'Clinician Handoff' : 'AI Review'} export saved locally.`
+        : 'Export canceled; no file was written.';
+    } catch (e: unknown) {
+      audienceExportHint = `Export failed: ${String(e)}`;
+      await dialogStore.alert('Audience export failed: ' + String(e));
+    } finally {
+      audienceExportBusy = '';
     }
   }
 </script>
@@ -359,6 +391,18 @@
       >
         Export curated report JSON
       </button>
+      <div class="export-audience-group" aria-label="Audience-specific markdown exports">
+        <span class="export-audience-label">Audience exports</span>
+        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'personal' ? 'Saving…' : 'Personal Simple'}
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'clinician' ? 'Saving…' : 'Clinician Handoff'}
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'ai' ? 'Saving…' : 'AI Review'}
+        </button>
+      </div>
       <button
         class="btn btn-secondary btn-sm"
         onclick={exportFullCatalogJson}
@@ -373,6 +417,9 @@
     </div>
     {#if discoveryExportHint}
       <p class="export-hint">{discoveryExportHint}</p>
+    {/if}
+    {#if audienceExportHint}
+      <p class="export-hint" role="status">{audienceExportHint}</p>
     {/if}
     <p class="export-hint">
       Prefer the <strong>Discovery</strong> tab to browse beyond-pack associations in-app.
@@ -455,8 +502,8 @@
       </button>
       <button 
         class="view-mode-btn" 
-        class:view-mode-active={presentationMode === 'dual'}
-        onclick={() => setPresentationMode('dual')}
+        class:view-mode-active={presentationMode === 'compare'}
+        onclick={() => setPresentationMode('compare')}
       >
         👥 Compare
       </button>

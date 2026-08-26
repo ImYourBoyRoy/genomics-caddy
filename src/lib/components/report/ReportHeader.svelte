@@ -19,7 +19,7 @@
     geneticSex: string;
     foundMarkersCount: number;
     totalMarkersChecked: number;
-    presentationMode?: "simple" | "clinical" | "dual";
+    presentationMode?: "simple" | "clinical" | "compare";
   }
 
   let {

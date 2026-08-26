@@ -21,6 +21,8 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 const MCP_WRITE_TOOLS: &[&str] = &[
     "delete_chat_session",
     "update_candidate_marker_status",
+    "sync_offline_asset",
+    "sync_offline_data",
     "backfill_evidence_payloads",
     "build_vector_atlas",
     "enable_named_vectors_collection",
@@ -332,6 +334,39 @@ async fn handle_request(
                         }
                     },
                     {
+                        "name": "get_offline_update_status",
+                        "description": "Returns machine-readable local/offline reference inventory, update availability, and indexed row counts. Does not return genotype values.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {}
+                        }
+                    },
+                    {
+                        "name": "sync_offline_asset",
+                        "description": "Downloads and validates one offline reference asset, then imports it locally. Requires --mcp-write; never returns genotype values.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "asset_id": { "type": "string", "description": "Manifest asset ID, for example clinvar_variant_summary" },
+                                "force": { "type": "boolean", "description": "Re-download an existing asset when true" },
+                                "sample_id": { "type": "integer", "description": "Optional sample ID for sample-derived Tier 2 assets" }
+                            },
+                            "required": ["asset_id"]
+                        }
+                    },
+                    {
+                        "name": "sync_offline_data",
+                        "description": "Syncs one offline data tier or all tiers. Requires --mcp-write; returns sync/validation messages without genotype values.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "tier": { "type": "integer", "description": "Optional tier 0, 1, or 2; omit to sync all tiers" },
+                                "force": { "type": "boolean", "description": "Re-download existing assets when true" },
+                                "sample_id": { "type": "integer", "description": "Optional sample ID for sample-derived Tier 2 assets" }
+                            }
+                        }
+                    },
+                    {
                         "name": "check_chain_status",
                         "description": "Checks if the GRCh37-to-GRCh38 liftover chain alignment file is locally present.",
                         "inputSchema": {
@@ -627,6 +662,80 @@ async fn handle_request(
     }
 }
 
+/// Offline resource operations exposed to MCP use the same manifest/sync
+/// implementation as the desktop UI. Status is read-only; sync operations are
+/// write-gated above and intentionally return only asset metadata/messages.
+async fn mcp_offline_tool(name: &str, args: Value, db_path: &PathBuf) -> Result<Value, String> {
+    let data_dir = db_path
+        .parent()
+        .ok_or("Could not resolve offline data directory")?;
+
+    match name {
+        "get_offline_update_status" => {
+            let status = crate::offline::check_offline_updates(data_dir, db_path).await?;
+            Ok(serde_json::to_value(status)
+                .map_err(|e| format!("Offline status serialization error: {e}"))?)
+        }
+        "sync_offline_asset" => {
+            let asset_id = args
+                .get("asset_id")
+                .and_then(|v| v.as_str())
+                .ok_or("Missing asset_id")?;
+            let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
+            let sample_id = args.get("sample_id").and_then(|v| v.as_i64());
+            let result = crate::offline::sync_single_asset(
+                data_dir,
+                db_path,
+                asset_id,
+                force,
+                sample_id,
+                None,
+            )
+            .await?;
+            Ok(serde_json::to_value(result)
+                .map_err(|e| format!("Offline sync serialization error: {e}"))?)
+        }
+        "sync_offline_data" => {
+            let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
+            let sample_id = args.get("sample_id").and_then(|v| v.as_i64());
+            if let Some(tier) = args.get("tier").and_then(|v| v.as_u64()) {
+                if tier > 2 {
+                    return Err("tier must be 0, 1, or 2".into());
+                }
+                let result = crate::offline::sync_offline_tier(
+                    data_dir,
+                    db_path,
+                    tier as u8,
+                    force,
+                    sample_id,
+                    None,
+                )
+                .await?;
+                return Ok(serde_json::to_value(result)
+                    .map_err(|e| format!("Offline sync serialization error: {e}"))?);
+            }
+
+            let mut results = Vec::new();
+            for tier in 0..=2 {
+                results.push(
+                    crate::offline::sync_offline_tier(
+                        data_dir,
+                        db_path,
+                        tier,
+                        force,
+                        sample_id,
+                        None,
+                    )
+                    .await?,
+                );
+            }
+            Ok(serde_json::to_value(results)
+                .map_err(|e| format!("Offline sync serialization error: {e}"))?)
+        }
+        _ => Err(format!("Unknown offline tool: {name}")),
+    }
+}
+
 async fn execute_tool(
     name: &str,
     args: Value,
@@ -642,6 +751,9 @@ async fn execute_tool(
 
     match name {
         "search_evidence" => return mcp_search_evidence(db_path, args, allow_write).await,
+        "get_offline_update_status" | "sync_offline_asset" | "sync_offline_data" => {
+            return mcp_offline_tool(name, args, db_path).await;
+        }
         "scan_ollama_models" | "show_ollama_model" | "get_active_ollama_models" => {
             return mcp_ollama_tool(name, args).await;
         }
@@ -1551,7 +1663,10 @@ mod tests {
     #[test]
     fn write_tools_include_build_vector_atlas() {
         assert!(mcp_tool_requires_write("build_vector_atlas"));
+        assert!(mcp_tool_requires_write("sync_offline_asset"));
+        assert!(mcp_tool_requires_write("sync_offline_data"));
         assert!(!mcp_tool_requires_write("search_evidence"));
+        assert!(!mcp_tool_requires_write("get_offline_update_status"));
         assert!(mcp_tool_requires_write("delete_chat_session"));
     }
 

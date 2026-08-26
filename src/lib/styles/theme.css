@@ -1385,6 +1385,22 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   flex-wrap: wrap;
 }
+.export-audience-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.55rem;
+  background: var(--surface-subtle);
+}
+.export-audience-label {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 .filter-actions {
   display: inline-flex;
   gap: 4px;

@@ -21,7 +21,11 @@ describe('presentation preferences', () => {
   it('accepts supported modes and writes only the selected mode', () => {
     const prefs = storage();
     expect(readPresentationMode(storage({ mode: 'clinical' }), 'mode')).toBe('clinical');
-    writePresentationMode(prefs, 'mode', 'dual');
-    expect(prefs.getItem('mode')).toBe('dual');
+    writePresentationMode(prefs, 'mode', 'compare');
+    expect(prefs.getItem('mode')).toBe('compare');
+  });
+
+  it('migrates the legacy dual mode to compare without resetting the profile', () => {
+    expect(readPresentationMode(storage({ mode: 'dual' }), 'mode')).toBe('compare');
   });
 });

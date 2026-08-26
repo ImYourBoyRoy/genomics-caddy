@@ -24,7 +24,7 @@
 
   interface Props {
     section: EvaluatedSection;
-    viewMode: "simple" | "clinical" | "dual";
+    viewMode: "simple" | "clinical" | "compare";
     onExploreResearch?: (rsid: string) => void;
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;

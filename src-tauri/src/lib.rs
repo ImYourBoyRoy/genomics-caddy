@@ -1799,6 +1799,29 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
             "params": []
         },
         {
+            "name": "get_offline_update_status",
+            "description": "Returns local/offline reference inventory, update availability, and indexed row counts without genotype values.",
+            "params": []
+        },
+        {
+            "name": "sync_offline_asset",
+            "description": "Downloads, validates, and imports one offline reference asset. Requires --mcp-write.",
+            "params": [
+                { "name": "asset_id", "type": "string", "required": true, "description": "Manifest asset ID" },
+                { "name": "force", "type": "boolean", "required": false, "description": "Re-download an existing asset" },
+                { "name": "sample_id", "type": "integer", "required": false, "description": "Sample ID for sample-derived Tier 2 assets" }
+            ]
+        },
+        {
+            "name": "sync_offline_data",
+            "description": "Syncs one offline data tier or all tiers. Requires --mcp-write.",
+            "params": [
+                { "name": "tier", "type": "integer", "required": false, "description": "Tier 0, 1, or 2; omit for all tiers" },
+                { "name": "force", "type": "boolean", "required": false, "description": "Re-download existing assets" },
+                { "name": "sample_id", "type": "integer", "required": false, "description": "Sample ID for sample-derived Tier 2 assets" }
+            ]
+        },
+        {
             "name": "check_chain_status",
             "description": "Checks if the GRCh37-to-GRCh38 liftover chain alignment file is locally present.",
             "params": []

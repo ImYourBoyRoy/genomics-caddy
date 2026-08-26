@@ -14,7 +14,7 @@
 
   interface Props {
     marker: EvaluatedMarker;
-    viewMode: "simple" | "clinical" | "dual";
+    viewMode: "simple" | "clinical" | "compare";
     onExploreResearch?: (rsid: string) => void;
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
@@ -80,14 +80,18 @@
   class:marker-card-collapsed={!isActiveFindings}
   class:marker-card-highlight={isHighlighted}
 >
-  <!-- Header row: gene name + evidence tier -->
+  <!-- Header row: a plain-language title in Simple mode; technical identity stays below. -->
   <div class="marker-top">
-    <span class="gene-label">
-      <strong>{marker.gene}</strong> 
-      {#if marker.variant_name}
-        <span class="variant-sub">({marker.variant_name})</span>
-      {/if}
-      {#if viewMode !== 'simple'}
+    {#if viewMode === 'simple'}
+      <span class="gene-label simple-finding-title">
+        <strong>{laypersonTranslation.simpleImpact}</strong>
+      </span>
+    {:else}
+      <span class="gene-label">
+        <strong>{marker.gene}</strong>
+        {#if marker.variant_name}
+          <span class="variant-sub">({marker.variant_name})</span>
+        {/if}
         <span class="rsid-sub">
           {marker.rsid}
           {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
@@ -105,8 +109,8 @@
             </span>
           {/if}
         </span>
-      {/if}
-    </span>
+      </span>
+    {/if}
     <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
     {#if marker.sex_scope && marker.sex_scope !== 'all'}
       <Tooltip label={getScopeLabel(marker.sex_scope)} description="Biological applicability hint only; this is not gender identity, anatomy, fertility, pregnancy, or hormone status.">
@@ -218,14 +222,14 @@
       <div class="impact-section">
         <strong>{viewMode === 'simple' ? 'What this is about:' : 'What this gene does:'}</strong>
         {#if viewMode === "simple"}
-          <span class="layperson-text">{laypersonTranslation?.simpleImpact || marker.impact}</span>
+          <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
         {:else if viewMode === "clinical"}
           <span class="clinical-text">{marker.impact}</span>
         {:else}
           <div class="dual-explanations">
             <div class="dual-row layperson-box">
               <span class="dual-tag layperson-tag">🌱 Simple:</span>
-              <span class="layperson-text">{laypersonTranslation?.simpleImpact || marker.impact}</span>
+              <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
             </div>
             <div class="dual-row clinical-box">
               <span class="dual-tag clinical-tag">🏥 Medical:</span>
@@ -251,14 +255,14 @@
       <div class="interpretation-section">
         <strong>{viewMode === 'simple' ? 'What this might mean for you:' : 'What your result means:'}</strong>
         {#if viewMode === "simple"}
-          <span class="layperson-text">{laypersonTranslation?.simpleMeaning || marker.interpretation}</span>
+          <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
         {:else if viewMode === "clinical"}
           <span class="clinical-text">{marker.interpretation}</span>
         {:else}
           <div class="dual-explanations">
             <div class="dual-row layperson-box">
               <span class="dual-tag layperson-tag">🌱 Simple:</span>
-              <span class="layperson-text">{laypersonTranslation?.simpleMeaning || marker.interpretation}</span>
+              <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
             </div>
             <div class="dual-row clinical-box">
               <span class="dual-tag clinical-tag">🏥 Medical:</span>
@@ -341,6 +345,17 @@
     opacity: 0.6;
     transition: opacity 0.2s, transform 0.2s;
     vertical-align: middle;
+  }
+
+  .simple-finding-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .simple-finding-title strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.3;
   }
 
   .research-explore-link:hover {

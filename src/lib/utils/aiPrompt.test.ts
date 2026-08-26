@@ -112,6 +112,14 @@ describe('AI marker payload claim boundaries', () => {
         active_ingredients: 'norethindrone 0.35 mg',
         question_or_belief_to_verify: 'I think this is progesterone-only; verify the label',
       },
+      cycleDiary: [{
+        id: 'day-1',
+        values: {
+          entry_date: '2026-08-01',
+          mood_behavior_score: '3',
+          mood_behavior_notes: 'needs quiet',
+        },
+      }],
     };
     const prompt = buildSystemPrompt({
       selectedSample: { id: 7, name: 'Example', genetic_sex: 'unknown' } as unknown as GenomeSample,
@@ -143,6 +151,8 @@ describe('AI marker payload claim boundaries', () => {
     expect(prompt).toContain('active_ingredients');
     expect(prompt).toContain('I think this is progesterone-only');
     expect(prompt).toContain('reproductive_context_intake');
+    expect(prompt).toContain('cycle_symptom_diary');
+    expect(prompt).toContain('needs quiet');
     expect(prompt).toContain('self-reported context for this DNA profile, not genotype evidence');
   });
 });

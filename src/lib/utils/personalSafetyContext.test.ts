@@ -25,6 +25,14 @@ describe('personal safety context', () => {
         question_or_belief_to_verify: 'I think this is progesterone-only',
         unknown_field: 'drop me',
       },
+      cycleDiary: [{
+        id: 'day-1',
+        values: {
+          entry_date: '2026-08-01',
+          mood_behavior_score: '3',
+          unknown_field: 'drop me',
+        },
+      }],
     })).toEqual({
       medications: ['norethindrone', 'levothyroxine'],
       supplements: ['magnesium'],
@@ -35,6 +43,13 @@ describe('personal safety context', () => {
         active_ingredients: 'norethindrone 0.35 mg',
         question_or_belief_to_verify: 'I think this is progesterone-only',
       },
+      cycleDiary: [{
+        id: 'day-1',
+        values: {
+          entry_date: '2026-08-01',
+          mood_behavior_score: '3',
+        },
+      }],
     });
   });
 

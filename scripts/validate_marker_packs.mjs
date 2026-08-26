@@ -137,7 +137,7 @@ const supportContracts = {
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
-  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts', 'intake_schema'] },
+  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts', 'intake_schema', 'diary_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },
@@ -395,6 +395,52 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (!isStringArray(schema?.do_not_infer) || schema.do_not_infer.length === 0) {
       errors.push('cycle_support_guidance.json intake_schema.do_not_infer must be a non-empty string array');
+    }
+
+    const diary = resource.diary_schema;
+    const diaryFields = diary?.fields || [];
+    const diaryFieldIds = new Set();
+    for (const [index, field] of diaryFields.entries()) {
+      const location = `cycle_support_guidance.json diary field ${index + 1}`;
+      for (const key of ['id', 'label', 'input_type', 'help']) {
+        if (typeof field[key] !== 'string' || field[key].trim() === '') {
+          errors.push(`${location}: ${key} must be a non-empty string`);
+        }
+      }
+      if (!allowedInputTypes.has(field.input_type)) {
+        errors.push(`${location}: unsupported input_type ${field.input_type}`);
+      }
+      if (diaryFieldIds.has(field.id)) errors.push(`${location}: duplicate id ${field.id}`);
+      diaryFieldIds.add(field.id);
+      for (const bound of ['min', 'max', 'step']) {
+        if (field[bound] !== undefined && (typeof field[bound] !== 'number' || !Number.isFinite(field[bound]))) {
+          errors.push(`${location}: ${bound} must be a finite number when provided`);
+        }
+      }
+      if (field.min !== undefined && field.max !== undefined && field.min > field.max) {
+        errors.push(`${location}: min cannot exceed max`);
+      }
+    }
+    if (!diaryFieldIds.has('entry_date')) {
+      errors.push('cycle_support_guidance.json diary_schema requires an entry_date field');
+    }
+    if (!Number.isInteger(diary?.retention_limit) || diary.retention_limit < 1) {
+      errors.push('cycle_support_guidance.json diary_schema.retention_limit must be a positive integer');
+    }
+    if (!isStringArray(diary?.context_ids) || diary.context_ids.length === 0) {
+      errors.push('cycle_support_guidance.json diary_schema.context_ids must be a non-empty string array');
+    } else {
+      for (const contextId of diary.context_ids) {
+        if (!contextIds.has(contextId)) errors.push(`cycle_support_guidance.json diary_schema.context_ids references unknown context ${contextId}`);
+      }
+    }
+    for (const key of ['id', 'title', 'description', 'privacy_note']) {
+      if (typeof diary?.[key] !== 'string' || diary[key].trim() === '') {
+        errors.push(`cycle_support_guidance.json diary_schema.${key} must be a non-empty string`);
+      }
+    }
+    if (!isStringArray(diary?.do_not_infer) || diary.do_not_infer.length === 0) {
+      errors.push('cycle_support_guidance.json diary_schema.do_not_infer must be a non-empty string array');
     }
   }
   if (resourceId === 'layperson_translations') {

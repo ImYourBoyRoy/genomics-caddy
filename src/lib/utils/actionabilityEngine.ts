@@ -19,6 +19,7 @@ import supplementSafety from '../marker-packs/supplement_safety.json';
 import { cycleSupportDomainsForContext, selectedReproductiveContextOption } from './reproductiveContext';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import type { ReproductiveIntakeValues } from './reproductiveIntake';
+import type { CycleDiaryEntry } from './cycleDiary';
 
 export interface TopFinding {
   rsid: string;
@@ -86,6 +87,7 @@ export interface PersonalContextGuidance {
   symptoms: string[];
   labObservations: string[];
   reproductiveIntake?: ReproductiveIntakeValues;
+  cycleDiary?: CycleDiaryEntry[];
   priorityNotes: string[];
 }
 
@@ -464,6 +466,11 @@ function derivePersonalContextGuidance(
       'Structured cycle and hormone details are self-reported context. Verify product composition, dose, and schedule from the exact label; timing and symptoms do not establish hormone levels or a diagnosis.'
     );
   }
+  if (context.cycleDiary && context.cycleDiary.length > 0) {
+    priorityNotes.push(
+      'The cycle diary contains self-reported observations. Missing entries are not symptom-free days; review patterns over time with a clinician rather than treating them as hormone measurements or a diagnosis.'
+    );
+  }
 
   return {
     medications: [...context.medications],
@@ -472,6 +479,7 @@ function derivePersonalContextGuidance(
     symptoms: [...context.symptoms],
     labObservations: [...context.labObservations],
     ...(context.reproductiveIntake ? { reproductiveIntake: { ...context.reproductiveIntake } } : {}),
+    ...(context.cycleDiary ? { cycleDiary: context.cycleDiary.map((entry) => ({ id: entry.id, values: { ...entry.values } })) } : {}),
     priorityNotes,
   };
 }

@@ -285,6 +285,23 @@ describe('actionability engine safety policy', () => {
     expect(plan.personalContext.priorityNotes.join(' ')).toContain('Structured cycle and hormone details');
   });
 
+  it('keeps diary observations separate from genotype guidance', () => {
+    const plan = deriveActionablePlan(report([]), {
+      personalSafetyContext: {
+        medications: [],
+        supplements: [],
+        allergies: [],
+        symptoms: [],
+        labObservations: [],
+        cycleDiary: [{ id: 'day-1', values: { entry_date: '2026-08-01', mood_behavior_score: '3' } }],
+      },
+    });
+
+    expect(plan.personalContext.cycleDiary?.[0].values.mood_behavior_score).toBe('3');
+    expect(plan.personalContext.priorityNotes.join(' ')).toContain('Missing entries are not symptom-free days');
+    expect(plan.supplements).toHaveLength(0);
+  });
+
   it('separates general hormone therapy from contraceptive composition warnings', () => {
     const plan = deriveActionablePlan(report([]), {
       reproductiveContext: 'hormone_therapy_context',

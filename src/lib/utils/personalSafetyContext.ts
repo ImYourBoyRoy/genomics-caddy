@@ -8,6 +8,7 @@
  */
 
 import { normalizeReproductiveIntake, type ReproductiveIntakeValues } from './reproductiveIntake';
+import { normalizeCycleDiary, type CycleDiaryEntry } from './cycleDiary';
 
 export interface PersonalSafetyContext {
   medications: string[];
@@ -16,6 +17,7 @@ export interface PersonalSafetyContext {
   symptoms: string[];
   labObservations: string[];
   reproductiveIntake?: ReproductiveIntakeValues;
+  cycleDiary?: CycleDiaryEntry[];
 }
 
 export const EMPTY_PERSONAL_SAFETY_CONTEXT: PersonalSafetyContext = {
@@ -70,6 +72,7 @@ export function normalizePersonalSafetyContext(value: unknown): PersonalSafetyCo
   };
 
   const reproductiveIntake = normalizeReproductiveIntake(source.reproductiveIntake);
+  const cycleDiary = normalizeCycleDiary(source.cycleDiary);
   return {
     medications: list('medications'),
     supplements: list('supplements'),
@@ -77,6 +80,7 @@ export function normalizePersonalSafetyContext(value: unknown): PersonalSafetyCo
     symptoms: list('symptoms'),
     labObservations: list('labObservations'),
     ...(Object.keys(reproductiveIntake).length > 0 ? { reproductiveIntake } : {}),
+    ...(cycleDiary.length > 0 ? { cycleDiary } : {}),
   };
 }
 

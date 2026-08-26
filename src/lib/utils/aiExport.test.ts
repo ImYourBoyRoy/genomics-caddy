@@ -16,6 +16,14 @@ describe('clinical handoff export', () => {
         question_or_belief_to_verify: 'I think estrogen spikes; please verify',
         clinical_questions_or_findings: 'possible adenomyosis; ask about appropriate evaluation',
       },
+      cycleDiary: [{
+        id: 'day-1',
+        values: {
+          entry_date: '2026-08-01',
+          mood_behavior_score: '3',
+          mood_behavior_notes: 'needs quiet',
+        },
+      }],
     };
 
     const markdown = buildClinicalHandoffMarkdown(
@@ -33,5 +41,8 @@ describe('clinical handoff export', () => {
     expect(markdown).toContain('norethindrone 0.35 mg');
     expect(markdown).toContain('possible adenomyosis');
     expect(markdown).toContain('does not establish a diagnosis, hormone level');
+    expect(markdown).toContain('Daily cycle and symptom diary (self-reported)');
+    expect(markdown).toContain('needs quiet');
+    expect(markdown).toContain('missing entries are not symptom-free days');
   });
 });

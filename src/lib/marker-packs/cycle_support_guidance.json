@@ -1,9 +1,9 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
-  "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
+  "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
     "menstrual",
     "hormone",
@@ -235,6 +235,103 @@
       "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
       "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker.",
       "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context."
+    ]
+  },
+  "diary_schema": {
+    "id": "cycle_symptom_diary",
+    "title": "Optional daily cycle and symptom diary",
+    "description": "Use this local diary to compare bleeding, symptoms, functioning, sleep, stress, and treatment timing across cycles. Include lower-symptom days as well as difficult days.",
+    "privacy_note": "Stored locally per DNA profile with a bounded history. Diary entries are self-reported observations, not genotype evidence, hormone measurements, or a diagnosis.",
+    "retention_limit": 180,
+    "context_ids": [
+      "menstrual_cycle",
+      "cycle_linked_pain_headache",
+      "cyclic_mood_symptoms",
+      "ovarian_reproductive",
+      "uterine_pelvic",
+      "suspected_adenomyosis"
+    ],
+    "fields": [
+      {
+        "id": "entry_date",
+        "label": "Date",
+        "input_type": "date",
+        "placeholder": "YYYY-MM-DD",
+        "help": "Required. Use the local calendar date for the observation."
+      },
+      {
+        "id": "cycle_day",
+        "label": "Cycle day (optional)",
+        "input_type": "number",
+        "min": 1,
+        "max": 120,
+        "step": 1,
+        "placeholder": "e.g. 24",
+        "help": "Optional and approximate; do not use it to infer ovulation or hormone levels."
+      },
+      {
+        "id": "bleeding_level",
+        "label": "Bleeding or spotting level (0–4)",
+        "input_type": "number",
+        "min": 0,
+        "max": 4,
+        "step": 1,
+        "placeholder": "0 none · 4 heavy",
+        "help": "0 none, 1 spotting, 2 light, 3 moderate, 4 heavy by the person’s own consistent description."
+      },
+      {
+        "id": "mood_behavior_score",
+        "label": "Mood or behavior impact (0–4)",
+        "input_type": "number",
+        "min": 0,
+        "max": 4,
+        "step": 1,
+        "placeholder": "0 baseline · 4 severe impact",
+        "help": "Use the same personal scale over time; describe the actual experience in the notes and seek timely help for safety concerns."
+      },
+      {
+        "id": "pain_headache_score",
+        "label": "Pain or headache impact (0–4)",
+        "input_type": "number",
+        "min": 0,
+        "max": 4,
+        "step": 1,
+        "placeholder": "0 none · 4 severe impact",
+        "help": "Use the same personal scale over time; sudden severe pain or neurologic symptoms need timely care."
+      },
+      {
+        "id": "mood_behavior_notes",
+        "label": "Mood, behavior, or need-for-space notes",
+        "input_type": "textarea",
+        "placeholder": "e.g. more irritable, wants quiet, avoidant, relationship/work impact, or baseline day",
+        "help": "Record observations and impact without labeling PMDD, a psychiatric condition, or a hormone cause."
+      },
+      {
+        "id": "pain_bleeding_headache_notes",
+        "label": "Pain, bleeding, or headache notes",
+        "input_type": "textarea",
+        "placeholder": "e.g. cramps, pelvic pain, clots, migraine features, faintness, or no symptoms",
+        "help": "Record details that may help a clinician assess bleeding, pelvic pain, or headache patterns."
+      },
+      {
+        "id": "sleep_stress_medication_context",
+        "label": "Sleep, stress, food, activity, or medication context",
+        "input_type": "textarea",
+        "placeholder": "e.g. sleep change, major stress, missed dose, supplement, meal, alcohol, or unusual activity",
+        "help": "Context can change symptoms; record exact products and timing when relevant rather than attributing the change to DNA."
+      },
+      {
+        "id": "functioning_safety_notes",
+        "label": "Functioning, support, or safety notes",
+        "input_type": "textarea",
+        "placeholder": "e.g. missed work, requested space, support that helped, or safety concern requiring care",
+        "help": "Use concrete impact and support needs. Immediate danger or self-harm risk requires local emergency or crisis support."
+      }
+    ],
+    "do_not_infer": [
+      "Do not infer estrogen, progesterone, ovulation, PMDD, adenomyosis, endometriosis, or medication response from diary scores or timing.",
+      "Do not treat a missing diary entry as a symptom-free day or a normal result.",
+      "Do not use diary patterns to start, stop, dose, or switch medication or supplements."
     ]
   },
   "context_options": [

@@ -2,6 +2,7 @@
 import type { GenomeSample } from "../types/genomics";
 import { parseThinking } from "./chatParser";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
+import { populatedCycleDiaryFields } from "./cycleDiary";
 import { populatedReproductiveIntake } from "./reproductiveIntake";
 
 /**
@@ -87,6 +88,16 @@ export function buildClinicalHandoffMarkdown(
         md += `* **${field.label}:** ${value}\n`;
       }
       md += `*This context is not genetic evidence and does not establish a diagnosis, hormone level, medication composition, or treatment recommendation.*\n`;
+    }
+    if (personalSafetyContext.cycleDiary && personalSafetyContext.cycleDiary.length > 0) {
+      md += `### Daily cycle and symptom diary (self-reported)\n`;
+      for (const entry of personalSafetyContext.cycleDiary) {
+        md += `#### ${entry.values.entry_date}\n`;
+        for (const { field, value } of populatedCycleDiaryFields(entry.values)) {
+          if (field.id !== 'entry_date') md += `* **${field.label}:** ${value}\n`;
+        }
+      }
+      md += `*Diary entries are observations only; missing entries are not symptom-free days and do not establish hormone levels or a diagnosis.*\n`;
     }
     md += `*This context is not genetic evidence and does not establish a diagnosis or medication recommendation.*\n\n`;
   }

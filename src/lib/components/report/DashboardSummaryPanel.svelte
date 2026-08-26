@@ -6,6 +6,7 @@
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
   import { saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
   import ReproductiveContextEditor from '../ai/ReproductiveContextEditor.svelte';
+  import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
 
@@ -150,6 +151,7 @@
   </div>
 
   <ReproductiveContextEditor bind:personalSafetyContext sampleId={sampleId} reproductiveContext={reproductiveContext} />
+  <CycleDiaryEditor bind:personalSafetyContext sampleId={sampleId} reproductiveContext={reproductiveContext} />
 
   {#if plan.personalContext.priorityNotes.length > 0}
     <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">
@@ -179,6 +181,9 @@
         {#each populatedReproductiveIntake(plan.personalContext.reproductiveIntake) as item (item.field.id)}
           <div><strong>{item.field.label}</strong><span>{item.value}</span></div>
         {/each}
+        {#if plan.personalContext.cycleDiary && plan.personalContext.cycleDiary.length > 0}
+          <div><strong>Daily cycle diary</strong><span>{plan.personalContext.cycleDiary.length} self-reported observation{plan.personalContext.cycleDiary.length === 1 ? '' : 's'}</span></div>
+        {/if}
       </div>
     </div>
   {/if}

@@ -232,15 +232,15 @@
   }
 
   .badge-warning {
-    background: rgba(217, 119, 6, 0.12);
-    color: #fbbf24;
-    border-color: rgba(217, 119, 6, 0.3);
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border-color: var(--status-warning-border);
   }
 
   .badge-info {
-    background: rgba(14, 165, 233, 0.15);
-    color: #38bdf8;
-    border-color: rgba(14, 165, 233, 0.3);
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
+    border-color: var(--status-info-border);
   }
 
   .sec-score-descriptive {
@@ -250,14 +250,14 @@
   }
 
   .coverage-pill {
-    color: #c4b5fd;
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.22);
+    color: var(--coverage-text);
+    background: var(--coverage-bg);
+    border: 1px solid var(--coverage-border);
   }
 
   .coverage-note {
-    color: #cbd5e1;
-    background: rgba(148, 163, 184, 0.1);
+    color: var(--coverage-note-text);
+    background: var(--coverage-note-bg);
   }
 
   @media (max-width: 720px) {

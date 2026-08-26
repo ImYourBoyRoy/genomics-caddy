@@ -31,6 +31,17 @@ Responsibilities:
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
+  --status-warning-bg: rgba(217, 119, 6, 0.12);
+  --status-warning-text: #fbbf24;
+  --status-warning-border: rgba(217, 119, 6, 0.3);
+  --status-info-bg: rgba(14, 165, 233, 0.15);
+  --status-info-text: #38bdf8;
+  --status-info-border: rgba(14, 165, 233, 0.3);
+  --coverage-bg: rgba(139, 92, 246, 0.1);
+  --coverage-text: #c4b5fd;
+  --coverage-border: rgba(139, 92, 246, 0.22);
+  --coverage-note-bg: rgba(148, 163, 184, 0.1);
+  --coverage-note-text: #cbd5e1;
 }
 
 :root[data-theme="system"] {
@@ -62,6 +73,17 @@ Responsibilities:
   --danger: #b42318;
   --success: #047857;
   --warning: #a16207;
+  --status-warning-bg: #fffbeb;
+  --status-warning-text: #92400e;
+  --status-warning-border: #fcd34d;
+  --status-info-bg: #eff6ff;
+  --status-info-text: #075985;
+  --status-info-border: #7dd3fc;
+  --coverage-bg: #f5f3ff;
+  --coverage-text: #6d28d9;
+  --coverage-border: #c4b5fd;
+  --coverage-note-bg: #f1f5f9;
+  --coverage-note-text: #475569;
 }
 
 @media (prefers-color-scheme: light) {
@@ -89,6 +111,17 @@ Responsibilities:
     --danger: #b42318;
     --success: #047857;
     --warning: #a16207;
+    --status-warning-bg: #fffbeb;
+    --status-warning-text: #92400e;
+    --status-warning-border: #fcd34d;
+    --status-info-bg: #eff6ff;
+    --status-info-text: #075985;
+    --status-info-border: #7dd3fc;
+    --coverage-bg: #f5f3ff;
+    --coverage-text: #6d28d9;
+    --coverage-border: #c4b5fd;
+    --coverage-note-bg: #f1f5f9;
+    --coverage-note-text: #475569;
   }
 }
 

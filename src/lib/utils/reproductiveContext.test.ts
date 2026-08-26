@@ -3,6 +3,7 @@ import hormonesReproductive from '../marker-packs/hormones_reproductive.json';
 import {
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
+  reproductiveSectionHasContext,
   selectedReproductiveContextOption,
 } from './reproductiveContext';
 
@@ -63,6 +64,12 @@ describe('reproductive marker context routing', () => {
     expect(selectedReproductiveContextOption('')).toBeUndefined();
     expect(reproductiveMarkerContextRank('rs2234693', '')).toBe(0);
     expect(reproductiveMarkerContextRank('future_marker', 'menstrual_cycle')).toBe(1);
+  });
+
+  it('uses resource-authored section keywords and marker contexts for prioritization', () => {
+    expect(reproductiveSectionHasContext('Menstrual Cycle, Hormones & Reproductive Context')).toBe(true);
+    expect(reproductiveSectionHasContext('Sleep & Circadian')).toBe(false);
+    expect(reproductiveSectionHasContext('Unclassified section', ['PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY'])).toBe(true);
   });
 
   it('routes exogenous hormone therapy without assuming identity or anatomy', () => {

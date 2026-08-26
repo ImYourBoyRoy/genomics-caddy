@@ -93,3 +93,20 @@ export function reproductiveMarkerContextIds(rsid: string): string[] {
     .filter(([, ids]) => ids.includes(markerId))
     .map(([contextId]) => contextId);
 }
+
+/**
+ * Identify sections eligible for explicit reproductive-context prioritization.
+ * Section keywords and marker membership are both resource-authored; this
+ * helper never infers a person's anatomy, identity, fertility, or hormones.
+ */
+export function reproductiveSectionHasContext(
+  sectionName: string,
+  markerIds: string[] = [],
+): boolean {
+  const normalized = String(sectionName || '').toLowerCase();
+  const keywordMatch = cycleSupport.context_keywords.some((keyword) =>
+    normalized.includes(String(keyword).toLowerCase())
+  );
+  if (keywordMatch) return true;
+  return markerIds.some((rsid) => reproductiveMarkerContextIds(rsid).length > 0);
+}

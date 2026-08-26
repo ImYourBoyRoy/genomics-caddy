@@ -15,6 +15,7 @@
   import {
     loadReproductiveContext,
     reproductiveMarkerContextRank,
+    reproductiveSectionHasContext,
     reproductiveContextStorageKey,
     selectedReproductiveContextOption,
   } from '../../utils/reproductiveContext';
@@ -79,11 +80,6 @@
     loadedReproductiveContextKey = contextKey;
     reproductiveContext = browser ? loadReproductiveContext(selectedSample?.id) : '';
   });
-
-  function isReproductiveSection(sectionName: string): boolean {
-    const normalized = sectionName.toLowerCase();
-    return normalized.includes('hormone') || normalized.includes('reproductive') || normalized.includes('pmdd');
-  }
 
   function selectedReproductiveContextLabel(): string {
     return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
@@ -174,7 +170,11 @@
         return true;
       });
 
-      if (reproductiveContext && prioritizeReproductiveContext && isReproductiveSection(sec.name)) {
+      if (
+        reproductiveContext
+        && prioritizeReproductiveContext
+        && reproductiveSectionHasContext(sec.name, sec.markers.map((marker) => marker.rsid))
+      ) {
         markers = [...markers].sort((a, b) => {
           const contextRank = reproductiveMarkerContextRank(b.rsid, reproductiveContext)
             - reproductiveMarkerContextRank(a.rsid, reproductiveContext);

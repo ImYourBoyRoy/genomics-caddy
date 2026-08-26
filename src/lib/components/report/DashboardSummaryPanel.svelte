@@ -779,20 +779,20 @@
   .disclaimer-banner {
     display: flex;
     gap: 0.75rem;
-    background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.25);
+    background: var(--status-warning-bg);
+    border: 1px solid var(--status-warning-border);
     border-radius: 6px;
     padding: 0.75rem 1rem;
     font-size: 0.75rem;
     line-height: 1.4;
-    color: #f59e0b;
+    color: var(--status-warning-text);
   }
   .disclaimer-banner p {
     margin: 0;
   }
   .actionability-safety {
-    border: 1px solid rgba(96, 165, 250, 0.28);
-    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid var(--status-info-border);
+    background: var(--status-info-bg);
     color: var(--text-secondary);
     border-radius: 6px;
     padding: 0.75rem 1rem;
@@ -800,7 +800,7 @@
     line-height: 1.45;
   }
   .actionability-safety strong {
-    color: #93c5fd;
+    color: var(--status-info-text);
   }
   .actionability-safety ul {
     margin: 0.35rem 0 0;
@@ -816,8 +816,8 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.75rem 1rem;
-    border: 1px solid rgba(167, 139, 250, 0.28);
-    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid var(--coverage-border);
+    background: var(--coverage-bg);
   }
 
   .context-selector-copy {
@@ -830,7 +830,7 @@
   }
 
   .context-selector-copy strong {
-    color: #ddd6fe;
+    color: var(--coverage-text);
   }
 
   .context-selector-copy span {
@@ -839,8 +839,8 @@
 
   .personal-context-card {
     gap: 0.65rem;
-    border-color: rgba(52, 211, 153, 0.28);
-    background: rgba(16, 185, 129, 0.06);
+    border-color: var(--status-success-border);
+    background: var(--status-success-bg);
   }
 
   .personal-context-notes {
@@ -862,7 +862,7 @@
   }
 
   .personal-context-grid strong {
-    color: #a7f3d0;
+    color: var(--status-success-text);
   }
 
   .personal-context-grid span {
@@ -872,8 +872,8 @@
 
   .context-selector select {
     min-width: min(320px, 42%);
-    background: rgba(0, 0, 0, 0.28);
-    border: 1px solid rgba(167, 139, 250, 0.35);
+    background: var(--surface-control);
+    border: 1px solid var(--coverage-border);
     border-radius: 5px;
     color: var(--text-primary);
     padding: 0.45rem 0.55rem;
@@ -925,10 +925,10 @@
   }
 
   .lab-tier-block {
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 0.55rem 0.65rem;
-    background: rgba(0, 0, 0, 0.12);
+    background: var(--surface-control);
   }
 
   .lab-tier-header {
@@ -941,7 +941,7 @@
   .lab-tier-title {
     font-size: 0.74rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: var(--text-primary);
   }
 
   .lab-tier-count {
@@ -950,7 +950,7 @@
     opacity: 0.65;
     padding: 0.05rem 0.35rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--surface-subtle);
   }
 
   .lab-tier-hint {
@@ -993,27 +993,27 @@
     text-align: left;
     padding: 0.28rem 0.45rem;
     border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    background: var(--surface-card);
     color: inherit;
     cursor: pointer;
     font: inherit;
   }
 
   .lab-chip-main:hover {
-    border-color: rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-strong);
+    background: var(--surface-subtle);
   }
 
   .lab-chip-counselor .lab-chip-main {
-    border-color: rgba(236, 72, 153, 0.25);
-    background: rgba(236, 72, 153, 0.06);
+    border-color: var(--status-accent-soft-border);
+    background: var(--status-accent-soft-bg);
   }
 
   .lab-chip-name {
     font-size: 0.68rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
     line-height: 1.25;
   }
 
@@ -1028,18 +1028,18 @@
   }
 
   .lab-chip-badge.badge-counselor {
-    background: rgba(236, 72, 153, 0.18);
-    color: #f9a8d4;
+    background: var(--status-accent-bg);
+    color: var(--status-accent-text);
   }
 
   .lab-chip-badge.badge-discuss {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
   }
 
   .lab-chip-badge.badge-optional {
-    background: rgba(96, 165, 250, 0.15);
-    color: #93c5fd;
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
   }
 
   .lab-chip-counselor {
@@ -1060,8 +1060,8 @@
   }
 
   .summary-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
     height: fit-content;
@@ -1069,8 +1069,8 @@
     min-width: 0;
   }
   .summary-card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: var(--border-strong);
+    box-shadow: 0 4px 12px var(--shadow-subtle);
   }
 
   .card-header {
@@ -1079,9 +1079,9 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--surface-subtle);
     border: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
     border-radius: 0;
     appearance: none;
     color: inherit;
@@ -1126,8 +1126,8 @@
     gap: 0.55rem 0.85rem;
   }
   .finding-item {
-    background: rgba(255, 255, 255, 0.02);
-    border-left: 3px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-subtle);
+    border-left: 3px solid var(--border-strong);
     padding: 0.4rem 0.65rem;
     border-radius: 0 4px 4px 0;
   }
@@ -1139,8 +1139,8 @@
     margin-bottom: 0.2rem;
   }
   .gene-badge {
-    background: rgba(99, 102, 241, 0.15);
-    color: #818cf8;
+    background: var(--coverage-bg);
+    color: var(--coverage-text);
     font-size: 0.68rem;
     font-weight: 700;
     padding: 0.1rem 0.35rem;
@@ -1160,20 +1160,20 @@
     letter-spacing: 0.3px;
   }
   .severity-badge.high_risk {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
   }
   .severity-badge.confirmation_required {
-    background: rgba(236, 72, 153, 0.15);
-    color: #ec4899;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
   }
   .severity-badge.moderate_risk {
-    background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
   }
   .severity-badge.low_risk {
-    background: rgba(96, 165, 250, 0.15);
-    color: #60a5fa;
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
   }
   .finding-desc {
     margin: 0;
@@ -1193,7 +1193,7 @@
     opacity: 0.7;
     background: none;
     border: none;
-    color: #60a5fa;
+    color: var(--status-info-text);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -1213,9 +1213,9 @@
   .dietary-resource-rules {
     margin-bottom: 0.85rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(52, 211, 153, 0.2);
+    border: 1px solid var(--status-success-border);
     border-radius: 6px;
-    background: rgba(16, 185, 129, 0.06);
+    background: var(--status-success-bg);
     color: var(--text-secondary);
     font-size: 0.68rem;
     line-height: 1.4;
@@ -1234,21 +1234,21 @@
 
   .dietary-profile-list strong,
   .dietary-resource-rules > strong {
-    color: #a7f3d0;
+    color: var(--status-success-text);
   }
 
   .dietary-profile-allergy {
-    color: #fecaca;
+    color: var(--status-danger-text);
   }
 
   .dietary-profile-allergy strong {
-    color: #fca5a5;
+    color: var(--status-danger-strong-text);
   }
 
   .dietary-resource-rule {
     margin-top: 0.55rem;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 1px solid var(--border-color);
   }
 
   .dietary-resource-rule p {
@@ -1263,9 +1263,9 @@
   .dietary-suppressed-suggestions {
     margin-bottom: 0.85rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(251, 191, 36, 0.28);
+    border: 1px solid var(--status-warning-border);
     border-radius: 6px;
-    background: rgba(245, 158, 11, 0.07);
+    background: var(--status-warning-bg);
     color: var(--text-secondary);
     font-size: 0.68rem;
     line-height: 1.4;
@@ -1280,7 +1280,7 @@
   }
 
   .dietary-suppressed-suggestions > strong {
-    color: #fde68a;
+    color: var(--status-warning-text);
   }
 
   .diet-column h4 {
@@ -1288,8 +1288,8 @@
     font-size: 0.75rem;
     font-weight: bold;
   }
-  .diet-column.favor h4 { color: #4ade80; }
-  .diet-column.avoid h4 { color: #f87171; }
+  .diet-column.favor h4 { color: var(--status-success-text); }
+  .diet-column.avoid h4 { color: var(--status-danger-strong-text); }
   .diet-column ul {
     margin: 0;
     padding-left: 1.1rem;
@@ -1301,7 +1301,7 @@
   .diet-notes {
     margin-top: 0.75rem;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-color);
     font-size: 0.7rem;
     opacity: 0.8;
   }
@@ -1321,15 +1321,15 @@
   .supplement-item {
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.015);
+    background: var(--surface-subtle);
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
-    border-left: 2px solid #a855f7;
+    border-left: 2px solid var(--status-accent-soft-border);
   }
   .supp-name {
     font-size: 0.75rem;
     font-weight: bold;
-    color: #c084fc;
+    color: var(--status-accent-soft-text);
   }
   .supp-reason {
     font-size: 0.68rem;
@@ -1339,13 +1339,13 @@
   .supplement-safety {
     margin-top: 0.85rem;
     padding-top: 0.65rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--border-color);
   }
   .supplement-safety-rule {
     margin-top: 0.65rem;
     padding: 0.45rem 0.55rem;
-    border-left: 2px solid #f59e0b;
-    background: rgba(245, 158, 11, 0.04);
+    border-left: 2px solid var(--status-warning-border);
+    background: var(--status-warning-bg);
     border-radius: 4px;
     font-size: 0.72rem;
   }
@@ -1361,29 +1361,29 @@
   .activity-domain {
     margin-top: 0.85rem;
     padding: 0.55rem 0.65rem;
-    border-left: 2px solid #38bdf8;
-    background: rgba(56, 189, 248, 0.04);
+    border-left: 2px solid var(--status-info-soft-border);
+    background: var(--status-info-soft-bg);
     border-radius: 4px;
   }
   .cycle-support-domain {
     margin-top: 0.85rem;
     padding: 0.55rem 0.65rem;
-    border-left: 2px solid #c084fc;
-    background: rgba(192, 132, 252, 0.04);
+    border-left: 2px solid var(--status-accent-soft-border);
+    background: var(--status-accent-soft-bg);
     border-radius: 4px;
   }
   .cycle-diary-review {
     margin: 0.65rem 0 0.85rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(52, 211, 153, 0.28);
-    border-left: 3px solid #34d399;
-    background: rgba(52, 211, 153, 0.05);
+    border: 1px solid var(--status-success-border);
+    border-left: 3px solid var(--status-success-text);
+    background: var(--status-success-bg);
     border-radius: 5px;
   }
   .cycle-diary-review h4 {
     margin: 0;
     font-size: 0.75rem;
-    color: #a7f3d0;
+    color: var(--status-success-text);
   }
   .cycle-diary-review > p,
   .cycle-diary-review-metric span,
@@ -1406,7 +1406,7 @@
     gap: 0.1rem;
     padding: 0.4rem 0.5rem;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--surface-subtle);
   }
   .cycle-diary-review-metric strong {
     font-size: 0.7rem;
@@ -1423,26 +1423,26 @@
   }
   .cycle-diary-review-days span {
     padding: 0.25rem 0.4rem;
-    border: 1px solid rgba(52, 211, 153, 0.2);
+    border: 1px solid var(--status-success-border);
     border-radius: 4px;
   }
   .reproductive-evidence-layer {
     margin: 0.65rem 0 0.85rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(96, 165, 250, 0.28);
-    border-left: 3px solid #60a5fa;
-    background: rgba(96, 165, 250, 0.06);
+    border: 1px solid var(--status-info-soft-border);
+    border-left: 3px solid var(--status-info-text);
+    background: var(--status-info-soft-bg);
     border-radius: 5px;
   }
   .reproductive-evidence-item {
     margin-top: 0.65rem;
     padding-top: 0.55rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--border-color);
   }
   .reproductive-evidence-item h4 {
     margin: 0;
     font-size: 0.75rem;
-    color: #bfdbfe;
+    color: var(--status-info-soft-text);
   }
   .reproductive-evidence-item p {
     margin: 0.25rem 0 0;
@@ -1453,14 +1453,14 @@
     margin: 0.35rem 0 0;
     font-size: 0.7rem;
     line-height: 1.45;
-    color: #dbeafe;
+    color: var(--status-info-soft-text);
   }
   .pgx-readiness {
     margin: 0.65rem 0 0.85rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(96, 165, 250, 0.28);
-    border-left: 3px solid #60a5fa;
-    background: rgba(96, 165, 250, 0.06);
+    border: 1px solid var(--status-info-soft-border);
+    border-left: 3px solid var(--status-info-text);
+    background: var(--status-info-soft-bg);
     border-radius: 5px;
   }
   .pgx-readiness > p,
@@ -1472,11 +1472,11 @@
   .pgx-readiness-item {
     margin-top: 0.65rem;
     padding-top: 0.55rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--border-color);
   }
   .pgx-readiness-item > strong {
     font-size: 0.75rem;
-    color: #bfdbfe;
+    color: var(--status-info-soft-text);
   }
   .activity-context {
     display: block;
@@ -1495,14 +1495,14 @@
   .medication-columns h4 {
     margin: 0;
     font-size: 0.72rem;
-    color: #bae6fd;
+    color: var(--status-info-soft-text);
   }
   .activity-stop-list {
     margin-top: 0.85rem;
     padding: 0.55rem 0.65rem;
-    border: 1px solid rgba(248, 113, 113, 0.35);
+    border: 1px solid var(--status-danger-border);
     border-radius: 4px;
-    background: rgba(248, 113, 113, 0.05);
+    background: var(--status-danger-bg);
   }
 
   @media (max-width: 1100px) {

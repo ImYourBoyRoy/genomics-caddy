@@ -18,7 +18,9 @@ import safetyGuardrails from '../marker-packs/safety_guardrails.json';
 import supplementSafety from '../marker-packs/supplement_safety.json';
 import {
   activeReproductiveContextIds,
+  cycleSupportEvidenceLayersForContextIds,
   cycleSupportDomainsForContextIds,
+  reproductiveDnaCoverageForReport,
   selectedReproductiveContextOption,
 } from './reproductiveContext';
 import { activityDomainMatches, activityPersonalContextText } from './activityContext';
@@ -77,6 +79,8 @@ export interface MedicationSafetyGuidance {
 
 export interface CycleSupportGuidance {
   principles: typeof cycleSupport.principles;
+  relevantEvidenceLayers: typeof cycleSupport.evidence_layers;
+  dnaCoverage: ReturnType<typeof reproductiveDnaCoverageForReport>;
   relevantDomains: typeof cycleSupport.domains;
 }
 
@@ -668,6 +672,8 @@ export function deriveActionablePlan(
     )
   );
   const relevantCycleDomains = cycleSupportDomainsForContextIds(activeContextIds);
+  const relevantCycleEvidenceLayers = cycleSupportEvidenceLayersForContextIds(activeContextIds);
+  const reproductiveDnaCoverage = reproductiveDnaCoverageForReport(report, activeContextIds);
   const supplementSafetyRules = selectSupplementSafetyRules(
     markerValues,
     [
@@ -711,6 +717,8 @@ export function deriveActionablePlan(
     },
     cycleSupport: {
       principles: cycleSupport.principles,
+      relevantEvidenceLayers: relevantCycleEvidenceLayers,
+      dnaCoverage: reproductiveDnaCoverage,
       relevantDomains: relevantCycleDomains,
     },
     supplementSafety: {

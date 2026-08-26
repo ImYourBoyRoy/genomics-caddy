@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import hormonesReproductive from '../marker-packs/hormones_reproductive.json';
+import type { GeneratedReport } from '../types/genomics';
 import {
   activeReproductiveContextIds,
+  cycleSupportEvidenceLayersForContextIds,
   cycleSupportDomainsForPersonalContext,
+  reproductiveDnaCoverageForReport,
   reproductiveContextIdsForProfileText,
   reproductiveContextIdsForPersonalContext,
   reproductiveMarkerContextIds,
@@ -130,6 +133,45 @@ describe('reproductive marker context routing', () => {
     ]);
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION', 'cycle_linked_pain_headache')).toBe(3);
+  });
+
+  it('selects resource-authored evidence layers for menstrual and adenomyosis questions', () => {
+    const menstrualLayers = cycleSupportEvidenceLayersForContextIds(['menstrual_cycle']);
+    const adenomyosisLayers = cycleSupportEvidenceLayersForContextIds(['suspected_adenomyosis']);
+
+    expect(menstrualLayers.map((layer) => layer.id)).toEqual([
+      'current_hormone_state',
+      'natural_cycle_timing',
+      'genetic_pathway_context',
+      'hormone_product_label',
+      'adenomyosis_structural_workup',
+    ]);
+    expect(menstrualLayers.find((layer) => layer.id === 'natural_cycle_timing')?.summary)
+      .toContain('generally decline');
+    expect(adenomyosisLayers.find((layer) => layer.id === 'adenomyosis_structural_workup')?.next_step)
+      .toContain('transvaginal ultrasound');
+  });
+
+  it('reports reproductive marker coverage without returning genotypes', () => {
+    const report = {
+      sections: [{
+        markers: [
+          { rsid: 'rs2234693', assertion_status: 'Verified', interpretation_allowed: true, user_genotype: 'AA' },
+          { rsid: 'rs6166', assertion_status: 'UnverifiedOrientation', interpretation_allowed: false, user_genotype: 'AG' },
+          { rsid: 'rs9340799', assertion_status: 'NotInRawFile', interpretation_allowed: false, user_genotype: '--' },
+        ],
+      }],
+    } as unknown as GeneratedReport;
+
+    const coverage = reproductiveDnaCoverageForReport(report, ['menstrual_cycle']);
+
+    expect(coverage).toEqual(expect.objectContaining({
+      tracked_marker_count: 42,
+      present_marker_count: 2,
+      callable_marker_count: 1,
+      unknown_marker_count: 40,
+    }));
+    expect(coverage).not.toHaveProperty('genotype');
   });
 
   it('activates only resource-declared contexts from self-reported intake or diary data', () => {

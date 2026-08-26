@@ -1,6 +1,6 @@
 {
   "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "last_updated": "2026-08-26",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
@@ -27,6 +27,146 @@
     "esr1",
     "esr2",
     "pgr"
+  ],
+  "evidence_layers": [
+    {
+      "id": "current_hormone_state",
+      "title": "Current hormone levels are a clinical-measurement question",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "uterine_pelvic",
+        "suspected_adenomyosis",
+        "androgen_reproductive",
+        "menopause_hormone_therapy",
+        "hormone_therapy_context",
+        "pregnancy_postpartum",
+        "preconception_fertility"
+      ],
+      "summary": "The DNA report can show research associations in hormone-related pathways, but it cannot measure current estrogen, progesterone, progestin, allopregnanolone, ovulation, pregnancy, or medication response.",
+      "next_step": "Use the exact laboratory report, cycle or bleeding timing, treatment timing, product label, and clinician interpretation when the question is about a current hormone level or treatment effect.",
+      "do_not_claim": [
+        "A current hormone level from a consumer genotype",
+        "A current medication response from a pathway marker",
+        "A hormone deficiency, excess, or intolerance from symptoms alone"
+      ],
+      "sources": [
+        "menstrual_cycle_physiology",
+        "acog_premenstrual_disorders",
+        "lab_confirmation_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "natural_cycle_timing",
+      "title": "Late-luteal timing is usually a hormone drop, not an estrogen spike",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "uterine_pelvic",
+        "suspected_adenomyosis"
+      ],
+      "summary": "In a natural ovulatory cycle, estradiol and progesterone generally decline during the late luteal transition before bleeding. A person's symptoms can still peak then because sensitivity to hormonal change, nervous-system signaling, sleep, pain, stress, or treatment timing may matter more than a single hormone level.",
+      "next_step": "Record symptom onset, symptom-free days, bleeding, sleep, stress, missed doses, and product changes prospectively across at least two cycles; do not use the timing alone to label an estrogen spike.",
+      "do_not_claim": [
+        "The start of menstruation proves an estrogen spike",
+        "A cyclic request for space reveals personality, intent, or relationship meaning",
+        "A DNA result identifies which hormone caused a symptom day"
+      ],
+      "sources": [
+        "menstrual_cycle_physiology",
+        "womenshealth_pms",
+        "acog_premenstrual_disorders",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "genetic_pathway_context",
+      "title": "What the reproductive marker pack can and cannot add",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "uterine_pelvic",
+        "suspected_adenomyosis",
+        "androgen_reproductive",
+        "menopause_hormone_therapy",
+        "hormone_therapy_context",
+        "pregnancy_postpartum",
+        "preconception_fertility"
+      ],
+      "marker_pack_ids": ["hormones_reproductive"],
+      "summary": "The hormones and reproductive pack provides probabilistic context for receptors, steroid metabolism, pain or mood pathways, and selected research loci. A present marker is not a hormone measurement, a diagnosis, a fertility prediction, or proof that a symptom is caused by that pathway; an absent or uncalled marker does not rule out a condition.",
+      "next_step": "Read the pack's evidence tier, callability status, and limitation for each finding, then pair the result with the person's observed pattern and clinically appropriate evaluation.",
+      "do_not_claim": [
+        "PMDD, PCOS, endometriosis, adenomyosis, infertility, or a psychiatric diagnosis from a common SNP",
+        "A positive or negative research association as an individual risk percentage",
+        "A missing or uncalled marker as evidence that a condition is absent"
+      ],
+      "sources": [
+        "clinical_confirmation_required",
+        "adenomyosis_2026_gwas",
+        "phenotype_required"
+      ]
+    },
+    {
+      "id": "hormone_product_label",
+      "title": "Birth-control and hormone composition come from the product label",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "cyclic_mood_symptoms",
+        "ovarian_reproductive",
+        "menopause_hormone_therapy",
+        "hormone_therapy_context",
+        "pregnancy_postpartum",
+        "preconception_fertility"
+      ],
+      "summary": "DNA cannot identify the product, active ingredient, dose, route, schedule, ovulation suppression, or whether the method contains estrogen, a progestin, micronized progesterone, or another agent. Having no noticeable adverse effects is useful self-reported information, but it does not identify the product or prove future safety.",
+      "next_step": "Enter or bring the exact package or pharmacy label and prescribing instructions; have a clinician or pharmacist review benefits, risks, interactions, and any change in bleeding, mood, pain, or headache after starting or switching.",
+      "do_not_claim": [
+        "A DNA marker identifies a birth-control product",
+        "A symptom pattern identifies progestin-only or combined contraception",
+        "A DNA result justifies starting, stopping, skipping, or changing a hormone treatment"
+      ],
+      "sources": [
+        "acog_combined_contraception",
+        "acog_progestin_only_contraception",
+        "cdc_usmec_2024",
+        "user_declared_values_required",
+        "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "adenomyosis_structural_workup",
+      "title": "Adenomyosis requires symptom review and imaging, not a DNA call",
+      "context_ids": [
+        "menstrual_cycle",
+        "cycle_linked_pain_headache",
+        "uterine_pelvic",
+        "suspected_adenomyosis"
+      ],
+      "marker_pack_ids": ["hormones_reproductive"],
+      "summary": "Adenomyosis is a uterine structural condition. The reproductive pack can document research loci and the limits of current evidence, but a blood or saliva consumer SNP file cannot diagnose or exclude adenomyosis, explain an individual's pain or bleeding, or choose treatment.",
+      "next_step": "For heavy bleeding, worsening pelvic pain, pain with sex, or related functional impact, discuss examination and clinically indicated transvaginal ultrasound or MRI with a gynecology clinician; consider CBC and ferritin when bleeding is heavy or prolonged.",
+      "do_not_claim": [
+        "A research locus confirms or rules out adenomyosis",
+        "A DNA finding explains uterine pain or heavy bleeding",
+        "The absence of a listed research locus excludes adenomyosis"
+      ],
+      "sources": [
+        "nice_adenomyosis_heavy_bleeding",
+        "medlineplus_adenomyosis",
+        "adenomyosis_2026_gwas",
+        "clinical_confirmation_required",
+        "lab_confirmation_required"
+      ]
+    }
   ],
   "intake_schema": {
     "id": "reproductive_context_intake",

@@ -41,6 +41,15 @@ describe('support resource context', () => {
     expect(context.cycle_support.diary_schema.retention_limit).toBe(180);
     expect(context.cycle_support.marker_contexts.menstrual_cycle).toContain('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY');
     expect(context.cycle_support.marker_contexts.shared_reproductive).toContain('rs2234693');
+    expect(context.cycle_support.relevant_evidence_layers.map((layer) => layer.id)).toEqual([
+      'current_hormone_state',
+      'natural_cycle_timing',
+      'genetic_pathway_context',
+      'hormone_product_label',
+      'adenomyosis_structural_workup',
+    ]);
+    expect(context.cycle_support.relevant_evidence_layers.find((layer) => layer.id === 'genetic_pathway_context')?.marker_pack_ids)
+      .toContain('hormones_reproductive');
     const pmddDomain = context.cycle_support.relevant_domains.find((domain) => domain.id === 'pmdd_like_mood_symptoms');
     expect(pmddDomain?.support_options.join(' ')).toContain('SSRI');
     expect(pmddDomain?.support_options.join(' ')).toContain('not on a DNA marker');

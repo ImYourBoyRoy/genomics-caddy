@@ -250,6 +250,9 @@ if (runtimeSummary?.cycle_support_layer?.domains_count !== cycleSupport?.domains
 if (runtimeSummary?.cycle_support_layer?.context_options_count !== cycleSupport?.context_options?.length) {
   errors.push(`runtime_validation_summary.json: cycle_support_layer.context_options_count is ${runtimeSummary?.cycle_support_layer?.context_options_count ?? '(missing)'}, expected ${cycleSupport?.context_options?.length ?? 0}`);
 }
+if (runtimeSummary?.cycle_support_layer?.evidence_layers_count !== cycleSupport?.evidence_layers?.length) {
+  errors.push(`runtime_validation_summary.json: cycle_support_layer.evidence_layers_count is ${runtimeSummary?.cycle_support_layer?.evidence_layers_count ?? '(missing)'}, expected ${cycleSupport?.evidence_layers?.length ?? 0}`);
+}
 if (runtimeSummary?.research_taxonomy_layer?.categories_count !== researchTaxonomy?.categories?.length) {
   errors.push(`runtime_validation_summary.json: research_taxonomy_layer.categories_count is ${runtimeSummary?.research_taxonomy_layer?.categories_count ?? '(missing)'}, expected ${researchTaxonomy?.categories?.length ?? 0}`);
 }
@@ -291,6 +294,27 @@ const hormoneMarkerIds = new Set(hormonePack.map(({ marker }) => marker.rsid));
 const contextOptionIds = new Set((cycleSupport?.context_options || []).map((option) => option.id));
 const cycleDomainIds = new Set((cycleSupport?.domains || []).map((domain) => domain.id));
 const safetyRuleIds = new Set((safetyGuardrails?.rules || []).map((rule) => rule.id));
+const evidenceLayerIds = new Set();
+for (const layer of cycleSupport?.evidence_layers || []) {
+  if (!layer || typeof layer !== 'object') {
+    errors.push('cycle_support_guidance.json: evidence_layers contains a non-object entry');
+    continue;
+  }
+  if (typeof layer.id !== 'string' || !layer.id.trim()) errors.push('cycle_support_guidance.json: evidence layer id is required');
+  if (evidenceLayerIds.has(layer.id)) errors.push(`cycle_support_guidance.json: duplicate evidence layer ${layer.id}`);
+  evidenceLayerIds.add(layer.id);
+  for (const contextId of layer.context_ids || []) {
+    if (!contextOptionIds.has(contextId)) {
+      errors.push(`cycle_support_guidance.json: evidence layer ${layer.id} references unknown context ${contextId}`);
+    }
+  }
+  for (const markerPackId of layer.marker_pack_ids || []) {
+    if (!manifest?.packs?.some((pack) => pack.id === markerPackId)) {
+      errors.push(`cycle_support_guidance.json: evidence layer ${layer.id} references unknown marker pack ${markerPackId}`);
+    }
+  }
+}
+if (evidenceLayerIds.size === 0) errors.push('cycle_support_guidance.json: evidence_layers must be non-empty');
 for (const option of cycleSupport?.context_options || []) {
   for (const domainId of option.domain_ids || []) {
     if (!cycleDomainIds.has(domainId)) {

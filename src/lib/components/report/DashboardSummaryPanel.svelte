@@ -321,6 +321,21 @@
           {#if !collapsed.cycleSupport}
             <div class="card-body">
               <p class="section-hint">Showing guidance for {selectedReproductiveContextLabel()}. This section organizes timing, medication, symptom, and clinical follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
+              {#if plan.cycleSupport.relevantEvidenceLayers.length > 0}
+                <div class="reproductive-evidence-layer" role="note">
+                  <strong>🧬 How to read the DNA for this context</strong>
+                  {#if plan.cycleSupport.dnaCoverage}
+                    <p class="reproductive-coverage"><strong>Selected-context DNA coverage:</strong> {plan.cycleSupport.dnaCoverage.present_marker_count} of {plan.cycleSupport.dnaCoverage.tracked_marker_count} tracked markers have a raw call; {plan.cycleSupport.dnaCoverage.callable_marker_count} are verified for interpretation; {plan.cycleSupport.dnaCoverage.unknown_marker_count} are unknown or unavailable. Coverage is not a risk score.</p>
+                  {/if}
+                  {#each plan.cycleSupport.relevantEvidenceLayers as layer (layer.id)}
+                    <div class="reproductive-evidence-item">
+                      <h4>{layer.title}</h4>
+                      <p>{layer.summary}</p>
+                      <p><strong>Useful next step:</strong> {layer.next_step}</p>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
               <ul class="guardrail-list">
                 {#each plan.cycleSupport.principles as principle (principle)}<li>{principle}</li>{/each}
               </ul>
@@ -997,6 +1012,35 @@
     border-left: 2px solid #c084fc;
     background: rgba(192, 132, 252, 0.04);
     border-radius: 4px;
+  }
+  .reproductive-evidence-layer {
+    margin: 0.65rem 0 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    border-left: 3px solid #60a5fa;
+    background: rgba(96, 165, 250, 0.06);
+    border-radius: 5px;
+  }
+  .reproductive-evidence-item {
+    margin-top: 0.65rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .reproductive-evidence-item h4 {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #bfdbfe;
+  }
+  .reproductive-evidence-item p {
+    margin: 0.25rem 0 0;
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+  .reproductive-coverage {
+    margin: 0.35rem 0 0;
+    font-size: 0.7rem;
+    line-height: 1.45;
+    color: #dbeafe;
   }
   .activity-context {
     display: block;

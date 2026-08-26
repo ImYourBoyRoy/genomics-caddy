@@ -31,6 +31,7 @@ import userDietProfileSchema from '../marker-packs/user_diet_profile_schema.json
 import {
   activeReproductiveContextIds,
   cycleSupportDomainsForContextIds,
+  cycleSupportEvidenceLayersForContextIds,
   hasReproductivePersonalContext,
   reproductiveContextIdsForProfileText,
   selectedReproductiveContextOption,
@@ -94,6 +95,8 @@ export interface SupportResourceContext {
   };
   cycle_support: {
     principles: typeof cycleSupport.principles;
+    evidence_layers: typeof cycleSupport.evidence_layers;
+    relevant_evidence_layers: typeof cycleSupport.evidence_layers;
     context_options: typeof cycleSupport.context_options;
     marker_contexts: typeof cycleSupport.marker_contexts;
     intake_schema: typeof cycleSupport.intake_schema;
@@ -300,7 +303,11 @@ export function buildSupportResourceContext({
     const signals = Array.isArray(domain.relevant_pack_signals) ? domain.relevant_pack_signals : [];
     return signals.length === 0 || signals.some((signal) => selectedPackIds.has(signal));
   });
-  const selectedSourceRecords = selectSourceRecords(supportSourceIds(selectedPackIds, relevantCycleDomains));
+  const relevantCycleEvidenceLayers = cycleSupportEvidenceLayersForContextIds(routing.activeContextIds);
+  const selectedSourceRecords = selectSourceRecords([
+    ...supportSourceIds(selectedPackIds, relevantCycleDomains),
+    ...relevantCycleEvidenceLayers.flatMap((layer) => layer.sources || []),
+  ]);
 
   return {
     context_routing: {
@@ -376,6 +383,8 @@ export function buildSupportResourceContext({
     },
     cycle_support: {
       principles: cycleSupport.principles,
+      evidence_layers: cycleSupport.evidence_layers,
+      relevant_evidence_layers: relevantCycleEvidenceLayers,
       context_options: cycleSupport.context_options,
       marker_contexts: cycleSupport.marker_contexts,
       intake_schema: cycleSupport.intake_schema,

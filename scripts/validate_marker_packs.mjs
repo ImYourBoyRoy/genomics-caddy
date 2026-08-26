@@ -140,7 +140,7 @@ const supportContracts = {
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
-  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do'], objects: ['marker_contexts', 'intake_schema', 'diary_schema'] },
+  cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
   dietary_requirements: { arrays: ['priority_order', 'rules'] },
   evidence_policy: { objects: ['tiers', 'claim_policy'] },
@@ -497,6 +497,33 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     const groupIds = new Set();
     const contextIds = new Set((resource.context_options || []).map((option) => option.id));
+
+    const evidenceLayerIds = new Set();
+    for (const [index, layer] of (resource.evidence_layers || []).entries()) {
+      const location = `cycle_support_guidance.json evidence layer ${index + 1}`;
+      for (const key of ['id', 'title', 'summary', 'next_step']) {
+        if (typeof layer[key] !== 'string' || layer[key].trim() === '') {
+          errors.push(`${location}: ${key} must be a non-empty string`);
+        }
+      }
+      for (const field of ['context_ids', 'do_not_claim', 'sources']) {
+        if (!isStringArray(layer[field]) || layer[field].length === 0) {
+          errors.push(`${location}: ${field} must be a non-empty string array`);
+        }
+      }
+      if (layer.marker_pack_ids !== undefined && !isStringArray(layer.marker_pack_ids)) {
+        errors.push(`${location}: marker_pack_ids must be a string array when provided`);
+      }
+      for (const contextId of layer.context_ids || []) {
+        if (!contextIds.has(contextId)) errors.push(`${location}: context_ids references unknown context ${contextId}`);
+      }
+      if (evidenceLayerIds.has(layer.id)) errors.push(`${location}: duplicate id ${layer.id}`);
+      evidenceLayerIds.add(layer.id);
+    }
+    if (evidenceLayerIds.size === 0) {
+      errors.push('cycle_support_guidance.json: evidence_layers must contain at least one layer');
+    }
+
     for (const [index, group] of (schema?.groups || []).entries()) {
       const location = `cycle_support_guidance.json intake group ${index + 1}`;
       for (const key of ['id', 'title', 'description']) {

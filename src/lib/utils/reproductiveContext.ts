@@ -1,4 +1,5 @@
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
+import type { GeneratedReport } from '../types/genomics';
 
 export interface ReproductivePersonalContextLike {
   reproductiveIntake?: Record<string, unknown> | null;
@@ -151,6 +152,85 @@ export function cycleSupportDomainsForPersonalContext(
   personalContext?: ReproductivePersonalContextLike,
 ): typeof cycleSupport.domains {
   return cycleSupportDomainsForContextIds(reproductiveContextIdsForPersonalContext(personalContext));
+}
+
+/**
+ * Select the resource-authored interpretation layers for an explicit or
+ * self-reported reproductive context. These layers explain what the DNA
+ * report can add and where clinical history, product labels, labs, or imaging
+ * are required; they never turn a marker into a diagnosis or a current
+ * hormone measurement.
+ */
+export function cycleSupportEvidenceLayersForContextIds(
+  contextIds: readonly string[],
+): typeof cycleSupport.evidence_layers {
+  if (contextIds.length === 0) return [];
+  return cycleSupport.evidence_layers.filter((layer) =>
+    layer.context_ids.some((contextId) => contextIds.includes(contextId)),
+  );
+}
+
+export interface ReproductiveDnaCoverage {
+  tracked_marker_count: number;
+  present_marker_count: number;
+  callable_marker_count: number;
+  unknown_marker_count: number;
+}
+
+/**
+ * Summarize only callability coverage for markers relevant to a selected
+ * route. Genotypes are deliberately not returned. "Present" means the report
+ * contains a raw call in a status other than missing/not evaluated; "callable"
+ * is reserved for a verified interpretation. This is coverage accounting,
+ * not a health result.
+ */
+export function reproductiveDnaCoverageForReport(
+  report: GeneratedReport | null | undefined,
+  contextIds: readonly string[],
+): ReproductiveDnaCoverage | null {
+  if (!report || contextIds.length === 0) return null;
+
+  const markerContexts = cycleSupport.marker_contexts as Record<string, string[]>;
+  const relevantIds = new Set<string>(markerContexts.shared_reproductive || []);
+  for (const contextId of contextIds) {
+    for (const markerId of markerContexts[contextId] || []) relevantIds.add(markerId);
+  }
+
+  // Only count numeric rsIDs here. Guardrails, panels, and repeat callouts
+  // are intentionally excluded because they are not single-SNP call targets.
+  const trackedIds = new Set(
+    Array.from(relevantIds).filter((markerId) => /^rs\d+$/i.test(markerId)),
+  );
+  if (trackedIds.size === 0) return null;
+
+  const reportMarkers = new Map<string, GeneratedReport['sections'][number]['markers'][number]>();
+  for (const section of report.sections || []) {
+    for (const marker of section.markers || []) {
+      if (!reportMarkers.has(marker.rsid)) reportMarkers.set(marker.rsid, marker);
+    }
+  }
+
+  let present = 0;
+  let callable = 0;
+  for (const markerId of trackedIds) {
+    const marker = reportMarkers.get(markerId);
+    if (!marker) continue;
+    const isMissing = marker.assertion_status === 'NoData'
+      || marker.assertion_status === 'NotInRawFile'
+      || marker.assertion_status === 'NotEvaluated'
+      || marker.user_genotype === '--'
+      || marker.user_genotype.trim() === '';
+    if (isMissing) continue;
+    present += 1;
+    if (marker.assertion_status === 'Verified' && marker.interpretation_allowed) callable += 1;
+  }
+
+  return {
+    tracked_marker_count: trackedIds.size,
+    present_marker_count: present,
+    callable_marker_count: callable,
+    unknown_marker_count: trackedIds.size - present,
+  };
 }
 
 /**

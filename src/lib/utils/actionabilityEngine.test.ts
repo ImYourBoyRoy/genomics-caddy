@@ -170,6 +170,43 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.rules.some((item) => item.includes('raw DNA'))).toBe(true);
   });
 
+  it('routes thyroid pathway markers to measured thyroid follow-up', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs225014',
+      gene: 'DIO2',
+      interpretation: 'Thyroid conversion context marker; not diagnostic.',
+    })]));
+
+    expect(plan.labTests.some((test) => test.name === 'TSH')).toBe(true);
+    expect(plan.labTests.some((test) => test.name === 'Free T4')).toBe(true);
+    expect(plan.diet.avoid.some((item) => item.includes('High-dose iodine'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('levothyroxine'))).toBe(true);
+  });
+
+  it('routes sleep markers to symptom tracking and sleep-apnea evaluation', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs1801260',
+      gene: 'CLOCK',
+      interpretation: 'Circadian timing association marker; not diagnostic.',
+    })]));
+
+    expect(plan.labTests.some((test) => test.name.includes('Sleep study'))).toBe(true);
+    expect(plan.diet.favor.some((item) => item.includes('consistent sleep opportunity'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('chronotype'))).toBe(true);
+  });
+
+  it('keeps food-allergy actionability exposure-led rather than genotype-led', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs10156191',
+      gene: 'AOC1',
+      interpretation: 'Histamine-processing pathway context marker; not diagnostic.',
+    })]));
+
+    expect(plan.labTests.some((test) => test.name.includes('Allergist-directed'))).toBe(true);
+    expect(plan.diet.avoid.some((item) => item.includes('Permanent food elimination'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('AOC1'))).toBe(true);
+  });
+
   it('does not infer reproductive applicability from hormone marker text', () => {
     const plan = deriveActionablePlan(report([marker({
       rsid: 'rs2234693',

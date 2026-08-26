@@ -3,7 +3,7 @@
  * Purpose: Provide clear, plain-English translations for genetic marker impacts and meanings.
  * Responsibilities:
  * - Define the LaypersonTranslation interface.
- * - Map all 99 rsIDs from markers_extracted.json to their simplified layperson-friendly translations.
+ * - Map curated rsIDs from the marker packs to their simplified layperson-friendly translations.
  * Key Inputs: None (static mapping).
  * Key Outputs: LAYPERSON_MAP dictionary.
  * Operational Notes: Keeps technical and medical validity while using terms a layperson or teenager can understand.
@@ -28,48 +28,48 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This gene change is considered harmless and does not indicate a classic hereditary cancer risk. It is a common variant used in research."
   },
   "rs429358": {
-    simpleImpact: "APOE e4 variant linked to cholesterol and brain health",
-    simpleMeaning: "This gene variant affects how your body handles fats. Having one or two copies of this variant can lead to higher cholesterol levels and a higher long-term risk of heart issues or memory decline."
+    simpleImpact: "APOE e4-associated marker (lipid and brain-health context)",
+    simpleMeaning: "This marker is part of the APOE type used in lipid and age-related health research. Associations with cholesterol and other outcomes vary by the complete APOE type, ancestry, age, and health history; a lipid profile and clinical context are more useful than this SNP alone."
   },
   "rs7412": {
-    simpleImpact: "APOE gene type determination",
-    simpleMeaning: "This marker determines your specific APOE gene type. It helps show whether your body is naturally prone to lower or higher cholesterol levels."
+    simpleImpact: "APOE haplotype component",
+    simpleMeaning: "This is one of the markers used with rs429358 to infer a common APOE type. This SNP alone does not establish the full type or your current cholesterol; use a lipid profile and clinical context."
   },
   "rs10757278": {
-    simpleImpact: "Increased risk of early-onset heart disease (9p21 region)",
-    simpleMeaning: "This variant affects cells in your blood vessel walls. Certain versions are linked to a higher risk of early heart attacks, independent of your cholesterol levels."
+    simpleImpact: "9p21 cardiovascular-association marker",
+    simpleMeaning: "This region marker has been associated with coronary-disease outcomes in some studies. The effect is probabilistic and overlaps with blood pressure, lipids, smoking, diabetes, family history, and other factors; it is not an early-heart-attack prediction."
   },
   "rs1799983": {
-    simpleImpact: "Reduced nitric oxide production (NOS3 gene)",
-    simpleMeaning: "You may produce less nitric oxide, which helps widen blood vessels. This can affect how well your blood flows, your exercise recovery, and how your blood vessels react to stress."
+    simpleImpact: "NOS3 nitric-oxide signaling marker",
+    simpleMeaning: "This NOS3 marker has been studied in nitric-oxide signaling and vascular response. Associations vary between studies; it does not measure nitric oxide, blood flow, or exercise recovery."
   },
   "rs2070744": {
-    simpleImpact: "Lower nitric oxide levels (NOS3 gene)",
-    simpleMeaning: "This variant lowers the production of nitric oxide in your blood vessels. Working with other markers, it can make it harder for your blood vessels to relax."
+    simpleImpact: "NOS3 vascular-response marker",
+    simpleMeaning: "This NOS3 marker has been studied in relation to nitric-oxide signaling and vascular response. It is a small-effect research association, not a measurement of vessel relaxation or cardiovascular disease."
   },
   "rs1800012": {
-    simpleImpact: "Slightly reduced bone density and collagen strength (COL1A1 gene)",
-    simpleMeaning: "This variant can slightly lower the strength of your body's main structural support, collagen. It is linked to slightly weaker bones and a higher chance of soft-tissue injuries like sprains."
+    simpleImpact: "COL1A1 bone and collagen association marker",
+    simpleMeaning: "This COL1A1 marker has been associated with small differences in bone or connective-tissue traits. Effects are probabilistic and do not establish bone weakness or injury risk; symptoms, fracture history, and clinical testing matter more."
   },
   "rs12722": {
     simpleImpact: "Tendon and ligament flexibility (COL5A1 gene)",
-    simpleMeaning: "This variant affects the structure of your tendons and ligaments. Some versions give you more joint flexibility, while others make you more prone to tendon strains."
+    simpleMeaning: "This COL5A1 marker has been studied in tendon, ligament, and flexibility traits. Associations vary; it does not predict an injury or establish whether a person is unusually flexible."
   },
   "rs1800255": {
     simpleImpact: "Common collagen structure variant (COL3A1 gene)",
     simpleMeaning: "This common marker is not a diagnosis of a collagen disorder. It has been studied in relation to small differences in joint and tissue flexibility, but symptoms and clinical examination matter more."
   },
   "rs143383": {
-    simpleImpact: "Reduced joint cartilage repair (GDF5 gene)",
-    simpleMeaning: "This variant reduces the production of a protein needed to repair joint cartilage. It can slightly increase your chances of developing joint wear-and-tear (osteoarthritis) over time, especially in the knees and hips."
+    simpleImpact: "GDF5 joint-trait association marker",
+    simpleMeaning: "This GDF5 marker has been studied in cartilage and osteoarthritis susceptibility. Any association is small and probabilistic; it does not diagnose osteoarthritis or predict which joint becomes symptomatic."
   },
   "rs3025058": {
     simpleImpact: "Altered tissue remodeling in tendons (MMP3 gene)",
     simpleMeaning: "This variant affects how your body breaks down and rebuilds tissue in your joints and tendons. It can influence your risk of tendon injuries, such as Achilles tendon issues."
   },
   "rs2118181": {
-    simpleImpact: "Altered artery wall elasticity (FBN1 gene)",
-    simpleMeaning: "This variant affects the elasticity of your blood vessels. It is linked to a slight increase in risk for blood vessel stretching or tearing, but it is not a diagnosis of a genetic disorder like Marfan syndrome."
+    simpleImpact: "FBN1/connective-tissue association marker",
+    simpleMeaning: "This common marker has been studied in connective-tissue and vascular traits. It does not establish vessel fragility, aortic disease, or a condition such as Marfan syndrome; clinical examination and family history are more informative."
   },
   "rs8033037": {
     simpleImpact: "Common bone growth variant (FBN1 gene)",
@@ -88,51 +88,51 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This variant changes how your body maintains and breaks down tissues in your joints and blood vessels, which can impact your overall joint and heart health."
   },
   "rs10156191": {
-    simpleImpact: "Reduced breakdown of histamine in food (AOC1 gene)",
-    simpleMeaning: "You produce less of the enzyme that breaks down histamine in your gut. This can make you more sensitive to histamine-rich foods like aged cheeses, wine, or fermented items, leading to digestive issues or hives."
+    simpleImpact: "AOC1 histamine-processing research marker",
+    simpleMeaning: "This AOC1 marker has been studied in DAO-related histamine processing. Food tolerance varies widely, and this SNP does not diagnose histamine intolerance, food allergy, hives, or a need to avoid particular foods."
   },
   "rs11558538": {
-    simpleImpact: "Slower breakdown of histamine in cells (HNMT gene)",
-    simpleMeaning: "This variant slows down how your brain and body clear histamine from inside your cells. This can make histamine signals last longer, potentially affecting sleep, focus, or allergy-like symptoms."
+    simpleImpact: "HNMT histamine-processing research marker",
+    simpleMeaning: "This HNMT marker has been studied in cellular histamine processing. Symptoms and food responses are not determined by this SNP; consider allergies, medicines, other conditions, and clinical evaluation when symptoms persist."
   },
   "rs4988235": {
-    simpleImpact: "Lactose intolerance (MCM6 gene)",
+    simpleImpact: "MCM6 lactase-persistence association marker",
     simpleMeaning: "Two copies are associated with adult lactase non-persistence in many European-ancestry studies. Symptoms and dairy tolerance vary, and this is not a milk-allergy diagnosis."
   },
   "rs9939609": {
-    simpleImpact: "Increased appetite and slower fullness signals (FTO gene)",
-    simpleMeaning: "This variant is linked to a naturally higher appetite and taking longer to feel full. Regular exercise and eating enough protein can help counteract this effect."
+    simpleImpact: "FTO appetite and weight association marker",
+    simpleMeaning: "This FTO marker has been associated with small differences in appetite or weight-related traits in some populations. It does not determine appetite or body size; eating patterns, activity, sleep, environment, and health history matter."
   },
   "rs1801282": {
-    simpleImpact: "Altered fat storage and insulin sensitivity (PPARG gene)",
-    simpleMeaning: "This variant helps control fat storage and how your body responds to insulin. Some versions improve your insulin response, which helps protect you against type 2 diabetes."
+    simpleImpact: "PPARG metabolic association marker",
+    simpleMeaning: "This PPARG marker is studied in fat storage and insulin sensitivity. Associations are modest and context-dependent; it does not establish insulin sensitivity or protection from type 2 diabetes."
   },
   "rs2237897": {
-    simpleImpact: "Lower insulin response to sugar (KCNQ1 gene)",
-    simpleMeaning: "This variant can lower the amount of insulin your body releases in response to sugar. This slightly raises your risk of developing type 2 diabetes."
+    simpleImpact: "KCNQ1 glucose and insulin-secretion association marker",
+    simpleMeaning: "This KCNQ1 marker has been associated with small differences in insulin secretion or glucose-related traits. It does not diagnose diabetes or predict an individual response; HbA1c, glucose testing, and clinical risk factors are more useful."
   },
   "rs7903146": {
-    simpleImpact: "Elevated risk of type 2 diabetes (TCF7L2 gene)",
-    simpleMeaning: "This is the strongest common genetic marker linked to type 2 diabetes. It reduces insulin secretion, but eating a low-sugar diet and staying active can significantly lower your risk."
+    simpleImpact: "TCF7L2 glucose association marker",
+    simpleMeaning: "This is a well-studied common association with type 2 diabetes risk, but it is not a diagnosis or a personal probability estimate. Glucose, HbA1c, family history, age, body composition, activity, sleep, and overall diet provide the actionable context."
   },
   "rs13266634": {
-    simpleImpact: "Altered zinc transport in insulin cells (SLC30A8 gene)",
-    simpleMeaning: "This variant affects how zinc is moved inside your insulin-producing cells. This can alter how insulin is stored and released, slightly increasing your risk of diabetes."
+    simpleImpact: "SLC30A8 beta-cell association marker",
+    simpleMeaning: "This SLC30A8 marker is studied in zinc transport and pancreatic beta-cell function. Any association with glucose or diabetes risk is probabilistic; it does not measure insulin release or diagnose diabetes."
   },
   "rs5219": {
-    simpleImpact: "Reduced insulin release (KCNJ11 gene)",
-    simpleMeaning: "This variant keeps channels in your pancreas open longer, which slows down the release of insulin. This can slightly elevate your blood sugar response after meals."
+    simpleImpact: "KCNJ11 beta-cell association marker",
+    simpleMeaning: "This KCNJ11 marker has been studied in pancreatic beta-cell function and glucose traits. It does not measure post-meal insulin or establish diabetes risk for one person; use laboratory testing and clinical context."
   },
   "rs1260326": {
-    simpleImpact: "Triglyceride and sugar balance shift (GCKR gene)",
-    simpleMeaning: "This variant shifts how your liver handles sugars and fats. Certain versions lower your fasting blood sugar but increase your level of triglycerides (fats in the blood)."
+    simpleImpact: "GCKR glucose and triglyceride association marker",
+    simpleMeaning: "This GCKR marker has been associated with a trade-off between fasting glucose and triglyceride-related traits in some studies. A lipid panel and glucose testing show current status; the SNP is not a diagnosis."
   },
   "rs662799": {
-    simpleImpact: "Reduced clearance of blood fats (APOA5 gene)",
-    simpleMeaning: "This variant slows down how quickly your body clears fat from your blood. This can lead to higher levels of fasting triglycerides."
+    simpleImpact: "APOA5 triglyceride association marker",
+    simpleMeaning: "This APOA5 marker has been associated with triglyceride levels in some populations. Diet, alcohol, metabolic health, medicines, and other genes also matter; a measured lipid panel is needed."
   },
   "rs328": {
-    simpleImpact: "Faster clearance of blood fats (LPL gene)",
+    simpleImpact: "LPL lipid-clearance association marker",
     simpleMeaning: "This variant has been associated with differences in an enzyme involved in blood-fat clearance. Some studies link it with lower triglycerides or higher HDL, but your actual lipid tests and overall health matter more."
   },
   "rs708272": {
@@ -140,8 +140,8 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This marker has been associated with differences in cholesterol transport and HDL levels. It does not guarantee protection; a complete lipid profile and ApoB-related context are more useful."
   },
   "rs10455872": {
-    simpleImpact: "Elevated Lipoprotein(a) levels (LPA gene)",
-    simpleMeaning: "This marker is strongly linked to higher levels of a specific type of cholesterol-carrying particle called Lipoprotein(a). High levels can increase the risk of plaque buildup in your arteries."
+    simpleImpact: "LPA lipoprotein(a)-level association marker",
+    simpleMeaning: "This LPA marker has been associated with higher lipoprotein(a) in many studies, but the SNP does not measure your level. A measured Lp(a) result, lipid profile, family history, and overall cardiovascular risk are needed for useful interpretation."
   },
   "rs3798220": {
     simpleImpact: "Elevated Lipoprotein(a) levels (LPA gene)",
@@ -149,23 +149,23 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs17782313": {
     simpleImpact: "Altered fullness signaling (MC4R gene)",
-    simpleMeaning: "This variant affects how your brain receives signals about being full. Certain versions can make you feel less satisfied after eating, leading to a tendency to eat more."
+    simpleMeaning: "This MC4R-region marker has been associated with small differences in appetite or weight-related traits. It does not determine hunger or eating behavior; food environment, sleep, activity, and health history matter."
   },
   "rs1360780": {
     simpleImpact: "Altered stress hormone sensitivity (FKBP5 gene)",
-    simpleMeaning: "This variant affects how your brain turns off its stress response. Certain versions make you more sensitive to stress and can prolong the effects of the stress hormone cortisol."
+    simpleMeaning: "This FKBP5 marker has been studied in stress-response regulation. Associations vary by stress exposure and other factors; it does not measure cortisol or determine emotional responses."
   },
   "rs6311": {
     simpleImpact: "Altered serotonin receptor density (HTR2A gene)",
-    simpleMeaning: "This research-level variant changes how many serotonin receptors are on your brain cells. It can influence your mood, emotional reactivity, and how you react to certain medications."
+    simpleMeaning: "This research-level HTR2A marker has been studied in serotonin-related traits and medication-response research. It does not measure receptor density, diagnose a mood condition, or predict a medication response."
   },
   "rs53576": {
     simpleImpact: "Altered oxytocin (social hormone) sensitivity (OXTR gene)",
-    simpleMeaning: "This variant can affect how sensitive your brain is to oxytocin, a hormone involved in bonding and social stress management. Certain versions can affect how you seek support or handle stress around others."
+    simpleMeaning: "This OXTR marker has been studied in oxytocin-related and social-behavior research. Findings are inconsistent and context-dependent; it does not determine bonding, empathy, personality, or how someone handles stress."
   },
   "rs6323": {
     simpleImpact: "Slower breakdown of brain chemicals (MAOA gene)",
-    simpleMeaning: "This variant slows down how quickly your body clears brain chemicals like dopamine and serotonin. This can lead to stronger emotional responses under sudden stress."
+    simpleMeaning: "This MAOA marker has been studied in neurotransmitter metabolism and behavior research. It does not measure brain-chemical levels or determine emotional responses, aggression, or personality."
   },
   "rs4680": {
     simpleImpact: "Slower dopamine breakdown in the brain (COMT gene)",
@@ -173,11 +173,11 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1800497": {
     simpleImpact: "Fewer dopamine receptors (DRD2/ANKK1 gene region)",
-    simpleMeaning: "This variant reduces the number of dopamine receptors in your brain's reward center. This can make you more likely to seek out strong rewards or stimulation."
+    simpleMeaning: "This DRD2/ANKK1-region marker has been studied in dopamine signaling and reward-related traits. It does not measure receptor number or determine motivation, addiction, or reward-seeking behavior."
   },
   "rs6277": {
     simpleImpact: "Altered dopamine receptor availability (DRD2 gene)",
-    simpleMeaning: "This variant affects how efficiently your brain makes dopamine receptors, which can play a role in memory, learning, and mental flexibility."
+    simpleMeaning: "This DRD2 marker has been studied in dopamine signaling and cognitive traits. Associations are small and inconsistent; it does not measure receptor availability or determine memory, learning, or flexibility."
   },
   "rs7794154": {
     simpleImpact: "Altered brain cell connections (CNTNAP2 gene)",
@@ -188,32 +188,32 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This is a minor research marker that plays a role in brain cell architecture. It shows a weak association with sensory processing and neurodevelopmental traits."
   },
   "rs1800544": {
-    simpleImpact: "Altered adrenaline receptor sensitivity in the brain (ADRA2A gene)",
-    simpleMeaning: "This variant changes how your brain responds to norepinephrine, a chemical related to focus and stress. It is often studied for its role in attention and focus medication response."
+    simpleImpact: "ADRA2A norepinephrine-signaling association marker",
+    simpleMeaning: "This ADRA2A marker has been studied in norepinephrine signaling and attention-related research. It does not measure receptor sensitivity or predict focus, stress response, or medication outcome."
   },
   "rs1801132": {
-    simpleImpact: "Estrogen receptor sensitivity (ESR1 gene)",
-    simpleMeaning: "This variant affects how your cells respond to estrogen. It has been researched for its relationship with mood changes during hormonal shifts."
+    simpleImpact: "ESR1 hormone-response research marker",
+    simpleMeaning: "This ESR1 marker has been studied in estrogen-receptor and hormone-response research. It does not measure current estrogen, determine hormone sensitivity, or explain menstrual mood symptoms."
   },
   "rs2234693": {
-    simpleImpact: "Estrogen binding sensitivity (ESR1 gene)",
-    simpleMeaning: "This research marker affects how your body processes estrogen. It is studied for links to emotional and physical symptoms during hormone drops."
+    simpleImpact: "ESR1 hormone-response research marker",
+    simpleMeaning: "This research-level ESR1 marker has been studied in estrogen-receptor and symptom-timing research. It does not measure estrogen or explain emotional or physical symptoms during a hormone change."
   },
   "rs8079626": {
-    simpleImpact: "Progesterone receptor sensitivity (PGR gene)",
-    simpleMeaning: "This marker affects how your cells respond to progesterone. It is researched in relation to mood fluctuations during menstrual cycle hormonal peaks."
+    simpleImpact: "PGR hormone-response research marker",
+    simpleMeaning: "This PGR marker has been studied in progesterone-receptor and menstrual-symptom research. It does not measure progesterone, determine receptor sensitivity, or diagnose a cycle-related mood condition."
   },
   "rs6265": {
-    simpleImpact: "Reduced brain growth factor release (BDNF gene)",
-    simpleMeaning: "This variant reduces the release of a key protein that helps brain cells grow and adapt. It is linked to differences in memory, learning, and how your brain benefits from cardio exercise."
+    simpleImpact: "BDNF neuroplasticity association marker",
+    simpleMeaning: "This BDNF marker has been studied in neuroplasticity, memory, and exercise-response research. Associations vary; it does not measure BDNF, predict learning ability, or establish exercise response."
   },
   "rs324420": {
-    simpleImpact: "Higher natural 'bliss' chemical levels (FAAH gene)",
-    simpleMeaning: "This variant slows down the breakdown of a natural brain chemical often called the 'bliss molecule.' It is linked to lower anxiety and a better ability to handle stress."
+    simpleImpact: "FAAH endocannabinoid-signaling association marker",
+    simpleMeaning: "This FAAH marker has been studied in endocannabinoid signaling and stress-related traits. It does not measure anandamide, diagnose anxiety, or predict stress resilience."
   },
   "rs5751876": {
-    simpleImpact: "Increased risk of anxiety from caffeine (ADORA2A gene)",
-    simpleMeaning: "This variant affects how your brain reacts to caffeine. Certain versions can cause a much stronger fight-or-flight response, leading to jitteriness and anxiety after drinking coffee or energy drinks."
+    simpleImpact: "ADORA2A caffeine-sensitivity association marker",
+    simpleMeaning: "This ADORA2A marker has been associated with differences in caffeine sensitivity in some studies. Dose, sleep, expectations, medicines, pregnancy, and personal response matter; it does not diagnose anxiety or set a universal caffeine limit."
   },
   "rs1799971": {
     simpleImpact: "Altered pain and reward sensitivity (OPRM1 gene)",
@@ -221,7 +221,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs1611115": {
     simpleImpact: "Altered dopamine and norepinephrine balance (DBH gene)",
-    simpleMeaning: "This variant reduces the speed at which your body turns dopamine into norepinephrine. This changes the balance of key focus and stress chemicals in your nervous system."
+    simpleMeaning: "This DBH marker has been studied in dopamine-to-norepinephrine metabolism. It does not measure neurotransmitter levels or determine focus, stress response, or medication outcome."
   },
   "rs1801133": {
     simpleImpact: "Folate-processing context marker (MTHFR gene)",
@@ -232,43 +232,43 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This common variant is usually a small-effect context marker. It does not diagnose a folate problem or justify avoiding folic acid; consider folate, B12, and homocysteine only when clinically relevant."
   },
   "rs1800795": {
-    simpleImpact: "Higher baseline inflammation (IL-6 gene)",
-    simpleMeaning: "This variant is linked to higher baseline levels of an inflammatory protein. This can make you more sensitive to physical and mental stress when your immune system is active."
+    simpleImpact: "IL6 inflammation-association marker",
+    simpleMeaning: "This IL6 marker has been studied in inflammatory signaling and measured IL-6 differences. It does not measure current inflammation or predict how someone feels during illness or stress."
   },
   "rs1800629": {
-    simpleImpact: "Increased inflammatory response (TNF gene)",
-    simpleMeaning: "This variant makes your body produce more of a key inflammatory protein. This can raise your body's overall baseline level of inflammation."
+    simpleImpact: "TNF inflammation-association marker",
+    simpleMeaning: "This TNF marker has been studied in inflammatory signaling. Associations vary by population and context; it does not measure current TNF levels, diagnose inflammation, or establish autoimmune disease."
   },
   "rs1800562": {
-    simpleImpact: "Increased iron absorption risk (HFE gene)",
+    simpleImpact: "HFE iron-overload evaluation marker",
     simpleMeaning: "This HFE variant can be relevant to iron-overload evaluation, especially when a clinical result and iron studies support it. A raw SNP result alone does not diagnose hemochromatosis or prove that you absorb too much iron."
   },
   "rs1799945": {
-    simpleImpact: "Mildly increased iron absorption (HFE gene)",
+    simpleImpact: "HFE iron-related association marker",
     simpleMeaning: "This is a milder HFE component. Its significance depends on other HFE alleles, iron studies, symptoms, and life stage; it is not proof of iron buildup by itself."
   },
   "rs1805087": {
     simpleImpact: "Altered folate and B12 processing (MTR gene)",
-    simpleMeaning: "This variant affects an enzyme that works with folate and vitamin B12. It can slightly alter how your body uses these vitamins for cell maintenance."
+    simpleMeaning: "This MTR marker is studied in folate and vitamin-B12 pathways. Any effect is likely small and context-dependent; it does not establish a vitamin deficiency or determine supplement need."
   },
   "rs1801394": {
-    simpleImpact: "Slower Vitamin B12 recycling (MTRR gene)",
-    simpleMeaning: "This variant makes your body recycle vitamin B12 less efficiently. This can slightly increase your dietary need for active B12."
+    simpleImpact: "MTRR vitamin-B12 pathway association marker",
+    simpleMeaning: "This MTRR marker is studied in vitamin-B12 recycling. It does not measure B12 status or set a personal dietary requirement; symptoms, diet, absorption, medicines, and laboratory results matter."
   },
   "rs1801198": {
     simpleImpact: "Reduced Vitamin B12 delivery to cells (TCN2 gene)",
     simpleMeaning: "This variant has been studied in vitamin-B12 transport. If symptoms or labs raise concern, clinicians may consider more than a single serum B12 result; the SNP alone does not establish cellular B12 deficiency."
   },
   "rs602662": {
-    simpleImpact: "Altered gut environment and lower blood B12 (FUT2 gene)",
+    simpleImpact: "FUT2 secretor-status and B12 association marker",
     simpleMeaning: "This FUT2 marker has been associated with secretor-status and B12 differences in some populations. One SNP does not establish secretor status or B12 deficiency; symptoms, diet, and labs provide the useful context."
   },
   "rs7946": {
-    simpleImpact: "Reduced choline production in the liver (PEMT gene)",
+    simpleImpact: "PEMT choline-pathway association marker",
     simpleMeaning: "This PEMT marker is studied in choline metabolism. It may be a reason to consider ordinary choline-rich foods in the context of your diet and health, but it does not establish a choline deficiency or fatty-liver risk."
   },
   "rs2236225": {
-    simpleImpact: "Altered folate processing and higher choline demand (MTHFD1 gene)",
+    simpleImpact: "MTHFD1 folate/choline-pathway association marker",
     simpleMeaning: "This MTHFD1 marker is studied in folate and choline pathways. Any effect is likely context-dependent; it does not set a personal daily choline requirement or justify high-dose supplements."
   },
   "rs2228570": {
@@ -276,8 +276,8 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This VDR marker is associated in some studies with small differences in vitamin-D signaling. Use 25(OH)D and clinical context rather than the SNP to decide whether any action is needed."
   },
   "rs1544410": {
-    simpleImpact: "Fewer Vitamin D receptors (VDR gene)",
-    simpleMeaning: "This variant is linked to having fewer Vitamin D receptors on your cells, which can reduce how effectively your body uses Vitamin D."
+    simpleImpact: "VDR vitamin-D signaling association marker",
+    simpleMeaning: "This VDR marker has been studied in vitamin-D signaling. It does not measure receptor number or current vitamin-D status; use a 25(OH)D result and clinical context rather than the SNP alone."
   },
   "rs2282679": {
     simpleImpact: "Lower Vitamin D transport in the blood (GC gene)",
@@ -288,7 +288,7 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This CYP2R1 marker is studied in vitamin-D activation. Effects vary; use measured 25(OH)D and clinician guidance rather than assuming supplementation is needed."
   },
   "rs12785878": {
-    simpleImpact: "Reduced Vitamin D production from sunlight (DHCR7 gene)",
+    simpleImpact: "DHCR7 vitamin-D association marker",
     simpleMeaning: "This DHCR7 marker is associated in some studies with vitamin-D-related differences. It does not measure sunlight exposure or establish reliance on supplements; use labs and safe sun/food guidance."
   },
   "rs3892097": {
@@ -368,40 +368,40 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
     simpleMeaning: "This is one NUDT15 allele component studied for thiopurine toxicity. Confirm with a clinical PGx result and blood-count monitoring before any treatment decision."
   },
   "rs73598374": {
-    simpleImpact: "Higher sleep pressure and deeper sleep (ADA gene)",
-    simpleMeaning: "This variant slows down how your body breaks down adenosine, a chemical that builds up during the day to make you feel sleepy. You may experience deeper sleep but feel groggier when you wake up."
+    simpleImpact: "ADA sleep-pressure association marker",
+    simpleMeaning: "This ADA marker has been studied in adenosine metabolism and sleep-pressure traits. It does not predict sleep depth or morning alertness; sleep schedule, health, medicines, and environment matter."
   },
   "rs934945": {
-    simpleImpact: "Sleep schedule disruption and lighter sleep (PER2 gene)",
-    simpleMeaning: "This research-level variant in a core clock gene is linked to disruptions in your sleep schedule, waking up in the middle of the night, and lighter sleep."
+    simpleImpact: "PER2 circadian-rhythm research marker",
+    simpleMeaning: "This research-level PER2 marker has been studied in circadian timing and sleep traits. It does not diagnose insomnia or predict awakenings; sleep history and clinical context matter."
   },
   "rs1801260": {
-    simpleImpact: "Natural preference for staying up late (CLOCK gene)",
-    simpleMeaning: "This variant is strongly linked to being a 'night owl.' It can delay your body's natural release of melatonin, making it harder to fall asleep early."
+    simpleImpact: "CLOCK circadian-timing association marker",
+    simpleMeaning: "This CLOCK marker has been associated with chronotype in some studies. It does not determine whether someone is a night owl or measure melatonin; light exposure, schedule, sleep pressure, and environment also matter."
   },
   "rs10830963": {
     simpleImpact: "Altered sugar control in the morning (MTNR1B gene)",
-    simpleMeaning: "This variant affects how your body handles sugar in the morning. When melatonin levels are still high, your body release less insulin, which can lead to higher morning blood sugar levels."
+    simpleMeaning: "This MTNR1B marker has been associated with fasting-glucose and glucose-timing traits. It does not measure melatonin or insulin release; sleep timing, meals, medicines, and glucose testing provide the useful context."
   },
   "rs225014": {
-    simpleImpact: "Reduced thyroid hormone activation in cells (DIO2 gene)",
-    simpleMeaning: "This variant makes your cells less efficient at turning inactive thyroid hormone into its active form. This can cause mild fatigue or brain fog even if your standard blood tests look normal."
+    simpleImpact: "DIO2 thyroid-hormone-conversion association marker",
+    simpleMeaning: "This DIO2 marker has been studied in thyroid-hormone conversion. It does not measure tissue thyroid activity or explain fatigue/brain fog; thyroid symptoms and laboratory results require clinical interpretation."
   },
   "rs1050450": {
-    simpleImpact: "Lower antioxidant protection in the thyroid (GPX1 gene)",
-    simpleMeaning: "This variant reduces your body's ability to protect the thyroid gland from oxidative stress. Getting enough selenium in your diet can help support this protective pathway."
+    simpleImpact: "GPX1 antioxidant-pathway association marker",
+    simpleMeaning: "This GPX1 marker has been studied in antioxidant-enzyme activity and thyroid-related research. It does not measure selenium status or establish a need for selenium; food, laboratory results, medicines, and clinician guidance matter."
   },
   "rs231775": {
-    simpleImpact: "Higher immune cell activation and autoimmune risk (CTLA4 gene)",
-    simpleMeaning: "This variant lowers a safety brake on your immune cells, making them more active. This can slightly raise your risk for autoimmune conditions, where the body attacks its own tissues."
+    simpleImpact: "CTLA4 immune-association marker",
+    simpleMeaning: "This CTLA4 marker has been associated with autoimmune traits in some studies. It does not measure immune activity or diagnose an autoimmune condition; symptoms, examination, and appropriate tests are needed."
   },
   "rs2476601": {
     simpleImpact: "Altered immune signaling and autoimmune risk (PTPN22 gene)",
-    simpleMeaning: "This variant changes a key signal in your immune cells, making it harder for your body to turn off immune responses. This is linked to a higher risk of autoimmune thyroid issues and other conditions."
+    simpleMeaning: "This PTPN22 marker has been associated with several autoimmune traits. Associations vary by condition and population; it does not diagnose autoimmune thyroid disease or predict an individual outcome."
   },
   "rs1883832": {
-    simpleImpact: "Increased thyroid antibody production (CD40 gene)",
-    simpleMeaning: "This variant increases the activity of immune cells that make antibodies. In some people, this can lead to the immune system targeting the thyroid gland."
+    simpleImpact: "CD40 immune-signaling association marker",
+    simpleMeaning: "This CD40 marker has been studied in antibody and autoimmune-trait research. It does not measure thyroid antibodies or diagnose thyroid disease; symptoms and laboratory testing are required."
   },
   "rs179247": {
     simpleImpact: "Altered thyroid hormone receptor sensitivity (TSHR gene)",
@@ -409,6 +409,6 @@ export const LAYPERSON_MAP: Record<string, LaypersonTranslation> = {
   },
   "rs2235544": {
     simpleImpact: "Altered thyroid hormone conversion in organs (DIO1 gene)",
-    simpleMeaning: "This variant alters how your liver and kidneys convert thyroid hormone from its inactive to active form, causing minor shifts in thyroid hormone ratios in the blood."
+    simpleMeaning: "This DIO1 marker has been studied in thyroid-hormone conversion and measured hormone-ratio differences. It does not measure current thyroid function or determine treatment; laboratory results and clinical assessment matter."
   },
 };

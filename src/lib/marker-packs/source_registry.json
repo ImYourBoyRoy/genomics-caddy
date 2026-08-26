@@ -371,6 +371,38 @@
       "conflict_of_interest": "U.S. National Library of Medicine public health resource",
       "notes": "Use for urgent symptom escalation: sudden severe testicle pain needs immediate medical care. This is a symptom-safety rule, not a genetic inference."
     },
+    "niddk_thyroid_tests": {
+      "name": "NIDDK: Thyroid Tests",
+      "url": "https://www.niddk.nih.gov/health-information/diagnostic-tests/thyroid",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH diagnostic-testing reference",
+      "conflict_of_interest": "U.S. National Institute of Diabetes and Digestive and Kidney Diseases public health resource",
+      "notes": "Use for the boundary that thyroid status is evaluated with clinical blood tests such as TSH and free T4, with additional tests or imaging when indicated; do not use common SNPs to diagnose thyroid disease or direct treatment."
+    },
+    "nhlbi_sleep_apnea_diagnosis": {
+      "name": "NHLBI: Sleep Apnea Diagnosis",
+      "url": "https://www.nhlbi.nih.gov/health/sleep-apnea/diagnosis",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH clinical diagnostic reference",
+      "conflict_of_interest": "U.S. National Heart, Lung, and Blood Institute public health resource",
+      "notes": "Use for symptom prompts, sleep diaries, and sleep-study follow-up when snoring, witnessed apneas, gasping, or daytime sleepiness warrant evaluation; chronotype SNPs do not diagnose sleep apnea."
+    },
+    "aaaai_food_allergy_diagnosis": {
+      "name": "AAAAI: Food Allergy Symptoms, Diagnosis and Treatment",
+      "url": "https://www.aaaai.org/conditions-treatments/allergies/food-allergy",
+      "accessed": "2026-08-25",
+      "evidence_type": "Allergy/immunology professional-society reference",
+      "conflict_of_interest": "American Academy of Allergy, Asthma & Immunology professional education resource",
+      "notes": "Use for exposure-linked history, allergist-directed testing, and urgent anaphylaxis escalation. Do not infer food allergy from AOC1/HNMT or immune SNPs, and do not recommend unsupervised elimination or food challenges."
+    },
+    "nih_ods_iodine": {
+      "name": "NIH Office of Dietary Supplements: Iodine Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/Iodine-Consumer/",
+      "accessed": "2026-08-25",
+      "evidence_type": "NIH nutrient safety reference",
+      "conflict_of_interest": "U.S. National Institutes of Health public health resource",
+      "notes": "Use for iodine food/supplement safety and the risk of excessive intake; do not convert thyroid-pathway SNPs into iodine dosing advice."
+    },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",
       "evidence_type": "Local support-engine policy",

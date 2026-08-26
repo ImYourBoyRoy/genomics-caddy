@@ -711,6 +711,128 @@
         "user_declared_values_required",
         "lab_confirmation_required"
       ]
+    },
+    {
+      "id": "thyroid_function_context",
+      "genes": [
+        "DIO1",
+        "DIO2",
+        "TSHR",
+        "CTLA4",
+        "PTPN22",
+        "CD40",
+        "GPX1"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "thyroid_autoimmune"
+      ],
+      "avoid": [
+        "High-dose iodine or selenium supplements without clinical guidance"
+      ],
+      "lab_tests": [
+        {
+          "name": "TSH",
+          "urgency": "consider"
+        },
+        {
+          "name": "Free T4",
+          "urgency": "consider"
+        },
+        {
+          "name": "Thyroid antibodies when autoimmune thyroid disease is clinically suspected",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Do not start, stop, or change levothyroxine or another thyroid medicine from a common SNP; review symptoms, exact medication, TSH, free T4, and clinician assessment together."
+      ],
+      "notes": "Common thyroid-pathway markers are hypothesis prompts only. Thyroid function, autoimmunity, pregnancy/postpartum context, iodine and selenium exposure, and medication response require phenotype and clinical testing.",
+      "sources": [
+        "niddk_thyroid_tests",
+        "nih_ods_iodine",
+        "nih_ods_selenium",
+        "lab_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "sleep_airway_context",
+      "genes": [
+        "ADA",
+        "PER2",
+        "CLOCK",
+        "MTNR1B",
+        "RGS16",
+        "ABCC9"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "sleep",
+        "respiratory_airway"
+      ],
+      "favor": [
+        "A consistent sleep opportunity and wake-time routine that fits the person's work, caregiving, and health needs",
+        "A brief sleep and daytime-alertness diary when sleep timing or quality is a concern"
+      ],
+      "lab_tests": [
+        {
+          "name": "Sleep study when snoring, witnessed apneas, gasping, or daytime sleepiness warrant evaluation",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Do not use a chronotype or sleep-duration SNP to justify sedatives, stimulants, or a medication change; review sleep symptoms, substances, medicines, and clinician assessment."
+      ],
+      "notes": "Common sleep markers may provide small chronotype or sleep-duration context. They do not diagnose insomnia, sleep apnea, natural short sleep, or a treatment response.",
+      "sources": [
+        "nhlbi_sleep_apnea_diagnosis",
+        "phenotype_required",
+        "clinical_confirmation_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "allergy_food_reaction_context",
+      "genes": [
+        "AOC1",
+        "HNMT",
+        "FCER1A",
+        "IL4",
+        "IL13",
+        "IL4R",
+        "FLG",
+        "TSLP",
+        "STAT6"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "allergy_atopy_mast_cell",
+        "digestive_gut_microbiome"
+      ],
+      "favor": [
+        "An exposure and symptom log that records the food or environment, timing, objective symptoms, and co-factors"
+      ],
+      "avoid": [
+        "Permanent food elimination or unsupervised food challenge based only on a genetic marker"
+      ],
+      "lab_tests": [
+        {
+          "name": "Allergist-directed skin or specific-IgE testing when the exposure history fits",
+          "urgency": "consider"
+        }
+      ],
+      "medication_context": [
+        "Do not use an AOC1, HNMT, or immune SNP to label a food allergy or to change antihistamine, asthma, or emergency medicines; use an allergist-directed plan when indicated."
+      ],
+      "notes": "Food allergy, intolerance, histamine symptoms, eczema, and asthma are different clinical questions. DNA can provide limited pathway context but cannot identify a safe food, diagnose allergy, or rule out anaphylaxis.",
+      "sources": [
+        "aaaai_food_allergy_diagnosis",
+        "fda_major_food_allergens",
+        "clinical_confirmation_required",
+        "phenotype_required",
+        "safety_guardrail"
+      ]
     }
   ]
 }

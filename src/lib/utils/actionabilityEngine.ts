@@ -307,6 +307,7 @@ function isLabLikeConfirmItem(text: string): boolean {
     'tsh',
     'sleep study',
     'polysomn',
+    'allerg',
   ];
 
   if (allowed.some((a) => lower.includes(a))) return true;

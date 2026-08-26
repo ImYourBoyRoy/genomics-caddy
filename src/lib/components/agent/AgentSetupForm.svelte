@@ -107,7 +107,7 @@ Operational Notes: Uses Svelte 5 runes. Fully typed. Strictly under 500 lines.
 
         <div class="qc-metrics-grid">
           <div class="metric-card">
-            <span class="metric-label">Genetic Sex</span>
+            <span class="metric-label">Chromosome-call context</span>
             <span class="metric-value">{selectedSample.genetic_sex || 'Unknown'}</span>
           </div>
           <div class="metric-card">

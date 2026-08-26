@@ -109,6 +109,7 @@ interface ActionableRule {
     urgency: 'routine' | 'consider' | 'urgent';
     requires_counselor?: boolean;
   }[];
+  medication_context?: string[];
   notes?: string;
 }
 
@@ -378,7 +379,7 @@ function cycleContextMatches(markers: EvaluatedMarker[], sectionNames: string[])
     ...sectionNames,
     ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
   ].join(' ').toLowerCase();
-  return /menstrual|hormone|reproductive|pmdd|ovarian|uterine|contracept|estrogen|progesterone|\besr[12]\b|\bpgr\b/.test(context);
+  return cycleSupport.context_keywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
 }
 
 function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string[]): MedicationSafetyGuidance {
@@ -386,8 +387,12 @@ function deriveMedicationSafety(markers: EvaluatedMarker[], sectionNames: string
     ...sectionNames,
     ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
   ].join(' ').toLowerCase();
-  const pgxContext = /pharmacogen|\bpgx\b|cyp[0-9]|dpyd|tpmt|nudt15|slco1b1|vkorc1|hla|g6pd/.test(context);
-  const hormoneContext = /menstrual|hormone|reproductive|pmdd|ovarian|uterine|contracept|estrogen|progesterone|\besr[12]\b|\bpgr\b/.test(context);
+  const pgxContext = safetyGuardrails.medication_context.pgx_context_keywords.some((keyword) =>
+    context.includes(String(keyword).toLowerCase())
+  );
+  const hormoneContext = safetyGuardrails.medication_context.hormone_context_keywords.some((keyword) =>
+    context.includes(String(keyword).toLowerCase())
+  );
   const relevantRuleIds = new Set(['PGX_NO_MED_CHANGE', 'LABS_AND_PHENOTYPE_FIRST']);
   if (pgxContext) {
     relevantRuleIds.add('HLA_TAGS_NOT_TYPING');
@@ -427,6 +432,7 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
   const avoidSet = new Set<string>();
   const safetyNotes = new Set<string>(ACTIONABILITY_POLICY.safety_notes || []);
   const supplementsMap = new Map<string, string[]>();
+  const medicationContext = new Set<string>();
   const labTestsMap = new Map<
     string,
     {
@@ -528,6 +534,7 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
       list.push(`${reason}; ${qualifyGuidance(s, actionabilityClass, 'supplement')}`);
       supplementsMap.set(s, list);
     });
+    rule.medication_context?.forEach((item) => medicationContext.add(item));
     rule.lab_tests?.forEach((lt) => {
       upsertLab(labTestsMap, lt.name, reason, lt.urgency, !!lt.requires_counselor);
     });
@@ -608,6 +615,7 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
     markerValues,
     supplements.map((item) => item.name)
   );
+  const medicationSafety = deriveMedicationSafety(markerValues, sectionNames);
 
   return {
     topFindings,
@@ -624,7 +632,10 @@ export function deriveActionablePlan(report: GeneratedReport): ActionablePlan {
       stopAndEscalate: activityGuardrails.stop_and_escalate,
       relevantDomains: relevantActivityDomains,
     },
-    medication: deriveMedicationSafety(markerValues, sectionNames),
+    medication: {
+      rules: Array.from(new Set([...medicationSafety.rules, ...medicationContext])),
+      askFor: medicationSafety.askFor,
+    },
     cycleSupport: {
       principles: cycleSupport.principles,
       relevantDomains: relevantCycleDomains,

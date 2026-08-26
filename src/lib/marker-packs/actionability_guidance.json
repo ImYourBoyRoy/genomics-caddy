@@ -530,6 +530,39 @@
         "genereviews",
         "clinical_confirmation_required"
       ]
+    },
+    {
+      "id": "thrombophilia_estrogen_context",
+      "genes": [
+        "F5",
+        "F2"
+      ],
+      "actionability_class": "clinical_confirmation",
+      "severity_classes": [
+        "high_risk",
+        "moderate_risk",
+        "confirmation_required"
+      ],
+      "pack_hints": [
+        "cardiovascular",
+        "hormones_reproductive",
+        "pgx"
+      ],
+      "medication_context": [
+        "If this raw-array finding is confirmed, review the exact contraceptive or hormone product (including whether it contains estrogen) and personal/family VTE history with a clinician; do not change medication from this report."
+      ],
+      "lab_tests": [
+        {
+          "name": "Clinical Factor V Leiden / prothrombin mutation confirmation",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "This is a confirmation and medication-context prompt, not a recommendation to screen everyone or a diagnosis of current thrombosis.",
+      "sources": [
+        "cdc_usmec_2024",
+        "acog_combined_contraception",
+        "clinical_confirmation_required"
+      ]
     }
   ]
 }

@@ -6,7 +6,7 @@
   Module Docstring:
   Purpose: Displays a list of active imported genomic profiles.
   Responsibilities:
-  - Render list items containing sample name and detected genetic sex.
+  - Render list items containing sample name and conservative chromosome-call context.
   - Highlight the currently active profile.
   - Expose select and delete event bindings.
   Key Inputs: samples, selectedSample, onSelectSample, onDeleteSample.
@@ -43,7 +43,7 @@
             style={disabled ? "pointer-events: none; opacity: 0.65; cursor: not-allowed;" : ""}
             onclick={() => { if (!disabled) onSelectSample(s); }}
             onkeydown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectSample(s); } }}>
-            👤 {s.name} <span class="sex-pill">{s.genetic_sex}</span>
+            👤 {s.name} <span class="sex-pill" title="Chromosome-call hint only; not gender identity, anatomy, fertility, pregnancy, or hormone status">{s.genetic_sex}</span>
           </span>
           <button class="btn-delete" disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>
         </li>

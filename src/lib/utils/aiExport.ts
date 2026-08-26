@@ -13,7 +13,7 @@ export function buildStandardMarkdown(
 ): string {
   let md = `# Genomics Caddy AI - Consultation Export\n`;
   md += `*Sample Name:* ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `*Genetic Sex:* ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
+  md += `*Chromosome-call context:* ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
   md += `*Date:* ${new Date().toLocaleString()}\n`;
   md += `*Model:* ${selectedModel}\n\n`;
   md += `---\n\n`;
@@ -54,7 +54,7 @@ export function buildClinicalHandoffMarkdown(
   let md = `# Genomics Caddy AI - Clinical Handoff & Biohacking Summary\n`;
   md += `## Patient & Metadata\n`;
   md += `* **Patient Name:** ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `* **Genetic Sex:** ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
+  md += `* **Chromosome-call context:** ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
   md += `* **Date of Report:** ${new Date().toLocaleString()}\n`;
   md += `* **Inference Model:** ${selectedModel}\n\n`;
   md += `---\n\n`;

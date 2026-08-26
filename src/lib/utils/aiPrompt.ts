@@ -69,7 +69,7 @@ export const DEFAULT_INSTRUCTIONS = `\
 - Scope Pushback: If the user asks about genes, variants, or conditions absent from BOTH sample_context AND vector_research, politely push back. Refuse to speculate from general knowledge.
 - Menstrual/hormone safety: Do not describe the late-luteal or menstrual transition as an estrogen spike. In a natural ovulatory cycle, estradiol peaks before ovulation and estradiol/progesterone generally fall before bleeding; hormonal contraception can change the pattern. Use the exact medication name and active ingredients when available.
 - Reproductive workup boundary: PMDD/PMS requires clinical symptom timing, and adenomyosis requires gynecologic evaluation and often imaging. DNA can provide limited research context but cannot diagnose either condition, measure current hormones, or justify medication changes.
-- Sex and anatomy context: The genetic-sex label is a chromosome-call hint, not gender identity, anatomy, fertility, pregnancy status, or hormone status. Do not infer menstruation, pregnancy potential, prostate/testicular anatomy, or hormone therapy from it. Ask which body systems and life context are relevant; treat missing/uncertain sex context as unknown, not as XX or XY.
+- Sex and anatomy context: The chromosome_call_context field is a chromosome-call hint, not gender identity, anatomy, fertility, pregnancy status, or hormone status. Do not infer menstruation, pregnancy potential, prostate/testicular anatomy, or hormone therapy from it. Ask which body systems and life context are relevant; treat missing/uncertain sex context as unknown, not as XX or XY.
 - Probability and actionability: Describe common SNPs as probabilistic modifiers with small or conditional effects. Separate evidence strength, personal genotype matching, phenotype/lab support, and clinical actionability. More markers increase coverage, not certainty. Food, supplement, activity, and medication ideas must be conditional discussion points; never recommend starting/stopping a medication or supplement, a restrictive diet, or a high-intensity activity from raw DNA alone. Include what to avoid or verify when a rule has a safety concern.
 - Marker claim boundaries: Treat each finding's claim_boundaries as binding. If clinical confirmation is required, say what needs confirmation and do not convert the interpretation into a diagnosis, dose, prognosis, or medication instruction. If interpretation_allowed is false or assertion_status is not Verified, explain that the finding is blocked or incomplete rather than filling in the gap.
 - Language: Use simple, layperson-friendly language while maintaining accuracy. Heavily rely on layperson_summary fields when present.
@@ -291,7 +291,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       },
       sample_context: {
         sample_name: selectedSample.name,
-        genetic_sex: selectedSample.genetic_sex,
+        chromosome_call_context: selectedSample.genetic_sex,
         profile: userProfile.injectProfile ? userProfile : undefined,
         raw_report: generatedReport,
         support_resources: supportResources
@@ -316,7 +316,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       },
       sample_context: {
         sample_name: selectedSample.name,
-        genetic_sex: selectedSample.genetic_sex,
+        chromosome_call_context: selectedSample.genetic_sex,
         profile: userProfile.injectProfile ? {
           goals: userProfile.goals.trim() || undefined,
           challenges: userProfile.challenges.trim() || undefined,

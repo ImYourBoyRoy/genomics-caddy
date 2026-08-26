@@ -91,7 +91,7 @@
 
     <div class="health-summary-row">
       <div class="health-stat">
-        <span class="lbl">Genetic Sex</span>
+        <span class="lbl">Chromosome-call context</span>
         <span class="val text-accent">{geneticSex}</span>
       </div>
       <div class="health-stat">
@@ -99,7 +99,7 @@
         <span class="val">{foundMarkersCount} / {totalMarkersChecked} curated SNPs found</span>
       </div>
       <p class="marker-scope-note">
-        Counts reflect hand-curated marker packs only (~{totalMarkersChecked} SNPs), not your full chip (~600k variants).
+      This is a conservative chromosome-call hint only—not gender identity, anatomy, fertility, pregnancy, or hormone status. Counts reflect hand-curated marker packs only (~{totalMarkersChecked} SNPs), not your full chip (~600k variants).
         Use Agent Discovery and Vector Research scopes to expand beyond this baseline.
       </p>
     </div>

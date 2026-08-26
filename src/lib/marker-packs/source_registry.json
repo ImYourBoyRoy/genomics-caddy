@@ -123,6 +123,14 @@
       "conflict_of_interest": "Professional medical society patient guidance",
       "notes": "Use the term progestin for synthetic progesterone-like contraceptive ingredients and do not infer a medication class from DNA."
     },
+    "cdc_usmec_2024": {
+      "name": "CDC U.S. Medical Eligibility Criteria for Contraceptive Use, 2024",
+      "url": "https://www.cdc.gov/mmwr/volumes/73/rr/rr7304a1_appendix.htm",
+      "accessed": "2026-08-25",
+      "evidence_type": "U.S. public-health clinical guidance",
+      "conflict_of_interest": "U.S. Centers for Disease Control and Prevention public-health guidance",
+      "notes": "Use for thrombophilia and contraceptive-method safety context. The app must not use a raw SNP call to choose, stop, or change contraception, and routine population screening is not implied."
+    },
     "nice_adenomyosis_heavy_bleeding": {
       "name": "NICE NG88: Heavy Menstrual Bleeding Assessment and Management",
       "url": "https://www.nice.org.uk/guidance/ng88/chapter/Recommendations",

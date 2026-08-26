@@ -4,6 +4,20 @@
   "last_updated": "2026-08-25",
   "type": "support_engine",
   "purpose": "Provide cycle-aware questions, low-risk support options, safety escalation, and clinical follow-up prompts when reproductive or menstrual context is relevant. This is not a diagnostic or treatment engine.",
+  "context_keywords": [
+    "menstrual",
+    "hormone",
+    "reproductive",
+    "pmdd",
+    "ovarian",
+    "uterine",
+    "contracept",
+    "estrogen",
+    "progesterone",
+    "esr1",
+    "esr2",
+    "pgr"
+  ],
   "principles": [
     "Cycle timing is phenotype information that must be recorded; a consumer DNA file cannot measure current estrogen, progesterone, allopregnanolone, ovulation, or uterine tissue.",
     "In a natural ovulatory cycle, estradiol and progesterone generally fall during the late-luteal transition before bleeding. Symptoms can reflect sensitivity to hormone change rather than an estrogen spike.",
@@ -113,6 +127,7 @@
       "sources": [
         "acog_combined_contraception",
         "acog_progestin_only_contraception",
+        "cdc_usmec_2024",
         "user_declared_values_required",
         "clinical_confirmation_required"
       ]

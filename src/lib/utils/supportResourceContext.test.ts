@@ -18,6 +18,7 @@ describe('support resource context', () => {
     expect(context.food_safety.conditional_questions.pmdd_cycle).toBeDefined();
     expect(context.cycle_support.relevant_domains.some((domain) => domain.id === 'pmdd_like_mood_symptoms')).toBe(true);
     expect(context.cycle_support.source_registry.acog_premenstrual_disorders).toBeDefined();
+    expect(context.cycle_support.source_registry.cdc_usmec_2024).toBeDefined();
   });
 
   it('selects PGx confirmation resources and retains medication safety priorities', () => {
@@ -37,6 +38,9 @@ describe('support resource context', () => {
     expect(context.evidence_policy.claim_policy.never_claim).toContain('diagnosis from raw DNA');
     expect(context.prs_policy.principle).toContain('Do not compute');
     expect(context.actionability_policy.safety_notes?.[0]).toContain('More markers increase coverage');
+    const apoeRule = context.actionability_rules.find((rule) => rule.id === 'apoe_lipid');
+    expect(apoeRule?.interpretation_contains).toContain('APOE4');
+    expect(apoeRule?.pack_hints).toContain('cardiovascular');
     expect(context.activity_safety.relevant_domains.some((domain) => domain.id === 'cardiovascular')).toBe(true);
     expect(context.activity_safety.stop_and_escalate.some((item) => item.includes('Chest pain'))).toBe(true);
   });

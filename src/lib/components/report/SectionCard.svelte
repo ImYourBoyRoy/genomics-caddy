@@ -59,6 +59,13 @@
   let summaryParts = $derived(getSectionSummaryParts(section.summary));
   let showPercent = $derived(section.summary.show_percent_score);
   let activeCount = $derived(section.summary.active_marker_count ?? 0);
+  let noDataCount = $derived(section.summary.no_data_count ?? 0);
+  let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount));
+  let coveragePercent = $derived(
+    section.summary.total_markers > 0
+      ? Math.round((callableCount / section.summary.total_markers) * 100)
+      : 0
+  );
 </script>
 
 <div class="section-card card" class:collapsed-card={isCollapsed}>
@@ -83,6 +90,9 @@
           {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
         </span>
       {/if}
+      <span class="pill coverage-pill" title="A missing or uncalled marker is unknown, not evidence of low risk.">
+        DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
+      </span>
     </div>
 
     <div class="section-score-area">
@@ -139,6 +149,17 @@
     color: var(--text-secondary);
     opacity: 0.8;
   }
+
+  .coverage-pill {
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+  }
+
+  .coverage-note {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.1);
+  }
 </style>
 
   {#if !isCollapsed}
@@ -148,6 +169,9 @@
         {#each summaryParts as part}
           <span class="summary-pill">{part}</span>
         {/each}
+        {#if noDataCount > 0}
+          <span class="summary-pill coverage-note">{noDataCount} not called; unknown, not negative</span>
+        {/if}
       </div>
 
       <div class="markers-grid">

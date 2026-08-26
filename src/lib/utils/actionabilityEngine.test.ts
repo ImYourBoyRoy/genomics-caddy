@@ -119,4 +119,23 @@ describe('actionability engine safety policy', () => {
     expect(plan.medication.rules.some((item) => item.includes('raw DNA alone'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('HLA'))).toBe(true);
   });
+
+  it('connects confirmed thrombophilia context to contraceptive review without prescribing a change', () => {
+    const plan = deriveActionablePlan({
+      ...report([]),
+      sections: [{
+        ...report([]).sections[0],
+        name: 'Cardiovascular Health',
+        markers: [marker({
+          gene: 'F5',
+          rsid: 'rs6025',
+          severity_class: 'confirmation_required',
+          clinical_confirmation_required: true,
+        })],
+      }],
+    });
+    expect(plan.medication.rules.some((item) => item.includes('whether it contains estrogen'))).toBe(true);
+    expect(plan.labTests.some((test) => test.name.includes('Factor V Leiden'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('do not change medication'))).toBe(true);
+  });
 });

@@ -14,6 +14,34 @@
       "Do not start, stop, skip, substitute, or change a medication because of raw DNA alone.",
       "Do not infer a contraceptive product, dose, ovulation suppression, or hormone level from DNA.",
       "Do not treat a single SNP as a complete PGx diplotype, copy-number call, HLA type, or clinical phenotype."
+    ],
+    "pgx_context_keywords": [
+      "pharmacogen",
+      "pgx",
+      "cyp1",
+      "cyp2",
+      "cyp3",
+      "dpyd",
+      "tpmt",
+      "nudt15",
+      "slco1b1",
+      "vkorc1",
+      "hla",
+      "g6pd"
+    ],
+    "hormone_context_keywords": [
+      "menstrual",
+      "hormone",
+      "reproductive",
+      "pmdd",
+      "ovarian",
+      "uterine",
+      "contracept",
+      "estrogen",
+      "progesterone",
+      "esr1",
+      "esr2",
+      "pgr"
     ]
   },
   "rules": [

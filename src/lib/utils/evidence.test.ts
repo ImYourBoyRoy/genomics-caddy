@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getClaimFrame, getDirectionInfo, getScopeLabel, getSeverityInfo, getSimpleTierLabel, getTierInfo } from './evidence';
+import { getClaimFrame, getDirectionInfo, getScopeLabel, getSeverityInfo, getSimpleSectionSummaryParts, getSimpleTierLabel, getTierInfo } from './evidence';
 
 describe('evidence tier display', () => {
   it('uses the tier prefix for custom evidence labels', () => {
@@ -45,5 +45,37 @@ describe('evidence tier display', () => {
     }));
     expect(getScopeLabel('menstrual_cycle_context')).toBe('Menstrual-cycle context');
     expect(getScopeLabel('new_resource_scope')).toBe('new resource scope');
+  });
+
+  it('uses plain-language section summary labels only in Simple mode', () => {
+    const summary = {
+      risk_effect_count: 2,
+      risk_possible: 2,
+      protective_effect_count: 1,
+      protective_possible: 1,
+      trait_count: 1,
+      context_dependent_count: 1,
+      no_data_count: 0,
+      confirmation_required_count: 2,
+      total_markers: 9,
+      show_percent_score: false,
+      all_require_confirmation: false,
+      active_marker_count: 7,
+      active_risk_marker_count: 2,
+      active_protective_marker_count: 1,
+      active_trait_marker_count: 1,
+      active_context_marker_count: 1,
+      blocked_unverified_count: 1,
+      benign_modifier_count: 1,
+    };
+
+    expect(getSimpleSectionSummaryParts(summary)).toEqual([
+      '2 possible associations',
+      '1 possible protective association',
+      '1 trait finding',
+      '1 context finding',
+      '1 needs review',
+      '2 need confirmation',
+    ]);
   });
 });

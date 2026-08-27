@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { EvaluatedSection } from '../../types/genomics';
-  import { getSectionSummaryParts } from '../../utils/evidence';
+  import { getSectionSummaryParts, getSimpleSectionSummaryParts } from '../../utils/evidence';
   import VariantCard from './VariantCard.svelte';
   import ClinicalFindingsTable from './ClinicalFindingsTable.svelte';
   import Tooltip from '../common/Tooltip.svelte';
@@ -81,7 +81,9 @@
   }
 
   let summaryParts = $derived(getSectionSummaryParts(section.summary));
+  let simpleSummaryParts = $derived(getSimpleSectionSummaryParts(section.summary));
   let countParts = $derived(summaryParts.filter((part) => !part.endsWith('not tested')));
+  let simpleCountParts = $derived(simpleSummaryParts.filter((part) => !part.endsWith('not called')));
   let showPercent = $derived(section.summary.show_percent_score);
   let activeCount = $derived(
     section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length
@@ -332,7 +334,7 @@
       <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
         {#if viewMode === 'simple'}
           <span class="summary-line">
-            {countParts.join(' · ')}{#if noDataCount > 0}{countParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
+            {simpleCountParts.join(' · ')}{#if noDataCount > 0}{simpleCountParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
           </span>
         {:else}
           {#each countParts as part}

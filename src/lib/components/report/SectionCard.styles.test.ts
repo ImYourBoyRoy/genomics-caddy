@@ -31,6 +31,7 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('class:simple-summary={viewMode === \'simple\'}');
     expect(source).toContain('<span class="summary-line">');
     expect(source).toContain("summaryParts.filter((part) => !part.endsWith('not tested'))");
+    expect(source).toContain("simpleSummaryParts.filter((part) => !part.endsWith('not called'))");
     expect(source).toContain('{noDataCount} not called');
     expect(source).not.toContain('unknown, not negative');
   });

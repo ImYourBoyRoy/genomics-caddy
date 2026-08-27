@@ -198,6 +198,37 @@ export function getSectionSummaryParts(summary: SectionSummary): string[] {
   return parts;
 }
 
+function replaceCountLabel(
+  part: string,
+  pattern: RegExp,
+  singular: string,
+  plural: string,
+): string {
+  const match = part.match(pattern);
+  if (!match) return part;
+  const count = Number(match[1]);
+  return `${match[1]} ${count === 1 ? singular : plural}`;
+}
+
+/** Keep section summaries understandable in Simple mode without changing counts or claims. */
+export function getSimpleSectionSummaryParts(summary: SectionSummary): string[] {
+  return getSectionSummaryParts(summary).map((part) => {
+    let simplePart = part;
+    simplePart = replaceCountLabel(simplePart, /^(\d+) risk variants?$/i, 'possible association', 'possible associations');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) risk alleles? found$/i, 'possible association', 'possible associations');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) protective variants?$/i, 'possible protective association', 'possible protective associations');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) protective alleles?$/i, 'possible protective association', 'possible protective associations');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) trait markers?$/i, 'trait finding', 'trait findings');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) context variants?$/i, 'context finding', 'context findings');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) context-dependent$/i, 'context finding', 'context findings');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) blocked \(unverified\)$/i, 'needs review', 'need review');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) require validation$/i, 'needs confirmation', 'need confirmation');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) need clinical confirmation$/i, 'needs confirmation', 'need confirmation');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) not tested$/i, 'not called', 'not called');
+    return simplePart;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Clinical Warning
 // ---------------------------------------------------------------------------

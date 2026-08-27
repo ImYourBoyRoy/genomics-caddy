@@ -39,6 +39,7 @@ export interface AgentUiLayoutMetrics {
   focusControlBottom: number | null;
   firstContentTop: number | null;
   actionQueueWidth: number | null;
+  actionQueueItemCount: number;
   themeControlInToolbar: boolean;
   overflowingElements: Array<{
     tag: string;
@@ -263,6 +264,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
     firstContentTop: contentRect ? Math.round(contentRect.top) : null,
     actionQueueWidth: actionQueue ? Math.round(actionQueue.getBoundingClientRect().width) : null,
+    actionQueueItemCount: actionQueue?.querySelectorAll('.action-queue-item').length ?? 0,
     themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
     overflowingElements: collectOverflowingElements(mainContent),
   };

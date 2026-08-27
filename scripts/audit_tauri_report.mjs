@@ -70,6 +70,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     assert(layout.focusControlBottom <= layout.firstContentTop, "Focus Report control is not above the first content block");
   }
   assert(layout.themeControlInToolbar === true, "Theme control is not in the desktop toolbar");
+  assert(layout.actionQueueItemCount <= 5, "Action queue exceeds the five-item desktop contract");
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }

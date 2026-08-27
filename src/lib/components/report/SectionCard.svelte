@@ -91,26 +91,28 @@
 <div id={sectionAnchorId} class="section-card card" class:collapsed-card={isCollapsed}>
   <div class="section-header">
     <div class="section-title-area">
-      <button
-        type="button"
-        class="section-toggle"
-        onclick={toggleCollapse}
-        aria-expanded={!isCollapsed}
-        aria-controls={sectionBodyId}
-      >
-        <span class="collapse-icon" aria-hidden="true">
-          {isCollapsed ? '▶' : '▼'}
-        </span>
-        <h4>{section.name}</h4>
-        <span class="pill section-count-pill">
-          {section.markers.length} shown
-        </span>
-        {#if showActiveCount}
-          <span class="pill active-pill section-active-pill">
-            {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
+      <h4 class="section-heading">
+        <button
+          type="button"
+          class="section-toggle"
+          onclick={toggleCollapse}
+          aria-expanded={!isCollapsed}
+          aria-controls={sectionBodyId}
+        >
+          <span class="collapse-icon" aria-hidden="true">
+            {isCollapsed ? '▶' : '▼'}
           </span>
-        {/if}
-      </button>
+          <span class="section-heading-label">{section.name}</span>
+          <span class="pill section-count-pill">
+            {section.markers.length} shown
+          </span>
+          {#if showActiveCount}
+            <span class="pill active-pill section-active-pill">
+              {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
+            </span>
+          {/if}
+        </button>
+      </h4>
       <Tooltip
         label="DNA call coverage"
         description="A missing or uncalled marker is unknown, not evidence of low risk."
@@ -203,10 +205,20 @@
     transition: transform 160ms ease;
   }
 
-  .section-title-area h4 {
+  .section-heading {
+    flex: 1 1 auto;
+    min-width: 0;
     margin: 0;
-    color: var(--text-primary);
     font-size: 1rem;
+  }
+
+  .section-heading .section-toggle {
+    width: 100%;
+  }
+
+  .section-heading-label {
+    min-width: 0;
+    color: var(--text-primary);
     overflow-wrap: anywhere;
   }
 

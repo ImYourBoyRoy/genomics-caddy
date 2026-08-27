@@ -153,7 +153,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Sidebar update, progress, warning, error, and success surfaces use semantic theme tokens; dynamic progress widths remain data-driven.
 * The advanced Connections entry is a compact sidebar launch row; its longer setup explanation remains available through an accessible tooltip and Advanced → Connections.
 * Healthy Liftover status is a compact sidebar row; missing or newer-chain states keep their download/update actions and concise explanatory context.
-* Offline update badges derive from the named locally-installed update list, clear a successfully synced asset while the authoritative probe is running, and describe remaining items as newer remote versions so downloaded/current resources are not conflated.
+* Offline update badges derive from the named locally-installed update list, clear a successfully synced asset while the authoritative probe is running, and describe remaining items as newer remote versions so downloaded/current resources are not conflated. The GWAS sync path also honors a proven newer remote identity before deciding that an installed catalog is current.
 * Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
 * Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing, so collapsed sections do not silently produce incomplete print output.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.

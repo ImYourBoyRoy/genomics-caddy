@@ -4,6 +4,7 @@
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getEffectAllele, getEffectCount } from '../../utils/genotype';
   import { getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
+  import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';
   import SourcesList from './SourcesList.svelte';
 
   interface Props {
@@ -20,19 +21,8 @@
     onNavigateToVariant,
   }: Props = $props();
 
-  function authoredFollowUp(marker: EvaluatedMarker): string {
-    const labels = marker.confirm_with
-      .map((item) => item.trim())
-      .filter(Boolean);
-    if (labels.length === 0) return '';
-
-    const visibleLabels = labels.slice(0, 3).join('; ');
-    const remainingCount = labels.length - 3;
-    return remainingCount > 0 ? `${visibleLabels} (+${remainingCount} more)` : visibleLabels;
-  }
-
   function nextHelpfulStep(marker: EvaluatedMarker): string {
-    const followUp = authoredFollowUp(marker);
+    const followUp = formatClinicalFollowUp(marker.confirm_with);
     if (followUp) return followUp;
     if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
       return 'Review need for clinical confirmation.';

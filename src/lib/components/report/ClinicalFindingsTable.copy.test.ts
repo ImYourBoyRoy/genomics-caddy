@@ -5,10 +5,8 @@ const source = readFileSync(new URL('./ClinicalFindingsTable.svelte', import.met
 
 describe('ClinicalFindingsTable copy', () => {
   it('keeps repeated next-step guidance concise', () => {
-    expect(source).toContain('function authoredFollowUp(marker: EvaluatedMarker): string');
-    expect(source).toContain('const visibleLabels = labels.slice(0, 3).join(\'; \');');
-    expect(source).toContain('return remainingCount > 0 ? `${visibleLabels} (+${remainingCount} more)` : visibleLabels;');
-    expect(source).toContain('const followUp = authoredFollowUp(marker);');
+    expect(source).toContain("import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';");
+    expect(source).toContain('const followUp = formatClinicalFollowUp(marker.confirm_with);');
     expect(source).toContain('if (followUp) return followUp;');
     expect(source).toContain("return 'Review need for clinical confirmation.'");
     expect(source).toContain("return 'Interpret with history and current guidance.'");

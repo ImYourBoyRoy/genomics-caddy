@@ -33,9 +33,7 @@ describe('VariantCard enrichment surface', () => {
   });
 
   it('keeps Simple metadata quiet so the meaning and next step stay focal', () => {
-    const simpleContextStyles = source.slice(source.indexOf('/* Simple mode reference context summary */'));
-    const severityStyles = simpleContextStyles.match(/\.simple-severity-label \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const contextRule = simpleContextStyles.match(/\.simple-context-summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const severityStyles = source.match(/\.simple-severity-label \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(source).toContain('class="marker-severity-label simple-severity-label"');
     expect(source).not.toContain('class="simple-status-line"');
@@ -43,9 +41,10 @@ describe('VariantCard enrichment surface', () => {
     expect(severityStyles).toContain('max-width: 100%;');
     expect(severityStyles).not.toContain('border: 1px solid');
     expect(severityStyles).not.toContain('background: var(--surface-subtle);');
-    expect(source).toContain('class="simple-context-summary" aria-label="Additional reference context"');
+    expect(source).not.toContain('simple-context-summary');
+    expect(source).not.toContain('Medical reference context available');
+    expect(source).not.toContain('Population context available');
     expect(source).not.toContain('Evidence sources available');
-    expect(contextRule).not.toContain('border-top: 1px solid var(--border-color);');
   });
 
   it('keeps Compare evidence boundaries behind a compact disclosure', () => {

@@ -262,17 +262,7 @@
           <span>{nextHelpfulStep()}</span>
         </div>
 
-        <!-- Simple mode: only context labels stay visible; references remain a separate disclosure. -->
-        {#if marker.clinvar_significance || marker.population_rarity}
-        <div class="simple-context-summary" aria-label="Additional reference context">
-          {#if marker.clinvar_significance}
-            <span class="simple-context-pill">🏛️ Medical reference context available</span>
-          {/if}
-          {#if marker.population_rarity}
-            <span class="simple-context-pill">🌍 Population context available</span>
-          {/if}
-        </div>
-        {/if}
+        <!-- Secondary catalog context remains available in Technical data and References. -->
         <details class="simple-details">
           <summary>Details</summary>
           <p>{laypersonTranslation.simpleImpact}</p>
@@ -592,14 +582,6 @@
   }
   .gwas-count { opacity: 0.7; font-size: 0.7rem; margin-left: 0.3rem; }
 
-  /* Simple mode reference context summary */
-  .simple-context-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.35rem;
-  }
-
   .simple-meaning-block {
     display: flex;
     flex-direction: column;
@@ -616,11 +598,6 @@
   }
 
   .simple-meaning-block .layperson-text {
-    color: var(--text-secondary);
-  }
-
-  .simple-context-pill {
-    font-size: 0.72rem;
     color: var(--text-secondary);
   }
 

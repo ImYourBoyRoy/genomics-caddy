@@ -93,15 +93,18 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
 
   if (expectedMode === "clinical") {
     assert(layout.clinicalTableCount === 1, "Clinical mode did not render its structured findings table");
+    assert(layout.clinicalProvenanceCount === 1, "Clinical mode did not render its single provenance disclosure");
     assert(layout.markerCardCount === 0, "Clinical mode rendered duplicate marker cards");
   } else {
     assert(layout.clinicalTableCount === 0, `${expectedMode} mode rendered a clinical table`);
+    assert(layout.clinicalProvenanceCount === 0, `${expectedMode} mode rendered Clinical provenance content`);
   }
 
   return {
     sex,
     markerCards: layout.markerCardCount,
     clinicalTables: layout.clinicalTableCount,
+    clinicalProvenance: layout.clinicalProvenanceCount,
     columns: layout.markerGridColumnCount,
     gridWidth: layout.markerGridWidth,
     connectionsHeight: layout.connectionsLaunchHeight,

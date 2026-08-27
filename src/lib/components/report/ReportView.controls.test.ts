@@ -62,9 +62,12 @@ describe('Simple-first report controls', () => {
   });
 
   it('shows Clinical data provenance once at the report level', () => {
-    expect(source).toContain('{#if presentationMode === \'clinical\'}\n    <details class="clinical-provenance no-print">');
+    expect(source).toContain("let clinicalProvenanceExpanded = $state(false);");
+    expect(source).toContain('{#if presentationMode === \'clinical\'}\n    <details class="clinical-provenance" bind:open={clinicalProvenanceExpanded}>');
     expect(source).toContain('<summary>About the data in Clinical view</summary>');
     expect(source).toContain('<strong>DNA array</strong> Genotype calls shown in the tables.');
     expect(source).toContain('<strong>Personal context</strong> Symptoms, medications, and goals are not DNA findings.');
+    expect(source).toContain('const previousClinicalProvenanceExpanded = clinicalProvenanceExpanded;');
+    expect(source).toContain('if (presentationMode === \'clinical\') clinicalProvenanceExpanded = true;');
   });
 });

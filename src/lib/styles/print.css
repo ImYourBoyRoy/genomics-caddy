@@ -121,6 +121,39 @@
     color: #333 !important;
   }
 
+  .clinical-provenance {
+    display: block !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin: 0 0 14px !important;
+    padding: 8px 10px !important;
+    border: 1px solid #ccc !important;
+    background: #fdfdfd !important;
+    color: #333 !important;
+    font-size: 0.78rem !important;
+  }
+
+  .clinical-provenance summary {
+    color: #111 !important;
+    font-weight: 700 !important;
+  }
+
+  .clinical-provenance-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px 14px !important;
+    margin-top: 6px !important;
+  }
+
+  .clinical-provenance-grid span {
+    color: #333 !important;
+    line-height: 1.35 !important;
+  }
+
+  .clinical-provenance-grid strong {
+    color: #111 !important;
+  }
+
   /* ===== Print styles for View Modes ===== */
   .dual-explanations {
     gap: 4px !important;

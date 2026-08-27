@@ -36,6 +36,7 @@ export interface AgentUiLayoutMetrics {
   markerGridColumnCount: number | null;
   markerCardCount: number;
   clinicalTableCount: number;
+  clinicalProvenanceCount: number;
   activePresentationMode: 'simple' | 'clinical' | 'compare' | null;
   focusMode: boolean;
   focusControlOverlapsContent: boolean;
@@ -266,6 +267,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     markerGridColumnCount: getGridColumnCount(markerGrid),
     markerCardCount: document.querySelectorAll('.marker-card').length,
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
+    clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length,
     activePresentationMode: getActivePresentationMode(),
     focusMode: document.querySelector('.app-layout.focus-mode') !== null,
     focusControlOverlapsContent,

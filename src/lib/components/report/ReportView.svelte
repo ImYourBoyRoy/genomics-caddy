@@ -88,6 +88,7 @@
   let collapsedSections = $state<Record<string, boolean>>({});
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
+  let clinicalProvenanceExpanded = $state(false);
   let reproductiveContext = $state('');
   let loadedReproductiveContextKey = $state('');
   let prioritizeReproductiveContext = $state(true);
@@ -257,11 +258,13 @@
     if (!browser || !generatedReport || isPreparingPrint) return;
 
     const previousCollapsedSections = { ...collapsedSections };
+    const previousClinicalProvenanceExpanded = clinicalProvenanceExpanded;
     isPreparingPrint = true;
     const restore = () => {
       if (printRestore !== restore) return;
       window.removeEventListener('afterprint', restore);
       collapsedSections = previousCollapsedSections;
+      clinicalProvenanceExpanded = previousClinicalProvenanceExpanded;
       printRestore = null;
       isPreparingPrint = false;
     };
@@ -272,6 +275,7 @@
       ...collapsedSections,
       ...Object.fromEntries(filteredSections.map((section) => [section.name, false])),
     };
+    if (presentationMode === 'clinical') clinicalProvenanceExpanded = true;
 
     await tick();
     await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
@@ -483,7 +487,7 @@
   {/if}
 
   {#if presentationMode === 'clinical'}
-    <details class="clinical-provenance no-print">
+    <details class="clinical-provenance" bind:open={clinicalProvenanceExpanded}>
       <summary>About the data in Clinical view</summary>
       <div class="clinical-provenance-grid">
         <span><strong>DNA array</strong> Genotype calls shown in the tables.</span>

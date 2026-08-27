@@ -223,7 +223,7 @@
     border-radius: 0.65rem;
     background: var(--tooltip-bg);
     color: var(--tooltip-text);
-    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.26);
+    box-shadow: 0 0.75rem 2rem var(--shadow-tooltip);
     font-size: 0.75rem;
     line-height: 1.4;
     pointer-events: auto;

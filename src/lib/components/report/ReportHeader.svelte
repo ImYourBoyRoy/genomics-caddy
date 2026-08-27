@@ -80,9 +80,9 @@
   <div class="report-desc">
     <div class="header-title-row">
       <h3>{generatedReport.title}</h3>
-      <span class="overall-summary-badge">✨ {summaryLine}</span>
     </div>
     <p>{generatedReport.description}</p>
+    <span class="overall-summary" aria-label="Report finding summary">{summaryLine}</span>
 
     <details class="technical-score-details">
       <summary>Technical coverage metric</summary>
@@ -148,15 +148,14 @@
     min-width: 0;
   }
 
-  .overall-summary-badge {
-    background: var(--status-accent-bg);
-    border: 1px solid var(--status-accent-border);
-    color: var(--status-accent-text);
-    font-size: 0.75rem;
-    padding: 0.25rem 0.6rem;
-    border-radius: 9999px;
-    font-weight: 600;
+  .overall-summary {
+    display: block;
     max-width: 100%;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.4;
     overflow-wrap: anywhere;
   }
 

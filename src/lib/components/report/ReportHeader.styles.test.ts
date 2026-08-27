@@ -3,9 +3,9 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(resolve(process.cwd(), 'src/lib/components/report/ReportHeader.svelte'), 'utf8');
-const badgeStyles = source.slice(source.indexOf('.overall-summary-badge'), source.indexOf('.technical-score-details'));
+const summaryStyles = source.slice(source.indexOf('.overall-summary'), source.indexOf('.technical-score-details'));
 
-describe('ReportHeader summary badge', () => {
+describe('ReportHeader summary', () => {
   it('does not repeat the title-row sex result in the report body', () => {
     expect(source).not.toContain('health-summary-row');
     expect(source).not.toContain('formatGeneticSexLabel');
@@ -33,10 +33,12 @@ describe('ReportHeader summary badge', () => {
     expect(simpleMode).not.toContain('stronger association');
   });
 
-  it('uses semantic theme tokens for association context', () => {
-    expect(badgeStyles).toContain('var(--status-accent-bg)');
-    expect(badgeStyles).toContain('var(--status-accent-border)');
-    expect(badgeStyles).toContain('var(--status-accent-text)');
+  it('keeps the aggregate research count visually secondary to the report title', () => {
+    expect(source).toContain('<span class="overall-summary" aria-label="Report finding summary">{summaryLine}</span>');
+    expect(summaryStyles).toContain('display: block;');
+    expect(summaryStyles).toContain('color: var(--text-secondary);');
+    expect(summaryStyles).not.toContain('border:');
+    expect(summaryStyles).not.toContain('background:');
   });
 
   it('keeps long report header content inside its flex layout', () => {
@@ -47,7 +49,7 @@ describe('ReportHeader summary badge', () => {
     expect(source).toContain('max-width: 100%;');
   });
 
-  it('does not contain raw color literals in the badge style', () => {
-    expect(badgeStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  it('does not contain raw color literals in the summary style', () => {
+    expect(summaryStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 });

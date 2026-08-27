@@ -60,6 +60,20 @@ export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTran
 
 const GENERIC_TITLE_PREFIXES = new Set(['DNA', 'RNA', 'SNP']);
 
+function humanizeSimpleTitle(title: string): string {
+  const normalized = title
+    .replace(/-association\b/gi, ' research')
+    .replace(/\bresearch-only marker\b/gi, 'research-only finding')
+    .replace(/\bcontext marker\b/gi, 'context')
+    .replace(/\b(?:association|research) marker\b/gi, 'research context')
+    .replace(/\bmarker\b/gi, 'research context')
+    .replace(/\bresearch\s+research\b/gi, 'research')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  return normalized ? `${normalized[0].toUpperCase()}${normalized.slice(1)}` : normalized;
+}
+
 /**
  * Keep gene symbols and locus identifiers in Technical data for Simple mode.
  * The authored wording remains unchanged in the resource and technical
@@ -77,10 +91,10 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   );
 
   if (!leadingTechnical || GENERIC_TITLE_PREFIXES.has(leadingTechnical[1])) {
-    return withoutGeneSuffix;
+    return humanizeSimpleTitle(withoutGeneSuffix);
   }
 
-  return leadingTechnical[2].trim() || withoutGeneSuffix;
+  return humanizeSimpleTitle(leadingTechnical[2].trim() || withoutGeneSuffix);
 }
 
 const GENERIC_GUARDRAIL_PATTERNS = [

@@ -15,4 +15,10 @@ describe('SectionCard semantic status styling', () => {
   it('does not contain raw color literals in the section-card style block', () => {
     expect(styleBlock).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('disables the section transition when reduced motion is requested', () => {
+    expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')");
+    expect(source).toContain('mediaQuery.addEventListener');
+    expect(source).toContain('duration: reduceMotion ? 0 : 200');
+  });
 });

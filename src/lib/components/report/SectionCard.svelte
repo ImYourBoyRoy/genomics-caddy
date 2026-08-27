@@ -1,5 +1,6 @@
 <!-- ./src/lib/components/report/SectionCard.svelte -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { EvaluatedSection } from '../../types/genomics';
   import { getSectionSummaryParts } from '../../utils/evidence';
   import VariantCard from './VariantCard.svelte';
@@ -43,6 +44,18 @@
 
   // If collapsed is undefined, we default to true (collapsed by default)
   let isCollapsed = $derived(collapsed ?? true);
+  let reduceMotion = $state(true);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => {
+      reduceMotion = mediaQuery.matches;
+    };
+
+    updateMotionPreference();
+    mediaQuery.addEventListener('change', updateMotionPreference);
+    return () => mediaQuery.removeEventListener('change', updateMotionPreference);
+  });
 
   // Collapse/expand state — persisted to localStorage so it survives report regeneration.
   let storageKey = $derived(`section-collapsed-${section.name}`);
@@ -285,7 +298,7 @@
 </style>
 
   {#if !isCollapsed}
-    <div class="section-body" id={sectionBodyId} transition:slide={{ duration: 200 }}>
+    <div class="section-body" id={sectionBodyId} transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
       <!-- Direction-aware breakdown pills -->
       <div class="section-summary-pills">
         {#each summaryParts as part}

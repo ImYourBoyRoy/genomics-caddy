@@ -698,7 +698,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
+    background: var(--modal-backdrop-bg);
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
@@ -711,7 +711,7 @@
     background: var(--surface-raised);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 20px 40px var(--shadow-modal);
     border-radius: 12px;
     width: 90%;
     max-width: 600px;

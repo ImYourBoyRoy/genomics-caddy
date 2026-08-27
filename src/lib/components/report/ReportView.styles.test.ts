@@ -36,6 +36,12 @@ describe('ReportView Help Guide surface', () => {
     expect(source).toContain('aria-label="Show benign and uncalled markers"');
     expect(source).not.toContain('>\n        Undetected\n');
   });
+
+  it('expands a health-area target before scrolling to its findings', () => {
+    expect(source).toContain('function handleJumpToSection(sectionName: string)');
+    expect(source).toContain('collapsedSections = { ...collapsedSections, [sectionName]: false };');
+    expect(source).toContain('onJumpToSection={handleJumpToSection}');
+  });
 });
 
 describe('ReportView print preparation', () => {

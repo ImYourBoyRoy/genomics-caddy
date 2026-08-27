@@ -60,6 +60,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('Health areas');
     expect(source).toContain('healthAreaSections');
     expect(source).toContain("href={'#' + sectionAnchorId(section.name)}");
+    expect(source).toContain('onJumpToSection?.(section.name)');
     expect(source).toContain('{section.markers.length} markers');
 
     const index = styleBlock.match(/\.health-area-index \{[\s\S]*?\.actionability-safety/)?.[0] ?? '';

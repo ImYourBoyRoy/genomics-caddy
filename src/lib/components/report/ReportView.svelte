@@ -180,6 +180,18 @@
     return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
   }
 
+  function sectionAnchorId(sectionName: string): string {
+    return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  }
+
+  function handleJumpToSection(sectionName: string) {
+    if (!generatedReport?.sections.some((section) => section.name === sectionName)) return;
+    collapsedSections = { ...collapsedSections, [sectionName]: false };
+    void tick().then(() => {
+      document.getElementById(sectionAnchorId(sectionName))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   function handleJumpToMarker(linkId: string) {
     if (!generatedReport) return;
     let foundSectionName = "";
@@ -456,6 +468,7 @@
       bind:personalSafetyContext
       bind:reproductiveContext
       onJumpToMarker={handleJumpToMarker}
+      onJumpToSection={handleJumpToSection}
     />
   {/if}
 

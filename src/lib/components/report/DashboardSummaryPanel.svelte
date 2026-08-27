@@ -16,6 +16,7 @@
     report: GeneratedReport;
     sampleId?: number;
     onJumpToMarker?: (linkId: string) => void;
+    onJumpToSection?: (sectionName: string) => void;
     reproductiveContext?: string;
     personalSafetyContext?: PersonalSafetyContext;
   }
@@ -26,6 +27,7 @@
     onJumpToMarker,
     reproductiveContext = $bindable(''),
     personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
+    onJumpToSection,
   }: Props = $props();
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
@@ -685,7 +687,7 @@
       <ul class="health-area-index-list">
         {#each healthAreaSections as section (section.name)}
           <li>
-            <a href={'#' + sectionAnchorId(section.name)}>
+            <a href={'#' + sectionAnchorId(section.name)} onclick={() => onJumpToSection?.(section.name)}>
               <span>{section.name}</span>
               <span class="health-area-index-markers">{section.markers.length} markers</span>
             </a>

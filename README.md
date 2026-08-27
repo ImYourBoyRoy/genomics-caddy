@@ -129,6 +129,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
 * The report header’s Sex and DNA-coverage summary also wraps as needed on narrow screens while keeping the concise `Male`/`Female` value visible.
 * Dashboard guidance uses compact visible prompts across dietary, supplement, reproductive, activity, medication, and lab panels; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip.
+* Repeated report next-step guidance stays compact: Simple action-queue/cards use short distinct actions, Clinical rows use concise follow-up labels, and the general reference reminder remains in the application footer.
 * Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
 * The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
 * The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.

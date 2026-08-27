@@ -201,8 +201,9 @@
   }
 
   .section-active-pill {
-    background: rgba(239, 68, 68, 0.12);
-    color: var(--danger);
+    background: var(--status-danger-bg);
+    color: var(--status-danger-strong-text);
+    border: 1px solid var(--status-danger-border);
   }
 
   .section-score-area {
@@ -236,7 +237,7 @@
     font-weight: 600;
     text-align: right;
     letter-spacing: 0.01em;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px var(--shadow-subtle);
     border: 1px solid transparent;
   }
 

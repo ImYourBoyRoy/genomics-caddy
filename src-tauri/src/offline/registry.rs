@@ -156,21 +156,30 @@ pub fn store_remote_content_length(
 }
 
 pub fn row_count_for_asset(conn: &Connection, asset_id: OfflineAssetId) -> u64 {
+    fn catalog_table_count(conn: &Connection, schema: &str, table: &str) -> u64 {
+        let qualified = if super::schema::schema_attached(conn, schema) {
+            format!("{schema}.{table}")
+        } else {
+            format!("reference.{table}")
+        };
+        super::schema::table_count(conn, &qualified)
+    }
+
     match asset_id {
-        OfflineAssetId::GwasCatalog => super::schema::table_count(conn, "gwas_reference"),
+        OfflineAssetId::GwasCatalog => catalog_table_count(conn, "gwas", "gwas_reference"),
         OfflineAssetId::ClinvarVariantSummary => {
-            super::schema::table_count(conn, "clinvar_reference")
+            catalog_table_count(conn, "clinvar", "clinvar_reference")
         }
         OfflineAssetId::PharmgkbClinicalVariants => {
-            super::schema::table_count(conn, "pharmgkb_clinical_variants")
+            catalog_table_count(conn, "pharmgkb", "pharmgkb_clinical_variants")
         }
-        OfflineAssetId::PharmgkbGenes => super::schema::table_count(conn, "pharmgkb_genes"),
+        OfflineAssetId::PharmgkbGenes => catalog_table_count(conn, "pharmgkb", "pharmgkb_genes"),
         OfflineAssetId::ClingenGeneValidity => {
-            super::schema::table_count(conn, "clingen_gene_validity")
+            catalog_table_count(conn, "clingen", "clingen_gene_validity")
         }
-        OfflineAssetId::ManeSelectSummary => super::schema::table_count(conn, "mane_transcripts"),
+        OfflineAssetId::ManeSelectSummary => catalog_table_count(conn, "mane", "mane_transcripts"),
         OfflineAssetId::DbsnpMergedJson | OfflineAssetId::DbsnpWithdrawnJson => {
-            super::schema::table_count(conn, "rsid_aliases")
+            catalog_table_count(conn, "dbsnp", "rsid_aliases")
         }
         OfflineAssetId::Tier2VariantLocus => {
             // Locus rows live in per-sample DBs; prefer last synced registry count.
@@ -205,5 +214,52 @@ pub fn row_count_for_asset(conn: &Connection, asset_id: OfflineAssetId) -> u64 {
                 0
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    #[test]
+    fn counts_attached_clingen_rows_without_relying_on_a_temp_view() {
+        let conn = Connection::open_in_memory().expect("open test connection");
+        conn.execute("ATTACH DATABASE ':memory:' AS clingen", [])
+            .expect("attach ClinGen test database");
+        conn.execute(
+            "CREATE TABLE clingen.clingen_gene_validity (gene_symbol TEXT, disease_label TEXT)",
+            [],
+        )
+        .expect("create ClinGen test table");
+        conn.execute(
+            "INSERT INTO clingen.clingen_gene_validity (gene_symbol, disease_label) VALUES ('TEST', 'Test condition')",
+            [],
+        )
+        .expect("insert ClinGen test row");
+
+        assert_eq!(
+            row_count_for_asset(&conn, OfflineAssetId::ClingenGeneValidity),
+            1
+        );
+    }
+
+    #[test]
+    fn counts_attached_gwas_rows_without_relying_on_a_temp_view() {
+        let conn = Connection::open_in_memory().expect("open test connection");
+        conn.execute("ATTACH DATABASE ':memory:' AS gwas", [])
+            .expect("attach GWAS test database");
+        conn.execute(
+            "CREATE TABLE gwas.gwas_reference (rsid TEXT PRIMARY KEY)",
+            [],
+        )
+        .expect("create GWAS test table");
+        conn.execute(
+            "INSERT INTO gwas.gwas_reference (rsid) VALUES ('rs-test')",
+            [],
+        )
+        .expect("insert GWAS test row");
+
+        assert_eq!(row_count_for_asset(&conn, OfflineAssetId::GwasCatalog), 1);
     }
 }

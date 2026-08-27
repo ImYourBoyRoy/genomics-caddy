@@ -26,6 +26,7 @@
   let syncingTier = $state<number | null>(null);
   let syncingAsset = $state<string | null>(null);
   let forceSync = $state(false);
+  let statusRefreshGeneration = 0;
 
   let updateAssets = $derived(listOfflineUpdates(status));
 
@@ -37,15 +38,19 @@
   }
 
   async function refresh() {
+    const generation = ++statusRefreshGeneration;
     loading = true;
     try {
-      status = await checkOfflineDataUpdates();
+      const nextStatus = await checkOfflineDataUpdates();
+      if (generation !== statusRefreshGeneration) return;
+      status = nextStatus;
     } catch (e: unknown) {
+      if (generation !== statusRefreshGeneration) return;
       const msg = e instanceof Error ? e.message : String(e);
       onLog?.(`Offline data status failed: ${msg}`);
       status = null;
     } finally {
-      loading = false;
+      if (generation === statusRefreshGeneration) loading = false;
     }
   }
 
@@ -83,8 +88,8 @@
     }
   }
 
-  async function updateOne(assetId: string) {
-    if (syncingAsset || syncingTier !== null) return;
+  async function updateOne(assetId: string, refreshAfter = true, allowBulk = false) {
+    if (syncingAsset || (syncingTier !== null && !allowBulk)) return;
     syncingAsset = assetId;
     onLog?.(`Updating ${assetId}${forceSync ? " (force)" : ""}…`);
     try {
@@ -94,7 +99,7 @@
         assetId === "tier2_variant_locus" ? selectedSample?.id : undefined
       );
       reportResult(result);
-      await refresh();
+      if (refreshAfter) await refresh();
     } catch (e: unknown) {
       onLog?.(`Update ${assetId} failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -108,12 +113,7 @@
     onLog?.(`Updating ${updateAssets.length} outdated asset(s)…`);
     try {
       for (const u of updateAssets) {
-        const result = await syncSingleOfflineAsset(
-          u.asset_id,
-          forceSync,
-          u.asset_id === "tier2_variant_locus" ? selectedSample?.id : undefined
-        );
-        reportResult(result);
+        await updateOne(u.asset_id, false, true);
       }
       await refresh();
     } catch (e: unknown) {

@@ -226,13 +226,17 @@ import { onMount, onDestroy } from 'svelte';
   let unlistenProgress: (() => void) | null = null;
   let unlistenImport: (() => void) | null = null;
   let unlistenPhase: (() => void) | null = null;
+  let statusRefreshGeneration = 0;
 
   async function loadSettingsAndStatus() {
+    const generation = ++statusRefreshGeneration;
     isCheckingStatus = true;
     setUpdateState('checking', 'Checking local inventory and remote identities…');
     try {
       customDir = await getCustomDownloadDir();
-      offlineStatus = await checkOfflineDataUpdates();
+      const status = await checkOfflineDataUpdates();
+      if (generation !== statusRefreshGeneration) return;
+      offlineStatus = status;
       const pendingCount = listOfflineUpdates(offlineStatus).length;
       setUpdateState(
         pendingCount > 0 ? 'available' : 'ready',
@@ -241,32 +245,35 @@ import { onMount, onDestroy } from 'svelte';
           : 'Local resources are current.',
       );
     } catch (err) {
+      if (generation !== statusRefreshGeneration) return;
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
       setUpdateState('error', 'Could not check offline resource status. Retry from Reference Databases.');
     } finally {
-      isCheckingStatus = false;
+      if (generation === statusRefreshGeneration) isCheckingStatus = false;
     }
   }
 
   /** Refresh inventory asynchronously; the backend waits for an authoritative probe. */
-  function refreshStatusInBackground() {
+  async function refreshStatusInBackground() {
+    const generation = ++statusRefreshGeneration;
     setUpdateState('checking', 'Refreshing resource status…');
-    void checkOfflineDataUpdates()
-      .then((status) => {
-        offlineStatus = status;
-        const pendingCount = listOfflineUpdates(status).length;
-        setUpdateState(
-          pendingCount > 0 ? 'available' : 'ready',
-          pendingCount > 0
-            ? `${pendingCount} newer remote resource version(s) available.`
-            : 'Local resources are current.',
-        );
-      })
-      .catch((err) => {
-        console.error('Background offline status refresh failed:', err);
-        setUpdateState('error', 'Resource status refresh failed. The last known local resources remain available.');
-      });
+    try {
+      const status = await checkOfflineDataUpdates();
+      if (generation !== statusRefreshGeneration) return;
+      offlineStatus = status;
+      const pendingCount = listOfflineUpdates(status).length;
+      setUpdateState(
+        pendingCount > 0 ? 'available' : 'ready',
+        pendingCount > 0
+          ? `${pendingCount} newer remote resource version(s) available.`
+          : 'Local resources are current.',
+      );
+    } catch (err) {
+      if (generation !== statusRefreshGeneration) return;
+      console.error('Background offline status refresh failed:', err);
+      setUpdateState('error', 'Resource status refresh failed. The last known local resources remain available.');
+    }
   }
 
   function clearAssetProgress(assetId: string) {
@@ -458,7 +465,7 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
-  async function handleSyncAsset(assetId: string, force: boolean) {
+  async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true) {
     if (syncingAsset[assetId] || syncingAll) return;
     syncingAsset = { ...syncingAsset, [assetId]: true };
     clearAssetProgress(assetId);
@@ -505,8 +512,9 @@ import { onMount, onDestroy } from 'svelte';
       // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
       clearAssetProgress(assetId);
-      // Inventory refresh is asynchronous — never block the Syncing… clear.
-      refreshStatusInBackground();
+      // Bulk update awaits one final authoritative refresh instead of allowing
+      // per-asset probes to race and restore an older pending-update snapshot.
+      if (refreshAfter) void refreshStatusInBackground();
     }
   }
 
@@ -694,11 +702,11 @@ import { onMount, onDestroy } from 'svelte';
     isPanelCollapsed = false;
     try {
       for (const item of items) {
-        await handleSyncAsset(item.asset_id, forceRedownload);
+        await handleSyncAsset(item.asset_id, forceRedownload, false);
       }
     } finally {
       updatingAllOutdated = false;
-      refreshStatusInBackground();
+      await refreshStatusInBackground();
     }
   }
   /** Catalogs with no local file yet (not "downloaded but not indexed"). */

@@ -123,20 +123,20 @@
           {/if}
         </button>
       </h4>
-      <Tooltip
-        label="DNA call coverage"
-        description="A missing or uncalled marker is unknown, not evidence of low risk."
-      >
-        <span class="pill coverage-pill">
-          DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
-        </span>
-      </Tooltip>
+      {#if viewMode !== 'simple'}
+        <Tooltip
+          label="DNA call coverage"
+          description="A missing or uncalled marker is unknown, not evidence of low risk."
+        >
+          <span class="pill coverage-pill">
+            DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
+          </span>
+        </Tooltip>
+      {/if}
     </div>
 
     <div class="section-score-area">
-      {#if showPercent && viewMode === 'simple'}
-        <span class="sec-score-descriptive">Association context</span>
-      {:else if showPercent}
+      {#if showPercent && viewMode !== 'simple'}
         <span class="sec-score">
           Association match rate: {section.section_signal_score.toFixed(1)}%
         </span>
@@ -145,7 +145,7 @@
         </span>
       {:else if section.summary.all_require_confirmation}
         <Tooltip label="Clinical validation required" description="High-stakes clinical variants require medical-grade confirmation before assigning risk estimates.">
-          <span class="sec-score-badge badge-warning">⚠️ Clinical validation required</span>
+          <span class="sec-score-badge badge-warning">{viewMode === 'simple' ? 'Confirm first' : '⚠️ Clinical validation required'}</span>
         </Tooltip>
       {:else if section.summary.risk_possible === 0}
         <Tooltip label="Context and modifier traits" description="This category contains environmental, dietary, lifestyle, or other context markers rather than direct disease indicators.">

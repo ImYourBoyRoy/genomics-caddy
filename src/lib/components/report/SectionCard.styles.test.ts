@@ -23,8 +23,10 @@ describe('SectionCard semantic status styling', () => {
   });
 
   it('keeps Simple section status concise without duplicating DNA coverage', () => {
-    expect(source).toContain('<span class="sec-score-descriptive">Association context</span>');
-    expect(source).not.toContain('Association context · {callableCount}/{section.summary.total_markers} called');
+    expect(source).toContain('{#if viewMode !== \'simple\'}');
+    expect(source).toContain('DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)');
+    expect(source).not.toContain('<span class="sec-score-descriptive">Association context</span>');
+    expect(source).toContain("{viewMode === 'simple' ? 'Confirm first' : '⚠️ Clinical validation required'}");
   });
 
   it('compresses Simple section summaries and avoids repeating uncalled counts', () => {

@@ -13,7 +13,10 @@ describe('responsive data-sidebar access', () => {
     expect(appShell).toContain('aria-hidden={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? \'true\' : undefined}');
     expect(appShell).toContain('inert={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? true : undefined}');
     expect(appShell).toContain('class:mobile-sidebar-open={mobileSidebarOpen}');
-    expect(appShell).toContain('event.key === \'Escape\' && mobileSidebarOpen');
+    expect(appShell).toContain('if (event.key === \'Escape\')');
+    expect(appShell).toContain('event.key !== \'Tab\'');
+    expect(appShell).toContain('last.focus();');
+    expect(appShell).toContain('first.focus();');
     expect(appShell).toContain('aria-label="Close data controls"');
   });
 

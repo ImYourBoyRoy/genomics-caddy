@@ -112,7 +112,7 @@
   </div>
 
   <p class="welcome-aside">
-    The left sidebar stays available for downloads, profiles, and progress while you work.
+    Use Data controls for downloads, profiles, and progress while you work.
   </p>
 
   {#if !runtimeAvailable}

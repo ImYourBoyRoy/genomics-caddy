@@ -46,10 +46,39 @@
     void tick().then(() => mobileToggleButton?.focus());
   }
 
+  function getMobileFocusables(): HTMLElement[] {
+    const candidates = [
+      ...Array.from(sidebarSlot?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      ) ?? []),
+      mobileToggleButton,
+    ];
+    return candidates.filter((element): element is HTMLElement => {
+      if (!element) return false;
+      const style = getComputedStyle(element);
+      return style.display !== 'none' && style.visibility !== 'hidden';
+    });
+  }
+
   function handleDocumentKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && mobileSidebarOpen) {
+    if (!mobileSidebarOpen) return;
+    if (event.key === 'Escape') {
       event.preventDefault();
       closeMobileSidebar();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const focusable = getMobileFocusables();
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 

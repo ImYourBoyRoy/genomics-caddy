@@ -16,4 +16,11 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain("role={learnMoreHref ? 'dialog' : 'tooltip'}");
     expect(source).toContain("aria-haspopup={learnMoreHref ? 'dialog' : undefined}");
   });
+
+  it('lets a second trigger activation dismiss hover- or focus-open content', () => {
+    expect(source).toContain('function handleTriggerClick(event: MouseEvent)');
+    expect(source).toContain('if (isClicked) {');
+    expect(source).toContain('close();');
+    expect(source).toContain('onclick={handleTriggerClick}');
+  });
 });

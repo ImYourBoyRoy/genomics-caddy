@@ -79,6 +79,16 @@
     }
   }
 
+  function handleTriggerClick(event: MouseEvent) {
+    event.stopPropagation();
+    if (isClicked) {
+      close();
+      return;
+    }
+    isClicked = true;
+    refreshOpenState();
+  }
+
   function updatePosition() {
     if (!isOpen || !triggerElement) return;
     const rect = triggerElement.getBoundingClientRect();
@@ -149,11 +159,7 @@
     aria-controls={isOpen && learnMoreHref ? tooltipId : undefined}
     aria-haspopup={learnMoreHref ? 'dialog' : undefined}
     aria-expanded={isOpen}
-    onclick={(event) => {
-      event.stopPropagation();
-      isClicked = !isClicked;
-      refreshOpenState();
-    }}
+    onclick={handleTriggerClick}
   >
     {@render children()}
   </button>

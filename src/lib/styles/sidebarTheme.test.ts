@@ -45,4 +45,13 @@ describe('sidebar status theme tokens', () => {
     expect(progressTrack).toContain('aria-valuetext={valueText}');
     expect(progressTrack).toContain('--progress-width:');
   });
+
+  it('keeps profile actions keyboard-visible and comfortably targetable', () => {
+    expect(source).toContain('.sidebar .sample-name:focus-visible');
+    expect(source).toContain('.sidebar .btn-delete:focus-visible');
+    expect(source).toContain('.reset-dir-btn:focus-visible');
+    expect(source).toContain('min-width: 2.25rem;');
+    expect(source).toContain('min-height: 2.25rem;');
+    expect(source).toContain('var(--focus-ring)');
+  });
 });

@@ -21,4 +21,9 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('mediaQuery.addEventListener');
     expect(source).toContain('duration: reduceMotion ? 0 : 200');
   });
+
+  it('keeps Simple section status concise without duplicating DNA coverage', () => {
+    expect(source).toContain('<span class="sec-score-descriptive">Association context</span>');
+    expect(source).not.toContain('Association context · {callableCount}/{section.summary.total_markers} called');
+  });
 });

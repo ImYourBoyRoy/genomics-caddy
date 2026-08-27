@@ -119,7 +119,7 @@
 
     <div class="section-score-area">
       {#if showPercent && viewMode === 'simple'}
-        <span class="sec-score-descriptive">Association context · {callableCount}/{section.summary.total_markers} called</span>
+        <span class="sec-score-descriptive">Association context</span>
       {:else if showPercent}
         <span class="sec-score">
           Association match rate: {section.section_signal_score.toFixed(1)}%

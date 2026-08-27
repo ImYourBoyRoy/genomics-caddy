@@ -123,7 +123,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Conservative chromosome context:** Missing Y calls remain unknown rather than being treated as proof of XX. Chromosome-call context is a biological hint only; it is not gender identity, anatomy, fertility, pregnancy status, or hormone status. Marker packs can declare biological applicability such as `xx_reproductive`, `xy_reproductive`, `x_linked`, or `y_linked`.
 
 ### 12. Presentation, theme, and resource-update controls
-* The report uses a Simple-first hierarchy with a centered, readable single-column action queue capped at five items; Clinical and Compare remain available for advanced review.
+* The report uses a Simple-first hierarchy with a centered, readable single-column action queue capped at five items and a 60rem maximum measure; Clinical and Compare remain available for advanced review.
 * A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
@@ -148,6 +148,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Active-finding status is omitted when it duplicates the visible-marker count and retained when benign or uncalled markers make the subset useful.
 * Report filter-select borders use the active semantic theme token, keeping Light, Dark, and System-light controls visibly bounded.
 * Sidebar update, progress, warning, error, and success surfaces use semantic theme tokens; dynamic progress widths remain data-driven.
+* Offline update badges derive from the named locally-installed update list, clear a successfully synced asset while the authoritative probe is running, and describe remaining items as newer remote versions so downloaded/current resources are not conflated.
 * Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
 * Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing, so collapsed sections do not silently produce incomplete print output.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.

@@ -23,4 +23,14 @@ describe('report card wrapping', () => {
     expect(genotype).toContain('overflow-wrap: anywhere;');
     expect(severity).toContain('overflow-wrap: anywhere;');
   });
+
+  it('allows report header health statistics to wrap on narrow screens', () => {
+    const summary = source.match(/\.health-summary-row \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const stat = source.match(/\.health-stat \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const value = source.match(/\.health-stat \.val \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(summary).toContain('flex-wrap: wrap;');
+    expect(stat).toContain('min-width: 0;');
+    expect(value).toContain('overflow-wrap: anywhere;');
+  });
 });

@@ -893,11 +893,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .health-summary-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
 }
 .health-stat {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .health-stat .lbl {
   font-size: 0.7rem;
@@ -907,6 +909,7 @@ h1, h2, h3, h4, h5, h6 {
 .health-stat .val {
   font-size: 0.95rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .text-accent {
   color: var(--accent);

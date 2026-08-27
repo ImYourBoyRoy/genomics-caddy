@@ -29,4 +29,13 @@ describe('DiscoveredFindingsBanner disclosure surface', () => {
     expect(source).toContain('<summary>Technical data</summary>');
     expect(source).toContain('<dt>DNA call</dt><dd>{item.user_genotype}</dd>');
   });
+
+  it('wraps long technical discovery labels without displacing navigation controls', () => {
+    expect(bannerStyles).toContain('.findings-list li {');
+    expect(bannerStyles).toContain('flex-wrap: wrap;');
+    expect(bannerStyles).toContain('min-width: 0;');
+    expect(bannerStyles).toContain('overflow-wrap: anywhere;');
+    expect(bannerStyles).toContain('.mini-nav {');
+    expect(bannerStyles).toContain('flex: 0 0 auto;');
+  });
 });

@@ -169,15 +169,27 @@
     gap: 6px;
   }
 
+  .findings-list li {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.35rem 0.6rem;
+  }
+
   .finding-link {
     background: none;
     border: none;
     color: inherit;
     cursor: pointer;
+    min-width: 0;
+    max-width: 100%;
     padding: 0;
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
+    overflow-wrap: anywhere;
   }
 
   .simple-finding-summary {
@@ -244,5 +256,10 @@
   .more-note {
     margin: 8px 0 0;
     font-size: 0.72rem;
+  }
+
+  .mini-nav {
+    display: inline-flex;
+    flex: 0 0 auto;
   }
 </style>

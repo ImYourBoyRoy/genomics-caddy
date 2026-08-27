@@ -5,6 +5,7 @@
   import { buildVectorAtlas, getVectorAtlasCached, enableNamedVectorsCollection } from "../../../api/tauri";
   import type { AtlasPoint } from "../../../types/research";
   import ActivityPulse from "../../common/loading/ActivityPulse.svelte";
+  import Tooltip from "../../common/Tooltip.svelte";
   import { atlasCategoryColor, atlasDotRadius } from "../../../utils/atlasColors";
   import "$lib/styles/components/vector-workbench.css";
 
@@ -181,15 +182,16 @@
       >
         {building ? "Building…" : "Build atlas"}
       </button>
-      <button
-        type="button"
-        class="btn btn-secondary btn-xs"
-        onclick={enableNamedVectors}
-        disabled={actionsLocked || !ollamaUrl}
-        title="Qdrant only — named multi-vectors"
-      >
-        Named vectors
-      </button>
+      <Tooltip interactiveChildren label="Named vectors" description="This Qdrant-only action enables named multi-vectors for trait, gene, evidence, and actionability data.">
+        <button
+          type="button"
+          class="btn btn-secondary btn-xs"
+          onclick={enableNamedVectors}
+          disabled={actionsLocked || !ollamaUrl}
+        >
+          Named vectors
+        </button>
+      </Tooltip>
     </div>
   </header>
 

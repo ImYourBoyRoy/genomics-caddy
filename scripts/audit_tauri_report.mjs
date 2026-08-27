@@ -168,6 +168,15 @@ async function assertNoRedundantPublicCopy() {
     genericFollowUp?.ok === true && genericFollowUp.count === 0,
     "Generic follow-up copy is visible instead of an authored next step",
   );
+
+  const genericConfirmation = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Consider clinical confirmation." }),
+  });
+  assert(
+    genericConfirmation?.ok === true && genericConfirmation.count === 0,
+    "Generic confirmation copy is visible instead of an authored confirmation step",
+  );
 }
 
 async function ensurePopulatedSection() {

@@ -199,6 +199,17 @@ describe('plain-English claim framing', () => {
       effect_direction: 'risk',
       confirm_with: ['ferritin;'],
     })).toBe('Review ferritin.');
+    expect(getSimpleNextStep({
+      ...base,
+      clinical_confirmation_required: true,
+      effect_direction: 'risk',
+      confirm_with: ['validated clinical laboratory test', 'genetic counseling'],
+    })).toBe('Confirm with validated clinical laboratory test, or genetic counseling.');
+    expect(getSimpleNextStep({
+      ...base,
+      effect_direction: 'risk',
+      confirm_with: ['a very long authored follow-up label that should remain readable in the first-screen action queue', 'second check', 'third check'],
+    })).toContain('more in details');
   });
 
   it('removes repeated actionability framing from secondary guidance text', () => {

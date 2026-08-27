@@ -158,6 +158,35 @@ export function getCompactSimpleMeaning(translation: LaypersonTranslation): stri
 }
 
 /** Keep the primary Simple action consistent between cards and the dashboard queue. */
+function compactFollowUpSummary(items: string[]): string | null {
+  const followUps = items
+    .map((item) => item.replace(/[.;:]+$/, '').trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  if (followUps.length === 0) return null;
+
+  const maxLength = 116;
+  const visible: string[] = [];
+  for (const item of followUps) {
+    const candidate = visible.length === 0 ? item : `${visible.join(', ')}, or ${item}`;
+    if (candidate.length <= maxLength) {
+      visible.push(item);
+      continue;
+    }
+    if (visible.length === 0) {
+      const clipped = item.slice(0, maxLength - 1).replace(/\s+\S*$/, '').trim();
+      visible.push(`${clipped || item.slice(0, maxLength - 1)}…`);
+    }
+    break;
+  }
+
+  const omittedCount = followUps.length - visible.length;
+  const summary = visible.length === 1
+    ? visible[0]
+    : `${visible.slice(0, -1).join(', ')}, or ${visible.at(-1)}`;
+  return omittedCount > 0 ? `${summary} (+${omittedCount} more in details)` : summary;
+}
+
 export function getSimpleNextStep(
   marker: Pick<
     EvaluatedMarker,
@@ -165,16 +194,12 @@ export function getSimpleNextStep(
   >,
 ): string {
   if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
-    return 'Consider clinical confirmation.';
+    const followUp = compactFollowUpSummary(marker.confirm_with);
+    return followUp ? `Confirm with ${followUp}.` : 'Consider clinical confirmation.';
   }
   if (marker.confirm_with.length > 0) {
-    const followUps = marker.confirm_with
-      .map((item) => item.replace(/[.;:]+$/, '').trim())
-      .filter(Boolean)
-      .slice(0, 3);
-    if (followUps.length === 1) return `Review ${followUps[0]}.`;
-    if (followUps.length === 2) return `Review ${followUps[0]} or ${followUps[1]}.`;
-    if (followUps.length === 3) return `Review ${followUps[0]}, ${followUps[1]}, or ${followUps[2]}.`;
+    const followUp = compactFollowUpSummary(marker.confirm_with);
+    if (followUp) return `Review ${followUp}.`;
   }
   if (marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk' || marker.severity_class === 'low_risk' || marker.effect_direction === 'risk') {
     return 'Compare with symptoms, history, and relevant labs.';

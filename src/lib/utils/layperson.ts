@@ -91,6 +91,45 @@ const GENERIC_GUARDRAIL_PATTERNS = [
   /\bbefore making (?:health|medical) decisions\b/i,
 ];
 
+const COMPACT_GUIDANCE_PREFIX = /(?:Do not make this change from raw DNA; confirm the finding clinically first:|Only consider after clinical confirmation and individualized advice:|Do not make this change unless symptoms, labs, or clinician guidance support it:|Consider only if symptoms, labs, or personal goals support it:|General health consideration, not a genotype-specific restriction:|General low-risk option, not a genotype prescription:)\s*/gi;
+
+/**
+ * Remove repeated actionability framing from secondary Simple guidance lists.
+ * The section heading provides the shared context; authored plan data remains
+ * unchanged for clinical and AI consumers.
+ */
+export function getCompactGuidanceText(text: string): string {
+  return text.replace(COMPACT_GUIDANCE_PREFIX, '').trim();
+}
+
+/** Keep Simple supplement rows readable while preserving the authored plan. */
+export function getCompactSupplementName(name: string): string {
+  const normalized = name.replace(/\s+/g, ' ').trim();
+  if (/bone-health product/i.test(normalized)) return 'Bone-health supplement review';
+  if (/\bIBD marker\b/i.test(normalized)) return 'IBD supplement review';
+
+  const label = normalized
+    .replace(/^(?:a|an|the)\s+/i, '')
+    .replace(/^(?:review|consider|use|favor|avoid|do not use)\s+/i, '')
+    .split(/\s+(?:only after|after reviewing|after|before|without|against|with)\b/i)[0]
+    .replace(/[,;:.]+$/, '')
+    .trim();
+
+  return label && label.length <= 72 ? label : 'Targeted supplement review';
+}
+
+/** Remove repeated attribution and review framing from Simple supplement rows. */
+export function getCompactSupplementReason(reason: string): string {
+  return reason
+    .replace(/Based on your [^;]+;\s*/gi, '')
+    .replace(/Discuss with a clinician or pharmacist before starting:\s*/gi, '')
+    .replace(/,?\s*(?:and\s+)?clinician or pharmacist guidance\b/gi, '')
+    .replace(/\s+with a clinician or pharmacist\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;])/g, '$1')
+    .trim();
+}
+
 function isGenericGuardrail(text: string): boolean {
   return GENERIC_GUARDRAIL_PATTERNS.some((pattern) => pattern.test(text));
 }

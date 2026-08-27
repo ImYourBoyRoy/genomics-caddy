@@ -9,7 +9,8 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
+  import { getCompactGuidanceText, getCompactSimpleMeaning, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
+  import type { PresentationMode } from '../../utils/presentationPreferences';
   import Tooltip from '../common/Tooltip.svelte';
 
   interface Props {
@@ -17,6 +18,7 @@
     sampleId?: number;
     onJumpToMarker?: (linkId: string) => void;
     onJumpToSection?: (sectionName: string) => void;
+    presentationMode?: PresentationMode;
     reproductiveContext?: string;
     personalSafetyContext?: PersonalSafetyContext;
   }
@@ -28,6 +30,7 @@
     reproductiveContext = $bindable(''),
     personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
     onJumpToSection,
+    presentationMode = 'simple',
   }: Props = $props();
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
@@ -213,7 +216,7 @@
     {/if}
   </section>
 
-  {#if plan.safetyNotes.length > 0}
+  {#if presentationMode !== 'simple' && plan.safetyNotes.length > 0}
     <details class="actionability-safety">
       <summary>🧭 How to use suggestions</summary>
       <ul>
@@ -252,7 +255,7 @@
     <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">
       <div class="context-selector-copy">
         <strong id="personal-context-label">🧾 Personal safety context applied</strong>
-        <span>This information is self-reported for this DNA profile. It is not genetic evidence, and it is kept separate from the genotype interpretation.</span>
+        <span>Profile context only; kept separate from DNA findings.</span>
       </div>
       <ul class="guardrail-list personal-context-notes">
         {#each plan.personalContext.priorityNotes as note (note)}<li>{note}</li>{/each}
@@ -361,7 +364,7 @@
                     <h4>👍 Lean Into / Favor</h4>
                     <ul>
                       {#each plan.diet.favor as item (item)}
-                        <li>{item}</li>
+                        <li>{getCompactGuidanceText(item)}</li>
                       {/each}
                     </ul>
                   </div>
@@ -372,7 +375,7 @@
                     <h4>👎 Limit / Avoid</h4>
                     <ul>
                       {#each plan.diet.avoid as item (item)}
-                        <li>{item}</li>
+                        <li>{getCompactGuidanceText(item)}</li>
                       {/each}
                     </ul>
                   </div>
@@ -381,7 +384,7 @@
               {#if plan.diet.notes}
                 <div class="diet-notes">
                   <strong>Notes:</strong>
-                  <pre class="diet-notes-pre">{plan.diet.notes}</pre>
+                    <pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>
                 </div>
               {/if}
             </div>
@@ -405,32 +408,34 @@
                 <div class="supplements-list">
                   {#each plan.supplements as s (`${s.name}:${s.reason}`)}
                     <div class="supplement-item">
-                      <span class="supp-name">{s.name}</span>
-                      <span class="supp-reason">{s.reason}</span>
+                      <span class="supp-name">{getCompactSupplementName(s.name)}</span>
+                      <span class="supp-reason">{getCompactSupplementReason(s.reason)}</span>
                     </div>
                   {/each}
                 </div>
               {/if}
               {#if plan.supplementSafety.relevantRules.length > 0}
-                <div class="supplement-safety">
-                  <strong>Safety checks before any supplement</strong>
-                  <ul class="guardrail-list">
-                    {#each plan.supplementSafety.principles as principle (principle)}<li>{principle}</li>{/each}
-                  </ul>
-                  {#each plan.supplementSafety.relevantRules as rule (rule.id)}
-                    <div class="supplement-safety-rule">
-                      <strong>{rule.label}</strong>
-                      {#if rule.avoid?.length}
-                        <ul class="guardrail-list">
-                          {#each rule.avoid as item (item)}<li>{item}</li>{/each}
-                        </ul>
-                      {/if}
-                      {#if rule.confirm_with?.length}
-                        <span class="supp-reason">Confirm with: {rule.confirm_with.join('; ')}</span>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
+                <details class="supplement-safety-details">
+                  <summary>Safety details</summary>
+                  <div class="supplement-safety">
+                    <ul class="guardrail-list">
+                      {#each plan.supplementSafety.principles as principle (principle)}<li>{principle}</li>{/each}
+                    </ul>
+                    {#each plan.supplementSafety.relevantRules as rule (rule.id)}
+                      <div class="supplement-safety-rule">
+                        <strong>{rule.label}</strong>
+                        {#if rule.avoid?.length}
+                          <ul class="guardrail-list">
+                            {#each rule.avoid as item (item)}<li>{item}</li>{/each}
+                          </ul>
+                        {/if}
+                        {#if rule.confirm_with?.length}
+                          <span class="supp-reason">Confirm with: {rule.confirm_with.join('; ')}</span>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                </details>
               {/if}
             </div>
           {/if}
@@ -594,7 +599,7 @@
         </h3>
         {#if !collapsed.medication}
           <div class="card-body" id="medication-body">
-            <p class="section-hint">Bring current medications and past responses to a clinician or pharmacist.</p>
+            <p class="section-hint">Compare this with current medications and past responses.</p>
             {#if plan.pgxGuidance.relevantGenes.length > 0}
               <div class="pgx-readiness" role="note">
                 <strong>🧪 PGx completeness check</strong>
@@ -1529,6 +1534,23 @@
     margin-top: 0.85rem;
     padding-top: 0.65rem;
     border-top: 1px solid var(--border-color);
+  }
+  .supplement-safety-details {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.45rem;
+  }
+  .supplement-safety-details > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .supplement-safety-details[open] > summary {
+    color: var(--text-primary);
   }
   .supplement-safety-rule {
     margin-top: 0.65rem;

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import hormonePack from '../marker-packs/hormones_reproductive.json';
 import {
   DEFAULT_LAYPERSON_TRANSLATION,
+  getCompactGuidanceText,
   getCompactSimpleMeaning,
+  getCompactSupplementName,
+  getCompactSupplementReason,
   getSimpleFindingTitle,
   getSimpleNextStep,
   getLaypersonTranslation,
@@ -177,5 +180,28 @@ describe('plain-English claim framing', () => {
     expect(getSimpleNextStep({ ...base, effect_direction: 'protective' })).toBe('Use this as background context with your health history.');
     expect(getSimpleNextStep({ ...base, effect_direction: 'risk', severity_class: 'low_risk' })).toBe('Compare with symptoms, history, and relevant labs.');
     expect(getSimpleNextStep({ ...base, effect_direction: 'trait', clinical_confirmation_required: true })).toBe('Consider clinical confirmation.');
+  });
+
+  it('removes repeated actionability framing from secondary guidance text', () => {
+    expect(getCompactGuidanceText(
+      'Do not make this change unless symptoms, labs, or clinician guidance support it: Starting a restrictive diet',
+    )).toBe('Starting a restrictive diet');
+    expect(getCompactGuidanceText(
+      'General low-risk option, not a genotype prescription: Eat a varied diet',
+    )).toBe('Eat a varied diet');
+    expect(getCompactGuidanceText(
+      '• Consider only if symptoms, labs, or personal goals support it: Track the pattern\n• Confirm clinically before another step',
+    )).toBe('• Track the pattern\n• Confirm clinically before another step');
+  });
+
+  it('compacts supplement labels and attribution for Simple rows', () => {
+    expect(getCompactSupplementName('Iron supplementation only after reviewing ferritin and clinician guidance'))
+      .toBe('Iron supplementation');
+    expect(getCompactSupplementName('Review calcium, vitamin D, magnesium, vitamin K, and any bone-health product against measured status'))
+      .toBe('Bone-health supplement review');
+
+    expect(getCompactSupplementReason(
+      'Based on your TMPRSS6/TF variant (rs3811647); Discuss with a clinician or pharmacist before starting: Iron supplementation only after reviewing ferritin, and clinician or pharmacist guidance',
+    )).toBe('Iron supplementation only after reviewing ferritin');
   });
 });

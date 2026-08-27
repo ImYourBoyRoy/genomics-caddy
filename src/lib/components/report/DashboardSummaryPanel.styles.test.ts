@@ -36,7 +36,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('Conditional prompts, not permanent food rules.');
     expect(source).toContain('Review interactions and health context before use.');
     expect(source).toContain('Planning prompts for training and recovery — not activity clearance.');
-    expect(source).toContain('Bring current medications and past responses to a clinician or pharmacist.');
+    expect(source).toContain('Compare this with current medications and past responses.');
     expect(source).toContain('Grouped by priority for clinician discussion.');
     expect(source).toContain('Up to five prioritized follow-up prompts from this report.');
     expect(source).toContain('{Math.min(plan.topFindings.length, 5)} shown');
@@ -48,6 +48,23 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('DNA cannot measure current hormones or diagnose a condition or medication response.');
     expect(source).not.toContain('Grouped by priority for clinician discussion; seek care promptly for acute symptoms.');
     expect(source).not.toContain('{Math.min(plan.topFindings.length, 5)} of 5');
+    expect(source).toContain("{#if presentationMode !== 'simple' && plan.safetyNotes.length > 0}");
+    expect(source).toContain('<summary>Safety details</summary>');
+    expect(source).toContain('Profile context only; kept separate from DNA findings.');
+    expect(source).not.toContain('This information is self-reported for this DNA profile. It is not genetic evidence');
+  });
+
+  it('compacts repeated supplement review prefixes without changing the underlying plan', () => {
+    expect(source).toContain('getCompactSupplementName');
+    expect(source).toContain('getCompactSupplementReason');
+    expect(source).toContain('{getCompactSupplementName(s.name)}');
+    expect(source).toContain('{getCompactSupplementReason(s.reason)}');
+  });
+
+  it('compacts repeated conditional guidance prefixes in the Simple dietary view', () => {
+    expect(source).toContain('getCompactGuidanceText');
+    expect(source).toContain('<li>{getCompactGuidanceText(item)}</li>');
+    expect(source).toContain('<pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>');
   });
 
   it('keeps repeated action steps concise instead of repeating warning copy', () => {
@@ -93,6 +110,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     const notes = styleBlock.match(/\.diet-notes-pre \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementItem = styleBlock.match(/\.supplement-item \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementReason = styleBlock.match(/\.supp-reason \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const supplementSafetyDetails = styleBlock.match(/\.supplement-safety-details > summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(cardBody).toContain('min-width: 0;');
     expect(notes).toContain('overflow-wrap: anywhere;');
@@ -100,6 +118,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(supplementItem).toContain('box-sizing: border-box;');
     expect(supplementReason).toContain('display: block;');
     expect(supplementReason).toContain('overflow-wrap: anywhere;');
+    expect(supplementSafetyDetails).toContain('min-height: 44px;');
   });
 
   it('bounds the optional context selector and dashboard containers', () => {

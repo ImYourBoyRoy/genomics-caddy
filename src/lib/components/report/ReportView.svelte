@@ -450,6 +450,7 @@
       sampleId={selectedSample.id}
       bind:personalSafetyContext
       bind:reproductiveContext
+      presentationMode={presentationMode}
       onJumpToMarker={handleJumpToMarker}
       onJumpToSection={handleJumpToSection}
       />

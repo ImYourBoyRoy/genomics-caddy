@@ -29,4 +29,12 @@ describe('DashboardSummaryPanel semantic styling', () => {
       expect(styleBlock).toContain(`var(${token})`);
     }
   });
+
+  it('keeps repeated guidance boundaries compact and available on demand', () => {
+    expect(source).toContain("import Tooltip from '../common/Tooltip.svelte';");
+    expect(source).toContain('Optional self-reported context used to tailor guidance.');
+    expect(source).toContain('Conditional prompts, not permanent food rules.');
+    expect(source).not.toContain('A genotype match is not a permanent food restriction;');
+    expect(source).not.toContain('This selection is self-reported, stored per DNA profile, and is never inferred');
+  });
 });

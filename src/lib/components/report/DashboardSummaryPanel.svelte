@@ -10,6 +10,7 @@
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
   import { getCompactSimpleMeaning, getLaypersonTranslation } from '../../utils/layperson';
+  import Tooltip from '../common/Tooltip.svelte';
 
   interface Props {
     report: GeneratedReport;
@@ -204,8 +205,16 @@
 
   <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
     <div class="context-selector-copy">
-      <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
-      <span>Choose only when relevant to the person. This selection is self-reported, stored per DNA profile, and is never inferred from genotype, chromosome calls, gender, anatomy, fertility, pregnancy, or hormone status.</span>
+      <div class="context-selector-heading">
+        <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
+        <Tooltip
+          label="About context selection"
+          description="This is self-reported context stored for this DNA profile. It is not inferred from genotype or chromosome calls and does not establish gender, anatomy, fertility, pregnancy, or hormone status."
+        >
+          <span class="context-info-icon" aria-hidden="true">ⓘ</span>
+        </Tooltip>
+      </div>
+      <span>Optional self-reported context used to tailor guidance.</span>
     </div>
     <select aria-labelledby="reproductive-context-label" value={reproductiveContext} onchange={setReproductiveContext}>
       <option value="">Not specified — keep context-specific guidance hidden</option>
@@ -264,7 +273,7 @@
           </button>
           {#if !collapsed.diet}
             <div class="card-body" id="dietary-alignment-body">
-              <p class="section-hint">These are conditional discussion or short-trial prompts. A genotype match is not a permanent food restriction; use symptoms, labs, allergies, medications, and clinician guidance first.</p>
+              <p class="section-hint">Conditional prompts, not permanent food rules.</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
                 <div class="dietary-profile-safety" role="note">
                   <strong>🛡️ Explicit food context</strong>
@@ -412,7 +421,7 @@
           </button>
           {#if !collapsed.cycleSupport}
             <div class="card-body" id="cycle-support-body">
-              <p class="section-hint">Showing guidance for {selectedReproductiveContextLabel()}. This section organizes timing, medication, symptom, and clinical follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
+              <p class="section-hint">Guidance for {selectedReproductiveContextLabel()}: timing, symptoms, products, and follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
               {#if plan.cycleSupport.diaryReview}
                 <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
                   <h4 id="cycle-diary-review-title">📈 Observed diary review</h4>
@@ -596,7 +605,7 @@
         </button>
         {#if !collapsed.labTests}
           <div class="card-body lab-body" id="lab-followups-body">
-            <p class="section-hint">Grouped by priority — bring to a clinician; none of these imply an emergency workup unless you have acute symptoms.</p>
+            <p class="section-hint">Grouped by priority for clinician discussion; seek care promptly for acute symptoms.</p>
             <div class="lab-tier-stack">
               {#each plan.labGroups as group (group.label)}
                 <section class="lab-tier-block">
@@ -804,6 +813,27 @@
     min-width: 0;
     font-size: 0.72rem;
     line-height: 1.4;
+  }
+
+  .context-selector-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .context-selector-heading strong {
+    min-width: 0;
+  }
+
+  .context-info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    min-height: 1.1rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
   }
 
   .context-selector-copy strong {

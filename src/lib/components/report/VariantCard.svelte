@@ -5,7 +5,6 @@
   import EffectDirectionBadge from './EffectDirectionBadge.svelte';
   import SourcesList from './SourcesList.svelte';
   import ConfirmWithList from './ConfirmWithList.svelte';
-  import WarningBlocks from './WarningBlocks.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
@@ -168,6 +167,19 @@
         <div class="claim-frame" role="note">
           {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
         </div>
+        {#if marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required'}
+          <p class="claim-detail-note">Consumer-array results may need clinical-laboratory confirmation before guiding care.</p>
+        {/if}
+        {#if marker.raw_dna_limitation}
+          <p class="claim-detail-note">{marker.raw_dna_limitation}</p>
+        {/if}
+        {#if marker.do_not_claim.length > 0}
+          <ul class="claim-limit-list">
+            {#each marker.do_not_claim as item}
+              <li>{item}</li>
+            {/each}
+          </ul>
+        {/if}
       </details>
     {/if}
 
@@ -331,13 +343,6 @@
           {/if}
         </div>
 
-        <WarningBlocks
-          gene={marker.gene}
-          rawDnaLimitation={marker.raw_dna_limitation}
-          clinicalConfirmationRequired={marker.clinical_confirmation_required}
-          doNotClaim={marker.do_not_claim}
-        />
-
         <div class="interpretation-section">
           <strong>What your result means:</strong>
           {#if viewMode === "clinical"}
@@ -456,6 +461,18 @@
 
   .claim-details .claim-frame {
     margin-bottom: 0;
+  }
+
+  .claim-detail-note {
+    margin: 0.45rem 0 0;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .claim-limit-list {
+    margin: 0.45rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--text-secondary);
   }
 
   /* Reference enrichment chips */

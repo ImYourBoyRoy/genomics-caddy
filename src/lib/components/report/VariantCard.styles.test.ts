@@ -34,16 +34,15 @@ describe('VariantCard enrichment surface', () => {
 
   it('keeps Simple metadata quiet so the meaning and next step stay focal', () => {
     const simpleEvidenceStyles = source.slice(source.indexOf('/* Simple mode evidence summary */'));
-    const statusStyles = simpleEvidenceStyles.slice(
-      simpleEvidenceStyles.indexOf('.simple-status-line {'),
-      simpleEvidenceStyles.indexOf('.simple-next-step {'),
-    );
+    const severityStyles = simpleEvidenceStyles.match(/\.simple-severity-label \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const evidenceRule = simpleEvidenceStyles.match(/\.simple-evidence-summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(statusStyles).toContain('min-height: 1.25rem;');
-    expect(statusStyles).toContain('padding: 0;');
-    expect(statusStyles).not.toContain('border: 1px solid');
-    expect(statusStyles).not.toContain('background: var(--surface-subtle);');
+    expect(source).toContain('class="marker-severity-label simple-severity-label"');
+    expect(source).not.toContain('class="simple-status-line"');
+    expect(severityStyles).toContain('display: inline-flex;');
+    expect(severityStyles).toContain('max-width: 100%;');
+    expect(severityStyles).not.toContain('border: 1px solid');
+    expect(severityStyles).not.toContain('background: var(--surface-subtle);');
     expect(simpleEvidenceStyles).toContain('.simple-evidence-summary {');
     expect(evidenceRule).not.toContain('border-top: 1px solid var(--border-color);');
   });

@@ -2268,7 +2268,6 @@ h1, h2, h3, h4, h5, h6 {
 :root[data-theme="light"] .tabs,
 :root[data-theme="light"] .view-mode-buttons,
 :root[data-theme="light"] .marker-middle,
-:root[data-theme="light"] .simple-status-line,
 :root[data-theme="light"] .technical-details,
 :root[data-theme="light"] .score-explainer {
   background: var(--surface-subtle);

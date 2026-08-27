@@ -118,17 +118,16 @@
         <span class="scope-badge">{getScopeLabel(marker.sex_scope)}</span>
       </Tooltip>
     {/if}
-  </div>
-
-  <!-- Status line: Simple keeps raw calls in technical details; Clinical keeps the full call visible. -->
-  {#if viewMode === 'simple'}
-    <div class="simple-status-line">
-      <span class="marker-severity-label">
+    {#if viewMode === 'simple'}
+      <span class="marker-severity-label simple-severity-label">
         <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
         {severity.plainLabel}
       </span>
-    </div>
-  {:else}
+    {/if}
+  </div>
+
+  <!-- Clinical status row keeps the full DNA call visible; Simple keeps raw calls in technical details. -->
+  {#if viewMode !== 'simple'}
     <div class="marker-middle">
       <span class="genotype-val">Your Result: <strong>{marker.user_genotype}</strong></span>
       <span class="marker-severity-label">
@@ -641,14 +640,15 @@
     user-select: none;
   }
 
-  .simple-status-line {
-    display: flex;
+  .simple-severity-label {
+    display: inline-flex;
     align-items: center;
-    min-height: 1.25rem;
-    padding: 0;
+    max-width: 100%;
+    line-height: 1.35;
   }
 
-  .simple-status-line .marker-severity-label {
+  .simple-severity-label .severity-glyph {
+    flex: 0 0 auto;
     font-size: 0.74rem;
   }
 

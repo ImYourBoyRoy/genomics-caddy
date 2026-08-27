@@ -16,20 +16,34 @@
 
 {#if dialogStore.state.show}
   <div class="modal-backdrop dialog-backdrop" onclick={() => dialogStore.close()} role="presentation">
-    <div class="modal-content dialog-content" onclick={(e) => e.stopPropagation()} role="presentation">
+    <div
+      class="modal-content dialog-content"
+      onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+      role="alertdialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="global-dialog-title"
+      aria-describedby="global-dialog-message"
+    >
       <div class="modal-header">
-        <h3>{dialogStore.state.title}</h3>
-        <button class="modal-close" onclick={() => dialogStore.close()}>&times;</button>
+        <h3 id="global-dialog-title">{dialogStore.state.title}</h3>
+        <button
+          type="button"
+          class="modal-close"
+          aria-label="Close dialog"
+          onclick={() => dialogStore.close()}
+        >&times;</button>
       </div>
       <div class="modal-body dialog-body">
-        <p>{dialogStore.state.message}</p>
+        <p id="global-dialog-message">{dialogStore.state.message}</p>
       </div>
       <div class="modal-footer dialog-footer">
         {#if dialogStore.state.type === "confirm"}
-          <button class="btn btn-secondary" onclick={() => dialogStore.close()}>Cancel</button>
-          <button class="btn btn-accent" onclick={() => dialogStore.handleConfirm()}>Confirm</button>
+          <button type="button" class="btn btn-secondary" onclick={() => dialogStore.close()}>Cancel</button>
+          <button type="button" class="btn btn-accent" onclick={() => dialogStore.handleConfirm()}>Confirm</button>
         {:else}
-          <button class="btn btn-accent" onclick={() => dialogStore.close()}>OK</button>
+          <button type="button" class="btn btn-accent" onclick={() => dialogStore.close()}>OK</button>
         {/if}
       </div>
     </div>
@@ -43,7 +57,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
+    background: var(--modal-backdrop-bg);
     backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
@@ -53,9 +67,9 @@
   }
 
   .modal-content {
-    background: rgba(20, 22, 37, 0.95);
+    background: var(--surface-raised);
     border: 1px solid var(--border-color);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 20px 40px var(--shadow-modal);
     border-radius: 12px;
     width: 90%;
     max-width: 440px;
@@ -82,7 +96,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--surface-subtle);
   }
 
   .modal-header h3 {
@@ -92,6 +106,8 @@
   }
 
   .modal-close {
+    min-width: 44px;
+    min-height: 44px;
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -121,20 +137,20 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--surface-subtle);
   }
 
   .dialog-backdrop {
-    background: rgba(0, 0, 0, 0.75);
+    background: var(--modal-backdrop-bg);
     backdrop-filter: blur(12px);
     z-index: 1110;
   }
 
   .dialog-content {
     max-width: 440px;
-    background: rgba(15, 17, 28, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px var(--shadow-modal);
   }
 
   .dialog-body {
@@ -148,6 +164,6 @@
   .dialog-footer {
     justify-content: center;
     gap: 12px;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--surface-subtle);
   }
 </style>

@@ -38,6 +38,33 @@ export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined
   return out;
 }
 
+/**
+ * Remove a completed asset from the optimistic UI snapshot while the backend
+ * performs its authoritative post-sync probe. The probe can add the asset
+ * back only when it proves that a newer remote identity still exists.
+ */
+export function clearOfflineUpdate(
+  status: OfflineUpdateCheck | null | undefined,
+  assetId: string,
+): OfflineUpdateCheck | null | undefined {
+  if (!status) return status;
+
+  let changed = false;
+  const tiers = status.tiers.map((tier) => {
+    const assets = tier.assets.map((asset) => {
+      if (asset.asset_id !== assetId || !asset.update_available) return asset;
+      changed = true;
+      return { ...asset, update_available: false };
+    });
+    const updates_available = assets.filter((asset) => asset.update_available).length;
+    return { ...tier, assets, updates_available };
+  });
+
+  if (!changed) return status;
+  const total_updates_available = tiers.reduce((total, tier) => total + tier.updates_available, 0);
+  return { ...status, tiers, total_updates_available };
+}
+
 function toUpdateItem(asset: OfflineAssetStatus): OfflineUpdateItem {
   return {
     asset_id: asset.asset_id,

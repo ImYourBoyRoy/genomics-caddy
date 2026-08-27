@@ -165,9 +165,9 @@
     {#if loading}
       <ActivityPulse message="Checking sources…" accent="#34d399" maxWidth="180px" />
     {:else if status}
-      <span class="update-badge" class:has-updates={status.total_updates_available > 0}>
-        {status.total_updates_available > 0
-          ? `${status.total_updates_available} update(s) available`
+      <span class="update-badge" class:has-updates={updateAssets.length > 0}>
+        {updateAssets.length > 0
+          ? `${updateAssets.length} newer version(s) available`
           : "Up to date"}
       </span>
     {/if}

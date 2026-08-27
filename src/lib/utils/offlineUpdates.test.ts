@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listOfflineUpdates } from './offlineUpdates';
+import { clearOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
@@ -52,5 +52,15 @@ describe('listOfflineUpdates', () => {
 
     expect(items.map((item) => item.asset_id)).toEqual(['gwas_catalog']);
     expect(items[0]?.local_present).toBe(true);
+  });
+
+  it('clears a completed asset from the optimistic snapshot without touching other assets', () => {
+    const status = makeStatus();
+    const cleared = clearOfflineUpdate(status, 'gwas_catalog');
+
+    expect(cleared?.total_updates_available).toBe(1);
+    expect(cleared?.tiers[0]?.updates_available).toBe(1);
+    expect(listOfflineUpdates(cleared).map((item) => item.asset_id)).toEqual([]);
+    expect(cleared?.tiers[0]?.assets[1]?.update_available).toBe(true);
   });
 });

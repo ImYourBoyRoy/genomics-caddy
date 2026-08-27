@@ -23,7 +23,7 @@ import { onMount, onDestroy } from 'svelte';
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
-  import { formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
+  import { clearOfflineUpdate, formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
@@ -233,10 +233,11 @@ import { onMount, onDestroy } from 'svelte';
     try {
       customDir = await getCustomDownloadDir();
       offlineStatus = await checkOfflineDataUpdates();
+      const pendingCount = listOfflineUpdates(offlineStatus).length;
       setUpdateState(
-        offlineStatus.total_updates_available > 0 ? 'available' : 'ready',
-        offlineStatus.total_updates_available > 0
-          ? `${offlineStatus.total_updates_available} resource update(s) available.`
+        pendingCount > 0 ? 'available' : 'ready',
+        pendingCount > 0
+          ? `${pendingCount} newer remote resource version(s) available.`
           : 'Local resources are current.',
       );
     } catch (err) {
@@ -254,10 +255,11 @@ import { onMount, onDestroy } from 'svelte';
     void checkOfflineDataUpdates()
       .then((status) => {
         offlineStatus = status;
+        const pendingCount = listOfflineUpdates(status).length;
         setUpdateState(
-          status.total_updates_available > 0 ? 'available' : 'ready',
-          status.total_updates_available > 0
-            ? `${status.total_updates_available} resource update(s) available.`
+          pendingCount > 0 ? 'available' : 'ready',
+          pendingCount > 0
+            ? `${pendingCount} newer remote resource version(s) available.`
             : 'Local resources are current.',
         );
       })
@@ -276,6 +278,10 @@ import { onMount, onDestroy } from 'svelte';
     syncPhase = restP;
   }
 
+  function markAssetCurrent(assetId: string) {
+    offlineStatus = clearOfflineUpdate(offlineStatus, assetId) ?? offlineStatus;
+  }
+
   async function handleSyncAllMissing() {
     if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
     syncingAll = true;
@@ -289,6 +295,9 @@ import { onMount, onDestroy } from 'svelte';
     syncPhase = {};
     try {
       const results = await syncAllOfflineMissing(selectedSample?.id ?? undefined);
+      for (const assetId of results.flatMap((result) => result.assets_synced)) {
+        markAssetCurrent(assetId);
+      }
       const allErrors: string[] = [];
       const allMessages: string[] = [];
       results.forEach((r) => {
@@ -477,7 +486,10 @@ import { onMount, onDestroy } from 'svelte';
       if (result.errors?.length) {
         syncErrors = { ...syncErrors, [assetId]: result.errors.join('\n') };
         setUpdateState('error', `${assetId} failed validation or import. The previous local resource remains available.`);
-      } else if (result.messages?.length) {
+      } else {
+        for (const syncedAssetId of result.assets_synced) {
+          markAssetCurrent(syncedAssetId);
+        }
         syncMessages = { ...syncMessages, [assetId]: result.messages.join('\n') };
         setUpdateState('validating', `Validating ${assetId}…`);
         setUpdateState('installed', `${assetId} installed and indexed.`);
@@ -654,12 +666,13 @@ import { onMount, onDestroy } from 'svelte';
     },
   ] as const;
 
-  let updatesAvailable = $derived.by(() => {
-    // Match Offline Reference Data: count every asset with a proven remote update.
-    return offlineStatus?.total_updates_available ?? 0;
-  });
-
   let pendingUpdates = $derived.by(() => listOfflineUpdates(offlineStatus));
+
+  let updatesAvailable = $derived.by(() => {
+    // Derive from the named list so the badge cannot outlive an optimistic
+    // completion while the authoritative post-sync probe is still running.
+    return pendingUpdates.length;
+  });
 
   let primaryUpdatesAvailable = $derived(
     pendingUpdates.filter((u) => u.primary).length
@@ -836,9 +849,9 @@ import { onMount, onDestroy } from 'svelte';
         {#if updatesAvailable > 0}
           <span
             class="update-pill"
-            aria-label={updateBadgeTitle || `${updatesAvailable} database update(s) available`}
+            aria-label={updateBadgeTitle || `${updatesAvailable} newer remote version(s) available`}
           >
-            {updatesAvailable} update{updatesAvailable === 1 ? '' : 's'}
+            {updatesAvailable} newer
             {#if pendingUpdates.length === 1}
               · {pendingUpdates[0].label}
             {/if}

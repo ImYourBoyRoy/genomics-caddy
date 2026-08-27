@@ -105,9 +105,9 @@
   }
 
   .activity-pulse.error .pulse-inner {
-    color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.25);
-    background: rgba(239, 68, 68, 0.08);
+    color: var(--status-danger-strong-text);
+    border-color: var(--status-danger-border);
+    background: var(--status-danger-bg);
     animation: none;
   }
 
@@ -115,8 +115,8 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-strong-text);
     display: grid;
     place-items: center;
     font-size: 0.72rem;

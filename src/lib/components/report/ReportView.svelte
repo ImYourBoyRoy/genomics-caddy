@@ -392,7 +392,6 @@
       <h3 class="report-hero-title">Trait report</h3>
       <p class="report-hero-lead">
         Curated genetic context for <strong>{selectedSample.name}</strong>.
-        Findings are research and clinical discussion prompts, not a diagnosis or treatment plan.
         {#if presentationMode !== 'simple'}
           Technical marker symbols and raw calls are available in the detailed view.
         {/if}
@@ -426,11 +425,6 @@
       onJumpToMarker={handleJumpToMarker}
     />
   {/if}
-
-  <!-- Core report context and controls remain ahead of secondary research surfaces. -->
-  <div class="disclaimer-banner">
-    <strong>Important:</strong> This report shows curated marker-pack context from your raw DNA file. It is <strong>not</strong> a medical diagnosis, disease probability, or treatment recommendation. Uncalled markers remain unknown.
-  </div>
 
   {#if generatedReport.catalog_warnings?.length}
     <div class="catalog-warnings-banner" role="status">

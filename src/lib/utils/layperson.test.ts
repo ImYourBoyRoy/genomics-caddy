@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import hormonePack from '../marker-packs/hormones_reproductive.json';
-import { DEFAULT_LAYPERSON_TRANSLATION, getLaypersonTranslation, LAYPERSON_MAP } from './layperson';
+import {
+  DEFAULT_LAYPERSON_TRANSLATION,
+  getCompactSimpleMeaning,
+  getLaypersonTranslation,
+  LAYPERSON_MAP,
+} from './layperson';
 
 describe('plain-English claim framing', () => {
   it('does not reintroduce deterministic or diagnosis-like wording', () => {
@@ -118,5 +123,34 @@ describe('plain-English claim framing', () => {
     expect(translation.simpleMeaning).toContain('A clinical test may be needed');
     expect(translation.simpleMeaning).not.toContain('This marker has been studied in pathway research.');
     expect(translation.simpleMeaning).not.toContain('does not measure current pathway activity');
+  });
+
+  it('keeps Simple cards concise while retaining the full authored meaning for details and exports', () => {
+    const translation = {
+      simpleImpact: 'Blood sugar research context',
+      simpleMeaning: 'This marker has been studied in insulin signaling. It does not diagnose diabetes.',
+    };
+
+    expect(getCompactSimpleMeaning(translation)).toBe('This marker has been studied in insulin signaling.');
+  });
+
+  it('falls back to the plain title when a meaning contains only generic guardrails', () => {
+    const translation = {
+      simpleImpact: 'Research pathway context',
+      simpleMeaning: 'This DNA result does not predict whether you have a condition or tell you what treatment to use.',
+    };
+
+    expect(getCompactSimpleMeaning(translation)).toBe('Research pathway context');
+  });
+
+  it('keeps domain-specific measurement limits visible', () => {
+    const translation = {
+      simpleImpact: 'Steroid-signaling research context',
+      simpleMeaning: 'This marker is studied in steroid signaling. It does not measure current estrogen.',
+    };
+
+    expect(getCompactSimpleMeaning(translation)).toBe(
+      'This marker is studied in steroid signaling. It does not measure current estrogen.',
+    );
   });
 });

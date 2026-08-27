@@ -1189,38 +1189,76 @@ fn migrate_legacy_sample_tables(conn: &Connection, data_dir: &Path) -> Result<()
     Ok(())
 }
 
-/// Infer a conservative chromosome-call label from the raw file.
+const MIN_SEX_CHROMOSOME_CALLS: usize = 20;
+
+fn allele_is_called(allele: &str) -> bool {
+    let value = allele.trim();
+    !value.is_empty()
+        && !matches!(value, "-" | "--" | "00" | "?" | "NN")
+        && !value.contains('?')
+}
+
+fn record_is_called(record: &SnpRecord) -> bool {
+    allele_is_called(&record.allele1) && allele_is_called(&record.allele2)
+}
+
+fn record_is_heterozygous(record: &SnpRecord) -> bool {
+    record_is_called(record) && !record.allele1.trim().eq_ignore_ascii_case(record.allele2.trim())
+}
+
+/// Infer a chromosome-pattern label from X/Y call coverage.
 ///
-/// A missing Y chromosome call is not evidence of an XX pattern: many
-/// consumer exports omit Y markers or provide too little coverage. The label
-/// is therefore an applicability hint for biological/genomic context, not a
-/// statement about gender identity, anatomy, fertility, or hormone status.
+/// Y calls support a male chromosome pattern. When Y is absent, a
+/// sufficiently called and heterozygous X pattern supports a female
+/// chromosome pattern; missing Y coverage alone remains unknown. This is an
+/// applicability hint for
+/// biological/genomic context, not a statement about gender identity,
+/// anatomy, fertility, or hormone status.
 fn infer_genetic_sex(records: &[SnpRecord]) -> String {
+    let mut x_records = 0usize;
+    let mut x_calls = 0usize;
+    let mut x_heterozygous = 0usize;
     let mut y_records = 0usize;
     let mut y_calls = 0usize;
 
     for record in records {
-        if !record.chromosome.eq_ignore_ascii_case("Y") {
-            continue;
-        }
-        y_records += 1;
-        let genotype = format!("{}{}", record.allele1.trim(), record.allele2.trim());
-        let has_call = !genotype.is_empty()
-            && genotype != "--"
-            && genotype != "-"
-            && genotype != "00"
-            && !genotype.contains('?');
-        if has_call {
-            y_calls += 1;
+        let chromosome = record.chromosome.trim().to_ascii_uppercase();
+        let chromosome = chromosome.strip_prefix("CHR").unwrap_or(&chromosome);
+        if chromosome == "X" {
+            x_records += 1;
+            if record_is_called(record) {
+                x_calls += 1;
+                if record_is_heterozygous(record) {
+                    x_heterozygous += 1;
+                }
+            }
+        } else if chromosome == "Y" {
+            y_records += 1;
+            if record_is_called(record) {
+                y_calls += 1;
+            }
         }
     }
 
-    classify_genetic_sex(y_records, y_calls)
+    classify_genetic_sex(x_records, x_calls, x_heterozygous, y_records, y_calls)
 }
 
-fn classify_genetic_sex(y_records: usize, y_calls: usize) -> String {
-    if y_calls >= 20 {
-        "XY-like (Y chromosome calls present)".to_string()
+fn classify_genetic_sex(
+    x_records: usize,
+    x_calls: usize,
+    x_heterozygous: usize,
+    y_records: usize,
+    y_calls: usize,
+) -> String {
+    if y_calls >= MIN_SEX_CHROMOSOME_CALLS {
+        "Male".to_string()
+    } else if y_calls == 0
+        && x_records >= MIN_SEX_CHROMOSOME_CALLS
+        && x_calls >= MIN_SEX_CHROMOSOME_CALLS
+        && x_heterozygous >= 2
+        && x_heterozygous.saturating_mul(10) >= x_calls
+    {
+        "Female".to_string()
     } else if y_records == 0 {
         "Unknown (Y chromosome not observed)".to_string()
     } else {
@@ -1229,8 +1267,8 @@ fn classify_genetic_sex(y_records: usize, y_calls: usize) -> String {
 }
 
 /// Recompute derived chromosome-call labels for samples imported before the
-/// conservative inference rule was introduced. This intentionally reads only
-/// Y rows and never treats missing Y coverage as evidence of XX.
+/// conservative inference rule was introduced. This reads only X/Y rows and
+/// never treats missing Y coverage alone as evidence of XX.
 fn refresh_genetic_sex_labels(conn: &Connection, data_dir: &Path) -> Result<()> {
     let sample_ids = conn
         .prepare("SELECT id FROM samples")?
@@ -1253,21 +1291,21 @@ fn refresh_genetic_sex_labels(conn: &Connection, data_dir: &Path) -> Result<()> 
             }
         };
         let mut stmt = sample_conn.prepare(
-            "SELECT allele1, allele2 FROM genotypes
-             WHERE UPPER(REPLACE(UPPER(chromosome), 'CHR', '')) = 'Y'",
+            "SELECT chromosome, allele1, allele2 FROM genotypes
+             WHERE UPPER(REPLACE(UPPER(chromosome), 'CHR', '')) IN ('X', 'Y')",
         )?;
-        let y_records = stmt
+        let sex_chromosome_records = stmt
             .query_map([], |row| {
                 Ok(SnpRecord {
                     rsid: String::new(),
-                    chromosome: "Y".to_string(),
+                    chromosome: row.get(0)?,
                     position: 0,
-                    allele1: row.get(0)?,
-                    allele2: row.get(1)?,
+                    allele1: row.get(1)?,
+                    allele2: row.get(2)?,
                 })
             })?
             .collect::<Result<Vec<_>, _>>()?;
-        let genetic_sex = infer_genetic_sex(&y_records);
+        let genetic_sex = infer_genetic_sex(&sex_chromosome_records);
         conn.execute(
             "UPDATE samples SET genetic_sex = ? WHERE id = ?",
             params![genetic_sex, sample_id],
@@ -1299,7 +1337,7 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
         )
         .map_err(|e| format!("Failed to retrieve sample ID: {}", e))?;
 
-    // Determine a conservative chromosome-call hint from Y coverage.
+    // Determine a conservative sex label from X/Y call coverage.
     let genetic_sex = infer_genetic_sex(records);
 
     conn.execute(
@@ -2536,10 +2574,7 @@ mod sex_context_tests {
     #[test]
     fn strong_y_coverage_is_xy_like_not_gender_identity() {
         let records = (0..20).map(|i| y_record(i, true)).collect::<Vec<_>>();
-        assert_eq!(
-            infer_genetic_sex(&records),
-            "XY-like (Y chromosome calls present)"
-        );
+        assert_eq!(infer_genetic_sex(&records), "Male");
     }
 
     #[test]
@@ -2548,6 +2583,37 @@ mod sex_context_tests {
         assert_eq!(
             infer_genetic_sex(&records),
             "Uncertain (limited Y chromosome calls)"
+        );
+    }
+
+    #[test]
+    fn strong_heterozygous_x_coverage_supports_xx_like_pattern() {
+        let records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "X".to_string(),
+                position: i as u64 + 1,
+                allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
+                allele2: if i % 4 == 0 { "G" } else { "G" }.to_string(),
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(infer_genetic_sex(&records), "Female");
+    }
+
+    #[test]
+    fn missing_y_with_homozygous_x_coverage_stays_unknown() {
+        let records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "X".to_string(),
+                position: i as u64 + 1,
+                allele1: "A".to_string(),
+                allele2: "A".to_string(),
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Unknown (Y chromosome not observed)"
         );
     }
 }

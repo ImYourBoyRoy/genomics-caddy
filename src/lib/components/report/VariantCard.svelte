@@ -9,7 +9,7 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
-  import { getLaypersonTranslation } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -26,6 +26,7 @@
   let effectAllele = $derived(getEffectAllele(marker));
   let severity = $derived(getSeverityInfo(marker.severity_class as SeverityClass));
   let laypersonTranslation = $derived(getLaypersonTranslation(marker));
+  let compactSimpleMeaning = $derived(getCompactSimpleMeaning(laypersonTranslation));
 
   /** True when the variant was actually detected (not benign / no_data) */
   let isActiveFindings = $derived(
@@ -159,6 +160,7 @@
         <div class="claim-frame" role="note">
           {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
         </div>
+        <p class="claim-context">{laypersonTranslation.simpleMeaning}</p>
       </details>
     {:else}
       <div class="claim-frame" role="note">
@@ -251,14 +253,8 @@
       {#if viewMode === 'simple'}
         <div class="simple-meaning-block">
           <strong>What this might mean for you:</strong>
-          <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
+          <span class="layperson-text">{compactSimpleMeaning}</span>
         </div>
-
-        {#if marker.clinical_confirmation_required}
-          <div class="simple-alert no-print">
-            ⚠️ <strong>Clinical test needed:</strong> Consumer DNA tests can sometimes report false positives on rare variants. A medical-grade lab test is required to confirm this finding before making any therapy changes.
-          </div>
-        {/if}
 
         <div class="simple-next-step">
           <strong>Next helpful step:</strong>
@@ -418,6 +414,13 @@
     padding: 0.45rem 0.6rem;
     border-left: 3px solid var(--report-claim-border);
     background: var(--report-claim-bg);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .claim-context {
+    margin: 0.45rem 0 0;
     color: var(--text-secondary);
     font-size: 0.75rem;
     line-height: 1.4;

@@ -142,12 +142,6 @@
   .clinical-text {
     color: #4a5568 !important;
   }
-  .simple-alert {
-    background: #fffaf0 !important;
-    border: 1px solid #feebc8 !important;
-    color: black !important;
-  }
-
   /* Legend Print Styles */
   .report-legend {
     margin-bottom: 24px !important;

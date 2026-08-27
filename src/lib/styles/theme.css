@@ -683,6 +683,15 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
+.app-reference-note {
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  padding: 0.75rem 0.25rem 0.25rem;
+  text-align: center;
+}
+
 /* Welcome / empty-state layout lives in empty-state.css */
 
 /* Content Header */
@@ -816,17 +825,6 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(245, 158, 11, 0.12);
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-/* Disclaimers */
-.disclaimer-banner {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  color: #fbd38d;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  line-height: 1.4;
 }
 
 .catalog-warnings-banner {
@@ -1921,17 +1919,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
   line-height: 1.45;
 }
-.simple-alert {
-  background: rgba(245, 158, 11, 0.03);
-  border: 1px solid rgba(245, 158, 11, 0.08);
-  color: var(--warning);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  line-height: 1.35;
-  margin: 4px 0;
-}
-
 /* Reusable select styles for the Settings drawer */
 .settings-select {
   width: 100%;

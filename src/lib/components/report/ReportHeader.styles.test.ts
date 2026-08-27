@@ -6,6 +6,12 @@ const source = readFileSync(resolve(process.cwd(), 'src/lib/components/report/Re
 const badgeStyles = source.slice(source.indexOf('.overall-summary-badge'), source.indexOf('.technical-score-details'));
 
 describe('ReportHeader summary badge', () => {
+  it('keeps the concise sex result visible in the report summary', () => {
+    expect(source).toContain('Sex');
+    expect(source).toContain('Sex estimate from DNA');
+    expect(source).toContain('Based on X/Y chromosome call coverage');
+  });
+
   it('uses semantic theme tokens for association context', () => {
     expect(badgeStyles).toContain('var(--status-accent-bg)');
     expect(badgeStyles).toContain('var(--status-accent-border)');

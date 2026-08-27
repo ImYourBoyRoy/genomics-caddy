@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/report/ReportHeader.svelte -->
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
+  import Tooltip from '../common/Tooltip.svelte';
 
   /*
   Module Docstring:
@@ -75,17 +76,21 @@
 
     <div class="health-summary-row">
       <div class="health-stat">
-        <span class="lbl">Chromosome-call context</span>
+        <span class="lbl">
+          Sex
+          <Tooltip
+            label="Sex estimate from DNA"
+            description="Based on X/Y chromosome call coverage. This is not gender identity, anatomy, fertility, pregnancy, or hormone status."
+          >
+            <span class="report-info-icon" aria-label="Explain sex estimate from DNA">ⓘ</span>
+          </Tooltip>
+        </span>
         <span class="val text-accent">{geneticSex}</span>
       </div>
       <div class="health-stat">
         <span class="lbl">Markers Checked</span>
         <span class="val">{foundMarkersCount} / {totalMarkersChecked} curated SNPs found</span>
       </div>
-      <p class="marker-scope-note">
-      This is a conservative chromosome-call hint only—not gender identity, anatomy, fertility, pregnancy, or hormone status. Counts reflect hand-curated marker packs only (~{totalMarkersChecked} SNPs), not your full chip (~600k variants).
-        Use Agent Discovery and Vector Research scopes to expand beyond this baseline.
-      </p>
     </div>
 
     <details class="technical-score-details">
@@ -131,6 +136,16 @@
 
   .quality-note {
     margin-top: 0.25rem;
+  }
+
+  .report-info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    min-height: 1.1rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
   }
 
   .header-title-row {

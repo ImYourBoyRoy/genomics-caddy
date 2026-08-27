@@ -51,10 +51,10 @@
               👤 {s.name} <span class="sex-pill">{s.genetic_sex}</span>
             </button>
             <Tooltip
-              label="Chromosome-call context"
-              description="This is a limited DNA-call hint only. It is not gender identity, anatomy, fertility, pregnancy, or hormone status."
+              label="Sex estimate from DNA"
+              description="Based on X/Y chromosome call coverage. It is not gender identity, anatomy, fertility, pregnancy, or hormone status."
             >
-              <span class="sample-scope-help" aria-label="Explain chromosome-call context">ⓘ</span>
+              <span class="sample-scope-help" aria-label="Explain sex estimate from DNA">ⓘ</span>
             </Tooltip>
           </div>
           <button type="button" class="btn-delete" aria-label={`Delete profile ${s.name}`} disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>

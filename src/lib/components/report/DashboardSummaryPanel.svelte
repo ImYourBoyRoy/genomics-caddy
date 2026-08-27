@@ -9,7 +9,7 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getLaypersonTranslation } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation } from '../../utils/layperson';
 
   interface Props {
     report: GeneratedReport;
@@ -82,7 +82,7 @@
   function findingMeaning(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
     return marker
-      ? getLaypersonTranslation(marker).simpleMeaning
+      ? getCompactSimpleMeaning(getLaypersonTranslation(marker))
       : 'This is a research association that may be useful to discuss in the right personal context.';
   }
 
@@ -157,7 +157,7 @@
       <div>
         <span class="section-kicker">Start here</span>
         <h3 id="action-queue-title">Your next steps</h3>
-        <p>These are the most useful follow-up prompts from this report. They are not diagnoses or treatment instructions.</p>
+        <p>Prioritized follow-up prompts from this report.</p>
       </div>
       <span class="action-queue-count">{Math.min(plan.topFindings.length, 5)} of 5</span>
     </div>
@@ -186,27 +186,20 @@
     {:else}
       <div class="action-queue-empty">
         <strong>No immediate genetic follow-up prompts were generated.</strong>
-        <span>That does not mean every condition is ruled out. Review symptoms, routine care, and any selected personal context with a clinician.</span>
+        <span>Use routine care and selected personal context to guide follow-up.</span>
       </div>
     {/if}
   </section>
 
-  <div class="disclaimer-banner">
-    <span class="warning-icon">⚠️</span>
-    <p>
-      <strong>Educational Information Only:</strong> This dashboard summarizes curated genetic associations from your raw genotype calls and local research registries. It is not medical advice, diagnosis, or a treatment plan. Always review these markers and any suggested testing with a qualified healthcare provider.
-    </p>
-  </div>
-
   {#if plan.safetyNotes.length > 0}
-    <div class="actionability-safety" role="note">
-      <strong>🧭 How to use actionability guidance</strong>
+    <details class="actionability-safety">
+      <summary>🧭 How to use suggestions</summary>
       <ul>
         {#each plan.safetyNotes as note (note)}
           <li>{note}</li>
         {/each}
       </ul>
-    </div>
+    </details>
   {/if}
 
   <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
@@ -776,20 +769,6 @@
     color: var(--text-primary);
   }
 
-  .disclaimer-banner {
-    display: flex;
-    gap: 0.75rem;
-    background: var(--status-warning-bg);
-    border: 1px solid var(--status-warning-border);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    font-size: 0.75rem;
-    line-height: 1.4;
-    color: var(--status-warning-text);
-  }
-  .disclaimer-banner p {
-    margin: 0;
-  }
   .actionability-safety {
     border: 1px solid var(--status-info-border);
     background: var(--status-info-bg);
@@ -799,17 +778,15 @@
     font-size: 0.75rem;
     line-height: 1.45;
   }
-  .actionability-safety strong {
+  .actionability-safety summary {
     color: var(--status-info-text);
+    cursor: pointer;
+    font-weight: 700;
   }
   .actionability-safety ul {
     margin: 0.35rem 0 0;
     padding-left: 1.2rem;
   }
-  .warning-icon {
-    font-size: 1.1rem;
-  }
-
   .context-selector {
     display: flex;
     align-items: center;

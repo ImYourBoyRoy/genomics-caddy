@@ -589,7 +589,7 @@
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <span class="pill font-mono">Chromosome-call context: {selectedSample.genetic_sex}</span>
+              <span class="pill font-mono">Sex: {selectedSample.genetic_sex}</span>
               <span class="pill">Sample ID: {selectedSample.id}</span>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">
@@ -738,6 +738,11 @@
             />
           {/if}
         </div>
+      {/if}
+      {#if selectedSample !== null}
+        <footer class="app-reference-note" role="note">
+          For reference only. Discuss findings and health decisions with a qualified healthcare professional.
+        </footer>
       {/if}
     </main>
   {/snippet}

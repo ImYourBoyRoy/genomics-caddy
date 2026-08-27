@@ -58,6 +58,41 @@ export const LAYPERSON_MAP = buildLaypersonMap();
 
 export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTranslations.fallback;
 
+const GENERIC_GUARDRAIL_PATTERNS = [
+  /\bdoes not (?:diagnose|prove)\b/i,
+  /\bdoes not predict whether you have (?:a )?condition\b/i,
+  /\bnot (?:a|an) (?:diagnosis|treatment|prescription)\b/i,
+  /\b(?:requires|needs?) (?:a|an|the)?\s*(?:doctor|clinician|clinical|medical-grade|healthcare)\b.*\bbefore\b/i,
+  /\bbefore making (?:health|medical) decisions\b/i,
+];
+
+function isGenericGuardrail(text: string): boolean {
+  return GENERIC_GUARDRAIL_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+/**
+ * Keep the visible Simple card focused on the finding itself. Broad claim
+ * boundaries remain available in the card's disclosure and in clinical/AI
+ * outputs; this display helper removes only generic warning sentences or
+ * semicolon clauses that would otherwise repeat the report-level notice.
+ */
+export function getCompactSimpleMeaning(translation: LaypersonTranslation): string {
+  const sentences = translation.simpleMeaning
+    .trim()
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+  const compact = sentences
+    .map((sentence) => sentence
+      .split(/;\s+/)
+      .filter((clause) => !isGenericGuardrail(clause))
+      .join('; ')
+      .trim())
+    .filter((sentence) => sentence && !isGenericGuardrail(sentence));
+
+  return compact.join(' ') || translation.simpleImpact;
+}
+
 const SAFE_FALLBACK: LaypersonTranslation = {
   simpleImpact: "A biological pathway studied in genetic research.",
   simpleMeaning:

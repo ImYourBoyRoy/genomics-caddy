@@ -12,6 +12,13 @@
   Key Inputs: dialogStore.state.
   Key Outputs: Custom UI overlay.
   */
+
+  function handleDialogKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      dialogStore.close();
+    }
+    event.stopPropagation();
+  }
 </script>
 
 {#if dialogStore.state.show}
@@ -19,7 +26,7 @@
     <div
       class="modal-content dialog-content"
       onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
+      onkeydown={handleDialogKeydown}
       role="alertdialog"
       tabindex="-1"
       aria-modal="true"

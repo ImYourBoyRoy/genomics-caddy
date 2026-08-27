@@ -9,7 +9,8 @@ describe('GlobalDialogs interaction and theme contract', () => {
     expect(source).toContain('role="alertdialog"');
     expect(source).toContain('aria-modal="true"');
     expect(source).toContain('tabindex="-1"');
-    expect(source).toContain('onkeydown={(e) => e.stopPropagation()}');
+    expect(source).toContain('onkeydown={handleDialogKeydown}');
+    expect(source).toContain("if (event.key === 'Escape')");
     expect(source).toContain('aria-labelledby="global-dialog-title"');
     expect(source).toContain('aria-describedby="global-dialog-message"');
     expect(source).toContain('id="global-dialog-title"');

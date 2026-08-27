@@ -34,7 +34,7 @@
 
   let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
 
-  function computeSummaryLine(report: GeneratedReport): string {
+  function computeSummaryLine(report: GeneratedReport, mode: "simple" | "clinical" | "compare"): string {
     let high = 0;
     let mod = 0;
     let prot = 0;
@@ -49,6 +49,19 @@
         }
       }
     }
+    if (mode === 'simple') {
+      const associationCount = high + mod;
+      const simpleParts = [];
+      if (associationCount > 0) {
+        simpleParts.push(`${associationCount} possible ${associationCount === 1 ? 'association' : 'associations'}`);
+      }
+      if (prot > 0) {
+        simpleParts.push(`${prot} possible protective ${prot === 1 ? 'association' : 'associations'}`);
+      }
+      if (simpleParts.length === 0) return "No notable associations in this report.";
+      return simpleParts.join(' · ');
+    }
+
     const parts = [];
     if (high > 0) parts.push(`${high} stronger ${high === 1 ? 'association' : 'associations'}`);
     if (mod > 0) parts.push(`${mod} possible ${mod === 1 ? 'association' : 'associations'}`);
@@ -58,7 +71,7 @@
     return parts.join(', ') + ' among curated pack markers.';
   }
 
-  let summaryLine = $derived(computeSummaryLine(generatedReport));
+  let summaryLine = $derived(computeSummaryLine(generatedReport, presentationMode));
 </script>
 
 <div class="report-header card" data-presentation-mode={presentationMode}>

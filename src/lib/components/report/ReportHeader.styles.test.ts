@@ -20,6 +20,19 @@ describe('ReportHeader summary badge', () => {
     expect(source).not.toContain('curated SNPs found');
   });
 
+  it('uses plain-language aggregate summary text in Simple mode', () => {
+    const simpleStart = source.indexOf("if (mode === 'simple')");
+    const clinicalStart = source.indexOf('const parts = []', simpleStart);
+    const simpleMode = source.slice(simpleStart, clinicalStart);
+
+    expect(source).toContain("if (mode === 'simple')");
+    expect(source).toContain('const associationCount = high + mod;');
+    expect(source).toContain('possible protective ${prot === 1 ? \'association\' : \'associations\'}');
+    expect(source).toContain("return simpleParts.join(' · ');");
+    expect(source).toContain('computeSummaryLine(generatedReport, presentationMode)');
+    expect(simpleMode).not.toContain('stronger association');
+  });
+
   it('uses semantic theme tokens for association context', () => {
     expect(badgeStyles).toContain('var(--status-accent-bg)');
     expect(badgeStyles).toContain('var(--status-accent-border)');

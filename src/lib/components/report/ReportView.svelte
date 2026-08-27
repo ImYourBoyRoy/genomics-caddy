@@ -86,6 +86,8 @@
   let helpCloseButton = $state<HTMLButtonElement | undefined>(undefined);
   let previousHelpFocus: HTMLElement | null = null;
   let collapsedSections = $state<Record<string, boolean>>({});
+  let isPreparingPrint = $state(false);
+  let printRestore: (() => void) | null = null;
   let reproductiveContext = $state('');
   let loadedReproductiveContextKey = $state('');
   let prioritizeReproductiveContext = $state(true);
@@ -232,6 +234,37 @@
   function collapseAll() {
     for (const sec of filteredSections) {
       collapsedSections[sec.name] = true;
+    }
+  }
+
+  async function printReport() {
+    if (!browser || !generatedReport || isPreparingPrint) return;
+
+    const previousCollapsedSections = { ...collapsedSections };
+    isPreparingPrint = true;
+    const restore = () => {
+      if (printRestore !== restore) return;
+      window.removeEventListener('afterprint', restore);
+      collapsedSections = previousCollapsedSections;
+      printRestore = null;
+      isPreparingPrint = false;
+    };
+
+    printRestore = restore;
+    window.addEventListener('afterprint', restore, { once: true });
+    collapsedSections = {
+      ...collapsedSections,
+      ...Object.fromEntries(filteredSections.map((section) => [section.name, false])),
+    };
+
+    await tick();
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
+    if (printRestore !== restore) return;
+
+    try {
+      window.print();
+    } catch {
+      restore();
     }
   }
 
@@ -470,8 +503,8 @@
       >
         {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
       </button>
-      <button type="button" class="btn btn-primary btn-sm" onclick={() => window.print()}>
-        Export PDF
+      <button type="button" class="btn btn-primary btn-sm" onclick={printReport} disabled={isPreparingPrint}>
+        {isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'}
       </button>
     </div>
     {#if discoveryExportHint}

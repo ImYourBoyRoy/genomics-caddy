@@ -23,3 +23,14 @@ describe('ReportView Help Guide surface', () => {
     expect(source).not.toContain('>\n        Undetected\n');
   });
 });
+
+describe('ReportView print preparation', () => {
+  it('expands filtered sections for printing and restores the user collapse state', () => {
+    expect(source).toContain('async function printReport()');
+    expect(source).toContain('window.addEventListener(\'afterprint\', restore, { once: true });');
+    expect(source).toContain('Object.fromEntries(filteredSections.map((section) => [section.name, false]))');
+    expect(source).toContain('collapsedSections = previousCollapsedSections;');
+    expect(source).toContain('onclick={printReport}');
+    expect(source).toContain("isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'");
+  });
+});

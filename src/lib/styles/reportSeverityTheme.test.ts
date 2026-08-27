@@ -66,4 +66,17 @@ describe('report severity theme tokens', () => {
     expect(emptyReportBlock).toContain('color: var(--text-secondary);');
     expect(emptyReportBlock).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('applies explicit report surfaces to System mode on light desktop systems', () => {
+    const systemLightBlock = source.match(
+      /\/\* System mode needs the same explicit surface treatment[\s\S]*?\n\}/
+    )?.[0] ?? '';
+
+    expect(systemLightBlock).toContain('@media (prefers-color-scheme: light)');
+    expect(systemLightBlock).toContain(':root[data-theme="system"] .app-layout');
+    expect(systemLightBlock).toContain(':root[data-theme="system"] .sidebar');
+    expect(systemLightBlock).toContain('background: var(--surface-raised);');
+    expect(systemLightBlock).toContain('color: var(--text-primary);');
+    expect(systemLightBlock).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

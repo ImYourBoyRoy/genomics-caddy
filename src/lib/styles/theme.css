@@ -2231,6 +2231,58 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary) !important;
 }
 
+/* System mode needs the same explicit surface treatment when the desktop OS
+   prefers light; custom-property overrides alone cannot replace these rules. */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] .card,
+  :root[data-theme="system"] .summary-card,
+  :root[data-theme="system"] .section-card,
+  :root[data-theme="system"] .filter-bar,
+  :root[data-theme="system"] .report-header,
+  :root[data-theme="system"] .report-hero {
+    background: var(--surface-raised);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  :root[data-theme="system"] .app-layout {
+    background: radial-gradient(circle at top right, var(--surface-subtle), var(--bg-primary));
+  }
+
+  :root[data-theme="system"] .sidebar {
+    background-color: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+  }
+
+  :root[data-theme="system"] .tabs,
+  :root[data-theme="system"] .view-mode-buttons,
+  :root[data-theme="system"] .marker-middle,
+  :root[data-theme="system"] .technical-details,
+  :root[data-theme="system"] .score-explainer {
+    background: var(--surface-subtle);
+    border-color: var(--border-color);
+  }
+
+  :root[data-theme="system"] .tab-btn,
+  :root[data-theme="system"] .view-mode-btn:not(.view-mode-active),
+  :root[data-theme="system"] .filter-toggle,
+  :root[data-theme="system"] .filter-label,
+  :root[data-theme="system"] .filter-select {
+    color: var(--text-secondary);
+  }
+
+  :root[data-theme="system"] .filter-select,
+  :root[data-theme="system"] select option {
+    background: var(--surface-raised) !important;
+    color: var(--text-primary) !important;
+  }
+
+  :root[data-theme="system"] .report-hero-title,
+  :root[data-theme="system"] .report-hero-lead,
+  :root[data-theme="system"] .report-kicker {
+    color: var(--text-primary) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

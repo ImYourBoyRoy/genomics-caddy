@@ -135,6 +135,12 @@
     }
   }
 
+  function handleAtlasPointKeydown(event: KeyboardEvent, rsid: string) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onSelectRsid?.(rsid);
+  }
+
   onMount(async () => {
     unlistenProgress = await listen<{
       phase: string;
@@ -321,8 +327,12 @@
             onmouseleave={() => {
               if (hoveredRsid === p.rsid) hoveredRsid = null;
             }}
+            onfocus={() => (hoveredRsid = p.rsid)}
+            onblur={() => {
+              if (hoveredRsid === p.rsid) hoveredRsid = null;
+            }}
             onclick={() => onSelectRsid?.(p.rsid)}
-            onkeydown={(e) => e.key === "Enter" && onSelectRsid?.(p.rsid)}
+            onkeydown={(e) => handleAtlasPointKeydown(e, p.rsid)}
           />
         {/each}
       </svg>
@@ -341,7 +351,7 @@
         {:else}
           <div class="atlas-tooltip-card muted">
             <strong>Explore</strong>
-            <span>Hover a point for details. Size reflects data quality; color is trait category.</span>
+            <span>Point to or focus a point for details. Size reflects data quality; color is trait category.</span>
           </div>
         {/if}
 

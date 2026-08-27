@@ -559,6 +559,12 @@
   filter: drop-shadow(0 0 4px rgba(125, 211, 252, 0.45));
 }
 
+.atlas-dot:focus-visible {
+  stroke: var(--focus-ring);
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 4px var(--focus-ring));
+}
+
 .atlas-side {
   display: flex;
   flex-direction: column;
@@ -717,4 +723,3 @@
     transform: translateX(160%);
   }
 }
-

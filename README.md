@@ -162,6 +162,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Tooltip shadows use a theme token, keeping the shared popover surface consistent in Light, Dark, and System themes.
 * Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
+* Update completion is reconciled through one authoritative final probe after bulk work; stale status responses cannot restore an older update badge, and attached catalog row counts are read from their actual sidecar schemas.
 
 ---
 

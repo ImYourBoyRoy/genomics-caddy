@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { EvidenceCard, QdrantHit } from "../../types/research";
   import type { VariantNavTarget } from "../../constants/traitCategories";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     hits: QdrantHit[];
@@ -69,7 +70,9 @@
         {expanded ? "▾" : "▸"} Vector research ({hits.length} hits)
       </button>
       {#if query}
-        <span class="query-pill" title="Semantic query">“{query.slice(0, 80)}{query.length > 80 ? "…" : ""}”</span>
+        <Tooltip label="Semantic query" description="The text used to retrieve these research results from the vector index.">
+          <span class="query-pill">“{query.slice(0, 80)}{query.length > 80 ? "…" : ""}”</span>
+        </Tooltip>
       {/if}
       {#if onOpenEvidence}
         <button type="button" class="btn btn-secondary btn-xs" onclick={() => onOpenEvidence?.(query || hits[0]?.rsid || "")}>
@@ -100,7 +103,9 @@
               {#if hit.genotype}
                 <span class="genotype">{hit.genotype}</span>
               {/if}
-              <span class="score" title="Semantic similarity">{Math.round(hit.score * 100)}% match</span>
+              <Tooltip label="Semantic similarity" description="How closely this research result matches the query; it is an index signal, not a clinical probability.">
+                <span class="score">{Math.round(hit.score * 100)}% match</span>
+              </Tooltip>
             </header>
             {#if card}
               <div class="card-scores">

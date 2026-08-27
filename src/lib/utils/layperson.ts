@@ -161,13 +161,13 @@ export function getCompactSimpleMeaning(translation: LaypersonTranslation): stri
 function compactFollowUpSummary(items: string[]): string | null {
   const followUps = items
     .map((item) => item.replace(/[.;:]+$/, '').trim())
-    .filter(Boolean)
-    .slice(0, 3);
+    .filter(Boolean);
   if (followUps.length === 0) return null;
 
+  const visibleFollowUps = followUps.slice(0, 3);
   const maxLength = 116;
   const visible: string[] = [];
-  for (const item of followUps) {
+  for (const item of visibleFollowUps) {
     const candidate = visible.length === 0 ? item : `${visible.join(', ')}, or ${item}`;
     if (candidate.length <= maxLength) {
       visible.push(item);

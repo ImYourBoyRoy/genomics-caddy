@@ -193,7 +193,7 @@ describe('plain-English claim framing', () => {
       ...base,
       effect_direction: 'risk',
       confirm_with: ['baseline serum tryptase', 'event tryptase', 'allergist/immunologist review', 'extra item'],
-    })).toBe('Review baseline serum tryptase, event tryptase, or allergist/immunologist review.');
+    })).toBe('Review baseline serum tryptase, event tryptase, or allergist/immunologist review (+1 more in details).');
     expect(getSimpleNextStep({
       ...base,
       effect_direction: 'risk',

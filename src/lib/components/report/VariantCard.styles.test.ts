@@ -56,6 +56,12 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('class="claim-limit-list"');
   });
 
+  it('keeps repeated claim-boundary copy out of the default Simple card', () => {
+    expect(source).not.toContain('<summary>Why this is shown</summary>');
+    expect(source).toContain('<summary>Technical data</summary>');
+    expect(source).toContain('<dt>Claim boundary</dt>');
+  });
+
   it('keeps the Simple card from repeating its direction label', () => {
     expect(source).toContain('{#if marker.effect_direction && viewMode !== \'simple\'}');
     expect(source).toContain('<EffectDirectionBadge direction={marker.effect_direction} />');

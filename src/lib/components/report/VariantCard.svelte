@@ -148,15 +148,7 @@
         {severity.description}
       </div>
     {/if}
-    {#if viewMode === 'simple'}
-      <details class="claim-details">
-        <summary>Why this is shown</summary>
-        <div class="claim-frame" role="note">
-          {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
-        </div>
-        <p class="claim-context">{laypersonTranslation.simpleMeaning}</p>
-      </details>
-    {:else}
+    {#if viewMode !== 'simple'}
       <details class="claim-details">
         <summary>Evidence boundary</summary>
         <div class="claim-frame" role="note">

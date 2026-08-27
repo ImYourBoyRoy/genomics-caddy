@@ -1,5 +1,7 @@
 <!-- ./src/lib/components/ai/evidence/EvidenceSourcesSidebar.svelte -->
 <script lang="ts">
+  import Tooltip from "../../common/Tooltip.svelte";
+
   interface Props {
     sources: string[];
   }
@@ -15,7 +17,9 @@
       {#each sources as src}
         <div class="source-item">
           <span class="source-icon">📄</span>
-          <span class="source-name" title={src}>{src}</span>
+          <Tooltip label="Loaded source" description={src}>
+            <span class="source-name">{src}</span>
+          </Tooltip>
         </div>
       {/each}
     </div>

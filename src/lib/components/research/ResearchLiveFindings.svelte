@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
   import type { ResearchFindingPreview } from "../../types/research";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     findings?: ResearchFindingPreview[];
@@ -113,7 +114,9 @@
           <p class="live-finding-summary">{finding.summary}</p>
 
           <div class="live-finding-meta">
-            <span title={bucketHint(finding.impact_bucket)}>{bucketLabel(finding.impact_bucket)}</span>
+            <Tooltip label={bucketLabel(finding.impact_bucket)} description={bucketHint(finding.impact_bucket)}>
+              <span>{bucketLabel(finding.impact_bucket)}</span>
+            </Tooltip>
             <span>Data quality {pct(finding.data_quality_score)}</span>
             <span>Wellness relevance {pct(finding.wellness_actionability_score)}</span>
             {#if finding.clinical_actionability_score > 0}

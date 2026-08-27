@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { getActionabilityMatrix } from "../../../api/tauri";
   import type { ActionabilityPoint } from "../../../types/research";
+  import Tooltip from "../../common/Tooltip.svelte";
 
   interface Props {
     sampleId: number;
@@ -36,6 +37,10 @@
   function yPct(v: number) {
     return `${100 - Math.min(100, Math.max(0, v * 100))}%`;
   }
+
+  function pointDescription(point: ActionabilityPoint): string {
+    return `${point.rsid} — clinical ${Math.round(point.clinical_actionability_score * 100)}%, wellness ${Math.round(point.wellness_actionability_score * 100)}%`;
+  }
 </script>
 
 <section class="matrix-panel">
@@ -56,13 +61,15 @@
       <div class="axis-label y">Wellness ↑</div>
       <div class="plot" role="img" aria-label="Actionability scatter plot">
         {#each points as p (p.rsid)}
-          <button
-            type="button"
-            class="dot"
-            style:left={xPct(p.clinical_actionability_score)}
-            style:top={yPct(p.wellness_actionability_score)}
-            title="{p.rsid} — clinical {Math.round(p.clinical_actionability_score * 100)}%, wellness {Math.round(p.wellness_actionability_score * 100)}%"
-          ></button>
+          <Tooltip interactiveChildren label="Actionability point" description={pointDescription(p)} placement="right">
+            <button
+              type="button"
+              class="dot"
+              aria-label={pointDescription(p)}
+              style:left={xPct(p.clinical_actionability_score)}
+              style:top={yPct(p.wellness_actionability_score)}
+            ></button>
+          </Tooltip>
         {/each}
       </div>
       <div class="axis-label x">Clinical →</div>
@@ -105,5 +112,6 @@
     cursor: help;
   }
   .dot:hover { background: rgba(180, 230, 255, 1); transform: scale(1.4); }
+  .dot:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   .count { margin-top: 8px; }
 </style>

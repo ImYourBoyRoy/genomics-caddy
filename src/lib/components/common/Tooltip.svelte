@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/common/Tooltip.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -10,6 +10,7 @@
     learnMoreHref?: string;
     placement?: 'top' | 'bottom' | 'left' | 'right';
     triggerClass?: string;
+    interactiveChildren?: boolean;
   }
 
   let {
@@ -19,6 +20,7 @@
     learnMoreHref,
     placement = 'top',
     triggerClass = '',
+    interactiveChildren = false,
   }: Props = $props();
 
   let isOpen = $state(false);
@@ -26,7 +28,7 @@
   let isFocused = $state(false);
   let isClicked = $state(false);
   let hostElement: HTMLSpanElement;
-  let triggerElement: HTMLButtonElement;
+  let triggerElement = $state<HTMLButtonElement | undefined>(undefined);
   let panelElement = $state<HTMLSpanElement | undefined>(undefined);
   let panelStyle = $state('');
   let tooltipId = $state('');
@@ -91,6 +93,29 @@
     refreshOpenState();
   }
 
+  function syncInteractiveTrigger() {
+    if (!interactiveChildren || !hostElement || !tooltipId) return;
+    const nextTrigger = hostElement.querySelector<HTMLElement>(
+      'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (!nextTrigger) return;
+    if (!nextTrigger.getAttribute('aria-label')) nextTrigger.setAttribute('aria-label', label);
+    if (isOpen && panelDescriptionId) {
+      nextTrigger.setAttribute('aria-describedby', panelDescriptionId);
+    } else {
+      nextTrigger.removeAttribute('aria-describedby');
+    }
+    nextTrigger.setAttribute('aria-expanded', String(isOpen));
+    if (learnMoreHref) {
+      nextTrigger.setAttribute('aria-haspopup', 'dialog');
+      if (isOpen) nextTrigger.setAttribute('aria-controls', tooltipId);
+      else nextTrigger.removeAttribute('aria-controls');
+    } else {
+      nextTrigger.removeAttribute('aria-haspopup');
+      nextTrigger.removeAttribute('aria-controls');
+    }
+  }
+
   function updatePosition() {
     if (!isOpen || !triggerElement) return;
     const rect = triggerElement.getBoundingClientRect();
@@ -123,6 +148,7 @@
 
   $effect(() => {
     if (isOpen) requestAnimationFrame(updatePosition);
+    if (interactiveChildren && tooltipId) void tick().then(syncInteractiveTrigger);
   });
 
   onMount(() => {
@@ -144,6 +170,7 @@
 
 <div
   class="tooltip-host"
+  class:interactive-children={interactiveChildren}
   bind:this={hostElement}
   data-tooltip-id={tooltipId}
   role="presentation"
@@ -151,20 +178,25 @@
   onmouseleave={handleHoverLeave}
   onfocusin={() => { isFocused = true; refreshOpenState(); }}
   onfocusout={handleHostFocusOut}
+  onclick={interactiveChildren ? handleTriggerClick : undefined}
 >
-  <button
-    type="button"
-    class={`tooltip-trigger ${triggerClass}`}
-    bind:this={triggerElement}
-    aria-label={label}
-    aria-describedby={isOpen ? panelDescriptionId : undefined}
-    aria-controls={isOpen && learnMoreHref ? tooltipId : undefined}
-    aria-haspopup={learnMoreHref ? 'dialog' : undefined}
-    aria-expanded={isOpen}
-    onclick={handleTriggerClick}
-  >
+  {#if interactiveChildren}
     {@render children()}
-  </button>
+  {:else}
+    <button
+      type="button"
+      class={`tooltip-trigger ${triggerClass}`}
+      bind:this={triggerElement}
+      aria-label={label}
+      aria-describedby={isOpen ? panelDescriptionId : undefined}
+      aria-controls={isOpen && learnMoreHref ? tooltipId : undefined}
+      aria-haspopup={learnMoreHref ? 'dialog' : undefined}
+      aria-expanded={isOpen}
+      onclick={handleTriggerClick}
+    >
+      {@render children()}
+    </button>
+  {/if}
   {#if isOpen}
     <span
       bind:this={panelElement}
@@ -193,6 +225,11 @@
     position: relative;
     display: inline-flex;
     max-width: 100%;
+  }
+
+  .tooltip-host.interactive-children {
+    position: static;
+    display: contents;
   }
 
   .tooltip-trigger {

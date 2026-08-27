@@ -138,6 +138,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Active-finding status is omitted when it duplicates the visible-marker count and retained when benign or uncalled markers make the subset useful.
 * Report filter-select borders use the active semantic theme token, keeping Light, Dark, and System-light controls visibly bounded.
 * Sidebar update, progress, warning, error, and success surfaces use semantic theme tokens; dynamic progress widths remain data-driven.
+* Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
 * Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing, so collapsed sections do not silently produce incomplete print output.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.
 * Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.

@@ -127,6 +127,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * A bottom-left Theme control supports System, Light, and Dark preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
+* Clinical findings remain a structured table on wide desktop and switch to stacked labelled rows at 1100px and below, so sidebar-constrained tablet layouts do not require a cramped 900px table.
 * The report header’s Sex and DNA-coverage summary also wraps as needed on narrow screens while keeping the concise `Male`/`Female` value visible.
 * Dashboard guidance uses compact visible prompts across dietary, supplement, reproductive, activity, medication, and lab panels; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip.
 * Repeated report next-step guidance stays compact: Simple action-queue/cards use short distinct actions, Clinical rows use concise follow-up labels, and the general reference reminder remains in the application footer.

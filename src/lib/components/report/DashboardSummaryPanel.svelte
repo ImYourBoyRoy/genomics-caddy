@@ -375,7 +375,7 @@
           </button>
           {#if !collapsed.supplements}
             <div class="card-body" id="supplements-body">
-              <p class="section-hint">Every supplement item is a discussion prompt, not a prescription. Check medications, pregnancy/lactation status, kidney/liver health, and labs before starting anything.</p>
+              <p class="section-hint">Review interactions and health context before use.</p>
               {#if plan.supplements.length > 0}
                 <div class="supplements-list">
                   {#each plan.supplements as s (`${s.name}:${s.reason}`)}
@@ -421,7 +421,7 @@
           </button>
           {#if !collapsed.cycleSupport}
             <div class="card-body" id="cycle-support-body">
-              <p class="section-hint">Guidance for {selectedReproductiveContextLabel()}: timing, symptoms, products, and follow-up questions. DNA cannot measure current hormones or diagnose a condition or medication response.</p>
+              <p class="section-hint">Guidance for {selectedReproductiveContextLabel()}: timing, symptoms, products, and follow-up questions.</p>
               {#if plan.cycleSupport.diaryReview}
                 <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
                   <h4 id="cycle-diary-review-title">📈 Observed diary review</h4>
@@ -517,7 +517,7 @@
         </button>
         {#if !collapsed.activity}
           <div class="card-body" id="activity-body">
-            <p class="section-hint">Genotype may provide weak context for training questions. It never clears high-intensity, contact, endurance, heat, altitude, or maximal-load activity.</p>
+            <p class="section-hint">Planning prompts for training and recovery — not activity clearance.</p>
             <ul class="guardrail-list">
               {#each plan.activity.principles as principle (principle)}
                 <li>{principle}</li>
@@ -563,7 +563,7 @@
         </button>
         {#if !collapsed.medication}
           <div class="card-body" id="medication-body">
-            <p class="section-hint">Record medication context before interpreting a marker. Raw consumer DNA is not a complete clinical PGx result and is never a reason to change a medication.</p>
+            <p class="section-hint">Bring current medications and past responses to a clinician or pharmacist.</p>
             {#if plan.pgxGuidance.relevantGenes.length > 0}
               <div class="pgx-readiness" role="note">
                 <strong>🧪 PGx completeness check</strong>
@@ -605,7 +605,7 @@
         </button>
         {#if !collapsed.labTests}
           <div class="card-body lab-body" id="lab-followups-body">
-            <p class="section-hint">Grouped by priority for clinician discussion; seek care promptly for acute symptoms.</p>
+            <p class="section-hint">Grouped by priority for clinician discussion.</p>
             <div class="lab-tier-stack">
               {#each plan.labGroups as group (group.label)}
                 <section class="lab-tier-block">

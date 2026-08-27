@@ -28,7 +28,7 @@
   let isFocused = $state(false);
   let isClicked = $state(false);
   let hostElement: HTMLSpanElement;
-  let triggerElement = $state<HTMLButtonElement | undefined>(undefined);
+  let triggerElement = $state<HTMLElement | undefined>(undefined);
   let panelElement = $state<HTMLSpanElement | undefined>(undefined);
   let panelStyle = $state('');
   let tooltipId = $state('');
@@ -99,6 +99,7 @@
       'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     if (!nextTrigger) return;
+    triggerElement = nextTrigger;
     if (!nextTrigger.getAttribute('aria-label')) nextTrigger.setAttribute('aria-label', label);
     if (isOpen && panelDescriptionId) {
       nextTrigger.setAttribute('aria-describedby', panelDescriptionId);
@@ -148,7 +149,12 @@
 
   $effect(() => {
     if (isOpen) requestAnimationFrame(updatePosition);
-    if (interactiveChildren && tooltipId) void tick().then(syncInteractiveTrigger);
+    if (interactiveChildren && tooltipId) {
+      void tick().then(() => {
+        syncInteractiveTrigger();
+        if (isOpen) requestAnimationFrame(updatePosition);
+      });
+    }
   });
 
   onMount(() => {

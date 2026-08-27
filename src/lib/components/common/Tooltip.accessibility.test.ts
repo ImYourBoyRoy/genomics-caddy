@@ -30,6 +30,9 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('interactiveChildren = false');
     expect(source).toContain('class:interactive-children={interactiveChildren}');
     expect(source).toContain('hostElement.querySelector<HTMLElement>');
+    expect(source).toContain('let triggerElement = $state<HTMLElement | undefined>(undefined);');
+    expect(source).toContain('triggerElement = nextTrigger;');
+    expect(source).toContain('if (isOpen) requestAnimationFrame(updatePosition);');
     expect(source).toContain("nextTrigger.setAttribute('aria-describedby', panelDescriptionId);");
     expect(source).toContain('{#if interactiveChildren}');
   });

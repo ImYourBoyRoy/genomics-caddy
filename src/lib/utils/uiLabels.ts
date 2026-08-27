@@ -20,5 +20,5 @@ export function formatGeneticSexLabel(value: string | null | undefined): string 
   if (/^male\b/i.test(label)) return 'Male';
   if (/^uncertain\b/i.test(label)) return 'Uncertain';
   if (/^unknown\b/i.test(label)) return 'Unknown';
-  return label;
+  return 'Unknown';
 }

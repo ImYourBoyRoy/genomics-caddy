@@ -16,5 +16,6 @@ describe('UI label normalization', () => {
     expect(formatGeneticSexLabel('Male')).toBe('Male');
     expect(formatGeneticSexLabel('Unknown (Y chromosome not observed)')).toBe('Unknown');
     expect(formatGeneticSexLabel('Uncertain (limited Y chromosome calls)')).toBe('Uncertain');
+    expect(formatGeneticSexLabel('XX chromosome pattern; no Y calls observed')).toBe('Unknown');
   });
 });

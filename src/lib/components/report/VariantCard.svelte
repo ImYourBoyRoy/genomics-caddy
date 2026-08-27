@@ -8,7 +8,7 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
-  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -69,28 +69,7 @@
   }
 
   function nextHelpfulStep(): string {
-    if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
-      return 'Consider clinical confirmation.';
-    }
-    if (marker.confirm_with.length > 0) {
-      return 'Review the suggested follow-up.';
-    }
-    if (marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk') {
-      return 'Compare with symptoms, history, and relevant labs.';
-    }
-    if (marker.severity_class === 'low_risk' || marker.effect_direction === 'risk') {
-      return 'Compare with symptoms, history, and relevant labs.';
-    }
-    switch (marker.effect_direction) {
-      case 'protective':
-        return 'Use this as background context with your health history.';
-      case 'context_dependent':
-        return 'Consider diet, medications, and lifestyle context.';
-      case 'trait':
-        return 'Compare this with your lived experience.';
-      default:
-        return 'Review the details for personal relevance.';
-    }
+    return getSimpleNextStep(marker);
   }
 
 </script>

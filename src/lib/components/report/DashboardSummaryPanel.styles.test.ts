@@ -51,8 +51,8 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('keeps repeated action steps concise instead of repeating warning copy', () => {
-    expect(source).toContain("return 'Consider clinical confirmation.'");
-    expect(source).toContain("return 'Compare with symptoms, history, and relevant labs.'");
+    expect(source).toContain('getSimpleNextStep');
+    expect(source).toContain('return marker ? getSimpleNextStep(marker) :');
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
   });
 

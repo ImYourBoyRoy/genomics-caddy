@@ -21,12 +21,8 @@ describe('VariantCard enrichment surface', () => {
   });
 
   it('keeps the Simple next-step copy compact', () => {
-    expect(source).toContain("return 'Consider clinical confirmation.'");
-    expect(source).toContain("return 'Review the suggested follow-up.'");
-    expect(source).toContain("return 'Compare with symptoms, history, and relevant labs.'");
-    expect(source).toContain("return 'Consider diet, medications, and lifestyle context.'");
-    expect(source).toContain("return 'Compare this with your lived experience.'");
-    expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
+    expect(source).toContain("import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep }");
+    expect(source).toContain('return getSimpleNextStep(marker);');
     expect(source).toContain('.simple-next-step {\n    display: block;');
   });
 

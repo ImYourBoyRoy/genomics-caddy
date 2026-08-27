@@ -9,7 +9,7 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
   import Tooltip from '../common/Tooltip.svelte';
 
   interface Props {
@@ -115,13 +115,8 @@
   }
 
   function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
-    if (finding.severity_class === 'confirmation_required' || finding.severity_class === 'high_risk') {
-      return 'Consider clinical confirmation.';
-    }
-    if (finding.severity_class === 'moderate_risk' || finding.severity_class === 'low_risk') {
-      return 'Compare with symptoms, history, and relevant labs.';
-    }
-    return 'Review the detailed finding for personal relevance.';
+    const marker = markerForFinding(finding);
+    return marker ? getSimpleNextStep(marker) : 'Review the detailed finding for personal relevance.';
   }
 
   function getSeverityLabel(sc: SeverityClass): string {

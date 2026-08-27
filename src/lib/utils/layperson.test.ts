@@ -4,6 +4,7 @@ import {
   DEFAULT_LAYPERSON_TRANSLATION,
   getCompactSimpleMeaning,
   getSimpleFindingTitle,
+  getSimpleNextStep,
   getLaypersonTranslation,
   LAYPERSON_MAP,
 } from './layperson';
@@ -162,5 +163,19 @@ describe('plain-English claim framing', () => {
     expect(getSimpleFindingTitle('FBN1/connective-tissue association marker')).toBe('connective-tissue association marker');
     expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('no-function allele component');
     expect(getSimpleFindingTitle('A biological pathway studied in genetic research.')).toBe('A biological pathway studied in genetic research.');
+  });
+
+  it('keeps dashboard and card next steps direction-aware and concise', () => {
+    const base = {
+      clinical_confirmation_required: false,
+      severity_class: 'benign' as const,
+      confirm_with: [],
+    };
+
+    expect(getSimpleNextStep({ ...base, effect_direction: 'context_dependent' })).toBe('Consider diet, medications, and lifestyle context.');
+    expect(getSimpleNextStep({ ...base, effect_direction: 'trait' })).toBe('Compare this with your lived experience.');
+    expect(getSimpleNextStep({ ...base, effect_direction: 'protective' })).toBe('Use this as background context with your health history.');
+    expect(getSimpleNextStep({ ...base, effect_direction: 'risk', severity_class: 'low_risk' })).toBe('Compare with symptoms, history, and relevant labs.');
+    expect(getSimpleNextStep({ ...base, effect_direction: 'trait', clinical_confirmation_required: true })).toBe('Consider clinical confirmation.');
   });
 });

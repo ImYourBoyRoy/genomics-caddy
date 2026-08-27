@@ -56,4 +56,14 @@ describe('report severity theme tokens', () => {
       expect(source).toContain(token);
     }
   });
+
+  it('keeps the empty-report state readable in every theme', () => {
+    const emptyReportBlock = source.match(/\.report-idle-empty \{[\s\S]*?\.report-idle-empty p \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(emptyReportBlock).toContain('border: 1px dashed var(--border-strong);');
+    expect(emptyReportBlock).toContain('background: var(--surface-subtle);');
+    expect(emptyReportBlock).toContain('color: var(--text-primary);');
+    expect(emptyReportBlock).toContain('color: var(--text-secondary);');
+    expect(emptyReportBlock).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

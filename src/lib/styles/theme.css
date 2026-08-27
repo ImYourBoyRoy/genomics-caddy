@@ -2072,15 +2072,15 @@ h1, h2, h3, h4, h5, h6 {
 .report-idle-empty {
   padding: 1.5rem 1.25rem;
   border-radius: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.35);
-  background: rgba(0, 0, 0, 0.22);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-subtle);
   text-align: center;
 }
 
 .report-idle-empty strong {
   display: block;
   margin-bottom: 0.35rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .report-idle-empty p {
@@ -2088,7 +2088,7 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 28rem;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .severity-glyph {

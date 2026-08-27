@@ -262,13 +262,9 @@
           <span>{nextHelpfulStep()}</span>
         </div>
 
-        <!-- Simple mode: plain context labels; exact catalog data stays in technical details. -->
-        <div class="simple-evidence-summary">
-          {#if (marker.sources?.length ?? 0) > 0 || (marker.db_enriched_sources?.length ?? 0) > 0}
-            <span class="evidence-count-pill">
-              📚 Evidence sources available
-            </span>
-          {/if}
+        <!-- Simple mode: only context labels stay visible; references remain a separate disclosure. -->
+        {#if marker.clinvar_significance || marker.population_rarity}
+        <div class="simple-context-summary" aria-label="Additional reference context">
           {#if marker.clinvar_significance}
             <span class="simple-context-pill">🏛️ Medical reference context available</span>
           {/if}
@@ -276,6 +272,7 @@
             <span class="simple-context-pill">🌍 Population context available</span>
           {/if}
         </div>
+        {/if}
         <details class="technical-details">
           <summary>Technical data</summary>
           <dl>
@@ -591,8 +588,8 @@
   }
   .gwas-count { opacity: 0.7; font-size: 0.7rem; margin-left: 0.3rem; }
 
-  /* Simple mode evidence summary */
-  .simple-evidence-summary {
+  /* Simple mode reference context summary */
+  .simple-context-summary {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
@@ -616,15 +613,6 @@
 
   .simple-meaning-block .layperson-text {
     color: var(--text-secondary);
-  }
-
-  .evidence-count-pill {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    padding: 0.15rem 0.4rem;
-    background: var(--surface-subtle);
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
   }
 
   .simple-context-pill {

@@ -137,6 +137,15 @@ function validateTooltipSnapshot(snapshot) {
   );
 }
 
+function validateFocusModeSnapshot(snapshot) {
+  const layout = layoutOf(snapshot);
+  assert(layout.focusMode === true, "Focus Report did not enter focus mode");
+  assert(layout.sidebarWidth === 0, "Focus Report did not hide the data sidebar");
+  assert(layout.mainContentWidth === layout.viewportWidth, "Focus Report did not use the available desktop width");
+  assert(layout.focusControlOverlapsContent === false, "Focus Report overlaps report content in focus mode");
+  assert(layout.overflowingElements.length === 0, "Focus mode introduced desktop overflow");
+}
+
 async function waitForSnapshot(predicate, label, waitMs = timeoutMs) {
   const started = Date.now();
   let lastError = null;
@@ -276,6 +285,11 @@ async function main() {
 
   await clickText("Simple");
   const restored = validateDesktopSnapshot(await waitForMode("simple"), "simple");
+
+  await clickText("Focus report");
+  validateFocusModeSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === true, "Focus Report mode"));
+  await clickText("Show data");
+  validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
 
   await clickText("Color theme");
   await selectTheme("Light mode", "light");

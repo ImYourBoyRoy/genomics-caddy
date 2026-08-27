@@ -96,12 +96,12 @@
 
   function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
     if (finding.severity_class === 'confirmation_required' || finding.severity_class === 'high_risk') {
-      return 'Ask a qualified clinician whether medical-grade confirmation or follow-up is appropriate.';
+      return 'Consider clinical confirmation.';
     }
     if (finding.severity_class === 'moderate_risk' || finding.severity_class === 'low_risk') {
-      return 'Review the context, symptoms, and any relevant labs with a clinician before acting.';
+      return 'Compare with symptoms, history, and relevant labs.';
     }
-    return 'Open the detailed finding and compare it with your symptoms, goals, and history.';
+    return 'Review the detailed finding for personal relevance.';
   }
 
   function getSeverityLabel(sc: SeverityClass): string {

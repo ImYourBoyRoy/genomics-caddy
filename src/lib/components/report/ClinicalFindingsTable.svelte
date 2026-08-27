@@ -22,12 +22,12 @@
 
   function nextHelpfulStep(marker: EvaluatedMarker): string {
     if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
-      return 'Discuss medical-grade confirmation before making health decisions.';
+      return 'Review need for clinical confirmation.';
     }
     if (marker.confirm_with.length > 0) {
-      return 'Review the listed clinical follow-up with the care team.';
+      return 'Review the listed follow-up.';
     }
-    return 'Interpret with phenotype, history, and current clinical guidance.';
+    return 'Interpret with history and current guidance.';
   }
 
   function isHighlighted(marker: EvaluatedMarker): boolean {

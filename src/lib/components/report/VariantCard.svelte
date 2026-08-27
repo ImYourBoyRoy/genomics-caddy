@@ -70,12 +70,12 @@
 
   function nextHelpfulStep(): string {
     if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
-      return 'Ask a qualified clinician whether medical-grade confirmation is appropriate.';
+      return 'Consider clinical confirmation.';
     }
     if (marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk') {
-      return 'Review this context alongside symptoms, history, and relevant labs before acting.';
+      return 'Compare with symptoms, history, and relevant labs.';
     }
-    return 'Review the details and decide whether this research context is relevant to your goals.';
+    return 'Review the details for personal relevance.';
   }
 
 </script>
@@ -647,10 +647,8 @@
   }
 
   .simple-next-step {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.7rem 0.8rem;
+    display: block;
+    padding: 0.45rem 0.6rem;
     border-radius: 0.5rem;
     background: var(--accent-soft);
     color: var(--text-secondary);
@@ -660,6 +658,7 @@
 
   .simple-next-step strong {
     color: var(--text-primary);
+    margin-right: 0.3rem;
   }
 
   .technical-details {

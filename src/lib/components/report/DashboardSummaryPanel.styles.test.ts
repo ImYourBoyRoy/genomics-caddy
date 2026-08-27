@@ -49,4 +49,10 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Grouped by priority for clinician discussion; seek care promptly for acute symptoms.');
     expect(source).not.toContain('{Math.min(plan.topFindings.length, 5)} of 5');
   });
+
+  it('keeps repeated action steps concise instead of repeating warning copy', () => {
+    expect(source).toContain("return 'Consider clinical confirmation.'");
+    expect(source).toContain("return 'Compare with symptoms, history, and relevant labs.'");
+    expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
+  });
 });

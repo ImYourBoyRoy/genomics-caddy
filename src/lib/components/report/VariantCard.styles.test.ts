@@ -19,4 +19,10 @@ describe('VariantCard enrichment surface', () => {
   it('does not reintroduce raw color literals in the enrichment block', () => {
     expect(enrichmentStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('keeps the Simple next-step copy compact', () => {
+    expect(source).toContain("return 'Consider clinical confirmation.'");
+    expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
+    expect(source).toContain('.simple-next-step {\n    display: block;');
+  });
 });

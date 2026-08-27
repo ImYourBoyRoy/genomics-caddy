@@ -40,4 +40,16 @@ describe('report card wrapping', () => {
     expect(filter).toContain('border: 1px solid var(--border-color);');
     expect(filter).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('keeps shared error surfaces on semantic danger tokens', () => {
+    const errorCard = source.match(/\.error-card \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const errorHeading = source.match(/\.error-header h4 \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const errorDetails = source.match(/\.error-details \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(errorCard).toContain('border: 1px solid var(--status-danger-border);');
+    expect(errorCard).toContain('background: var(--status-danger-bg);');
+    expect(errorHeading).toContain('color: var(--status-danger-strong-text);');
+    expect(errorDetails).toContain('color: var(--status-danger-text);');
+    expect(`${errorCard}${errorHeading}${errorDetails}`).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

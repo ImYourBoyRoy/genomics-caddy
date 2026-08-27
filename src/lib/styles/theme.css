@@ -1801,8 +1801,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===== Error Card ===== */
 .error-card {
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid var(--status-danger-border);
+  background: var(--status-danger-bg);
   padding: 16px;
   margin-bottom: 16px;
   border-radius: 8px;
@@ -1818,13 +1818,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 .error-header h4 {
   margin: 0;
-  color: #fca5a5;
+  color: var(--status-danger-strong-text);
   font-size: 0.95rem;
 }
 .error-details {
   margin: 0;
   font-size: 0.82rem;
-  color: #fecaca;
+  color: var(--status-danger-text);
   line-height: 1.4;
 }
 

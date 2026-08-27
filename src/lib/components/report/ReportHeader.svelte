@@ -146,9 +146,9 @@
   }
 
   .overall-summary-badge {
-    background: rgba(99, 102, 241, 0.08);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    color: #a5b4fc;
+    background: var(--status-accent-bg);
+    border: 1px solid var(--status-accent-border);
+    color: var(--status-accent-text);
     font-size: 0.75rem;
     padding: 0.25rem 0.6rem;
     border-radius: 9999px;

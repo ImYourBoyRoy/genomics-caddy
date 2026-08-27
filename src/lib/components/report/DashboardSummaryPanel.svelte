@@ -1271,13 +1271,16 @@
     outline-offset: -2px;
   }
   .card-header-title {
+    min-width: 0;
     margin: 0;
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: var(--text-primary);
+    overflow-wrap: anywhere;
   }
   .chevron {
+    flex: 0 0 auto;
     font-size: 0.75rem;
     opacity: 0.6;
   }

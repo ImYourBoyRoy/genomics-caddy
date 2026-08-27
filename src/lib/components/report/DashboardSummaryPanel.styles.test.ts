@@ -63,6 +63,15 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(styleBlock).toContain('.card-header-heading {');
   });
 
+  it('bounds long guidance titles beside the collapse control', () => {
+    const title = styleBlock.match(/\.card-header-title \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const chevron = styleBlock.match(/\.chevron \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(title).toContain('min-width: 0;');
+    expect(title).toContain('overflow-wrap: anywhere;');
+    expect(chevron).toContain('flex: 0 0 auto;');
+  });
+
   it('provides a compact health-area index that targets report section headers', () => {
     expect(source).toContain('Health areas');
     expect(source).toContain('healthAreaSections');

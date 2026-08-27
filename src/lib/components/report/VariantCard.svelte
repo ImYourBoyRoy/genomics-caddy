@@ -493,15 +493,39 @@
     letter-spacing: 0.01em;
   }
 
-  .clinvar-pathogenic      { background: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.3); }
-  .clinvar-likely-pathogenic { background: rgba(234, 88, 12, 0.12); color: #f97316; border: 1px solid rgba(234, 88, 12, 0.25); }
-  .clinvar-benign          { background: rgba(22, 163, 74, 0.12); color: #22c55e; border: 1px solid rgba(22, 163, 74, 0.25); }
-  .clinvar-uncertain       { background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); }
-  .clinvar-other           { background: rgba(100, 116, 139, 0.12); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.25); }
+  .clinvar-pathogenic {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-strong-text);
+    border: 1px solid var(--status-danger-border);
+  }
+  .clinvar-likely-pathogenic {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border: 1px solid var(--status-warning-border);
+  }
+  .clinvar-benign {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
+  }
+  .clinvar-uncertain {
+    background: var(--status-accent-bg);
+    color: var(--status-accent-text);
+    border: 1px solid var(--status-accent-border);
+  }
+  .clinvar-other {
+    background: var(--report-severity-neutral-bg);
+    color: var(--report-severity-neutral-text);
+    border: 1px solid var(--report-severity-neutral-border);
+  }
 
   .review-status { opacity: 0.75; font-weight: 400; font-size: 0.68rem; }
 
-  .population-chip { background: rgba(14, 165, 233, 0.1); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.25); }
+  .population-chip {
+    background: var(--status-info-soft-bg);
+    color: var(--status-info-soft-text);
+    border: 1px solid var(--status-info-soft-border);
+  }
 
   .pharmgkb-chip,
   .clingen-chip,
@@ -515,35 +539,35 @@
   }
 
   .pharmgkb-chip {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
+    border: 1px solid var(--status-info-border);
   }
 
   .clingen-chip {
-    background: rgba(139, 92, 246, 0.15);
-    color: #a78bfa;
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--status-accent-bg);
+    color: var(--status-accent-text);
+    border: 1px solid var(--status-accent-border);
   }
 
   .mane-chip {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
   }
 
   .gwas-detail {
     margin: 0.4rem 0;
     padding: 0.3rem 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--report-explainer-bg);
+    border: 1px solid var(--report-explainer-border);
     border-radius: 6px;
     font-size: 0.75rem;
   }
   .gwas-detail summary {
     cursor: pointer;
     font-weight: 600;
-    color: #a78bfa;
+    color: var(--status-accent-text);
     user-select: none;
     list-style: none;
     display: flex;
@@ -551,7 +575,11 @@
     gap: 0.3rem;
   }
   .gwas-detail summary::-webkit-details-marker { display: none; }
-  .gwas-body { padding: 0.4rem 0 0.1rem 0.25rem; line-height: 1.6; color: #cbd5e1; }
+  .gwas-body {
+    padding: 0.4rem 0 0.1rem 0.25rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
   .gwas-count { opacity: 0.7; font-size: 0.7rem; margin-left: 0.3rem; }
 
   /* Simple mode evidence summary */

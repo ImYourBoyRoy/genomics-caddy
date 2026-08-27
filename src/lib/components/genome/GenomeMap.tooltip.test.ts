@@ -19,4 +19,13 @@ describe('chromosome map tooltip surfaces', () => {
     expect(source).toContain('aria-label={`Chromosome ${chr}; ${formatMb(CHR_LENGTHS[chr])}; ${count.toLocaleString()} SNPs`}');
     expect(source).not.toContain('title={`Chr ${chr}');
   });
+
+  it('uses the shared collision-aware tooltip for variant pins', () => {
+    expect(source).toContain('interactiveChildren');
+    expect(source).toContain('interactiveClickBehavior="dismiss"');
+    expect(source).toContain('description={`Chromosome ${pin.chr} finding: ${severityLabel(pin.severity)}. Select to open this finding in the report.`}');
+    expect(source).not.toContain('hoveredPin');
+    expect(source).not.toContain('class="map-tooltip"');
+    expect(styles).not.toContain('.map-tooltip');
+  });
 });

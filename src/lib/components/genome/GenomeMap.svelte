@@ -53,15 +53,6 @@
   let comparisonData = $state<ComparisonRow[]>([]);
   let isComparing = $state(false);
 
-  interface HoveredPin {
-    rsid: string;
-    gene: string;
-    severity: string;
-    x: number;
-    y: number;
-  }
-  let hoveredPin = $state<HoveredPin | null>(null);
-
   const maxChrLen = CHR_LENGTHS["1"];
 
   let maxCount = $derived(
@@ -308,25 +299,6 @@
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
-  function showTooltip(pin: RiskPin, e: Event) {
-    const el = e.currentTarget as HTMLElement | null;
-    if (!el) return;
-    const mapContainer = document.querySelector(".map-container");
-    if (!mapContainer) return;
-    const rect = el.getBoundingClientRect();
-    const parentRect = mapContainer.getBoundingClientRect();
-    hoveredPin = {
-      rsid: pin.rsid,
-      gene: pin.gene,
-      severity: pin.severity,
-      x: rect.left - parentRect.left + rect.width / 2,
-      y: rect.top - parentRect.top - 12,
-    };
-  }
-
-  function hideTooltip() {
-    hoveredPin = null;
-  }
 </script>
 
 <div class="card map-container">
@@ -571,21 +543,25 @@
 
                   {#each chrPins as pin (`${pin.rsid}:${pin.pos}`)}
                     {@const pinPosPct = (pin.pos / CHR_LENGTHS[chr]) * 100}
-                    <button
-                      type="button"
-                      class="variant-pin {pin.severity}"
-                      class:pin-focused={focusRsid && pin.rsid.toLowerCase() === focusRsid.toLowerCase()}
-                      style={`left: ${pinPosPct}%`}
-                      data-rsid={pin.rsid.toLowerCase()}
-                      aria-label="{pin.gene} {pin.rsid} — {severityLabel(pin.severity)}"
-                      onclick={() => focusPin(pin)}
-                      onmouseenter={(e) => showTooltip(pin, e)}
-                      onmouseleave={hideTooltip}
-                      onfocus={(e) => showTooltip(pin, e)}
-                      onblur={hideTooltip}
+                    <Tooltip
+                      label={`${pin.gene} ${pin.rsid}`}
+                      description={`Chromosome ${pin.chr} finding: ${severityLabel(pin.severity)}. Select to open this finding in the report.`}
+                      placement="top"
+                      interactiveChildren
+                      interactiveClickBehavior="dismiss"
                     >
-                      <span class="pin-glyph" aria-hidden="true">{pinGlyph(pin.severity)}</span>
-                    </button>
+                      <button
+                        type="button"
+                        class="variant-pin {pin.severity}"
+                        class:pin-focused={focusRsid && pin.rsid.toLowerCase() === focusRsid.toLowerCase()}
+                        style={`left: ${pinPosPct}%`}
+                        data-rsid={pin.rsid.toLowerCase()}
+                        aria-label="{pin.gene} {pin.rsid} — {severityLabel(pin.severity)}"
+                        onclick={() => focusPin(pin)}
+                      >
+                        <span class="pin-glyph" aria-hidden="true">{pinGlyph(pin.severity)}</span>
+                      </button>
+                    </Tooltip>
                   {/each}
                 </div>
               </div>
@@ -641,14 +617,4 @@
     </div>
   {/if}
 
-  {#if hoveredPin}
-    <div class="map-tooltip" style={`left: ${hoveredPin.x}px; top: ${hoveredPin.y}px`}>
-      <span class="tooltip-title">{hoveredPin.gene}</span>
-      <span class="tooltip-sub font-mono">{hoveredPin.rsid}</span>
-      <span class="tooltip-badge {hoveredPin.severity}">
-        <span aria-hidden="true">{pinGlyph(hoveredPin.severity)}</span>
-        {severityLabel(hoveredPin.severity)}
-      </span>
-    </div>
-  {/if}
 </div>

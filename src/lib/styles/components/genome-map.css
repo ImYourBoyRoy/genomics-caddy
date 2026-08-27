@@ -893,62 +893,6 @@
   outline-offset: 2px;
 }
 
-.map-tooltip {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  background: rgba(2, 6, 23, 0.96);
-  border: 1px solid rgba(94, 234, 212, 0.28);
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-  z-index: 100;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  animation: mapFadeIn 0.12s ease-out;
-  min-width: 7rem;
-}
-
-.tooltip-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #f8fafc;
-}
-
-.tooltip-sub {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-}
-
-.tooltip-badge {
-  font-size: 0.62rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  text-transform: capitalize;
-  font-weight: 700;
-  width: fit-content;
-  margin-top: 0.25rem;
-}
-
-.tooltip-badge.high_risk {
-  background: rgba(255, 138, 128, 0.18);
-  color: #fecaca; /* AA on dark tooltip */
-}
-.tooltip-badge.moderate_risk {
-  background: rgba(251, 191, 36, 0.18);
-  color: #fde68a;
-}
-.tooltip-badge.confirmation_required {
-  background: rgba(56, 189, 248, 0.18);
-  color: #bae6fd;
-  border: 1px solid rgba(56, 189, 248, 0.45);
-}
-.tooltip-badge.vector_promoted {
-  background: rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
-}
-
 @keyframes mapFadeIn {
   from {
     opacity: 0;
@@ -996,7 +940,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .chr-row,
-  .map-tooltip,
   .variant-pin.pin-focused,
   .comparison-overlay {
     animation: none;

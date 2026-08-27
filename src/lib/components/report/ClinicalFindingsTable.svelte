@@ -332,10 +332,12 @@
 
     .clinical-details {
       min-width: 0;
+      max-width: 100%;
     }
 
     .clinical-details dl {
       min-width: 0;
+      max-width: 100%;
     }
 
     .clinical-details dl > div {

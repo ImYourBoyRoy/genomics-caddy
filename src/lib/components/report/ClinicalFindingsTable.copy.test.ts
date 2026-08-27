@@ -24,4 +24,10 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('.clinical-findings-table {\n      min-width: 0;');
     expect(source).toContain('.clinical-findings-table thead {');
   });
+
+  it('lets expanded technical details fit inside narrow stacked rows', () => {
+    expect(source).toContain('.clinical-details {\n      min-width: 0;\n      max-width: 100%;');
+    expect(source).toContain('.clinical-details dl {\n      min-width: 0;\n      max-width: 100%;');
+    expect(source).toContain('grid-template-columns: minmax(6rem, 0.45fr) minmax(0, 1fr);');
+  });
 });

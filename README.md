@@ -137,6 +137,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Marker-card hover and bottom-left theme-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
 * Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent.
 * Sidebar download/import progress uses one reusable, labelled progress surface with clamped determinate values and an explicit indeterminate state for streaming or preparation phases.
+* Shared tooltip panels cap their height to the viewport and scroll locally when explanations are long, so edge-positioned help remains reachable instead of being clipped.
 * Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
 * The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
 * The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.

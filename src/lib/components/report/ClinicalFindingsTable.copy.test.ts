@@ -47,4 +47,9 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('<dt>Clinician-entered information</dt>');
     expect(source).toContain('.clinical-provenance');
   });
+
+  it('keeps the clinical table markup structurally balanced', () => {
+    expect(source.match(/<tbody>/g)).toHaveLength(1);
+    expect(source.match(/<\/tbody>/g)).toHaveLength(1);
+  });
 });

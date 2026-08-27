@@ -85,13 +85,16 @@ const sample: GenomeSample = {
 
 describe('audience-specific report exports', () => {
   it('keeps personal exports plain-language and free of raw or medical fallback text', () => {
+    const femaleSample = { ...sample, genetic_sex: 'Female-like (XX chromosome pattern; no Y calls observed)' };
     const output = buildReportAudienceMarkdown({
       audience: 'personal',
       report: report([marker()]),
-      sample,
+      sample: femaleSample,
     });
 
     expect(output).toContain('# Personal Simple Genomics Report');
+    expect(output).toContain('- Sex: Female');
+    expect(output).not.toContain('Female-like');
     expect(output).toContain('This DNA result is associated with a research finding');
     expect(output).not.toContain('SYNTHETIC_CALL');
     expect(output).not.toContain('Technical impact text');

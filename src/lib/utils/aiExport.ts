@@ -4,6 +4,7 @@ import { parseThinking } from "./chatParser";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { populatedCycleDiaryFields } from "./cycleDiary";
 import { populatedReproductiveIntake } from "./reproductiveIntake";
+import { formatGeneticSexLabel } from "./uiLabels";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -16,7 +17,7 @@ export function buildStandardMarkdown(
 ): string {
   let md = `# Genomics Caddy AI - Consultation Export\n`;
   md += `*Sample Name:* ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `*Chromosome-call context:* ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
+  md += `*Sex:* ${selectedSample ? formatGeneticSexLabel(selectedSample.genetic_sex) : "Unknown"}\n`;
   md += `*Date:* ${new Date().toLocaleString()}\n`;
   md += `*Model:* ${selectedModel}\n\n`;
   md += `---\n\n`;
@@ -58,7 +59,7 @@ export function buildClinicalHandoffMarkdown(
   let md = `# Genomics Caddy AI - Clinical Handoff & Biohacking Summary\n`;
   md += `## Patient & Metadata\n`;
   md += `* **Patient Name:** ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `* **Chromosome-call context:** ${selectedSample ? selectedSample.genetic_sex : "N/A"}\n`;
+  md += `* **Sex:** ${selectedSample ? formatGeneticSexLabel(selectedSample.genetic_sex) : "Unknown"}\n`;
   md += `* **Date of Report:** ${new Date().toLocaleString()}\n`;
   md += `* **Inference Model:** ${selectedModel}\n\n`;
   md += `---\n\n`;

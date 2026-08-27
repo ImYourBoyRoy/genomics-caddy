@@ -7,6 +7,7 @@ import type {
 } from '../types/genomics';
 import { getScopeLabel, getTierInfo } from './evidence';
 import { getLaypersonTranslation, getSimpleFindingTitle } from './layperson';
+import { formatGeneticSexLabel } from './uiLabels';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import { populatedReproductiveIntake } from './reproductiveIntake';
 import { selectedReproductiveContextOption } from './reproductiveContext';
@@ -315,7 +316,7 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       options.audience === 'clinician' ? '# Clinician Handoff — Genomics Report' : '# AI Review — Genomics Report',
     '',
     `- Profile: ${clean(options.sample.name)}`,
-    `- Chromosome-call context: ${clean(options.sample.genetic_sex)}`,
+    `- Sex: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
     `- Report generated: ${generatedAt}`,
     '- Data source: local consumer-array interpretation; not a clinical laboratory report',
     '',

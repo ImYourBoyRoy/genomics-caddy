@@ -1,0 +1,18 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const source = readFileSync(resolve(process.cwd(), 'src/lib/components/common/ThemeToggle.svelte'), 'utf8');
+const narrowStyles = source.slice(source.indexOf('@media (max-width: 900px)'), source.indexOf(':global(.app-layout.focus-mode)'));
+
+describe('ThemeToggle responsive placement', () => {
+  it('moves the fixed control out of the scrollable content on narrow layouts', () => {
+    expect(narrowStyles).toContain('top: 0.75rem');
+    expect(narrowStyles).toContain('bottom: auto');
+  });
+
+  it('opens the theme menu below the control when it is placed at the top', () => {
+    expect(narrowStyles).toContain('top: calc(100% + 0.4rem)');
+    expect(narrowStyles).toContain('.theme-options');
+  });
+});

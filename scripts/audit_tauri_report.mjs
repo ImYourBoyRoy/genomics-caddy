@@ -65,6 +65,10 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     );
   }
   assert(layout.overflowingElements.length === 0, "Desktop bridge reported overflowing elements");
+  assert(layout.focusControlOverlapsContent === false, "Focus Report control overlaps the first content block");
+  if (layout.focusControlBottom !== null && layout.firstContentTop !== null) {
+    assert(layout.focusControlBottom <= layout.firstContentTop, "Focus Report control is not above the first content block");
+  }
   if (layout.markerGridColumnCount !== null) {
     assert(layout.markerGridColumnCount <= 2, "Report finding grid exceeds the two-column desktop contract");
   }
@@ -159,6 +163,36 @@ async function ensurePopulatedSection() {
   return snapshot;
 }
 
+async function ensureCollapsedSection() {
+  const snapshot = await request("/ui/snapshot");
+  if (snapshot.layout?.markerCardCount === 0) return;
+
+  await request("/ui/clickSection", {
+    method: "POST",
+    body: JSON.stringify({ section: "Pharmacogenomics (PGx)" }),
+  });
+  await waitForSnapshot(
+    (candidate) => candidate.layout?.activePresentationMode === "simple" && candidate.layout.markerCardCount === 0,
+    "the populated section to collapse",
+    5_000,
+  );
+}
+
+async function assertClinicalCollapsedHint() {
+  await clickText("Clinical");
+  await waitForSnapshot(
+    (snapshot) => snapshot.layout?.activePresentationMode === "clinical" && snapshot.layout.clinicalTableCount === 0,
+    "Clinical mode with collapsed sections",
+  );
+  const result = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Clinical view is ready." }),
+  });
+  assert(result?.ok === true && result.count > 0, "Collapsed Clinical mode does not explain how to reveal findings");
+  await clickText("Simple");
+  await waitForMode("simple");
+}
+
 async function main() {
   let ready = await waitForSnapshot(
     (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode,
@@ -173,6 +207,8 @@ async function main() {
   const modes = {};
   validateDesktopSnapshot(ready, "simple");
   await assertNoRedundantPublicCopy();
+  await ensureCollapsedSection();
+  await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
 
   await clickText("Sex estimate from DNA");

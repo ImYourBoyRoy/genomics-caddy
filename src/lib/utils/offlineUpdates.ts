@@ -24,7 +24,9 @@ export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined
   const out: OfflineUpdateItem[] = [];
   for (const tier of status.tiers) {
     for (const asset of tier.assets) {
-      if (!asset.update_available) continue;
+      // A remote flag only represents an update for an asset that is already
+      // installed locally. Missing assets belong in the download flow.
+      if (!asset.local_present || !asset.update_available) continue;
       out.push(toUpdateItem(asset));
     }
   }

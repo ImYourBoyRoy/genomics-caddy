@@ -53,4 +53,11 @@ describe('Simple-first report controls', () => {
     expect(summaryIndex).toBeGreaterThan(reportHeaderIndex);
     expect(heroIndex).toBeGreaterThan(summaryIndex);
   });
+
+  it('explains how to reveal Clinical tables when report sections are collapsed', () => {
+    expect(source).toContain("let clinicalSectionsExpanded = $derived(");
+    expect(source).toContain('Clinical view is ready.');
+    expect(source).toContain('Expand a health area below, or use “Expand all” under Filters &amp; ordering');
+    expect(source).toContain('class="clinical-empty-hint" role="status"');
+  });
 });

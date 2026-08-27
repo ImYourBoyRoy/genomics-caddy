@@ -149,6 +149,15 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(labCard).toContain('max-width: 100%;');
   });
 
+  it('keeps the primary action queue readable without breaking its one-column priority order', () => {
+    const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(actionQueue).toContain('width: min(100%, 72rem);');
+    expect(actionQueue).toContain('box-sizing: border-box;');
+    expect(source).toContain('<div class="action-queue-list">');
+    expect(actionQueue).not.toContain('grid-template-columns:');
+  });
+
   it('keeps context selector labels short while retaining their stable IDs', () => {
     expect(source).toContain("const contextOptionLabels: Record<string, string>");
     expect(source).toContain("menstrual_cycle: 'Menstrual cycle / PMS'");

@@ -108,7 +108,24 @@
   >
     {@render sidebar()}
   </div>
-  {@render children()}
+  <div class="main-slot">
+    <div class="focus-toolbar no-print">
+      <div class="focus-toolbar-inner">
+        <button
+          type="button"
+          class="focus-toggle"
+          aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
+          aria-controls="data-sidebar"
+          aria-pressed={focusMode}
+          onclick={() => focusMode = !focusMode}
+        >
+          {focusMode ? '☰ Show data' : '⤢ Focus report'}
+        </button>
+        <ThemeToggle />
+      </div>
+    </div>
+    {@render children()}
+  </div>
   {#if isNarrowViewport && mobileSidebarOpen}
     <button
       type="button"
@@ -118,16 +135,6 @@
       onclick={closeMobileSidebar}
     ></button>
   {/if}
-  <button
-    type="button"
-    class="focus-toggle no-print"
-    aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
-    aria-controls="data-sidebar"
-    aria-pressed={focusMode}
-    onclick={() => focusMode = !focusMode}
-  >
-    {focusMode ? '☰ Show data' : '⤢ Focus report'}
-  </button>
   {#if isNarrowViewport}
     <button
       type="button"
@@ -141,5 +148,4 @@
       {mobileSidebarOpen ? '× Close data' : '☰ Data controls'}
     </button>
   {/if}
-  <ThemeToggle />
 </div>

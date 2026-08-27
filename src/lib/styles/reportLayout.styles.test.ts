@@ -67,14 +67,14 @@ describe('report card wrapping', () => {
     expect(severity).toContain('overflow-wrap: anywhere;');
   });
 
-  it('allows report header health statistics to wrap on narrow screens', () => {
-    const summary = source.match(/\.health-summary-row \{[\s\S]*?\n\}/)?.[0] ?? '';
-    const stat = source.match(/\.health-stat \{[\s\S]*?\n\}/)?.[0] ?? '';
-    const value = source.match(/\.health-stat \.val \{[\s\S]*?\n\}/)?.[0] ?? '';
+  it('keeps the desktop Focus report control in normal layout flow', () => {
+    const toolbar = source.match(/\.focus-toolbar \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
 
-    expect(summary).toContain('flex-wrap: wrap;');
-    expect(stat).toContain('min-width: 0;');
-    expect(value).toContain('overflow-wrap: anywhere;');
+    expect(toolbar).toContain('flex: 0 0 auto;');
+    expect(toolbar).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 0;');
+    expect(focusToggle).toContain('position: static;');
+    expect(focusToggle).not.toContain('position: fixed;');
   });
 
   it('keeps report filter controls on the active theme border token', () => {

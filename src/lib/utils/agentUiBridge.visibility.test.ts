@@ -49,4 +49,12 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('maxRightOverflow');
     expect(source).not.toContain('panel.textContent');
   });
+
+  it('exposes aggregate focus geometry without exposing report content', () => {
+    expect(source).toContain('focusControlOverlapsContent: boolean;');
+    expect(source).toContain('focusControlBottom: number | null;');
+    expect(source).toContain('firstContentTop: number | null;');
+    expect(source).toContain("document.querySelector<HTMLElement>('.focus-toggle')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.main-content > *')");
+  });
 });

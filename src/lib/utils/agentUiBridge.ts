@@ -35,6 +35,9 @@ export interface AgentUiLayoutMetrics {
   clinicalTableCount: number;
   activePresentationMode: 'simple' | 'clinical' | 'compare' | null;
   focusMode: boolean;
+  focusControlOverlapsContent: boolean;
+  focusControlBottom: number | null;
+  firstContentTop: number | null;
   overflowingElements: Array<{
     tag: string;
     classes: string[];
@@ -229,6 +232,15 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
+  const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
+  const firstContent = document.querySelector<HTMLElement>('.main-content > *');
+  const focusRect = focusControl?.getBoundingClientRect();
+  const contentRect = firstContent?.getBoundingClientRect();
+  const focusControlOverlapsContent = !!focusRect && !!contentRect
+    && focusRect.left < contentRect.right
+    && focusRect.right > contentRect.left
+    && focusRect.top < contentRect.bottom
+    && focusRect.bottom > contentRect.top;
 
   return {
     viewportWidth: window.innerWidth,
@@ -243,6 +255,9 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
     activePresentationMode: getActivePresentationMode(),
     focusMode: document.querySelector('.app-layout.focus-mode') !== null,
+    focusControlOverlapsContent,
+    focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
+    firstContentTop: contentRect ? Math.round(contentRect.top) : null,
     overflowingElements: collectOverflowingElements(mainContent),
   };
 }

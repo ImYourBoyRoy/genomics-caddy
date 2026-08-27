@@ -1,8 +1,6 @@
 <!-- ./src/lib/components/report/ReportHeader.svelte -->
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
-  import Tooltip from '../common/Tooltip.svelte';
-  import { formatGeneticSexLabel } from '../../utils/uiLabels';
 
   /*
   Module Docstring:
@@ -11,14 +9,13 @@
   - Display progress gauge with the risk-direction-only signal score.
   - Add explanatory subtitle so users understand what the score represents.
   - Summarize basic user biological statistics.
-  Key Inputs: generatedReport, geneticSex, foundMarkersCount, totalMarkersChecked.
+  Key Inputs: generatedReport, foundMarkersCount, totalMarkersChecked.
   Key Outputs: Visual report header element.
   Operational Notes: Score reflects risk-direction markers only. Protective/trait excluded.
   */
 
   interface Props {
     generatedReport: GeneratedReport;
-    geneticSex: string;
     foundMarkersCount: number;
     totalMarkersChecked: number;
     presentationMode?: "simple" | "clinical" | "compare";
@@ -26,7 +23,6 @@
 
   let {
     generatedReport,
-    geneticSex,
     foundMarkersCount,
     totalMarkersChecked,
     presentationMode = "simple"
@@ -88,21 +84,6 @@
     </div>
     <p>{generatedReport.description}</p>
 
-    <div class="health-summary-row">
-      <div class="health-stat">
-        <span class="lbl">
-          Sex
-          <Tooltip
-            label="Sex estimate from DNA"
-            description="Based on X/Y chromosome call coverage. This is not gender identity, anatomy, fertility, pregnancy, or hormone status."
-          >
-            <span class="report-info-icon" aria-label="Explain sex estimate from DNA">ⓘ</span>
-          </Tooltip>
-        </span>
-        <span class="val text-accent">{formatGeneticSexLabel(geneticSex)}</span>
-      </div>
-    </div>
-
     <details class="technical-score-details">
       <summary>Technical coverage metric</summary>
       <p>
@@ -146,16 +127,6 @@
 
   .quality-note {
     margin-top: 0.25rem;
-  }
-
-  .report-info-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.1rem;
-    min-height: 1.1rem;
-    color: var(--text-secondary);
-    font-size: 0.72rem;
   }
 
   .header-title-row {

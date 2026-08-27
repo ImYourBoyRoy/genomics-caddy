@@ -31,4 +31,14 @@ describe('responsive data-sidebar access', () => {
     expect(theme).toContain('.mobile-sidebar-backdrop {');
     expect(theme).toContain('min-height: 44px;');
   });
+
+  it('keeps the desktop focus control in a reserved toolbar row', () => {
+    expect(appShell).toContain('<div class="main-slot">');
+    expect(appShell).toContain('<div class="focus-toolbar no-print">');
+    expect(appShell).toContain('class="focus-toggle"');
+    expect(appShell).toContain('<ThemeToggle />');
+    expect(theme).toContain('.focus-toolbar-inner {');
+    expect(theme).toContain('justify-content: space-between;');
+    expect(theme).toContain('position: static;');
+  });
 });

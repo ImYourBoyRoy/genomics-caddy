@@ -239,10 +239,6 @@ import { onMount, onDestroy } from 'svelte';
           ? `${offlineStatus.total_updates_available} resource update(s) available.`
           : 'Local resources are current.',
       );
-      // The backend fires network probes in the background after returning
-      // the local inventory. Re-poll after 3 s to pick up accurate remote
-      // sizes and update badges without making the user wait for them.
-      setTimeout(refreshStatusInBackground, 3000);
     } catch (err) {
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
@@ -252,7 +248,7 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
-  /** Refresh inventory without blocking UI; never await inside sync finally. */
+  /** Refresh inventory asynchronously; the backend waits for an authoritative probe. */
   function refreshStatusInBackground() {
     setUpdateState('checking', 'Refreshing resource status…');
     void checkOfflineDataUpdates()
@@ -497,7 +493,7 @@ import { onMount, onDestroy } from 'svelte';
       // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
       clearAssetProgress(assetId);
-      // Inventory refresh is background-only — never block the Syncing… clear.
+      // Inventory refresh is asynchronous — never block the Syncing… clear.
       refreshStatusInBackground();
     }
   }

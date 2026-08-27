@@ -800,7 +800,9 @@
   .action-queue-list {
     display: grid;
     gap: 0.75rem;
+    width: min(100%, 72rem);
     padding-top: 1rem;
+    box-sizing: border-box;
   }
 
   .action-queue-item {

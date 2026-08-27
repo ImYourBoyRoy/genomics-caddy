@@ -11,10 +11,14 @@
   let optionsElement = $state<HTMLDivElement | undefined>(undefined);
 
   const themeOptions: Array<{ id: ThemeMode; label: string; icon: string }> = [
-    { id: 'system', label: 'System', icon: '◐' },
-    { id: 'light', label: 'Light', icon: '☀️' },
-    { id: 'dark', label: 'Dark', icon: '🌙' },
+    { id: 'system', label: 'System default', icon: '◐' },
+    { id: 'light', label: 'Light mode', icon: '☀️' },
+    { id: 'dark', label: 'Dark mode', icon: '🌙' },
   ];
+
+  function themeModeLabel(value: ThemeMode): string {
+    return themeOptions.find((option) => option.id === value)?.label ?? 'System default';
+  }
 
   function readStoredTheme(): ThemeMode {
     try {
@@ -112,14 +116,14 @@
     aria-expanded={isOpen}
     aria-controls="theme-options"
     aria-haspopup="menu"
-    aria-label={`Theme: ${mode}`}
+    aria-label={`Color theme: ${themeModeLabel(mode)}`}
     onclick={toggleMenu}
   >
     <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
-    <span>Theme</span>
+    <span>{themeModeLabel(mode)}</span>
   </button>
   {#if isOpen}
-    <div id="theme-options" class="theme-options" role="menu" tabindex="-1" aria-label="Theme preference" aria-orientation="vertical" bind:this={optionsElement} onkeydown={handleMenuKeydown}>
+    <div id="theme-options" class="theme-options" role="menu" tabindex="-1" aria-label="Color theme preference" aria-orientation="vertical" bind:this={optionsElement} onkeydown={handleMenuKeydown}>
       {#each themeOptions as option}
         <button
           type="button"
@@ -137,10 +141,9 @@
 
 <style>
   .theme-toggle {
-    position: fixed;
+    position: relative;
     z-index: 120;
-    left: calc(var(--sidebar-width) + 0.75rem);
-    bottom: 0.75rem;
+    flex: 0 0 auto;
   }
 
   .theme-toggle-button,
@@ -166,8 +169,8 @@
 
   .theme-options {
     position: absolute;
-    bottom: calc(100% + 0.4rem);
-    left: 0;
+    top: calc(100% + 0.4rem);
+    right: 0;
     display: grid;
     min-width: 9rem;
     gap: 0.3rem;
@@ -190,22 +193,4 @@
     background: var(--accent-soft);
   }
 
-  @media (max-width: 900px) {
-    .theme-toggle {
-      left: 0.75rem;
-      bottom: 0.75rem;
-    }
-
-    .theme-options {
-      bottom: calc(100% + 0.4rem);
-    }
-
-    :global(.app-layout.mobile-sidebar-open) .theme-toggle {
-      left: calc(var(--sidebar-width) + 0.75rem);
-    }
-  }
-
-  :global(.app-layout.focus-mode) .theme-toggle {
-    left: 0.75rem;
-  }
 </style>

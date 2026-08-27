@@ -15,7 +15,7 @@ use super::manifest::{
     asset_def, local_path, tier_budget_bytes,
 };
 use super::registry::{
-    clear_unproven_update_flags, mark_update_available, read_registry, row_count_for_asset,
+    clear_update_flags, mark_update_available, read_registry, row_count_for_asset,
     store_remote_content_length, upsert_registry,
 };
 use super::schema::migrate_offline_schema;
@@ -273,27 +273,17 @@ pub async fn check_offline_updates(
     let db_path = db_path.to_path_buf();
 
     with_conn(&db_path, |conn| {
-        clear_unproven_update_flags(conn)?;
+        clear_update_flags(conn)?;
         Ok(())
     })?;
 
-    // Fire network probes in the background so they never block the sidebar render.
-    // Results are written to DB; the frontend does a silent re-poll at +3 s to pick
-    // them up for accurate sizes and update badges.
-    {
-        let data_dir2 = data_dir.clone();
-        let db_path2 = db_path.clone();
-        tokio::spawn(async move {
-            let _ = tokio::time::timeout(
-                std::time::Duration::from_secs(8),
-                async {
-                    refresh_missing_remote_sizes(&db_path2).await;
-                    probe_remote_updates(&data_dir2, &db_path2).await;
-                },
-            )
-            .await;
-        });
-    }
+    // Probe before returning so the frontend receives one authoritative status
+    // snapshot instead of stale flags from a previous check.
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(8), async {
+        refresh_missing_remote_sizes(&db_path).await;
+        probe_remote_updates(&data_dir, &db_path).await;
+    })
+    .await;
 
     let custom_dir = get_custom_download_dir_from_db(&db_path);
 
@@ -364,7 +354,8 @@ pub async fn check_offline_updates(
                 .map(|r| (r.row_count, r.reg.clone()))
                 .unwrap_or((0, None));
 
-            let mut update_available = reg.as_ref().map(|r| r.update_available).unwrap_or(false);
+            let mut update_available = local_present
+                && reg.as_ref().map(|r| r.update_available).unwrap_or(false);
             // Ignore stale flags that were set from Content-Length-only probes
             // (no ETag / Last-Modified baseline means we cannot prove an update).
             let has_identity = reg.as_ref().is_some_and(|r| {

@@ -52,7 +52,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
   * **Compare Mode 👥:** Opt-in side-by-side comparison of the Simple and Clinical explanations.
   * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
-  * **Responsive theme control:** The persistent theme control stays at the bottom-left on desktop and moves to the top-left on narrow layouts where the data sidebar is collapsed, preventing it from covering scrollable report content. Its menu opens in the direction that remains visible at that breakpoint.
+  * **Desktop theme control:** The persistent theme control lives in the top report toolbar with clear System default, Light mode, and Dark mode choices, keeping it out of the scrollable report content.
 
 ### 4. Local RAG Evidence Library & Search Engine
 * **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.
@@ -124,7 +124,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 
 ### 12. Presentation, theme, and resource-update controls
 * The report uses a Simple-first hierarchy with an action queue capped at five items; Clinical and Compare remain available for advanced review.
-* A bottom-left Theme control supports System, Light, and Dark preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
+* A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
 * Clinical findings remain a structured table on wide desktop and switch to stacked labelled rows at 1100px and below, so sidebar-constrained tablet layouts do not require a cramped 900px table.
@@ -134,7 +134,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Clinical rows and Compare cards keep the longer claim boundary behind details; the visible status stays compact (`Confirmation needed`, `Contextual result`, or `Review blocked`).
 * Compare-mode warning details are grouped under one collapsed `Limits & confirmation` disclosure per finding; the short `Clinical review` badge remains visible when applicable.
 * Finding highlights and report/discovery loading states use the active semantic info/warning tokens instead of fixed colors.
-* Marker-card hover and bottom-left theme-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
+* Marker-card hover and top-toolbar theme-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
 * Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent.
 * Sidebar download/import progress uses one reusable, labelled progress surface with clamped determinate values and an explicit indeterminate state for streaming or preparation phases.
 * Shared tooltip panels cap their height to the viewport and scroll locally when explanations are long, so edge-positioned help remains reachable instead of being clipped.

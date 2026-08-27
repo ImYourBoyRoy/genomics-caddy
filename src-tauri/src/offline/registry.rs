@@ -113,14 +113,12 @@ pub fn mark_update_available(
     Ok(())
 }
 
-/// Clear update flags that cannot be proven (no stored ETag / Last-Modified).
-pub fn clear_unproven_update_flags(conn: &Connection) -> Result<(), String> {
+/// Clear all transient update flags before a fresh authoritative remote probe.
+pub fn clear_update_flags(conn: &Connection) -> Result<(), String> {
     conn.execute(
         "UPDATE reference.offline_asset_registry
          SET update_available = 0
-         WHERE update_available != 0
-           AND (remote_etag IS NULL OR TRIM(remote_etag) = '')
-           AND (remote_last_modified IS NULL OR TRIM(remote_last_modified) = '')",
+         WHERE update_available != 0",
         [],
     )
     .map_err(|e| e.to_string())?;

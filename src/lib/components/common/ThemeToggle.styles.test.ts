@@ -3,23 +3,26 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const source = readFileSync(resolve(process.cwd(), 'src/lib/components/common/ThemeToggle.svelte'), 'utf8');
-const narrowStyles = source.slice(source.indexOf('@media (max-width: 900px)'), source.indexOf(':global(.app-layout.focus-mode)'));
-
-describe('ThemeToggle responsive placement', () => {
-  it('moves the fixed control out of the scrollable content on narrow layouts', () => {
-    expect(narrowStyles).toContain('bottom: 0.75rem');
-    expect(narrowStyles).not.toContain('top: 0.75rem');
+describe('ThemeToggle desktop toolbar placement', () => {
+  it('uses the title-toolbar flow instead of a fixed bottom-corner control', () => {
+    const toggle = source.match(/\.theme-toggle \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    expect(toggle).toContain('position: relative;');
+    expect(toggle).not.toContain('position: fixed;');
+    expect(source).not.toContain('bottom: 0.75rem');
   });
 
-  it('opens the theme menu above the bottom-anchored control', () => {
-    expect(narrowStyles).toContain('bottom: calc(100% + 0.4rem)');
-    expect(narrowStyles).not.toContain('top: calc(100% + 0.4rem)');
-    expect(narrowStyles).toContain('.theme-options');
+  it('opens the theme menu below the toolbar control', () => {
+    const options = source.match(/\.theme-options \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    expect(options).toContain('top: calc(100% + 0.4rem);');
+    expect(options).toContain('right: 0;');
+    expect(options).not.toContain('bottom: calc(100% + 0.4rem)');
   });
 
-  it('keeps the control on the report side while the mobile data drawer is open', () => {
-    expect(narrowStyles).toContain(':global(.app-layout.mobile-sidebar-open) .theme-toggle');
-    expect(narrowStyles).toContain('left: calc(var(--sidebar-width) + 0.75rem);');
+  it('uses clear mode labels instead of the generic Theme label', () => {
+    expect(source).toContain('System default');
+    expect(source).toContain('Light mode');
+    expect(source).toContain('Dark mode');
+    expect(source).not.toContain('<span>Theme</span>');
   });
 
   it('uses theme-aware floating shadow tokens', () => {

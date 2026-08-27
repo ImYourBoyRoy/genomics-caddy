@@ -335,6 +335,11 @@
     }).filter(sec => sec.markers.length > 0) ?? []
   );
 
+  let clinicalSectionsExpanded = $derived(
+    presentationMode !== 'clinical'
+      || filteredSections.some((section) => collapsedSections[section.name] === false),
+  );
+
   let discoveryExportBusy = $state(false);
   let discoveryExportHint = $state('');
   let audienceExportBusy = $state<ReportExportAudience | ''>('');
@@ -438,7 +443,6 @@
   <!-- Start with profile/data quality, then the bounded action queue. -->
   <ReportHeader
     {generatedReport}
-    geneticSex={selectedSample.genetic_sex}
     {foundMarkersCount}
     {totalMarkersChecked}
     presentationMode={presentationMode}
@@ -643,6 +647,12 @@
   </div>
 
   <div class="sections-container">
+    {#if presentationMode === 'clinical' && filteredSections.length > 0 && !clinicalSectionsExpanded}
+      <div class="clinical-empty-hint" role="status">
+        <strong>Clinical view is ready.</strong>
+        <span>Expand a health area below, or use “Expand all” under Filters &amp; ordering, to open its structured findings table.</span>
+      </div>
+    {/if}
     {#each filteredSections as section}
       <SectionCard 
         {section} 
@@ -733,6 +743,24 @@
     color: var(--text-secondary);
     font-size: 0.72rem;
     max-width: 180px;
+  }
+
+  .clinical-empty-hint {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    align-items: baseline;
+    margin: 0 0 0.75rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.6rem;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+  }
+
+  .clinical-empty-hint strong {
+    color: var(--text-primary);
   }
 
   .help-backdrop {

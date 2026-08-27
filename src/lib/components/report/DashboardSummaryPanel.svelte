@@ -168,6 +168,12 @@
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([category, categoryTests]) => ({ category, tests: categoryTests }));
   }
+
+  function sectionAnchorId(sectionName: string): string {
+    return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  }
+
+  let healthAreaSections = $derived((report.sections || []).filter((section) => section.markers.length > 0));
 </script>
 
 <div class="dashboard-v2">
@@ -666,6 +672,28 @@
       </div>
     {/if}
   </div>
+
+  {#if healthAreaSections.length > 0}
+    <nav class="health-area-index summary-card card" aria-labelledby="health-area-index-title">
+      <div class="health-area-index-heading">
+        <div>
+          <span class="section-kicker">Explore</span>
+          <h3 id="health-area-index-title">Health areas</h3>
+        </div>
+        <span class="health-area-index-count">{healthAreaSections.length} areas</span>
+      </div>
+      <ul class="health-area-index-list">
+        {#each healthAreaSections as section (section.name)}
+          <li>
+            <a href={'#' + sectionAnchorId(section.name)}>
+              <span>{section.name}</span>
+              <span class="health-area-index-markers">{section.markers.length} markers</span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </nav>
+  {/if}
 </div>
 
 <style>
@@ -797,6 +825,82 @@
 
   .action-queue-empty strong {
     color: var(--text-primary);
+  }
+
+  .health-area-index {
+    padding: 1rem;
+  }
+
+  .health-area-index-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .health-area-index-heading h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .health-area-index-count {
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .health-area-index-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .health-area-index-list a {
+    display: flex;
+    min-width: 0;
+    min-height: 44px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    box-sizing: border-box;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--surface-subtle);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    text-decoration: none;
+  }
+
+  .health-area-index-list a:hover,
+  .health-area-index-list a:focus-visible {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .health-area-index-list a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .health-area-index-list a > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .health-area-index-markers {
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+    white-space: nowrap;
   }
 
   .actionability-safety {

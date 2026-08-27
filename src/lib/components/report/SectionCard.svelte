@@ -59,6 +59,7 @@
 
   // Collapse/expand state — persisted to localStorage so it survives report regeneration.
   let storageKey = $derived(`section-collapsed-${section.name}`);
+  let sectionAnchorId = $derived(`report-section-${section.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
   let sectionBodyId = $derived(`section-body-${section.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
 
   // Write new collapse state to localStorage whenever it changes
@@ -87,7 +88,7 @@
   );
 </script>
 
-<div class="section-card card" class:collapsed-card={isCollapsed}>
+<div id={sectionAnchorId} class="section-card card" class:collapsed-card={isCollapsed}>
   <div class="section-header">
     <div class="section-title-area">
       <button
@@ -155,6 +156,10 @@
     flex-wrap: wrap;
     min-height: 2.75rem;
     user-select: none;
+  }
+
+  .section-card {
+    scroll-margin-top: 1rem;
   }
 
   .section-title-area {

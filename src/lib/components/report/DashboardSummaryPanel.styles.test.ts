@@ -56,6 +56,19 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
   });
 
+  it('provides a compact health-area index that targets report section headers', () => {
+    expect(source).toContain('Health areas');
+    expect(source).toContain('healthAreaSections');
+    expect(source).toContain("href={'#' + sectionAnchorId(section.name)}");
+    expect(source).toContain('{section.markers.length} markers');
+
+    const index = styleBlock.match(/\.health-area-index \{[\s\S]*?\.actionability-safety/)?.[0] ?? '';
+    expect(index).toContain('grid-template-columns: repeat(auto-fit');
+    expect(index).toContain('min-height: 44px;');
+    expect(index).toContain('overflow-wrap: anywhere;');
+    expect(index).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
   it('allows long guidance text to wrap inside narrow cards', () => {
     const cardBody = styleBlock.match(/\.card-body \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const notes = styleBlock.match(/\.diet-notes-pre \{[\s\S]*?\n  \}/)?.[0] ?? '';

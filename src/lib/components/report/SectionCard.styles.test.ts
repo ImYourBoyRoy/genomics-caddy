@@ -35,4 +35,10 @@ describe('SectionCard semantic status styling', () => {
     expect(source).not.toContain("section.markers.length === 1 ? 'variant' : 'variants'");
     expect(source).not.toContain('section.summary.active_marker_count ?? 0');
   });
+
+  it('gives each section a stable anchor for the dashboard health-area index', () => {
+    expect(source).toContain('let sectionAnchorId = $derived(`report-section-${section.name.toLowerCase()');
+    expect(source).toContain('id={sectionAnchorId}');
+    expect(styleBlock).toContain('scroll-margin-top: 1rem;');
+  });
 });

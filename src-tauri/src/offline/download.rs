@@ -469,20 +469,24 @@ pub fn remote_changed(
         return etag != stored;
     }
 
-    // Fall back to Last-Modified — but ignore LM-only thrash when length is stable.
+    // Fall back to Last-Modified only when the payload size also gives us a
+    // comparable identity signal. A request-time LM header without a stable
+    // filename, ETag, or size is not enough evidence to label a downloaded
+    // resource as outdated.
     if let (Some(lm), Some(stored)) = (remote_lm, stored_lm) {
         if lm == stored {
             return false;
         }
         if let (Some(remote_len), Some(stored_len)) = (head.content_length, stored_length) {
-            if remote_len > 0 && stored_len > 0 && remote_len as i64 == stored_len {
-                return false;
+            if remote_len > 0 && stored_len > 0 {
+                return remote_len as i64 != stored_len;
             }
         }
-        return true;
     }
 
-    // No comparable identity metadata → do not claim an update.
+    // No comparable identity metadata → do not claim an update. A false
+    // negative is safer than repeatedly asking the user to redownload a
+    // resource whose server metadata is known to be unstable.
     false
 }
 
@@ -539,6 +543,40 @@ mod tests {
             Some("Sat, 11 Jul 2026 20:58:34 GMT"),
             Some(1_112_373),
             Some("Clingen-Gene-Disease-Summary-2026-07-11.csv"),
+        ));
+    }
+
+    #[test]
+    fn last_modified_only_change_without_size_is_not_update() {
+        let head = RemoteHead {
+            content_length: None,
+            etag: None,
+            last_modified: Some("Sun, 12 Jul 2026 01:00:00 GMT".into()),
+            content_filename: None,
+        };
+        assert!(!remote_changed(
+            &head,
+            None,
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            None,
+            None,
+        ));
+    }
+
+    #[test]
+    fn last_modified_with_changed_size_is_update() {
+        let head = RemoteHead {
+            content_length: Some(200),
+            etag: None,
+            last_modified: Some("Sun, 12 Jul 2026 01:00:00 GMT".into()),
+            content_filename: None,
+        };
+        assert!(remote_changed(
+            &head,
+            None,
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            Some(100),
+            None,
         ));
     }
 

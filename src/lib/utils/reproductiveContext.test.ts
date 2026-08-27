@@ -8,6 +8,7 @@ import {
   reproductiveDnaCoverageForReport,
   reproductiveContextIdsForProfileText,
   reproductiveContextIdsForPersonalContext,
+  reproductiveContextOptionIsSuggestedForGeneticSex,
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
   reproductiveSectionHasContext,
@@ -15,6 +16,14 @@ import {
 } from './reproductiveContext';
 
 describe('reproductive marker context routing', () => {
+  it('groups, but does not hide, context options for known chromosome patterns', () => {
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Female')).toBe(true);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Female')).toBe(false);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Male')).toBe(true);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Male')).toBe(false);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Unknown')).toBe(true);
+  });
+
   it('prioritizes menstrual-cycle markers without hiding other findings', () => {
     expect(reproductiveMarkerContextRank('PANEL_PMDD_OVARIAN_STEROID_SENSITIVITY', 'menstrual_cycle')).toBe(3);
     expect(reproductiveMarkerContextRank('rs2234693', 'menstrual_cycle')).toBe(2);

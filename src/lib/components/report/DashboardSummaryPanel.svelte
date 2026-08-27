@@ -4,7 +4,7 @@
   import type { GeneratedReport, SeverityClass } from '../../types/genomics';
   import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
-  import { saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
+  import { reproductiveContextOptionIsSuggestedForGeneticSex, saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
   import ReproductiveContextEditor from '../ai/ReproductiveContextEditor.svelte';
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
@@ -12,10 +12,12 @@
   import { getCompactGuidanceText, getCompactSimpleMeaning, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
   import type { PresentationMode } from '../../utils/presentationPreferences';
   import Tooltip from '../common/Tooltip.svelte';
+  import { formatGeneticSexLabel } from '../../utils/uiLabels';
 
   interface Props {
     report: GeneratedReport;
     sampleId?: number;
+    geneticSex?: string;
     onJumpToMarker?: (linkId: string) => void;
     onJumpToSection?: (sectionName: string) => void;
     presentationMode?: PresentationMode;
@@ -26,12 +28,22 @@
   let {
     report,
     sampleId,
+    geneticSex = '',
     onJumpToMarker,
     reproductiveContext = $bindable(''),
     personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
     onJumpToSection,
     presentationMode = 'simple',
   }: Props = $props();
+
+  let contextOptions = $derived(cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown'));
+  let suggestedContextOptions = $derived(
+    contextOptions.filter((option) => reproductiveContextOptionIsSuggestedForGeneticSex(option.id, geneticSex)),
+  );
+  let otherContextOptions = $derived(
+    contextOptions.filter((option) => !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, geneticSex)),
+  );
+  let hasKnownGeneticSex = $derived(['Male', 'Female'].includes(formatGeneticSexLabel(geneticSex)));
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
 
@@ -233,7 +245,7 @@
         <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
         <Tooltip
           label="About context selection"
-          description="This is self-reported context stored for this DNA profile. It is not inferred from genotype or chromosome calls and does not establish gender, anatomy, fertility, pregnancy, or hormone status."
+          description="This is self-reported context stored for this DNA profile. Known chromosome-pattern results only organize the options; they do not establish gender, anatomy, fertility, pregnancy, or hormone status."
         >
           <span class="context-info-icon" aria-hidden="true">ⓘ</span>
         </Tooltip>
@@ -242,9 +254,24 @@
     </div>
     <select aria-labelledby="reproductive-context-label" value={reproductiveContext} onchange={setReproductiveContext}>
       <option value="">Not specified</option>
-      {#each cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown') as option (option.id)}
-        <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
-      {/each}
+      {#if hasKnownGeneticSex}
+        <optgroup label="Suggested for this profile">
+          {#each suggestedContextOptions as option (option.id)}
+            <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
+          {/each}
+        </optgroup>
+        {#if otherContextOptions.length > 0}
+          <optgroup label="Other contexts — select if relevant">
+            {#each otherContextOptions as option (option.id)}
+              <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
+            {/each}
+          </optgroup>
+        {/if}
+      {:else}
+        {#each contextOptions as option (option.id)}
+          <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
+        {/each}
+      {/if}
     </select>
   </div>
 

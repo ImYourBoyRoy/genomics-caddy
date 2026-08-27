@@ -101,9 +101,9 @@
 
 <style>
   .reproductive-intake {
-    border: 1px solid rgba(96, 165, 250, 0.28);
+    border: 1px solid var(--status-info-border);
     border-radius: 8px;
-    background: rgba(59, 130, 246, 0.06);
+    background: var(--status-info-soft-bg);
     overflow: hidden;
   }
 
@@ -150,7 +150,7 @@
   }
 
   .reproductive-intake-privacy {
-    color: #93c5fd;
+    color: var(--status-info-text);
   }
 
   .reproductive-intake-group {
@@ -191,7 +191,7 @@
     box-sizing: border-box;
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    background: rgba(0, 0, 0, 0.22);
+    background: var(--surface-control);
     color: var(--text-primary);
     font: inherit;
     font-size: 0.76rem;

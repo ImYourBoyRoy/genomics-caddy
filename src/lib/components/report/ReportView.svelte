@@ -448,6 +448,7 @@
     <DashboardSummaryPanel
       report={generatedReport}
       sampleId={selectedSample.id}
+      geneticSex={selectedSample.genetic_sex}
       bind:personalSafetyContext
       bind:reproductiveContext
       presentationMode={presentationMode}

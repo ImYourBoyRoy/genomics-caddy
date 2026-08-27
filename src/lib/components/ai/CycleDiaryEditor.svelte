@@ -163,9 +163,9 @@
 
 <style>
   .cycle-diary {
-    border: 1px solid rgba(52, 211, 153, 0.28);
+    border: 1px solid var(--status-success-border);
     border-radius: 8px;
-    background: rgba(16, 185, 129, 0.05);
+    background: var(--status-success-bg);
     overflow: hidden;
   }
 
@@ -211,7 +211,7 @@
   }
 
   .cycle-diary-privacy {
-    color: #6ee7b7;
+    color: var(--status-success-text);
   }
 
   .cycle-diary-form {
@@ -237,7 +237,7 @@
     box-sizing: border-box;
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    background: rgba(0, 0, 0, 0.22);
+    background: var(--surface-control);
     color: var(--text-primary);
     font: inherit;
     font-size: 0.76rem;
@@ -257,7 +257,7 @@
   }
 
   .cycle-diary-error {
-    color: #fca5a5;
+    color: var(--status-danger-strong-text);
     font-size: 0.72rem;
   }
 

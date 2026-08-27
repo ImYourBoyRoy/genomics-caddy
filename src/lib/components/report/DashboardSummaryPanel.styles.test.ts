@@ -105,6 +105,14 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(index).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
+  it('organizes reproductive context options without silently removing any', () => {
+    expect(source).toContain('geneticSex?: string;');
+    expect(source).toContain('Suggested for this profile');
+    expect(source).toContain('Other contexts — select if relevant');
+    expect(source).toContain('contextOptions as option');
+    expect(source).toContain('reproductiveContextOptionIsSuggestedForGeneticSex');
+  });
+
   it('allows long guidance text to wrap inside narrow cards', () => {
     const cardBody = styleBlock.match(/\.card-body \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const notes = styleBlock.match(/\.diet-notes-pre \{[\s\S]*?\n  \}/)?.[0] ?? '';

@@ -26,6 +26,36 @@ function markerIsInExternalContext(markerId: string, contextId: string): boolean
 
 export type ReproductiveContextOption = typeof cycleSupport.context_options[number];
 
+const FEMALE_ASSOCIATED_CONTEXTS = new Set([
+  'menstrual_cycle',
+  'cycle_linked_pain_headache',
+  'cyclic_mood_symptoms',
+  'ovarian_reproductive',
+  'uterine_pelvic',
+  'suspected_adenomyosis',
+  'menopause_hormone_therapy',
+  'pregnancy_postpartum',
+]);
+
+const MALE_ASSOCIATED_CONTEXTS = new Set(['androgen_reproductive']);
+
+/**
+ * Group context-picker options for easier scanning in a known chromosome-
+ * pattern report. This is presentation ordering only: every option remains
+ * available and the result never infers anatomy, identity, fertility, or
+ * hormone status.
+ */
+export function reproductiveContextOptionIsSuggestedForGeneticSex(
+  contextId: string,
+  geneticSex?: string | null,
+): boolean {
+  const normalizedSex = String(geneticSex || '').trim().toLowerCase();
+  const normalizedContext = String(contextId || '').trim().toLowerCase();
+  if (normalizedSex === 'male') return !FEMALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
+  if (normalizedSex === 'female') return !MALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
+  return true;
+}
+
 export const REPRODUCTIVE_CONTEXT_STORAGE_PREFIX = 'genomics_reproductive_context:';
 
 export function reproductiveContextStorageKey(sampleId?: number | null): string {

@@ -161,7 +161,7 @@
     padding: 0.45rem 0.7rem;
     font-size: 0.75rem;
     font-weight: 700;
-    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.18);
+    box-shadow: 0 0.5rem 1.25rem var(--shadow-floating);
   }
 
   .theme-options {
@@ -175,7 +175,7 @@
     border: 1px solid var(--border-color);
     border-radius: 0.7rem;
     background: var(--surface-raised);
-    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0.75rem 2rem var(--shadow-floating);
   }
 
   .theme-options button {

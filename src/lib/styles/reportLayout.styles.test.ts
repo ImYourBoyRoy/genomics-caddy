@@ -4,6 +4,13 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 
 describe('report card wrapping', () => {
+  it('uses a theme-aware hover shadow for marker cards', () => {
+    const markerHover = source.match(/\.marker-card:hover \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(markerHover).toContain('var(--shadow-card-hover)');
+    expect(markerHover).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
   it('allows long marker identities and applicability badges to wrap', () => {
     const markerTop = source.match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
     const markerLabel = source.match(/\.marker-top > \.gene-label \{[\s\S]*?\n\}/)?.[0] ?? '';

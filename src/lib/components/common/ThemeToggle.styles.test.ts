@@ -15,4 +15,10 @@ describe('ThemeToggle responsive placement', () => {
     expect(narrowStyles).toContain('top: calc(100% + 0.4rem)');
     expect(narrowStyles).toContain('.theme-options');
   });
+
+  it('uses theme-aware floating shadow tokens', () => {
+    expect(source).toContain('box-shadow: 0 0.5rem 1.25rem var(--shadow-floating);');
+    expect(source).toContain('box-shadow: 0 0.75rem 2rem var(--shadow-floating);');
+    expect(source).not.toMatch(/box-shadow:[^;]*(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

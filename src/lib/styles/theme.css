@@ -55,6 +55,8 @@ Responsibilities:
   --status-info-soft-border: rgba(56, 189, 248, 0.28);
   --shadow-subtle: rgba(0, 0, 0, 0.15);
   --shadow-tooltip: rgba(0, 0, 0, 0.26);
+  --shadow-card-hover: rgba(0, 0, 0, 0.3);
+  --shadow-floating: rgba(0, 0, 0, 0.22);
   --modal-backdrop-bg: rgba(0, 0, 0, 0.75);
   --shadow-modal: rgba(0, 0, 0, 0.6);
   --coverage-bg: rgba(139, 92, 246, 0.1);
@@ -187,6 +189,8 @@ Responsibilities:
   --status-info-soft-border: #7dd3fc;
   --shadow-subtle: rgba(15, 23, 42, 0.12);
   --shadow-tooltip: rgba(15, 23, 42, 0.26);
+  --shadow-card-hover: rgba(15, 23, 42, 0.16);
+  --shadow-floating: rgba(15, 23, 42, 0.18);
   --modal-backdrop-bg: rgba(15, 23, 42, 0.48);
   --shadow-modal: rgba(15, 23, 42, 0.26);
   --coverage-bg: #f5f3ff;
@@ -275,6 +279,8 @@ Responsibilities:
     --status-info-soft-border: #7dd3fc;
     --shadow-subtle: rgba(15, 23, 42, 0.12);
     --shadow-tooltip: rgba(15, 23, 42, 0.26);
+    --shadow-card-hover: rgba(15, 23, 42, 0.16);
+    --shadow-floating: rgba(15, 23, 42, 0.18);
     --modal-backdrop-bg: rgba(15, 23, 42, 0.48);
     --shadow-modal: rgba(15, 23, 42, 0.26);
     --coverage-bg: #f5f3ff;
@@ -964,7 +970,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .marker-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px var(--shadow-card-hover);
 }
 .marker-top {
   display: flex;

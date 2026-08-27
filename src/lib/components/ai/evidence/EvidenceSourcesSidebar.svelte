@@ -17,7 +17,7 @@
       {#each sources as src}
         <div class="source-item">
           <span class="source-icon">📄</span>
-          <Tooltip label="Loaded source" description={src}>
+          <Tooltip label="Loaded source" description={src} triggerClass="source-tooltip-trigger">
             <span class="source-name">{src}</span>
           </Tooltip>
         </div>
@@ -79,10 +79,24 @@
   }
 
   .source-item .source-name {
+    display: block;
     color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .source-item :global(.tooltip-host) {
+    min-width: 0;
     flex: 1;
+  }
+
+  .source-item :global(.source-tooltip-trigger) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-align: left;
   }
 </style>

@@ -9,6 +9,7 @@
     children: Snippet;
     learnMoreHref?: string;
     placement?: 'top' | 'bottom' | 'left' | 'right';
+    triggerClass?: string;
   }
 
   let {
@@ -17,6 +18,7 @@
     children,
     learnMoreHref,
     placement = 'top',
+    triggerClass = '',
   }: Props = $props();
 
   let isOpen = $state(false);
@@ -152,7 +154,7 @@
 >
   <button
     type="button"
-    class="tooltip-trigger"
+    class={`tooltip-trigger ${triggerClass}`}
     bind:this={triggerElement}
     aria-label={label}
     aria-describedby={isOpen ? panelDescriptionId : undefined}

@@ -7,7 +7,8 @@ describe('Tooltip accessibility structure', () => {
   it('keeps the accessible name on the native trigger instead of a redundant wrapper group', () => {
     expect(source).not.toContain('role="group"');
     expect(source).toContain('role="presentation"');
-    expect(source).toContain('class="tooltip-trigger"');
+    expect(source).toContain('class={`tooltip-trigger ${triggerClass}`}');
+    expect(source).toContain('triggerClass?: string;');
     expect(source).toContain('aria-label={label}');
     expect(source).toContain('aria-describedby={isOpen ? panelDescriptionId : undefined}');
   });

@@ -13,7 +13,7 @@ describe('research surface tooltip contract', () => {
 
   it('uses the shared tooltip to reveal truncated source names', () => {
     expect(sources).toContain('import Tooltip from "../../common/Tooltip.svelte";');
-    expect(sources).toContain('<Tooltip label="Loaded source" description={src}>');
+    expect(sources).toContain('<Tooltip label="Loaded source" description={src} triggerClass="source-tooltip-trigger">');
     expect(sources).not.toContain('title={src}');
   });
 });

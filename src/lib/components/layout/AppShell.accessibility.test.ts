@@ -17,7 +17,9 @@ describe('responsive data-sidebar access', () => {
     expect(appShell).toContain('event.key !== \'Tab\'');
     expect(appShell).toContain('last.focus();');
     expect(appShell).toContain('first.focus();');
-    expect(appShell).toContain('aria-label="Close data controls"');
+    expect(appShell).toContain('class="mobile-sidebar-backdrop no-print"');
+    expect(appShell).toContain('aria-hidden="true"');
+    expect(appShell).toContain('tabindex="-1"');
   });
 
   it('provides a stable sidebar target and narrow drawer styles', () => {

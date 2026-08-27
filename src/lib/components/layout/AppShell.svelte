@@ -113,7 +113,8 @@
     <button
       type="button"
       class="mobile-sidebar-backdrop no-print"
-      aria-label="Close data controls"
+      aria-hidden="true"
+      tabindex="-1"
       onclick={closeMobileSidebar}
     ></button>
   {/if}

@@ -126,6 +126,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * The report uses a Simple-first hierarchy with an action queue capped at five items; Clinical and Compare remain available for advanced review.
 * A bottom-left Theme control supports System, Light, and Dark preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
+* Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
 

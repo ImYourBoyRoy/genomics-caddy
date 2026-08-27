@@ -152,6 +152,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Report filter-select borders use the active semantic theme token, keeping Light, Dark, and System-light controls visibly bounded.
 * Sidebar update, progress, warning, error, and success surfaces use semantic theme tokens; dynamic progress widths remain data-driven.
 * The advanced Connections entry is a compact sidebar launch row; its longer setup explanation remains available through an accessible tooltip and Advanced → Connections.
+* Healthy Liftover status is a compact sidebar row; missing or newer-chain states keep their download/update actions and concise explanatory context.
 * Offline update badges derive from the named locally-installed update list, clear a successfully synced asset while the authoritative probe is running, and describe remaining items as newer remote versions so downloaded/current resources are not conflated.
 * Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
 * Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing, so collapsed sections do not silently produce incomplete print output.

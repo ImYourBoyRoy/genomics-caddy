@@ -159,6 +159,15 @@ async function assertNoRedundantPublicCopy() {
     body: JSON.stringify({ text: "Evidence sources available" }),
   });
   assert(result?.ok === true && result.count === 0, "Redundant generic evidence warning is visible in the report");
+
+  const genericFollowUp = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Review the suggested follow-up." }),
+  });
+  assert(
+    genericFollowUp?.ok === true && genericFollowUp.count === 0,
+    "Generic follow-up copy is visible instead of an authored next step",
+  );
 }
 
 async function ensurePopulatedSection() {

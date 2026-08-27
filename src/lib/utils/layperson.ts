@@ -168,7 +168,13 @@ export function getSimpleNextStep(
     return 'Consider clinical confirmation.';
   }
   if (marker.confirm_with.length > 0) {
-    return 'Review the suggested follow-up.';
+    const followUps = marker.confirm_with
+      .map((item) => item.replace(/[.;:]+$/, '').trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    if (followUps.length === 1) return `Review ${followUps[0]}.`;
+    if (followUps.length === 2) return `Review ${followUps[0]} or ${followUps[1]}.`;
+    if (followUps.length === 3) return `Review ${followUps[0]}, ${followUps[1]}, or ${followUps[2]}.`;
   }
   if (marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk' || marker.severity_class === 'low_risk' || marker.effect_direction === 'risk') {
     return 'Compare with symptoms, history, and relevant labs.';

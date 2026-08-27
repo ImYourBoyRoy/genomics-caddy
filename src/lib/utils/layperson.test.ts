@@ -182,6 +182,25 @@ describe('plain-English claim framing', () => {
     expect(getSimpleNextStep({ ...base, effect_direction: 'trait', clinical_confirmation_required: true })).toBe('Consider clinical confirmation.');
   });
 
+  it('surfaces a bounded summary of the authored follow-up items', () => {
+    const base = {
+      clinical_confirmation_required: false,
+      severity_class: 'benign' as const,
+      confirm_with: [],
+    };
+
+    expect(getSimpleNextStep({
+      ...base,
+      effect_direction: 'risk',
+      confirm_with: ['baseline serum tryptase', 'event tryptase', 'allergist/immunologist review', 'extra item'],
+    })).toBe('Review baseline serum tryptase, event tryptase, or allergist/immunologist review.');
+    expect(getSimpleNextStep({
+      ...base,
+      effect_direction: 'risk',
+      confirm_with: ['ferritin;'],
+    })).toBe('Review ferritin.');
+  });
+
   it('removes repeated actionability framing from secondary guidance text', () => {
     expect(getCompactGuidanceText(
       'Do not make this change unless symptoms, labs, or clinician guidance support it: Starting a restrictive diet',

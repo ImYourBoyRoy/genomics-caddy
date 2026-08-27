@@ -14,4 +14,11 @@ describe('ActivityPulse error surface', () => {
   it('does not retain fixed error colors in the guarded error block', () => {
     expect(errorStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('keeps a full-width loading pulse inside its parent box', () => {
+    const baseStyles = source.match(/\.activity-pulse \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(baseStyles).toContain('box-sizing: border-box;');
+    expect(baseStyles).toContain('min-width: 0;');
+  });
 });

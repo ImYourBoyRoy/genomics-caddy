@@ -160,7 +160,26 @@ function isIgnoredLayoutElement(element: HTMLElement): boolean {
 
   const style = getComputedStyle(element);
   if (style.display === 'none' || style.visibility === 'hidden') return true;
+  // Fixed overlays (tooltips, focus controls, and dialogs) are positioned
+  // against the viewport rather than the report scroll container. They must
+  // not be treated as report-content overflow.
+  if (style.position === 'fixed') return true;
+  // Decorative absolute layers are intentionally clipped by their layout
+  // parent (for example the animated border inside ActivityPulse). Their
+  // transformed visual bounds are not scrollable report content.
+  const parentStyle = element.parentElement ? getComputedStyle(element.parentElement) : null;
+  if (style.position === 'absolute' && parentStyle && ['hidden', 'clip'].includes(parentStyle.overflow)) {
+    return true;
+  }
   return style.position === 'absolute' && element.clientWidth <= 1 && element.clientHeight <= 1;
+}
+
+function getLayoutParent(element: HTMLElement, root: HTMLElement): HTMLElement | null {
+  let parent = element.parentElement;
+  while (parent && parent !== root && getComputedStyle(parent).display === 'contents') {
+    parent = parent.parentElement;
+  }
+  return parent;
 }
 
 function collectOverflowingElements(root: HTMLElement | null): AgentUiLayoutMetrics['overflowingElements'] {
@@ -172,8 +191,8 @@ function collectOverflowingElements(root: HTMLElement | null): AgentUiLayoutMetr
     .filter((element) => !isIgnoredLayoutElement(element))
     .map((element) => {
       const rect = element.getBoundingClientRect();
-      const parent = element.parentElement;
-      const parentWidth = parent?.clientWidth ?? root.clientWidth;
+      const parent = getLayoutParent(element, root);
+      const parentWidth = parent?.getBoundingClientRect().width ?? root.getBoundingClientRect().width;
       const overflow = element.scrollWidth - element.clientWidth;
       const rightOverflow = rect.right - rootRight;
       const parentWidthOverflow = rect.width - parentWidth;

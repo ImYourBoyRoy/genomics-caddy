@@ -40,6 +40,8 @@
   .activity-pulse {
     position: relative;
     width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
     border-radius: 10px;
     padding: 1px;
     overflow: hidden;

@@ -21,6 +21,16 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('element.id');
   });
 
+  it('does not treat display-contents wrappers or fixed overlays as report bounds', () => {
+    expect(source).toContain("if (style.position === 'fixed') return true;");
+    expect(source).toContain("['hidden', 'clip'].includes(parentStyle.overflow)");
+    expect(source).toContain('function getLayoutParent(element: HTMLElement, root: HTMLElement)');
+    expect(source).toContain("getComputedStyle(parent).display === 'contents'");
+    expect(source).toContain('const parent = getLayoutParent(element, root);');
+    expect(source).toContain('parent?.getBoundingClientRect().width');
+    expect(source).not.toContain('const parentWidth = parent?.clientWidth');
+  });
+
   it('provides an unambiguous section-toggle action for local QA', () => {
     expect(source).toContain('clickSection: (sectionName: string)');
     expect(source).toContain("document.querySelectorAll<HTMLButtonElement>('.section-toggle')");

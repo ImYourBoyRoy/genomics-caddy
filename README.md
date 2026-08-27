@@ -123,7 +123,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Conservative chromosome context:** Missing Y calls remain unknown rather than being treated as proof of XX. Chromosome-call context is a biological hint only; it is not gender identity, anatomy, fertility, pregnancy status, or hormone status. Marker packs can declare biological applicability such as `xx_reproductive`, `xy_reproductive`, `x_linked`, or `y_linked`.
 
 ### 12. Presentation, theme, and resource-update controls
-* The report uses a Simple-first hierarchy with an action queue capped at five items; Clinical and Compare remain available for advanced review.
+* The report uses a Simple-first hierarchy with a centered, readable single-column action queue capped at five items; Clinical and Compare remain available for advanced review.
 * A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.

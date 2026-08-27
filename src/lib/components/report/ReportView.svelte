@@ -509,8 +509,8 @@
     <div class="filter-group">
       <span class="filter-label">Show</span>
       <label class="filter-toggle">
-        <input type="checkbox" bind:checked={showBenign} />
-        Undetected
+        <input type="checkbox" bind:checked={showBenign} aria-label="Show benign and uncalled markers" />
+        Show benign &amp; uncalled
       </label>
       <label class="filter-toggle">
         <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />

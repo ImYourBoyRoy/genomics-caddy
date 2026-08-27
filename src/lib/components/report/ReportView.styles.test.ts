@@ -16,4 +16,10 @@ describe('ReportView Help Guide surface', () => {
     expect(theme.match(/--modal-backdrop-bg:/g)?.length).toBe(3);
     expect(theme.match(/--shadow-modal:/g)?.length).toBe(3);
   });
+
+  it('labels the additional-marker filter according to what it reveals', () => {
+    expect(source).toContain('Show benign &amp; uncalled');
+    expect(source).toContain('aria-label="Show benign and uncalled markers"');
+    expect(source).not.toContain('>\n        Undetected\n');
+  });
 });

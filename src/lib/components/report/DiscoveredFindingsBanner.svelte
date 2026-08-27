@@ -47,7 +47,7 @@
 
 {#if isLoading}
   <div class="discoveries-banner loading no-print">
-    <ActivityPulse message="Loading agent discoveries…" accent="#60a5fa" maxWidth="100%" />
+    <ActivityPulse message="Loading agent discoveries…" accent="var(--status-info-text)" maxWidth="100%" />
   </div>
 {:else if loadError}
   <!-- silent fail -->

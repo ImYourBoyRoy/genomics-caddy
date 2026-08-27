@@ -25,4 +25,12 @@ describe('VariantCard enrichment surface', () => {
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
     expect(source).toContain('.simple-next-step {\n    display: block;');
   });
+
+  it('keeps the highlighted finding state on shared info tokens', () => {
+    const highlightStyles = source.match(/:global\(\.marker-card-highlight\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(highlightStyles).toContain('var(--status-info-text)');
+    expect(highlightStyles).toContain('var(--status-info-border)');
+    expect(highlightStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

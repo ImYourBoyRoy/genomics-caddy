@@ -416,7 +416,7 @@
   <PanelLoadingState
     message="Analyzing genetic markers across marker packs…"
     submessage="Evaluating curated SNPs against your local genotype database."
-    accent="#fbbf24"
+    accent="var(--status-warning-text)"
   />
 {:else if generatedReport}
   <header class="report-hero no-print">

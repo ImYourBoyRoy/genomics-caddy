@@ -404,9 +404,9 @@
   }
 
   :global(.marker-card-highlight) {
-    outline: 2px solid rgba(56, 189, 248, 0.75);
+    outline: 2px solid var(--status-info-text);
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 0 0 4px var(--status-info-border);
   }
 
   .claim-frame {

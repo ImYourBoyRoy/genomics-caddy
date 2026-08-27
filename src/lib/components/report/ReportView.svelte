@@ -645,8 +645,8 @@
   </div>
 
   <!-- Secondary research surfaces stay below the core report and remain optional. -->
-  <VectorPromotedSection {selectedSample} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
-  <DiscoveredFindingsBanner {selectedSample} {onExploreResearch} onNavigate={onNavigateToVariant} />
+  <VectorPromotedSection {selectedSample} {presentationMode} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
+  <DiscoveredFindingsBanner {selectedSample} {presentationMode} {onExploreResearch} onNavigate={onNavigateToVariant} />
 
   {#if showHelpGuide}
     <div class="modal-backdrop help-backdrop" onclick={closeHelpGuide} role="presentation">

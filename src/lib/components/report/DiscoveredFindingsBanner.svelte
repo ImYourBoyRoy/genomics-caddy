@@ -8,11 +8,12 @@
 
   interface Props {
     selectedSample: GenomeSample;
+    presentationMode?: 'simple' | 'clinical' | 'compare';
     onExploreResearch?: (rsid: string) => void;
     onNavigate?: (rsid: string, target: VariantNavTarget) => void;
   }
 
-  let { selectedSample, onExploreResearch, onNavigate }: Props = $props();
+  let { selectedSample, presentationMode = 'simple', onExploreResearch, onNavigate }: Props = $props();
 
   let findings = $state<DiscoveredFindingSummary[]>([]);
   let isLoading = $state(true);
@@ -74,17 +75,38 @@
       <ul id="discovered-findings-list" class="findings-list">
         {#each activeFindings.slice(0, 24) as item}
           <li>
-            <button
-              type="button"
-              class="finding-link"
-              onclick={() => onExploreResearch?.(item.rsid)}
-            >
-              <code>{item.rsid}</code>
-              {#if item.gene}<span class="gene">{item.gene}</span>{/if}
-              {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
-            </button>
-            {#if item.clinvar_clinical_significance}
-              <span class="clinvar">{item.clinvar_clinical_significance}</span>
+            {#if presentationMode === 'simple'}
+              <div class="simple-finding-summary">
+                <button
+                  type="button"
+                  class="finding-link"
+                  onclick={() => onExploreResearch?.(item.rsid)}
+                >
+                  View research finding
+                </button>
+                <details class="technical-details">
+                  <summary>Technical data</summary>
+                  <dl>
+                    <div><dt>rsID</dt><dd>{item.rsid}</dd></div>
+                    {#if item.gene}<div><dt>Gene</dt><dd>{item.gene}</dd></div>{/if}
+                    {#if item.user_genotype}<div><dt>DNA call</dt><dd>{item.user_genotype}</dd></div>{/if}
+                    {#if item.clinvar_clinical_significance}<div><dt>Clinical catalog</dt><dd>{item.clinvar_clinical_significance}</dd></div>{/if}
+                  </dl>
+                </details>
+              </div>
+            {:else}
+              <button
+                type="button"
+                class="finding-link"
+                onclick={() => onExploreResearch?.(item.rsid)}
+              >
+                <code>{item.rsid}</code>
+                {#if item.gene}<span class="gene">{item.gene}</span>{/if}
+                {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
+              </button>
+              {#if item.clinvar_clinical_significance}
+                <span class="clinvar">{item.clinvar_clinical_significance}</span>
+              {/if}
             {/if}
             <span class="mini-nav">
               <button type="button" class="mini-btn" aria-label="Open on genome map" onclick={() => onNavigate?.(item.rsid, "map")}>🗺️</button>
@@ -156,6 +178,46 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .simple-finding-summary {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .technical-details {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+
+  .technical-details summary {
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .technical-details dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.4rem 0 0;
+  }
+
+  .technical-details dl > div {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .technical-details dt {
+    font-weight: 700;
+  }
+
+  .technical-details dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
   }
 
   .finding-link code {

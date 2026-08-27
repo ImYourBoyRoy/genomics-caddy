@@ -29,4 +29,11 @@ describe('VectorPromotedSection report hierarchy', () => {
   it('does not contain raw color literals in the component style block', () => {
     expect(styleBlock).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('keeps research identifiers and DNA calls behind technical details in Simple mode', () => {
+    expect(source).toContain("presentationMode?: 'simple' | 'clinical' | 'compare';");
+    expect(source).toContain("{#if presentationMode === 'simple'}");
+    expect(source).toContain('<summary>Technical data</summary>');
+    expect(source).toContain('<dt>DNA call</dt><dd>{item.user_genotype}</dd>');
+  });
 });

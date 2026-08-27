@@ -22,4 +22,11 @@ describe('DiscoveredFindingsBanner disclosure surface', () => {
     expect(bannerStyles).toContain('var(--border-color)');
     expect(bannerStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
+
+  it('keeps discovery identifiers and DNA calls behind technical details in Simple mode', () => {
+    expect(source).toContain("presentationMode?: 'simple' | 'clinical' | 'compare';");
+    expect(source).toContain("{#if presentationMode === 'simple'}");
+    expect(source).toContain('<summary>Technical data</summary>');
+    expect(source).toContain('<dt>DNA call</dt><dd>{item.user_genotype}</dd>');
+  });
 });

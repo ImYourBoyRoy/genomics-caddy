@@ -9,12 +9,13 @@
 
   interface Props {
     selectedSample: GenomeSample;
+    presentationMode?: 'simple' | 'clinical' | 'compare';
     highlightRsid?: string;
     onNavigate?: (rsid: string, target: VariantNavTarget) => void;
     onExploreResearch?: (rsid: string) => void;
   }
 
-  let { selectedSample, highlightRsid = "", onNavigate, onExploreResearch }: Props = $props();
+  let { selectedSample, presentationMode = 'simple', highlightRsid = "", onNavigate, onExploreResearch }: Props = $props();
 
   let findings = $state<VectorPromotedFinding[]>([]);
   let corpusHighlights = $state<ActionabilityPoint[]>([]);
@@ -94,21 +95,40 @@
             class:highlighted={highlightRsid && item.rsid.toLowerCase() === highlightRsid.toLowerCase()}
             id="vector-promoted-{item.rsid.toLowerCase()}"
           >
-            <div class="card-top">
-              <code class="rsid">{item.rsid}</code>
-              {#if item.gene}<span class="gene">{item.gene}</span>{/if}
-              {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
-              <Tooltip label="Research index score" description="This local ranking signal helps organize research items. It is not a disease probability or a health score.">
-                <span class="score">Rank {Math.round(item.significance_score * 100)}%</span>
-              </Tooltip>
-            </div>
-            <p class="trait">{item.trait_summary}</p>
-            {#if item.trait_categories.length > 0}
-              <div class="tags">
-                {#each item.trait_categories as cat}
-                  <span class="tag">{cat.replace(/_/g, " ")}</span>
-                {/each}
+            {#if presentationMode === 'simple'}
+              <div class="card-top simple-card-top">
+                <strong class="simple-research-label">Research context</strong>
               </div>
+              <p class="trait">{item.trait_summary}</p>
+              <details class="technical-details">
+                <summary>Technical data</summary>
+                <dl>
+                  <div><dt>rsID</dt><dd>{item.rsid}</dd></div>
+                  {#if item.gene}<div><dt>Gene</dt><dd>{item.gene}</dd></div>{/if}
+                  {#if item.user_genotype}<div><dt>DNA call</dt><dd>{item.user_genotype}</dd></div>{/if}
+                  <div><dt>Research index</dt><dd>{Math.round(item.significance_score * 100)}%</dd></div>
+                  {#if item.trait_categories.length > 0}
+                    <div><dt>Categories</dt><dd>{item.trait_categories.map((cat) => cat.replace(/_/g, " ")).join(', ')}</dd></div>
+                  {/if}
+                </dl>
+              </details>
+            {:else}
+              <div class="card-top">
+                <code class="rsid">{item.rsid}</code>
+                {#if item.gene}<span class="gene">{item.gene}</span>{/if}
+                {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
+                <Tooltip label="Research index score" description="This local ranking signal helps organize research items. It is not a disease probability or a health score.">
+                  <span class="score">Rank {Math.round(item.significance_score * 100)}%</span>
+                </Tooltip>
+              </div>
+              <p class="trait">{item.trait_summary}</p>
+              {#if item.trait_categories.length > 0}
+                <div class="tags">
+                  {#each item.trait_categories as cat}
+                    <span class="tag">{cat.replace(/_/g, " ")}</span>
+                  {/each}
+                </div>
+              {/if}
             {/if}
             <div class="actions">
               <button type="button" class="btn btn-secondary btn-xs" onclick={() => onNavigate?.(item.rsid, "report")}>📋 Report</button>
@@ -163,6 +183,40 @@
     border-radius: 8px;
     background: var(--surface-card);
     border: 1px solid var(--border-color);
+  }
+  .simple-card-top {
+    margin-bottom: 6px;
+  }
+  .simple-research-label {
+    color: var(--text-primary);
+    font-size: 0.78rem;
+  }
+  .technical-details {
+    margin: 0.55rem 0 0.7rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+  .technical-details summary {
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .technical-details dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.55rem 0 0;
+  }
+  .technical-details dl > div {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .technical-details dt {
+    font-weight: 700;
+  }
+  .technical-details dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
   }
   .card.highlighted {
     border-color: var(--status-success-border);

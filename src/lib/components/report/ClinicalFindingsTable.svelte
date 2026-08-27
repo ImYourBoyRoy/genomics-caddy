@@ -37,7 +37,7 @@
 
 <div class="clinical-table-wrap" role="region" aria-label="Clinical findings table">
   <table class="clinical-findings-table">
-    <caption>Structured findings for clinical review. Consumer-array calls are not diagnostic.</caption>
+    <caption>Structured findings for clinical review.</caption>
     <thead>
       <tr>
         <th scope="col">Finding</th>

@@ -10,6 +10,11 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).not.toContain('Discuss medical-grade confirmation before making health decisions.');
   });
 
+  it('keeps the table caption structural instead of repeating the global reminder', () => {
+    expect(source).toContain('<caption>Structured findings for clinical review.</caption>');
+    expect(source).not.toContain('Consumer-array calls are not diagnostic.');
+  });
+
   it('stacks the clinical table before the sidebar-constrained widths become cramped', () => {
     expect(source).toContain('@media (max-width: 1100px)');
     expect(source).toContain('.clinical-findings-table {\n      min-width: 0;');

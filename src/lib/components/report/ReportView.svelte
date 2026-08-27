@@ -686,15 +686,6 @@
             </ul>
           </section>
 
-          <section class="help-section warning-section">
-            <h5>⚠️ Crucial Safety Information</h5>
-            <p>
-              <strong>This tool uses raw, unvalidated consumer DNA data.</strong> Consumer arrays can miss variants, use different assays, or produce a result that needs confirmation; a rare health-variant call must not be treated as a clinical result by itself.
-            </p>
-            <p>
-              <em>Never change medications, supplement dosages, or medical therapies based on this report alone.</em> Always verify high-risk or clinical findings with a medical-grade clinical lab test (e.g. CLIA/CAP certified) ordered by your physician.
-            </p>
-          </section>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-accent" onclick={closeHelpGuide}>Got it, thank you!</button>
@@ -788,19 +779,6 @@
     border-left: 4px solid var(--danger);
     padding: 12px 16px;
     border-radius: 6px;
-  }
-
-  .warning-section h5 {
-    color: var(--danger);
-  }
-
-  .warning-section p {
-    color: var(--text-primary);
-  }
-
-  .warning-section em {
-    color: var(--danger);
-    font-weight: 600;
   }
 
   /* Modal header/footer styling */

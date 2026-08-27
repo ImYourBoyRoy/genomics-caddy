@@ -6,6 +6,12 @@ const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), '
 const modalSurfaceStyles = source.match(/\.help-backdrop[\s\S]*?\.help-body/)?.[0] ?? '';
 
 describe('ReportView Help Guide surface', () => {
+  it('keeps the general safety reminder in the application footer instead of repeating it in the Guide', () => {
+    expect(source).not.toContain('Crucial Safety Information');
+    expect(source).not.toContain('Never change medications, supplement dosages, or medical therapies based on this report alone.');
+    expect(source).not.toContain('medical-grade clinical lab test');
+  });
+
   it('uses semantic backdrop and shadow tokens', () => {
     expect(modalSurfaceStyles).toContain('var(--modal-backdrop-bg)');
     expect(modalSurfaceStyles).toContain('var(--shadow-modal)');

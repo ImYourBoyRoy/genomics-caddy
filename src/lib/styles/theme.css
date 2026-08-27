@@ -964,7 +964,15 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 12px;
+  min-width: 0;
+}
+.marker-top > .gene-label {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .gene-label {
   font-size: 0.95rem;
@@ -1036,6 +1044,8 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   background: var(--report-result-bg);
   padding: 8px 12px;
   border-radius: 6px;
@@ -1044,11 +1054,15 @@ h1, h2, h3, h4, h5, h6 {
 .genotype-val {
   font-size: 0.8rem;
   color: var(--text-secondary);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 /* Severity label in marker-middle */
 .marker-severity-label {
   font-size: 0.75rem;
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .allele-detail {
   font-weight: 400;

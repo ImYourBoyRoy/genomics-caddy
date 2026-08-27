@@ -1,0 +1,26 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+const source = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
+
+describe('report card wrapping', () => {
+  it('allows long marker identities and applicability badges to wrap', () => {
+    const markerTop = source.match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const markerLabel = source.match(/\.marker-top > \.gene-label \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(markerTop).toContain('flex-wrap: wrap;');
+    expect(markerTop).toContain('min-width: 0;');
+    expect(markerLabel).toContain('overflow-wrap: anywhere;');
+    expect(markerLabel).toContain('word-break: break-word;');
+  });
+
+  it('allows Clinical result labels to wrap without horizontal overflow', () => {
+    const markerMiddle = source.match(/\.marker-middle \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const genotype = source.match(/\.genotype-val \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const severity = source.match(/\.marker-severity-label \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(markerMiddle).toContain('flex-wrap: wrap;');
+    expect(genotype).toContain('overflow-wrap: anywhere;');
+    expect(severity).toContain('overflow-wrap: anywhere;');
+  });
+});

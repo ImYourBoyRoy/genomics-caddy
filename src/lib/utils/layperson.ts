@@ -58,6 +58,31 @@ export const LAYPERSON_MAP = buildLaypersonMap();
 
 export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTranslations.fallback;
 
+const GENERIC_TITLE_PREFIXES = new Set(['DNA', 'RNA', 'SNP']);
+
+/**
+ * Keep gene symbols and locus identifiers in Technical data for Simple mode.
+ * The authored wording remains unchanged in the resource and technical
+ * fields; this helper only changes personal-facing summary labels.
+ */
+export function getSimpleFindingTitle(simpleImpact: string): string {
+  const title = simpleImpact.trim();
+  if (!title) return 'Genetic context marker';
+
+  const withoutGeneSuffix = title
+    .replace(/\s+\([^()]*\bgene(?:\s+region)?\b[^()]*\)\s*$/i, '')
+    .trim();
+  const leadingTechnical = withoutGeneSuffix.match(
+    /^((?:[A-Z]{2,}[A-Z0-9]*(?:\*[A-Z0-9]+)?(?:\/(?:[A-Z]{2,}[A-Z0-9]*(?:\*[A-Z0-9]+)?)|\/(?=[a-z]))?|[0-9]+p[0-9.]+))\s*(.+)$/,
+  );
+
+  if (!leadingTechnical || GENERIC_TITLE_PREFIXES.has(leadingTechnical[1])) {
+    return withoutGeneSuffix;
+  }
+
+  return leadingTechnical[2].trim() || withoutGeneSuffix;
+}
+
 const GENERIC_GUARDRAIL_PATTERNS = [
   /\bdoes not (?:diagnose|prove)\b/i,
   /\bdoes not predict whether you have (?:a )?condition\b/i,
@@ -90,7 +115,7 @@ export function getCompactSimpleMeaning(translation: LaypersonTranslation): stri
       .trim())
     .filter((sentence) => sentence && !isGenericGuardrail(sentence));
 
-  return compact.join(' ') || translation.simpleImpact;
+  return compact.join(' ') || getSimpleFindingTitle(translation.simpleImpact);
 }
 
 const SAFE_FALLBACK: LaypersonTranslation = {

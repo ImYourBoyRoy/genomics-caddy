@@ -30,6 +30,12 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('.simple-next-step {\n    display: block;');
   });
 
+  it('keeps technical gene identifiers out of the Simple card heading', () => {
+    expect(source).toContain('getSimpleFindingTitle(laypersonTranslation.simpleImpact)');
+    expect(source).toContain('<strong>{simpleFindingTitle}</strong>');
+    expect(source).toContain('if (viewMode === \'simple\') return simpleFindingTitle;');
+  });
+
   it('keeps Simple metadata quiet so the meaning and next step stay focal', () => {
     const simpleEvidenceStyles = source.slice(source.indexOf('/* Simple mode evidence summary */'));
     const statusStyles = simpleEvidenceStyles.slice(

@@ -6,7 +6,7 @@ import type {
   MarkerSource,
 } from '../types/genomics';
 import { getScopeLabel, getTierInfo } from './evidence';
-import { getLaypersonTranslation } from './layperson';
+import { getLaypersonTranslation, getSimpleFindingTitle } from './layperson';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import { populatedReproductiveIntake } from './reproductiveIntake';
 import { selectedReproductiveContextOption } from './reproductiveContext';
@@ -185,7 +185,7 @@ function findingFor(
   const finding: ExportFinding = {
     referenceIds,
     section,
-    title: audience === 'personal' ? simple.simpleImpact : `${marker.gene} ${clean(marker.variant_name, marker.rsid)}`,
+    title: audience === 'personal' ? getSimpleFindingTitle(simple.simpleImpact) : `${marker.gene} ${clean(marker.variant_name, marker.rsid)}`,
     plainMeaning: simple.simpleMeaning,
     nextStep: nextStepFor(marker),
     evidence: `${tier.label} — ${tier.confidenceLabel}`,

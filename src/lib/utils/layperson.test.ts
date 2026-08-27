@@ -3,6 +3,7 @@ import hormonePack from '../marker-packs/hormones_reproductive.json';
 import {
   DEFAULT_LAYPERSON_TRANSLATION,
   getCompactSimpleMeaning,
+  getSimpleFindingTitle,
   getLaypersonTranslation,
   LAYPERSON_MAP,
 } from './layperson';
@@ -152,5 +153,14 @@ describe('plain-English claim framing', () => {
     expect(getCompactSimpleMeaning(translation)).toBe(
       'This marker is studied in steroid signaling. It does not measure current estrogen.',
     );
+  });
+
+  it('keeps technical gene names out of the primary Simple finding title', () => {
+    expect(getSimpleFindingTitle('Altered DNA repair (BRCA1 gene)')).toBe('Altered DNA repair');
+    expect(getSimpleFindingTitle('ESR1 hormone-response research marker')).toBe('hormone-response research marker');
+    expect(getSimpleFindingTitle('9p21 cardiovascular-association marker')).toBe('cardiovascular-association marker');
+    expect(getSimpleFindingTitle('FBN1/connective-tissue association marker')).toBe('connective-tissue association marker');
+    expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('no-function allele component');
+    expect(getSimpleFindingTitle('A biological pathway studied in genetic research.')).toBe('A biological pathway studied in genetic research.');
   });
 });

@@ -22,7 +22,7 @@ import consultationModes from "../marker-packs/consultation_modes.json";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
 import { buildSupportResourceContext } from "./supportResourceContext";
-import { getLaypersonTranslation, type LaypersonTranslation } from "./layperson";
+import { getLaypersonTranslation, getSimpleFindingTitle, type LaypersonTranslation } from "./layperson";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 // ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ export function buildMarkerPayload(
     },
     source_names: (m.sources || []).map((source) => source.name),
     layperson_summary: layperson
-      ? { simple_impact: layperson.simpleImpact, simple_meaning: layperson.simpleMeaning }
+      ? { simple_impact: getSimpleFindingTitle(layperson.simpleImpact), simple_meaning: layperson.simpleMeaning }
       : undefined,
     impact: m.impact,
     interpretation: m.interpretation,

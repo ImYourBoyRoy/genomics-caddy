@@ -8,7 +8,7 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
-  import { getCompactSimpleMeaning, getLaypersonTranslation } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle } from '../../utils/layperson';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -25,6 +25,7 @@
   let effectAllele = $derived(getEffectAllele(marker));
   let severity = $derived(getSeverityInfo(marker.severity_class as SeverityClass));
   let laypersonTranslation = $derived(getLaypersonTranslation(marker));
+  let simpleFindingTitle = $derived(getSimpleFindingTitle(laypersonTranslation.simpleImpact));
   let compactSimpleMeaning = $derived(getCompactSimpleMeaning(laypersonTranslation));
 
   /** True when the variant was actually detected (not benign / no_data) */
@@ -36,7 +37,7 @@
   );
 
   function cardAccessibleName(): string {
-    if (viewMode === 'simple') return laypersonTranslation.simpleImpact;
+    if (viewMode === 'simple') return simpleFindingTitle;
     return `${marker.gene}${marker.variant_name ? ` ${marker.variant_name}` : ''}`;
   }
 
@@ -105,7 +106,7 @@
   <div class="marker-top">
     {#if viewMode === 'simple'}
       <h5 class="gene-label simple-finding-title">
-        <strong>{laypersonTranslation.simpleImpact}</strong>
+        <strong>{simpleFindingTitle}</strong>
       </h5>
     {:else}
       <h5 class="gene-label">

@@ -9,7 +9,7 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getCompactSimpleMeaning, getLaypersonTranslation } from '../../utils/layperson';
+  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle } from '../../utils/layperson';
   import Tooltip from '../common/Tooltip.svelte';
 
   interface Props {
@@ -110,7 +110,7 @@
   function findingTitle(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
     return marker
-      ? getLaypersonTranslation(marker).simpleImpact
+      ? getSimpleFindingTitle(getLaypersonTranslation(marker).simpleImpact)
       : 'Research finding';
   }
 

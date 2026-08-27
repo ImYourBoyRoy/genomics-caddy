@@ -31,4 +31,10 @@ describe('report severity theme tokens', () => {
   it('does not let the generic light surface rule erase severity surfaces', () => {
     expect(lightSurfaceBlock).not.toContain(':root[data-theme="light"] .marker-card');
   });
+
+  it('keeps shared accent text on the active theme token', () => {
+    const accentBlock = source.slice(source.indexOf('.text-accent'), source.indexOf('/* Sections container */'));
+    expect(accentBlock).toContain('color: var(--accent);');
+    expect(accentBlock).not.toContain('#818cf8');
+  });
 });

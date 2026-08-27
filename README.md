@@ -124,6 +124,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 
 ### 12. Presentation, theme, and resource-update controls
 * The report uses a Simple-first hierarchy with a centered, readable single-column action queue capped at five items and a 60rem maximum measure; Clinical and Compare remain available for advanced review.
+* Simple finding cards keep the plain-language meaning visible and place an additional plain-language explanation behind a compact `Details` disclosure before technical data.
 * A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.

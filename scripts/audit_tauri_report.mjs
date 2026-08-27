@@ -68,6 +68,10 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   assert(layout.focusControlOverlapsContent === false, "Focus Report control overlaps the first content block");
   if (layout.focusControlBottom !== null && layout.firstContentTop !== null) {
     assert(layout.focusControlBottom <= layout.firstContentTop, "Focus Report control is not above the first content block");
+    assert(
+      layout.firstContentTop - layout.focusControlBottom >= 4,
+      "Focus Report control has no visual separation from the first content block",
+    );
   }
   assert(layout.themeControlInToolbar === true, "Theme control is not in the desktop toolbar");
   assert(layout.actionQueueItemCount <= 5, "Action queue exceeds the five-item desktop contract");
@@ -279,7 +283,10 @@ async function main() {
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  const toolbarGap = ready.layout.firstContentTop !== null && ready.layout.focusControlBottom !== null
+    ? ready.layout.firstContentTop - ready.layout.focusControlBottom
+    : "n/a";
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
 }
 
 main().catch((error) => {

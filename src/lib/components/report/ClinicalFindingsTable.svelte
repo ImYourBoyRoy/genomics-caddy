@@ -245,7 +245,7 @@
     border: 0;
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 1100px) {
     .clinical-table-wrap {
       overflow-x: visible;
     }

@@ -26,6 +26,7 @@ import { onMount, onDestroy } from 'svelte';
   import { formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
+  import ProgressTrack from './ProgressTrack.svelte';
   import '$lib/styles/components/sidebar.css';
 
   /*
@@ -987,24 +988,14 @@ import { onMount, onDestroy } from 'svelte';
             <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="var(--status-success-text)" />
             {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
               {@const prog = downloadProgress[bulkActiveAssetId]}
-              <div class="progress-track progress-track-spaced">
-                <div
-                  class="progress-fill"
-                  style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                ></div>
-              </div>
+              <ProgressTrack percent={prog.percent} spaced label="Bulk download progress" />
               <div class="bulk-sync-meta">
                 <span>{prog.percent >= 0 ? `${prog.percent}%` : 'streaming…'}</span>
                 <span>{prog.speedMbps.toFixed(1)} MB/s</span>
               </div>
             {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
               {@const imp = importProgress[bulkActiveAssetId]}
-              <div class="progress-track progress-track-indexing progress-track-spaced">
-                <div
-                  class="progress-fill progress-fill-indexing"
-                  style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                ></div>
-              </div>
+              <ProgressTrack percent={imp.percent ?? -1} variant="indexing" spaced label="Bulk indexing progress" />
               <div class="bulk-sync-meta bulk-sync-meta-indexing">
                 <span>{imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
                 {#if imp.eta_seconds != null}
@@ -1091,24 +1082,14 @@ import { onMount, onDestroy } from 'svelte';
               <!-- Per-asset progress bar (shown while downloading or importing) -->
               {#if isActive}
                 {#if prog && !importProgress[db.assetId]}
-                  <div class="progress-track">
-                    <div
-                      class="progress-fill"
-                      style="width: {prog.percent >= 0 ? prog.percent + '%' : '100%'}; animation: {prog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                    ></div>
-                  </div>
+                  <ProgressTrack percent={prog.percent} label={`${db.label} download progress`} />
                   <div class="progress-meta">
                     <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
                     <span>{prog.speedMbps.toFixed(1)} MB/s</span>
                   </div>
                 {:else if importProgress[db.assetId]}
                   {@const imp = importProgress[db.assetId]}
-                  <div class="progress-track progress-track-indexing">
-                    <div
-                      class="progress-fill progress-fill-indexing"
-                      style="width: {imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : '100%'}; animation: {imp.percent === undefined || imp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                    ></div>
-                  </div>
+                  <ProgressTrack percent={imp.percent ?? -1} variant="indexing" label={`${db.label} indexing progress`} />
                   <div class="progress-meta progress-meta-indexing">
                     <span>{imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
                     {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
@@ -1120,9 +1101,7 @@ import { onMount, onDestroy } from 'svelte';
                     <span>{imp.message}</span>
                   </div>
                 {:else}
-                  <div class="progress-track progress-track-preparing">
-                    <div class="progress-fill progress-fill-indeterminate"></div>
-                  </div>
+                  <ProgressTrack variant="preparing" label={`${db.label} import preparation`} />
                   <div class="progress-preparing">
                     Preparing import (no download needed)…
                   </div>
@@ -1184,20 +1163,10 @@ import { onMount, onDestroy } from 'svelte';
                       <li class="db-companion-progress">
                         {#if downloadProgress[c.assetId] && !importProgress[c.assetId]}
                           {@const cprog = downloadProgress[c.assetId]}
-                          <div class="progress-track">
-                            <div
-                              class="progress-fill"
-                              style="width: {cprog.percent >= 0 ? cprog.percent + '%' : '100%'}; animation: {cprog.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                            ></div>
-                          </div>
+                          <ProgressTrack percent={cprog.percent} label={`${c.label} download progress`} />
                         {:else if importProgress[c.assetId]}
                           {@const cimp = importProgress[c.assetId]}
-                            <div class="progress-track progress-track-indexing">
-                            <div
-                              class="progress-fill progress-fill-indexing"
-                              style="width: {cimp.percent !== undefined && cimp.percent >= 0 ? cimp.percent + '%' : '100%'}; animation: {cimp.percent === undefined || cimp.percent < 0 ? 'indeterminate 1.4s ease infinite' : 'none'};"
-                            ></div>
-                          </div>
+                          <ProgressTrack percent={cimp.percent ?? -1} variant="indexing" label={`${c.label} indexing progress`} />
                         {/if}
                       </li>
                     {/if}

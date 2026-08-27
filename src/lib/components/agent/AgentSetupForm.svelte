@@ -14,6 +14,7 @@ Operational Notes: Uses Svelte 5 runes. Fully typed. Strictly under 500 lines.
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
   import type { VariantEvidence } from "../../types/agent";
   import { dialogStore } from "../../utils/dialogState.svelte";
+  import { formatGeneticSexLabel } from "../../utils/uiLabels";
   import AutonomousScanSection from "./AutonomousScanSection.svelte";
 
   interface Props {
@@ -108,7 +109,7 @@ Operational Notes: Uses Svelte 5 runes. Fully typed. Strictly under 500 lines.
         <div class="qc-metrics-grid">
           <div class="metric-card">
             <span class="metric-label">Chromosome-call context</span>
-            <span class="metric-value">{selectedSample.genetic_sex || 'Unknown'}</span>
+            <span class="metric-value">{formatGeneticSexLabel(selectedSample.genetic_sex)}</span>
           </div>
           <div class="metric-card">
             <span class="metric-label">Call Rate</span>

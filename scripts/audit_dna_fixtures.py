@@ -24,6 +24,14 @@ def is_standard_rsid(value: object) -> bool:
     return bool(STANDARD_RSID_RE.fullmatch(str(value or "").strip()))
 
 
+def normalize_chromosome(value: object) -> str:
+    """Normalize common Ancestry chromosome aliases for safe aggregate audits."""
+    clean = str(value or "").strip().upper()
+    if clean.startswith("CHR"):
+        clean = clean[3:]
+    return {"23": "X", "24": "Y", "25": "MT"}.get(clean, clean)
+
+
 def manifest_pack_paths() -> list[Path]:
     manifest_path = PACK_DIR / "manifest.json"
     try:
@@ -166,7 +174,7 @@ def audit(
             continue
 
         rsid = columns[0].strip().lower()
-        chromosome = columns[1].strip().upper().removeprefix("CHR")
+        chromosome = normalize_chromosome(columns[1])
         try:
             position = int(columns[2].strip())
         except ValueError:

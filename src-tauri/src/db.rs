@@ -1206,6 +1206,16 @@ fn record_is_heterozygous(record: &SnpRecord) -> bool {
     record_is_called(record) && !record.allele1.trim().eq_ignore_ascii_case(record.allele2.trim())
 }
 
+fn normalize_sex_chromosome(raw: &str) -> String {
+    let clean = raw.trim().to_ascii_uppercase();
+    let clean = clean.strip_prefix("CHR").unwrap_or(&clean);
+    match clean {
+        "23" => "X".to_string(),
+        "24" => "Y".to_string(),
+        _ => clean.to_string(),
+    }
+}
+
 /// Infer a chromosome-pattern label from X/Y call coverage.
 ///
 /// Y calls support a male chromosome pattern. When Y is absent, a
@@ -1222,8 +1232,7 @@ fn infer_genetic_sex(records: &[SnpRecord]) -> String {
     let mut y_calls = 0usize;
 
     for record in records {
-        let chromosome = record.chromosome.trim().to_ascii_uppercase();
-        let chromosome = chromosome.strip_prefix("CHR").unwrap_or(&chromosome);
+        let chromosome = normalize_sex_chromosome(&record.chromosome);
         if chromosome == "X" {
             x_records += 1;
             if record_is_called(record) {
@@ -1252,7 +1261,7 @@ fn classify_genetic_sex(
 ) -> String {
     if y_calls >= MIN_SEX_CHROMOSOME_CALLS {
         "Male".to_string()
-    } else if y_calls == 0
+    } else if y_calls < MIN_SEX_CHROMOSOME_CALLS
         && x_records >= MIN_SEX_CHROMOSOME_CALLS
         && x_calls >= MIN_SEX_CHROMOSOME_CALLS
         && x_heterozygous >= 2
@@ -1267,7 +1276,8 @@ fn classify_genetic_sex(
 }
 
 /// Recompute derived chromosome-call labels for samples imported before the
-/// conservative inference rule was introduced. This reads only X/Y rows and
+/// conservative inference rule was introduced. This reads only X/Y rows,
+/// including the numeric 23/24 aliases used by some Ancestry exports, and
 /// never treats missing Y coverage alone as evidence of XX.
 fn refresh_genetic_sex_labels(conn: &Connection, data_dir: &Path) -> Result<()> {
     let sample_ids = conn
@@ -1292,7 +1302,7 @@ fn refresh_genetic_sex_labels(conn: &Connection, data_dir: &Path) -> Result<()> 
         };
         let mut stmt = sample_conn.prepare(
             "SELECT chromosome, allele1, allele2 FROM genotypes
-             WHERE UPPER(REPLACE(UPPER(chromosome), 'CHR', '')) IN ('X', 'Y')",
+             WHERE UPPER(REPLACE(UPPER(chromosome), 'CHR', '')) IN ('X', 'Y', '23', '24')",
         )?;
         let sex_chromosome_records = stmt
             .query_map([], |row| {
@@ -2594,10 +2604,45 @@ mod sex_context_tests {
                 chromosome: "X".to_string(),
                 position: i as u64 + 1,
                 allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
-                allele2: if i % 4 == 0 { "G" } else { "G" }.to_string(),
+                allele2: "G".to_string(),
             })
             .collect::<Vec<_>>();
         assert_eq!(infer_genetic_sex(&records), "Female");
+    }
+
+    #[test]
+    fn sparse_y_calls_with_strong_xx_coverage_stay_female() {
+        let mut records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "X".to_string(),
+                position: i as u64 + 1,
+                allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
+                allele2: "G".to_string(),
+            })
+            .collect::<Vec<_>>();
+        records.extend((0..5).map(|i| y_record(i, true)));
+
+        assert_eq!(infer_genetic_sex(&records), "Female");
+    }
+
+    #[test]
+    fn numeric_ancestry_chromosome_aliases_are_normalized() {
+        let mut records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "23".to_string(),
+                position: i as u64 + 1,
+                allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
+                allele2: "G".to_string(),
+            })
+            .collect::<Vec<_>>();
+        records.extend((0..20).map(|i| y_record(i, true)));
+        for record in records.iter_mut().skip(40) {
+            record.chromosome = "24".to_string();
+        }
+
+        assert_eq!(infer_genetic_sex(&records), "Male");
     }
 
     #[test]

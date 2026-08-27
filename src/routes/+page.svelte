@@ -60,6 +60,7 @@
   import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
   import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
   import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
+  import { formatGeneticSexLabel } from "$lib/utils/uiLabels";
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
@@ -589,7 +590,7 @@
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <span class="pill font-mono">Sex: {selectedSample.genetic_sex}</span>
+              <span class="pill font-mono">Sex: {formatGeneticSexLabel(selectedSample.genetic_sex)}</span>
               <span class="pill">Sample ID: {selectedSample.id}</span>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">

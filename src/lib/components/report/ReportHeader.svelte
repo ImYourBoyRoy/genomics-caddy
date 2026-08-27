@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
   import Tooltip from '../common/Tooltip.svelte';
+  import { formatGeneticSexLabel } from '../../utils/uiLabels';
 
   /*
   Module Docstring:
@@ -85,7 +86,7 @@
             <span class="report-info-icon" aria-label="Explain sex estimate from DNA">ⓘ</span>
           </Tooltip>
         </span>
-        <span class="val text-accent">{geneticSex}</span>
+        <span class="val text-accent">{formatGeneticSexLabel(geneticSex)}</span>
       </div>
       <div class="health-stat">
         <span class="lbl">Markers Checked</span>

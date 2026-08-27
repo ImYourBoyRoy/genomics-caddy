@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { GenomeSample } from '../../types/genomics';
   import Tooltip from '../common/Tooltip.svelte';
+  import { formatGeneticSexLabel } from '../../utils/uiLabels';
 
   /*
   Module Docstring:
@@ -48,7 +49,7 @@
               aria-current={selectedSample?.id === s.id ? 'true' : undefined}
               onclick={() => onSelectSample(s)}
             >
-              👤 {s.name} <span class="sex-pill">{s.genetic_sex}</span>
+              👤 {s.name} <span class="sex-pill">{formatGeneticSexLabel(s.genetic_sex)}</span>
             </button>
             <Tooltip
               label="Sex estimate from DNA"

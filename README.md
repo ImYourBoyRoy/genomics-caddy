@@ -132,6 +132,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
 * The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
 * The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.
+* Section headers report the number of visible markers as “shown” and count only visible active findings, so filtered views cannot display contradictory totals.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.
 * Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.

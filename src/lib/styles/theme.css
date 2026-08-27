@@ -872,7 +872,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  border: 8px solid rgba(88, 80, 236, 0.2);
+  border: 8px solid var(--status-accent-soft-border);
   border-top-color: var(--accent);
   display: flex;
   flex-direction: column;
@@ -1197,7 +1197,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .interpretation-section {
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.005);
+  background: var(--surface-subtle);
   border-left: 2px solid var(--border-color);
   padding-left: 8px;
 }
@@ -1378,7 +1378,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-subtle);
 }
 .report-chrome-details > summary {
   cursor: pointer;
@@ -1422,29 +1422,29 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-block;
 }
 .direction-risk {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--status-danger-bg);
+  color: var(--status-danger-strong-text);
+  border: 1px solid var(--status-danger-border);
 }
 .direction-protective {
-  background: rgba(16, 185, 129, 0.15);
-  color: #a7f3d0;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
 }
 .direction-context_dependent {
-  background: rgba(139, 92, 246, 0.15);
-  color: #ddd6fe;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: var(--status-accent-soft-bg);
+  color: var(--status-accent-soft-text);
+  border: 1px solid var(--status-accent-soft-border);
 }
 .direction-trait {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e5e7eb;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  border: 1px solid var(--status-info-border);
 }
 .direction-unknown {
-  background: rgba(156, 163, 175, 0.1);
-  color: #d1d5db;
-  border: 1px solid rgba(156, 163, 175, 0.2);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 .raw-limitation-warning {
   background: var(--status-warning-bg);
@@ -1515,7 +1515,7 @@ h1, h2, h3, h4, h5, h6 {
 .marker-sources {
   margin-top: 8px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-color);
   border-radius: 6px;
 }
@@ -1536,7 +1536,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 4px;
 }
 .source-link {
-  color: #60a5fa;
+  color: var(--accent);
   text-decoration: none;
   font-weight: 600;
 }
@@ -1544,14 +1544,14 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: underline;
 }
 .source-type {
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-style: italic;
   font-size: 0.7rem;
   margin-left: 2px;
 }
 .source-notes {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 /* ===== Report Legend ===== */
@@ -1598,41 +1598,41 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 2px;
 }
 .legend-swatch.signal-high-risk {
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--report-severity-high-border);
+  background: var(--report-severity-high-bg);
 }
 .legend-swatch.signal-moderate-risk {
-  border-color: rgba(245, 158, 11, 0.5);
-  background: rgba(245, 158, 11, 0.15);
+  border-color: var(--report-severity-moderate-border);
+  background: var(--report-severity-moderate-bg);
 }
 .legend-swatch.signal-low-risk {
-  border-color: rgba(217, 119, 6, 0.45);
-  background: rgba(217, 119, 6, 0.12);
+  border-color: var(--report-severity-low-border);
+  background: var(--report-severity-low-bg);
 }
 .legend-swatch.signal-protective {
-  border-color: rgba(16, 185, 129, 0.5);
-  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--report-severity-protective-border);
+  background: var(--report-severity-protective-bg);
 }
 .legend-swatch.signal-trait {
-  border-color: rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--report-severity-trait-border);
+  background: var(--report-severity-trait-bg);
 }
 .legend-swatch.signal-context {
-  border-color: rgba(139, 92, 246, 0.5);
-  background: rgba(139, 92, 246, 0.15);
+  border-color: var(--report-severity-context-border);
+  background: var(--report-severity-context-bg);
 }
 .legend-swatch.signal-confirm {
-  border-color: rgba(245, 158, 11, 0.5);
+  border-color: var(--report-severity-confirm-border);
   border-style: dashed;
-  background: rgba(245, 158, 11, 0.1);
+  background: var(--report-severity-confirm-bg);
 }
 .legend-swatch.signal-benign {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--report-severity-neutral-border);
+  background: var(--report-severity-neutral-bg);
 }
 .legend-swatch.signal-nodata {
-  border-color: rgba(156, 163, 175, 0.3);
-  background: rgba(156, 163, 175, 0.08);
+  border-color: var(--report-severity-neutral-border);
+  background: var(--report-severity-neutral-bg);
 }
 
 /* ===== Section Summary Pills ===== */
@@ -1646,8 +1646,8 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-color);
   font-size: 0.72rem;
   color: var(--text-secondary);
   font-weight: 500;
@@ -1676,8 +1676,8 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.78rem;
   color: var(--text-secondary);
   line-height: 1.5;
-  background: rgba(88, 80, 236, 0.04);
-  border: 1px solid rgba(88, 80, 236, 0.12);
+  background: var(--report-claim-bg);
+  border: 1px solid var(--report-claim-border);
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 12px;

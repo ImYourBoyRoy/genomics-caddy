@@ -44,31 +44,31 @@
           </span>
           <div class="message-actions-row">
             {#if msg.role === "user" && !isChatting}
-              <button 
-                type="button" 
-                class="btn-message-action-icon" 
+              <button
+                type="button"
+                class="btn-message-action-icon"
                 onclick={() => editMessage(idx)}
-                title="Edit question & branch chat"
+                aria-label="Edit question and branch chat"
               >
                 ✏️
               </button>
             {/if}
             {#if !isChatting}
-              <button 
-                type="button" 
-                class="btn-message-action-icon delete-msg-btn" 
+              <button
+                type="button"
+                class="btn-message-action-icon delete-msg-btn"
                 onclick={() => deleteMessage(idx)}
-                title="Delete message"
+                aria-label="Delete message"
               >
                 🗑
               </button>
             {/if}
             {#if msg.role === "assistant" && msg.content}
-              <button 
-                type="button" 
-                class="btn-copy-msg" 
+              <button
+                type="button"
+                class="btn-copy-msg"
                 onclick={() => copyToClipboard(msg.content, idx)}
-                title="Copy response text"
+                aria-label={copiedMsgId === idx ? "Copied response text" : "Copy response text"}
               >
                 {copiedMsgId === idx ? "✓ Copied!" : "📋 Copy"}
               </button>
@@ -164,8 +164,9 @@
   .message-meta { font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; }
   .message.user .message-meta-row { justify-content: flex-end; }
   .message-actions-row { display: flex; gap: 6px; align-items: center; }
-  .btn-message-action-icon { background: none; border: none; cursor: pointer; font-size: 0.72rem; padding: 2px 4px; border-radius: 4px; transition: all 0.2s; opacity: 0.45; }
+  .btn-message-action-icon { background: none; border: none; cursor: pointer; font-size: 0.72rem; padding: 2px 4px; min-width: 44px; min-height: 44px; border-radius: 4px; transition: all 0.2s; opacity: 0.45; }
   .btn-message-action-icon:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
+  .btn-message-action-icon:focus-visible, .btn-copy-msg:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; opacity: 1; }
   .btn-message-action-icon.delete-msg-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.15); }
   .btn-copy-msg { background: none; border: none; color: var(--text-secondary); font-size: 0.7rem; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
   .btn-copy-msg:hover { color: var(--accent); background: rgba(88, 80, 236, 0.1); border-color: rgba(88, 80, 236, 0.2); }

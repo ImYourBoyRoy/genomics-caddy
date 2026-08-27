@@ -140,7 +140,7 @@
         class="btn btn-secondary btn-sm toggle-sidebar-btn" 
         onclick={() => showHistorySidebar = !showHistorySidebar}
         class:drawer-open={showHistorySidebar}
-        title="Toggle History Sidebar"
+        aria-label="Toggle history sidebar"
         style="margin-right: 8px;"
       >
         📂
@@ -151,7 +151,7 @@
     
     <div class="chat-header-actions">
       {#if messages.length > 0}
-        <button class="btn btn-secondary btn-sm" onclick={() => sendPrompt("TRIGGER_EXPORT_MODAL")} title="Export options">
+        <button class="btn btn-secondary btn-sm" onclick={() => sendPrompt("TRIGGER_EXPORT_MODAL")}>
           📥 Export Chat
         </button>
       {/if}
@@ -159,7 +159,6 @@
         class="btn btn-secondary btn-sm"
         onclick={() => sendPrompt("TRIGGER_CONTEXT_INSPECTOR")}
         disabled={!selectedSample}
-        title="Inspect System Prompt & DNA Context"
       >
         🔍 Context
       </button>
@@ -167,7 +166,6 @@
         class="btn btn-secondary btn-sm toggle-settings-btn" 
         onclick={() => showSettingsDrawer = !showSettingsDrawer}
         class:drawer-open={showSettingsDrawer}
-        title="Toggle Model Settings"
       >
         ⚙️ Settings
       </button>

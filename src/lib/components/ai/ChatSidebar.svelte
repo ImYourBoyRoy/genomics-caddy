@@ -96,20 +96,20 @@
                   ondblclick={() => startEditingSession(session)}
                 >
                   <span class="session-icon">💬</span>
-                  <span class="session-title" title={session.title}>{session.title}</span>
+                  <span class="session-title">{session.title}</span>
                 </button>
                 <div class="session-actions">
-                  <button 
-                    class="btn-session-action edit-btn" 
+                  <button
+                    class="btn-session-action edit-btn"
                     onclick={() => startEditingSession(session)}
-                    title="Rename consultation"
+                    aria-label="Rename consultation"
                   >
                     ✏️
                   </button>
-                  <button 
-                    class="btn-session-action delete-btn" 
+                  <button
+                    class="btn-session-action delete-btn"
                     onclick={() => deleteSession(session.id)}
-                    title="Delete consultation"
+                    aria-label="Delete consultation"
                   >
                     🗑
                   </button>
@@ -270,6 +270,7 @@
   }
 
   .session-item-wrapper:hover .session-actions,
+  .session-item-wrapper:focus-within .session-actions,
   .session-item-wrapper.active .session-actions {
     opacity: 1;
   }
@@ -278,6 +279,8 @@
     background: none;
     border: none;
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
     padding: 4px;
     font-size: 0.75rem;
     border-radius: 4px;
@@ -288,6 +291,11 @@
   .btn-session-action:hover {
     transform: scale(1.15);
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .btn-session-action:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .delete-btn:hover {

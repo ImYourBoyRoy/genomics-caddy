@@ -309,10 +309,10 @@
               {#each approvedDomains as domain, index}
                 <span class="domain-chip">
                   {domain}
-                  <button 
-                    onclick={() => removeDomain(index)} 
+                  <button
+                    onclick={() => removeDomain(index)}
                     class="domain-chip-remove"
-                    title="Remove domain"
+                    aria-label="Remove domain"
                   >
                     ❌
                   </button>
@@ -346,7 +346,7 @@
                 <span class="mcp-name">{server.name}</span>
                 <span class="mcp-url font-mono">{server.url}</span>
               </div>
-              <button class="btn-remove" onclick={() => removeMcpServer(index)} title="Remove connection">❌</button>
+              <button class="btn-remove" onclick={() => removeMcpServer(index)} aria-label="Remove connection">❌</button>
             </div>
           {/each}
         </div>

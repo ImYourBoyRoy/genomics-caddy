@@ -71,12 +71,11 @@
           bind:this={imageInput}
           onchange={handleFileChange}
         />
-        <button 
-          type="button" 
-          class="btn btn-secondary btn-icon" 
+        <button
+          type="button"
+          class="btn btn-secondary btn-icon"
           onclick={() => imageInput?.click()}
           disabled={isChatting}
-          title="Attach Image (multimodal analysis)"
         >
           📷 Attach Image
         </button>

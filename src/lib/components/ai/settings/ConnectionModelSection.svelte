@@ -197,7 +197,7 @@
       <div class="telemetry-box mt-2">
         <div class="telemetry-header">
           <span class="telemetry-title">VRAM &amp; Active Models Telemetry</span>
-          <button class="btn-refresh" onclick={refreshActiveModels} disabled={isPollingActive} type="button" title="Refresh active models">
+          <button class="btn-refresh" onclick={refreshActiveModels} disabled={isPollingActive} type="button" aria-label="Refresh active models">
             {isPollingActive ? "..." : "🔄"}
           </button>
         </div>

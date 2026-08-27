@@ -264,7 +264,7 @@
         class="btn btn-secondary btn-sm toggle-sidebar-btn"
         onclick={() => (showHistorySidebar = !showHistorySidebar)}
         class:drawer-open={showHistorySidebar}
-        title="Toggle History Sidebar"
+        aria-label="Toggle history sidebar"
         style="margin-right: 8px;"
       >
         📂
@@ -296,7 +296,6 @@
         class="btn btn-secondary btn-sm toggle-settings-btn"
         onclick={() => (showSettingsDrawer = !showSettingsDrawer)}
         class:drawer-open={showSettingsDrawer}
-        title="Toggle Model Settings"
       >
         ⚙️ Settings
       </button>

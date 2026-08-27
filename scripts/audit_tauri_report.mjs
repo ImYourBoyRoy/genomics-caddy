@@ -74,6 +74,9 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }
+  if (layout.markerGridWidth !== null && layout.mainContentWidth !== null) {
+    assert(layout.markerGridWidth < layout.mainContentWidth, "Finding grid still stretches across the full report pane");
+  }
   if (layout.markerGridColumnCount !== null) {
     assert(layout.markerGridColumnCount <= 2, "Report finding grid exceeds the two-column desktop contract");
   }
@@ -90,6 +93,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     markerCards: layout.markerCardCount,
     clinicalTables: layout.clinicalTableCount,
     columns: layout.markerGridColumnCount,
+    gridWidth: layout.markerGridWidth,
   };
 }
 
@@ -267,7 +271,7 @@ async function main() {
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
-  console.log(`  simple_cards=${modes.simple.markerCards}; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
 }
 
 main().catch((error) => {

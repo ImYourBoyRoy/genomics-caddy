@@ -30,6 +30,7 @@ export interface AgentUiLayoutMetrics {
   mainContentWidth: number | null;
   mainContentScrollWidth: number | null;
   sidebarWidth: number | null;
+  markerGridWidth: number | null;
   markerGridColumnCount: number | null;
   markerCardCount: number;
   clinicalTableCount: number;
@@ -255,6 +256,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     mainContentWidth: mainContent?.getBoundingClientRect().width ?? null,
     mainContentScrollWidth: mainContent?.scrollWidth ?? null,
     sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
+    markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
     markerGridColumnCount: getGridColumnCount(markerGrid),
     markerCardCount: document.querySelectorAll('.marker-card').length,
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,

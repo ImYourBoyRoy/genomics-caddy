@@ -44,6 +44,9 @@ describe('report card wrapping', () => {
 
     expect(grid).toContain('min-width: 0;');
     expect(grid).toContain('max-width: 100%;');
+    expect(grid).toContain('width: min(100%, 72rem);');
+    expect(grid).toContain('margin-inline: auto;');
+    expect(grid).toContain('box-sizing: border-box;');
     expect(grid).toContain('align-items: start;');
     expect(card).toContain('min-width: 0;');
     expect(card).toContain('max-width: 100%;');

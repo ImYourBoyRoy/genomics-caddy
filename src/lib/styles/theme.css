@@ -925,8 +925,11 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: var(--space-3);
+  width: min(100%, 72rem);
+  margin-inline: auto;
   min-width: 0;
   max-width: 100%;
+  box-sizing: border-box;
 }
 .marker-card {
   background: var(--surface-card);

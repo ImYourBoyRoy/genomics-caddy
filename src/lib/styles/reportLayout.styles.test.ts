@@ -47,6 +47,13 @@ describe('report card wrapping', () => {
     expect(card).toContain('min-width: 0;');
     expect(card).toContain('max-width: 100%;');
     expect(card).toContain('box-sizing: border-box;');
+    expect(card).toContain('gap: var(--space-1);');
+  });
+
+  it('keeps marker header spacing on the shared compact token', () => {
+    const markerTop = source.match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(markerTop).toContain('gap: var(--space-1);');
   });
 
   it('allows Clinical result labels to wrap without horizontal overflow', () => {

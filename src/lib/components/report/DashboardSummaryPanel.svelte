@@ -800,7 +800,7 @@
   .action-queue-list {
     display: grid;
     gap: 0.75rem;
-    width: min(100%, 60rem);
+    width: min(100%, 54rem);
     margin-inline: auto;
     padding-top: 1rem;
     box-sizing: border-box;

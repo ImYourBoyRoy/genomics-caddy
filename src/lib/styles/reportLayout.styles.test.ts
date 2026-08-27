@@ -33,4 +33,11 @@ describe('report card wrapping', () => {
     expect(stat).toContain('min-width: 0;');
     expect(value).toContain('overflow-wrap: anywhere;');
   });
+
+  it('keeps report filter controls on the active theme border token', () => {
+    const filter = source.match(/\.filter-select \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(filter).toContain('border: 1px solid var(--border-color);');
+    expect(filter).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
 });

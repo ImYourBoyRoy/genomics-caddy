@@ -128,7 +128,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
 * The report header’s Sex and DNA-coverage summary also wraps as needed on narrow screens while keeping the concise `Male`/`Female` value visible.
-* Dashboard guidance uses compact visible prompts; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip.
+* Dashboard guidance uses compact visible prompts across dietary, supplement, reproductive, activity, medication, and lab panels; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.
 * Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.

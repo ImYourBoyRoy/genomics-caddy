@@ -63,10 +63,10 @@
 
 <div class="report-header card" data-presentation-mode={presentationMode}>
   <div class="report-quality-summary" aria-label="Report data quality summary">
-    <span class="quality-kicker">DNA report</span>
-    <strong>{foundMarkersCount.toLocaleString()}</strong>
-    <span>of {totalMarkersChecked.toLocaleString()} curated markers called</span>
-    <span class="quality-note">Uncalled markers are unknown, not negative evidence.</span>
+    <span class="quality-kicker">DNA coverage</span>
+    <strong>{foundMarkersCount.toLocaleString()} / {totalMarkersChecked.toLocaleString()}</strong>
+    <span>markers called</span>
+    <span class="quality-note">Uncalled = unknown</span>
   </div>
   <div class="report-desc">
     <div class="header-title-row">
@@ -87,10 +87,6 @@
           </Tooltip>
         </span>
         <span class="val text-accent">{formatGeneticSexLabel(geneticSex)}</span>
-      </div>
-      <div class="health-stat">
-        <span class="lbl">Markers Checked</span>
-        <span class="val">{foundMarkersCount} / {totalMarkersChecked} curated SNPs found</span>
       </div>
     </div>
 

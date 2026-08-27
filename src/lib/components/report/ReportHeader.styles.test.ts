@@ -12,6 +12,14 @@ describe('ReportHeader summary badge', () => {
     expect(source).toContain('Based on X/Y chromosome call coverage');
   });
 
+  it('keeps Simple-mode coverage compact and avoids duplicate technical copy', () => {
+    expect(source).toContain('<span class="quality-kicker">DNA coverage</span>');
+    expect(source).toContain('<span>markers called</span>');
+    expect(source).toContain('<span class="quality-note">Uncalled = unknown</span>');
+    expect(source).not.toContain('Markers Checked');
+    expect(source).not.toContain('curated SNPs found');
+  });
+
   it('uses semantic theme tokens for association context', () => {
     expect(badgeStyles).toContain('var(--status-accent-bg)');
     expect(badgeStyles).toContain('var(--status-accent-border)');

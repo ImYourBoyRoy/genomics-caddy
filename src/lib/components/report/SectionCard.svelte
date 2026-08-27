@@ -74,6 +74,7 @@
   }
 
   let summaryParts = $derived(getSectionSummaryParts(section.summary));
+  let countParts = $derived(summaryParts.filter((part) => !part.endsWith('not tested')));
   let showPercent = $derived(section.summary.show_percent_score);
   let activeCount = $derived(
     section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length
@@ -320,12 +321,18 @@
   {#if !isCollapsed}
     <div class="section-body" id={sectionBodyId} transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
       <!-- Direction-aware breakdown pills -->
-      <div class="section-summary-pills">
-        {#each summaryParts as part}
-          <span class="summary-pill">{part}</span>
-        {/each}
-        {#if noDataCount > 0}
-          <span class="summary-pill coverage-note">{noDataCount} not called; unknown, not negative</span>
+      <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
+        {#if viewMode === 'simple'}
+          <span class="summary-line">
+            {countParts.join(' · ')}{#if noDataCount > 0}{countParts.length > 0 ? ' · ' : ''}{noDataCount} not called; unknown, not negative{/if}
+          </span>
+        {:else}
+          {#each countParts as part}
+            <span class="summary-pill">{part}</span>
+          {/each}
+          {#if noDataCount > 0}
+            <span class="summary-pill coverage-note">{noDataCount} not called; unknown, not negative</span>
+          {/if}
         {/if}
       </div>
 

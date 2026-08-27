@@ -27,6 +27,13 @@ describe('SectionCard semantic status styling', () => {
     expect(source).not.toContain('Association context · {callableCount}/{section.summary.total_markers} called');
   });
 
+  it('compresses Simple section summaries and avoids repeating uncalled counts', () => {
+    expect(source).toContain('class:simple-summary={viewMode === \'simple\'}');
+    expect(source).toContain('<span class="summary-line">');
+    expect(source).toContain("summaryParts.filter((part) => !part.endsWith('not tested'))");
+    expect(source).toContain('{noDataCount} not called; unknown, not negative');
+  });
+
   it('derives header findings from the visible filtered marker list', () => {
     expect(source).toContain("section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length");
     expect(source).toContain('let showActiveCount = $derived(activeCount > 0 && activeCount < section.markers.length);');

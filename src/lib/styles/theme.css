@@ -1655,6 +1655,15 @@ h1, h2, h3, h4, h5, h6 {
   gap: 6px;
   margin-bottom: 16px;
 }
+.section-summary-pills.simple-summary {
+  gap: 0;
+}
+.summary-line {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 .summary-pill {
   display: inline-block;
   padding: 3px 10px;

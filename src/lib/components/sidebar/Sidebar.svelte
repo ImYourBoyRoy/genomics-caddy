@@ -984,7 +984,7 @@ import { onMount, onDestroy } from 'svelte';
 
         {#if syncingAll}
           <div class="bulk-sync-panel" role="status" aria-live="polite">
-            <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="#34d399" />
+            <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="var(--status-success-text)" />
             {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
               {@const prog = downloadProgress[bulkActiveAssetId]}
               <div class="progress-track progress-track-spaced">

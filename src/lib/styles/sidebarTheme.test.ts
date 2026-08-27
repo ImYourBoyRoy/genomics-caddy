@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./components/sidebar.css', import.meta.url), 'utf8');
+const sidebarComponent = readFileSync(new URL('../components/sidebar/Sidebar.svelte', import.meta.url), 'utf8');
 
 describe('sidebar status theme tokens', () => {
   it('keeps sidebar status presentation on semantic theme tokens', () => {
@@ -20,5 +21,10 @@ describe('sidebar status theme tokens', () => {
     ]) {
       expect(source).toContain(token);
     }
+  });
+
+  it('keeps sidebar activity accents theme-aware', () => {
+    expect(sidebarComponent).toContain('accent="var(--status-success-text)"');
+    expect(sidebarComponent).not.toMatch(/accent="#[0-9a-f]{3,8}"/i);
   });
 });

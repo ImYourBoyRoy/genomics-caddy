@@ -11,6 +11,13 @@ describe('report card wrapping', () => {
     expect(markerHover).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
+  it('uses a theme-aware floating shadow for the focus control', () => {
+    const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(focusToggle).toContain('var(--shadow-floating)');
+    expect(focusToggle).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
   it('allows long marker identities and applicability badges to wrap', () => {
     const markerTop = source.match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
     const markerLabel = source.match(/\.marker-top > \.gene-label \{[\s\S]*?\n\}/)?.[0] ?? '';

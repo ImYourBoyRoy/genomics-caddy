@@ -6,6 +6,7 @@
 <script lang="ts">
   import type { QdrantConfigPublic, QdrantConnectionStatus } from "../../types/research";
   import "$lib/styles/components/research-connection-card.css";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     editQdrantUrl: string;
@@ -54,10 +55,13 @@
     <div class="form-group-custom">
       <label for="qdrant-url" class="label-with-status">
         <span>Qdrant Server URL</span>
-        <span
-          class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}"
-          title="Qdrant status"
-        ></span>
+        <Tooltip
+          label="Qdrant status"
+          description={connectionStatus?.success ? "Qdrant is connected." : connectionStatus ? "The last Qdrant connection check failed." : "Qdrant has not been checked yet."}
+          triggerClass="status-tooltip-trigger"
+        >
+          <span class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}"></span>
+        </Tooltip>
       </label>
       <input id="qdrant-url" type="text" bind:value={editQdrantUrl} placeholder="e.g. http://127.0.0.1:6333" />
     </div>
@@ -98,7 +102,13 @@
     <div class="form-group-custom">
       <label for="ollama-url" class="label-with-status">
         <span>Ollama Server URL</span>
-        <span class="status-indicator-dot {ollamaStatus}" title="Ollama status"></span>
+        <Tooltip
+          label="Ollama status"
+          description={ollamaStatus === "live" ? "Ollama is available." : ollamaStatus === "dead" ? "The last Ollama model check failed." : ollamaStatus === "testing" ? "Ollama is being checked." : "Ollama has not been checked yet."}
+          triggerClass="status-tooltip-trigger"
+        >
+          <span class="status-indicator-dot {ollamaStatus}"></span>
+        </Tooltip>
       </label>
       <input
         id="ollama-url"

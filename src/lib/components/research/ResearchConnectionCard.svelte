@@ -24,6 +24,7 @@
   } from "../../utils/researchConnection";
   import { persistOllamaUrl } from "../../utils/ollamaSettings";
   import ResearchConnectionEditForm from "./ResearchConnectionEditForm.svelte";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     config: QdrantConfigPublic;
@@ -352,7 +353,13 @@
           <div>
             <dt>Server</dt>
             <dd class="val-with-status">
-              <span class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}" title="Qdrant status"></span>
+              <Tooltip
+                label="Qdrant status"
+                description={connectionStatus?.success ? "Qdrant is connected." : connectionStatus ? "The last Qdrant connection check failed." : "Qdrant has not been checked yet."}
+                triggerClass="status-tooltip-trigger"
+              >
+                <span class="status-indicator-dot {connectionStatus?.success ? 'live' : connectionStatus ? 'dead' : 'untested'}"></span>
+              </Tooltip>
               <span class="url-text">{config.url}</span>
             </dd>
           </div>
@@ -377,7 +384,13 @@
           <div>
             <dt>Server</dt>
             <dd class="val-with-status">
-              <span class="status-indicator-dot {ollamaStatus}" title="Ollama status"></span>
+              <Tooltip
+                label="Ollama status"
+                description={ollamaStatus === "live" ? "Ollama is available." : ollamaStatus === "dead" ? "The last Ollama model check failed." : ollamaStatus === "testing" ? "Ollama is being checked." : "Ollama has not been checked yet."}
+                triggerClass="status-tooltip-trigger"
+              >
+                <span class="status-indicator-dot {ollamaStatus}"></span>
+              </Tooltip>
               <span class="url-text">{ollamaUrl}</span>
             </dd>
           </div>

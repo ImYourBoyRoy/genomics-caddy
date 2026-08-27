@@ -63,7 +63,7 @@
 
 {#if isLoading}
   <div class="vector-promoted no-print">
-    <ActivityPulse message="Loading vector research discoveries…" accent="#34d399" maxWidth="100%" />
+    <ActivityPulse message="Loading vector research discoveries…" accent="var(--status-success-text)" maxWidth="100%" />
   </div>
 {:else if displayItems.length > 0}
   <section class="vector-promoted no-print">
@@ -128,8 +128,8 @@
     margin-bottom: 16px;
     padding: 12px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(52, 211, 153, 0.35);
-    background: rgba(52, 211, 153, 0.06);
+    border: 1px solid var(--status-success-border);
+    background: var(--status-success-bg);
   }
   .header {
     display: flex;
@@ -154,19 +154,19 @@
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin-top: 12px;
   }
   .card {
     padding: 10px;
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
   }
   .card.highlighted {
-    border-color: rgba(52, 211, 153, 0.8);
-    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.35);
+    border-color: var(--status-success-border);
+    box-shadow: 0 0 0 1px var(--status-success-border);
   }
   .card-top {
     display: flex;
@@ -175,12 +175,12 @@
     gap: 6px;
     margin-bottom: 6px;
   }
-  .rsid { color: #34d399; font-size: 0.85rem; }
+  .rsid { color: var(--status-success-text); font-size: 0.85rem; }
   .gene {
     font-size: 0.72rem;
     padding: 1px 6px;
     border-radius: 4px;
-    background: rgba(168, 85, 247, 0.2);
+    background: var(--status-accent-bg);
   }
   .gt { font-family: monospace; font-size: 0.72rem; opacity: 0.85; }
   .score { margin-left: auto; font-size: 0.7rem; opacity: 0.75; }
@@ -197,7 +197,7 @@
     border-radius: 4px;
     font-size: 0.65rem;
     text-transform: capitalize;
-    background: rgba(56, 189, 248, 0.15);
+    background: var(--status-info-bg);
   }
   .actions {
     display: flex;
@@ -205,4 +205,10 @@
     gap: 4px;
   }
   .btn-xs { font-size: 0.68rem; padding: 2px 6px; }
+
+  @media (max-width: 720px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>

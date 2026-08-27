@@ -226,6 +226,9 @@
     box-shadow: 0 0.75rem 2rem var(--shadow-tooltip);
     font-size: 0.75rem;
     line-height: 1.4;
+    max-height: min(24rem, calc(100vh - 1rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
     pointer-events: auto;
   }
 

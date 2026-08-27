@@ -10,6 +10,12 @@ describe('Tooltip theme surface', () => {
     expect(tooltip).not.toMatch(/box-shadow:[^;]*(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
+  it('keeps long tooltip content inside the viewport with local scrolling', () => {
+    expect(tooltip).toContain('max-height: min(24rem, calc(100vh - 1rem));');
+    expect(tooltip).toContain('overflow-y: auto;');
+    expect(tooltip).toContain('overscroll-behavior: contain;');
+  });
+
   it('defines tooltip shadow values for dark, light, and system-light themes', () => {
     expect(theme.match(/--shadow-tooltip:/g)?.length).toBe(3);
   });

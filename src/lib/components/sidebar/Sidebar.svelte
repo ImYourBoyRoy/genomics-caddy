@@ -668,6 +668,10 @@ import { onMount, onDestroy } from 'svelte';
 
   let pendingUpdates = $derived.by(() => listOfflineUpdates(offlineStatus));
 
+  let liftoverUpdateAvailable = $derived(
+    pendingUpdates.some((update) => update.asset_id === 'liftover_chain'),
+  );
+
   let updatesAvailable = $derived.by(() => {
     // Derive from the named list so the badge cannot outlive an optimistic
     // completion while the authoritative post-sync probe is still running.
@@ -806,31 +810,46 @@ import { onMount, onDestroy } from 'svelte';
     </div>
   {/if}
 
-  <!-- Chain Status Indicator -->
-  <div class="chain-status-card card">
-    <h4>Liftover Assembly</h4>
-    {#if isChainDownloaded}
-      <div class="badge success">🟢 GRCh38 Active</div>
-    {:else}
-      <div class="badge warning">⚠️ GRCh37 Only</div>
-      <p class="card-hint">Liftover chain file is missing. Import will not map to GRCh38 coordinates.</p>
-      <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
-        {isDownloadingChain ? 'Downloading…' : 'Download Chain'}
-      </button>
-    {/if}
-    {#if pendingUpdates.some((u) => u.asset_id === 'liftover_chain')}
-      <p class="card-hint update-hint">
-        Newer <strong>UCSC GRCh37→GRCh38 chain</strong> is available (this is the “1 update” when primary catalogs are current).
-      </p>
-      <button
-        type="button"
-        class="btn btn-warning btn-sm"
-        disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
-        onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
+  <!-- Chain status stays compact when healthy; attention states keep their action visible. -->
+  <div class="chain-status-card card liftover-status-card" class:liftover-needs-action={!isChainDownloaded || liftoverUpdateAvailable}>
+    <div class="liftover-status-copy">
+      <strong>Liftover assembly</strong>
+      {#if isChainDownloaded}
+        <span class="badge success">🟢 GRCh38 Active</span>
+      {:else}
+        <span class="badge warning">⚠️ GRCh37 Only</span>
+        <span class="liftover-status-detail">Download the chain to map imported coordinates to GRCh38.</span>
+      {/if}
+    </div>
+    <div class="liftover-status-actions">
+      <Tooltip
+        label="Liftover assembly"
+        description="The chain maps imported GRCh37 coordinates to GRCh38 for report context; it does not change your genotype calls."
       >
-        {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update liftover chain'}
-      </button>
-    {/if}
+        <span class="info-icon" aria-label="Explain liftover assembly">ⓘ</span>
+      </Tooltip>
+      {#if !isChainDownloaded}
+        <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
+          {isDownloadingChain ? 'Downloading…' : 'Download chain'}
+        </button>
+      {/if}
+      {#if liftoverUpdateAvailable}
+        <Tooltip
+          label="Liftover update"
+          description="A newer UCSC GRCh37→GRCh38 chain is available. The current local chain remains available until the update finishes."
+        >
+          <span class="badge warning">Update available</span>
+        </Tooltip>
+        <button
+          type="button"
+          class="btn btn-warning btn-sm"
+          disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
+          onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
+        >
+          {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update chain'}
+        </button>
+      {/if}
+    </div>
   </div>
 
   <!-- Data and updates disclosure -->

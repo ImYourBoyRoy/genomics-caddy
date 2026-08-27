@@ -31,6 +31,7 @@ export interface AgentUiLayoutMetrics {
   mainContentScrollWidth: number | null;
   sidebarWidth: number | null;
   connectionsLaunchHeight: number | null;
+  liftoverStatusHeight: number | null;
   markerGridWidth: number | null;
   markerGridColumnCount: number | null;
   markerCardCount: number;
@@ -238,6 +239,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
   const connectionsLaunch = document.querySelector<HTMLElement>('.connections-launch-card');
+  const liftoverStatus = document.querySelector<HTMLElement>('.liftover-status-card');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
   const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
   const actionQueue = document.querySelector<HTMLElement>('.action-queue-list');
@@ -259,6 +261,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     mainContentScrollWidth: mainContent?.scrollWidth ?? null,
     sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
     connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
+    liftoverStatusHeight: liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null,
     markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
     markerGridColumnCount: getGridColumnCount(markerGrid),
     markerCardCount: document.querySelectorAll('.marker-card').length,

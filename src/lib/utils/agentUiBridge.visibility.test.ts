@@ -62,6 +62,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('actionQueueWidth: number | null;');
     expect(source).toContain('actionQueueItemCount: number;');
     expect(source).toContain('connectionsLaunchHeight: number | null;');
+    expect(source).toContain('liftoverStatusHeight: number | null;');
     expect(source).toContain('markerGridWidth: number | null;');
     expect(source).toContain('themeControlInToolbar: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
@@ -72,5 +73,6 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("actionQueue?.querySelectorAll('.action-queue-item').length ?? 0");
     expect(source).toContain('markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null');
     expect(source).toContain('connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null');
+    expect(source).toContain('liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null');
   });
 });

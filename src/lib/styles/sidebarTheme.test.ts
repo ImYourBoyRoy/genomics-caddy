@@ -80,4 +80,13 @@ describe('sidebar status theme tokens', () => {
     expect(sidebarComponent).toContain('class="connections-launch-card card"');
     expect(sidebarComponent).toContain('Open Connections');
   });
+
+  it('keeps a healthy Liftover status compact while preserving attention actions', () => {
+    expect(source).toContain('.liftover-status-card.card');
+    expect(source).toContain('.liftover-status-copy');
+    expect(source).toContain('.liftover-status-actions');
+    expect(sidebarComponent).toContain('class="chain-status-card card liftover-status-card"');
+    expect(sidebarComponent).toContain('Download the chain to map imported coordinates to GRCh38.');
+    expect(sidebarComponent).toContain('Update chain');
+  });
 });

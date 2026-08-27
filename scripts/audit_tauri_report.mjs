@@ -77,6 +77,9 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   if (layout.connectionsLaunchHeight !== null) {
     assert(layout.connectionsLaunchHeight <= 72, "Advanced Connections launch surface is too tall for the default sidebar");
   }
+  if (layout.liftoverStatusHeight !== null) {
+    assert(layout.liftoverStatusHeight <= 72, "Healthy Liftover status surface is too tall for the default sidebar");
+  }
   if (layout.markerGridWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.markerGridWidth < layout.mainContentWidth, "Finding grid still stretches across the full report pane");
   }
@@ -98,6 +101,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     columns: layout.markerGridColumnCount,
     gridWidth: layout.markerGridWidth,
     connectionsHeight: layout.connectionsLaunchHeight,
+    liftoverHeight: layout.liftoverStatusHeight,
   };
 }
 
@@ -275,7 +279,7 @@ async function main() {
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
 }
 
 main().catch((error) => {

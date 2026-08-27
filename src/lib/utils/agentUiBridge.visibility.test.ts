@@ -20,4 +20,13 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('element.textContent');
     expect(source).not.toContain('element.id');
   });
+
+  it('provides an unambiguous section-toggle action for local QA', () => {
+    expect(source).toContain('clickSection: (sectionName: string)');
+    expect(source).toContain("document.querySelectorAll<HTMLButtonElement>('.section-toggle')");
+    expect(source).toContain('candidate.querySelector(\'.section-heading-label\')');
+    expect(source).toContain('clickSectionByName(sectionName)');
+    expect(source).toContain('const wasExpanded = button.getAttribute(\'aria-expanded\') === \'true\';');
+    expect(source).toContain('${wasExpanded ? \'collapsed\' : \'expanded\'}: ${sectionName}');
+  });
 });

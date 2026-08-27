@@ -35,4 +35,11 @@ describe('Simple-first report controls', () => {
     expect(narrow).toContain('.report-controls .view-mode-buttons');
     expect(narrow).toContain('.report-controls .view-mode-btn');
   });
+
+  it('routes section collapse changes through an explicit parent updater', () => {
+    expect(source).toContain('function setSectionCollapsed(sectionName: string, isCollapsed: boolean)');
+    expect(source).toContain('collapsed={collapsedSections[section.name]}');
+    expect(source).toContain('onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}');
+    expect(source).not.toContain('bind:collapsed={collapsedSections[section.name]}');
+  });
 });

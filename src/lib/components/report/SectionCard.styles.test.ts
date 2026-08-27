@@ -54,4 +54,10 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('<span class="section-heading-label">{section.name}</span>');
     expect(source).not.toContain('<button\n        type="button"\n        class="section-toggle"\n        onclick={toggleCollapse}\n        aria-expanded={!isCollapsed}\n        aria-controls={sectionBodyId}\n      >\n        <span class="collapse-icon" aria-hidden="true">\n          {isCollapsed ? \'▶\' : \'▼\'}\n        </span>\n        <h4>');
   });
+
+  it('uses an explicit parent callback for reliable section collapse state', () => {
+    expect(source).toContain('onCollapsedChange?: (collapsed: boolean) => void;');
+    expect(source).toContain('onCollapsedChange(nextCollapsed);');
+    expect(source).toContain('collapsed = nextCollapsed;');
+  });
 });

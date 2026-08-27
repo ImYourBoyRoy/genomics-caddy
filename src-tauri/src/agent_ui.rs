@@ -283,7 +283,7 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
             } else {
                 args
             }
-        } else if matches!(ui_method, "clickText" | "queryText") {
+        } else if matches!(ui_method, "clickText" | "clickSection" | "queryText") {
             if let Some(text) = args.get("text").cloned() {
                 text
             } else if let Some(arg) = args.get("arg").cloned() {
@@ -312,6 +312,7 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "POST /ui/setTab",
                 "POST /ui/expandLabs",
                 "POST /ui/clickText",
+                "POST /ui/clickSection",
                 "POST /ui/queryText"
             ]
         })

@@ -31,6 +31,7 @@
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     collapsed?: boolean;
+    onCollapsedChange?: (collapsed: boolean) => void;
   }
 
   let {
@@ -39,7 +40,8 @@
     onExploreResearch,
     highlightRsid = "",
     onNavigateToVariant,
-    collapsed = $bindable()
+    collapsed = $bindable(),
+    onCollapsedChange,
   }: Props = $props();
 
   // If collapsed is undefined, we default to true (collapsed by default)
@@ -70,7 +72,12 @@
   });
 
   function toggleCollapse() {
-    collapsed = !isCollapsed;
+    const nextCollapsed = !isCollapsed;
+    if (onCollapsedChange) {
+      onCollapsedChange(nextCollapsed);
+    } else {
+      collapsed = nextCollapsed;
+    }
   }
 
   let summaryParts = $derived(getSectionSummaryParts(section.summary));

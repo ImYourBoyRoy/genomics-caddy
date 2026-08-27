@@ -87,6 +87,7 @@ declare global {
       setTab: (tab: string) => { ok: true; activeTab: string };
       expandLabs: () => { ok: boolean; detail: string };
       clickText: (text: string) => { ok: boolean; detail: string };
+      clickSection: (sectionName: string) => { ok: boolean; detail: string };
       queryText: (text: string) => { ok: boolean; count: number; samples: string[] };
     };
   }
@@ -254,6 +255,22 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   return { ok: true, detail: `clicked: ${hit.label.slice(0, 80)}` };
 }
 
+function clickSectionByName(sectionName: string): { ok: boolean; detail: string } {
+  const needle = normalizeUiLabel(sectionName);
+  if (!needle) return { ok: false, detail: 'empty section name' };
+
+  const button = Array.from(document.querySelectorAll<HTMLButtonElement>('.section-toggle')).find((candidate) =>
+    normalizeUiLabel(candidate.querySelector('.section-heading-label')?.textContent || '') === needle
+  );
+  if (!button) return { ok: false, detail: `section not found: ${sectionName}` };
+  const wasExpanded = button.getAttribute('aria-expanded') === 'true';
+  button.click();
+  return {
+    ok: true,
+    detail: `${wasExpanded ? 'collapsed' : 'expanded'}: ${sectionName}`,
+  };
+}
+
 export function installAgentUiBridge(controllers: AgentUiControllers): () => void {
   const api = {
     snapshot(): AgentUiSnapshot {
@@ -316,6 +333,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
     clickText(text: string) {
       return clickByVisibleText(text);
     },
+    clickSection(sectionName: string) {
+      return clickSectionByName(sectionName);
+    },
     queryText(text: string) {
       const needle = text.toLowerCase();
       const hits: string[] = [];
@@ -371,6 +391,17 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
                     ?? (args as { arg?: string } | null)?.arg
                     ?? '');
             result = api.clickText(text);
+            break;
+          }
+          case 'clickSection': {
+            const sectionName =
+              typeof args === 'string'
+                ? args
+                : String((args as { section?: string; name?: string; arg?: string } | null)?.section
+                    ?? (args as { name?: string } | null)?.name
+                    ?? (args as { arg?: string } | null)?.arg
+                    ?? '');
+            result = api.clickSection(sectionName);
             break;
           }
           case 'queryText': {

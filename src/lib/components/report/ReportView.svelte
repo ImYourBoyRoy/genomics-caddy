@@ -249,6 +249,10 @@
     }
   }
 
+  function setSectionCollapsed(sectionName: string, isCollapsed: boolean) {
+    collapsedSections = { ...collapsedSections, [sectionName]: isCollapsed };
+  }
+
   async function printReport() {
     if (!browser || !generatedReport || isPreparingPrint) return;
 
@@ -643,8 +647,9 @@
         viewMode={presentationMode}
         {onExploreResearch} 
         {highlightRsid} 
-        onNavigateToVariant={onNavigateToVariant} 
-        bind:collapsed={collapsedSections[section.name]} 
+        onNavigateToVariant={onNavigateToVariant}
+        collapsed={collapsedSections[section.name]}
+        onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}
       />
     {/each}
   </div>

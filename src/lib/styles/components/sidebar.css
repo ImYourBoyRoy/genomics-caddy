@@ -223,7 +223,7 @@
 .progress-meta-indexing,
 .bulk-sync-meta-indexing,
 .import-status-line {
-  color: #a5b4fc;
+  color: var(--status-accent-text);
 }
 
 .progress-meta-indexing {
@@ -235,7 +235,7 @@
 }
 
 .progress-track-indexing {
-  background: rgba(165, 180, 252, 0.15);
+  background: var(--status-accent-bg);
 }
 
 .progress-track-preparing {
@@ -243,7 +243,7 @@
 }
 
 .progress-fill-indexing {
-  background: linear-gradient(90deg, #818cf8, #a5b4fc);
+  background: linear-gradient(90deg, var(--accent), var(--report-accent-muted));
 }
 
 .progress-fill-indeterminate {
@@ -329,26 +329,26 @@
 }
 
 .sync-error-block {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
   border-radius: 4px;
   padding: 0.35rem 0.5rem;
   font-size: 0.68rem;
-  color: #fca5a5;
+  color: var(--status-danger-strong-text);
 }
 
 .sync-ok-block {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
-  color: #86efac;
+  color: var(--status-success-text);
 }
 
 .progress-track {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--control-group-bg);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 0.35rem;
@@ -356,19 +356,19 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #818cf8);
+  background: linear-gradient(90deg, var(--accent), var(--report-accent-muted));
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 
 .btn-warning {
-  background: rgba(217, 119, 6, 0.18) !important;
-  border-color: rgba(251, 191, 36, 0.4) !important;
-  color: #fbbf24 !important;
+  background: var(--status-warning-bg) !important;
+  border-color: var(--status-warning-border) !important;
+  color: var(--status-warning-text) !important;
 }
 
 .btn-warning:hover {
-  background: rgba(217, 119, 6, 0.3) !important;
+  background: var(--status-warning-border) !important;
 }
 
 @keyframes indeterminate {
@@ -393,10 +393,10 @@
 .import-dot {
   width: 6px;
   height: 6px;
-  background-color: #818cf8;
+  background-color: var(--accent);
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 8px #818cf8;
+  box-shadow: 0 0 8px var(--accent);
   animation: import-pulse-dot 1.2s ease-in-out infinite;
 }
 
@@ -409,9 +409,9 @@
   text-transform: uppercase;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(251, 191, 36, 0.18);
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  color: #fbbf24;
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning-text);
   white-space: nowrap;
 }
 
@@ -424,9 +424,9 @@
   text-transform: uppercase;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(248, 113, 113, 0.16);
-  border: 1px solid rgba(248, 113, 113, 0.45);
-  color: #fca5a5;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-strong-text);
   white-space: nowrap;
 }
 
@@ -435,9 +435,9 @@
   line-height: 1.4;
   padding: 0.45rem 0.55rem;
   border-radius: 6px;
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  background: rgba(251, 191, 36, 0.08);
-  color: #fde68a;
+  border: 1px solid var(--status-warning-border);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -503,7 +503,7 @@
 .status-warn {
   margin-top: 0.35rem;
   font-size: 0.65rem;
-  color: #fbbf24;
+  color: var(--status-warning-text);
   line-height: 1.35;
 }
 
@@ -529,7 +529,7 @@
 
 .update-hint {
   margin-top: 0.45rem;
-  color: #fde68a;
+  color: var(--status-warning-text);
 }
 
 .updates-panel {
@@ -554,8 +554,8 @@
   gap: 0.5rem;
   padding: 0.35rem 0.4rem;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: var(--report-result-bg);
+  border: 1px solid var(--status-warning-border);
 }
 
 .update-item-meta {
@@ -589,7 +589,7 @@
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0.35rem 0 0 0.55rem;
-  border-left: 2px solid rgba(148, 163, 184, 0.35);
+  border-left: 2px solid var(--border-strong);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -634,8 +634,8 @@
   margin-top: 0.45rem;
   padding: 0.5rem 0.55rem;
   border-radius: 8px;
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid var(--status-success-border);
+  background: var(--status-success-bg);
 }
 
 .bulk-sync-meta {

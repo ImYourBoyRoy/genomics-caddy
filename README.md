@@ -142,7 +142,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Compare-mode warning details are grouped under one collapsed `Limits & confirmation` disclosure per finding; the short `Clinical review` badge remains visible when applicable.
 * Finding highlights and report/discovery loading states use the active semantic info/warning tokens instead of fixed colors.
 * Marker-card hover and top-toolbar theme-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
-* Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent.
+* Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent; the desktop Focus Report control stays in a reserved toolbar row with a small separation from report content.
 * Sidebar download/import progress uses one reusable, labelled progress surface with clamped determinate values and an explicit indeterminate state for streaming or preparation phases.
 * Shared tooltip panels cap their height to the viewport and scroll locally when explanations are long, so edge-positioned help remains reachable instead of being clipped.
 * Narrow report cards and context selectors keep long guidance inside their available width; Simple evidence badges use concise labels while their full explanations remain available through the shared tooltip.

@@ -1712,6 +1712,44 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== Filter Bar ===== */
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+.report-filter-details {
+  flex: 1 1 22rem;
+  min-width: min(100%, 18rem);
+}
+.report-filter-details > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.55rem;
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  list-style-position: inside;
+}
+.report-filter-details > summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.report-filter-details[open] > summary {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.report-filter-details[open] .filter-bar {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1799,6 +1837,15 @@ h1, h2, h3, h4, h5, h6 {
     padding: 18px;
   }
 
+  .report-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-filter-details {
+    width: 100%;
+  }
+
   .filter-bar {
     align-items: stretch;
     flex-direction: column;
@@ -1820,18 +1867,21 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
   }
 
-  .mode-group {
+  .report-controls > .mode-group {
+    width: 100%;
     margin-left: 0;
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .filter-bar .view-mode-buttons {
+  .report-controls .view-mode-buttons {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     flex-wrap: wrap;
   }
 
-  .filter-bar .view-mode-btn {
+  .report-controls .view-mode-btn {
     flex: 1;
     justify-content: center;
   }

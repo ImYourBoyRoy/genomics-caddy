@@ -69,7 +69,7 @@ describe('report card wrapping', () => {
   it('allows the narrow reading-mode control to wrap inside its width', () => {
     const narrow = source.match(/@media \(max-width: 720px\) \{[\s\S]*?\n\}/)?.[0] ?? '';
 
-    expect(narrow).toContain('.filter-bar .view-mode-buttons');
+    expect(narrow).toContain('.report-controls .view-mode-buttons');
     expect(narrow).toContain('max-width: 100%;');
     expect(narrow).toContain('box-sizing: border-box;');
     expect(narrow).toContain('flex-wrap: wrap;');

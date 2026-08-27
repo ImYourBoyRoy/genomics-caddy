@@ -550,8 +550,11 @@
     </div>
   </details>
 
-  <!-- Filter Bar -->
-  <div class="filter-bar card no-print">
+  <!-- Keep advanced filtering out of the Simple-first reading path while keeping it one click away. -->
+  <div class="report-controls no-print">
+    <details class="report-filter-details" open={presentationMode !== 'simple'}>
+      <summary>Filters &amp; ordering</summary>
+      <div class="filter-bar card">
     <div class="filter-group">
       <span class="filter-label">Show</span>
       <label class="filter-toggle">
@@ -587,7 +590,9 @@
       </label>
       <span id="reproductive-priority-hint" class="filter-context-hint">This changes ordering only; all reproductive markers remain visible.</span>
     {/if}
-    
+      </div>
+    </details>
+
     <div class="mode-group" role="group" aria-labelledby="reading-mode-label">
       <span id="reading-mode-label" class="filter-label">Reading mode</span>
       <div class="view-mode-buttons">

@@ -127,7 +127,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * The report uses a Simple-first hierarchy with a centered, readable single-column action queue capped at five items and a 54rem maximum measure; Clinical and Compare remain available for advanced review.
 * Simple finding cards keep the plain-language meaning visible and place an additional plain-language explanation behind a compact `Details` disclosure before technical data.
 * Simple cards keep secondary ClinVar/population context in Technical data and References instead of repeating context pills across every card.
-* Simple next-step text uses the authored lab, symptom, or clinical follow-up labels when available instead of repeating a generic follow-up sentence.
+* Simple next-step text uses the authored lab, symptom, or clinical follow-up labels when available instead of repeating a generic follow-up sentence; longer authored lists are bounded with a compact remainder count and stay available in Details.
 * Expanded Simple and Compare finding grids use a centered 72rem maximum measure so two-column cards retain readable line lengths and intentional whitespace.
 * A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.

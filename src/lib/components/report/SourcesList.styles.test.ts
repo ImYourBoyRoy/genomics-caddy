@@ -12,4 +12,11 @@ describe('SourcesList semantic styling', () => {
     expect(styleBlock).toContain('var(--status-info-soft-bg)');
     expect(styleBlock).toContain('var(--status-info-soft-border)');
   });
+
+  it('wraps long citation and catalog labels inside the reference drawer', () => {
+    expect(styleBlock).toContain('.sources-list li,');
+    expect(styleBlock).toContain('.source-link,');
+    expect(styleBlock).toContain('overflow-wrap: anywhere;');
+    expect(styleBlock).toContain('word-break: break-word;');
+  });
 });

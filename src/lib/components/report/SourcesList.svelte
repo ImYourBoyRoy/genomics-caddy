@@ -132,4 +132,13 @@
     border: 1px solid var(--status-info-soft-border);
     border-radius: 3px;
   }
+
+  .sources-list li,
+  .source-link,
+  .source-type,
+  .source-notes {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 </style>

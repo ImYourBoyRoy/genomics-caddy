@@ -52,6 +52,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
   * **Compare Mode 👥:** Opt-in side-by-side comparison of the Simple and Clinical explanations.
   * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
+  * **Compact secondary details:** Simple finding cards keep Details, Technical data, and References in one compact disclosure rail so the plain-language meaning and next step remain the focus.
   * **Desktop theme control:** The persistent theme control lives in the top report toolbar with clear System default, Light mode, and Dark mode choices, keeping it out of the scrollable report content.
 
 ### 4. Local RAG Evidence Library & Search Engine

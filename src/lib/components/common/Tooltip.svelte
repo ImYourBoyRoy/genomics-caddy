@@ -2,13 +2,14 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
+  import { calculateTooltipPosition, type TooltipPlacement } from '../../utils/tooltipPosition';
 
   interface Props {
     label: string;
     description: string;
     children: Snippet;
     learnMoreHref?: string;
-    placement?: 'top' | 'bottom' | 'left' | 'right';
+    placement?: TooltipPlacement;
     triggerClass?: string;
     interactiveChildren?: boolean;
   }
@@ -121,23 +122,13 @@
     if (!isOpen || !triggerElement) return;
     const rect = triggerElement.getBoundingClientRect();
     const panelRect = panelElement?.getBoundingClientRect();
-    const width = Math.min(panelRect?.width || 288, window.innerWidth - 16);
-    const height = panelRect?.height || 120;
-    const gap = 8;
-    let left = rect.left + (rect.width / 2) - (width / 2);
-    let top = placement === 'bottom'
-      ? rect.bottom + gap
-      : placement === 'left' || placement === 'right'
-        ? rect.top + (rect.height / 2) - (height / 2)
-        : rect.top - height - gap;
-
-    if (placement === 'left') left = rect.left - width - gap;
-    if (placement === 'right') left = rect.right + gap;
-    if (placement === 'top' && top < 8) top = rect.bottom + gap;
-    if (placement === 'bottom' && top + height > window.innerHeight - 8) top = rect.top - height - gap;
-    left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
-    top = Math.max(8, Math.min(top, window.innerHeight - height - 8));
-    panelStyle = `left: ${Math.round(left)}px; top: ${Math.round(top)}px; width: ${Math.round(width)}px;`;
+    const position = calculateTooltipPosition({
+      trigger: rect,
+      panel: panelRect,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      placement,
+    });
+    panelStyle = `left: ${position.left}px; top: ${position.top}px; width: ${position.width}px;`;
   }
 
   function handleHostFocusOut(event: FocusEvent) {

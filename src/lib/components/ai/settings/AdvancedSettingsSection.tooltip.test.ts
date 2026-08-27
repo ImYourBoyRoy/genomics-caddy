@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./AdvancedSettingsSection.svelte', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../../../styles/components/advanced-settings-section.css', import.meta.url), 'utf8');
+const rawColor = /(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i;
 
 describe('advanced settings path tooltip coverage', () => {
   it('uses the shared tooltip for every optional local storage path', () => {
@@ -18,5 +19,9 @@ describe('advanced settings path tooltip coverage', () => {
     expect(focusRule).toContain('outline: 2px solid var(--focus-ring);');
     expect(focusRule).toContain('outline-offset: 2px;');
     expect(styles.match(/\.path-tooltip-trigger \{[\s\S]*?\n  \}/)?.[0] ?? '').toContain('min-height: 44px;');
+  });
+
+  it('keeps advanced settings colors on shared theme tokens', () => {
+    expect(rawColor.test(styles)).toBe(false);
   });
 });

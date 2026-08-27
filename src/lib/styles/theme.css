@@ -838,9 +838,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .catalog-warnings-banner {
-  background: rgba(248, 113, 113, 0.08);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #fecaca;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-text);
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 0.8rem;

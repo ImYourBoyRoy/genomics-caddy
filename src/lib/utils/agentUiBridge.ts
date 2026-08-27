@@ -116,6 +116,10 @@ function isPublicUiTextNode(node: Node): boolean {
   if (!element || element.closest(PRIVATE_UI_SELECTORS)) return false;
   if (element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
 
+  // A closed disclosure keeps its summary visible while hiding its body.
+  const closedDetails = element.closest('details:not([open])');
+  if (closedDetails && !element.closest('summary')) return false;
+
   const style = getComputedStyle(element);
   return style.display !== 'none' && style.visibility !== 'hidden';
 }

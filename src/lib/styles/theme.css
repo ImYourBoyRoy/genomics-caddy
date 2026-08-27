@@ -1195,22 +1195,22 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 6px;
 }
 .confirm-pathway {
-  background: rgba(59, 130, 246, 0.04);
-  border: 1px solid rgba(59, 130, 246, 0.08);
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
 }
 .confirm-pathway .sec-title {
-  color: #93c5fd;
+  color: var(--status-info-text);
   font-weight: 700;
   display: block;
   margin-bottom: 4px;
   font-size: 0.75rem;
 }
 .claim-warning {
-  background: rgba(239, 68, 68, 0.04);
-  border: 1px solid rgba(239, 68, 68, 0.08);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
 }
 .claim-warning .sec-title {
-  color: #fca5a5;
+  color: var(--status-danger-strong-text);
   font-weight: 700;
   display: block;
   margin-bottom: 4px;
@@ -1435,14 +1435,14 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(156, 163, 175, 0.2);
 }
 .raw-limitation-warning {
-  background: rgba(245, 158, 11, 0.04);
-  border: 1px solid rgba(245, 158, 11, 0.12);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
   padding: 10px;
   border-radius: 6px;
   margin-top: 4px;
 }
 .raw-limitation-warning .sec-title {
-  color: #fbd38d;
+  color: var(--status-warning-text);
   font-weight: 700;
   display: block;
   margin-bottom: 4px;
@@ -1454,13 +1454,51 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
 }
 .clinical-confirmation-warning {
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-strong-text);
   padding: 10px;
   border-radius: 6px;
   font-size: 0.75rem;
   margin-top: 4px;
+}
+.warning-details {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+.warning-details summary {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.warning-details summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.warning-summary-badge {
+  flex: 0 1 auto;
+  max-width: 100%;
+  color: var(--status-danger-strong-text);
+  overflow-wrap: anywhere;
+}
+.warning-details[open] summary {
+  color: var(--text-primary);
+}
+.warning-details-body {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
 }
 .marker-sources {
   margin-top: 8px;

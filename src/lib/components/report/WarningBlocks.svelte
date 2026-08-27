@@ -27,28 +27,42 @@
     clinicalConfirmationRequired,
     doNotClaim = []
   }: Props = $props();
+
+  let hasWarnings = $derived(Boolean(rawDnaLimitation || clinicalConfirmationRequired || doNotClaim.length > 0));
 </script>
 
-{#if rawDnaLimitation}
-  <div class="raw-limitation-warning">
-    <span class="sec-title">⚠️ Raw DNA Limitation:</span>
-    <p>{rawDnaLimitation}</p>
-  </div>
-{/if}
+{#if hasWarnings}
+  <details class="warning-details">
+    <summary>
+      <span>Limits &amp; confirmation</span>
+      {#if clinicalConfirmationRequired}
+        <span class="warning-summary-badge">Clinical review</span>
+      {/if}
+    </summary>
+    <div class="warning-details-body">
+      {#if rawDnaLimitation}
+        <div class="raw-limitation-warning">
+          <span class="sec-title">Raw DNA limitation</span>
+          <p>{rawDnaLimitation}</p>
+        </div>
+      {/if}
 
-{#if clinicalConfirmationRequired}
-  <div class="clinical-confirmation-warning">
-    {getClinicalWarning(gene)}
-  </div>
-{/if}
+      {#if clinicalConfirmationRequired}
+        <div class="clinical-confirmation-warning">
+          {getClinicalWarning(gene)}
+        </div>
+      {/if}
 
-{#if doNotClaim && doNotClaim.length > 0}
-  <div class="claim-warning">
-    <span class="sec-title">⚠️ Clinical Warning (Does Not Claim):</span>
-    <ul class="warning-list">
-      {#each doNotClaim as item}
-        <li>{item}</li>
-      {/each}
-    </ul>
-  </div>
+      {#if doNotClaim.length > 0}
+        <div class="claim-warning">
+          <span class="sec-title">Important limits</span>
+          <ul class="warning-list">
+            {#each doNotClaim as item}
+              <li>{item}</li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+    </div>
+  </details>
 {/if}

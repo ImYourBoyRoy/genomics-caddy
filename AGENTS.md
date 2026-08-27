@@ -47,6 +47,10 @@ npm run cargo:test
 git diff --check
 ```
 
+For report/sidebar or other desktop UI changes, also run `npm run audit:tauri-ui`
+while the Tauri development window is running. This is the application-level
+fixture check; the Svelte renderer URL and browser preview are supplemental only.
+
 The fixture audit is read-only and must not emit or persist raw genotype values.
 Report source/runtime drift, unverified external behavior, warnings, and
 remaining coverage limits explicitly. Update `README.md` for externally

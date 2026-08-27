@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/ai/evidence/EvidenceSearchToolbar.svelte -->
 <script lang="ts">
   import { TRAIT_CATEGORIES } from "../../../constants/traitCategories";
+  import Tooltip from "../../common/Tooltip.svelte";
 
   interface Props {
     searchQuery: string;
@@ -183,15 +184,16 @@
       <div class="trait-category-row">
         <span class="discovery-label">Trait categories</span>
         {#each TRAIT_CATEGORIES as cat}
-          <button
-            type="button"
-            class="trait-chip"
-            class:active={traitCategory === cat.id}
-            onclick={() => onBrowseTrait(cat.id)}
-            title={cat.queryHint}
-          >
-            {cat.label}
-          </button>
+          <Tooltip interactiveChildren label={cat.label} description={cat.queryHint} placement="bottom">
+            <button
+              type="button"
+              class="trait-chip"
+              class:active={traitCategory === cat.id}
+              onclick={() => onBrowseTrait(cat.id)}
+            >
+              {cat.label}
+            </button>
+          </Tooltip>
         {/each}
         {#if traitCategory}
           <button type="button" class="trait-chip clear" onclick={onClearTrait}>Clear filter</button>

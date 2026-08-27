@@ -2,6 +2,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
   import type { ResearchJob, PipelineTuningPublic, ResearchScopePreview } from "../../types/research";
+  import Tooltip from "../common/Tooltip.svelte";
   import { liveProgress } from "../../research/liveProgress.svelte";
   import {
     PIPELINE_STEPS,
@@ -298,7 +299,7 @@
 </script>
 
 {#if pipelineTuning}
-  <div class="tuning-banner" title="Batch size and prepare parallelism adapt from measured Ollama/Qdrant latency">
+  <div class="tuning-banner">
     <span class="tuning-profile">{pipelineTuning.profile}</span>
     <span class="tuning-pill">batch {pipelineTuning.enrich_batch_size}</span>
     <span class="tuning-pill">{pipelineTuning.prepare_concurrency}× prepare</span>
@@ -313,6 +314,13 @@
     {#if pipelineTuning.fast_sweep}
       <span class="tuning-fast">fast sweep</span>
     {/if}
+    <Tooltip
+      label="Adaptive sweep tuning"
+      description="Batch size and preparation parallelism adapt from measured Ollama and Qdrant latency."
+      triggerClass="tuning-help-trigger"
+    >
+      <span class="tuning-help" aria-hidden="true">ⓘ</span>
+    </Tooltip>
   </div>
 {/if}
 

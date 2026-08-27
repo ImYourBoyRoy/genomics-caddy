@@ -4,6 +4,16 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 
 describe('report card wrapping', () => {
+  it('defines and applies the shared report spacing scale', () => {
+    expect(source).toContain('--space-1: 0.5rem;');
+    expect(source).toContain('--space-2: 1rem;');
+    expect(source).toContain('--space-3: 1.5rem;');
+    expect(source).toContain('--space-4: 2rem;');
+    expect(source).toContain('gap: var(--space-3);');
+    expect(source).toContain('gap: var(--space-2);');
+    expect(source).toContain('padding: var(--space-2);');
+  });
+
   it('uses a theme-aware hover shadow for marker cards', () => {
     const markerHover = source.match(/\.marker-card:hover \{[\s\S]*?\n\}/)?.[0] ?? '';
 

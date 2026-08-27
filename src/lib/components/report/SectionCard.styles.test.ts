@@ -60,4 +60,9 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('onCollapsedChange(nextCollapsed);');
     expect(source).toContain('collapsed = nextCollapsed;');
   });
+
+  it('keeps section toggles usable as touch controls', () => {
+    expect(styleBlock).toContain('min-height: 44px;');
+    expect(styleBlock).toContain('gap: var(--space-1);');
+  });
 });

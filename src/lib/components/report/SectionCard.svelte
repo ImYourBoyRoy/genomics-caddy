@@ -162,7 +162,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-2);
     flex-wrap: wrap;
     min-height: 2.75rem;
     user-select: none;
@@ -177,7 +177,7 @@
     flex: 1 1 30rem;
     min-width: 0;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-1);
     flex-wrap: wrap;
   }
 
@@ -185,8 +185,9 @@
     display: flex;
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 44px;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-1);
     padding: 0.2rem 0.35rem;
     border: 1px solid transparent;
     border-radius: 0.45rem;

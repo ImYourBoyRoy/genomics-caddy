@@ -75,7 +75,7 @@ describe('report card wrapping', () => {
     const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
 
     expect(toolbar).toContain('flex: 0 0 auto;');
-    expect(toolbar).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 0;');
+    expect(toolbar).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) var(--space-1);');
     expect(focusToggle).toContain('position: static;');
     expect(focusToggle).not.toContain('position: fixed;');
   });

@@ -436,7 +436,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .focus-toolbar {
   flex: 0 0 auto;
-  padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 0;
+  padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) var(--space-1);
   box-sizing: border-box;
 }
 

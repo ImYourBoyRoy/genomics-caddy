@@ -40,5 +40,6 @@ describe('responsive data-sidebar access', () => {
     expect(theme).toContain('.focus-toolbar-inner {');
     expect(theme).toContain('justify-content: space-between;');
     expect(theme).toContain('position: static;');
+    expect(theme).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) var(--space-1);');
   });
 });

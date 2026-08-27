@@ -1194,7 +1194,7 @@ const MIN_SEX_CHROMOSOME_CALLS: usize = 20;
 fn allele_is_called(allele: &str) -> bool {
     let value = allele.trim();
     !value.is_empty()
-        && !matches!(value, "-" | "--" | "00" | "?" | "NN")
+        && !matches!(value, "-" | "--" | "0" | "00" | "?" | "NN")
         && !value.contains('?')
 }
 
@@ -2622,6 +2622,29 @@ mod sex_context_tests {
             })
             .collect::<Vec<_>>();
         records.extend((0..5).map(|i| y_record(i, true)));
+
+        assert_eq!(infer_genetic_sex(&records), "Female");
+    }
+
+    #[test]
+    fn ancestry_zero_placeholders_do_not_count_as_y_calls() {
+        let mut records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "X".to_string(),
+                position: i as u64 + 1,
+                allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
+                allele2: "G".to_string(),
+            })
+            .collect::<Vec<_>>();
+        records.extend((0..1_665).map(|i| SnpRecord {
+            rsid: format!("rsy{i}"),
+            chromosome: "Y".to_string(),
+            position: i as u64 + 1,
+            allele1: "0".to_string(),
+            allele2: "0".to_string(),
+        }));
+        records.extend((0..9).map(|i| y_record(i, true)));
 
         assert_eq!(infer_genetic_sex(&records), "Female");
     }

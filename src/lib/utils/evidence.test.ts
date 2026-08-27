@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getClaimFrame, getDirectionInfo, getScopeLabel, getSeverityInfo, getTierInfo } from './evidence';
+import { getClaimFrame, getDirectionInfo, getScopeLabel, getSeverityInfo, getSimpleTierLabel, getTierInfo } from './evidence';
 
 describe('evidence tier display', () => {
   it('uses the tier prefix for custom evidence labels', () => {
@@ -17,6 +17,12 @@ describe('evidence tier display', () => {
     const info = getTierInfo('not_a_real_tier');
     expect(info.colorClass).toBe('tier-unknown');
     expect(info.confidenceLabel).toContain('Unclassified');
+  });
+
+  it('keeps the primary Simple evidence label concise', () => {
+    expect(getSimpleTierLabel('A_clinical')).toBe('Higher evidence');
+    expect(getSimpleTierLabel('D_research')).toBe('Research only');
+    expect(getSimpleTierLabel('not_a_real_tier')).toBe('Evidence context');
   });
 
   it('frames raw-SNP claims separately from clinical actionability', () => {

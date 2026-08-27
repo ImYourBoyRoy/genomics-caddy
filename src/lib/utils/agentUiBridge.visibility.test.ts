@@ -8,4 +8,16 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("const closedDetails = element.closest('details:not([open])');");
     expect(source).toContain('if (closedDetails && !element.closest(\'summary\')) return false;');
   });
+
+  it('reports only safe width metadata for overflowing report descendants', () => {
+    expect(source).toContain('overflowingElements: Array<{');
+    expect(source).toContain('classes: Array.from(element.classList).slice(0, 4),');
+    expect(source).toContain('rightOverflow: Math.max(0, Math.round(rightOverflow)),');
+    expect(source).toContain('parentClasses,');
+    expect(source).toContain("element.closest('details:not([open])')");
+    expect(source).toContain("element.closest('.clinical-findings-table thead')");
+    expect(source).toContain("element.classList.contains('sr-only')");
+    expect(source).not.toContain('element.textContent');
+    expect(source).not.toContain('element.id');
+  });
 });

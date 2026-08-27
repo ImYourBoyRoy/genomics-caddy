@@ -55,4 +55,46 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain("return 'Compare with symptoms, history, and relevant labs.'");
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
   });
+
+  it('allows long guidance text to wrap inside narrow cards', () => {
+    const cardBody = styleBlock.match(/\.card-body \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const notes = styleBlock.match(/\.diet-notes-pre \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const supplementItem = styleBlock.match(/\.supplement-item \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const supplementReason = styleBlock.match(/\.supp-reason \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(cardBody).toContain('min-width: 0;');
+    expect(notes).toContain('overflow-wrap: anywhere;');
+    expect(notes).toContain('word-break: break-word;');
+    expect(supplementItem).toContain('box-sizing: border-box;');
+    expect(supplementReason).toContain('display: block;');
+    expect(supplementReason).toContain('overflow-wrap: anywhere;');
+  });
+
+  it('bounds the optional context selector and dashboard containers', () => {
+    const dashboard = styleBlock.match(/\.dashboard-v2 \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const context = styleBlock.match(/\.context-selector \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const heading = styleBlock.match(/\.context-selector-heading \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const select = styleBlock.match(/\.context-selector select \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const summaryCard = styleBlock.match(/\.summary-card \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const labCard = styleBlock.match(/\.card-lab-followups \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(dashboard).toContain('box-sizing: border-box;');
+    expect(context).toContain('max-width: 100%;');
+    expect(heading).toContain('flex-wrap: wrap;');
+    expect(select).toContain('box-sizing: border-box;');
+    expect(select).toContain('max-width: 100%;');
+    expect(select).toContain('text-overflow: ellipsis;');
+    expect(grid).toContain('min-width: 0;');
+    expect(summaryCard).toContain('box-sizing: border-box;');
+    expect(labCard).toContain('max-width: 100%;');
+  });
+
+  it('keeps context selector labels short while retaining their stable IDs', () => {
+    expect(source).toContain("const contextOptionLabels: Record<string, string>");
+    expect(source).toContain("menstrual_cycle: 'Menstrual cycle / PMS'");
+    expect(source).toContain("suspected_adenomyosis: 'Adenomyosis / heavy bleeding'");
+    expect(source).toContain("<option value=\"\">Not specified</option>");
+    expect(source).toContain('contextOptionLabel(option.id, option.label)');
+  });
 });

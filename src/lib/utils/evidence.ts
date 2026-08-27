@@ -43,6 +43,19 @@ export function getTierInfo(tier: string): TierInfo {
   };
 }
 
+/** Keep the primary Simple card label short; the full context remains in the tooltip. */
+export function getSimpleTierLabel(tier: string): string {
+  const band = String(tier || '').trim().charAt(0).toUpperCase();
+  const labels: Record<string, string> = {
+    A: 'Higher evidence',
+    B: 'Moderate evidence',
+    C: 'Limited evidence',
+    D: 'Research only',
+    E: 'Safety boundary',
+  };
+  return labels[band] || 'Evidence context';
+}
+
 /**
  * Add a visible claim frame beside every interpretation. Evidence strength,
  * genotype matching, and clinical actionability are separate dimensions.

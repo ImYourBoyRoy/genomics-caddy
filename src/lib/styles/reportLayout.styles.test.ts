@@ -28,6 +28,17 @@ describe('report card wrapping', () => {
     expect(markerLabel).toContain('word-break: break-word;');
   });
 
+  it('keeps marker cards inside their one-column track on narrow screens', () => {
+    const grid = source.match(/\.markers-grid \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = source.match(/\.marker-card \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(grid).toContain('min-width: 0;');
+    expect(grid).toContain('max-width: 100%;');
+    expect(card).toContain('min-width: 0;');
+    expect(card).toContain('max-width: 100%;');
+    expect(card).toContain('box-sizing: border-box;');
+  });
+
   it('allows Clinical result labels to wrap without horizontal overflow', () => {
     const markerMiddle = source.match(/\.marker-middle \{[\s\S]*?\n\}/)?.[0] ?? '';
     const genotype = source.match(/\.genotype-val \{[\s\S]*?\n\}/)?.[0] ?? '';
@@ -53,6 +64,15 @@ describe('report card wrapping', () => {
 
     expect(filter).toContain('border: 1px solid var(--border-color);');
     expect(filter).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
+  it('allows the narrow reading-mode control to wrap inside its width', () => {
+    const narrow = source.match(/@media \(max-width: 720px\) \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(narrow).toContain('.filter-bar .view-mode-buttons');
+    expect(narrow).toContain('max-width: 100%;');
+    expect(narrow).toContain('box-sizing: border-box;');
+    expect(narrow).toContain('flex-wrap: wrap;');
   });
 
   it('keeps shared error surfaces on semantic danger tokens', () => {

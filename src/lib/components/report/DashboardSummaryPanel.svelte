@@ -72,6 +72,24 @@
     return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
   }
 
+  const contextOptionLabels: Record<string, string> = {
+    menstrual_cycle: 'Menstrual cycle / PMS',
+    cycle_linked_pain_headache: 'Cycle-linked pain / migraine',
+    cyclic_mood_symptoms: 'Cyclic mood symptoms',
+    ovarian_reproductive: 'Ovarian / reproductive care',
+    uterine_pelvic: 'Uterine / pelvic symptoms',
+    suspected_adenomyosis: 'Adenomyosis / heavy bleeding',
+    androgen_reproductive: 'Androgen / prostate / testicular',
+    menopause_hormone_therapy: 'Menopause / hormone therapy',
+    hormone_therapy_context: 'Hormone therapy context',
+    pregnancy_postpartum: 'Pregnancy / postpartum / lactation',
+    preconception_fertility: 'Preconception / fertility',
+  };
+
+  function contextOptionLabel(id: string, fallback: string): string {
+    return contextOptionLabels[id] || fallback;
+  }
+
   function markerForFinding(finding: ActionablePlan['topFindings'][number]) {
     for (const section of report.sections || []) {
       const marker = section.markers.find((candidate) => candidate.link_id === finding.link_id);
@@ -217,9 +235,9 @@
       <span>Optional self-reported context used to tailor guidance.</span>
     </div>
     <select aria-labelledby="reproductive-context-label" value={reproductiveContext} onchange={setReproductiveContext}>
-      <option value="">Not specified — keep context-specific guidance hidden</option>
+      <option value="">Not specified</option>
       {#each cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown') as option (option.id)}
-        <option value={option.id}>{option.label}</option>
+        <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
       {/each}
     </select>
   </div>
@@ -657,6 +675,9 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .action-queue {
@@ -804,6 +825,9 @@
     padding: 0.75rem 1rem;
     border: 1px solid var(--coverage-border);
     background: var(--coverage-bg);
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .context-selector-copy {
@@ -811,6 +835,7 @@
     flex-direction: column;
     gap: 0.2rem;
     min-width: 0;
+    max-width: 100%;
     font-size: 0.72rem;
     line-height: 1.4;
   }
@@ -820,10 +845,16 @@
     align-items: center;
     gap: 0.25rem;
     min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
   }
 
   .context-selector-heading strong {
+    display: block;
+    flex: 1 1 10rem;
     min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .context-info-icon {
@@ -879,12 +910,17 @@
 
   .context-selector select {
     min-width: min(320px, 42%);
+    max-width: 100%;
     background: var(--surface-control);
     border: 1px solid var(--coverage-border);
     border-radius: 5px;
     color: var(--text-primary);
     padding: 0.45rem 0.55rem;
     font: inherit;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .grid-layout {
@@ -892,6 +928,9 @@
     flex-direction: column;
     gap: 1rem;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .action-row {
@@ -903,6 +942,8 @@
 
   .card-lab-followups {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .card-cycle-support {
@@ -1074,6 +1115,7 @@
     height: fit-content;
     transition: all 0.2s ease;
     min-width: 0;
+    box-sizing: border-box;
   }
   .summary-card:hover {
     border-color: var(--border-strong);
@@ -1118,6 +1160,9 @@
 
   .card-body {
     padding: 0.85rem 1rem;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .section-hint {
@@ -1311,6 +1356,8 @@
     border-top: 1px solid var(--border-color);
     font-size: 0.7rem;
     opacity: 0.8;
+    min-width: 0;
+    max-width: 100%;
   }
   .diet-notes-pre {
     white-space: pre-wrap;
@@ -1318,12 +1365,17 @@
     font-size: 0.75rem;
     margin-top: 0.25rem;
     opacity: 0.95;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .supplements-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
   }
   .supplement-item {
     display: flex;
@@ -1332,6 +1384,9 @@
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
     border-left: 2px solid var(--status-accent-soft-border);
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .supp-name {
     font-size: 0.75rem;
@@ -1339,9 +1394,14 @@
     color: var(--status-accent-soft-text);
   }
   .supp-reason {
+    display: block;
     font-size: 0.68rem;
     opacity: 0.75;
     margin-top: 0.1rem;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .supplement-safety {
     margin-top: 0.85rem;

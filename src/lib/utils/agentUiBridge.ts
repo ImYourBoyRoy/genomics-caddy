@@ -35,6 +35,17 @@ export interface AgentUiLayoutMetrics {
   clinicalTableCount: number;
   activePresentationMode: 'simple' | 'clinical' | 'compare' | null;
   focusMode: boolean;
+  overflowingElements: Array<{
+    tag: string;
+    classes: string[];
+    clientWidth: number;
+    scrollWidth: number;
+    boundingWidth: number;
+    rightOverflow: number;
+    parentWidth: number;
+    parentWidthOverflow: number;
+    parentClasses: string[];
+  }>;
 }
 
 export interface AgentUiSnapshot {
@@ -140,6 +151,49 @@ function getActivePresentationMode(): AgentUiLayoutMetrics['activePresentationMo
   return null;
 }
 
+function isIgnoredLayoutElement(element: HTMLElement): boolean {
+  if (element.closest('[hidden], [aria-hidden="true"], [inert]')) return true;
+  if (element.closest('details:not([open])') && !element.closest('summary')) return true;
+  if (element.closest('.clinical-findings-table thead')) return true;
+  if (element.classList.contains('sr-only')) return true;
+
+  const style = getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') return true;
+  return style.position === 'absolute' && element.clientWidth <= 1 && element.clientHeight <= 1;
+}
+
+function collectOverflowingElements(root: HTMLElement | null): AgentUiLayoutMetrics['overflowingElements'] {
+  if (!root) return [];
+
+  const rootRight = root.getBoundingClientRect().right;
+
+  return Array.from(root.querySelectorAll<HTMLElement>('*'))
+    .filter((element) => !isIgnoredLayoutElement(element))
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+      const parent = element.parentElement;
+      const parentWidth = parent?.clientWidth ?? root.clientWidth;
+      const overflow = element.scrollWidth - element.clientWidth;
+      const rightOverflow = rect.right - rootRight;
+      const parentWidthOverflow = rect.width - parentWidth;
+      return { element, overflow, rightOverflow, boundingWidth: rect.width, parentWidth, parentWidthOverflow, parentClasses: parent ? Array.from(parent.classList).slice(0, 4) : [] };
+    })
+    .filter(({ overflow, rightOverflow, parentWidthOverflow }) => overflow > 1 || rightOverflow > 1 || parentWidthOverflow > 1)
+    .sort((a, b) => Math.max(b.overflow, b.rightOverflow, b.parentWidthOverflow) - Math.max(a.overflow, a.rightOverflow, a.parentWidthOverflow))
+    .slice(0, 12)
+    .map(({ element, rightOverflow, boundingWidth, parentWidth, parentWidthOverflow, parentClasses }) => ({
+      tag: element.tagName.toLowerCase(),
+      classes: Array.from(element.classList).slice(0, 4),
+      clientWidth: Math.round(element.clientWidth),
+      scrollWidth: Math.round(element.scrollWidth),
+      boundingWidth: Math.round(boundingWidth),
+      rightOverflow: Math.max(0, Math.round(rightOverflow)),
+      parentWidth: Math.round(parentWidth),
+      parentWidthOverflow: Math.max(0, Math.round(parentWidthOverflow)),
+      parentClasses,
+    }));
+}
+
 function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
@@ -158,6 +212,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
     activePresentationMode: getActivePresentationMode(),
     focusMode: document.querySelector('.app-layout.focus-mode') !== null,
+    overflowingElements: collectOverflowingElements(mainContent),
   };
 }
 

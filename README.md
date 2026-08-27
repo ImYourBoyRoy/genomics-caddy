@@ -140,6 +140,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Shared tooltip panels cap their height to the viewport and scroll locally when explanations are long, so edge-positioned help remains reachable instead of being clipped.
 * Narrow report cards and context selectors keep long guidance inside their available width; Simple evidence badges use concise labels while their full explanations remain available through the shared tooltip.
 * Reference drawers wrap long citation titles, catalog labels, and source notes inside the finding card instead of widening the report.
+* Clinical technical-detail disclosures remove desktop width minimums on stacked narrow rows, keeping expanded clinician fields inside the available card.
 * Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
 * The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
 * The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.

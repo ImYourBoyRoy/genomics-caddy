@@ -67,6 +67,13 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('<EffectDirectionBadge direction={marker.effect_direction} />');
   });
 
+  it('provides a compact plain-language Details disclosure before technical data', () => {
+    expect(source).toContain('<details class="simple-details">');
+    expect(source).toContain('<summary>Details</summary>');
+    expect(source).toContain('<p>{laypersonTranslation.simpleImpact}</p>');
+    expect(source).not.toContain('<summary>Why this is shown</summary>');
+  });
+
   it('keeps the highlighted finding state on shared info tokens', () => {
     const highlightStyles = source.match(/:global\(\.marker-card-highlight\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
 

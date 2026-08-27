@@ -273,6 +273,10 @@
           {/if}
         </div>
         {/if}
+        <details class="simple-details">
+          <summary>Details</summary>
+          <p>{laypersonTranslation.simpleImpact}</p>
+        </details>
         <details class="technical-details">
           <summary>Technical data</summary>
           <dl>
@@ -653,6 +657,37 @@
   .simple-next-step strong {
     color: var(--text-primary);
     margin-right: 0.3rem;
+  }
+
+  .simple-details {
+    margin-top: 0.15rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .simple-details summary {
+    display: flex;
+    min-height: 2rem;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .simple-details summary:focus-visible,
+  .technical-details summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+
+  .simple-details p {
+    margin: 0.15rem 0 0;
+    padding: 0.45rem 0.6rem;
+    border-left: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    line-height: 1.45;
   }
 
   .technical-details {

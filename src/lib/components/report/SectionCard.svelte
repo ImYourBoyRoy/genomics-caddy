@@ -74,7 +74,9 @@
 
   let summaryParts = $derived(getSectionSummaryParts(section.summary));
   let showPercent = $derived(section.summary.show_percent_score);
-  let activeCount = $derived(section.summary.active_marker_count ?? 0);
+  let activeCount = $derived(
+    section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length
+  );
   let noDataCount = $derived(section.summary.no_data_count ?? 0);
   let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount));
   let coveragePercent = $derived(
@@ -99,7 +101,7 @@
         </span>
         <h4>{section.name}</h4>
         <span class="pill section-count-pill">
-          {section.markers.length} {section.markers.length === 1 ? 'variant' : 'variants'}
+          {section.markers.length} shown
         </span>
         {#if activeCount > 0}
           <span class="pill active-pill section-active-pill">

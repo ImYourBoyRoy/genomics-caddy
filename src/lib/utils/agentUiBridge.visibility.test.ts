@@ -39,4 +39,14 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('const wasExpanded = button.getAttribute(\'aria-expanded\') === \'true\';');
     expect(source).toContain('${wasExpanded ? \'collapsed\' : \'expanded\'}: ${sectionName}');
   });
+
+  it('exposes aggregate tooltip bounds without exposing tooltip content', () => {
+    expect(source).toContain('export interface AgentUiTooltipMetrics');
+    expect(source).toContain('tooltip: AgentUiTooltipMetrics;');
+    expect(source).toContain('function collectTooltipMetrics()');
+    expect(source).toContain('withinViewportCount');
+    expect(source).toContain('accessiblePanelCount');
+    expect(source).toContain('maxRightOverflow');
+    expect(source).not.toContain('panel.textContent');
+  });
 });

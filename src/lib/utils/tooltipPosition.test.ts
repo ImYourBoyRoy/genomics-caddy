@@ -33,19 +33,28 @@ describe('calculateTooltipPosition', () => {
     })).toEqual({ left: 360, top: 632, width: 280 });
   });
 
-  it('clamps side placements on both horizontal and vertical edges', () => {
+  it('flips side placements before clamping over the trigger at horizontal edges', () => {
     expect(calculateTooltipPosition({
       trigger: trigger(2, 2),
       panel: { width: 280, height: 160 },
       viewport,
       placement: 'left',
-    })).toEqual({ left: 8, top: 8, width: 280 });
+    })).toEqual({ left: 50, top: 8, width: 280 });
     expect(calculateTooltipPosition({
       trigger: trigger(960, 680),
       panel: { width: 280, height: 160 },
       viewport,
       placement: 'right',
-    })).toEqual({ left: 712, top: 616, width: 280 });
+    })).toEqual({ left: 672, top: 616, width: 280 });
+  });
+
+  it('still clamps a side placement when neither side has enough room', () => {
+    expect(calculateTooltipPosition({
+      trigger: trigger(130, 2),
+      panel: { width: 280, height: 160 },
+      viewport: { width: 300, height: 200 },
+      placement: 'left',
+    })).toEqual({ left: 8, top: 8, width: 280 });
   });
 
   it('shrinks the panel to fit a narrow viewport with equal edge padding', () => {

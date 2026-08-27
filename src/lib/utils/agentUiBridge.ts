@@ -48,6 +48,16 @@ export interface AgentUiLayoutMetrics {
   }>;
 }
 
+export interface AgentUiTooltipMetrics {
+  openPanelCount: number;
+  withinViewportCount: number;
+  accessiblePanelCount: number;
+  maxLeftOverflow: number;
+  maxTopOverflow: number;
+  maxRightOverflow: number;
+  maxBottomOverflow: number;
+}
+
 export interface AgentUiSnapshot {
   title: string;
   activeTab: string;
@@ -62,6 +72,7 @@ export interface AgentUiSnapshot {
   dualExportButtonsPresent: boolean;
   urgentBadgeCount: number;
   visibleTextSample: string[];
+  tooltip: AgentUiTooltipMetrics;
   layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
@@ -236,6 +247,26 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   };
 }
 
+function collectTooltipMetrics(): AgentUiTooltipMetrics {
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('.tooltip-panel'));
+  const rects = panels.map((panel) => panel.getBoundingClientRect());
+  const withinViewportCount = rects.filter(
+    (rect) => rect.left >= 0 && rect.top >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight,
+  ).length;
+
+  return {
+    openPanelCount: panels.length,
+    withinViewportCount,
+    accessiblePanelCount: panels.filter(
+      (panel) => !!panel.getAttribute('aria-labelledby') && !!panel.getAttribute('aria-describedby'),
+    ).length,
+    maxLeftOverflow: Math.max(0, ...rects.map((rect) => Math.round(-rect.left))),
+    maxTopOverflow: Math.max(0, ...rects.map((rect) => Math.round(-rect.top))),
+    maxRightOverflow: Math.max(0, ...rects.map((rect) => Math.round(rect.right - window.innerWidth))),
+    maxBottomOverflow: Math.max(0, ...rects.map((rect) => Math.round(rect.bottom - window.innerHeight))),
+  };
+}
+
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   const needle = normalizeUiLabel(text);
   if (!needle) return { ok: false, detail: 'empty text' };
@@ -323,6 +354,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           return /^\s*URGENT\s*$/i.test(direct);
         }).length,
         visibleTextSample: collectVisibleText(30),
+        tooltip: collectTooltipMetrics(),
         layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),

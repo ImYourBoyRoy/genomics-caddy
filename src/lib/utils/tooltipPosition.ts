@@ -58,8 +58,20 @@ export function calculateTooltipPosition({
       ? trigger.top + trigger.height / 2 - height / 2
       : trigger.top - height - gap;
 
-  if (placement === 'left') left = trigger.left - width - gap;
-  if (placement === 'right') left = trigger.right + gap;
+  if (placement === 'left') {
+    const leftSpace = trigger.left - horizontalPadding;
+    const rightSpace = viewport.width - horizontalPadding - trigger.right;
+    left = leftSpace >= width + gap || rightSpace < width + gap
+      ? trigger.left - width - gap
+      : trigger.right + gap;
+  }
+  if (placement === 'right') {
+    const rightSpace = viewport.width - horizontalPadding - trigger.right;
+    const leftSpace = trigger.left - horizontalPadding;
+    left = rightSpace >= width + gap || leftSpace < width + gap
+      ? trigger.right + gap
+      : trigger.left - width - gap;
+  }
   if (placement === 'top' && top < horizontalPadding) top = trigger.bottom + gap;
   if (placement === 'bottom' && top + height > viewport.height - horizontalPadding) {
     top = trigger.top - height - gap;

@@ -84,10 +84,25 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   };
 }
 
-async function waitForSnapshot(predicate, label) {
+function validateTooltipSnapshot(snapshot) {
+  const tooltip = snapshot.tooltip;
+  assert(tooltip && typeof tooltip === "object", "Bridge snapshot has no tooltip metrics");
+  assert(tooltip.openPanelCount === 1, "Expected one open tooltip panel");
+  assert(tooltip.withinViewportCount === tooltip.openPanelCount, "Tooltip panel is outside the desktop viewport");
+  assert(tooltip.accessiblePanelCount === tooltip.openPanelCount, "Open tooltip lacks accessible name/description metadata");
+  assert(
+    tooltip.maxLeftOverflow === 0 &&
+      tooltip.maxTopOverflow === 0 &&
+      tooltip.maxRightOverflow === 0 &&
+      tooltip.maxBottomOverflow === 0,
+    "Tooltip panel exceeds the desktop viewport",
+  );
+}
+
+async function waitForSnapshot(predicate, label, waitMs = timeoutMs) {
   const started = Date.now();
   let lastError = null;
-  while (Date.now() - started < timeoutMs) {
+  while (Date.now() - started < waitMs) {
     try {
       const snapshot = await request("/ui/snapshot");
       if (predicate(snapshot)) return snapshot;
@@ -109,7 +124,14 @@ async function clickText(text) {
 }
 
 async function waitForMode(mode) {
-  return waitForSnapshot((snapshot) => snapshot.layout?.activePresentationMode === mode, `${mode} mode`);
+  return waitForSnapshot(
+    (snapshot) => {
+      const layout = snapshot.layout;
+      if (layout?.activePresentationMode !== mode) return false;
+      return mode === "clinical" ? layout.clinicalTableCount === 1 : layout.clinicalTableCount === 0;
+    },
+    `${mode} mode and settled report structure`,
+  );
 }
 
 async function assertNoRedundantPublicCopy() {
@@ -120,15 +142,43 @@ async function assertNoRedundantPublicCopy() {
   assert(result?.ok === true && result.count === 0, "Redundant generic evidence warning is visible in the report");
 }
 
+async function ensurePopulatedSection() {
+  let snapshot = await request("/ui/snapshot");
+  if (snapshot.layout?.markerCardCount > 0) return snapshot;
+
+  await request("/ui/clickSection", {
+    method: "POST",
+    body: JSON.stringify({ section: "Pharmacogenomics (PGx)" }),
+  });
+  snapshot = await waitForSnapshot(
+    (candidate) => candidate.layout?.activePresentationMode === "simple" && candidate.layout.markerCardCount > 0,
+    "a populated Simple report section",
+    5_000,
+  );
+  assert(snapshot.layout.markerGridColumnCount !== null, "Populated Simple section did not render a finding grid");
+  return snapshot;
+}
+
 async function main() {
-  const ready = await waitForSnapshot(
+  let ready = await waitForSnapshot(
     (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode,
     "a loaded Tauri report"
   );
 
+  if (ready.layout.activePresentationMode !== "simple") {
+    await clickText("Simple");
+    ready = await waitForMode("simple");
+  }
+
   const modes = {};
-  modes.simple = validateDesktopSnapshot(ready, "simple");
+  validateDesktopSnapshot(ready, "simple");
   await assertNoRedundantPublicCopy();
+  modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
+
+  await clickText("Sex estimate from DNA");
+  validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the sex-estimate tooltip"));
+  await clickText("Sex estimate from DNA");
+  await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 0, "the sex-estimate tooltip to close");
 
   await clickText("Clinical");
   modes.clinical = validateDesktopSnapshot(await waitForMode("clinical"), "clinical");

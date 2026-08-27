@@ -435,27 +435,6 @@
     accent="var(--status-warning-text)"
   />
 {:else if generatedReport}
-  <header class="report-hero no-print">
-    <div>
-      <span class="report-kicker">Curated packs · on-device</span>
-      <h3 class="report-hero-title">Trait report</h3>
-      <p class="report-hero-lead">
-        Curated genetic context for <strong>{selectedSample.name}</strong>.
-        {#if presentationMode !== 'simple'}
-          Technical marker symbols and raw calls are available in the detailed view.
-        {/if}
-      </p>
-      {#if onOpenDiscovery}
-        <p class="report-hero-cta">
-          Looking beyond packs?
-          <button type="button" class="btn btn-link btn-sm" onclick={() => onOpenDiscovery?.()}>
-            Open Discovery
-          </button>
-        </p>
-      {/if}
-    </div>
-  </header>
-
   <!-- Start with profile/data quality, then the bounded action queue. -->
   <ReportHeader
     {generatedReport}
@@ -473,7 +452,28 @@
       bind:reproductiveContext
       onJumpToMarker={handleJumpToMarker}
       onJumpToSection={handleJumpToSection}
-    />
+      />
+  {/if}
+
+  {#if presentationMode !== 'simple'}
+    <header class="report-hero no-print">
+      <div>
+        <span class="report-kicker">Curated packs · on-device</span>
+        <h3 class="report-hero-title">Trait report</h3>
+        <p class="report-hero-lead">
+          Curated genetic context for <strong>{selectedSample.name}</strong>.
+          Technical marker symbols and raw calls are available in the detailed view.
+        </p>
+        {#if onOpenDiscovery}
+          <p class="report-hero-cta">
+            Looking beyond packs?
+            <button type="button" class="btn btn-link btn-sm" onclick={() => onOpenDiscovery?.()}>
+              Open Discovery
+            </button>
+          </p>
+        {/if}
+      </div>
+    </header>
   {/if}
 
   {#if generatedReport.catalog_warnings?.length}

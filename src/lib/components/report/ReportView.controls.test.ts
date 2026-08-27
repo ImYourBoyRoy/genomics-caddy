@@ -42,4 +42,15 @@ describe('Simple-first report controls', () => {
     expect(source).toContain('onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}');
     expect(source).not.toContain('bind:collapsed={collapsedSections[section.name]}');
   });
+
+  it('keeps the Simple landing focused on the profile and action queue', () => {
+    const reportHeaderIndex = source.indexOf('<ReportHeader');
+    const summaryIndex = source.indexOf('<DashboardSummaryPanel');
+    const heroIndex = source.indexOf('<header class="report-hero no-print">');
+
+    expect(source).toContain('{#if presentationMode !== \'simple\'}\n    <header class="report-hero no-print">');
+    expect(reportHeaderIndex).toBeGreaterThan(-1);
+    expect(summaryIndex).toBeGreaterThan(reportHeaderIndex);
+    expect(heroIndex).toBeGreaterThan(summaryIndex);
+  });
 });

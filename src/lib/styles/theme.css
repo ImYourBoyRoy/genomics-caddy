@@ -633,74 +633,6 @@ h1, h2, h3, h4, h5, h6 {
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Sample List */
-.sample-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.sample-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
-  transition: background 0.2s, border-color 0.2s;
-}
-.sample-item.active {
-  background: rgba(88, 80, 236, 0.15);
-  border-color: var(--accent);
-}
-.sample-name-wrap {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  align-items: center;
-  gap: 0.25rem;
-}
-.sample-name {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 0.85rem;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-}
-.sample-name:hover:not(:disabled) {
-  color: var(--accent);
-}
-.sample-name:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-.sample-scope-help {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-}
-.btn-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 2px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-}
-.btn-delete:hover { opacity: 1; }
-
 /* Main Content Pane */
 .main-content {
   flex: 1;
@@ -1729,9 +1661,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== Focus Indicators ===== */
-.tab-btn:focus-visible,
 .btn:focus-visible,
-.sample-name:focus-visible,
 .view-mode-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

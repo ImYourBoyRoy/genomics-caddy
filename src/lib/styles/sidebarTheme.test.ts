@@ -47,11 +47,29 @@ describe('sidebar status theme tokens', () => {
   });
 
   it('keeps profile actions keyboard-visible and comfortably targetable', () => {
-    expect(source).toContain('.sidebar .sample-name:focus-visible');
-    expect(source).toContain('.sidebar .btn-delete:focus-visible');
+    expect(source).toContain('.samples-card .sample-name:focus-visible');
+    expect(source).toContain('.samples-card .btn-delete:focus-visible');
     expect(source).toContain('.reset-dir-btn:focus-visible');
     expect(source).toContain('min-width: 2.25rem;');
     expect(source).toContain('min-height: 2.25rem;');
     expect(source).toContain('var(--focus-ring)');
+  });
+
+  it('keeps profile-list presentation in the sidebar stylesheet', () => {
+    for (const selector of [
+      '.samples-card .sample-list',
+      '.samples-card .sample-item',
+      '.samples-card .sample-name-wrap',
+      '.samples-card .sample-name',
+      '.samples-card .sample-scope-help',
+    ]) {
+      expect(source).toContain(selector);
+    }
+
+    expect(theme).not.toMatch(/\.sample-list\s*\{/);
+    expect(theme).not.toMatch(/\.sample-item(?:\.active)?\s*\{/);
+    expect(theme).not.toMatch(/\.sample-name(?:-wrap)?\s*\{/);
+    expect(theme).not.toMatch(/\.sample-scope-help\s*\{/);
+    expect(theme).not.toMatch(/\.btn-delete\s*\{/);
   });
 });

@@ -65,6 +65,85 @@
   line-height: 1.4;
 }
 
+/* Active profile list belongs to the sidebar and uses the shared theme palette. */
+.samples-card .sample-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.samples-card .sample-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--surface-subtle);
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.samples-card .sample-item.active {
+  background: var(--status-accent-bg);
+  border-color: var(--accent);
+}
+
+.samples-card .sample-name-wrap {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.samples-card .sample-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+.samples-card .sample-name:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.samples-card .sample-name:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.samples-card .sample-scope-help {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.samples-card .btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.samples-card .btn-delete:hover:not(:disabled) {
+  opacity: 1;
+}
+
 .setting-label {
   display: block;
   margin-bottom: 0.25rem;
@@ -385,19 +464,19 @@
 }
 
 /* Profile actions stay compact while remaining easy to reach with the keyboard. */
-.sidebar .sample-name {
+.samples-card .sample-name {
   min-height: 2.25rem;
   padding-inline: 0.2rem;
   border-radius: 0.35rem;
 }
 
-.sidebar .sample-name:focus-visible {
+.samples-card .sample-name:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   background: var(--surface-subtle);
 }
 
-.sidebar .btn-delete {
+.samples-card .btn-delete {
   min-width: 2.25rem;
   min-height: 2.25rem;
   padding: 0.25rem;
@@ -407,15 +486,15 @@
   line-height: 1;
 }
 
-.sidebar .btn-delete:hover:not(:disabled),
-.sidebar .btn-delete:focus-visible {
+.samples-card .btn-delete:hover:not(:disabled),
+.samples-card .btn-delete:focus-visible {
   border-color: var(--status-danger-border);
   background: var(--status-danger-bg);
   color: var(--status-danger-strong-text);
   opacity: 1;
 }
 
-.sidebar .btn-delete:focus-visible {
+.samples-card .btn-delete:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }

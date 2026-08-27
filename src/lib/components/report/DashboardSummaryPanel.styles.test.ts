@@ -38,6 +38,8 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('Planning prompts for training and recovery — not activity clearance.');
     expect(source).toContain('Bring current medications and past responses to a clinician or pharmacist.');
     expect(source).toContain('Grouped by priority for clinician discussion.');
+    expect(source).toContain('Up to five prioritized follow-up prompts from this report.');
+    expect(source).toContain('{Math.min(plan.topFindings.length, 5)} shown');
     expect(source).not.toContain('A genotype match is not a permanent food restriction;');
     expect(source).not.toContain('This selection is self-reported, stored per DNA profile, and is never inferred');
     expect(source).not.toContain('Every supplement item is a discussion prompt, not a prescription.');
@@ -45,5 +47,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Raw consumer DNA is not a complete clinical PGx result');
     expect(source).not.toContain('DNA cannot measure current hormones or diagnose a condition or medication response.');
     expect(source).not.toContain('Grouped by priority for clinician discussion; seek care promptly for acute symptoms.');
+    expect(source).not.toContain('{Math.min(plan.topFindings.length, 5)} of 5');
   });
 });

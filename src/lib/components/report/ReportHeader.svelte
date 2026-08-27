@@ -158,6 +158,13 @@
   }
   .header-title-row h3 {
     margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .report-desc {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .overall-summary-badge {
@@ -168,6 +175,12 @@
     padding: 0.25rem 0.6rem;
     border-radius: 9999px;
     font-weight: 600;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .report-desc > p {
+    overflow-wrap: anywhere;
   }
 
   .technical-score-details {

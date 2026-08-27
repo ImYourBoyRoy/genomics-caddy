@@ -18,6 +18,14 @@ describe('ReportHeader summary badge', () => {
     expect(badgeStyles).toContain('var(--status-accent-text)');
   });
 
+  it('keeps long report header content inside its flex layout', () => {
+    expect(source).toContain('.report-desc {');
+    expect(source).toContain('flex: 1 1 auto;');
+    expect(source).toContain('min-width: 0;');
+    expect(source).toContain('overflow-wrap: anywhere;');
+    expect(source).toContain('max-width: 100%;');
+  });
+
   it('does not contain raw color literals in the badge style', () => {
     expect(badgeStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });

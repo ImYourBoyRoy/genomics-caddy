@@ -158,9 +158,9 @@
       <div>
         <span class="section-kicker">Start here</span>
         <h3 id="action-queue-title">Your next steps</h3>
-        <p>Prioritized follow-up prompts from this report.</p>
+        <p>Up to five prioritized follow-up prompts from this report.</p>
       </div>
-      <span class="action-queue-count">{Math.min(plan.topFindings.length, 5)} of 5</span>
+      <span class="action-queue-count">{Math.min(plan.topFindings.length, 5)} shown</span>
     </div>
 
     {#if plan.topFindings.length > 0}

@@ -7,6 +7,7 @@
   } from "../../../api/tauri";
   import type { AppPaths } from "../../../types/genomics";
   import QdrantResearchSettingsDetails from "./QdrantResearchSettingsDetails.svelte";
+  import Tooltip from "../../common/Tooltip.svelte";
   import { saveOllamaUrl } from "../../../utils/ollamaSettings";
   import "$lib/styles/components/advanced-settings-section.css";
 
@@ -231,24 +232,44 @@
       {#if paths}
         <div class="path-box">
           <span class="path-title">Data root ({paths.data_dir_mode.replaceAll("_", " ")}):</span>
-          <code class="font-mono path-value" title={paths.data_dir}>{paths.data_dir}</code>
+          <Tooltip interactiveChildren label="Data root path" description={`Full local path: ${paths.data_dir}`}>
+            <button type="button" class="path-tooltip-trigger">
+              <code class="font-mono path-value">{paths.data_dir}</code>
+            </button>
+          </Tooltip>
         </div>
         <div class="path-box mt-1">
           <span class="path-title">Database:</span>
-          <code class="font-mono path-value" title={paths.db_path}>{paths.db_path}</code>
+          <Tooltip interactiveChildren label="Database path" description={`Full local path: ${paths.db_path}`}>
+            <button type="button" class="path-tooltip-trigger">
+              <code class="font-mono path-value">{paths.db_path}</code>
+            </button>
+          </Tooltip>
         </div>
         <div class="path-box mt-1">
           <span class="path-title">Offline downloads:</span>
-          <code class="font-mono path-value" title={paths.raw_downloads_dir}>{paths.raw_downloads_dir}</code>
+          <Tooltip interactiveChildren label="Offline downloads path" description={`Full local path: ${paths.raw_downloads_dir}`}>
+            <button type="button" class="path-tooltip-trigger">
+              <code class="font-mono path-value">{paths.raw_downloads_dir}</code>
+            </button>
+          </Tooltip>
         </div>
         <div class="path-box mt-1">
           <span class="path-title">Chain File:</span>
-          <code class="font-mono path-value" title={paths.chain_path}>{paths.chain_path}</code>
+          <Tooltip interactiveChildren label="Chain file path" description={`Full local path: ${paths.chain_path}`}>
+            <button type="button" class="path-tooltip-trigger">
+              <code class="font-mono path-value">{paths.chain_path}</code>
+            </button>
+          </Tooltip>
         </div>
         {#if paths.env_path}
           <div class="path-box mt-1">
             <span class="path-title">Local `.env`:</span>
-            <code class="font-mono path-value" title={paths.env_path}>{paths.env_path}</code>
+            <Tooltip interactiveChildren label="Local environment file path" description={`Full local path: ${paths.env_path}`}>
+              <button type="button" class="path-tooltip-trigger">
+                <code class="font-mono path-value">{paths.env_path}</code>
+              </button>
+            </Tooltip>
           </div>
           <span class="help-text mt-1">
             Copy <code>.env.example</code> to <code>App/.env</code> (or project root) for QDRANT_URL, QDRANT_API_KEY, NCBI_API_KEY, and OLLAMA_TOKEN.

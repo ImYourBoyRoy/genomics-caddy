@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { EvidenceCard } from "../../../types/research";
   import type { VariantNavTarget } from "../../../constants/traitCategories";
+  import Tooltip from "../../common/Tooltip.svelte";
   import { userFindingFromEvidenceCard } from "../../../utils/userFinding";
 
   interface Props {
@@ -48,13 +49,21 @@
     </div>
     <div class="ev-card-scores">
       {#if card.semantic_score > 0}
-        <span class="score-chip semantic" title="Vector similarity">{scorePct(card.semantic_score)} match</span>
+        <Tooltip label="Vector similarity" description="How closely the indexed evidence text matches the research context; this is an organization signal, not a clinical probability.">
+          <span class="score-chip semantic">{scorePct(card.semantic_score)} match</span>
+        </Tooltip>
       {/if}
-      <span class="score-chip dq" title="Data quality">DQ {scorePct(card.data_quality_score)}</span>
+      <Tooltip label="Data quality" description="A quality check for the indexed evidence record and its available metadata.">
+        <span class="score-chip dq">DQ {scorePct(card.data_quality_score)}</span>
+      </Tooltip>
       {#if card.has_direction}
-        <span class="score-chip direction" title="Structured direction available">Direction known</span>
+        <Tooltip label="Structured direction available" description="The indexed record contains a direction field. Interpret it with the full evidence context shown below.">
+          <span class="score-chip direction">Direction known</span>
+        </Tooltip>
       {:else}
-        <span class="score-chip unknown-dir" title="Do not infer direction from p-value alone">Direction unknown</span>
+        <Tooltip label="Direction unknown" description="Do not infer a personal effect direction from a p-value alone.">
+          <span class="score-chip unknown-dir">Direction unknown</span>
+        </Tooltip>
       {/if}
     </div>
   </header>

@@ -3,6 +3,7 @@
   import type { QdrantHit } from "../../../types/research";
   import type { VariantNavTarget } from "../../../constants/traitCategories";
   import PanelLoadingState from "../../common/loading/PanelLoadingState.svelte";
+  import Tooltip from "../../common/Tooltip.svelte";
 
   interface Props {
     results: QdrantHit[];
@@ -53,13 +54,17 @@
             </div>
 
             <div class="right-meta">
-              <span class="match-badge vector" title="Calculated cosine similarity score from Qdrant vector search">
-                🤖 {(rec.score * 100).toFixed(0)}% concept match
-              </span>
-              {#if rec.significance_score > 0}
-                <span class="match-badge keyword" title="Significance score based on ClinVar pathogenicity and GWAS counts">
-                  ⭐ Significance: {rec.significance_score.toFixed(2)}
+              <Tooltip label="Concept match" description="Calculated cosine similarity score from Qdrant vector search; it helps organize research results and is not a clinical probability.">
+                <span class="match-badge vector">
+                  🤖 {(rec.score * 100).toFixed(0)}% concept match
                 </span>
+              </Tooltip>
+              {#if rec.significance_score > 0}
+                <Tooltip label="Research significance" description="A local organization signal based on available ClinVar and GWAS counts; it is not a disease probability.">
+                  <span class="match-badge keyword">
+                    ⭐ Significance: {rec.significance_score.toFixed(2)}
+                  </span>
+                </Tooltip>
               {/if}
             </div>
           </div>

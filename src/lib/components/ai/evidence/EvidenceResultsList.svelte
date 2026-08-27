@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { EvidenceRecord } from "../../../api/tauri";
   import PanelLoadingState from "../../common/loading/PanelLoadingState.svelte";
+  import Tooltip from "../../common/Tooltip.svelte";
   import { parseCitationUrl } from "../../../utils/urlSafety";
 
   interface Props {
@@ -52,19 +53,25 @@
             
             <div class="right-meta">
               {#if rec.similarity !== null}
-                <span class="match-badge vector" title="Calculated cosine similarity of embedded text">
-                  🤖 {(rec.similarity * 100).toFixed(0)}% concept match
-                </span>
+                <Tooltip label="Concept match" description="Calculated cosine similarity of the embedded evidence text; it helps organize results and is not a clinical probability.">
+                  <span class="match-badge vector">
+                    🤖 {(rec.similarity * 100).toFixed(0)}% concept match
+                  </span>
+                </Tooltip>
               {:else}
-                <span class="match-badge keyword" title="Exact text search hit">
-                  📝 Text match
-                </span>
+                <Tooltip label="Text match" description="This result matched the exact words in your search rather than a vector similarity score.">
+                  <span class="match-badge keyword">
+                    📝 Text match
+                  </span>
+                </Tooltip>
               {/if}
               
               {#if rec.has_embedding}
-                <span class="embedding-indicator active" title="Vector embedding generated and cached in SQLite">
-                  Vectorized
-                </span>
+                <Tooltip label="Vectorized" description="A vector embedding for this evidence record is generated and cached in the local SQLite index.">
+                  <span class="embedding-indicator active">
+                    Vectorized
+                  </span>
+                </Tooltip>
               {/if}
             </div>
           </div>

@@ -52,6 +52,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
   * **Compare Mode 👥:** Opt-in side-by-side comparison of the Simple and Clinical explanations.
   * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
+  * **Responsive theme control:** The persistent theme control stays at the bottom-left on desktop and moves to the top-left on narrow layouts where the data sidebar is collapsed, preventing it from covering scrollable report content. Its menu opens in the direction that remains visible at that breakpoint.
 
 ### 4. Local RAG Evidence Library & Search Engine
 * **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.

@@ -59,12 +59,19 @@
         <strong>{activeFindings.length} active variant{activeFindings.length === 1 ? "" : "s"}</strong>
         from Research Agent scans not in the curated trait report.
       </div>
-      <button type="button" class="toggle-btn" onclick={() => (expanded = !expanded)}>
+      <button
+        type="button"
+        class="toggle-btn"
+        aria-expanded={expanded}
+        aria-controls="discovered-findings-list"
+        aria-label={expanded ? "Hide discovered findings" : "Show discovered findings"}
+        onclick={() => (expanded = !expanded)}
+      >
         {expanded ? "Hide" : "Show"}
       </button>
     </div>
     {#if expanded}
-      <ul class="findings-list">
+      <ul id="discovered-findings-list" class="findings-list">
         {#each activeFindings.slice(0, 24) as item}
           <li>
             <button
@@ -95,8 +102,8 @@
 
 <style>
   .discoveries-banner {
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.22);
+    background: var(--report-claim-bg);
+    border: 1px solid var(--report-claim-border);
     border-radius: 10px;
     padding: 12px 14px;
     margin-bottom: 12px;
@@ -123,7 +130,7 @@
   .toggle-btn {
     margin-left: auto;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
     border-radius: 6px;
     padding: 4px 10px;

@@ -1,0 +1,25 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const source = readFileSync(
+  resolve(process.cwd(), 'src/lib/components/report/DiscoveredFindingsBanner.svelte'),
+  'utf8'
+);
+const bannerStyles = source.slice(source.indexOf('<style>'), source.indexOf('</style>'));
+
+describe('DiscoveredFindingsBanner disclosure surface', () => {
+  it('exposes a labelled disclosure relationship for the findings list', () => {
+    expect(source).toContain('aria-expanded={expanded}');
+    expect(source).toContain('aria-controls="discovered-findings-list"');
+    expect(source).toContain('id="discovered-findings-list"');
+    expect(source).toContain('aria-label={expanded ? "Hide discovered findings" : "Show discovered findings"}');
+  });
+
+  it('uses semantic theme tokens instead of fixed banner colors', () => {
+    expect(bannerStyles).toContain('var(--report-claim-bg)');
+    expect(bannerStyles).toContain('var(--report-claim-border)');
+    expect(bannerStyles).toContain('var(--border-color)');
+    expect(bannerStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+});

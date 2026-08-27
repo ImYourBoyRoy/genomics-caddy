@@ -184,7 +184,7 @@
       <div class="trait-category-row">
         <span class="discovery-label">Trait categories</span>
         {#each TRAIT_CATEGORIES as cat}
-          <Tooltip interactiveChildren label={cat.label} description={cat.queryHint} placement="bottom">
+          <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label={cat.label} description={cat.queryHint} placement="bottom">
             <button
               type="button"
               class="trait-chip"

@@ -4,6 +4,8 @@
   import type { Snippet } from 'svelte';
   import { calculateTooltipPosition, type TooltipPlacement } from '../../utils/tooltipPosition';
 
+  type InteractiveClickBehavior = 'toggle' | 'dismiss';
+
   interface Props {
     label: string;
     description: string;
@@ -12,6 +14,7 @@
     placement?: TooltipPlacement;
     triggerClass?: string;
     interactiveChildren?: boolean;
+    interactiveClickBehavior?: InteractiveClickBehavior;
   }
 
   let {
@@ -22,6 +25,7 @@
     placement = 'top',
     triggerClass = '',
     interactiveChildren = false,
+    interactiveClickBehavior = 'toggle',
   }: Props = $props();
 
   let isOpen = $state(false);
@@ -87,6 +91,12 @@
 
   function handleTriggerClick(event: MouseEvent) {
     event.stopPropagation();
+    if (interactiveChildren && interactiveClickBehavior === 'dismiss') {
+      // The child is an action control. Its click should complete the action
+      // without pinning the explanatory tooltip over the next UI state.
+      close();
+      return;
+    }
     if (isClicked) {
       close();
       return;

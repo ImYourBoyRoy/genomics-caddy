@@ -16,6 +16,7 @@ describe('research standalone tooltip migrations', () => {
 
       expect(source).toContain('Tooltip');
       expect(source).toContain('<Tooltip interactiveChildren');
+      expect(source).toContain('interactiveClickBehavior="dismiss"');
       expect(source).not.toContain('title=');
     }
   });

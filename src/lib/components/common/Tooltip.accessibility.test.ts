@@ -10,6 +10,8 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('class={`tooltip-trigger ${triggerClass}`}');
     expect(source).toContain('triggerClass?: string;');
     expect(source).toContain('interactiveChildren?: boolean;');
+    expect(source).toContain("interactiveClickBehavior?: InteractiveClickBehavior;");
+    expect(source).toContain("interactiveClickBehavior = 'toggle'");
     expect(source).toContain('aria-label={label}');
     expect(source).toContain('aria-describedby={isOpen ? panelDescriptionId : undefined}');
   });
@@ -24,6 +26,12 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('if (isClicked) {');
     expect(source).toContain('close();');
     expect(source).toContain('onclick={handleTriggerClick}');
+  });
+
+  it('does not pin a tooltip when the wrapped child is an action control', () => {
+    expect(source).toContain("if (interactiveChildren && interactiveClickBehavior === 'dismiss') {");
+    expect(source).toContain('close();');
+    expect(source).toContain('interactiveClickBehavior = \'toggle\'');
   });
 
   it('closes only the open tooltip before a parent drawer handles Escape', () => {

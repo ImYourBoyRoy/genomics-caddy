@@ -408,7 +408,7 @@
           </div>
           {#if refStatus !== null}
             {#if gwasReady}
-              <Tooltip interactiveChildren label="Re-sync GWAS" description="Replace the local GWAS reference catalog with a fresh copy.">
+              <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Re-sync GWAS" description="Replace the local GWAS reference catalog with a fresh copy.">
                 <button
                   class="btn btn-secondary btn-sm ref-resync-btn"
                   onclick={handleSyncGwas}

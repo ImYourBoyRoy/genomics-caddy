@@ -136,7 +136,7 @@
             <option value={model}>{model}</option>
           {/each}
         </select>
-        <Tooltip interactiveChildren label="Refresh models" description="Refresh the available embedding models from Ollama.">
+        <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Refresh models" description="Refresh the available embedding models from Ollama.">
           <button
             class="refresh-btn"
             type="button"

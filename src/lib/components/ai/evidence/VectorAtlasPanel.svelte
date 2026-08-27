@@ -182,7 +182,7 @@
       >
         {building ? "Building…" : "Build atlas"}
       </button>
-      <Tooltip interactiveChildren label="Named vectors" description="This Qdrant-only action enables named multi-vectors for trait, gene, evidence, and actionability data.">
+      <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Named vectors" description="This Qdrant-only action enables named multi-vectors for trait, gene, evidence, and actionability data.">
         <button
           type="button"
           class="btn btn-secondary btn-xs"

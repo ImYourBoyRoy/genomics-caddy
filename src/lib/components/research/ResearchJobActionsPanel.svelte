@@ -124,7 +124,7 @@
         >
           {isStarting ? "..." : "Resume Sweep"}
         </button>
-        <Tooltip interactiveChildren label="Force re-enrich" description="Rebuilds enrichment for already-indexed vectors. Prefer Resume for multi-day runs.">
+        <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Force re-enrich" description="Rebuilds enrichment for already-indexed vectors. Prefer Resume for multi-day runs.">
           <button
             class="btn btn-secondary"
             onclick={() => onStart?.({ forceReenrich: true })}

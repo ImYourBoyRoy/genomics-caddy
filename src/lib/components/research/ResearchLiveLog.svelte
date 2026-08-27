@@ -57,7 +57,7 @@
 <div class="glass-card log-card">
   <div class="log-header">
     <h2 class="card-title">Sweep activity</h2>
-    <Tooltip interactiveChildren label="Detailed log" description="Shows verbose sweep logs in this feed and the terminal. The DNA_RESEARCH_DEBUG setting also enables it.">
+    <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Detailed log" description="Shows verbose sweep logs in this feed and the terminal. The DNA_RESEARCH_DEBUG setting also enables it.">
       <label class="debug-toggle">
         <input
           type="checkbox"

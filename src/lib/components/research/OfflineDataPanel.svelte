@@ -257,7 +257,7 @@
     >
       {syncingTier === -1 ? "Syncing all…" : "Sync all tiers"}
     </button>
-    <Tooltip interactiveChildren label="Rebuild locus index" description="Rebuilds the local variant-locus index from the imported genome only.">
+    <Tooltip interactiveChildren interactiveClickBehavior="dismiss" label="Rebuild locus index" description="Rebuilds the local variant-locus index from the imported genome only.">
       <button
         type="button"
         class="btn btn-secondary btn-sm"

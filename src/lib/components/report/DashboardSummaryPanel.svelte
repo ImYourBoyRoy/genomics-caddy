@@ -293,10 +293,12 @@
       <!-- Panel 2: Dietary Guidance -->
       {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0 || plan.foodSafety.suppressedSuggestions.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
-          <button type="button" class="card-header" onclick={() => toggle('diet')} aria-expanded={!collapsed.diet} aria-controls="dietary-alignment-body">
-            <span class="card-header-title" role="heading" aria-level="3">🥗 Dietary Alignment</span>
-            <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
-          </button>
+          <h3 class="card-header-heading">
+            <button type="button" class="card-header" onclick={() => toggle('diet')} aria-expanded={!collapsed.diet} aria-controls="dietary-alignment-body">
+              <span class="card-header-title">🥗 Dietary Alignment</span>
+              <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
+            </button>
+          </h3>
           {#if !collapsed.diet}
             <div class="card-body" id="dietary-alignment-body">
               <p class="section-hint">Conditional prompts, not permanent food rules.</p>
@@ -395,10 +397,12 @@
       <!-- Panel 3: Supplements to Discuss -->
       {#if plan.supplements.length > 0 || plan.supplementSafety.relevantRules.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
-          <button type="button" class="card-header" onclick={() => toggle('supplements')} aria-expanded={!collapsed.supplements} aria-controls="supplements-body">
-            <span class="card-header-title" role="heading" aria-level="3">💊 Supplements to Discuss</span>
-            <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
-          </button>
+          <h3 class="card-header-heading">
+            <button type="button" class="card-header" onclick={() => toggle('supplements')} aria-expanded={!collapsed.supplements} aria-controls="supplements-body">
+              <span class="card-header-title">💊 Supplements to Discuss</span>
+              <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
+            </button>
+          </h3>
           {#if !collapsed.supplements}
             <div class="card-body" id="supplements-body">
               <p class="section-hint">Review interactions and health context before use.</p>
@@ -441,10 +445,12 @@
       <!-- Cycle/reproductive support is a phenotype and safety layer, not a diagnosis. -->
       {#if plan.cycleSupport.relevantDomains.length > 0}
         <div class="summary-card card card-cycle-support" class:collapsed={collapsed.cycleSupport}>
-          <button type="button" class="card-header" onclick={() => toggle('cycleSupport')} aria-expanded={!collapsed.cycleSupport} aria-controls="cycle-support-body">
-            <span class="card-header-title" role="heading" aria-level="3">⚕️ Reproductive &amp; Hormone Support</span>
-            <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
-          </button>
+          <h3 class="card-header-heading">
+            <button type="button" class="card-header" onclick={() => toggle('cycleSupport')} aria-expanded={!collapsed.cycleSupport} aria-controls="cycle-support-body">
+              <span class="card-header-title">⚕️ Reproductive &amp; Hormone Support</span>
+              <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
+            </button>
+          </h3>
           {#if !collapsed.cycleSupport}
             <div class="card-body" id="cycle-support-body">
               <p class="section-hint">Guidance for {selectedReproductiveContextLabel()}: timing, symptoms, products, and follow-up questions.</p>
@@ -537,10 +543,12 @@
 
     {#if plan.activity.relevantDomains.length > 0}
       <div class="summary-card card" class:collapsed={collapsed.activity}>
-        <button type="button" class="card-header" onclick={() => toggle('activity')} aria-expanded={!collapsed.activity} aria-controls="activity-body">
-          <span class="card-header-title" role="heading" aria-level="3">🏃 Activity &amp; Recovery Guardrails</span>
-          <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
-        </button>
+        <h3 class="card-header-heading">
+          <button type="button" class="card-header" onclick={() => toggle('activity')} aria-expanded={!collapsed.activity} aria-controls="activity-body">
+            <span class="card-header-title">🏃 Activity &amp; Recovery Guardrails</span>
+            <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
+          </button>
+        </h3>
         {#if !collapsed.activity}
           <div class="card-body" id="activity-body">
             <p class="section-hint">Planning prompts for training and recovery — not activity clearance.</p>
@@ -583,10 +591,12 @@
 
     {#if plan.medication.rules.length > 0}
       <div class="summary-card card" class:collapsed={collapsed.medication}>
-        <button type="button" class="card-header" onclick={() => toggle('medication')} aria-expanded={!collapsed.medication} aria-controls="medication-body">
-          <span class="card-header-title" role="heading" aria-level="3">💊 Medication Safety &amp; Context</span>
-          <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
-        </button>
+        <h3 class="card-header-heading">
+          <button type="button" class="card-header" onclick={() => toggle('medication')} aria-expanded={!collapsed.medication} aria-controls="medication-body">
+            <span class="card-header-title">💊 Medication Safety &amp; Context</span>
+            <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
+          </button>
+        </h3>
         {#if !collapsed.medication}
           <div class="card-body" id="medication-body">
             <p class="section-hint">Bring current medications and past responses to a clinician or pharmacist.</p>
@@ -625,10 +635,12 @@
     <!-- Labs: full-width, grouped & compact (collapsed by default) -->
     {#if plan.labTests.length > 0}
       <div class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
-        <button type="button" class="card-header" onclick={() => toggle('labTests')} aria-expanded={!collapsed.labTests} aria-controls="lab-followups-body">
-          <span class="card-header-title" role="heading" aria-level="3">🔬 Lab &amp; screening follow-ups ({plan.labTests.length})</span>
-          <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
-        </button>
+        <h3 class="card-header-heading">
+          <button type="button" class="card-header" onclick={() => toggle('labTests')} aria-expanded={!collapsed.labTests} aria-controls="lab-followups-body">
+            <span class="card-header-title">🔬 Lab &amp; screening follow-ups ({plan.labTests.length})</span>
+            <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
+          </button>
+        </h3>
         {#if !collapsed.labTests}
           <div class="card-body lab-body" id="lab-followups-body">
             <p class="section-hint">Grouped by priority for clinician discussion.</p>
@@ -1244,6 +1256,12 @@
     text-align: left;
     cursor: pointer;
     user-select: none;
+  }
+  .card-header-heading {
+    margin: 0;
+  }
+  .card-header-heading .card-header {
+    width: 100%;
   }
   .card-header:hover {
     background: var(--surface-subtle);

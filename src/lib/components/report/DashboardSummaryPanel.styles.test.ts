@@ -56,6 +56,13 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
   });
 
+  it('keeps collapsible guidance titles as real headings outside button descendants', () => {
+    expect(source).toContain('<h3 class="card-header-heading">');
+    expect(source).toContain('<span class="card-header-title">🥗 Dietary Alignment</span>');
+    expect(source).not.toContain('class="card-header-title" role="heading" aria-level="3"');
+    expect(styleBlock).toContain('.card-header-heading {');
+  });
+
   it('provides a compact health-area index that targets report section headers', () => {
     expect(source).toContain('Health areas');
     expect(source).toContain('healthAreaSections');

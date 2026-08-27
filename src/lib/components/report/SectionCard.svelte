@@ -332,14 +332,14 @@
       <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
         {#if viewMode === 'simple'}
           <span class="summary-line">
-            {countParts.join(' · ')}{#if noDataCount > 0}{countParts.length > 0 ? ' · ' : ''}{noDataCount} not called; unknown, not negative{/if}
+            {countParts.join(' · ')}{#if noDataCount > 0}{countParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
           </span>
         {:else}
           {#each countParts as part}
             <span class="summary-pill">{part}</span>
           {/each}
           {#if noDataCount > 0}
-            <span class="summary-pill coverage-note">{noDataCount} not called; unknown, not negative</span>
+            <span class="summary-pill coverage-note">{noDataCount} not called</span>
           {/if}
         {/if}
       </div>

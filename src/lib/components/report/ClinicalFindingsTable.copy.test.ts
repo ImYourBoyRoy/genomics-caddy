@@ -38,4 +38,13 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('.clinical-mobile-label {\n    display: none;');
     expect(source).toContain('.clinical-findings-table tbody td::before {\n      content: none;');
   });
+
+  it('separates DNA, clinical, self-reported, and clinician-entered data sources', () => {
+    expect(source).toContain('<summary>Data sources in this report</summary>');
+    expect(source).toContain('<dt>Consumer DNA array</dt>');
+    expect(source).toContain('<dt>Clinical confirmation</dt>');
+    expect(source).toContain('<dt>Self-reported context</dt>');
+    expect(source).toContain('<dt>Clinician-entered information</dt>');
+    expect(source).toContain('.clinical-provenance');
+  });
 });

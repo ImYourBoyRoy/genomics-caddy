@@ -44,6 +44,27 @@
 </script>
 
 <div class="clinical-table-wrap" role="region" aria-label="Clinical findings table">
+  <details class="clinical-provenance">
+    <summary>Data sources in this report</summary>
+    <dl>
+      <div>
+        <dt>Consumer DNA array</dt>
+        <dd>Genotype calls shown in this table.</dd>
+      </div>
+      <div>
+        <dt>Clinical confirmation</dt>
+        <dd>Separate testing; only the follow-up status is shown here.</dd>
+      </div>
+      <div>
+        <dt>Self-reported context</dt>
+        <dd>Symptoms, medications, and goals are kept separate from DNA findings.</dd>
+      </div>
+      <div>
+        <dt>Clinician-entered information</dt>
+        <dd>Not part of these genotype rows unless separately documented.</dd>
+      </div>
+    </dl>
+  </details>
   <table class="clinical-findings-table">
     <caption>Structured findings for clinical review.</caption>
     <thead>
@@ -140,6 +161,45 @@
     border-collapse: collapse;
     color: var(--text-primary);
     font-size: 0.74rem;
+  }
+
+  .clinical-provenance {
+    margin: 0.75rem 0.8rem 0;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+
+  .clinical-provenance summary {
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .clinical-provenance dl {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0;
+  }
+
+  .clinical-provenance dl > div {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
+    gap: 0.6rem;
+  }
+
+  .clinical-provenance dt {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .clinical-provenance dd {
+    margin: 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .clinical-findings-table caption {
@@ -299,6 +359,15 @@
       display: grid;
       gap: 0.75rem;
       padding: 0.75rem;
+    }
+
+    .clinical-provenance {
+      margin-inline: 0.75rem;
+    }
+
+    .clinical-provenance dl > div {
+      grid-template-columns: 1fr;
+      gap: 0.15rem;
     }
 
     .clinical-findings-table tbody tr {

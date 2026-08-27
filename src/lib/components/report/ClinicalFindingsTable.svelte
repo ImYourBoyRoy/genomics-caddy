@@ -20,12 +20,22 @@
     onNavigateToVariant,
   }: Props = $props();
 
+  function authoredFollowUp(marker: EvaluatedMarker): string {
+    const labels = marker.confirm_with
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (labels.length === 0) return '';
+
+    const visibleLabels = labels.slice(0, 3).join('; ');
+    const remainingCount = labels.length - 3;
+    return remainingCount > 0 ? `${visibleLabels} (+${remainingCount} more)` : visibleLabels;
+  }
+
   function nextHelpfulStep(marker: EvaluatedMarker): string {
+    const followUp = authoredFollowUp(marker);
+    if (followUp) return followUp;
     if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
       return 'Review need for clinical confirmation.';
-    }
-    if (marker.confirm_with.length > 0) {
-      return 'Review the listed follow-up.';
     }
     return 'Interpret with history and current guidance.';
   }

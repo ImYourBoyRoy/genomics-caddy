@@ -531,8 +531,9 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.65rem;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(88, 80, 236, 0.2);
-  color: #a5b4fc;
+  background: var(--status-accent-bg);
+  border: 1px solid var(--status-accent-border);
+  color: var(--status-accent-text);
   margin-left: 6px;
   font-weight: 700;
 }

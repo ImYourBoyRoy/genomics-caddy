@@ -26,6 +26,14 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('onclick={handleTriggerClick}');
   });
 
+  it('closes only the open tooltip before a parent drawer handles Escape', () => {
+    expect(source).toContain("if (event.key !== 'Escape' || !isOpen) return;");
+    expect(source).toContain('event.preventDefault();');
+    expect(source).toContain('event.stopImmediatePropagation();');
+    expect(source).toContain('document.addEventListener(\'keydown\', handleKeydown, true);');
+    expect(source).toContain('document.removeEventListener(\'keydown\', handleKeydown, true);');
+  });
+
   it('can attach semantics to an existing interactive child without nesting a button', () => {
     expect(source).toContain('interactiveChildren = false');
     expect(source).toContain('class:interactive-children={interactiveChildren}');

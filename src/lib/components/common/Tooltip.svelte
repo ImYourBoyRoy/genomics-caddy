@@ -79,9 +79,10 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      close();
-    }
+    if (event.key !== 'Escape' || !isOpen) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    close();
   }
 
   function handleTriggerClick(event: MouseEvent) {
@@ -151,12 +152,13 @@
   onMount(() => {
     tooltipId = `genomics-tooltip-${Math.random().toString(36).slice(2, 10)}`;
     document.addEventListener('pointerdown', handleDocumentPointerDown);
-    document.addEventListener('keydown', handleKeydown);
+    // Capture Escape before parent drawers/modals can consume it.
+    document.addEventListener('keydown', handleKeydown, true);
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
     return () => {
       document.removeEventListener('pointerdown', handleDocumentPointerDown);
-      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener('keydown', handleKeydown, true);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
       clearHoverCloseTimer();

@@ -72,4 +72,12 @@ describe('sidebar status theme tokens', () => {
     expect(theme).not.toMatch(/\.sample-scope-help\s*\{/);
     expect(theme).not.toMatch(/\.btn-delete\s*\{/);
   });
+
+  it('keeps the advanced Connections launch surface compact', () => {
+    expect(source).toContain('.connections-launch-card.card');
+    expect(source).toContain('.connections-launch-copy');
+    expect(source).toContain('.connections-launch-actions');
+    expect(sidebarComponent).toContain('class="connections-launch-card card"');
+    expect(sidebarComponent).toContain('Open Connections');
+  });
 });

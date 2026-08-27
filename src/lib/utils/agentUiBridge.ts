@@ -30,6 +30,7 @@ export interface AgentUiLayoutMetrics {
   mainContentWidth: number | null;
   mainContentScrollWidth: number | null;
   sidebarWidth: number | null;
+  connectionsLaunchHeight: number | null;
   markerGridWidth: number | null;
   markerGridColumnCount: number | null;
   markerCardCount: number;
@@ -236,6 +237,7 @@ function collectOverflowingElements(root: HTMLElement | null): AgentUiLayoutMetr
 function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
+  const connectionsLaunch = document.querySelector<HTMLElement>('.connections-launch-card');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
   const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
   const actionQueue = document.querySelector<HTMLElement>('.action-queue-list');
@@ -256,6 +258,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     mainContentWidth: mainContent?.getBoundingClientRect().width ?? null,
     mainContentScrollWidth: mainContent?.scrollWidth ?? null,
     sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
+    connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
     markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
     markerGridColumnCount: getGridColumnCount(markerGrid),
     markerCardCount: document.querySelectorAll('.marker-card').length,

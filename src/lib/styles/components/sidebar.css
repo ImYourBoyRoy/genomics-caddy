@@ -65,6 +65,38 @@
   line-height: 1.4;
 }
 
+.connections-launch-card.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.connections-launch-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.connections-launch-copy strong {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.connections-launch-copy span {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  line-height: 1.3;
+}
+
+.connections-launch-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* Active profile list belongs to the sidebar and uses the shared theme palette. */
 .samples-card .sample-list {
   list-style: none;

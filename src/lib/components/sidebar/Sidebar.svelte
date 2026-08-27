@@ -787,14 +787,22 @@ import { onMount, onDestroy } from 'svelte';
   {/if}
 
   {#if onOpenConnections}
-    <div class="chain-status-card card">
-      <h4>Connections</h4>
-      <p class="card-hint">
-        Set Ollama + vector DB endpoints, monitor health, and see which models are likely GPU vs CPU — no baked-in hosts.
-      </p>
-      <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()} disabled={!runtimeAvailable}>
-        Open Connections
-      </button>
+    <div class="connections-launch-card card">
+      <div class="connections-launch-copy">
+        <strong>Connections</strong>
+        <span>Ollama + vector databases</span>
+      </div>
+      <div class="connections-launch-actions">
+        <Tooltip
+          label="Connections"
+          description="Set Ollama and vector database endpoints, monitor health, and manage model settings under Advanced."
+        >
+          <span class="info-icon" aria-label="Explain Connections">ⓘ</span>
+        </Tooltip>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()} disabled={!runtimeAvailable}>
+          Open Connections
+        </button>
+      </div>
     </div>
   {/if}
 

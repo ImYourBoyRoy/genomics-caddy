@@ -193,13 +193,15 @@
   @media (max-width: 900px) {
     .theme-toggle {
       left: 0.75rem;
-      top: 0.75rem;
-      bottom: auto;
+      bottom: 0.75rem;
     }
 
     .theme-options {
-      top: calc(100% + 0.4rem);
-      bottom: auto;
+      bottom: calc(100% + 0.4rem);
+    }
+
+    :global(.app-layout.mobile-sidebar-open) .theme-toggle {
+      left: calc(var(--sidebar-width) + 0.75rem);
     }
   }
 

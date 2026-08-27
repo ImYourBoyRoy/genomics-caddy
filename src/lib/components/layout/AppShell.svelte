@@ -1,8 +1,13 @@
 <!-- ./src/lib/components/layout/AppShell.svelte -->
 <script lang="ts">
+  import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
   let focusMode = $state(false);
+  let mobileSidebarOpen = $state(false);
+  let isNarrowViewport = $state(false);
+  let mobileToggleButton = $state<HTMLButtonElement | undefined>(undefined);
+  let sidebarSlot = $state<HTMLDivElement | undefined>(undefined);
 
   /*
   Module Docstring:
@@ -21,19 +26,90 @@
   }
 
   let { sidebar, children }: Props = $props();
+
+  function focusSidebarContent() {
+    void tick().then(() => {
+      const firstFocusable = sidebarSlot?.querySelector<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    });
+  }
+
+  function openMobileSidebar() {
+    mobileSidebarOpen = true;
+    focusSidebarContent();
+  }
+
+  function closeMobileSidebar() {
+    mobileSidebarOpen = false;
+    void tick().then(() => mobileToggleButton?.focus());
+  }
+
+  function handleDocumentKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && mobileSidebarOpen) {
+      event.preventDefault();
+      closeMobileSidebar();
+    }
+  }
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const updateViewportMode = () => {
+      isNarrowViewport = mediaQuery.matches;
+      if (!isNarrowViewport) mobileSidebarOpen = false;
+    };
+
+    updateViewportMode();
+    mediaQuery.addEventListener('change', updateViewportMode);
+    document.addEventListener('keydown', handleDocumentKeydown);
+    return () => {
+      mediaQuery.removeEventListener('change', updateViewportMode);
+      document.removeEventListener('keydown', handleDocumentKeydown);
+    };
+  });
 </script>
 
-<div class="app-layout" class:focus-mode={focusMode}>
-  {@render sidebar()}
+<div class="app-layout" class:focus-mode={focusMode} class:mobile-sidebar-open={mobileSidebarOpen}>
+  <div
+    class="sidebar-slot"
+    bind:this={sidebarSlot}
+    aria-hidden={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? 'true' : undefined}
+    inert={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? true : undefined}
+  >
+    {@render sidebar()}
+  </div>
   {@render children()}
+  {#if isNarrowViewport && mobileSidebarOpen}
+    <button
+      type="button"
+      class="mobile-sidebar-backdrop no-print"
+      aria-label="Close data controls"
+      onclick={closeMobileSidebar}
+    ></button>
+  {/if}
   <button
     type="button"
     class="focus-toggle no-print"
     aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
+    aria-controls="data-sidebar"
     aria-pressed={focusMode}
     onclick={() => focusMode = !focusMode}
   >
     {focusMode ? '☰ Show data' : '⤢ Focus report'}
   </button>
+  {#if isNarrowViewport}
+    <button
+      type="button"
+      class="mobile-sidebar-toggle no-print"
+      bind:this={mobileToggleButton}
+      aria-label={mobileSidebarOpen ? 'Close data controls' : 'Open data controls'}
+      aria-controls="data-sidebar"
+      aria-expanded={mobileSidebarOpen}
+      onclick={mobileSidebarOpen ? closeMobileSidebar : openMobileSidebar}
+    >
+      {mobileSidebarOpen ? '× Close data' : '☰ Data controls'}
+    </button>
+  {/if}
   <ThemeToggle />
 </div>

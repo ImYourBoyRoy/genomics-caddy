@@ -765,7 +765,7 @@ import { onMount, onDestroy } from 'svelte';
   let bulkBusy = $derived(syncingAll || updatingAllOutdated);
 </script>
 
-<aside class="sidebar" aria-label="Profile and data controls">
+<aside id="data-sidebar" class="sidebar" aria-label="Profile and data controls">
   <div class="brand">
     <img src="/logo.png" alt="Genomics Caddy Logo" class="brand-logo" />
     <h2>Genomics Caddy</h2>

@@ -65,6 +65,7 @@
         {@const effectAllele = getEffectAllele(marker)}
         <tr class:clinical-row-highlight={isHighlighted(marker)}>
           <td data-label="Finding">
+            <span class="clinical-mobile-label">Finding</span>
             <strong>{marker.gene}</strong>
             <span class="clinical-finding-sub">{marker.variant_name || marker.rsid}</span>
             <div class="clinical-row-actions no-print">
@@ -76,19 +77,28 @@
             </div>
           </td>
           <td data-label="DNA result">
+            <span class="clinical-mobile-label">DNA result</span>
             <strong class="clinical-genotype">{marker.user_genotype}</strong>
             <span class="clinical-cell-note">{marker.assertion_status}</span>
           </td>
           <td data-label="Evidence">
+            <span class="clinical-mobile-label">Evidence</span>
             <strong>{tier.label}</strong>
             <span class="clinical-cell-note">{tier.confidenceLabel}</span>
           </td>
-          <td data-label="Applicability">{marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}</td>
+          <td data-label="Applicability">
+            <span class="clinical-mobile-label">Applicability</span>
+            {marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}
+          </td>
           <td data-label="Clinical status">
+            <span class="clinical-mobile-label">Clinical status</span>
             <span class="clinical-severity {severity.cssClass}">{severity.label}</span>
             <span class="clinical-cell-note">{clinicalStatusNote(marker)}</span>
           </td>
-          <td data-label="Next helpful step">{nextHelpfulStep(marker)}</td>
+          <td data-label="Next helpful step">
+            <span class="clinical-mobile-label">Next helpful step</span>
+            {nextHelpfulStep(marker)}
+          </td>
           <td data-label="Details">
             <details class="clinical-details">
               <summary>Technical details</summary>
@@ -168,6 +178,10 @@
     color: var(--text-secondary);
     font-size: 0.66rem;
     line-height: 1.35;
+  }
+
+  .clinical-mobile-label {
+    display: none;
   }
 
   .clinical-genotype {
@@ -313,7 +327,11 @@
     }
 
     .clinical-findings-table tbody td::before {
-      content: attr(data-label);
+      content: none;
+    }
+
+    .clinical-mobile-label {
+      display: block;
       color: var(--text-secondary);
       font-size: 0.64rem;
       font-weight: 700;

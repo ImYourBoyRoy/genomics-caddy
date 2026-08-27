@@ -30,4 +30,12 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('.clinical-details dl {\n      min-width: 0;\n      max-width: 100%;');
     expect(source).toContain('grid-template-columns: minmax(6rem, 0.45fr) minmax(0, 1fr);');
   });
+
+  it('uses real mobile field labels instead of CSS-only pseudo content', () => {
+    expect(source).toContain('<span class="clinical-mobile-label">Finding</span>');
+    expect(source).toContain('<span class="clinical-mobile-label">DNA result</span>');
+    expect(source).toContain('<span class="clinical-mobile-label">Next helpful step</span>');
+    expect(source).toContain('.clinical-mobile-label {\n    display: none;');
+    expect(source).toContain('.clinical-findings-table tbody td::before {\n      content: none;');
+  });
 });

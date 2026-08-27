@@ -135,6 +135,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Compare-mode warning details are grouped under one collapsed `Limits & confirmation` disclosure per finding; the short `Clinical review` badge remains visible when applicable.
 * Finding highlights and report/discovery loading states use the active semantic info/warning tokens instead of fixed colors.
 * Marker-card hover and bottom-left theme-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
+* Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent.
 * Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
 * The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
 * The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.

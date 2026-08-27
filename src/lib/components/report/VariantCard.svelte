@@ -610,9 +610,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin-top: 0.5rem;
-    padding-top: 0.4rem;
-    border-top: 1px solid var(--border-color);
+    margin-top: 0.35rem;
   }
 
   .simple-meaning-block {
@@ -659,11 +657,12 @@
   .simple-status-line {
     display: flex;
     align-items: center;
-    min-height: 2rem;
-    padding: 0.35rem 0.6rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.45rem;
-    background: var(--surface-subtle);
+    min-height: 1.25rem;
+    padding: 0;
+  }
+
+  .simple-status-line .marker-severity-label {
+    font-size: 0.74rem;
   }
 
   .simple-next-step {

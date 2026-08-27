@@ -26,6 +26,22 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('.simple-next-step {\n    display: block;');
   });
 
+  it('keeps Simple metadata quiet so the meaning and next step stay focal', () => {
+    const simpleEvidenceStyles = source.slice(source.indexOf('/* Simple mode evidence summary */'));
+    const statusStyles = simpleEvidenceStyles.slice(
+      simpleEvidenceStyles.indexOf('.simple-status-line {'),
+      simpleEvidenceStyles.indexOf('.simple-next-step {'),
+    );
+    const evidenceRule = simpleEvidenceStyles.match(/\.simple-evidence-summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(statusStyles).toContain('min-height: 1.25rem;');
+    expect(statusStyles).toContain('padding: 0;');
+    expect(statusStyles).not.toContain('border: 1px solid');
+    expect(statusStyles).not.toContain('background: var(--surface-subtle);');
+    expect(simpleEvidenceStyles).toContain('.simple-evidence-summary {');
+    expect(evidenceRule).not.toContain('border-top: 1px solid var(--border-color);');
+  });
+
   it('keeps Compare evidence boundaries behind a compact disclosure', () => {
     expect(source).toContain('<summary>Evidence boundary</summary>');
     expect(source).toContain('class="claim-frame" role="note"');

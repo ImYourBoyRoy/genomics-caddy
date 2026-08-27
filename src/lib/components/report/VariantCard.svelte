@@ -163,9 +163,12 @@
         <p class="claim-context">{laypersonTranslation.simpleMeaning}</p>
       </details>
     {:else}
-      <div class="claim-frame" role="note">
-        {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
-      </div>
+      <details class="claim-details">
+        <summary>Evidence boundary</summary>
+        <div class="claim-frame" role="note">
+          {getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}
+        </div>
+      </details>
     {/if}
 
     <div class="marker-body">

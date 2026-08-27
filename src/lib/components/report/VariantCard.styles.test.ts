@@ -26,6 +26,11 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('.simple-next-step {\n    display: block;');
   });
 
+  it('keeps Compare evidence boundaries behind a compact disclosure', () => {
+    expect(source).toContain('<summary>Evidence boundary</summary>');
+    expect(source).toContain('class="claim-frame" role="note"');
+  });
+
   it('keeps the highlighted finding state on shared info tokens', () => {
     const highlightStyles = source.match(/:global\(\.marker-card-highlight\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
 

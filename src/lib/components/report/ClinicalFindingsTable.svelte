@@ -3,7 +3,7 @@
   import type { EvaluatedMarker } from '../../types/genomics';
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getEffectAllele, getEffectCount } from '../../utils/genotype';
-  import { getClaimFrame, getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
+  import { getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
   import SourcesList from './SourcesList.svelte';
 
   interface Props {
@@ -28,6 +28,14 @@
       return 'Review the listed follow-up.';
     }
     return 'Interpret with history and current guidance.';
+  }
+
+  function clinicalStatusNote(marker: EvaluatedMarker): string {
+    if (!marker.interpretation_allowed) return 'Review blocked';
+    if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
+      return 'Confirmation needed';
+    }
+    return 'Contextual result';
   }
 
   function isHighlighted(marker: EvaluatedMarker): boolean {
@@ -78,7 +86,7 @@
           <td data-label="Applicability">{marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}</td>
           <td data-label="Clinical status">
             <span class="clinical-severity {severity.cssClass}">{severity.label}</span>
-            <span class="clinical-cell-note">{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</span>
+            <span class="clinical-cell-note">{clinicalStatusNote(marker)}</span>
           </td>
           <td data-label="Next helpful step">{nextHelpfulStep(marker)}</td>
           <td data-label="Details">

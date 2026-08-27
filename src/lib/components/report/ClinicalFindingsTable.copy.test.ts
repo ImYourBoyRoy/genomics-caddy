@@ -43,13 +43,12 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('.clinical-findings-table tbody td::before {\n      content: none;');
   });
 
-  it('separates DNA, clinical, self-reported, and clinician-entered data sources', () => {
-    expect(source).toContain('<summary>Data sources in this report</summary>');
-    expect(source).toContain('<dt>Consumer DNA array</dt>');
-    expect(source).toContain('<dt>Clinical confirmation</dt>');
-    expect(source).toContain('<dt>Self-reported context</dt>');
-    expect(source).toContain('<dt>Clinician-entered information</dt>');
-    expect(source).toContain('.clinical-provenance');
+  it('keeps repeated report-level provenance out of each finding table', () => {
+    expect(source).not.toContain('Data sources in this report');
+    expect(source).not.toContain('Consumer DNA array');
+    expect(source).not.toContain('Self-reported context');
+    expect(source).not.toContain('Clinician-entered information');
+    expect(source).not.toContain('.clinical-provenance');
   });
 
   it('keeps the clinical table markup structurally balanced', () => {

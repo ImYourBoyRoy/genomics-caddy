@@ -482,6 +482,18 @@
     </header>
   {/if}
 
+  {#if presentationMode === 'clinical'}
+    <details class="clinical-provenance no-print">
+      <summary>About the data in Clinical view</summary>
+      <div class="clinical-provenance-grid">
+        <span><strong>DNA array</strong> Genotype calls shown in the tables.</span>
+        <span><strong>Clinical confirmation</strong> Separate testing is shown as a follow-up status.</span>
+        <span><strong>Personal context</strong> Symptoms, medications, and goals are not DNA findings.</span>
+        <span><strong>Clinician-entered data</strong> Not included unless separately documented.</span>
+      </div>
+    </details>
+  {/if}
+
   {#if generatedReport.catalog_warnings?.length}
     <div class="catalog-warnings-banner" role="status">
       <strong>Reference catalogs:</strong>
@@ -761,6 +773,44 @@
 
   .clinical-empty-hint strong {
     color: var(--text-primary);
+  }
+
+  .clinical-provenance {
+    margin: 0 0 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .clinical-provenance summary {
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .clinical-provenance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 1rem;
+    margin-top: 0.6rem;
+  }
+
+  .clinical-provenance-grid span {
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .clinical-provenance-grid strong {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 900px) {
+    .clinical-provenance-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .help-backdrop {

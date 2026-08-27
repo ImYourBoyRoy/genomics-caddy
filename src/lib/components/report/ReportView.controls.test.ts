@@ -60,4 +60,11 @@ describe('Simple-first report controls', () => {
     expect(source).toContain('Expand a health area below, or use “Expand all” under Filters &amp; ordering');
     expect(source).toContain('class="clinical-empty-hint" role="status"');
   });
+
+  it('shows Clinical data provenance once at the report level', () => {
+    expect(source).toContain('{#if presentationMode === \'clinical\'}\n    <details class="clinical-provenance no-print">');
+    expect(source).toContain('<summary>About the data in Clinical view</summary>');
+    expect(source).toContain('<strong>DNA array</strong> Genotype calls shown in the tables.');
+    expect(source).toContain('<strong>Personal context</strong> Symptoms, medications, and goals are not DNA findings.');
+  });
 });

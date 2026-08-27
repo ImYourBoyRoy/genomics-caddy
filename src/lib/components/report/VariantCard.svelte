@@ -262,45 +262,47 @@
           <span>{nextHelpfulStep()}</span>
         </div>
 
-        <!-- Secondary catalog context remains available in Technical data and References. -->
-        <details class="simple-details">
-          <summary>Details</summary>
-          <p>{laypersonTranslation.simpleImpact}</p>
-        </details>
-        <details class="technical-details">
-          <summary>Technical data</summary>
-          <dl>
-            <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
-            <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
-            <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
-            <div><dt>Claim boundary</dt><dd>{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</dd></div>
-            {#if marker.clinvar_significance}
-              <div>
-                <dt>Clinical catalog</dt>
-                <dd>
-                  {marker.clinvar_significance}
-                  {#if marker.clinvar_review_status} · {marker.clinvar_review_status}{/if}
-                  {#if marker.clinvar_conditions} · {marker.clinvar_conditions}{/if}
-                </dd>
-              </div>
+        <!-- Secondary catalog context remains available in compact disclosures. -->
+        <div class="simple-card-disclosures">
+          <details class="simple-details">
+            <summary>Details</summary>
+            <p>{laypersonTranslation.simpleImpact}</p>
+          </details>
+          <details class="technical-details">
+            <summary>Technical data</summary>
+            <dl>
+              <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
+              <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
+              <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
+              <div><dt>Claim boundary</dt><dd>{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</dd></div>
+              {#if marker.clinvar_significance}
+                <div>
+                  <dt>Clinical catalog</dt>
+                  <dd>
+                    {marker.clinvar_significance}
+                    {#if marker.clinvar_review_status} · {marker.clinvar_review_status}{/if}
+                    {#if marker.clinvar_conditions} · {marker.clinvar_conditions}{/if}
+                  </dd>
+                </div>
+              {/if}
+              {#if marker.population_rarity}
+                <div>
+                  <dt>Population context</dt>
+                  <dd>
+                    {marker.population_rarity}
+                    {#if marker.population_af != null} ({formatAf(marker.population_af)}){/if}
+                  </dd>
+                </div>
+              {/if}
+            </dl>
+            {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+              <ConfirmWithList confirmWith={marker.confirm_with} />
             {/if}
-            {#if marker.population_rarity}
-              <div>
-                <dt>Population context</dt>
-                <dd>
-                  {marker.population_rarity}
-                  {#if marker.population_af != null} ({formatAf(marker.population_af)}){/if}
-                </dd>
-              </div>
-            {/if}
-          </dl>
+          </details>
           {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
-            <ConfirmWithList confirmWith={marker.confirm_with} />
+            <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
           {/if}
-        </details>
-        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
-          <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
-        {/if}
+        </div>
       {:else}
         <div class="impact-section">
           <strong>What this gene does:</strong>
@@ -637,7 +639,7 @@
   }
 
   .simple-details {
-    margin-top: 0.15rem;
+    margin: 0;
     color: var(--text-secondary);
     font-size: 0.72rem;
   }
@@ -668,9 +670,7 @@
   }
 
   .technical-details {
-    margin-top: 0.25rem;
-    border-top: 1px solid var(--border-color);
-    padding-top: 0.55rem;
+    margin: 0;
     color: var(--text-secondary);
     font-size: 0.72rem;
   }
@@ -701,5 +701,43 @@
   .technical-details dd {
     margin: 0;
     overflow-wrap: anywhere;
+  }
+
+  .simple-card-disclosures {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.25rem 0.85rem;
+    margin-top: 0.25rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .simple-card-disclosures > .simple-details,
+  .simple-card-disclosures > .technical-details,
+  .simple-card-disclosures > :global(.marker-sources-details) {
+    flex: 0 1 auto;
+  }
+
+  .simple-card-disclosures > :global(.marker-sources-details) {
+    margin: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .simple-card-disclosures > .simple-details[open],
+  .simple-card-disclosures > .technical-details[open],
+  .simple-card-disclosures > :global(.marker-sources-details[open]) {
+    flex-basis: 100%;
+  }
+
+  .simple-card-disclosures summary {
+    display: flex;
+    min-height: 2rem;
+    align-items: center;
+  }
+
+  :global(.simple-card-disclosures > .marker-sources-details[open] summary) {
+    margin-bottom: 0.6rem;
   }
 </style>

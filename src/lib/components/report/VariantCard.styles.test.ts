@@ -73,6 +73,17 @@ describe('VariantCard enrichment surface', () => {
     expect(source).not.toContain('<summary>Why this is shown</summary>');
   });
 
+  it('groups secondary Simple disclosures into one compact rail', () => {
+    expect(source).toContain('<div class="simple-card-disclosures">');
+    expect(source).toContain('<details class="technical-details">');
+    expect(source).toContain('<SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />');
+    expect(source).toContain('.simple-card-disclosures {');
+    expect(source).toContain('gap: 0.25rem 0.85rem;');
+    expect(source).toContain('.simple-card-disclosures > .technical-details[open]');
+    expect(source).toContain('flex-basis: 100%;');
+    expect(source).toContain(':global(.marker-sources-details)');
+  });
+
   it('keeps the highlighted finding state on shared info tokens', () => {
     const highlightStyles = source.match(/:global\(\.marker-card-highlight\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
 

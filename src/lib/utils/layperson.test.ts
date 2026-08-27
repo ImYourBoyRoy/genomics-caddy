@@ -161,17 +161,18 @@ describe('plain-English claim framing', () => {
 
   it('keeps technical gene names out of the primary Simple finding title', () => {
     expect(getSimpleFindingTitle('Altered DNA repair (BRCA1 gene)')).toBe('Altered DNA repair');
-    expect(getSimpleFindingTitle('ESR1 hormone-response research marker')).toBe('Hormone-response research context');
+    expect(getSimpleFindingTitle('ESR1 hormone-response research marker')).toBe('Hormone response research context');
     expect(getSimpleFindingTitle('9p21 cardiovascular-association marker')).toBe('Cardiovascular research context');
-    expect(getSimpleFindingTitle('FBN1/connective-tissue association marker')).toBe('Connective-tissue research context');
-    expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('No-function allele component');
+    expect(getSimpleFindingTitle('FBN1/connective-tissue association marker')).toBe('Connective tissue research context');
+    expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('No function allele component');
     expect(getSimpleFindingTitle('A biological pathway studied in genetic research.')).toBe('A biological pathway studied in genetic research.');
   });
 
   it('keeps the technical word marker out of Simple titles', () => {
     const titles = Object.values(LAYPERSON_MAP).map((translation) => getSimpleFindingTitle(translation.simpleImpact));
     expect(titles.some((title) => /\bmarker\b/i.test(title))).toBe(false);
-    expect(getSimpleFindingTitle('research-only marker')).toBe('Research-only finding');
+    expect(titles.some((title) => /[-_]/.test(title))).toBe(false);
+    expect(getSimpleFindingTitle('research-only marker')).toBe('Research only finding');
   });
 
   it('keeps dashboard and card next steps direction-aware and concise', () => {

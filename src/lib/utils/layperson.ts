@@ -68,6 +68,7 @@ function humanizeSimpleTitle(title: string): string {
     .replace(/\b(?:association|research) marker\b/gi, 'research context')
     .replace(/\bmarker\b/gi, 'research context')
     .replace(/\bresearch\s+research\b/gi, 'research')
+    .replace(/[-_]+/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();
 

@@ -3,6 +3,7 @@
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
   import GnomadSetupPanel from "./GnomadSetupPanel.svelte";
   import OfflineDataPanel from "./OfflineDataPanel.svelte";
+  import Tooltip from "../common/Tooltip.svelte";
   import {
     previewResearchScope,
     saveResearchScope,
@@ -407,20 +408,21 @@
           </div>
           {#if refStatus !== null}
             {#if gwasReady}
-              <button
-                class="btn btn-secondary btn-sm ref-resync-btn"
-                onclick={handleSyncGwas}
-                disabled={sweepRunning || isSyncing}
-                title="Replace local GWAS reference catalog"
-              >
-                {#if isSyncing}
-                  Syncing…
-                {:else if resyncConfirm}
-                  Confirm re-sync
-                {:else}
-                  Re-sync GWAS
-                {/if}
-              </button>
+              <Tooltip interactiveChildren label="Re-sync GWAS" description="Replace the local GWAS reference catalog with a fresh copy.">
+                <button
+                  class="btn btn-secondary btn-sm ref-resync-btn"
+                  onclick={handleSyncGwas}
+                  disabled={sweepRunning || isSyncing}
+                >
+                  {#if isSyncing}
+                    Syncing…
+                  {:else if resyncConfirm}
+                    Confirm re-sync
+                  {:else}
+                    Re-sync GWAS
+                  {/if}
+                </button>
+              </Tooltip>
             {:else}
               <button
                 class="btn btn-secondary btn-sm"

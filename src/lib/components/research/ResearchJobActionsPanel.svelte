@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { ResearchJob, QdrantConfigPublic, QdrantConnectionStatus } from "../../types/research";
   import type { RunReadiness } from "../../utils/researchRunReadiness";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     job?: ResearchJob | null;
@@ -123,14 +124,15 @@
         >
           {isStarting ? "..." : "Resume Sweep"}
         </button>
-        <button
-          class="btn btn-secondary"
-          onclick={() => onStart?.({ forceReenrich: true })}
-          disabled={busy || !readiness.canStart}
-          title="Rebuilds enrichment for already-indexed vectors. Prefer Resume for multi-day runs."
-        >
-          Force re-enrich
-        </button>
+        <Tooltip interactiveChildren label="Force re-enrich" description="Rebuilds enrichment for already-indexed vectors. Prefer Resume for multi-day runs.">
+          <button
+            class="btn btn-secondary"
+            onclick={() => onStart?.({ forceReenrich: true })}
+            disabled={busy || !readiness.canStart}
+          >
+            Force re-enrich
+          </button>
+        </Tooltip>
       </div>
       <p class="hint sweep-hint">
         <strong>Resume</strong> continues from the checkpoint and skips vectors already indexed in Qdrant.

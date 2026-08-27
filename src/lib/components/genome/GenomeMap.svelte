@@ -6,6 +6,7 @@
   import type { VariantNavTarget } from "../../constants/traitCategories";
   import { CHR_LENGTHS, CHR_ORDER } from "../../constants/chromosomeLayout";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
+  import Tooltip from "../common/Tooltip.svelte";
   import "$lib/styles/components/genome-map.css";
 
   /*
@@ -554,7 +555,8 @@
               <div
                 class="chr-capsule-wrapper"
                 style={`width: ${widthPct}%`}
-                title={`Chr ${chr} · ${formatMb(CHR_LENGTHS[chr])} · ${count.toLocaleString()} SNPs`}
+                role="group"
+                aria-label={`Chromosome ${chr}; ${formatMb(CHR_LENGTHS[chr])}; ${count.toLocaleString()} SNPs`}
               >
                 <div
                   class="chr-capsule"
@@ -611,12 +613,16 @@
             {#if chrTraits.length > 0}
               <div class="trait-overlay">
                 {#each chrTraits as band (`${band.trait_category}:${band.association_count}`)}
-                  <span
-                    class="trait-band"
-                    title="{band.trait_category}: {band.association_count} associations"
+                  <Tooltip
+                    label={band.trait_category.replace(/_/g, " ")}
+                    description={`${band.association_count} associations in this chromosome trait overlay.`}
+                    placement="bottom"
+                    triggerClass="trait-band-trigger"
                   >
-                    {band.trait_category.replace(/_/g, " ")} ({band.association_count})
-                  </span>
+                    <span class="trait-band">
+                      {band.trait_category.replace(/_/g, " ")} ({band.association_count})
+                    </span>
+                  </Tooltip>
                 {/each}
               </div>
             {/if}

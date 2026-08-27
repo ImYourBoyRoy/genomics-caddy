@@ -136,15 +136,16 @@
             <option value={model}>{model}</option>
           {/each}
         </select>
-        <button
-          class="refresh-btn"
-          type="button"
-          onclick={onRefreshModels}
-          disabled={isScanningModels}
-          title="Refresh models from Ollama"
-        >
-          {isScanningModels ? "⏳" : "🔄"}
-        </button>
+        <Tooltip interactiveChildren label="Refresh models" description="Refresh the available embedding models from Ollama.">
+          <button
+            class="refresh-btn"
+            type="button"
+            onclick={onRefreshModels}
+            disabled={isScanningModels}
+          >
+            {isScanningModels ? "⏳" : "🔄"}
+          </button>
+        </Tooltip>
       </div>
     </div>
 

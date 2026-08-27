@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { getResearchDebugLog, setResearchDebugLog } from "../../api/tauri";
   import { liveProgress } from "../../research/liveProgress.svelte";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     logs?: string[];
@@ -56,15 +57,17 @@
 <div class="glass-card log-card">
   <div class="log-header">
     <h2 class="card-title">Sweep activity</h2>
-    <label class="debug-toggle" title="Verbose sweep logs in this feed and the terminal (DNA_RESEARCH_DEBUG=1 also works)">
-      <input
-        type="checkbox"
-        checked={debugLogEnabled}
-        disabled={togglingDebug}
-        onchange={toggleDebugLog}
-      />
-      <span>Detailed log</span>
-    </label>
+    <Tooltip interactiveChildren label="Detailed log" description="Shows verbose sweep logs in this feed and the terminal. The DNA_RESEARCH_DEBUG setting also enables it.">
+      <label class="debug-toggle">
+        <input
+          type="checkbox"
+          checked={debugLogEnabled}
+          disabled={togglingDebug}
+          onchange={toggleDebugLog}
+        />
+        <span>Detailed log</span>
+      </label>
+    </Tooltip>
   </div>
 
   <div class="log-container">

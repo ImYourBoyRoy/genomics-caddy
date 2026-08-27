@@ -11,6 +11,7 @@
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
   import { listOfflineUpdates } from "../../utils/offlineUpdates";
   import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
+  import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {
     selectedSample: { id: number; name: string } | null;
@@ -256,15 +257,16 @@
     >
       {syncingTier === -1 ? "Syncing all…" : "Sync all tiers"}
     </button>
-    <button
-      type="button"
-      class="btn btn-secondary btn-sm"
-      disabled={disabled || syncingTier !== null || syncingAsset !== null || !selectedSample}
-      onclick={rebuildTier2}
-      title="Rebuild variant locus index from imported genotypes only"
-    >
-      Rebuild locus index
-    </button>
+    <Tooltip interactiveChildren label="Rebuild locus index" description="Rebuilds the local variant-locus index from the imported genome only.">
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        disabled={disabled || syncingTier !== null || syncingAsset !== null || !selectedSample}
+        onclick={rebuildTier2}
+      >
+        Rebuild locus index
+      </button>
+    </Tooltip>
     <button type="button" class="btn btn-secondary btn-sm" disabled={disabled || loading} onclick={refresh}>
       Check updates
     </button>

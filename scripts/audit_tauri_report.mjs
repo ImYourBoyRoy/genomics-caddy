@@ -1,0 +1,150 @@
+#!/usr/bin/env node
+/*
+Purpose: Exercise the running Tauri desktop report through its local UI bridge.
+How to run: `npm run audit:tauri-ui` while `npm run tauri:dev` is running.
+Outputs: Aggregate-only desktop mode, geometry, sex-label, and public-copy checks.
+Privacy: Never prints sample names, genotype calls, technical disclosures, or raw UI text.
+*/
+
+import { setTimeout as sleep } from "node:timers/promises";
+
+const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
+const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_TIMEOUT_MS, 120_000);
+const pollMs = 500;
+
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+async function request(path, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  const body = await response.text();
+  let payload;
+  try {
+    payload = body ? JSON.parse(body) : null;
+  } catch {
+    throw new Error(`Bridge returned non-JSON data for ${path}`);
+  }
+  if (!response.ok) {
+    throw new Error(`Bridge request failed for ${path} (HTTP ${response.status})`);
+  }
+  return payload;
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function layoutOf(snapshot) {
+  assert(snapshot && typeof snapshot === "object", "Bridge snapshot is not an object");
+  assert(snapshot.layout && typeof snapshot.layout === "object", "Bridge snapshot has no layout metrics");
+  return snapshot.layout;
+}
+
+function validateDesktopSnapshot(snapshot, expectedMode) {
+  assert(snapshot.hasReport === true, "Report is not ready");
+  const sex = snapshot.sample?.genetic_sex;
+  assert(sex === "Male" || sex === "Female", "Report did not expose a concise Male/Female sex label");
+
+  const layout = layoutOf(snapshot);
+  assert(layout.activePresentationMode === expectedMode, `Expected ${expectedMode} mode`);
+  assert(layout.viewportWidth > 0 && layout.viewportHeight > 0, "Desktop viewport is unavailable");
+  assert(layout.documentScrollWidth <= layout.documentClientWidth + 1, "Desktop document overflows horizontally");
+  if (layout.mainContentWidth !== null && layout.mainContentScrollWidth !== null) {
+    assert(
+      layout.mainContentScrollWidth <= layout.mainContentWidth + 1,
+      "Desktop report content overflows horizontally"
+    );
+  }
+  assert(layout.overflowingElements.length === 0, "Desktop bridge reported overflowing elements");
+  if (layout.markerGridColumnCount !== null) {
+    assert(layout.markerGridColumnCount <= 2, "Report finding grid exceeds the two-column desktop contract");
+  }
+
+  if (expectedMode === "clinical") {
+    assert(layout.clinicalTableCount === 1, "Clinical mode did not render its structured findings table");
+    assert(layout.markerCardCount === 0, "Clinical mode rendered duplicate marker cards");
+  } else {
+    assert(layout.clinicalTableCount === 0, `${expectedMode} mode rendered a clinical table`);
+  }
+
+  return {
+    sex,
+    markerCards: layout.markerCardCount,
+    clinicalTables: layout.clinicalTableCount,
+    columns: layout.markerGridColumnCount,
+  };
+}
+
+async function waitForSnapshot(predicate, label) {
+  const started = Date.now();
+  let lastError = null;
+  while (Date.now() - started < timeoutMs) {
+    try {
+      const snapshot = await request("/ui/snapshot");
+      if (predicate(snapshot)) return snapshot;
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(pollMs);
+  }
+  const detail = lastError ? ` (${lastError.message})` : "";
+  throw new Error(`Timed out waiting for ${label}${detail}`);
+}
+
+async function clickText(text) {
+  const result = await request("/ui/clickText", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  assert(result?.ok === true, `Could not activate ${text}`);
+}
+
+async function waitForMode(mode) {
+  return waitForSnapshot((snapshot) => snapshot.layout?.activePresentationMode === mode, `${mode} mode`);
+}
+
+async function assertNoRedundantPublicCopy() {
+  const result = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Evidence sources available" }),
+  });
+  assert(result?.ok === true && result.count === 0, "Redundant generic evidence warning is visible in the report");
+}
+
+async function main() {
+  const ready = await waitForSnapshot(
+    (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode,
+    "a loaded Tauri report"
+  );
+
+  const modes = {};
+  modes.simple = validateDesktopSnapshot(ready, "simple");
+  await assertNoRedundantPublicCopy();
+
+  await clickText("Clinical");
+  modes.clinical = validateDesktopSnapshot(await waitForMode("clinical"), "clinical");
+
+  await clickText("Compare");
+  modes.compare = validateDesktopSnapshot(await waitForMode("compare"), "compare");
+
+  await clickText("Simple");
+  const restored = validateDesktopSnapshot(await waitForMode("simple"), "simple");
+
+  console.log("PASS: Tauri desktop report audit");
+  console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+}
+
+main().catch((error) => {
+  console.error(`FAIL: ${error.message}`);
+  process.exitCode = 1;
+});

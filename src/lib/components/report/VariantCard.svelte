@@ -180,7 +180,7 @@
 
     <div class="marker-body">
       <!-- Direction badge: only when variant IS detected -->
-      {#if marker.effect_direction}
+      {#if marker.effect_direction && viewMode !== 'simple'}
         <EffectDirectionBadge direction={marker.effect_direction} />
       {/if}
 

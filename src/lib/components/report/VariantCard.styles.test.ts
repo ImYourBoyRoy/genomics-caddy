@@ -56,6 +56,11 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('class="claim-limit-list"');
   });
 
+  it('keeps the Simple card from repeating its direction label', () => {
+    expect(source).toContain('{#if marker.effect_direction && viewMode !== \'simple\'}');
+    expect(source).toContain('<EffectDirectionBadge direction={marker.effect_direction} />');
+  });
+
   it('keeps the highlighted finding state on shared info tokens', () => {
     const highlightStyles = source.match(/:global\(\.marker-card-highlight\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
 

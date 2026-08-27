@@ -196,7 +196,7 @@
               <span class="severity-badge {finding.severity_class}">{getSeverityLabel(finding.severity_class)}</span>
             </div>
             <p>{findingMeaning(finding)}</p>
-            <div class="action-queue-next"><strong>Next helpful step:</strong> {findingNextStep(finding)}</div>
+            <div class="action-queue-next"><strong class="action-queue-next-label">Next:</strong> {findingNextStep(finding)}</div>
             {#if onJumpToMarker}
               <button class="btn btn-xs btn-link jump-btn" type="button" onclick={() => onJumpToMarker?.(finding.link_id)}>
                 View finding details →

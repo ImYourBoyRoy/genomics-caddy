@@ -53,6 +53,8 @@ describe('DashboardSummaryPanel semantic styling', () => {
   it('keeps repeated action steps concise instead of repeating warning copy', () => {
     expect(source).toContain('getSimpleNextStep');
     expect(source).toContain('return marker ? getSimpleNextStep(marker) :');
+    expect(source).toContain('<strong class="action-queue-next-label">Next:</strong>');
+    expect(source).not.toContain('<strong>Next helpful step:</strong>');
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
   });
 

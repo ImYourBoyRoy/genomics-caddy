@@ -77,6 +77,7 @@
   let activeCount = $derived(
     section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length
   );
+  let showActiveCount = $derived(activeCount > 0 && activeCount < section.markers.length);
   let noDataCount = $derived(section.summary.no_data_count ?? 0);
   let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount));
   let coveragePercent = $derived(
@@ -103,7 +104,7 @@
         <span class="pill section-count-pill">
           {section.markers.length} shown
         </span>
-        {#if activeCount > 0}
+        {#if showActiveCount}
           <span class="pill active-pill section-active-pill">
             {activeCount} active {activeCount === 1 ? 'finding' : 'findings'}
           </span>

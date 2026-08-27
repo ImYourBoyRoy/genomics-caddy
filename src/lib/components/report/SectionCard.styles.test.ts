@@ -29,6 +29,8 @@ describe('SectionCard semantic status styling', () => {
 
   it('derives header findings from the visible filtered marker list', () => {
     expect(source).toContain("section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data').length");
+    expect(source).toContain('let showActiveCount = $derived(activeCount > 0 && activeCount < section.markers.length);');
+    expect(source).toContain('{#if showActiveCount}');
     expect(source).toContain('{section.markers.length} shown');
     expect(source).not.toContain("section.markers.length === 1 ? 'variant' : 'variants'");
     expect(source).not.toContain('section.summary.active_marker_count ?? 0');

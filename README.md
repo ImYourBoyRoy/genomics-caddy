@@ -141,6 +141,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
 * Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing, so collapsed sections do not silently produce incomplete print output.
 * Shared report/sidebar tooltips support keyboard focus, hover, click/tap pinning, Escape, click-away dismissal, reduced motion, and viewport-aware placement; explanatory text supplements visible labels rather than replacing them.
+* Tooltip shadows use a theme token, keeping the shared popover surface consistent in Light, Dark, and System themes.
 * Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
 

@@ -620,7 +620,18 @@ pub async fn sync_offline_assets_subset(
                 if def.id == OfflineAssetId::GwasCatalog {
                     let path = local_path(data_dir, custom_dir.as_deref(), def);
                     let present = asset_local_present(data_dir, custom_dir.as_deref(), def, &path);
-                    if (force || !present)
+                    // GWAS has a dedicated sync kind because its importer handles
+                    // several source-file shapes. It still needs the same update
+                    // decision as ordinary remote assets: an installed catalog
+                    // marked with a proven newer remote identity must download
+                    // before the local catalog is re-indexed.
+                    let registry_update_available = with_conn(db_path, |conn| {
+                        Ok(read_registry(conn, def.id.as_str()))
+                    })
+                    .ok()
+                    .flatten()
+                    .is_some_and(|registry| registry.update_available);
+                    if gwas_download_required(force, present, registry_update_available)
                         && let Some(url) = def.url
                     {
                         if bytes_used >= budget && !present {
@@ -956,6 +967,10 @@ pub async fn sync_all_missing(
     Ok(results)
 }
 
+fn gwas_download_required(force: bool, local_present: bool, update_available: bool) -> bool {
+    force || !local_present || update_available
+}
+
 fn import_asset_sync(
     conn: &Connection,
     data_dir: &Path,
@@ -1150,4 +1165,25 @@ pub fn offline_status_summary(conn: &Connection, data_dir: &Path) -> (u64, u64, 
     let gwas = row_count_for_asset(conn, OfflineAssetId::GwasCatalog);
     let locus = crate::offline::tier2::count_variant_locus_rows(data_dir, conn);
     (gwas, clinvar, locus)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::gwas_download_required;
+
+    #[test]
+    fn gwas_downloads_when_a_newer_remote_identity_is_proven() {
+        assert!(gwas_download_required(false, true, true));
+    }
+
+    #[test]
+    fn gwas_skips_an_installed_current_catalog() {
+        assert!(!gwas_download_required(false, true, false));
+    }
+
+    #[test]
+    fn gwas_downloads_when_missing_or_forced() {
+        assert!(gwas_download_required(false, false, false));
+        assert!(gwas_download_required(true, true, false));
+    }
 }

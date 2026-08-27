@@ -38,6 +38,8 @@ export interface AgentUiLayoutMetrics {
   focusControlOverlapsContent: boolean;
   focusControlBottom: number | null;
   firstContentTop: number | null;
+  actionQueueWidth: number | null;
+  themeControlInToolbar: boolean;
   overflowingElements: Array<{
     tag: string;
     classes: string[];
@@ -74,6 +76,7 @@ export interface AgentUiSnapshot {
   dietaryAlignmentPresent: boolean;
   dualExportButtonsPresent: boolean;
   urgentBadgeCount: number;
+  themeMode: 'system' | 'light' | 'dark' | null;
   visibleTextSample: string[];
   tooltip: AgentUiTooltipMetrics;
   layout: AgentUiLayoutMetrics;
@@ -233,6 +236,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
   const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
+  const actionQueue = document.querySelector<HTMLElement>('.action-queue-list');
   const firstContent = document.querySelector<HTMLElement>('.main-content > *');
   const focusRect = focusControl?.getBoundingClientRect();
   const contentRect = firstContent?.getBoundingClientRect();
@@ -258,6 +262,8 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     focusControlOverlapsContent,
     focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
     firstContentTop: contentRect ? Math.round(contentRect.top) : null,
+    actionQueueWidth: actionQueue ? Math.round(actionQueue.getBoundingClientRect().width) : null,
+    themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
     overflowingElements: collectOverflowingElements(mainContent),
   };
 }
@@ -368,6 +374,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
             .join(' ');
           return /^\s*URGENT\s*$/i.test(direct);
         }).length,
+        themeMode: document.documentElement.dataset.theme === 'light' || document.documentElement.dataset.theme === 'dark' || document.documentElement.dataset.theme === 'system'
+          ? document.documentElement.dataset.theme
+          : null,
         visibleTextSample: collectVisibleText(30),
         tooltip: collectTooltipMetrics(),
         layout: collectLayoutMetrics(),

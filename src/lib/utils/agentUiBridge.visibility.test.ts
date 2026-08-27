@@ -57,4 +57,14 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("document.querySelector<HTMLElement>('.focus-toggle')");
     expect(source).toContain("document.querySelector<HTMLElement>('.main-content > *')");
   });
+
+  it('exposes only aggregate toolbar and action-queue geometry plus the selected theme mode', () => {
+    expect(source).toContain('actionQueueWidth: number | null;');
+    expect(source).toContain('themeControlInToolbar: boolean;');
+    expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
+    expect(source).toContain("document.querySelector('.focus-toolbar .theme-toggle') !== null");
+    expect(source).toContain("themeMode: 'system' | 'light' | 'dark' | null;");
+    expect(source).toContain('document.documentElement.dataset.theme');
+    expect(source).not.toContain('actionQueue.textContent');
+  });
 });

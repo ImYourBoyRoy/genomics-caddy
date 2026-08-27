@@ -69,6 +69,10 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   if (layout.focusControlBottom !== null && layout.firstContentTop !== null) {
     assert(layout.focusControlBottom <= layout.firstContentTop, "Focus Report control is not above the first content block");
   }
+  assert(layout.themeControlInToolbar === true, "Theme control is not in the desktop toolbar");
+  if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
+    assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
+  }
   if (layout.markerGridColumnCount !== null) {
     assert(layout.markerGridColumnCount <= 2, "Report finding grid exceeds the two-column desktop contract");
   }
@@ -86,6 +90,16 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     clinicalTables: layout.clinicalTableCount,
     columns: layout.markerGridColumnCount,
   };
+}
+
+async function selectTheme(label, expectedMode) {
+  await clickText(label);
+  const snapshot = await waitForSnapshot(
+    (candidate) => candidate.themeMode === expectedMode,
+    `${expectedMode} theme mode`,
+  );
+  assert(snapshot.themeMode === expectedMode, `Expected ${expectedMode} theme mode`);
+  return snapshot;
 }
 
 function validateTooltipSnapshot(snapshot) {
@@ -224,6 +238,13 @@ async function main() {
 
   await clickText("Simple");
   const restored = validateDesktopSnapshot(await waitForMode("simple"), "simple");
+
+  await clickText("Color theme");
+  await selectTheme("Light mode", "light");
+  await clickText("Color theme");
+  await selectTheme("Dark mode", "dark");
+  await clickText("Color theme");
+  await selectTheme("System default", "system");
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);

@@ -10,6 +10,7 @@ Operational Notes: Active in all builds; actions are local-only (no network). Sa
 */
 
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { normalizeUiLabel } from './uiLabels';
 
 export type AgentUiTab =
   | 'report'
@@ -157,7 +158,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
 }
 
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
-  const needle = text.trim().toLowerCase();
+  const needle = normalizeUiLabel(text);
   if (!needle) return { ok: false, detail: 'empty text' };
 
   const candidates = Array.from(
@@ -174,15 +175,16 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
         .filter(Boolean)
         .join(' · ')
         .toLowerCase();
-      if (!label.includes(needle)) return null;
+      const exact = normalizeUiLabel(visibleLabel) === needle || normalizeUiLabel(accessibleLabel) === needle;
+      if (!normalizeUiLabel(label).includes(needle)) return null;
       const disabled =
         (el as HTMLButtonElement).disabled === true ||
         el.getAttribute('aria-disabled') === 'true' ||
         el.hasAttribute('disabled');
-      return { el, label, disabled };
+      return { el, label, disabled, exact };
     })
-    .filter((x): x is { el: HTMLElement; label: string; disabled: boolean } => !!x)
-    .sort((a, b) => Number(a.disabled) - Number(b.disabled));
+    .filter((x): x is { el: HTMLElement; label: string; disabled: boolean; exact: boolean } => !!x)
+    .sort((a, b) => Number(a.disabled) - Number(b.disabled) || Number(b.exact) - Number(a.exact));
 
   const hit = ranked[0];
   if (!hit) return { ok: false, detail: `no clickable element containing "${text}"` };

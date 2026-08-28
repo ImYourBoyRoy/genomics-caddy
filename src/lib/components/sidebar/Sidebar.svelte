@@ -23,7 +23,7 @@ import { onMount, onDestroy } from 'svelte';
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
-  import { clearOfflineUpdate, formatUpdateSummary, hasProvenOfflineUpdate, listOfflineUpdates } from '../../utils/offlineUpdates';
+  import { clearOfflineUpdate, formatUpdateSummary, hasFreshProvenOfflineUpdate, listOfflineUpdates } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
@@ -155,6 +155,7 @@ import { onMount, onDestroy } from 'svelte';
   // Do not present the previous probe's update flags while a new authoritative
   // status check is running or has failed.
   let offlineStatusFresh = $state(false);
+
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
   let gnomadReadiness = $state<GnomadReadinessStatus | null>(null);
   let gnomadBusy = $state(false);
@@ -597,7 +598,7 @@ import { onMount, onDestroy } from 'svelte';
 
   function companionNeedsUpdate(db: (typeof DB_DEFS)[number]): boolean {
     if (!('companions' in db)) return false;
-    return db.companions.some((c) => hasProvenOfflineUpdate(findAssetById(c.assetId)));
+    return db.companions.some((c) => hasFreshProvenOfflineUpdate(offlineStatusFresh, findAssetById(c.assetId)));
   }
 
   /** Show per-asset progress during single sync OR bulk Sync All / Update all. */
@@ -643,7 +644,7 @@ import { onMount, onDestroy } from 'svelte';
     if (syncingAsset[assetId]) {
       return phase?.message || 'Preparing sync…';
     }
-    if (hasProvenOfflineUpdate(asset)) {
+    if (hasFreshProvenOfflineUpdate(offlineStatusFresh, asset)) {
       const remote = asset.remote_content_length
         ? formatRemoteSize(asset.remote_content_length)
         : asset.display_size;
@@ -673,7 +674,7 @@ import { onMount, onDestroy } from 'svelte';
     const size = asset?.remote_content_length
       ? formatRemoteSize(asset.remote_content_length)
       : asset?.display_size || 'size unknown';
-    const update = hasProvenOfflineUpdate(asset) ? ' Update available on server.' : '';
+    const update = hasFreshProvenOfflineUpdate(offlineStatusFresh, asset) ? ' Update available on server.' : '';
     return `${db.blurb} Size: ${size}.${update}`;
   }
 
@@ -694,7 +695,7 @@ import { onMount, onDestroy } from 'svelte';
     if (!asset.local_present) {
       return { label: '⬇ Download', variant: 'primary', isForce: false };
     }
-    if (hasProvenOfflineUpdate(asset)) {
+    if (hasFreshProvenOfflineUpdate(offlineStatusFresh, asset)) {
       // Only show Update when the server has a newer identity (not merely force-checked).
       return { label: '🔄 Update', variant: 'warning', isForce: true };
     }
@@ -753,7 +754,7 @@ import { onMount, onDestroy } from 'svelte';
 
   async function handleUpdateAllOutdated() {
     if (updatingAllOutdated || syncingAll || Object.values(syncingAsset).some(Boolean)) return;
-    const items = listOfflineUpdates(offlineStatus);
+    const items = listOfflineUpdates(offlineStatusFresh ? offlineStatus : null);
     if (items.length === 0) return;
     updatingAllOutdated = true;
     isPanelCollapsed = false;
@@ -1174,7 +1175,7 @@ import { onMount, onDestroy } from 'svelte';
                 <div class="db-item-meta">
                   <span class="db-item-title">
                     <strong>{db.label}</strong>
-                    {#if hasProvenOfflineUpdate(findAsset(db.tierNum, db.assetId)) || companionNeedsUpdate(db)}
+                    {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, findAsset(db.tierNum, db.assetId)) || companionNeedsUpdate(db)}
                       <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
                         <span class="update-pill">update</span>
                       </Tooltip>
@@ -1195,7 +1196,7 @@ import { onMount, onDestroy } from 'svelte';
                   class:btn-secondary={btnState.variant === 'secondary'}
                   class:btn-warning={btnState.variant === 'warning'}
                   onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={!!syncingAsset[db.assetId] || bulkBusy || !offlineStatus || sweepRunning || !runtimeAvailable}
+                  disabled={!!syncingAsset[db.assetId] || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || !runtimeAvailable}
                 >
                   {btnState.label}
                 </button>
@@ -1239,7 +1240,7 @@ import { onMount, onDestroy } from 'svelte';
                       <div class="db-companion-meta">
                         <span class="db-companion-label">
                           {c.label}
-                          {#if hasProvenOfflineUpdate(companion)}
+                          {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
                             <Tooltip label="Update available" description="A newer supporting file is available on the server.">
                               <span class="update-pill">update</span>
                             </Tooltip>
@@ -1250,7 +1251,7 @@ import { onMount, onDestroy } from 'svelte';
                             Checking…
                           {:else if cBusy}
                             {syncPhase[c.assetId]?.message || importProgress[c.assetId]?.message || 'Updating…'}
-                          {:else if hasProvenOfflineUpdate(companion)}
+                          {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
                             Update available · {companion.display_size || companion.message}
                           {:else if companion.row_count > 0}
                             {companion.row_count.toLocaleString()} rows
@@ -1264,17 +1265,17 @@ import { onMount, onDestroy } from 'svelte';
                       <button
                         type="button"
                         class="btn btn-xs"
-                        aria-label={`${hasProvenOfflineUpdate(companion) || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
-                        class:btn-warning={hasProvenOfflineUpdate(companion) || forceRedownload}
-                        class:btn-secondary={!hasProvenOfflineUpdate(companion) && !forceRedownload}
-                        disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
+                        aria-label={`${hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
+                        class:btn-warning={hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
+                        class:btn-secondary={!hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) && !forceRedownload}
+                        disabled={cBusy || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
                         onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
                       >
                         {#if cBusy}
                           …
                         {:else if !companion?.local_present}
                           Download
-                        {:else if hasProvenOfflineUpdate(companion) || forceRedownload}
+                        {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
                           Update
                         {:else}
                           Re-sync

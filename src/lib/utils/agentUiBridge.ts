@@ -393,6 +393,15 @@ function waitForQaPaint(): Promise<void> {
   });
 }
 
+function dismissOpenTooltipForQa() {
+  if (!document.querySelector('.tooltip-panel')) return;
+  document.dispatchEvent(new KeyboardEvent('keydown', {
+    key: 'Escape',
+    bubbles: true,
+    cancelable: true,
+  }));
+}
+
 async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
   const triggers = Array.from(document.querySelectorAll<HTMLElement>('.tooltip-trigger'))
     .filter(isVisibleQaElement);
@@ -403,25 +412,29 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
   let accessiblePanelCount = 0;
 
   for (const trigger of triggers) {
+    dismissOpenTooltipForQa();
+    await waitForQaPaint();
     trigger.click();
     await waitForQaPaint();
     const metrics = collectTooltipMetrics();
     const panel = document.querySelector<HTMLElement>('.tooltip-panel');
-    if (metrics.openPanelCount !== 1 || !panel) continue;
+    try {
+      if (metrics.openPanelCount !== 1 || !panel) continue;
 
-    testedTriggerCount += 1;
-    openedPanelCount += metrics.openPanelCount;
-    withinViewportCount += metrics.withinViewportCount;
-    accessiblePanelCount += metrics.accessiblePanelCount;
-    const rect = trigger.getBoundingClientRect();
-    const edgeThreshold = 80;
-    if (rect.top <= edgeThreshold) triggerEdgeCounts.top += 1;
-    if (window.innerWidth - rect.right <= edgeThreshold) triggerEdgeCounts.right += 1;
-    if (window.innerHeight - rect.bottom <= edgeThreshold) triggerEdgeCounts.bottom += 1;
-    if (rect.left <= edgeThreshold) triggerEdgeCounts.left += 1;
-
-    trigger.click();
-    await waitForQaPaint();
+      testedTriggerCount += 1;
+      openedPanelCount += metrics.openPanelCount;
+      withinViewportCount += metrics.withinViewportCount;
+      accessiblePanelCount += metrics.accessiblePanelCount;
+      const rect = trigger.getBoundingClientRect();
+      const edgeThreshold = 80;
+      if (rect.top <= edgeThreshold) triggerEdgeCounts.top += 1;
+      if (window.innerWidth - rect.right <= edgeThreshold) triggerEdgeCounts.right += 1;
+      if (window.innerHeight - rect.bottom <= edgeThreshold) triggerEdgeCounts.bottom += 1;
+      if (rect.left <= edgeThreshold) triggerEdgeCounts.left += 1;
+    } finally {
+      dismissOpenTooltipForQa();
+      await waitForQaPaint();
+    }
   }
 
   return {

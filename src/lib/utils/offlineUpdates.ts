@@ -25,6 +25,14 @@ export function hasProvenOfflineUpdate(
   return Boolean(asset?.local_present && asset.update_available);
 }
 
+/** A visible update requires both a proven asset flag and a fresh status probe. */
+export function hasFreshProvenOfflineUpdate(
+  statusFresh: boolean,
+  asset: Pick<OfflineAssetStatus, "local_present" | "update_available"> | null | undefined,
+): boolean {
+  return statusFresh && hasProvenOfflineUpdate(asset);
+}
+
 /** Every asset with a proven remote update (ETag / Last-Modified), primary first. */
 export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined): OfflineUpdateItem[] {
   if (!status) return [];

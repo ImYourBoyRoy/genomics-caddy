@@ -6,9 +6,11 @@ const sidebarSource = readFileSync(resolve(process.cwd(), 'src/lib/components/si
 
 describe('Sidebar update-state ordering', () => {
   it('uses the installed-asset predicate for every visible update state', () => {
-    expect(sidebarSource).toContain('hasProvenOfflineUpdate');
-    expect(sidebarSource).toContain('hasProvenOfflineUpdate(findAsset(db.tierNum, db.assetId))');
-    expect(sidebarSource).toContain('hasProvenOfflineUpdate(companion)');
+    expect(sidebarSource).toContain('hasFreshProvenOfflineUpdate');
+    expect(sidebarSource).toContain('hasFreshProvenOfflineUpdate(offlineStatusFresh, findAsset(db.tierNum, db.assetId))');
+    expect(sidebarSource).toContain('hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)');
+    expect(sidebarSource).not.toContain('hasProvenOfflineUpdate(findAsset(db.tierNum, db.assetId))');
+    expect(sidebarSource).not.toContain('hasProvenOfflineUpdate(companion)');
     expect(sidebarSource).not.toContain('if (asset.update_available)');
     expect(sidebarSource).not.toContain('if (companion?.update_available)');
   });
@@ -24,6 +26,7 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('offlineStatusFresh = false;');
     expect(sidebarSource).toContain('offlineStatusFresh = true;');
     expect(sidebarSource).toContain('offlineStatusFresh ? listOfflineUpdates(offlineStatus) : []');
+    expect(sidebarSource).toContain('listOfflineUpdates(offlineStatusFresh ? offlineStatus : null)');
     expect(sidebarSource).toContain('async function refreshStatusInBackground(): Promise<StatusRefreshResult>');
     expect(sidebarSource).toContain("if (!failureMessage && finalStatus === 'error')");
     expect(sidebarSource).toContain("failureRetry = { kind: 'status' };");
@@ -32,6 +35,11 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true)');
     expect(sidebarSource).toContain('if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;');
     expect(sidebarSource).toContain('await refreshStatusInBackground();');
+  });
+
+  it('does not leave row actions enabled while a fresh status probe is running', () => {
+    expect(sidebarSource).toContain('isCheckingStatus || !offlineStatus');
+    expect(sidebarSource).toContain('isCheckingStatus || !offlineStatus || sweepRunning');
   });
 
   it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {

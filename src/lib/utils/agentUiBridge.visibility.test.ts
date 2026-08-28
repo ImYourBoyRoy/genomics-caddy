@@ -69,6 +69,9 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('withinViewportCount');
     expect(source).toContain('accessiblePanelCount');
     expect(source).toContain('maxRightOverflow');
+    expect(source).toContain('function dismissOpenTooltipForQa()');
+    expect(source).toContain('dismissOpenTooltipForQa();');
+    expect(source).toContain('finally {');
     expect(source).not.toContain('panel.textContent');
   });
 

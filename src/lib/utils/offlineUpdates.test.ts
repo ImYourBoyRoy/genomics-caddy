@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearOfflineUpdate, hasProvenOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
+import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
@@ -51,6 +51,14 @@ describe('listOfflineUpdates', () => {
     expect(hasProvenOfflineUpdate({ local_present: true, update_available: true })).toBe(true);
     expect(hasProvenOfflineUpdate({ local_present: false, update_available: true })).toBe(false);
     expect(hasProvenOfflineUpdate(null)).toBe(false);
+  });
+
+  it('requires a fresh status probe before exposing a visible update', () => {
+    const asset = { local_present: true, update_available: true };
+
+    expect(hasFreshProvenOfflineUpdate(false, asset)).toBe(false);
+    expect(hasFreshProvenOfflineUpdate(true, asset)).toBe(true);
+    expect(hasFreshProvenOfflineUpdate(true, { local_present: false, update_available: true })).toBe(false);
   });
 
   it('lists only installed assets with a remote update flag', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
+import { clearOfflineUpdate, hasProvenOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
@@ -47,6 +47,12 @@ function makeStatus(): OfflineUpdateCheck {
 }
 
 describe('listOfflineUpdates', () => {
+  it('requires a local asset before treating a remote flag as an update', () => {
+    expect(hasProvenOfflineUpdate({ local_present: true, update_available: true })).toBe(true);
+    expect(hasProvenOfflineUpdate({ local_present: false, update_available: true })).toBe(false);
+    expect(hasProvenOfflineUpdate(null)).toBe(false);
+  });
+
   it('lists only installed assets with a remote update flag', () => {
     const items = listOfflineUpdates(makeStatus());
 
@@ -58,8 +64,8 @@ describe('listOfflineUpdates', () => {
     const status = makeStatus();
     const cleared = clearOfflineUpdate(status, 'gwas_catalog');
 
-    expect(cleared?.total_updates_available).toBe(1);
-    expect(cleared?.tiers[0]?.updates_available).toBe(1);
+    expect(cleared?.total_updates_available).toBe(0);
+    expect(cleared?.tiers[0]?.updates_available).toBe(0);
     expect(listOfflineUpdates(cleared).map((item) => item.asset_id)).toEqual([]);
     expect(cleared?.tiers[0]?.assets[1]?.update_available).toBe(true);
   });

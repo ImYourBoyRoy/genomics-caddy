@@ -18,6 +18,13 @@ export interface OfflineUpdateItem {
   remote_content_length: number | null;
 }
 
+/** A remote update is actionable only when the corresponding local asset exists. */
+export function hasProvenOfflineUpdate(
+  asset: Pick<OfflineAssetStatus, "local_present" | "update_available"> | null | undefined,
+): boolean {
+  return Boolean(asset?.local_present && asset.update_available);
+}
+
 /** Every asset with a proven remote update (ETag / Last-Modified), primary first. */
 export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined): OfflineUpdateItem[] {
   if (!status) return [];
@@ -26,7 +33,7 @@ export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined
     for (const asset of tier.assets) {
       // A remote flag only represents an update for an asset that is already
       // installed locally. Missing assets belong in the download flow.
-      if (!asset.local_present || !asset.update_available) continue;
+      if (!hasProvenOfflineUpdate(asset)) continue;
       out.push(toUpdateItem(asset));
     }
   }
@@ -52,11 +59,11 @@ export function clearOfflineUpdate(
   let changed = false;
   const tiers = status.tiers.map((tier) => {
     const assets = tier.assets.map((asset) => {
-      if (asset.asset_id !== assetId || !asset.update_available) return asset;
+      if (asset.asset_id !== assetId || !hasProvenOfflineUpdate(asset)) return asset;
       changed = true;
       return { ...asset, update_available: false };
     });
-    const updates_available = assets.filter((asset) => asset.update_available).length;
+    const updates_available = assets.filter((asset) => hasProvenOfflineUpdate(asset)).length;
     return { ...tier, assets, updates_available };
   });
 

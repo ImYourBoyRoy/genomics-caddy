@@ -5,6 +5,14 @@ import { resolve } from 'node:path';
 const sidebarSource = readFileSync(resolve(process.cwd(), 'src/lib/components/sidebar/Sidebar.svelte'), 'utf8');
 
 describe('Sidebar update-state ordering', () => {
+  it('uses the installed-asset predicate for every visible update state', () => {
+    expect(sidebarSource).toContain('hasProvenOfflineUpdate');
+    expect(sidebarSource).toContain('hasProvenOfflineUpdate(findAsset(db.tierNum, db.assetId))');
+    expect(sidebarSource).toContain('hasProvenOfflineUpdate(companion)');
+    expect(sidebarSource).not.toContain('if (asset.update_available)');
+    expect(sidebarSource).not.toContain('if (companion?.update_available)');
+  });
+
   it('ignores stale status probes and waits for one final bulk-update refresh', () => {
     expect(sidebarSource).toContain('let statusRefreshGeneration = 0;');
     expect(sidebarSource).toContain('const generation = ++statusRefreshGeneration;');

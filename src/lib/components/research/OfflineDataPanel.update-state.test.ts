@@ -5,6 +5,12 @@ import { resolve } from 'node:path';
 const panelSource = readFileSync(resolve(process.cwd(), 'src/lib/components/research/OfflineDataPanel.svelte'), 'utf8');
 
 describe('OfflineDataPanel update-state ordering', () => {
+  it('does not render an update state for a missing local asset', () => {
+    expect(panelSource).toContain('hasProvenOfflineUpdate');
+    expect(panelSource).toContain('hasProvenOfflineUpdate(asset) && !statusStale');
+    expect(panelSource).not.toContain('asset.update_available && !statusStale');
+  });
+
   it('invalidates stale refreshes and performs one final refresh after bulk updates', () => {
     expect(panelSource).toContain('let statusRefreshGeneration = 0;');
     expect(panelSource).toContain('const generation = ++statusRefreshGeneration;');
@@ -26,6 +32,6 @@ describe('OfflineDataPanel update-state ordering', () => {
     expect(panelSource).toContain('forceSync = target.force;');
     expect(panelSource).toContain('Status needs checking');
     expect(panelSource).toContain('updateAssets.length > 0 && !statusStale');
-    expect(panelSource).toContain('asset.update_available && !statusStale');
+    expect(panelSource).toContain('hasProvenOfflineUpdate(asset) && !statusStale');
   });
 });

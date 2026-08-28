@@ -23,7 +23,7 @@ import { onMount, onDestroy } from 'svelte';
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
-  import { clearOfflineUpdate, formatUpdateSummary, listOfflineUpdates } from '../../utils/offlineUpdates';
+  import { clearOfflineUpdate, formatUpdateSummary, hasProvenOfflineUpdate, listOfflineUpdates } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
@@ -579,7 +579,7 @@ import { onMount, onDestroy } from 'svelte';
 
   function companionNeedsUpdate(db: (typeof DB_DEFS)[number]): boolean {
     if (!('companions' in db)) return false;
-    return db.companions.some((c) => !!findAssetById(c.assetId)?.update_available);
+    return db.companions.some((c) => hasProvenOfflineUpdate(findAssetById(c.assetId)));
   }
 
   /** Show per-asset progress during single sync OR bulk Sync All / Update all. */
@@ -625,7 +625,7 @@ import { onMount, onDestroy } from 'svelte';
     if (syncingAsset[assetId]) {
       return phase?.message || 'Preparing sync…';
     }
-    if (asset.update_available) {
+    if (hasProvenOfflineUpdate(asset)) {
       const remote = asset.remote_content_length
         ? formatRemoteSize(asset.remote_content_length)
         : asset.display_size;
@@ -655,7 +655,7 @@ import { onMount, onDestroy } from 'svelte';
     const size = asset?.remote_content_length
       ? formatRemoteSize(asset.remote_content_length)
       : asset?.display_size || 'size unknown';
-    const update = asset?.update_available ? ' Update available on server.' : '';
+    const update = hasProvenOfflineUpdate(asset) ? ' Update available on server.' : '';
     return `${db.blurb} Size: ${size}.${update}`;
   }
 
@@ -676,7 +676,7 @@ import { onMount, onDestroy } from 'svelte';
     if (!asset.local_present) {
       return { label: '⬇ Download', variant: 'primary', isForce: false };
     }
-    if (asset.update_available) {
+    if (hasProvenOfflineUpdate(asset)) {
       // Only show Update when the server has a newer identity (not merely force-checked).
       return { label: '🔄 Update', variant: 'warning', isForce: true };
     }
@@ -1156,7 +1156,7 @@ import { onMount, onDestroy } from 'svelte';
                 <div class="db-item-meta">
                   <span class="db-item-title">
                     <strong>{db.label}</strong>
-                    {#if findAsset(db.tierNum, db.assetId)?.update_available || companionNeedsUpdate(db)}
+                    {#if hasProvenOfflineUpdate(findAsset(db.tierNum, db.assetId)) || companionNeedsUpdate(db)}
                       <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
                         <span class="update-pill">update</span>
                       </Tooltip>
@@ -1221,7 +1221,7 @@ import { onMount, onDestroy } from 'svelte';
                       <div class="db-companion-meta">
                         <span class="db-companion-label">
                           {c.label}
-                          {#if companion?.update_available}
+                          {#if hasProvenOfflineUpdate(companion)}
                             <Tooltip label="Update available" description="A newer supporting file is available on the server.">
                               <span class="update-pill">update</span>
                             </Tooltip>
@@ -1232,7 +1232,7 @@ import { onMount, onDestroy } from 'svelte';
                             Checking…
                           {:else if cBusy}
                             {syncPhase[c.assetId]?.message || importProgress[c.assetId]?.message || 'Updating…'}
-                          {:else if companion.update_available}
+                          {:else if hasProvenOfflineUpdate(companion)}
                             Update available · {companion.display_size || companion.message}
                           {:else if companion.row_count > 0}
                             {companion.row_count.toLocaleString()} rows
@@ -1246,9 +1246,9 @@ import { onMount, onDestroy } from 'svelte';
                       <button
                         type="button"
                         class="btn btn-xs"
-                        aria-label={`${companion?.update_available || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
-                        class:btn-warning={!!companion?.update_available || forceRedownload}
-                        class:btn-secondary={!companion?.update_available && !forceRedownload}
+                        aria-label={`${hasProvenOfflineUpdate(companion) || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
+                        class:btn-warning={hasProvenOfflineUpdate(companion) || forceRedownload}
+                        class:btn-secondary={!hasProvenOfflineUpdate(companion) && !forceRedownload}
                         disabled={cBusy || bulkBusy || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
                         onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
                       >
@@ -1256,7 +1256,7 @@ import { onMount, onDestroy } from 'svelte';
                           …
                         {:else if !companion?.local_present}
                           Download
-                        {:else if companion?.update_available || forceRedownload}
+                        {:else if hasProvenOfflineUpdate(companion) || forceRedownload}
                           Update
                         {:else}
                           Re-sync

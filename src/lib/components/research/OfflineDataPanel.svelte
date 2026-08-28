@@ -9,7 +9,7 @@
     buildOfflineTier2,
   } from "../../api/tauri";
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
-  import { listOfflineUpdates } from "../../utils/offlineUpdates";
+  import { hasProvenOfflineUpdate, listOfflineUpdates } from "../../utils/offlineUpdates";
   import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
   import Tooltip from "../common/Tooltip.svelte";
 
@@ -402,7 +402,7 @@
           <h4>Tier {tier.tier}</h4>
           <ul class="asset-list">
             {#each tier.assets as asset}
-              <li class:update={asset.update_available && !statusStale}>
+              <li class:update={hasProvenOfflineUpdate(asset) && !statusStale}>
                 <span class="asset-label">
                   {asset.label}
                   {#if isPrimaryCatalogId(asset.asset_id)}
@@ -417,7 +417,7 @@
                   {:else}
                     missing
                   {/if}
-                  {#if asset.update_available && !statusStale}
+                  {#if hasProvenOfflineUpdate(asset) && !statusStale}
                     · <em>update</em>
                     <button
                       type="button"

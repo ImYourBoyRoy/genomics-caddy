@@ -78,6 +78,9 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }
+  if (layout.actionQueueWidth !== null && layout.actionQueueItemMaxWidth !== null) {
+    assert(layout.actionQueueItemMaxWidth <= layout.actionQueueWidth + 1, "Action queue item exceeds its reading surface");
+  }
   if (layout.connectionsLaunchHeight !== null) {
     assert(layout.connectionsLaunchHeight <= 72, "Advanced Connections launch surface is too tall for the default sidebar");
   }
@@ -89,6 +92,19 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   }
   if (layout.markerGridColumnCount !== null) {
     assert(layout.markerGridColumnCount <= 2, "Report finding grid exceeds the two-column desktop contract");
+  }
+  if (
+    layout.markerGridWidth !== null &&
+    layout.markerGridColumnCount !== null &&
+    layout.markerGridColumnCount > 0 &&
+    layout.markerCardMaxWidth !== null
+  ) {
+    const gap = layout.markerGridColumnGap ?? 0;
+    const expectedColumnWidth = (layout.markerGridWidth - gap * (layout.markerGridColumnCount - 1)) / layout.markerGridColumnCount;
+    assert(
+      layout.markerCardMaxWidth <= Math.ceil(expectedColumnWidth + 1),
+      "Finding card exceeds its grid column and may be spanning or stretching unexpectedly",
+    );
   }
 
   if (expectedMode === "clinical") {
@@ -107,6 +123,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     clinicalProvenance: layout.clinicalProvenanceCount,
     columns: layout.markerGridColumnCount,
     gridWidth: layout.markerGridWidth,
+    cardWidth: layout.markerCardMaxWidth,
     connectionsHeight: layout.connectionsLaunchHeight,
     liftoverHeight: layout.liftoverStatusHeight,
   };
@@ -303,7 +320,7 @@ async function main() {
   const toolbarGap = ready.layout.firstContentTop !== null && ready.layout.focusControlBottom !== null
     ? ready.layout.firstContentTop - ready.layout.focusControlBottom
     : "n/a";
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
 }
 
 main().catch((error) => {

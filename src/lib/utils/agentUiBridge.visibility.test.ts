@@ -60,10 +60,14 @@ describe('agent UI bridge visibility boundary', () => {
 
   it('exposes only aggregate toolbar and action-queue geometry plus the selected theme mode', () => {
     expect(source).toContain('actionQueueWidth: number | null;');
+    expect(source).toContain('actionQueueItemMaxWidth: number | null;');
     expect(source).toContain('actionQueueItemCount: number;');
     expect(source).toContain('connectionsLaunchHeight: number | null;');
     expect(source).toContain('liftoverStatusHeight: number | null;');
     expect(source).toContain('markerGridWidth: number | null;');
+    expect(source).toContain('markerGridColumnGap: number | null;');
+    expect(source).toContain('markerCardMinWidth: number | null;');
+    expect(source).toContain('markerCardMaxWidth: number | null;');
     expect(source).toContain('clinicalProvenanceCount: number;');
     expect(source).toContain('themeControlInToolbar: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
@@ -73,6 +77,9 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('actionQueue.textContent');
     expect(source).toContain("actionQueue?.querySelectorAll('.action-queue-item').length ?? 0");
     expect(source).toContain('markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null');
+    expect(source).toContain('getGridColumnGap(markerGrid)');
+    expect(source).toContain("getWidthBounds('.marker-card')");
+    expect(source).toContain("getWidthBounds('.action-queue-item')");
     expect(source).toContain("clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length");
     expect(source).toContain('connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null');
     expect(source).toContain('liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null');

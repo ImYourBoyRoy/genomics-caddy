@@ -33,7 +33,10 @@ export interface AgentUiLayoutMetrics {
   connectionsLaunchHeight: number | null;
   liftoverStatusHeight: number | null;
   markerGridWidth: number | null;
+  markerGridColumnGap: number | null;
   markerGridColumnCount: number | null;
+  markerCardMinWidth: number | null;
+  markerCardMaxWidth: number | null;
   markerCardCount: number;
   clinicalTableCount: number;
   clinicalProvenanceCount: number;
@@ -43,6 +46,7 @@ export interface AgentUiLayoutMetrics {
   focusControlBottom: number | null;
   firstContentTop: number | null;
   actionQueueWidth: number | null;
+  actionQueueItemMaxWidth: number | null;
   actionQueueItemCount: number;
   themeControlInToolbar: boolean;
   overflowingElements: Array<{
@@ -165,6 +169,23 @@ function getGridColumnCount(element: HTMLElement | null): number | null {
   return template.split(/\s+/).length;
 }
 
+function getGridColumnGap(element: HTMLElement | null): number | null {
+  if (!element) return null;
+  const gap = Number.parseFloat(getComputedStyle(element).columnGap);
+  return Number.isFinite(gap) ? Math.round(gap) : null;
+}
+
+function getWidthBounds(selector: string): { min: number | null; max: number | null } {
+  const widths = Array.from(document.querySelectorAll<HTMLElement>(selector))
+    .map((element) => element.getBoundingClientRect().width)
+    .filter((width) => Number.isFinite(width) && width > 0);
+  if (widths.length === 0) return { min: null, max: null };
+  return {
+    min: Math.round(Math.min(...widths)),
+    max: Math.round(Math.max(...widths)),
+  };
+}
+
 function getActivePresentationMode(): AgentUiLayoutMetrics['activePresentationMode'] {
   const activeButton = document.querySelector<HTMLElement>('.view-mode-btn[aria-pressed="true"]');
   const label = (activeButton?.textContent || '').toLowerCase();
@@ -247,6 +268,8 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const firstContent = document.querySelector<HTMLElement>('.main-content > *');
   const focusRect = focusControl?.getBoundingClientRect();
   const contentRect = firstContent?.getBoundingClientRect();
+  const markerCardWidths = getWidthBounds('.marker-card');
+  const actionQueueItemWidths = getWidthBounds('.action-queue-item');
   const focusControlOverlapsContent = !!focusRect && !!contentRect
     && focusRect.left < contentRect.right
     && focusRect.right > contentRect.left
@@ -264,7 +287,10 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
     liftoverStatusHeight: liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null,
     markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
+    markerGridColumnGap: getGridColumnGap(markerGrid),
     markerGridColumnCount: getGridColumnCount(markerGrid),
+    markerCardMinWidth: markerCardWidths.min,
+    markerCardMaxWidth: markerCardWidths.max,
     markerCardCount: document.querySelectorAll('.marker-card').length,
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
     clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length,
@@ -274,6 +300,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
     firstContentTop: contentRect ? Math.round(contentRect.top) : null,
     actionQueueWidth: actionQueue ? Math.round(actionQueue.getBoundingClientRect().width) : null,
+    actionQueueItemMaxWidth: actionQueueItemWidths.max,
     actionQueueItemCount: actionQueue?.querySelectorAll('.action-queue-item').length ?? 0,
     themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
     overflowingElements: collectOverflowingElements(mainContent),

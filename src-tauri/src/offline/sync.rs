@@ -32,6 +32,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::Mutex as AsyncMutex;
+use tokio::task::JoinSet;
 
 /// Cooperative cancel for long catalog imports (dbSNP / ClinVar).
 static IMPORT_CANCEL: AtomicBool = AtomicBool::new(false);
@@ -111,6 +112,14 @@ pub struct OfflineUpdateCheck {
     pub tiers: Vec<OfflineTierStatus>,
     pub total_updates_available: u32,
     pub indexed_summary: OfflineIndexedSummary,
+    pub remote_check: OfflineRemoteCheckStatus,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OfflineRemoteCheckStatus {
+    pub assets_checked: u32,
+    pub assets_failed: u32,
+    pub timed_out: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -179,18 +188,18 @@ async fn refresh_missing_remote_sizes(db_path: &Path) {
         return;
     }
 
-    let mut handles = Vec::new();
+    let mut handles = JoinSet::new();
     for (id, tier, url) in missing {
-        handles.push(tokio::spawn(async move {
+        handles.spawn(async move {
             let head = head_remote(&url).await.ok()?;
             let len = head.content_length.filter(|n| *n > 0)?;
             Some((id, tier, url, len))
-        }));
+        });
     }
 
     let db_path = db_path.to_path_buf();
-    for handle in handles {
-        if let Ok(Some((id, tier, url, len))) = handle.await {
+    while let Some(result) = handles.join_next().await {
+        if let Ok(Some((id, tier, url, len))) = result {
             let _ = with_conn(&db_path, |conn| {
                 store_remote_content_length(conn, id, tier, &url, len)
             });
@@ -198,8 +207,13 @@ async fn refresh_missing_remote_sizes(db_path: &Path) {
     }
 }
 
+struct RemoteProbeSummary {
+    assets_checked: u32,
+    assets_failed: u32,
+}
+
 /// Compare local registry metadata to remote HEAD for already-downloaded assets.
-async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
+async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSummary {
     struct UpdateProbe {
         id: OfflineAssetId,
         url: String,
@@ -231,12 +245,15 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
         Ok(())
     });
     if probes.is_empty() {
-        return;
+        return RemoteProbeSummary {
+            assets_checked: 0,
+            assets_failed: 0,
+        };
     }
 
-    let mut handles = Vec::new();
+    let mut handles = JoinSet::new();
     for probe in probes {
-        handles.push(tokio::spawn(async move {
+        handles.spawn(async move {
             let head = head_remote(&probe.url).await.ok()?;
             let newer = remote_changed(
                 &head,
@@ -246,22 +263,31 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) {
                 probe.version_label.as_deref(),
             );
             Some((probe.id, newer, head.content_length, probe.url))
-        }));
+        });
     }
 
     let db_path = db_path.to_path_buf();
-    for handle in handles {
-        if let Ok(Some((id, newer, content_length, url))) = handle.await {
-            let _ = with_conn(&db_path, |conn| {
+    let assets_checked = handles.len() as u32;
+    let mut assets_succeeded = 0u32;
+    while let Some(result) = handles.join_next().await {
+        if let Ok(Some((id, newer, content_length, url))) = result {
+            let persisted = with_conn(&db_path, |conn| {
                 if let Some(len) = content_length.filter(|n| *n > 0)
                     && let Some(def) = asset_def(id)
                 {
-                    let _ = store_remote_content_length(conn, id, def.tier, &url, len);
+                    store_remote_content_length(conn, id, def.tier, &url, len)?;
                 }
                 // Always write the probe result so stale false-positives clear.
                 mark_update_available(conn, id.as_str(), newer)
             });
+            if persisted.is_ok() {
+                assets_succeeded += 1;
+            }
         }
+    }
+    RemoteProbeSummary {
+        assets_checked,
+        assets_failed: assets_checked.saturating_sub(assets_succeeded),
     }
 }
 
@@ -279,11 +305,24 @@ pub async fn check_offline_updates(
 
     // Probe before returning so the frontend receives one authoritative status
     // snapshot instead of stale flags from a previous check.
-    let _ = tokio::time::timeout(std::time::Duration::from_secs(8), async {
-        refresh_missing_remote_sizes(&db_path).await;
-        probe_remote_updates(&data_dir, &db_path).await;
-    })
-    .await;
+    let (remote_probe, remote_check_timed_out) = match tokio::time::timeout(
+        std::time::Duration::from_secs(8),
+        async {
+            refresh_missing_remote_sizes(&db_path).await;
+            probe_remote_updates(&data_dir, &db_path).await
+        },
+    )
+    .await
+    {
+        Ok(summary) => (summary, false),
+        Err(_) => (
+            RemoteProbeSummary {
+                assets_checked: 0,
+                assets_failed: 0,
+            },
+            true,
+        ),
+    };
 
     let custom_dir = get_custom_download_dir_from_db(&db_path);
 
@@ -431,6 +470,11 @@ pub async fn check_offline_updates(
             gwas_rows: indexed_summary.0,
             clinvar_rows: indexed_summary.1,
             variant_locus_rows: indexed_summary.2,
+        },
+        remote_check: OfflineRemoteCheckStatus {
+            assets_checked: remote_probe.assets_checked,
+            assets_failed: remote_probe.assets_failed,
+            timed_out: remote_check_timed_out,
         },
     })
 }

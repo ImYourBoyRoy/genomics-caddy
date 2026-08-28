@@ -152,6 +152,13 @@ export interface OfflineUpdateCheck {
   tiers: OfflineTierStatus[];
   total_updates_available: number;
   indexed_summary: OfflineIndexedSummary;
+  remote_check: OfflineRemoteCheckStatus;
+}
+
+export interface OfflineRemoteCheckStatus {
+  assets_checked: number;
+  assets_failed: number;
+  timed_out: boolean;
 }
 
 export interface DatabaseCachePurgeResult {

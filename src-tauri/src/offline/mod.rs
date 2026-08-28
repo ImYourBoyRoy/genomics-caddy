@@ -25,7 +25,7 @@ pub mod tier2;
 pub use lookup::*;
 pub use manifest::{OfflineAssetId, OfflineAssetStatus, OfflineTierStatus};
 pub use sync::{
-    OfflineIndexedSummary, OfflineSyncResult, OfflineUpdateCheck, build_tier2_for_sample,
-    cancel_offline_import, check_offline_updates, reset_offline_import_cancel, sync_all_missing,
-    sync_offline_tier, sync_single_asset,
+    OfflineIndexedSummary, OfflineRemoteCheckStatus, OfflineSyncResult, OfflineUpdateCheck,
+    build_tier2_for_sample, cancel_offline_import, check_offline_updates,
+    reset_offline_import_cancel, sync_all_missing, sync_offline_tier, sync_single_asset,
 };

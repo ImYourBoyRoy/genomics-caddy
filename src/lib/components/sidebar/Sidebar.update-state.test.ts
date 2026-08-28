@@ -24,7 +24,8 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('let offlineStatusFresh = $state(false);');
     expect(sidebarSource).toContain("type StatusRefreshResult = 'ready' | 'stale' | 'error';");
     expect(sidebarSource).toContain('offlineStatusFresh = false;');
-    expect(sidebarSource).toContain('offlineStatusFresh = true;');
+    expect(sidebarSource).toContain('offlineStatusFresh = isCompleteOfflineStatus(status);');
+    expect(sidebarSource).toContain("status.remote_check.timed_out");
     expect(sidebarSource).toContain('offlineStatusFresh ? listOfflineUpdates(offlineStatus) : []');
     expect(sidebarSource).toContain('listOfflineUpdates(offlineStatusFresh ? offlineStatus : null)');
     expect(sidebarSource).toContain('async function refreshStatusInBackground(): Promise<StatusRefreshResult>');

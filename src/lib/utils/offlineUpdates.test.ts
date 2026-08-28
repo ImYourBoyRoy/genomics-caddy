@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, listOfflineUpdates } from './offlineUpdates';
+import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
   return {
     total_updates_available: 2,
     indexed_summary: { gwas_rows: 0, clinvar_rows: 0, variant_locus_rows: 0 },
+    remote_check: { assets_checked: 1, assets_failed: 0, timed_out: false },
     tiers: [
       {
         tier: 0,
@@ -47,6 +48,19 @@ function makeStatus(): OfflineUpdateCheck {
 }
 
 describe('listOfflineUpdates', () => {
+  it('only treats a completed remote probe as authoritative', () => {
+    const complete = makeStatus();
+    expect(isCompleteOfflineStatus(complete)).toBe(true);
+    expect(isCompleteOfflineStatus({
+      ...complete,
+      remote_check: { assets_checked: 1, assets_failed: 1, timed_out: false },
+    })).toBe(false);
+    expect(isCompleteOfflineStatus({
+      ...complete,
+      remote_check: { assets_checked: 0, assets_failed: 0, timed_out: true },
+    })).toBe(false);
+  });
+
   it('requires a local asset before treating a remote flag as an update', () => {
     expect(hasProvenOfflineUpdate({ local_present: true, update_available: true })).toBe(true);
     expect(hasProvenOfflineUpdate({ local_present: false, update_available: true })).toBe(false);

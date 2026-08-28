@@ -223,6 +223,61 @@ mod tests {
     use rusqlite::Connection;
 
     #[test]
+    fn successful_download_metadata_clears_previous_update_flag() {
+        let conn = Connection::open_in_memory().expect("open registry test connection");
+        conn.execute("ATTACH DATABASE ':memory:' AS reference", [])
+            .expect("attach reference test database");
+        crate::offline::schema::migrate_offline_schema(&conn)
+            .expect("create offline registry schema");
+        let old_head = RemoteHead {
+            content_length: Some(100),
+            etag: Some("\"old\"".into()),
+            last_modified: Some("Sat, 11 Jul 2026 00:00:00 GMT".into()),
+            content_filename: Some("catalog-old.tsv".into()),
+        };
+        let new_head = RemoteHead {
+            content_length: Some(120),
+            etag: Some("\"new\"".into()),
+            last_modified: Some("Sun, 12 Jul 2026 00:00:00 GMT".into()),
+            content_filename: Some("catalog-new.tsv".into()),
+        };
+
+        upsert_registry(
+            &conn,
+            OfflineAssetId::GwasCatalog,
+            0,
+            Path::new("catalog.tsv"),
+            "https://example.invalid/catalog.tsv",
+            Some(&old_head),
+            100,
+            None,
+            10,
+            Some("catalog-old.tsv"),
+            true,
+        )
+        .expect("seed an update flag");
+        upsert_registry(
+            &conn,
+            OfflineAssetId::GwasCatalog,
+            0,
+            Path::new("catalog.tsv"),
+            "https://example.invalid/catalog.tsv",
+            Some(&new_head),
+            120,
+            None,
+            20,
+            Some("catalog-new.tsv"),
+            false,
+        )
+        .expect("record the successful download");
+
+        let registry = read_registry(&conn, "gwas_catalog").expect("read updated registry");
+        assert!(!registry.update_available);
+        assert_eq!(registry.remote_etag.as_deref(), Some("\"new\""));
+        assert_eq!(registry.local_bytes, 120);
+    }
+
+    #[test]
     fn counts_attached_clingen_rows_without_relying_on_a_temp_view() {
         let conn = Connection::open_in_memory().expect("open test connection");
         conn.execute("ATTACH DATABASE ':memory:' AS clingen", [])

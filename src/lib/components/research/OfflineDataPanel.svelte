@@ -9,7 +9,7 @@
     buildOfflineTier2,
   } from "../../api/tauri";
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
-  import { hasProvenOfflineUpdate, listOfflineUpdates } from "../../utils/offlineUpdates";
+  import { hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates } from "../../utils/offlineUpdates";
   import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
   import Tooltip from "../common/Tooltip.svelte";
 
@@ -38,7 +38,7 @@
     | { kind: 'rebuild'; sampleId: number };
   let retryTarget = $state<RetryTarget | null>(null);
 
-  let updateAssets = $derived(listOfflineUpdates(status));
+  let updateAssets = $derived(isCompleteOfflineStatus(status) ? listOfflineUpdates(status) : []);
 
   function formatBytes(n: number): string {
     if (n < 1024) return `${n} B`;
@@ -55,8 +55,12 @@
       const nextStatus = await checkOfflineDataUpdates();
       if (generation !== statusRefreshGeneration) return false;
       status = nextStatus;
-      statusStale = false;
-      statusError = '';
+      statusStale = !isCompleteOfflineStatus(nextStatus);
+      statusError = statusStale
+        ? nextStatus.remote_check.timed_out
+          ? 'Resource check timed out. Retry to verify updates.'
+          : 'Some remote resources could not be verified. Retry to verify updates.'
+        : '';
       return true;
     } catch (e: unknown) {
       if (generation !== statusRefreshGeneration) return false;

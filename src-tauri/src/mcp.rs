@@ -1874,6 +1874,9 @@ mod tests {
         .await;
         let status = tool_payload(status_response);
         assert_eq!(status["total_updates_available"], 0);
+        assert_eq!(status["remote_check"]["assets_checked"], 0);
+        assert_eq!(status["remote_check"]["assets_failed"], 0);
+        assert_eq!(status["remote_check"]["timed_out"], false);
 
         let denied = handle_request(
             tool_request(
@@ -1902,6 +1905,7 @@ mod tests {
         assert_eq!(sync["assets_synced"][0], "tier2_variant_locus");
         assert!(sync["errors"].as_array().is_some_and(Vec::is_empty));
         assert_eq!(sync["final_status"]["total_updates_available"], 0);
+        assert_eq!(sync["final_status"]["remote_check"]["assets_failed"], 0);
 
         let reload_response = handle_request(
             tool_request("reload_report", json!({"sample_id": sample_id})),

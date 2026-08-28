@@ -18,6 +18,15 @@ export interface OfflineUpdateItem {
   remote_content_length: number | null;
 }
 
+/** Only a complete remote probe can make update flags actionable. */
+export function isCompleteOfflineStatus(status: OfflineUpdateCheck | null | undefined): boolean {
+  return Boolean(
+    status &&
+      !status.remote_check.timed_out &&
+      status.remote_check.assets_failed === 0,
+  );
+}
+
 /** A remote update is actionable only when the corresponding local asset exists. */
 export function hasProvenOfflineUpdate(
   asset: Pick<OfflineAssetStatus, "local_present" | "update_available"> | null | undefined,

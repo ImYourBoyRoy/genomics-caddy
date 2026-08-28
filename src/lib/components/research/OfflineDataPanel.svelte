@@ -9,7 +9,7 @@
     buildOfflineTier2,
   } from "../../api/tauri";
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
-  import { hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from "../../utils/offlineUpdates";
+  import { clearOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from "../../utils/offlineUpdates";
   import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
   import Tooltip from "../common/Tooltip.svelte";
 
@@ -94,6 +94,12 @@
         tier === 2 ? selectedSample?.id : undefined
       );
       reportResult(result);
+      // Remove completed assets from the visible snapshot immediately. The
+      // final refresh remains authoritative and can add an asset back only if
+      // the server still proves that a newer identity exists.
+      for (const syncedAssetId of result.assets_synced) {
+        status = clearOfflineUpdate(status, syncedAssetId) ?? status;
+      }
       if (result.errors?.length) {
         failure = `Tier ${tier} could not be fully synced. Review the error details and retry.`;
       }

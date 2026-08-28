@@ -4,6 +4,14 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 
 describe('report card wrapping', () => {
+  it('keeps dashboard guidance cards in a readable desktop measure', () => {
+    const dashboard = readFileSync(new URL('../components/report/DashboardSummaryPanel.svelte', import.meta.url), 'utf8');
+    const grid = dashboard.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(grid).toContain('width: min(100%, 72rem);');
+    expect(grid).toContain('margin-inline: auto;');
+  });
+
   it('defines and applies the shared report spacing scale', () => {
     expect(source).toContain('--space-1: 0.5rem;');
     expect(source).toContain('--space-2: 1rem;');

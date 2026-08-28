@@ -1089,7 +1089,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    width: 100%;
+    width: min(100%, 72rem);
+    margin-inline: auto;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;

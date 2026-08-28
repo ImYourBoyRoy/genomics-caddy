@@ -28,6 +28,8 @@ describe('OfflineDataPanel update-state ordering', () => {
     expect(panelSource).toContain('class="offline-operation-error" role="alert"');
     expect(panelSource).toContain('kind: \'outdated\'; assetIds: string[]; force: boolean');
     expect(panelSource).toContain('statusError = \'Could not verify the latest resource status.\';');
+    expect(panelSource).toContain('clearOfflineUpdate(status, syncedAssetId)');
+    expect(panelSource).toContain('for (const syncedAssetId of result.assets_synced)');
     expect(panelSource).toContain('if (failure) setOperationError(failure, { kind: \'tier\', tier, force: requestedForce });');
     expect(panelSource).toContain('if (failedAssetIds.length > 0)');
     expect(panelSource).toContain('forceSync = target.force;');

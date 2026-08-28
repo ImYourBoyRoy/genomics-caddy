@@ -284,6 +284,36 @@ async function run() {
         !Object.prototype.hasOwnProperty.call(sync, "genotype"),
         "MCP fixture sync exposed genotype data",
       );
+
+      const downloadedSync = toolPayload(
+        await requestWithTimeout("tools/call", withAuth({
+          name: "sync_offline_asset",
+          arguments: { asset_id: "liftover_chain", sample_id: sampleId },
+        })),
+        "sync_offline_asset liftover_chain",
+      );
+      assert(
+        downloadedSync.assets_synced?.includes("liftover_chain"),
+        "MCP fixture download did not import the liftover chain",
+      );
+      assert(
+        downloadedSync?.final_status && typeof downloadedSync.final_status === "object",
+        "MCP fixture download omitted final_status",
+      );
+      assert(
+        downloadedSync.final_status.total_updates_available === 0,
+        "MCP fixture download left an update flag after its final status probe",
+      );
+      assert(
+        downloadedSync.final_status.remote_check?.assets_checked === 1 &&
+          downloadedSync.final_status.remote_check?.assets_failed === 0 &&
+          downloadedSync.final_status.remote_check?.timed_out === false,
+        "MCP fixture download did not reach a successful terminal remote status",
+      );
+      assert(
+        !Object.prototype.hasOwnProperty.call(downloadedSync, "genotype"),
+        "MCP fixture download exposed genotype data",
+      );
     }
 
     const reload = toolPayload(

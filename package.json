@@ -24,6 +24,7 @@
     "audit:dna-fixtures": "python3 ./scripts/audit_dna_fixtures.py",
     "audit:tauri-ui": "node ./scripts/audit_tauri_report.mjs",
     "audit:mcp": "node ./scripts/audit_mcp_runtime.mjs",
+    "audit:mcp:write": "node ./scripts/audit_mcp_runtime.mjs --write-fixture",
     "test:watch": "vitest",
     "smoke": "python scripts/smoke_test.py",
     "mcp": "tauri dev -- --mcp",

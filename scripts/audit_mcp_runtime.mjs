@@ -7,14 +7,19 @@ GENOMICS_MCP_EXECUTABLE to an alternate compiled binary.
 Privacy: Only protocol/tool counts and aggregate status fields are printed.
 */
 
-import { access } from "node:fs/promises";
-import { resolve } from "node:path";
-import { spawn } from "node:child_process";
+import { access, mkdtemp, rm } from "node:fs/promises";
+import { execFile, spawn } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
 
 const projectRoot = resolve(new URL("..", import.meta.url).pathname);
 const executable = process.env.GENOMICS_MCP_EXECUTABLE
   ? resolve(projectRoot, process.env.GENOMICS_MCP_EXECUTABLE)
   : resolve(projectRoot, "src-tauri/target/debug/DNA-Tools");
+const fixtureAudit = process.argv.includes("--write-fixture");
+const seedExecutable = resolve(projectRoot, "src-tauri/target/debug/seed_mcp_fixture");
+const execFileAsync = promisify(execFile);
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_MCP_AUDIT_TIMEOUT_MS, 120_000);
 const configuredSampleId = parseOptionalInteger(process.env.GENOMICS_MCP_SAMPLE_ID);
 const authToken = process.env.GENOMICS_MCP_TOKEN?.trim() || "";
@@ -63,11 +68,43 @@ function toolPayload(result, method) {
   }
 }
 
+async function prepareFixture() {
+  const fixtureDir = await mkdtemp(join(tmpdir(), "genomics-caddy-mcp-audit-"));
+  try {
+    try {
+      await access(seedExecutable);
+    } catch {
+      await execFileAsync(
+        "cargo",
+        [
+          "build",
+          "--quiet",
+          "--manifest-path",
+          resolve(projectRoot, "src-tauri/Cargo.toml"),
+          "--bin",
+          "seed_mcp_fixture",
+        ],
+        { cwd: projectRoot, timeout: timeoutMs, maxBuffer: 1_000_000 },
+      );
+    }
+    await execFileAsync(seedExecutable, [fixtureDir], {
+      cwd: projectRoot,
+      timeout: timeoutMs,
+      maxBuffer: 1_000_000,
+    });
+    return fixtureDir;
+  } catch {
+    await rm(fixtureDir, { recursive: true, force: true });
+    throw new Error("Could not prepare the disposable MCP fixture");
+  }
+}
+
 async function run() {
   await access(executable);
-  const child = spawn(executable, ["--mcp"], {
+  const fixtureDir = fixtureAudit ? await prepareFixture() : null;
+  const child = spawn(executable, fixtureAudit ? ["--mcp", "--mcp-write"] : ["--mcp"], {
     cwd: projectRoot,
-    env: process.env,
+    env: fixtureDir ? { ...process.env, GENOMICS_DATA_DIR: fixtureDir } : process.env,
     stdio: ["pipe", "pipe", "pipe"],
   });
 
@@ -147,6 +184,17 @@ async function run() {
     for (const required of ["get_offline_update_status", "reload_report"]) {
       assert(toolNames.has(required), `MCP tool catalog is missing ${required}`);
     }
+    if (fixtureAudit) {
+      assert(
+        toolNames.has("sync_offline_asset"),
+        "write-enabled MCP tool catalog is missing sync_offline_asset",
+      );
+    } else {
+      assert(
+        !toolNames.has("sync_offline_asset"),
+        "read-only MCP tool catalog exposed sync_offline_asset",
+      );
+    }
 
     const status = toolPayload(
       await requestWithTimeout("tools/call", withAuth({
@@ -167,8 +215,37 @@ async function run() {
       "list_samples",
     );
     assert(Array.isArray(samples), "MCP list_samples returned an invalid result");
-    const sampleId = configuredSampleId ?? samples.find((sample) => Number.isInteger(sample?.id))?.id;
+    const sampleId = fixtureAudit
+      ? 1
+      : configuredSampleId ?? samples.find((sample) => Number.isInteger(sample?.id))?.id;
     assert(Number.isInteger(sampleId) && sampleId > 0, "MCP audit requires an imported sample");
+
+    if (fixtureAudit) {
+      const sync = toolPayload(
+        await requestWithTimeout("tools/call", withAuth({
+          name: "sync_offline_asset",
+          arguments: { asset_id: "tier2_variant_locus", sample_id: sampleId },
+        })),
+        "sync_offline_asset",
+      );
+      assert(Array.isArray(sync?.assets_synced), "MCP fixture sync omitted assets_synced");
+      assert(
+        sync.assets_synced.includes("tier2_variant_locus"),
+        "MCP fixture sync did not import Tier 2 resource",
+      );
+      assert(
+        sync?.final_status && typeof sync.final_status === "object",
+        "MCP fixture sync omitted final_status",
+      );
+      assert(
+        Number.isInteger(sync.final_status.total_updates_available),
+        "MCP fixture final_status omitted update count",
+      );
+      assert(
+        !Object.prototype.hasOwnProperty.call(sync, "genotype"),
+        "MCP fixture sync exposed genotype data",
+      );
+    }
 
     const reload = toolPayload(
       await requestWithTimeout("tools/call", withAuth({
@@ -191,6 +268,18 @@ async function run() {
     settled = true;
     child.stdin.end();
     if (!child.killed) child.kill();
+    await new Promise((resolveClose) => {
+      if (child.exitCode !== null) {
+        resolveClose();
+        return;
+      }
+      const timer = setTimeout(resolveClose, 1_000);
+      child.once("close", () => {
+        clearTimeout(timer);
+        resolveClose();
+      });
+    });
+    if (fixtureDir) await rm(fixtureDir, { recursive: true, force: true });
   }
 }
 

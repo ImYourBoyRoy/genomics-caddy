@@ -178,6 +178,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * MCP `sync_offline_asset` responses preserve the existing sync fields and add a machine-readable `final_status` snapshot from the same authoritative post-sync probe, so an AI client can confirm whether the local resource inventory is current without a second status call. The payload contains resource metadata and indexed row counts only; it does not contain genotype values.
 * After a successful reference sync, the sidebar awaits a dedicated report regeneration path; MCP also exposes read-only `reload_report` with `status: "ready"`, and all-tier sync responses include `{results, final_status}` for explicit completion checks.
 * The advanced Offline reference data panel uses the same final-refresh boundary: it preserves the last known inventory during a failed check, labels that view as stale, hides unverified update actions, and offers concise retry controls for tier, asset, bulk, and index rebuild failures.
+* Offline status now includes a machine-readable `remote_check` result. An incomplete or timed-out remote probe cannot be presented as `Current` or as an actionable update; probe tasks are cancelled with the check so late network responses cannot reintroduce stale update flags.
 
 ---
 

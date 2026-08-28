@@ -372,7 +372,9 @@ function focusByVisibleText(text: string): { ok: boolean; detail: string } {
   if (!needle) return { ok: false, detail: 'empty text' };
 
   const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>('button, a, [role="button"], .tab-btn, .card-header')
+    document.querySelectorAll<HTMLElement>(
+      'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])',
+    )
   );
   const hit = candidates
     .map((el) => {
@@ -397,7 +399,13 @@ function focusByVisibleText(text: string): { ok: boolean; detail: string } {
 
   if (!hit) return { ok: false, detail: `no focusable element containing "${text}"` };
   if (hit.disabled) return { ok: false, detail: `matched disabled control: ${hit.label.slice(0, 80)}` };
+  const style = getComputedStyle(hit.el);
+  const bounds = hit.el.getBoundingClientRect();
+  if (style.display === 'none' || style.visibility === 'hidden' || bounds.width === 0 || bounds.height === 0) {
+    return { ok: false, detail: `matched hidden control: ${hit.label.slice(0, 80)}` };
+  }
   hit.el.focus();
+  if (document.activeElement !== hit.el) return { ok: false, detail: 'control did not accept focus' };
   return { ok: true, detail: `focused: ${hit.label.slice(0, 80)}` };
 }
 

@@ -109,7 +109,7 @@
     {@render sidebar()}
   </div>
   <div class="main-slot">
-    <div class="focus-toolbar no-print">
+    <div class="focus-toolbar no-print" role="toolbar" aria-label="Report toolbar">
       <div class="focus-toolbar-inner">
         <button
           type="button"

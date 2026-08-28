@@ -51,7 +51,9 @@
     for (const id of PRIMARY_CATALOG_IDS) {
       const asset = byId.get(id);
       if (asset && assetReady(asset)) ready += 1;
-      if (asset?.update_available) updates += 1;
+      // An update applies only to an installed local asset. Missing files are
+      // part of the download count, not the update count.
+      if (asset?.local_present && asset.update_available) updates += 1;
     }
     return {
       ready,

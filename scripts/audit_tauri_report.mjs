@@ -308,11 +308,11 @@ async function main() {
   await clickText("Show data");
   validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
 
-  await clickText("Color theme");
+  await clickText("Appearance");
   await selectTheme("Light mode", "light");
-  await clickText("Color theme");
+  await clickText("Appearance");
   await selectTheme("Dark mode", "dark");
-  await clickText("Color theme");
+  await clickText("Appearance");
   await selectTheme("System default", "system");
 
   console.log("PASS: Tauri desktop report audit");

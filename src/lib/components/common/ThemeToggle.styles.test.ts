@@ -23,6 +23,7 @@ describe('ThemeToggle desktop toolbar placement', () => {
     expect(source).toContain('Light mode');
     expect(source).toContain('Dark mode');
     expect(source).not.toContain('<span>Theme</span>');
+    expect(source).toContain('aria-label={`Appearance: ${themeModeLabel(mode)}`}');
   });
 
   it('uses theme-aware floating shadow tokens', () => {

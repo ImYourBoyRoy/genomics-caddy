@@ -8,4 +8,9 @@ describe('welcome data-controls copy', () => {
     expect(source).toContain('Use Data controls for downloads, profiles, and progress while you work.');
     expect(source).not.toContain('The left sidebar stays available');
   });
+
+  it('counts updates only for assets that are already installed locally', () => {
+    expect(source).toContain('if (asset?.local_present && asset.update_available) updates += 1;');
+    expect(source).not.toContain('if (asset?.update_available) updates += 1;');
+  });
 });

@@ -34,12 +34,12 @@ describe('responsive data-sidebar access', () => {
 
   it('keeps the desktop focus control in a reserved toolbar row', () => {
     expect(appShell).toContain('<div class="main-slot">');
-    expect(appShell).toContain('<div class="focus-toolbar no-print">');
+    expect(appShell).toContain('<div class="focus-toolbar no-print" role="toolbar" aria-label="Report toolbar">');
     expect(appShell).toContain('class="focus-toggle"');
     expect(appShell).toContain('<ThemeToggle />');
     expect(theme).toContain('.focus-toolbar-inner {');
     expect(theme).toContain('justify-content: space-between;');
     expect(theme).toContain('position: static;');
-    expect(theme).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) var(--space-1);');
+    expect(theme).toContain('padding: var(--space-2) clamp(20px, 3vw, 36px);');
   });
 });

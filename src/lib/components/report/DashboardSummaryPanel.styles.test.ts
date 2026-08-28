@@ -150,9 +150,12 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('keeps the primary action queue readable without breaking its one-column priority order', () => {
+    const actionQueueCard = styleBlock.match(/\.action-queue \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(actionQueue).toContain('width: min(100%, 54rem);');
+    expect(actionQueueCard).toContain('width: min(100%, 72rem);');
+    expect(actionQueueCard).toContain('margin-inline: auto;');
+    expect(actionQueue).toContain('width: min(100%, 48rem);');
     expect(actionQueue).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('box-sizing: border-box;');
     expect(source).toContain('<div class="action-queue-list">');

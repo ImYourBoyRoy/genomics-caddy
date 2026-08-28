@@ -44,7 +44,7 @@ describe('report card wrapping', () => {
 
     expect(grid).toContain('min-width: 0;');
     expect(grid).toContain('max-width: 100%;');
-    expect(grid).toContain('width: min(100%, 64rem);');
+    expect(grid).toContain('width: min(100%, 56rem);');
     expect(grid).toContain('margin-inline: auto;');
     expect(grid).toContain('box-sizing: border-box;');
     expect(grid).toContain('align-items: start;');
@@ -75,7 +75,7 @@ describe('report card wrapping', () => {
     const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
 
     expect(toolbar).toContain('flex: 0 0 auto;');
-    expect(toolbar).toContain('padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) var(--space-1);');
+    expect(toolbar).toContain('padding: var(--space-2) clamp(20px, 3vw, 36px);');
     expect(focusToggle).toContain('position: static;');
     expect(focusToggle).not.toContain('position: fixed;');
   });

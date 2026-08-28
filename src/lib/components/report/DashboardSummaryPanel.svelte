@@ -752,6 +752,8 @@
   .action-queue {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
     background: var(--surface-raised);
+    width: min(100%, 72rem);
+    margin-inline: auto;
   }
 
   .action-queue-header {
@@ -800,7 +802,7 @@
   .action-queue-list {
     display: grid;
     gap: 0.75rem;
-    width: min(100%, 54rem);
+    width: min(100%, 48rem);
     margin-inline: auto;
     padding-top: 1rem;
     box-sizing: border-box;

@@ -116,14 +116,14 @@
     aria-expanded={isOpen}
     aria-controls="theme-options"
     aria-haspopup="menu"
-    aria-label={`Color theme: ${themeModeLabel(mode)}`}
+    aria-label={`Appearance: ${themeModeLabel(mode)}`}
     onclick={toggleMenu}
   >
     <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
     <span>{themeModeLabel(mode)}</span>
   </button>
   {#if isOpen}
-    <div id="theme-options" class="theme-options" role="menu" tabindex="-1" aria-label="Color theme preference" aria-orientation="vertical" bind:this={optionsElement} onkeydown={handleMenuKeydown}>
+    <div id="theme-options" class="theme-options" role="menu" tabindex="-1" aria-label="Appearance preference" aria-orientation="vertical" bind:this={optionsElement} onkeydown={handleMenuKeydown}>
       {#each themeOptions as option}
         <button
           type="button"

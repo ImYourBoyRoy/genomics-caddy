@@ -167,6 +167,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
 * Update completion is reconciled through one authoritative final probe after bulk work; stale status responses cannot restore an older update badge, and attached catalog row counts are read from their actual sidecar schemas. A remote `Last-Modified` change alone is not enough to show an update when the server provides no stable filename, ETag, or comparable payload size, which prevents unstable mirrors from repeatedly labeling downloaded resources as outdated.
 * Single-resource updates await that final status refresh before the flow completes. Download metadata writes are checked instead of ignored, and ETag changes still count as updates even when a remote export keeps the same filename.
+* Update failures retain their terminal error after the final reconciliation probe and expose a small Retry action for status checks, single-asset updates, and bulk sync/update flows. The retry control appears only when an operation fails.
 
 ---
 

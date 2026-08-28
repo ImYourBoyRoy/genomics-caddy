@@ -67,4 +67,10 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;');
     expect(sidebarSource).toContain("{ kind: 'outdated' }");
   });
+
+  it('allows each installed phase to paint before the next update phase replaces it', () => {
+    expect(sidebarSource).toContain('async function allowUpdateStatePaint(): Promise<void>');
+    expect(sidebarSource).toContain('requestAnimationFrame(() => requestAnimationFrame(() => resolve()))');
+    expect(sidebarSource.match(/await allowUpdateStatePaint\(\);/g)?.length).toBe(4);
+  });
 });

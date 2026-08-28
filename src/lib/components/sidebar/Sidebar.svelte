@@ -185,6 +185,17 @@ import { onMount, onDestroy } from 'svelte';
     updateRetry = retry;
   }
 
+  /** Let the desktop webview paint each public phase before advancing. */
+  async function allowUpdateStatePaint(): Promise<void> {
+    if (typeof requestAnimationFrame === 'function') {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      return;
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+
   $effect(() => {
     if (expandDatabases) {
       isPanelCollapsed = false;
@@ -381,7 +392,9 @@ import { onMount, onDestroy } from 'svelte';
       }
       if (allErrors.length === 0) {
         setUpdateState('validating', 'Validating synced resources…');
+        await allowUpdateStatePaint();
         setUpdateState('installed', 'Resources installed and indexed.');
+        await allowUpdateStatePaint();
         setUpdateState('reloading', 'Refreshing the selected profile report…');
         await onResourcesUpdated?.();
         lastSuccessfulUpdateAt = Date.now();
@@ -562,7 +575,9 @@ import { onMount, onDestroy } from 'svelte';
         }
         syncMessages = { ...syncMessages, [assetId]: result.messages.join('\n') };
         setUpdateState('validating', `Validating ${assetId}…`);
+        await allowUpdateStatePaint();
         setUpdateState('installed', `${assetId} installed and indexed.`);
+        await allowUpdateStatePaint();
         setUpdateState('reloading', 'Refreshing the selected profile report…');
         await onResourcesUpdated?.();
         lastSuccessfulUpdateAt = Date.now();

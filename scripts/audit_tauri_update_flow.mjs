@@ -17,7 +17,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 const projectRoot = resolve(new URL("..", import.meta.url).pathname);
 const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_UPDATE_TIMEOUT_MS, 120_000);
-const pollMs = 250;
+const pollMs = 10;
 const execFileAsync = promisify(execFile);
 const seedExecutable = resolve(projectRoot, "src-tauri/target/debug/seed_mcp_fixture");
 const liftoverSource = resolve(projectRoot, "App/Data/GRCh37_to_GRCh38.chain.gz");

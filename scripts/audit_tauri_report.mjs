@@ -359,6 +359,21 @@ async function main() {
   await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
 
+  const tooltipProbe = await request("/ui/probeTooltips", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  assert(tooltipProbe.visibleTriggerCount > 0, "Populated Simple report has no tooltip triggers to verify");
+  assert(
+    tooltipProbe.testedTriggerCount === tooltipProbe.visibleTriggerCount,
+    "At least one visible non-interactive tooltip trigger did not open a single panel",
+  );
+  assert(
+    tooltipProbe.openedPanelCount === tooltipProbe.withinViewportCount &&
+      tooltipProbe.openedPanelCount === tooltipProbe.accessiblePanelCount,
+    "A visible tooltip panel was clipped or lacked accessible metadata",
+  );
+
   await focusText("Sex estimate from DNA");
   validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the keyboard-opened sex-estimate tooltip"));
   await pressKey("Escape");
@@ -395,6 +410,7 @@ async function main() {
     ? ready.layout.firstContentTop - ready.layout.focusControlBottom
     : "n/a";
   console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
 }
 
 main().catch((error) => {

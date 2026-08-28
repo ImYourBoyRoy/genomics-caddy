@@ -58,8 +58,14 @@ describe('agent UI bridge visibility boundary', () => {
 
   it('exposes aggregate tooltip bounds without exposing tooltip content', () => {
     expect(source).toContain('export interface AgentUiTooltipMetrics');
+    expect(source).toContain('export interface AgentUiTooltipProbeMetrics');
     expect(source).toContain('tooltip: AgentUiTooltipMetrics;');
     expect(source).toContain('function collectTooltipMetrics()');
+    expect(source).toContain('async function probeVisibleTooltips()');
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.tooltip-trigger')");
+    expect(source).toContain('triggerEdgeCounts');
+    expect(source).toContain('probeTooltips: () => Promise<AgentUiTooltipProbeMetrics>');
+    expect(source).not.toContain('trigger.textContent');
     expect(source).toContain('withinViewportCount');
     expect(source).toContain('accessiblePanelCount');
     expect(source).toContain('maxRightOverflow');

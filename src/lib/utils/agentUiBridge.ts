@@ -73,6 +73,20 @@ export interface AgentUiTooltipMetrics {
   maxBottomOverflow: number;
 }
 
+export interface AgentUiTooltipProbeMetrics {
+  visibleTriggerCount: number;
+  testedTriggerCount: number;
+  openedPanelCount: number;
+  withinViewportCount: number;
+  accessiblePanelCount: number;
+  triggerEdgeCounts: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+}
+
 export interface AgentUiAccessibilityMetrics {
   mainLandmarkCount: number;
   sidebarLandmarkCount: number;
@@ -134,6 +148,7 @@ declare global {
       clickText: (text: string) => { ok: boolean; detail: string };
       focusText: (text: string) => { ok: boolean; detail: string };
       pressKey: (key: string) => { ok: boolean; detail: string };
+      probeTooltips: () => Promise<AgentUiTooltipProbeMetrics>;
       clickSection: (sectionName: string) => { ok: boolean; detail: string };
       queryText: (text: string) => { ok: boolean; count: number; samples: string[] };
     };
@@ -351,6 +366,61 @@ function collectTooltipMetrics(): AgentUiTooltipMetrics {
     maxTopOverflow: Math.max(0, ...rects.map((rect) => Math.round(-rect.top))),
     maxRightOverflow: Math.max(0, ...rects.map((rect) => Math.round(rect.right - window.innerWidth))),
     maxBottomOverflow: Math.max(0, ...rects.map((rect) => Math.round(rect.bottom - window.innerHeight))),
+  };
+}
+
+function isVisibleQaElement(element: HTMLElement): boolean {
+  if (element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
+  const style = getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function waitForQaPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
+  const triggers = Array.from(document.querySelectorAll<HTMLElement>('.tooltip-trigger'))
+    .filter(isVisibleQaElement);
+  const triggerEdgeCounts = { top: 0, right: 0, bottom: 0, left: 0 };
+  let testedTriggerCount = 0;
+  let openedPanelCount = 0;
+  let withinViewportCount = 0;
+  let accessiblePanelCount = 0;
+
+  for (const trigger of triggers) {
+    trigger.click();
+    await waitForQaPaint();
+    const metrics = collectTooltipMetrics();
+    const panel = document.querySelector<HTMLElement>('.tooltip-panel');
+    if (metrics.openPanelCount !== 1 || !panel) continue;
+
+    testedTriggerCount += 1;
+    openedPanelCount += metrics.openPanelCount;
+    withinViewportCount += metrics.withinViewportCount;
+    accessiblePanelCount += metrics.accessiblePanelCount;
+    const rect = trigger.getBoundingClientRect();
+    const edgeThreshold = 80;
+    if (rect.top <= edgeThreshold) triggerEdgeCounts.top += 1;
+    if (window.innerWidth - rect.right <= edgeThreshold) triggerEdgeCounts.right += 1;
+    if (window.innerHeight - rect.bottom <= edgeThreshold) triggerEdgeCounts.bottom += 1;
+    if (rect.left <= edgeThreshold) triggerEdgeCounts.left += 1;
+
+    trigger.click();
+    await waitForQaPaint();
+  }
+
+  return {
+    visibleTriggerCount: triggers.length,
+    testedTriggerCount,
+    openedPanelCount,
+    withinViewportCount,
+    accessiblePanelCount,
+    triggerEdgeCounts,
   };
 }
 
@@ -580,6 +650,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
     pressKey(key: string) {
       return pressAllowlistedKey(key);
     },
+    probeTooltips() {
+      return probeVisibleTooltips();
+    },
     clickSection(sectionName: string) {
       return clickSectionByName(sectionName);
     },
@@ -660,6 +733,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
             result = api.pressKey(key);
             break;
           }
+          case 'probeTooltips':
+            result = await api.probeTooltips();
+            break;
           case 'clickSection': {
             const sectionName =
               typeof args === 'string'

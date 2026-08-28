@@ -314,6 +314,7 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "POST /ui/clickText",
                 "POST /ui/focusText",
                 "POST /ui/pressKey",
+                "POST /ui/probeTooltips",
                 "POST /ui/clickSection",
                 "POST /ui/queryText"
             ]

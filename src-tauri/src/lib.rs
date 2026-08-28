@@ -1805,7 +1805,7 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
         },
         {
             "name": "sync_offline_asset",
-            "description": "Downloads, validates, and imports one offline reference asset. Requires --mcp-write.",
+            "description": "Downloads, validates, and imports one offline reference asset, then returns an authoritative final_status snapshot. Requires --mcp-write.",
             "params": [
                 { "name": "asset_id", "type": "string", "required": true, "description": "Manifest asset ID" },
                 { "name": "force", "type": "boolean", "required": false, "description": "Re-download an existing asset" },

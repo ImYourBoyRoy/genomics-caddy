@@ -343,7 +343,7 @@ async fn handle_request(
                     },
                     {
                         "name": "sync_offline_asset",
-                        "description": "Downloads and validates one offline reference asset, then imports it locally. Requires --mcp-write; never returns genotype values.",
+                        "description": "Downloads, validates, and imports one offline reference asset, then returns an authoritative final_status snapshot. Requires --mcp-write; never returns genotype values.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -662,6 +662,17 @@ async fn handle_request(
     }
 }
 
+/// Adds an authoritative post-sync status snapshot without changing the
+/// existing single-asset result fields. The status object contains only local
+/// resource metadata and indexed row counts; it never contains genotype calls.
+fn attach_offline_final_status(sync_payload: Value, status: Value) -> Result<Value, String> {
+    let Value::Object(mut payload) = sync_payload else {
+        return Err("Offline sync serialization did not produce an object".into());
+    };
+    payload.insert("final_status".into(), status);
+    Ok(Value::Object(payload))
+}
+
 /// Offline resource operations exposed to MCP use the same manifest/sync
 /// implementation as the desktop UI. Status is read-only; sync operations are
 /// write-gated above and intentionally return only asset metadata/messages.
@@ -692,8 +703,12 @@ async fn mcp_offline_tool(name: &str, args: Value, db_path: &Path) -> Result<Val
                 None,
             )
             .await?;
-            Ok(serde_json::to_value(result)
-                .map_err(|e| format!("Offline sync serialization error: {e}"))?)
+            let sync_payload = serde_json::to_value(result)
+                .map_err(|e| format!("Offline sync serialization error: {e}"))?;
+            let final_status = crate::offline::check_offline_updates(data_dir, db_path).await?;
+            let final_status = serde_json::to_value(final_status)
+                .map_err(|e| format!("Offline status serialization error: {e}"))?;
+            attach_offline_final_status(sync_payload, final_status)
         }
         "sync_offline_data" => {
             let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
@@ -1698,5 +1713,36 @@ mod tests {
         let token = Some("secret-token".to_string());
         let params = json!({ "_meta": { "authToken": "secret-token" } });
         assert!(verify_mcp_auth(&params, &token).is_ok());
+    }
+
+    #[test]
+    fn offline_final_status_preserves_sync_fields() {
+        let sync_payload = json!({
+            "tier": 1,
+            "assets_synced": ["clinvar_variant_summary"],
+            "messages": ["Imported"],
+            "errors": []
+        });
+        let status = json!({
+            "tiers": [],
+            "total_updates_available": 0,
+            "indexed_summary": {
+                "gwas_rows": 0,
+                "clinvar_rows": 42,
+                "variant_locus_rows": 0
+            }
+        });
+
+        let payload = attach_offline_final_status(sync_payload, status.clone()).unwrap();
+        assert_eq!(payload["tier"], 1);
+        assert_eq!(payload["assets_synced"][0], "clinvar_variant_summary");
+        assert_eq!(payload["final_status"], status);
+        assert!(payload.get("genotype").is_none());
+    }
+
+    #[test]
+    fn offline_final_status_requires_sync_object() {
+        let error = attach_offline_final_status(json!(["not-an-object"]), json!({}));
+        assert!(error.is_err());
     }
 }

@@ -527,14 +527,17 @@
   {/if}
 
   {#if generatedReport.catalog_warnings?.length}
-    <div class="catalog-warnings-banner" role="status">
-      <strong>Reference catalogs:</strong>
+    <details class="catalog-warnings-banner" aria-label="Reference catalog status">
+      <summary>
+        <span>Reference data needs attention</span>
+        <span class="catalog-warnings-count">{generatedReport.catalog_warnings.length} details</span>
+      </summary>
       <ul>
         {#each generatedReport.catalog_warnings as warning}
           <li>{warning}</li>
         {/each}
       </ul>
-    </div>
+    </details>
   {/if}
 
   <details class="report-chrome-details no-print">

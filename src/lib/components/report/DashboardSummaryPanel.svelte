@@ -764,7 +764,7 @@
   .action-queue {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
     background: var(--surface-raised);
-    width: min(100%, 72rem);
+    width: min(100%, 64rem);
     margin-inline: auto;
   }
 
@@ -1089,7 +1089,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    width: min(100%, 72rem);
+    width: min(100%, 64rem);
     margin-inline: auto;
     min-width: 0;
     max-width: 100%;

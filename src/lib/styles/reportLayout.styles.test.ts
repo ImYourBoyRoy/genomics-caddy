@@ -8,7 +8,7 @@ describe('report card wrapping', () => {
     const dashboard = readFileSync(new URL('../components/report/DashboardSummaryPanel.svelte', import.meta.url), 'utf8');
     const grid = dashboard.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(grid).toContain('width: min(100%, 72rem);');
+    expect(grid).toContain('width: min(100%, 64rem);');
     expect(grid).toContain('margin-inline: auto;');
   });
 

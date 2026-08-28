@@ -158,13 +158,20 @@ describe('DashboardSummaryPanel semantic styling', () => {
     const actionQueueCard = styleBlock.match(/\.action-queue \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(actionQueueCard).toContain('width: min(100%, 72rem);');
+    expect(actionQueueCard).toContain('width: min(100%, 64rem);');
     expect(actionQueueCard).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('width: min(100%, 48rem);');
     expect(actionQueue).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('box-sizing: border-box;');
     expect(source).toContain('<div class="action-queue-list">');
     expect(actionQueue).not.toContain('grid-template-columns:');
+  });
+
+  it('keeps the secondary guidance stack narrower than the full desktop report pane', () => {
+    const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(grid).toContain('width: min(100%, 64rem);');
+    expect(grid).toContain('margin-inline: auto;');
   });
 
   it('keeps context selector labels short while retaining their stable IDs', () => {

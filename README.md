@@ -139,7 +139,8 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Clinical findings remain a structured table on wide desktop and switch to stacked labelled rows at 1100px and below, so sidebar-constrained tablet layouts do not require a cramped 900px table.
 * The report header’s Sex and DNA-coverage summary also wraps as needed on narrow screens while keeping the concise `Male`/`Female` value visible.
 * Dashboard guidance uses compact visible prompts across dietary, supplement, reproductive, activity, medication, and lab panels; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip.
-* Desktop dashboard guidance cards use a centered 72rem maximum measure so two-column support panels do not stretch across the full application window; finding cards remain capped at two columns with a narrower reading surface.
+* Desktop dashboard guidance cards use a centered 64rem maximum measure so two-column support panels leave intentional whitespace instead of stretching across the full application window; the primary action queue keeps a narrower 48rem reading measure.
+* Missing reference catalogs appear as one compact status row with expandable details, keeping infrastructure issues visible without interrupting the report’s main reading flow.
 * Repeated report next-step guidance stays compact: Simple action-queue/cards use short distinct actions, Clinical rows surface up to three authored follow-up labels with a compact remainder count, and the general reference reminder remains in the application footer.
 * Clinical rows and Compare cards keep the longer claim boundary behind details; the visible status stays compact (`Confirmation needed`, `Contextual result`, or `Review blocked`).
 * Compare-mode warning details are grouped under one collapsed `Limits & confirmation` disclosure per finding; the short `Clinical review` badge remains visible when applicable.

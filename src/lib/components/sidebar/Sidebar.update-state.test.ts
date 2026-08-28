@@ -10,7 +10,22 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('const generation = ++statusRefreshGeneration;');
     expect(sidebarSource).toContain('if (generation !== statusRefreshGeneration) return;');
     expect(sidebarSource).toContain('async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true)');
-    expect(sidebarSource).toContain('await handleSyncAsset(item.asset_id, forceRedownload, false);');
+    expect(sidebarSource).toContain('if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;');
     expect(sidebarSource).toContain('await refreshStatusInBackground();');
+  });
+
+  it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {
+    expect(sidebarSource).toContain('type UpdateRetryTarget =');
+    expect(sidebarSource).toContain('let updateRetry = $state<UpdateRetryTarget | null>(null);');
+    expect(sidebarSource).toContain("{ kind: 'status' }");
+    expect(sidebarSource).toContain("{ kind: 'asset', assetId, force }");
+    expect(sidebarSource).toContain("{ kind: 'missing' }");
+    expect(sidebarSource).toContain('function handleRetryUpdate()');
+    expect(sidebarSource).toContain("{#if updatePhase === 'error' && updateRetry}");
+    expect(sidebarSource).toContain('aria-live="polite"');
+    expect(sidebarSource).toContain('resource-update-retry');
+    expect(sidebarSource).toContain('if (failureMessage && failureRetry) setUpdateState');
+    expect(sidebarSource).toContain('if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;');
+    expect(sidebarSource).toContain("{ kind: 'outdated' }");
   });
 });

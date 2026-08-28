@@ -142,8 +142,14 @@ import { onMount, onDestroy } from 'svelte';
   let syncPhase = $state<Record<string, SyncPhaseInfo>>({});
   let isCheckingStatus = $state(false);
   type ResourceUpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'validating' | 'installed' | 'reloading' | 'ready' | 'error';
+  type UpdateRetryTarget =
+    | { kind: 'status' }
+    | { kind: 'asset'; assetId: string; force: boolean }
+    | { kind: 'missing' }
+    | { kind: 'outdated' };
   let updatePhase = $state<ResourceUpdatePhase>('idle');
   let updateMessage = $state('');
+  let updateRetry = $state<UpdateRetryTarget | null>(null);
   let lastSuccessfulUpdateAt = $state<number | null>(null);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
   let gnomadReadiness = $state<GnomadReadinessStatus | null>(null);
@@ -164,9 +170,14 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
-  function setUpdateState(phase: ResourceUpdatePhase, message = '') {
+  function setUpdateState(
+    phase: ResourceUpdatePhase,
+    message = '',
+    retry: UpdateRetryTarget | null = null,
+  ) {
     updatePhase = phase;
     updateMessage = message;
+    updateRetry = retry;
   }
 
   $effect(() => {
@@ -248,7 +259,11 @@ import { onMount, onDestroy } from 'svelte';
       if (generation !== statusRefreshGeneration) return;
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
-      setUpdateState('error', 'Could not check offline resource status. Retry from Reference Databases.');
+      setUpdateState(
+        'error',
+        'Could not check offline resource status. Retry from Reference Databases.',
+        { kind: 'status' },
+      );
     } finally {
       if (generation === statusRefreshGeneration) isCheckingStatus = false;
     }
@@ -257,6 +272,7 @@ import { onMount, onDestroy } from 'svelte';
   /** Refresh inventory asynchronously; the backend waits for an authoritative probe. */
   async function refreshStatusInBackground() {
     const generation = ++statusRefreshGeneration;
+    isCheckingStatus = true;
     setUpdateState('checking', 'Refreshing resource status…');
     try {
       const status = await checkOfflineDataUpdates();
@@ -272,7 +288,13 @@ import { onMount, onDestroy } from 'svelte';
     } catch (err) {
       if (generation !== statusRefreshGeneration) return;
       console.error('Background offline status refresh failed:', err);
-      setUpdateState('error', 'Resource status refresh failed. The last known local resources remain available.');
+      setUpdateState(
+        'error',
+        'Resource status refresh failed. The last known local resources remain available.',
+        { kind: 'status' },
+      );
+    } finally {
+      if (generation === statusRefreshGeneration) isCheckingStatus = false;
     }
   }
 
@@ -291,6 +313,8 @@ import { onMount, onDestroy } from 'svelte';
 
   async function handleSyncAllMissing() {
     if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
+    let failureMessage: string | null = null;
+    let failureRetry: UpdateRetryTarget | null = null;
     syncingAll = true;
     setUpdateState('downloading', 'Syncing missing resources…');
     bulkSyncMessage = 'Sync All Missing · starting…';
@@ -313,7 +337,9 @@ import { onMount, onDestroy } from 'svelte';
       });
       if (allErrors.length) {
         syncErrors = { __all__: allErrors.join('\n') };
-        setUpdateState('error', 'Some resources could not be synced. Review the error details and retry.');
+        failureMessage = 'Some resources could not be synced. Review the error details and retry.';
+        failureRetry = { kind: 'missing' };
+        setUpdateState('error', failureMessage, failureRetry);
       }
       if (allMessages.length) {
         const skipped = allMessages.filter((m) => m.includes('up to date') || m.includes('already')).length;
@@ -334,7 +360,9 @@ import { onMount, onDestroy } from 'svelte';
       }
     } catch (err) {
       syncErrors = { __all__: String(err) };
-      setUpdateState('error', 'Sync failed. The previous local resources remain available.');
+      failureMessage = 'Sync failed. The previous local resources remain available.';
+      failureRetry = { kind: 'missing' };
+      setUpdateState('error', failureMessage, failureRetry);
     } finally {
       syncingAll = false;
       bulkSyncMessage = '';
@@ -342,7 +370,8 @@ import { onMount, onDestroy } from 'svelte';
       importProgress = {};
       syncPhase = {};
       downloadProgress = {};
-      refreshStatusInBackground();
+      await refreshStatusInBackground();
+      if (failureMessage && failureRetry) setUpdateState('error', failureMessage, failureRetry);
     }
   }
 
@@ -465,8 +494,10 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
-  async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true) {
-    if (syncingAsset[assetId] || syncingAll) return;
+  async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true): Promise<boolean> {
+    if (syncingAsset[assetId] || syncingAll) return false;
+    let failureMessage: string | null = null;
+    let failureRetry: UpdateRetryTarget | null = null;
     syncingAsset = { ...syncingAsset, [assetId]: true };
     clearAssetProgress(assetId);
     const { [assetId]: _e, ...restErrors } = syncErrors;
@@ -492,7 +523,9 @@ import { onMount, onDestroy } from 'svelte';
       );
       if (result.errors?.length) {
         syncErrors = { ...syncErrors, [assetId]: result.errors.join('\n') };
-        setUpdateState('error', `${assetId} failed validation or import. The previous local resource remains available.`);
+        failureMessage = `${assetId} failed validation or import. The previous local resource remains available.`;
+        failureRetry = { kind: 'asset', assetId, force };
+        setUpdateState('error', failureMessage, failureRetry);
       } else {
         for (const syncedAssetId of result.assets_synced) {
           markAssetCurrent(syncedAssetId);
@@ -504,10 +537,13 @@ import { onMount, onDestroy } from 'svelte';
         await onResourcesUpdated?.();
         lastSuccessfulUpdateAt = Date.now();
         setUpdateState('ready', 'Resource ready; report refreshed.');
+        return true;
       }
     } catch (err) {
       syncErrors = { ...syncErrors, [assetId]: String(err) };
-      setUpdateState('error', `${assetId} update failed. The previous local resource remains available.`);
+      failureMessage = `${assetId} update failed. The previous local resource remains available.`;
+      failureRetry = { kind: 'asset', assetId, force };
+      setUpdateState('error', failureMessage, failureRetry);
     } finally {
       // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
@@ -516,7 +552,9 @@ import { onMount, onDestroy } from 'svelte';
       // keeps the visible badge and per-asset buttons synchronized with the
       // final backend status before the update flow completes.
       if (refreshAfter) await refreshStatusInBackground();
+      if (failureMessage && failureRetry) setUpdateState('error', failureMessage, failureRetry);
     }
+    return false;
   }
 
   $effect(() => {
@@ -701,14 +739,25 @@ import { onMount, onDestroy } from 'svelte';
     if (items.length === 0) return;
     updatingAllOutdated = true;
     isPanelCollapsed = false;
+    let failed = false;
     try {
       for (const item of items) {
-        await handleSyncAsset(item.asset_id, forceRedownload, false);
+        if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;
       }
     } finally {
       updatingAllOutdated = false;
       await refreshStatusInBackground();
+      if (failed) setUpdateState('error', 'Some resource updates failed. Review the error details and retry.', { kind: 'outdated' });
     }
+  }
+
+  function handleRetryUpdate() {
+    const retry = updateRetry;
+    if (!retry || isCheckingStatus) return;
+    if (retry.kind === 'status') void loadSettingsAndStatus();
+    if (retry.kind === 'asset') void handleSyncAsset(retry.assetId, retry.force);
+    if (retry.kind === 'missing') void handleSyncAllMissing();
+    if (retry.kind === 'outdated') void handleUpdateAllOutdated();
   }
   /** Catalogs with no local file yet (not "downloaded but not indexed"). */
   let notDownloadedPrimary = $derived.by(() => {
@@ -908,6 +957,16 @@ import { onMount, onDestroy } from 'svelte';
             </div>
             {#if updateMessage}
               <div class="resource-update-state-message">{updateMessage}</div>
+            {/if}
+            {#if updatePhase === 'error' && updateRetry}
+              <button
+                type="button"
+                class="btn btn-secondary btn-xs resource-update-retry"
+                disabled={isCheckingStatus || syncingAll || updatingAllOutdated || Object.values(syncingAsset).some(Boolean)}
+                onclick={handleRetryUpdate}
+              >
+                {isCheckingStatus ? 'Retrying…' : 'Retry'}
+              </button>
             {/if}
             {#if lastSuccessfulUpdateAt}
               <div class="resource-update-state-time">Last successful update: {new Date(lastSuccessfulUpdateAt).toLocaleString()}</div>

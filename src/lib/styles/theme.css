@@ -2296,3 +2296,147 @@ h1, h2, h3, h4, h5, h6 {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Printed reports use a neutral paper palette and a single readable column.
+   Interactive chrome stays available in the application but is excluded from
+   the exported paper/PDF surface. */
+@media print {
+  @page {
+    margin: 0.55in;
+  }
+
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"],
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-card: #ffffff;
+    --surface-subtle: #f8fafc;
+    --surface-control: #ffffff;
+    --border-color: #cbd5e1;
+    --border-strong: #94a3b8;
+    --text-primary: #111827;
+    --text-secondary: #475569;
+    --accent: #0f766e;
+    --accent-hover: #115e59;
+    --focus-ring: #0f766e;
+    --status-warning-bg: #fff7ed;
+    --status-warning-text: #9a3412;
+    --status-warning-border: #fdba74;
+    --status-info-bg: #eff6ff;
+    --status-info-text: #075985;
+    --status-info-border: #7dd3fc;
+    --status-success-bg: #ecfdf5;
+    --status-success-text: #047857;
+    --status-success-border: #86efac;
+    --status-danger-bg: #fef2f2;
+    --status-danger-text: #b42318;
+    --status-danger-strong-text: #b42318;
+    --status-danger-border: #fca5a5;
+    --coverage-text: #6d28d9;
+    --coverage-note-text: #475569;
+    --report-accent-muted: #3730a3;
+    --report-tier-a-text: #1d4ed8;
+    --report-tier-b-text: #047857;
+    --report-tier-c-text: #6d28d9;
+    --report-tier-d-text: #92400e;
+    --report-tier-e-text: #475569;
+    --report-tier-unknown-text: #b42318;
+    --report-scope-text: #6d28d9;
+    --report-result-bg: #f8fafc;
+    --report-result-border: #e2e8f0;
+    --report-explainer-bg: #f8fafc;
+    --report-explainer-border: #cbd5e1;
+    --shadow-subtle: transparent;
+    --shadow-tooltip: transparent;
+    --shadow-card-hover: transparent;
+    --shadow-floating: transparent;
+    --shadow-modal: transparent;
+  }
+
+  html,
+  body {
+    width: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    background: #ffffff;
+    color: var(--text-primary);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .app-layout {
+    display: block;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    background: #ffffff;
+    color: var(--text-primary);
+  }
+
+  .sidebar-slot,
+  .focus-toolbar,
+  .mobile-sidebar-toggle,
+  .mobile-sidebar-backdrop,
+  .no-print,
+  .tooltip-panel {
+    display: none !important;
+  }
+
+  .main-slot {
+    display: block;
+    width: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .report-header,
+  .summary-card,
+  .card,
+  .section-card,
+  .marker-card,
+  .clinical-provenance,
+  .action-queue-item {
+    background: var(--surface-raised) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+  }
+
+  .report-header,
+  .action-queue-item,
+  .marker-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .markers-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: none !important;
+    gap: var(--space-2);
+  }
+
+  .marker-card:hover {
+    transform: none;
+  }
+
+  .section-header {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .report-legend-details {
+    display: none !important;
+  }
+
+  a {
+    color: #075985;
+    text-decoration: underline;
+  }
+}

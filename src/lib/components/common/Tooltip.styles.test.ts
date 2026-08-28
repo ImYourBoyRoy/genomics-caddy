@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const tooltip = readFileSync(new URL('./Tooltip.svelte', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
+const interactiveTheme = theme.split('@media print')[0];
 
 describe('Tooltip theme surface', () => {
   it('uses the shared tooltip shadow token', () => {
@@ -17,6 +18,6 @@ describe('Tooltip theme surface', () => {
   });
 
   it('defines tooltip shadow values for dark, light, and system-light themes', () => {
-    expect(theme.match(/--shadow-tooltip:/g)?.length).toBe(3);
+    expect(interactiveTheme.match(/--shadow-tooltip:/g)?.length).toBe(3);
   });
 });

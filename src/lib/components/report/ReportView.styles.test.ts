@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./ReportView.svelte', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
+const interactiveTheme = theme.split('@media print')[0];
 const modalSurfaceStyles = source.match(/\.help-backdrop[\s\S]*?\.help-body/)?.[0] ?? '';
 const catalogWarningStyles = theme.match(/\.catalog-warnings-banner \{[\s\S]*?\n\}/)?.[0] ?? '';
 
@@ -20,8 +21,8 @@ describe('ReportView Help Guide surface', () => {
   });
 
   it('defines modal tokens for dark, light, and system-light themes', () => {
-    expect(theme.match(/--modal-backdrop-bg:/g)?.length).toBe(3);
-    expect(theme.match(/--shadow-modal:/g)?.length).toBe(3);
+    expect(interactiveTheme.match(/--modal-backdrop-bg:/g)?.length).toBe(3);
+    expect(interactiveTheme.match(/--shadow-modal:/g)?.length).toBe(3);
   });
 
   it('keeps catalog warnings readable across themes', () => {

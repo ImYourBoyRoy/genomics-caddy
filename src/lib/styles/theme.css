@@ -29,12 +29,12 @@ Responsibilities:
   --tooltip-border: rgba(148, 163, 184, 0.35);
   --tooltip-text: #dbeafe;
   --tooltip-heading: #f8fafc;
-  --accent: #14b8a6;
-  --accent-hover: #0d9488;
-  --text-on-accent: #042f2e;
-  --action-accent-bg: #3b82f6;
-  --action-accent-hover-bg: #2563eb;
-  --action-accent-text: #0f172a;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --text-on-accent: #ffffff;
+  --action-accent-bg: #1d4ed8;
+  --action-accent-hover-bg: #1e40af;
+  --action-accent-text: #ffffff;
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;

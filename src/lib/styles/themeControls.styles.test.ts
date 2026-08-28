@@ -49,15 +49,23 @@ describe('shared theme controls', () => {
     expect(source.match(/--status-danger-hover-bg:/g)).toHaveLength(3);
   });
 
-  it('keeps accent button foregrounds at normal-text AA contrast', () => {
+  it('keeps accent button foregrounds at normal-text AA contrast in active and hover states', () => {
     for (const [name, block] of [['dark', darkTheme], ['light', lightTheme]] as const) {
       expect(
         contrastRatio(hexToken(block, '--accent'), hexToken(block, '--text-on-accent')),
         `${name} teal accent foreground`,
       ).toBeGreaterThanOrEqual(4.5);
       expect(
+        contrastRatio(hexToken(block, '--accent-hover'), hexToken(block, '--text-on-accent')),
+        `${name} teal hover foreground`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
         contrastRatio(hexToken(block, '--action-accent-bg'), hexToken(block, '--action-accent-text')),
         `${name} blue action foreground`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(hexToken(block, '--action-accent-hover-bg'), hexToken(block, '--action-accent-text')),
+        `${name} blue hover foreground`,
       ).toBeGreaterThanOrEqual(4.5);
     }
   });

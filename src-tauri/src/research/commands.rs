@@ -37,6 +37,39 @@ where
     db_runtime::with_connection(get_db_path(app), f).await
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct DatabaseCachePurgeResult {
+    pub api_response_rows: u64,
+    pub evidence_response_rows: u64,
+    pub total_rows: u64,
+    pub vacuumed: bool,
+}
+
+fn purge_database_cache_tables(
+    conn: &mut rusqlite::Connection,
+) -> Result<DatabaseCachePurgeResult, String> {
+    let transaction = conn.transaction().map_err(|e| e.to_string())?;
+    let api_response_rows = transaction
+        .execute("DELETE FROM api_cache_db.api_cache", [])
+        .map_err(|e| e.to_string())? as u64;
+    let evidence_response_rows = transaction
+        .execute("DELETE FROM api_cache_db.api_cache_entries", [])
+        .map_err(|e| e.to_string())? as u64;
+    transaction.commit().map_err(|e| e.to_string())?;
+
+    // Deleting rows does not release the sidecar's file space. Vacuum only
+    // this app-owned cache database; failure is reported without undoing the
+    // successful row purge.
+    let vacuumed = conn.execute_batch("VACUUM api_cache_db").is_ok();
+    let total_rows = api_response_rows + evidence_response_rows;
+    Ok(DatabaseCachePurgeResult {
+        api_response_rows,
+        evidence_response_rows,
+        total_rows,
+        vacuumed,
+    })
+}
+
 pub(crate) fn set_research_debug_enabled(enabled: bool) {
     super::debug_log::set_enabled(enabled);
 }
@@ -624,14 +657,8 @@ pub async fn save_ollama_url(app: AppHandle, url: String) -> Result<(), String> 
 }
 
 #[tauri::command]
-pub async fn purge_database_cache(app: AppHandle) -> Result<u64, String> {
-    with_db(&app, |conn| {
-        let deleted = conn
-            .execute("DELETE FROM api_cache", [])
-            .map_err(|e| e.to_string())?;
-        Ok(deleted as u64)
-    })
-    .await
+pub async fn purge_database_cache(app: AppHandle) -> Result<DatabaseCachePurgeResult, String> {
+    db_runtime::with_connection_mut(get_db_path(&app), purge_database_cache_tables).await
 }
 
 #[tauri::command]
@@ -880,4 +907,57 @@ pub async fn delete_research_found_markers(
     })
     .await
     .map_err(|e| format!("Delete markers failed: {e}"))?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::purge_database_cache_tables;
+    use rusqlite::Connection;
+
+    #[test]
+    fn purges_rebuildable_response_caches_and_preserves_source_provenance() {
+        let mut conn = Connection::open_in_memory().expect("open test database");
+        conn.execute_batch(
+            "
+            ATTACH DATABASE ':memory:' AS api_cache_db;
+            CREATE TABLE api_cache_db.api_cache (url TEXT PRIMARY KEY, response_json TEXT NOT NULL, fetched_at INTEGER NOT NULL);
+            CREATE TABLE api_cache_db.api_cache_entries (cache_id TEXT PRIMARY KEY, response_body TEXT);
+            CREATE TABLE api_cache_db.source_records (source_record_id TEXT PRIMARY KEY);
+            INSERT INTO api_cache_db.api_cache VALUES ('test-url', '{}', 1);
+            INSERT INTO api_cache_db.api_cache_entries VALUES ('test-cache', '{}');
+            INSERT INTO api_cache_db.source_records VALUES ('test-source');
+            ",
+        )
+        .expect("seed cache fixtures");
+
+        let result = purge_database_cache_tables(&mut conn).expect("purge cache tables");
+
+        assert_eq!(result.api_response_rows, 1);
+        assert_eq!(result.evidence_response_rows, 1);
+        assert_eq!(result.total_rows, 2);
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM api_cache_db.api_cache", [], |row| row
+                .get::<_, i64>(0))
+                .expect("count API cache rows"),
+            0
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT COUNT(*) FROM api_cache_db.api_cache_entries",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .expect("count evidence cache rows"),
+            0
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT COUNT(*) FROM api_cache_db.source_records",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .expect("count source records"),
+            1
+        );
+    }
 }

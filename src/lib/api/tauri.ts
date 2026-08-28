@@ -238,6 +238,7 @@ import type {
   GwasSyncResult,
   OfflineUpdateCheck,
   OfflineSyncResult,
+  DatabaseCachePurgeResult,
   PurgeCollectionResult,
   ConnectionActivity,
   EvidenceCard,
@@ -828,8 +829,8 @@ export async function probeVectorProvider(
   });
 }
 
-export async function purgeDatabaseCache(): Promise<number> {
-  return invoke<number>("purge_database_cache");
+export async function purgeDatabaseCache(): Promise<DatabaseCachePurgeResult> {
+  return invoke<DatabaseCachePurgeResult>("purge_database_cache");
 }
 
 export async function selectSavePath(defaultFilename: string): Promise<string | null> {

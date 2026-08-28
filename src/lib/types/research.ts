@@ -154,6 +154,13 @@ export interface OfflineUpdateCheck {
   indexed_summary: OfflineIndexedSummary;
 }
 
+export interface DatabaseCachePurgeResult {
+  api_response_rows: number;
+  evidence_response_rows: number;
+  total_rows: number;
+  vacuumed: boolean;
+}
+
 export interface OfflineSyncResult {
   tier: number;
   assets_synced: string[];

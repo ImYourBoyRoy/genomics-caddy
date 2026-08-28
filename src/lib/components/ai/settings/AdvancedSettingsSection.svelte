@@ -139,13 +139,15 @@
     purgeStatus = "clearing";
     purgeMessage = "";
     try {
-      await purgeDatabaseCache();
+      const result = await purgeDatabaseCache();
       purgeStatus = "success";
-      purgeMessage = "Cache cleared successfully!";
+      purgeMessage = result.total_rows > 0
+        ? `Cleared ${result.total_rows.toLocaleString()} cached response${result.total_rows === 1 ? "" : "s"}${result.vacuumed ? "." : "; storage compaction will retry later."}`
+        : "Cache was already clear.";
       setTimeout(() => { purgeStatus = "idle"; purgeMessage = ""; }, 3000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       purgeStatus = "error";
-      purgeMessage = `Failed: ${e.message || String(e)}`;
+      purgeMessage = `Could not clear cache: ${e instanceof Error ? e.message : String(e)}`;
     }
   }
 
@@ -223,7 +225,7 @@
       {#if purgeMessage}
         <div class="status-msg {purgeStatus}">{purgeMessage}</div>
       {/if}
-      <span class="help-text mt-1">Clears Ensembl APIs cache and RAG evidence library vector embeddings.</span>
+      <span class="help-text mt-1">Clears saved API responses only. Profiles, references, marker packs, and exports stay intact.</span>
     </div>
 
     <!-- Storage Paths -->

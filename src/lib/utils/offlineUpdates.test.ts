@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from './offlineUpdates';
+import { clearOfflineUpdate, countFreshInstalledUpdates, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
@@ -95,6 +95,16 @@ describe('listOfflineUpdates', () => {
 
     expect(items.map((item) => item.asset_id)).toEqual(['gwas_catalog']);
     expect(items[0]?.local_present).toBe(true);
+  });
+
+  it('never counts persisted update flags while the status probe is stale', () => {
+    const complete = makeStatus();
+    expect(countFreshInstalledUpdates(complete, true, ['gwas_catalog'])).toBe(1);
+    expect(countFreshInstalledUpdates(complete, false, ['gwas_catalog'])).toBe(0);
+    expect(countFreshInstalledUpdates({
+      ...complete,
+      remote_check: { assets_checked: 1, assets_failed: 1, head_fallbacks: 0, timed_out: false },
+    }, true, ['gwas_catalog'])).toBe(0);
   });
 
   it('clears a completed asset from the optimistic snapshot without touching other assets', () => {

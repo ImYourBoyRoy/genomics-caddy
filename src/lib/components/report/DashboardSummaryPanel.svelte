@@ -859,7 +859,7 @@
     padding: 0.55rem 0.65rem;
     border-radius: 0.45rem;
     background: var(--accent-soft);
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 0.75rem;
     line-height: 1.4;
   }

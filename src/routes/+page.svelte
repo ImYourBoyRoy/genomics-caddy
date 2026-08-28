@@ -196,6 +196,7 @@
   let activeSampleId = $state<number | null>(null);
   let expandDatabases = $state(false);
   let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
+  let offlineStatusFreshForWelcome = $state(false);
   let sidebarApi = $state<{
     syncAllMissing: () => void;
     expandDatabases: () => void;
@@ -567,8 +568,9 @@
       onReady={(api) => {
         sidebarApi = api;
       }}
-      onOfflineStatusChange={(status) => {
+      onOfflineStatusChange={(status, fresh) => {
         offlineStatusForWelcome = status;
+        offlineStatusFreshForWelcome = fresh;
       }}
       onDownloadChain={downloadChain}
       onBrowseFile={browseFile}
@@ -587,6 +589,7 @@
         <EmptyState
           {appPaths}
           offlineStatus={offlineStatusForWelcome}
+          offlineStatusFresh={offlineStatusFreshForWelcome}
           {isChainDownloaded}
           {runtimeAvailable}
           onImportGenome={handleWelcomeImport}

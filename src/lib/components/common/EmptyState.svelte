@@ -3,7 +3,7 @@
   import type { AppPaths } from '../../types/genomics';
   import type { OfflineUpdateCheck } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
-  import { isCompleteOfflineStatus } from '../../utils/offlineUpdates';
+  import { countFreshInstalledUpdates } from '../../utils/offlineUpdates';
   import '$lib/styles/components/empty-state.css';
 
   /*
@@ -16,6 +16,7 @@
   interface Props {
     appPaths: AppPaths | null;
     offlineStatus?: OfflineUpdateCheck | null;
+    offlineStatusFresh?: boolean;
     isChainDownloaded?: boolean;
     runtimeAvailable?: boolean;
     onImportGenome?: () => void;
@@ -26,6 +27,7 @@
   let {
     appPaths,
     offlineStatus = null,
+    offlineStatusFresh = false,
     isChainDownloaded = true,
     runtimeAvailable = true,
     onImportGenome,
@@ -48,14 +50,13 @@
       }
     }
     let ready = 0;
-    let updates = 0;
     for (const id of PRIMARY_CATALOG_IDS) {
       const asset = byId.get(id);
       if (asset && assetReady(asset)) ready += 1;
-      // An update applies only to an installed local asset. Missing files are
-      // part of the download count, not the update count.
-      if (isCompleteOfflineStatus(offlineStatus) && asset?.local_present && asset.update_available) updates += 1;
     }
+    // A persisted update flag is actionable only after a complete fresh probe.
+    // Missing files remain part of the download/attention path instead.
+    const updates = countFreshInstalledUpdates(offlineStatus, offlineStatusFresh, PRIMARY_CATALOG_IDS);
     return {
       ready,
       total: PRIMARY_CATALOG_IDS.length,

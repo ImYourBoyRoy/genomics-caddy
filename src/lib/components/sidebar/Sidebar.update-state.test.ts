@@ -36,6 +36,7 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true)');
     expect(sidebarSource).toContain('if (!await handleSyncAsset(item.asset_id, forceRedownload, false)) failed = true;');
     expect(sidebarSource).toContain('await refreshStatusInBackground();');
+    expect(sidebarSource).toContain('onOfflineStatusChange?.(offlineStatus, offlineStatusFresh);');
   });
 
   it('does not leave row actions enabled while a fresh status probe is running', () => {

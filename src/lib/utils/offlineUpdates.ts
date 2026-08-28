@@ -76,6 +76,17 @@ export function listOfflineUpdates(status: OfflineUpdateCheck | null | undefined
   return out;
 }
 
+/** Count installed updates only when the caller has an authoritative fresh probe. */
+export function countFreshInstalledUpdates(
+  status: OfflineUpdateCheck | null | undefined,
+  statusFresh: boolean,
+  assetIds?: readonly string[],
+): number {
+  if (!statusFresh || !isCompleteOfflineStatus(status)) return 0;
+  const allowed = assetIds ? new Set(assetIds) : null;
+  return listOfflineUpdates(status).filter((item) => !allowed || allowed.has(item.asset_id)).length;
+}
+
 /**
  * Remove a completed asset from the optimistic UI snapshot while the backend
  * performs its authoritative post-sync probe. The probe can add the asset

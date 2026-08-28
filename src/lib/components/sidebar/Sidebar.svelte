@@ -65,7 +65,7 @@ import { onMount, onDestroy } from 'svelte';
       syncAllMissing: () => void;
       expandDatabases: () => void;
     }) => void;
-    onOfflineStatusChange?: (status: OfflineUpdateCheck | null) => void;
+    onOfflineStatusChange?: (status: OfflineUpdateCheck | null, fresh: boolean) => void;
     onDownloadChain: () => void;
     onBrowseFile: () => void;
     onImportGenome: (e: Event) => void;
@@ -593,7 +593,7 @@ import { onMount, onDestroy } from 'svelte';
   }
 
   $effect(() => {
-    onOfflineStatusChange?.(offlineStatus);
+    onOfflineStatusChange?.(offlineStatus, offlineStatusFresh);
   });
 
   function findAsset(tierNum: number, assetId: string): OfflineAssetStatus | null {

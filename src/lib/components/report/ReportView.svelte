@@ -530,7 +530,9 @@
     <details class="catalog-warnings-banner" aria-label="Reference catalog status">
       <summary>
         <span>Reference data needs attention</span>
-        <span class="catalog-warnings-count">{generatedReport.catalog_warnings.length} details</span>
+        <span class="catalog-warnings-count">
+          {generatedReport.catalog_warnings.length} {generatedReport.catalog_warnings.length === 1 ? 'detail' : 'details'}
+        </span>
       </summary>
       <ul>
         {#each generatedReport.catalog_warnings as warning}

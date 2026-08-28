@@ -28,12 +28,13 @@ describe('ReportView Help Guide surface', () => {
   it('keeps catalog warnings readable across themes', () => {
     expect(source).toContain('<details class="catalog-warnings-banner" aria-label="Reference catalog status">');
     expect(source).toContain('<span>Reference data needs attention</span>');
-    expect(source).toContain('<span class="catalog-warnings-count">{generatedReport.catalog_warnings.length} details</span>');
+    expect(source).toContain("{generatedReport.catalog_warnings.length === 1 ? 'detail' : 'details'}");
     expect(catalogWarningStyles).toContain('padding: 0 16px;');
     expect(catalogWarningStyles).toContain('var(--status-danger-bg)');
     expect(catalogWarningStyles).toContain('var(--status-danger-border)');
     expect(catalogWarningStyles).toContain('var(--status-danger-text)');
     expect(theme).toContain('.catalog-warnings-banner > summary {');
+    expect(theme).toContain('.catalog-warnings-banner > summary:focus-visible {');
     expect(theme).toContain('.catalog-warnings-banner[open] > summary::before');
     expect(catalogWarningStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });

@@ -855,6 +855,12 @@ h1, h2, h3, h4, h5, h6 {
   order: -1;
 }
 
+.catalog-warnings-banner > summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
 .catalog-warnings-banner[open] > summary::before {
   content: '▾';
 }

@@ -190,6 +190,21 @@ function validateResourceUpdatePhase(snapshot) {
   return phase;
 }
 
+async function assertNoUnverifiedUpdateCopy(snapshot) {
+  if (snapshot.resourceStatus !== "error") return;
+
+  for (const text of ["newer remote", "Update available", "updates available"]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    assert(
+      result?.ok === true && result.count === 0,
+      `Incomplete resource verification exposed actionable update copy: ${text}`,
+    );
+  }
+}
+
 async function selectTheme(label, expectedMode) {
   await clickText(label);
   const snapshot = await waitForSnapshot(
@@ -434,6 +449,7 @@ async function main() {
   const modes = {};
   const resourceStatus = validateResourceStatus(ready);
   const resourceUpdatePhase = validateResourceUpdatePhase(ready);
+  await assertNoUnverifiedUpdateCopy(ready);
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();

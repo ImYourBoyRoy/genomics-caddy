@@ -5,6 +5,7 @@ import {
   reportAudienceFilename,
   reportExportPrivacyWarning,
 } from './reportAudienceExport';
+import { reportReferenceId } from './reportReferences';
 
 function marker(overrides: Partial<EvaluatedMarker> = {}): EvaluatedMarker {
   return {
@@ -114,8 +115,9 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('TEST1 — rs123');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
     expect(output).toContain('Technical interpretation: Clinical interpretation text');
-    expect(output.match(/### REF-001 —/g)).toHaveLength(1);
-    expect(output).not.toContain('REF-002');
+    const referenceId = reportReferenceId(marker().sources[0]);
+    expect(output.match(new RegExp(`### ${referenceId} —`, 'g'))).toHaveLength(1);
+    expect(output.match(/### REF-[A-F0-9]{8} —/g)).toHaveLength(1);
   });
 
   it('includes explicit anti-diagnosis instructions in AI Review exports', () => {
@@ -129,7 +131,7 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('# AI Review');
     expect(output).toContain('Do not diagnose');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
-    expect(output).toContain('Reference IDs: REF-001');
+    expect(output).toContain(`Reference IDs: ${reportReferenceId(marker().sources[0])}`);
   });
 
   it('creates safe deterministic filenames', () => {

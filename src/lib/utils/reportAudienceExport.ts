@@ -1,9 +1,7 @@
 import type {
-  EnrichedSource,
   EvaluatedMarker,
   GeneratedReport,
   GenomeSample,
-  MarkerSource,
 } from '../types/genomics';
 import { getScopeLabel, getTierInfo } from './evidence';
 import { getLaypersonTranslation, getSimpleFindingTitle } from './layperson';
@@ -11,6 +9,10 @@ import { formatGeneticSexLabel } from './uiLabels';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 import { populatedReproductiveIntake } from './reproductiveIntake';
 import { selectedReproductiveContextOption } from './reproductiveContext';
+import {
+  buildReportReferenceRegistry,
+  type ReportReference,
+} from './reportReferences';
 
 export type ReportExportAudience = 'personal' | 'clinician' | 'ai';
 
@@ -24,15 +26,6 @@ export interface ReportExportOptions {
   reproductiveContext?: string;
   /** Explicit profile context kept separate from genetic findings in the export. */
   personalSafetyContext?: PersonalSafetyContext;
-}
-
-interface ReportReference {
-  id: string;
-  title: string;
-  organization: string;
-  date: string;
-  evidenceRole: string;
-  url: string | null;
 }
 
 interface ExportFinding {
@@ -79,76 +72,6 @@ function safeFilePart(value: string): string {
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 64) || 'genome';
-}
-
-function sourceKey(source: MarkerSource | EnrichedSource): string {
-  const url = 'name' in source ? source.url : source.url;
-  if (url?.trim()) {
-    return `url:${url.trim().replace(/\/$/, '').toLowerCase()}`;
-  }
-  if ('name' in source) {
-    return [source.name, source.url || '', source.evidence_type || '', source.notes || '']
-      .map((value) => clean(value))
-      .join('|')
-      .toLowerCase();
-  }
-  return [source.source_type, source.citation, source.url || '', source.details || '']
-    .map((value) => clean(value))
-    .join('|')
-    .toLowerCase();
-}
-
-function sourceRecord(
-  source: MarkerSource | EnrichedSource,
-  id: string,
-): ReportReference {
-  if ('name' in source) {
-    return {
-      id,
-      title: clean(source.name, 'Reference'),
-      organization: clean(source.name, 'Not specified'),
-      date: clean(source.accessed, 'Access date not recorded'),
-      evidenceRole: clean(source.evidence_type, 'Marker-pack reference'),
-      url: source.url || null,
-    };
-  }
-  return {
-    id,
-    title: clean(source.citation, 'Catalog reference'),
-    organization: clean(source.source_type, 'Local reference catalog'),
-    date: 'Local catalog record',
-    evidenceRole: clean(source.details, 'Catalog evidence'),
-    url: source.url || null,
-  };
-}
-
-function buildReferenceRegistry(report: GeneratedReport): {
-  references: ReportReference[];
-  idsByMarker: Map<string, string[]>;
-} {
-  const references: ReportReference[] = [];
-  const idsByKey = new Map<string, string>();
-  const idsByMarker = new Map<string, string[]>();
-
-  for (const section of report.sections) {
-    for (const marker of section.markers) {
-      const markerKey = `${section.name}:${marker.link_id}`;
-      const markerIds: string[] = [];
-      for (const source of [...marker.sources, ...marker.db_enriched_sources]) {
-        const key = sourceKey(source);
-        let id = idsByKey.get(key);
-        if (!id) {
-          id = `REF-${String(references.length + 1).padStart(3, '0')}`;
-          idsByKey.set(key, id);
-          references.push(sourceRecord(source, id));
-        }
-        markerIds.push(id);
-      }
-      idsByMarker.set(markerKey, [...new Set(markerIds)]);
-    }
-  }
-
-  return { references, idsByMarker };
 }
 
 function nextStepFor(marker: EvaluatedMarker): string {
@@ -298,7 +221,7 @@ function renderReferences(references: ReportReference[]): string {
 
 export function buildReportAudienceMarkdown(options: ReportExportOptions): string {
   const includeRawGenotypes = options.includeRawGenotypes === true;
-  const registry = buildReferenceRegistry(options.report);
+  const registry = buildReportReferenceRegistry(options.report);
   const findings = options.report.sections.flatMap((section) =>
     section.markers
       .filter((marker) => options.audience !== 'personal' || !['benign', 'no_data'].includes(marker.severity_class))

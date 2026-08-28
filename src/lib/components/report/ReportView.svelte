@@ -4,6 +4,7 @@
   import { saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
+  import ReferenceIndex from './ReferenceIndex.svelte';
   import SectionCard from './SectionCard.svelte';
   import DashboardSummaryPanel from './DashboardSummaryPanel.svelte';
   import DiscoveredFindingsBanner from './DiscoveredFindingsBanner.svelte';
@@ -681,6 +682,8 @@
       />
     {/each}
   </div>
+
+  <ReferenceIndex report={generatedReport} />
 
   <!-- Secondary research surfaces stay below the core report and remain optional. -->
   <VectorPromotedSection {selectedSample} {presentationMode} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />

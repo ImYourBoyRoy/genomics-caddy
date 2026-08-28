@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { MarkerSource, EnrichedSource } from '../../types/genomics';
   import { safeExternalHref } from '../../utils/urlSafety';
+  import { buildReferenceEntries } from '../../utils/reportReferences';
 
   /*
   Module Docstring:
@@ -22,56 +23,7 @@
 
   let { sources = [], dbSources = [] }: Props = $props();
 
-  interface DisplayReference {
-    kind: 'Evidence' | 'Catalog';
-    title: string;
-    organization: string;
-    date: string;
-    role: string;
-    url?: string;
-  }
-
-  function buildReferences(curated: MarkerSource[], catalog: EnrichedSource[]): DisplayReference[] {
-    const references: DisplayReference[] = [];
-    const seen = new Set<string>();
-    for (const source of curated) {
-      const reference: DisplayReference = {
-        kind: 'Evidence',
-        title: source.name,
-        organization: source.name,
-        date: source.accessed || 'Access date not recorded',
-        role: source.evidence_type || 'Marker-pack reference',
-        url: source.url,
-      };
-      const key = reference.url
-        ? `url:${reference.url.trim().replace(/\/$/, '').toLowerCase()}`
-        : [reference.title, reference.role].join('|').toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        references.push(reference);
-      }
-    }
-    for (const source of catalog) {
-      const reference: DisplayReference = {
-        kind: 'Catalog',
-        title: source.citation,
-        organization: source.source_type,
-        date: 'Local catalog record',
-        role: source.details || 'Catalog evidence',
-        url: source.url,
-      };
-      const key = reference.url
-        ? `url:${reference.url.trim().replace(/\/$/, '').toLowerCase()}`
-        : [reference.title, reference.role].join('|').toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        references.push(reference);
-      }
-    }
-    return references;
-  }
-
-  let references = $derived(buildReferences(sources, dbSources));
+  let references = $derived(buildReferenceEntries(sources, dbSources));
 </script>
 
 {#if references.length > 0}
@@ -79,9 +31,9 @@
     <summary>📚 References ({references.length})</summary>
     <div class="marker-sources">
       <ul class="sources-list">
-        {#each references as reference}
+        {#each references as reference (reference.id)}
           <li>
-            <span class="db-source-type">{reference.kind}</span>
+            <span class="db-source-type">{reference.id}</span>
             {#if reference.url}
               {@const safeUrl = safeExternalHref(reference.url)}
               {#if safeUrl}
@@ -93,7 +45,7 @@
               {reference.title}
             {/if}
             <span class="source-type">— {reference.organization}</span>
-            <span class="source-notes">— {reference.role}; {reference.date}</span>
+            <span class="source-notes">— {reference.evidenceRole}; {reference.date}</span>
           </li>
         {/each}
       </ul>

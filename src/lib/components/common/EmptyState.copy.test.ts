@@ -10,7 +10,7 @@ describe('welcome data-controls copy', () => {
   });
 
   it('counts updates only for assets that are already installed locally', () => {
-    expect(source).toContain('if (asset?.local_present && asset.update_available) updates += 1;');
+    expect(source).toContain('isCompleteOfflineStatus(offlineStatus) && asset?.local_present && asset.update_available');
     expect(source).not.toContain('if (asset?.update_available) updates += 1;');
   });
 });

@@ -3,6 +3,7 @@
   import type { AppPaths } from '../../types/genomics';
   import type { OfflineUpdateCheck } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
+  import { isCompleteOfflineStatus } from '../../utils/offlineUpdates';
   import '$lib/styles/components/empty-state.css';
 
   /*
@@ -53,7 +54,7 @@
       if (asset && assetReady(asset)) ready += 1;
       // An update applies only to an installed local asset. Missing files are
       // part of the download count, not the update count.
-      if (asset?.local_present && asset.update_available) updates += 1;
+      if (isCompleteOfflineStatus(offlineStatus) && asset?.local_present && asset.update_available) updates += 1;
     }
     return {
       ready,

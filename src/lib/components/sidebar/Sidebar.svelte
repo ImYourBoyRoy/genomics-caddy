@@ -151,6 +151,9 @@ import { onMount, onDestroy } from 'svelte';
   let updateMessage = $state('');
   let updateRetry = $state<UpdateRetryTarget | null>(null);
   let lastSuccessfulUpdateAt = $state<number | null>(null);
+  // Do not present the previous probe's update flags while a new authoritative
+  // status check is running or has failed.
+  let offlineStatusFresh = $state(false);
   let referenceDetails = $state<ReferenceStatusDetails | null>(null);
   let gnomadReadiness = $state<GnomadReadinessStatus | null>(null);
   let gnomadBusy = $state(false);
@@ -242,12 +245,14 @@ import { onMount, onDestroy } from 'svelte';
   async function loadSettingsAndStatus() {
     const generation = ++statusRefreshGeneration;
     isCheckingStatus = true;
+    offlineStatusFresh = false;
     setUpdateState('checking', 'Checking local inventory and remote identities…');
     try {
       customDir = await getCustomDownloadDir();
       const status = await checkOfflineDataUpdates();
       if (generation !== statusRefreshGeneration) return;
       offlineStatus = status;
+      offlineStatusFresh = true;
       const pendingCount = listOfflineUpdates(offlineStatus).length;
       setUpdateState(
         pendingCount > 0 ? 'available' : 'ready',
@@ -259,6 +264,7 @@ import { onMount, onDestroy } from 'svelte';
       if (generation !== statusRefreshGeneration) return;
       console.error('Failed to load custom download directory / offline status:', err);
       offlineStatus = null;
+      offlineStatusFresh = false;
       setUpdateState(
         'error',
         'Could not check offline resource status. Retry from Reference Databases.',
@@ -273,11 +279,13 @@ import { onMount, onDestroy } from 'svelte';
   async function refreshStatusInBackground() {
     const generation = ++statusRefreshGeneration;
     isCheckingStatus = true;
+    offlineStatusFresh = false;
     setUpdateState('checking', 'Refreshing resource status…');
     try {
       const status = await checkOfflineDataUpdates();
       if (generation !== statusRefreshGeneration) return;
       offlineStatus = status;
+      offlineStatusFresh = true;
       const pendingCount = listOfflineUpdates(status).length;
       setUpdateState(
         pendingCount > 0 ? 'available' : 'ready',
@@ -288,6 +296,7 @@ import { onMount, onDestroy } from 'svelte';
     } catch (err) {
       if (generation !== statusRefreshGeneration) return;
       console.error('Background offline status refresh failed:', err);
+      offlineStatusFresh = false;
       setUpdateState(
         'error',
         'Resource status refresh failed. The last known local resources remain available.',
@@ -713,7 +722,7 @@ import { onMount, onDestroy } from 'svelte';
     },
   ] as const;
 
-  let pendingUpdates = $derived.by(() => listOfflineUpdates(offlineStatus));
+  let pendingUpdates = $derived.by(() => offlineStatusFresh ? listOfflineUpdates(offlineStatus) : []);
 
   let liftoverUpdateAvailable = $derived(
     pendingUpdates.some((update) => update.asset_id === 'liftover_chain'),

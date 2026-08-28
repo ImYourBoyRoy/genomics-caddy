@@ -110,20 +110,22 @@
             </span>
           {/if}
         </span>
-      </h5>
-    {/if}
-    <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
-    {#if marker.sex_scope && marker.sex_scope !== 'all'}
-      <Tooltip label={getScopeLabel(marker.sex_scope)} description="Biological applicability hint only; this is not gender identity, anatomy, fertility, pregnancy, or hormone status.">
-        <span class="scope-badge">{getScopeLabel(marker.sex_scope)}</span>
-      </Tooltip>
-    {/if}
-    {#if viewMode === 'simple'}
-      <span class="marker-severity-label simple-severity-label">
-        <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
-        {severity.plainLabel}
-      </span>
-    {/if}
+        </h5>
+      {/if}
+    <div class="marker-meta">
+      <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
+      {#if marker.sex_scope && marker.sex_scope !== 'all'}
+        <Tooltip label={getScopeLabel(marker.sex_scope)} description="Biological applicability hint only; this is not gender identity, anatomy, fertility, pregnancy, or hormone status.">
+          <span class="scope-badge">{getScopeLabel(marker.sex_scope)}</span>
+        </Tooltip>
+      {/if}
+      {#if viewMode === 'simple'}
+        <span class="marker-severity-label simple-severity-label">
+          <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
+          {severity.plainLabel}
+        </span>
+      {/if}
+    </div>
   </div>
 
   <!-- Clinical status row keeps the full DNA call visible; Simple keeps raw calls in technical details. -->

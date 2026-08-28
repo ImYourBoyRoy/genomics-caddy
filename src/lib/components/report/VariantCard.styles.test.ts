@@ -47,6 +47,19 @@ describe('VariantCard enrichment surface', () => {
     expect(source).not.toContain('Evidence sources available');
   });
 
+  it('gives the finding title its own row above the compact metadata rail', () => {
+    expect(source).toContain('<div class="marker-meta">');
+    const markerTopStyles = readFileSync(resolve(process.cwd(), 'src/lib/styles/theme.css'), 'utf8')
+      .match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const markerMetaStyles = readFileSync(resolve(process.cwd(), 'src/lib/styles/theme.css'), 'utf8')
+      .match(/\.marker-meta \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(markerTopStyles).toContain('flex-direction: column;');
+    expect(markerTopStyles).toContain('align-items: stretch;');
+    expect(markerMetaStyles).toContain('flex-wrap: wrap;');
+    expect(markerMetaStyles).toContain('min-width: 0;');
+  });
+
   it('keeps Compare evidence boundaries behind a compact disclosure', () => {
     expect(source).toContain('<summary>Evidence boundary</summary>');
     expect(source).toContain('class="claim-frame" role="note"');

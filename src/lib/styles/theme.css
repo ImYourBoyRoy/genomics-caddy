@@ -950,17 +950,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 .marker-top {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-1);
   min-width: 0;
 }
 .marker-top > .gene-label {
-  flex: 1 1 12rem;
+  flex: 0 1 auto;
+  width: 100%;
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+.marker-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
 }
 .gene-label {
   font-size: 0.95rem;

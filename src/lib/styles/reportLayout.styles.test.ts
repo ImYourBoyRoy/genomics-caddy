@@ -32,7 +32,7 @@ describe('report card wrapping', () => {
     const markerTop = source.match(/\.marker-top \{[\s\S]*?\n\}/)?.[0] ?? '';
     const markerLabel = source.match(/\.marker-top > \.gene-label \{[\s\S]*?\n\}/)?.[0] ?? '';
 
-    expect(markerTop).toContain('flex-wrap: wrap;');
+    expect(markerTop).toContain('flex-direction: column;');
     expect(markerTop).toContain('min-width: 0;');
     expect(markerLabel).toContain('overflow-wrap: anywhere;');
     expect(markerLabel).toContain('word-break: break-word;');

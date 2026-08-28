@@ -496,6 +496,19 @@ async function main() {
   validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
 
   await clickText("Appearance");
+  const openTheme = await waitForSnapshot(
+    (snapshot) => snapshot.layout?.themeMenuOpen === true,
+    "the Appearance menu to open",
+  );
+  assert(openTheme.layout.themeMenuInToolbarFlow === true, "Appearance menu is not in toolbar layout flow");
+  assert(openTheme.layout.themeMenuOverlapsReport === false, "Appearance menu overlaps the report content");
+  await pressKey("Escape");
+  await waitForSnapshot(
+    (snapshot) => snapshot.layout?.themeMenuOpen === false,
+    "the Appearance menu to close with Escape",
+  );
+
+  await clickText("Appearance");
   await selectTheme("Light mode", "light");
   const lightContrast = await probeContrast("light");
   await clickText("Appearance");

@@ -141,10 +141,17 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('expandedSectionNames: string[];');
     expect(source).toContain('clinicalProvenanceCount: number;');
     expect(source).toContain('themeControlInToolbar: boolean;');
+    expect(source).toContain('themeMenuOpen: boolean;');
+    expect(source).toContain('themeMenuInToolbarFlow: boolean;');
+    expect(source).toContain('themeMenuOverlapsReport: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue')");
     expect(source).toContain("document.querySelector<HTMLElement>('.grid-layout')");
     expect(source).toContain("document.querySelector('.focus-toolbar .theme-toggle') !== null");
+    expect(source).toContain("document.querySelector<HTMLElement>('.theme-options')");
+    expect(source).toContain("themeMenu.closest('.focus-toolbar') !== null");
+    expect(source).toContain("getComputedStyle(themeMenu).position === 'static'");
+    expect(source).toContain('themeMenuOverlapsReport');
     expect(source).toContain("themeMode: 'system' | 'light' | 'dark' | null;");
     expect(source).toContain('document.documentElement.dataset.theme');
     expect(source).not.toContain('actionQueue.textContent');

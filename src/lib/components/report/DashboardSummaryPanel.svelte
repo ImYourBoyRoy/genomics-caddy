@@ -185,6 +185,22 @@
     return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   }
 
+  const GUIDANCE_PREVIEW_LIMIT = 3;
+  const DETAIL_PREVIEW_LIMIT = 2;
+
+  function previewGuidance(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string[] {
+    return items.slice(0, limit);
+  }
+
+  function remainingGuidance(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string[] {
+    return items.slice(limit);
+  }
+
+  function guidanceMoreLabel(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string {
+    const count = Math.max(0, items.length - limit);
+    return count === 1 ? 'Show 1 more' : `Show ${count} more`;
+  }
+
   let healthAreaSections = $derived((report.sections || []).filter((section) => section.markers.length > 0));
 </script>
 
@@ -357,45 +373,59 @@
                 </div>
               {/if}
               {#if plan.foodSafety.relevantRules.length > 0}
-                <div class="dietary-resource-rules">
-                  <strong>Resource-backed food checks</strong>
-                  {#each plan.foodSafety.relevantRules as rule (rule.id)}
-                    <div class="dietary-resource-rule">
-                      <strong>{rule.label}</strong>
-                      <p>{rule.recommendation}</p>
-                      {#if rule.substitutions?.length}
-                        <span><strong>Possible substitutions:</strong> {rule.substitutions.join('; ')}</span>
-                      {/if}
-                      {#if rule.confirm_with?.length}
-                        <span><strong>Confirm with:</strong> {rule.confirm_with.join('; ')}</span>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
+                <details class="guidance-details dietary-resource-rules">
+                  <summary>Food safety checks ({plan.foodSafety.relevantRules.length})</summary>
+                  <div class="guidance-details-body">
+                    {#each plan.foodSafety.relevantRules as rule (rule.id)}
+                      <div class="dietary-resource-rule">
+                        <strong>{rule.label}</strong>
+                        <p>{rule.recommendation}</p>
+                        {#if rule.substitutions?.length}
+                          <span><strong>Possible substitutions:</strong> {rule.substitutions.join('; ')}</span>
+                        {/if}
+                        {#if rule.confirm_with?.length}
+                          <span><strong>Confirm with:</strong> {rule.confirm_with.join('; ')}</span>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                </details>
               {/if}
               {#if plan.foodSafety.suppressedSuggestions.length > 0}
-                <div class="dietary-suppressed-suggestions" role="note">
-                  <strong>🛡️ Suggestions withheld by explicit food constraints</strong>
-                  <p>These genotype- or nutrient-linked food suggestions were removed from the “Lean Into / Favor” list because they conflict with an explicitly entered food exclusion or reaction.</p>
-                  <ul>
-                    {#each plan.foodSafety.suppressedSuggestions as item (item)}<li>{item}</li>{/each}
-                  </ul>
-                  {#if plan.foodSafety.conflictNotes.length > 0}
-                    <ul class="guardrail-list">
-                      {#each plan.foodSafety.conflictNotes as note (note)}<li>{note}</li>{/each}
+                <details class="guidance-details dietary-suppressed-suggestions" role="note">
+                  <summary>Suggestions withheld by food constraints ({plan.foodSafety.suppressedSuggestions.length})</summary>
+                  <div class="guidance-details-body">
+                    <p>Suggestions that conflict with an explicitly entered food exclusion or reaction.</p>
+                    <ul>
+                      {#each plan.foodSafety.suppressedSuggestions as item (item)}<li>{item}</li>{/each}
                     </ul>
-                  {/if}
-                </div>
+                    {#if plan.foodSafety.conflictNotes.length > 0}
+                      <ul class="guardrail-list">
+                        {#each plan.foodSafety.conflictNotes as note (note)}<li>{note}</li>{/each}
+                      </ul>
+                    {/if}
+                  </div>
+                </details>
               {/if}
               <div class="diet-section">
                 {#if plan.diet.favor.length > 0}
                   <div class="diet-column favor">
                     <h4>👍 Lean Into / Favor</h4>
                     <ul>
-                      {#each plan.diet.favor as item (item)}
+                      {#each previewGuidance(plan.diet.favor) as item (item)}
                         <li>{getCompactGuidanceText(item)}</li>
                       {/each}
                     </ul>
+                    {#if plan.diet.favor.length > GUIDANCE_PREVIEW_LIMIT}
+                      <details class="guidance-more">
+                        <summary>{guidanceMoreLabel(plan.diet.favor)}</summary>
+                        <ul>
+                          {#each remainingGuidance(plan.diet.favor) as item (item)}
+                            <li>{getCompactGuidanceText(item)}</li>
+                          {/each}
+                        </ul>
+                      </details>
+                    {/if}
                   </div>
                 {/if}
 
@@ -403,18 +433,30 @@
                   <div class="diet-column avoid">
                     <h4>👎 Limit / Avoid</h4>
                     <ul>
-                      {#each plan.diet.avoid as item (item)}
+                      {#each previewGuidance(plan.diet.avoid) as item (item)}
                         <li>{getCompactGuidanceText(item)}</li>
                       {/each}
                     </ul>
+                    {#if plan.diet.avoid.length > GUIDANCE_PREVIEW_LIMIT}
+                      <details class="guidance-more">
+                        <summary>{guidanceMoreLabel(plan.diet.avoid)}</summary>
+                        <ul>
+                          {#each remainingGuidance(plan.diet.avoid) as item (item)}
+                            <li>{getCompactGuidanceText(item)}</li>
+                          {/each}
+                        </ul>
+                      </details>
+                    {/if}
                   </div>
                 {/if}
               </div>
               {#if plan.diet.notes}
-                <div class="diet-notes">
-                  <strong>Notes:</strong>
+                <details class="guidance-details diet-notes">
+                  <summary>Notes</summary>
+                  <div class="guidance-details-body">
                     <pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>
-                </div>
+                  </div>
+                </details>
               {/if}
             </div>
           {/if}
@@ -588,10 +630,18 @@
           <div class="card-body" id="activity-body">
             <p class="section-hint">Training and recovery prompts</p>
             <ul class="guardrail-list">
-              {#each plan.activity.principles as principle (principle)}
+              {#each previewGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT) as principle (principle)}
                 <li>{principle}</li>
               {/each}
             </ul>
+            {#if plan.activity.principles.length > DETAIL_PREVIEW_LIMIT}
+              <details class="guidance-more">
+                <summary>{guidanceMoreLabel(plan.activity.principles, DETAIL_PREVIEW_LIMIT)}</summary>
+                <ul class="guardrail-list">
+                  {#each remainingGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT) as principle (principle)}<li>{principle}</li>{/each}
+                </ul>
+              </details>
+            {/if}
             {#each plan.activity.relevantDomains as domain (domain.id)}
               <div class="activity-domain">
                 <strong>{domain.id.replaceAll('_', ' ')}</strong>
@@ -600,15 +650,30 @@
                   <div>
                     <h4>Favor</h4>
                     <ul class="guardrail-list">
-                      {#each domain.favor as item (item)}<li>{item}</li>{/each}
+                      {#each previewGuidance(domain.favor, DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
                     </ul>
+                    {#if domain.favor.length > DETAIL_PREVIEW_LIMIT}
+                      <details class="guidance-more">
+                        <summary>{guidanceMoreLabel(domain.favor, DETAIL_PREVIEW_LIMIT)}</summary>
+                        <ul class="guardrail-list">
+                          {#each remainingGuidance(domain.favor, DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
+                        </ul>
+                      </details>
+                    {/if}
                   </div>
                   <div>
                     <h4>Avoid / confirm</h4>
                     <ul class="guardrail-list">
-                      {#each domain.avoid as item (item)}<li>{item}</li>{/each}
-                      {#each domain.confirm_with as item (item)}<li>{item}</li>{/each}
+                      {#each previewGuidance([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
                     </ul>
+                    {#if domain.avoid.length + domain.confirm_with.length > DETAIL_PREVIEW_LIMIT}
+                      <details class="guidance-more">
+                        <summary>{guidanceMoreLabel([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT)}</summary>
+                        <ul class="guardrail-list">
+                          {#each remainingGuidance([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
+                        </ul>
+                      </details>
+                    {/if}
                   </div>
                 </div>
               </div>
@@ -1460,7 +1525,7 @@
   }
 
   .dietary-profile-list strong,
-  .dietary-resource-rules > strong {
+  .dietary-resource-rules > summary {
     color: var(--status-success-text);
   }
 
@@ -1506,7 +1571,7 @@
     margin: 0.35rem 0 0;
   }
 
-  .dietary-suppressed-suggestions > strong {
+  .dietary-suppressed-suggestions > summary {
     color: var(--status-warning-text);
   }
 
@@ -1524,6 +1589,39 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+  .guidance-details,
+  .guidance-more {
+    margin-top: 0.55rem;
+    min-width: 0;
+  }
+  .guidance-details > summary,
+  .guidance-more > summary {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    color: var(--status-info-text);
+    cursor: pointer;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .guidance-details > summary:hover,
+  .guidance-details > summary:focus-visible,
+  .guidance-more > summary:hover,
+  .guidance-more > summary:focus-visible {
+    color: var(--text-primary);
+  }
+  .guidance-details > summary:focus-visible,
+  .guidance-more > summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  .guidance-details-body {
+    min-width: 0;
+  }
+  .guidance-more ul {
+    margin-bottom: 0;
   }
   .diet-notes {
     margin-top: 0.75rem;

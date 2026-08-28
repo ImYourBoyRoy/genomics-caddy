@@ -69,8 +69,25 @@ describe('DashboardSummaryPanel semantic styling', () => {
 
   it('compacts repeated conditional guidance prefixes in the Simple dietary view', () => {
     expect(source).toContain('getCompactGuidanceText');
-    expect(source).toContain('<li>{getCompactGuidanceText(item)}</li>');
+    expect(source).toContain('const GUIDANCE_PREVIEW_LIMIT = 3;');
+    expect(source).toContain('previewGuidance(plan.diet.favor)');
+    expect(source).toContain('remainingGuidance(plan.diet.favor)');
+    expect(source).toContain('previewGuidance(plan.diet.avoid)');
+    expect(source).toContain('remainingGuidance(plan.diet.avoid)');
+    expect(source).toContain('<summary>Notes</summary>');
     expect(source).toContain('<pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>');
+    expect(source).toContain('<summary>Food safety checks ({plan.foodSafety.relevantRules.length})</summary>');
+  });
+
+  it('keeps long activity guidance readable without rendering every rule at once', () => {
+    expect(source).toContain('const DETAIL_PREVIEW_LIMIT = 2;');
+    expect(source).toContain('previewGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT)');
+    expect(source).toContain('previewGuidance(domain.favor, DETAIL_PREVIEW_LIMIT)');
+    expect(source).toContain('remainingGuidance(domain.favor, DETAIL_PREVIEW_LIMIT)');
+    expect(source).toContain('Show 1 more');
+    expect(styleBlock).toContain('.guidance-details > summary');
+    expect(styleBlock).toContain('.guidance-more > summary');
+    expect(styleBlock).toContain('min-height: 32px;');
   });
 
   it('keeps repeated action steps concise instead of repeating warning copy', () => {

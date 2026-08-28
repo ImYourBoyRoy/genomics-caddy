@@ -44,6 +44,15 @@
     if (target instanceof Node && !rootElement?.contains(target)) isOpen = false;
   }
 
+  function handleDocumentFocusIn(event: FocusEvent) {
+    const target = event.target;
+    if (target instanceof Node && !rootElement?.contains(target)) isOpen = false;
+  }
+
+  function handleDocumentScroll() {
+    if (isOpen) isOpen = false;
+  }
+
   function handleDocumentKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape' && isOpen) {
       event.preventDefault();
@@ -100,10 +109,14 @@
     mode = readStoredTheme();
     document.documentElement.dataset.theme = mode;
     document.addEventListener('pointerdown', handleDocumentPointerDown);
+    document.addEventListener('focusin', handleDocumentFocusIn);
     document.addEventListener('keydown', handleDocumentKeydown);
+    document.addEventListener('scroll', handleDocumentScroll, true);
     return () => {
       document.removeEventListener('pointerdown', handleDocumentPointerDown);
+      document.removeEventListener('focusin', handleDocumentFocusIn);
       document.removeEventListener('keydown', handleDocumentKeydown);
+      document.removeEventListener('scroll', handleDocumentScroll, true);
     };
   });
 </script>
@@ -120,7 +133,7 @@
     onclick={toggleMenu}
   >
     <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
-    <span>{themeModeLabel(mode)}</span>
+    <span>Appearance</span>
   </button>
   <div
     id="theme-options"
@@ -150,6 +163,9 @@
 
 <style>
   .theme-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     position: relative;
     z-index: 120;
     flex: 0 0 auto;
@@ -177,12 +193,11 @@
   }
 
   .theme-options {
-    position: absolute;
-    top: calc(100% + 0.4rem);
-    right: 0;
     display: grid;
+    align-self: stretch;
     min-width: 9rem;
     gap: 0.3rem;
+    margin-top: 0.4rem;
     padding: 0.4rem;
     border: 1px solid var(--border-color);
     border-radius: 0.7rem;

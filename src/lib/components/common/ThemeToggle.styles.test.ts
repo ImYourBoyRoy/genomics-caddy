@@ -11,11 +11,11 @@ describe('ThemeToggle desktop toolbar placement', () => {
     expect(source).not.toContain('bottom: 0.75rem');
   });
 
-  it('opens the theme menu below the toolbar control', () => {
+  it('keeps the open theme menu in toolbar flow instead of covering the report', () => {
     const options = source.match(/\.theme-options \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    expect(options).toContain('top: calc(100% + 0.4rem);');
-    expect(options).toContain('right: 0;');
-    expect(options).not.toContain('bottom: calc(100% + 0.4rem)');
+    expect(options).toContain('margin-top: 0.4rem;');
+    expect(options).not.toContain('position: absolute;');
+    expect(options).not.toContain('position: fixed;');
   });
 
   it('uses clear mode labels instead of the generic Theme label', () => {
@@ -23,7 +23,16 @@ describe('ThemeToggle desktop toolbar placement', () => {
     expect(source).toContain('Light mode');
     expect(source).toContain('Dark mode');
     expect(source).not.toContain('<span>Theme</span>');
+    expect(source).toContain('<span>Appearance</span>');
     expect(source).toContain('aria-label={`Appearance: ${themeModeLabel(mode)}`}');
+  });
+
+  it('closes when focus leaves the control or the report scrolls', () => {
+    expect(source).toContain('function handleDocumentFocusIn(event: FocusEvent)');
+    expect(source).toContain('function handleDocumentScroll()');
+    expect(source).toContain("document.addEventListener('focusin', handleDocumentFocusIn);");
+    expect(source).toContain("document.addEventListener('scroll', handleDocumentScroll, true);");
+    expect(source).toContain("document.removeEventListener('scroll', handleDocumentScroll, true);");
   });
 
   it('keeps the menu target mounted while hiding its optional contents', () => {

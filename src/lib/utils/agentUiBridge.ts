@@ -53,6 +53,9 @@ export interface AgentUiLayoutMetrics {
   dashboardGuidanceWidth: number | null;
   dashboardGuidanceCardMaxWidth: number | null;
   themeControlInToolbar: boolean;
+  themeMenuOpen: boolean;
+  themeMenuInToolbarFlow: boolean;
+  themeMenuOverlapsReport: boolean;
   overflowingElements: Array<{
     tag: string;
     classes: string[];
@@ -345,6 +348,14 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const actionQueueShell = document.querySelector<HTMLElement>('.action-queue');
   const dashboardGuidance = document.querySelector<HTMLElement>('.grid-layout');
   const dashboardGuidanceCardWidths = getWidthBounds('.grid-layout .summary-card');
+  const themeMenu = document.querySelector<HTMLElement>('.theme-options');
+  const themeMenuOpen = !!themeMenu && !themeMenu.hidden;
+  const themeMenuRect = themeMenuOpen ? themeMenu.getBoundingClientRect() : null;
+  const themeMenuOverlapsReport = !!themeMenuRect && !!contentRect
+    && themeMenuRect.left < contentRect.right
+    && themeMenuRect.right > contentRect.left
+    && themeMenuRect.top < contentRect.bottom
+    && themeMenuRect.bottom > contentRect.top;
   const expandedSectionNames = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded="true"]'),
   )
@@ -387,6 +398,11 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
     dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,
     themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
+    themeMenuOpen,
+    themeMenuInToolbarFlow: !!themeMenu
+      && themeMenu.closest('.focus-toolbar') !== null
+      && getComputedStyle(themeMenu).position === 'static',
+    themeMenuOverlapsReport,
     overflowingElements: collectOverflowingElements(mainContent),
   };
 }

@@ -149,10 +149,12 @@ export interface OfflineIndexedSummary {
 }
 
 export interface OfflineUpdateCheck {
+  checked_at: number;
   tiers: OfflineTierStatus[];
   total_updates_available: number;
   indexed_summary: OfflineIndexedSummary;
   remote_check: OfflineRemoteCheckStatus;
+  runtime_artifacts: OfflineRuntimeArtifactStatus;
 }
 
 export interface OfflineRemoteCheckStatus {
@@ -160,6 +162,13 @@ export interface OfflineRemoteCheckStatus {
   assets_failed: number;
   head_fallbacks: number;
   timed_out: boolean;
+}
+
+export interface OfflineRuntimeArtifactStatus {
+  partial_download_files: number;
+  partial_download_bytes: number;
+  sqlite_sidecar_files: number;
+  rebuildable_cache_rows: number;
 }
 
 export interface DatabaseCachePurgeResult {

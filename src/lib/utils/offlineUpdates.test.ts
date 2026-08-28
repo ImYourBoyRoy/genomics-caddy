@@ -4,9 +4,16 @@ import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
   return {
+    checked_at: 1,
     total_updates_available: 2,
     indexed_summary: { gwas_rows: 0, clinvar_rows: 0, variant_locus_rows: 0 },
     remote_check: { assets_checked: 1, assets_failed: 0, head_fallbacks: 0, timed_out: false },
+    runtime_artifacts: {
+      partial_download_files: 0,
+      partial_download_bytes: 0,
+      sqlite_sidecar_files: 0,
+      rebuildable_cache_rows: 0,
+    },
     tiers: [
       {
         tier: 0,

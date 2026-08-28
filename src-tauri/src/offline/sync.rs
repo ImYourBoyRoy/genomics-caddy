@@ -110,10 +110,26 @@ pub struct OfflineIndexedSummary {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct OfflineUpdateCheck {
+    pub checked_at: i64,
     pub tiers: Vec<OfflineTierStatus>,
     pub total_updates_available: u32,
     pub indexed_summary: OfflineIndexedSummary,
     pub remote_check: OfflineRemoteCheckStatus,
+    pub runtime_artifacts: OfflineRuntimeArtifactStatus,
+}
+
+/// Aggregate status for generated runtime artifacts.
+///
+/// This deliberately reports counts and bytes only. It does not expose paths,
+/// filenames, cache keys, sample data, or genotype values. SQLite WAL/SHM
+/// files are reported as sidecars, not as stale locks: they may be expected
+/// while the app is open and must not be deleted by an update check.
+#[derive(Debug, Clone, Serialize)]
+pub struct OfflineRuntimeArtifactStatus {
+    pub partial_download_files: u32,
+    pub partial_download_bytes: u64,
+    pub sqlite_sidecar_files: u32,
+    pub rebuildable_cache_rows: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -161,6 +177,118 @@ fn display_size_for(def: &OfflineAssetDef, remote_len: Option<u64>) -> String {
     match remote_len {
         Some(n) if n > 0 => format!("~{}", format_byte_size(n)),
         _ => def.display_size.to_string(),
+    }
+}
+
+const APP_OWNED_SQLITE_DATABASES: &[&str] = &[
+    "api_cache.db",
+    "genomics_reference.db",
+    "clinvar.db",
+    "dbsnp.db",
+    "gwas.db",
+    "pharmgkb.db",
+    "clingen.db",
+    "mane.db",
+];
+
+fn add_partial_download(path: &Path, files: &mut u32, bytes: &mut u64) {
+    let Ok(metadata) = std::fs::metadata(path) else {
+        return;
+    };
+    if !metadata.is_file() {
+        return;
+    }
+    *files = files.saturating_add(1);
+    *bytes = bytes.saturating_add(metadata.len());
+}
+
+/// Scan only the known reference-download directories, with a fixed depth.
+/// In particular, this never walks `samples/`, `exports/`, or the data root.
+fn scan_partial_downloads(dir: &Path, remaining_depth: u8, files: &mut u32, bytes: &mut u64) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+        if file_type.is_file() {
+            if path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(".part"))
+            {
+                add_partial_download(&path, files, bytes);
+            }
+        } else if file_type.is_dir() && remaining_depth > 0 {
+            scan_partial_downloads(&path, remaining_depth - 1, files, bytes);
+        }
+    }
+}
+
+fn collect_runtime_artifacts(
+    data_dir: &Path,
+    custom_dir: Option<&Path>,
+    conn: &Connection,
+) -> OfflineRuntimeArtifactStatus {
+    let mut bases = vec![data_dir.to_path_buf()];
+    if let Some(custom) = custom_dir
+        && custom != data_dir
+    {
+        bases.push(custom.to_path_buf());
+    }
+
+    let mut partial_download_files = 0u32;
+    let mut partial_download_bytes = 0u64;
+    for base in bases {
+        // The chain is the only known root-level download target.
+        add_partial_download(
+            &base.join("GRCh37_to_GRCh38.chain.gz.part"),
+            &mut partial_download_files,
+            &mut partial_download_bytes,
+        );
+        // GWAS downloads live directly in references; other catalog downloads
+        // live one directory below raw_downloads/<category>/.
+        scan_partial_downloads(
+            &base.join("references"),
+            0,
+            &mut partial_download_files,
+            &mut partial_download_bytes,
+        );
+        scan_partial_downloads(
+            &base.join("raw_downloads"),
+            1,
+            &mut partial_download_files,
+            &mut partial_download_bytes,
+        );
+        scan_partial_downloads(
+            &base.join("gnomad_indexes"),
+            0,
+            &mut partial_download_files,
+            &mut partial_download_bytes,
+        );
+    }
+
+    let sqlite_sidecar_files = APP_OWNED_SQLITE_DATABASES
+        .iter()
+        .flat_map(|database| [format!("{database}-wal"), format!("{database}-shm")])
+        .map(|suffix| data_dir.join(suffix))
+        .filter(|path| path.is_file())
+        .count() as u32;
+
+    let rebuildable_cache_rows = if crate::offline::schema::schema_attached(conn, "api_cache_db") {
+        crate::offline::schema::table_count(conn, "api_cache_db.api_cache")
+            + crate::offline::schema::table_count(conn, "api_cache_db.api_cache_entries")
+    } else {
+        0
+    };
+
+    OfflineRuntimeArtifactStatus {
+        partial_download_files,
+        partial_download_bytes,
+        sqlite_sidecar_files,
+        rebuildable_cache_rows,
     }
 }
 
@@ -486,7 +614,23 @@ pub async fn check_offline_updates(
     .await
     .map_err(|e| format!("Summary worker failed: {e}"))??;
 
+    let db_for_artifacts = db_path.clone();
+    let data_dir_for_artifacts = data_dir.clone();
+    let custom_dir_for_artifacts = custom_dir.clone();
+    let runtime_artifacts = tauri::async_runtime::spawn_blocking(move || {
+        with_conn(&db_for_artifacts, |conn| {
+            Ok(collect_runtime_artifacts(
+                &data_dir_for_artifacts,
+                custom_dir_for_artifacts.as_deref(),
+                conn,
+            ))
+        })
+    })
+    .await
+    .map_err(|e| format!("Runtime artifact worker failed: {e}"))??;
+
     Ok(OfflineUpdateCheck {
+        checked_at: crate::research::util::unix_now(),
         tiers,
         total_updates_available: total_updates,
         indexed_summary: OfflineIndexedSummary {
@@ -500,6 +644,7 @@ pub async fn check_offline_updates(
             head_fallbacks: remote_probe.head_fallbacks,
             timed_out: remote_check_timed_out,
         },
+        runtime_artifacts,
     })
 }
 
@@ -1368,5 +1513,48 @@ mod tests {
         assert!(!registry.update_available);
         drop(conn);
         std::fs::remove_dir_all(&data_dir).expect("remove ClinGen fixture directory");
+    }
+
+    #[test]
+    fn runtime_artifact_inventory_is_bounded_and_aggregate_only() {
+        let data_dir = fixture_data_dir("runtime_artifacts");
+        std::fs::create_dir_all(data_dir.join("raw_downloads/clinvar"))
+            .expect("create raw download fixture directory");
+        std::fs::create_dir_all(data_dir.join("references"))
+            .expect("create references fixture directory");
+        std::fs::create_dir_all(data_dir.join("samples/1"))
+            .expect("create private sample fixture directory");
+        std::fs::write(data_dir.join("raw_downloads/clinvar/catalog.part"), b"abc")
+            .expect("write catalog partial");
+        std::fs::write(data_dir.join("references/gwas.part"), b"defg").expect("write GWAS partial");
+        std::fs::write(data_dir.join("GRCh37_to_GRCh38.chain.gz.part"), b"hijkl")
+            .expect("write chain partial");
+        std::fs::write(data_dir.join("samples/1/private.part"), b"private")
+            .expect("write private partial");
+        std::fs::write(data_dir.join("api_cache.db-wal"), b"sidecar")
+            .expect("write app cache sidecar");
+        std::fs::write(data_dir.join("user_genome.db-wal"), b"private")
+            .expect("write private database sidecar");
+
+        let conn = rusqlite::Connection::open_in_memory().expect("open status fixture database");
+        conn.execute_batch(
+            "
+            ATTACH DATABASE ':memory:' AS api_cache_db;
+            CREATE TABLE api_cache_db.api_cache (url TEXT PRIMARY KEY, response_json TEXT NOT NULL, fetched_at INTEGER NOT NULL);
+            CREATE TABLE api_cache_db.api_cache_entries (cache_id TEXT PRIMARY KEY, response_body TEXT);
+            INSERT INTO api_cache_db.api_cache VALUES ('fixture-url', '{}', 1);
+            INSERT INTO api_cache_db.api_cache_entries VALUES ('fixture-cache', '{}');
+            ",
+        )
+        .expect("seed cache status fixture");
+
+        let status = collect_runtime_artifacts(&data_dir, None, &conn);
+        assert_eq!(status.partial_download_files, 3);
+        assert_eq!(status.partial_download_bytes, 12);
+        assert_eq!(status.sqlite_sidecar_files, 1);
+        assert_eq!(status.rebuildable_cache_rows, 2);
+
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir).expect("remove runtime artifact fixture");
     }
 }

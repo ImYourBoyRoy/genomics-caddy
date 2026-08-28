@@ -65,6 +65,19 @@ function summarizeStatus(status) {
       ? status.remote_check.head_fallbacks
       : -1,
     remoteTimedOut: status?.remote_check?.timed_out === true,
+    checkedAt: Number.isInteger(status?.checked_at) ? status.checked_at : -1,
+    partialDownloadFiles: Number.isInteger(status?.runtime_artifacts?.partial_download_files)
+      ? status.runtime_artifacts.partial_download_files
+      : -1,
+    partialDownloadBytes: Number.isInteger(status?.runtime_artifacts?.partial_download_bytes)
+      ? status.runtime_artifacts.partial_download_bytes
+      : -1,
+    sqliteSidecarFiles: Number.isInteger(status?.runtime_artifacts?.sqlite_sidecar_files)
+      ? status.runtime_artifacts.sqlite_sidecar_files
+      : -1,
+    rebuildableCacheRows: Number.isInteger(status?.runtime_artifacts?.rebuildable_cache_rows)
+      ? status.runtime_artifacts.rebuildable_cache_rows
+      : -1,
   };
 }
 
@@ -219,6 +232,11 @@ async function run() {
     assert(statusSummary.remoteChecked >= 0, "MCP status omitted remote probe count");
     assert(statusSummary.remoteFailed >= 0, "MCP status omitted remote probe failures");
     assert(statusSummary.headFallbacks >= 0, "MCP status omitted HEAD fallback count");
+    assert(statusSummary.checkedAt > 0, "MCP status omitted its check timestamp");
+    assert(statusSummary.partialDownloadFiles >= 0, "MCP status omitted partial-download count");
+    assert(statusSummary.partialDownloadBytes >= 0, "MCP status omitted partial-download bytes");
+    assert(statusSummary.sqliteSidecarFiles >= 0, "MCP status omitted SQLite sidecar count");
+    assert(statusSummary.rebuildableCacheRows >= 0, "MCP status omitted cache-row count");
     assert(
       statusSummary.headFallbacks <= statusSummary.remoteChecked,
       "MCP status returned an invalid HEAD fallback count",
@@ -286,6 +304,9 @@ async function run() {
       `indexed_rows=${statusSummary.indexedRows}; remote_checked=${statusSummary.remoteChecked}; ` +
       `remote_failed=${statusSummary.remoteFailed}; remote_timed_out=${statusSummary.remoteTimedOut}; ` +
       `head_fallbacks=${statusSummary.headFallbacks}; ` +
+      `checked_at=${statusSummary.checkedAt}; partial_downloads=${statusSummary.partialDownloadFiles}; ` +
+      `partial_download_bytes=${statusSummary.partialDownloadBytes}; sqlite_sidecars=${statusSummary.sqliteSidecarFiles}; ` +
+      `rebuildable_cache_rows=${statusSummary.rebuildableCacheRows}; ` +
       `reload=ready; sections=${reload.report.sections.length}`,
     );
   } finally {

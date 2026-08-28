@@ -428,13 +428,14 @@ pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String
 /// True only when we have a strong remote identity signal that differs from
 /// what we stored at last successful download.
 ///
-/// Priority: Content-Disposition filename → ETag → Last-Modified.
+/// Priority: ETag → Content-Disposition filename → Last-Modified.
 /// Content-Length alone is **not** an update signal (FTP/CDN HEADs thrash).
 ///
 /// ClinGen (and similar) stamp `Last-Modified` to request time on every HEAD
 /// while keeping the same daily export bytes. When LM differs but remote and
 /// stored Content-Length both match, treat as unchanged unless a disposition
-/// filename or ETag proves otherwise.
+/// filename or ETag proves otherwise. A matching ETag is authoritative even
+/// when a server varies its Content-Disposition filename between HEAD and GET.
 pub fn remote_changed(
     head: &RemoteHead,
     stored_etag: Option<&str>,
@@ -459,18 +460,18 @@ pub fn remote_changed(
         .map(str::trim)
         .filter(|s| !s.is_empty());
 
-    // A changed stable export filename proves a new version even when a
-    // server reuses the same ETag. This is the version identity used by
-    // ClinGen's dated daily exports.
+    // Prefer ETag when both sides have one.
+    if let (Some(etag), Some(stored)) = (remote_etag, stored_etag) {
+        return etag != stored;
+    }
+
+    // A changed stable export filename is the next-best identity signal when
+    // no comparable ETag pair exists. Some servers vary this header between
+    // HEAD and GET, so it must not override a matching ETag above.
     if let (Some(remote), Some(stored)) = (remote_name, stored_name) {
         if remote != stored {
             return true;
         }
-    }
-
-    // Prefer ETag when both sides have one.
-    if let (Some(etag), Some(stored)) = (remote_etag, stored_etag) {
-        return etag != stored;
     }
 
     // Fall back to Last-Modified only when the payload size also gives us a
@@ -710,6 +711,26 @@ mod tests {
         };
         assert!(remote_changed(&head, Some("\"a\""), None, Some(100), None));
         assert!(!remote_changed(&head, Some("\"b\""), None, Some(100), None));
+    }
+
+    #[test]
+    fn matching_etag_suppresses_filename_variation_after_download() {
+        let head = RemoteHead {
+            content_length: Some(100),
+            etag: Some("\"same-payload\"".into()),
+            last_modified: Some("Sun, 12 Jul 2026 01:00:00 GMT".into()),
+            content_filename: Some("catalog-latest.csv".into()),
+        };
+        // HEAD and GET can expose different attachment names even though the
+        // downloaded payload is unchanged. The strong ETag must prevent a
+        // perpetual update badge in that case.
+        assert!(!remote_changed(
+            &head,
+            Some("\"same-payload\""),
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            Some(100),
+            Some("catalog-2026-07-11.csv"),
+        ));
     }
 
     #[test]

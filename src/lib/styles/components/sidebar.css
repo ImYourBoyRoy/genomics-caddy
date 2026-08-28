@@ -616,6 +616,33 @@
   white-space: nowrap;
 }
 
+.resource-status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
+  color: var(--status-info-text);
+  white-space: nowrap;
+}
+
+.resource-status-pill.resource-status-current {
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
+}
+
+.resource-status-pill.resource-status-error {
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-strong-text);
+}
+
 .missing-pill {
   display: inline-flex;
   align-items: center;

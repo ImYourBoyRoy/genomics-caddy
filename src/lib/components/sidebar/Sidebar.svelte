@@ -851,6 +851,13 @@ import { onMount, onDestroy } from 'svelte';
 
   let needsAttention = $derived(updatesAvailable > 0 || missingPrimaryCount > 0);
 
+  let collapsedStatusLabel = $derived.by(() => {
+    if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';
+    if (updatePhase === 'error') return 'Check failed';
+    if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';
+    return '';
+  });
+
   // Only block the same asset or bulk sync — allow parallel downloads of other DBs.
   let bulkBusy = $derived(syncingAll || updatingAllOutdated);
 </script>
@@ -941,6 +948,14 @@ import { onMount, onDestroy } from 'svelte';
       <span class="data-updates-heading">
         <strong id="data-updates-title">Data &amp; updates</strong>
         <span class="data-updates-subtitle">Reference catalogs and local status</span>
+        {#if collapsedStatusLabel}
+          <span
+            class="resource-status-pill"
+            class:resource-status-current={collapsedStatusLabel === 'Current'}
+            class:resource-status-error={collapsedStatusLabel === 'Check failed'}
+            aria-live="polite"
+          >{collapsedStatusLabel}</span>
+        {/if}
         {#if missingPrimaryCount > 0}
           <span
             class="missing-pill"

@@ -42,6 +42,15 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain('isCheckingStatus || !offlineStatus || sweepRunning');
   });
 
+  it('shows a concise collapsed-row status after the authoritative probe settles', () => {
+    expect(sidebarSource).toContain("if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';");
+    expect(sidebarSource).toContain("if (updatePhase === 'error') return 'Check failed';");
+    expect(sidebarSource).toContain("if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';");
+    expect(sidebarSource).toContain('class="resource-status-pill"');
+    expect(sidebarSource).toContain('class:resource-status-current={collapsedStatusLabel === \'Current\'}');
+    expect(sidebarSource).toContain('class:resource-status-error={collapsedStatusLabel === \'Check failed\'}');
+  });
+
   it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {
     expect(sidebarSource).toContain('type UpdateRetryTarget =');
     expect(sidebarSource).toContain('let updateRetry = $state<UpdateRetryTarget | null>(null);');

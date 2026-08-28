@@ -9,7 +9,7 @@
   import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
   import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
   import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getCompactGuidanceText, getCompactSimpleMeaning, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
+  import { getCompactDietNotes, getCompactGuidanceText, getCompactSimpleMeaning, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
   import type { PresentationMode } from '../../utils/presentationPreferences';
   import Tooltip from '../common/Tooltip.svelte';
   import { formatGeneticSexLabel } from '../../utils/uiLabels';
@@ -451,10 +451,13 @@
                 {/if}
               </div>
               {#if plan.diet.notes}
+                {@const compactDietNotes = getCompactDietNotes(plan.diet.notes)}
                 <details class="guidance-details diet-notes">
-                  <summary>Notes</summary>
+                  <summary>More context ({compactDietNotes.length})</summary>
                   <div class="guidance-details-body">
-                    <pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>
+                    <ul class="compact-notes">
+                      {#each compactDietNotes as note (note)}<li>{note}</li>{/each}
+                    </ul>
                   </div>
                 </details>
               {/if}
@@ -1632,12 +1635,15 @@
     min-width: 0;
     max-width: 100%;
   }
-  .diet-notes-pre {
-    white-space: pre-wrap;
-    font-family: inherit;
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    opacity: 0.95;
+  .compact-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    line-height: 1.35;
     max-width: 100%;
     overflow-wrap: anywhere;
     word-break: break-word;

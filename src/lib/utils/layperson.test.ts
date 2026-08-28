@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import hormonePack from '../marker-packs/hormones_reproductive.json';
 import {
   DEFAULT_LAYPERSON_TRANSLATION,
+  getCompactDietNotes,
   getCompactGuidanceText,
   getCompactSimpleMeaning,
   getCompactSupplementName,
@@ -229,6 +230,27 @@ describe('plain-English claim framing', () => {
     expect(getCompactGuidanceText(
       '• Consider only if symptoms, labs, or personal goals support it: Track the pattern\n• Confirm clinically before another step',
     )).toBe('• Track the pattern\n• Confirm clinically before another step');
+  });
+
+  it('rewrites long dietary prompts into concise Simple-view labels', () => {
+    expect(getCompactGuidanceText(
+      "Iron-containing foods that fit the person's diet while the reason for an abnormal iron result is clarified",
+    )).toBe('Iron-rich foods, if they fit your diet');
+    expect(getCompactGuidanceText(
+      'Treating an iron-status marker as proof of iron deficiency, iron overload, or anemia',
+    )).toBe("Don't treat an iron marker as a diagnosis");
+    expect(getCompactGuidanceText(
+      'Review measured Lp(a), ApoB, LDL-C, triglycerides, blood pressure, and family history together rather than reading one SNP in isolation',
+    )).toBe('Review lipids, blood pressure, and family history together');
+  });
+
+  it('reduces aggregate dietary notes to unique plain-language bullets', () => {
+    expect(getCompactDietNotes(
+      '• TMPRSS6/TF: TMPRSS6 and TF markers can modestly shift population iron or hemoglobin traits, but they do not distinguish deficiency.\n• FUT2/TCN2: FUT2, TCN2, and CUBN markers can point to a B12-status or absorption question, but effects are modest.\n• FUT2/TCN2: FUT2, TCN2, and CUBN markers can point to a B12-status or absorption question, but effects are modest.',
+    )).toEqual([
+      'Iron SNPs are modest context; iron studies and bleeding history matter more.',
+      'B12 SNPs are modest context; B12, CBC, symptoms, diet, and medicines matter more.',
+    ]);
   });
 
   it('compacts supplement labels and attribution for Simple rows', () => {

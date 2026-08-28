@@ -74,8 +74,9 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('remainingGuidance(plan.diet.favor)');
     expect(source).toContain('previewGuidance(plan.diet.avoid)');
     expect(source).toContain('remainingGuidance(plan.diet.avoid)');
-    expect(source).toContain('<summary>Notes</summary>');
-    expect(source).toContain('<pre class="diet-notes-pre">{getCompactGuidanceText(plan.diet.notes)}</pre>');
+    expect(source).toContain('getCompactDietNotes');
+    expect(source).toContain('<summary>More context ({compactDietNotes.length})</summary>');
+    expect(source).toContain('<ul class="compact-notes">');
     expect(source).toContain('<summary>Food safety checks ({plan.foodSafety.relevantRules.length})</summary>');
   });
 
@@ -138,7 +139,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
 
   it('allows long guidance text to wrap inside narrow cards', () => {
     const cardBody = styleBlock.match(/\.card-body \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const notes = styleBlock.match(/\.diet-notes-pre \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const notes = styleBlock.match(/\.compact-notes \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementItem = styleBlock.match(/\.supplement-item \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementReason = styleBlock.match(/\.supp-reason \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementSafetyDetails = styleBlock.match(/\.supplement-safety-details > summary \{[\s\S]*?\n  \}/)?.[0] ?? '';

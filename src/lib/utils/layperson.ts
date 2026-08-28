@@ -108,13 +108,67 @@ const GENERIC_GUARDRAIL_PATTERNS = [
 
 const COMPACT_GUIDANCE_PREFIX = /(?:Do not make this change from raw DNA; confirm the finding clinically first:|Only consider after clinical confirmation and individualized advice:|Do not make this change unless symptoms, labs, or clinician guidance support it:|Consider only if symptoms, labs, or personal goals support it:|General health consideration, not a genotype-specific restriction:|General low-risk option, not a genotype prescription:)\s*/gi;
 
+const SIMPLE_GUIDANCE_REWRITES: Array<[RegExp, string]> = [
+  [/^Iron-containing foods.*$/i, 'Iron-rich foods, if they fit your diet'],
+  [/^B12-containing foods.*$/i, 'B12-rich or fortified foods'],
+  [/^Use measured B12 status.*$/i, 'Check B12 status before considering a supplement'],
+  [/^A balanced eating pattern built around fiber-rich foods.*$/i, 'Fiber-rich foods, adequate protein, and minimally processed carbs'],
+  [/^Regular physical activity progressed gradually.*$/i, 'Regular activity, adjusted for ability, symptoms, and recovery'],
+  [/^Use a heart-healthy eating pattern.*$/i, 'Heart-healthy eating and regular activity'],
+  [/^Review measured Lp\(a\).*$/i, 'Review lipids, blood pressure, and family history together'],
+  [/^An exposure and symptom log.*$/i, 'Track exposures, timing, symptoms, and co-factors'],
+  [/^Adequate protein and calcium-rich.*$/i, 'Adequate protein, calcium-rich foods, and safe resistance activity'],
+  [/^Track low-trauma fractures.*$/i, 'Review fracture history, bone pain, hormone context, and family history'],
+  [/^Use a symptom, stool, food, and medication log.*$/i, 'Track digestive symptoms, bleeding, fever, weight, and timing'],
+  [/^Maintain adequate hydration.*$/i, 'Stay hydrated; get guidance before restrictive diets'],
+  [/^Treating an iron-status marker.*$/i, "Don't treat an iron marker as a diagnosis"],
+  [/^Starting or avoiding iron supplements.*$/i, "Don't change iron supplements based on fatigue or one SNP"],
+  [/^Treating a FUT2.*$/i, "Don't treat a B12 marker as proof of deficiency"],
+  [/^Using folate or an energy formula.*$/i, "Don't mask B12 symptoms with folate or energy formulas"],
+  [/^Treating a common metabolic SNP.*$/i, "Don't treat a metabolic SNP as diabetes"],
+  [/^Using a highly restrictive diet.*$/i, "Don't use restrictive diets to chase a genotype"],
+  [/^Assuming a protective-leaning LDL.*$/i, "Don't skip lipid monitoring"],
+  [/^Using a genotype as a substitute.*$/i, "Don't replace measured lipids with genotype"],
+  [/^High-dose iodine or selenium.*$/i, 'Avoid high-dose iodine or selenium without guidance'],
+  [/^Permanent food elimination.*$/i, "Don't eliminate foods or do challenges based only on DNA"],
+  [/^Using a bone SNP.*$/i, "Don't use a bone SNP to diagnose or prescribe treatment"],
+  [/^High-dose calcium.*$/i, 'Avoid high-dose bone supplements or abrupt treatment changes'],
+  [/^Using an IBD-associated SNP.*$/i, "Don't use an IBD SNP to diagnose or choose treatment"],
+  [/^Long-term restrictive diets.*$/i, "Don't use restrictive diets, probiotics, enzymes, or detox products as DNA treatment"],
+];
+
+const SIMPLE_NOTE_REWRITES: Array<[RegExp, string]> = [
+  [/^TMPRSS6 and TF markers can modestly shift.*$/i, 'Iron SNPs are modest context; iron studies and bleeding history matter more.'],
+  [/^FUT2, TCN2, and CUBN markers can point.*$/i, 'B12 SNPs are modest context; B12, CBC, symptoms, diet, and medicines matter more.'],
+  [/^Common metabolic markers shift.*$/i, 'Metabolic SNPs are modest context; symptoms, history, and labs matter more.'],
+  [/^LPA and LDL-pathway markers can suggest.*$/i, 'Lipid SNPs suggest checking the phenotype; measured lipids and overall risk matter more.'],
+  [/^Bone density and fracture decisions.*$/i, 'Bone SNPs are modest context; DXA and clinical risk factors matter more.'],
+  [/^IBD susceptibility is polygenic.*$/i, 'IBD SNPs are research context; symptoms, blood/stool tests, and clinical evaluation lead.'],
+];
+
 /**
  * Remove repeated actionability framing from secondary Simple guidance lists.
  * The section heading provides the shared context; authored plan data remains
  * unchanged for clinical and AI consumers.
  */
 export function getCompactGuidanceText(text: string): string {
-  return text.replace(COMPACT_GUIDANCE_PREFIX, '').trim();
+  const compact = text.replace(COMPACT_GUIDANCE_PREFIX, '').trim();
+  return SIMPLE_GUIDANCE_REWRITES.find(([pattern]) => pattern.test(compact))?.[1] ?? compact;
+}
+
+/** Turn aggregate dietary notes into short, non-technical Simple-view bullets. */
+export function getCompactDietNotes(text: string): string[] {
+  const notes = text
+    .split('\n')
+    .map((line) => line.replace(/^\s*[•*-]\s*/, '').trim())
+    .filter(Boolean)
+    .map((line) => {
+      const note = line.includes(': ') ? line.slice(line.indexOf(': ') + 2) : line;
+      const firstSentence = note.split(/(?<=[.!?])\s+/)[0]?.trim() || note;
+      return SIMPLE_NOTE_REWRITES.find(([pattern]) => pattern.test(firstSentence))?.[1] ?? firstSentence;
+    });
+
+  return Array.from(new Set(notes));
 }
 
 /** Keep Simple supplement rows readable while preserving the authored plan. */

@@ -147,6 +147,7 @@ import { onMount, onDestroy } from 'svelte';
     | { kind: 'asset'; assetId: string; force: boolean }
     | { kind: 'missing' }
     | { kind: 'outdated' };
+  type StatusRefreshResult = 'ready' | 'stale' | 'error';
   let updatePhase = $state<ResourceUpdatePhase>('idle');
   let updateMessage = $state('');
   let updateRetry = $state<UpdateRetryTarget | null>(null);
@@ -276,14 +277,14 @@ import { onMount, onDestroy } from 'svelte';
   }
 
   /** Refresh inventory asynchronously; the backend waits for an authoritative probe. */
-  async function refreshStatusInBackground() {
+  async function refreshStatusInBackground(): Promise<StatusRefreshResult> {
     const generation = ++statusRefreshGeneration;
     isCheckingStatus = true;
     offlineStatusFresh = false;
     setUpdateState('checking', 'Refreshing resource status…');
     try {
       const status = await checkOfflineDataUpdates();
-      if (generation !== statusRefreshGeneration) return;
+      if (generation !== statusRefreshGeneration) return 'stale';
       offlineStatus = status;
       offlineStatusFresh = true;
       const pendingCount = listOfflineUpdates(status).length;
@@ -293,8 +294,9 @@ import { onMount, onDestroy } from 'svelte';
           ? `${pendingCount} newer remote resource version(s) available.`
           : 'Local resources are current.',
       );
+      return 'ready';
     } catch (err) {
-      if (generation !== statusRefreshGeneration) return;
+      if (generation !== statusRefreshGeneration) return 'stale';
       console.error('Background offline status refresh failed:', err);
       offlineStatusFresh = false;
       setUpdateState(
@@ -302,6 +304,7 @@ import { onMount, onDestroy } from 'svelte';
         'Resource status refresh failed. The last known local resources remain available.',
         { kind: 'status' },
       );
+      return 'error';
     } finally {
       if (generation === statusRefreshGeneration) isCheckingStatus = false;
     }
@@ -507,6 +510,7 @@ import { onMount, onDestroy } from 'svelte';
     if (syncingAsset[assetId] || syncingAll) return false;
     let failureMessage: string | null = null;
     let failureRetry: UpdateRetryTarget | null = null;
+    let finalStatus: StatusRefreshResult = 'ready';
     syncingAsset = { ...syncingAsset, [assetId]: true };
     clearAssetProgress(assetId);
     const { [assetId]: _e, ...restErrors } = syncErrors;
@@ -560,7 +564,12 @@ import { onMount, onDestroy } from 'svelte';
       // Await the authoritative refresh for both single and bulk updates. This
       // keeps the visible badge and per-asset buttons synchronized with the
       // final backend status before the update flow completes.
-      if (refreshAfter) await refreshStatusInBackground();
+      if (refreshAfter) finalStatus = await refreshStatusInBackground();
+      if (!failureMessage && finalStatus === 'error') {
+        failureMessage = 'Update finished, but its final status could not be confirmed. Retry the status check.';
+        failureRetry = { kind: 'status' };
+        setUpdateState('error', failureMessage, failureRetry);
+      }
       if (failureMessage && failureRetry) setUpdateState('error', failureMessage, failureRetry);
     }
     return false;

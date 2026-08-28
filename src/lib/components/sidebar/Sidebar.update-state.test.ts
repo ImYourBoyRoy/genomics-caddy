@@ -20,9 +20,13 @@ describe('Sidebar update-state ordering', () => {
   it('ignores stale status probes and waits for one final bulk-update refresh', () => {
     expect(sidebarSource).toContain('let statusRefreshGeneration = 0;');
     expect(sidebarSource).toContain('let offlineStatusFresh = $state(false);');
+    expect(sidebarSource).toContain("type StatusRefreshResult = 'ready' | 'stale' | 'error';");
     expect(sidebarSource).toContain('offlineStatusFresh = false;');
     expect(sidebarSource).toContain('offlineStatusFresh = true;');
     expect(sidebarSource).toContain('offlineStatusFresh ? listOfflineUpdates(offlineStatus) : []');
+    expect(sidebarSource).toContain('async function refreshStatusInBackground(): Promise<StatusRefreshResult>');
+    expect(sidebarSource).toContain("if (!failureMessage && finalStatus === 'error')");
+    expect(sidebarSource).toContain("failureRetry = { kind: 'status' };");
     expect(sidebarSource).toContain('const generation = ++statusRefreshGeneration;');
     expect(sidebarSource).toContain('if (generation !== statusRefreshGeneration) return;');
     expect(sidebarSource).toContain('async function handleSyncAsset(assetId: string, force: boolean, refreshAfter = true)');

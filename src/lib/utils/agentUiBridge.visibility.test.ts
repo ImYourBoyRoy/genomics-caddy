@@ -45,6 +45,8 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('pressKey: (key: string)');
     expect(source).toContain('function focusByVisibleText(text: string)');
     expect(source).toContain('function pressAllowlistedKey(key: string)');
+    expect(source).toContain("a[href], input, select, textarea, [role=\"button\"]");
+    expect(source).toContain('document.activeElement !== hit.el');
     expect(source).toContain("['Escape', 'Tab', 'Enter', ' '].includes(normalizedKey)");
     expect(source).toContain('activeElement.dispatchEvent(new KeyboardEvent');
   });

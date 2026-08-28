@@ -129,6 +129,17 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   };
 }
 
+function validateResourceStatus(snapshot) {
+  assert(
+    snapshot.resourceStatus === "checking" ||
+      snapshot.resourceStatus === "current" ||
+      snapshot.resourceStatus === "attention" ||
+      snapshot.resourceStatus === "error",
+    "Collapsed Data & updates row did not expose a settled or in-progress status category",
+  );
+  return snapshot.resourceStatus;
+}
+
 async function selectTheme(label, expectedMode) {
   await clickText(label);
   const snapshot = await waitForSnapshot(
@@ -361,7 +372,7 @@ async function assertClinicalCollapsedHint() {
 
 async function main() {
   let ready = await waitForSnapshot(
-    (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode,
+    (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode && snapshot.resourceStatus !== null,
     "a loaded Tauri report"
   );
 
@@ -371,6 +382,7 @@ async function main() {
   }
 
   const modes = {};
+  const resourceStatus = validateResourceStatus(ready);
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();
@@ -434,6 +446,7 @@ async function main() {
   console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
+  console.log(`  resource_status=${resourceStatus}`);
 }
 
 main().catch((error) => {

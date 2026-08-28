@@ -127,6 +127,7 @@ export interface AgentUiSnapshot {
   dualExportButtonsPresent: boolean;
   urgentBadgeCount: number;
   themeMode: 'system' | 'light' | 'dark' | null;
+  resourceStatus: 'checking' | 'current' | 'attention' | 'error' | null;
   visibleTextSample: string[];
   tooltip: AgentUiTooltipMetrics;
   accessibility: AgentUiAccessibilityMetrics;
@@ -357,6 +358,17 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
     overflowingElements: collectOverflowingElements(mainContent),
   };
+}
+
+function collectResourceStatus(): AgentUiSnapshot['resourceStatus'] {
+  const statusToggle = document.querySelector<HTMLElement>('.data-updates-toggle');
+  if (!statusToggle) return null;
+  const statusPill = statusToggle.querySelector<HTMLElement>('.resource-status-pill');
+  if (statusPill?.classList.contains('resource-status-current')) return 'current';
+  if (statusPill?.classList.contains('resource-status-error')) return 'error';
+  if (statusPill) return 'checking';
+  if (statusToggle.querySelector('.update-pill, .missing-pill')) return 'attention';
+  return null;
 }
 
 function collectTooltipMetrics(): AgentUiTooltipMetrics {
@@ -751,6 +763,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         themeMode: document.documentElement.dataset.theme === 'light' || document.documentElement.dataset.theme === 'dark' || document.documentElement.dataset.theme === 'system'
           ? document.documentElement.dataset.theme
           : null,
+        resourceStatus: collectResourceStatus(),
         visibleTextSample: collectVisibleText(30),
         tooltip: collectTooltipMetrics(),
         accessibility: collectAccessibilityMetrics(),

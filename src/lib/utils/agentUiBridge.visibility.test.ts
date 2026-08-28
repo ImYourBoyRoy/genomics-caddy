@@ -141,4 +141,14 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null');
     expect(source).toContain('liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null');
   });
+
+  it('exposes only the aggregate collapsed resource-status category', () => {
+    expect(source).toContain("resourceStatus: 'checking' | 'current' | 'attention' | 'error' | null;");
+    expect(source).toContain('function collectResourceStatus()');
+    expect(source).toContain("statusPill?.classList.contains('resource-status-current')");
+    expect(source).toContain("statusPill?.classList.contains('resource-status-error')");
+    expect(source).toContain("statusToggle.querySelector('.update-pill, .missing-pill')");
+    expect(source).toContain('resourceStatus: collectResourceStatus(),');
+    expect(source).not.toContain('statusPill.textContent');
+  });
 });

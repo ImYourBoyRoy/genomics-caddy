@@ -27,6 +27,16 @@
   let syncingAsset = $state<string | null>(null);
   let forceSync = $state(false);
   let statusRefreshGeneration = 0;
+  let statusStale = $state(false);
+  let statusError = $state('');
+  let operationError = $state('');
+  type RetryTarget =
+    | { kind: 'tier'; tier: number; force: boolean }
+    | { kind: 'all'; force: boolean }
+    | { kind: 'asset'; assetId: string; force: boolean }
+    | { kind: 'outdated'; assetIds: string[]; force: boolean }
+    | { kind: 'rebuild'; sampleId: number };
+  let retryTarget = $state<RetryTarget | null>(null);
 
   let updateAssets = $derived(listOfflineUpdates(status));
 
@@ -37,89 +47,145 @@
     return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }
 
-  async function refresh() {
+  async function refresh(): Promise<boolean> {
     const generation = ++statusRefreshGeneration;
     loading = true;
+    statusStale = true;
     try {
       const nextStatus = await checkOfflineDataUpdates();
-      if (generation !== statusRefreshGeneration) return;
+      if (generation !== statusRefreshGeneration) return false;
       status = nextStatus;
+      statusStale = false;
+      statusError = '';
+      return true;
     } catch (e: unknown) {
-      if (generation !== statusRefreshGeneration) return;
+      if (generation !== statusRefreshGeneration) return false;
       const msg = e instanceof Error ? e.message : String(e);
       onLog?.(`Offline data status failed: ${msg}`);
-      status = null;
+      statusStale = true;
+      statusError = 'Could not verify the latest resource status.';
+      return false;
     } finally {
       if (generation === statusRefreshGeneration) loading = false;
     }
   }
 
+  function clearOperationError() {
+    operationError = '';
+    retryTarget = null;
+  }
+
+  function setOperationError(message: string, target: RetryTarget) {
+    operationError = message;
+    retryTarget = target;
+  }
+
   async function runTier(tier: number) {
+    if (syncingTier !== null || syncingAsset) return;
+    const requestedForce = forceSync;
     syncingTier = tier;
-    onLog?.(`Syncing offline Tier ${tier}${forceSync ? " (force)" : ""}…`);
+    clearOperationError();
+    onLog?.(`Syncing offline Tier ${tier}${requestedForce ? " (force)" : ""}…`);
+    let failure = '';
     try {
       const result = await syncOfflineDataTier(
         tier,
-        forceSync,
+        requestedForce,
         tier === 2 ? selectedSample?.id : undefined
       );
       reportResult(result);
-      await refresh();
+      if (result.errors?.length) {
+        failure = `Tier ${tier} could not be fully synced. Review the error details and retry.`;
+      }
     } catch (e: unknown) {
+      failure = `Tier ${tier} sync failed. The last good local resources remain available.`;
       onLog?.(`Tier ${tier} sync failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
+      await refresh();
       syncingTier = null;
+      if (failure) setOperationError(failure, { kind: 'tier', tier, force: requestedForce });
     }
   }
 
   async function runAll() {
+    if (syncingTier !== null || syncingAsset) return;
+    const requestedForce = forceSync;
     syncingTier = -1;
-    onLog?.(`Syncing all offline tiers${forceSync ? " (force)" : ""}…`);
+    clearOperationError();
+    onLog?.(`Syncing all offline tiers${requestedForce ? " (force)" : ""}…`);
+    let failure = '';
     try {
-      const results = await syncAllOfflineData(forceSync, selectedSample?.id);
+      const results = await syncAllOfflineData(requestedForce, selectedSample?.id);
       for (const r of results) {
         reportResult(r);
       }
-      await refresh();
+      if (results.some((result) => result.errors?.length)) {
+        failure = 'Some offline resources could not be synced. Review the error details and retry.';
+      }
     } catch (e: unknown) {
+      failure = 'Offline sync failed. The last good local resources remain available.';
       onLog?.(`Full offline sync failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
+      await refresh();
       syncingTier = null;
+      if (failure) setOperationError(failure, { kind: 'all', force: requestedForce });
     }
   }
 
   async function updateOne(assetId: string, refreshAfter = true, allowBulk = false) {
     if (syncingAsset || (syncingTier !== null && !allowBulk)) return;
+    const requestedForce = forceSync;
     syncingAsset = assetId;
-    onLog?.(`Updating ${assetId}${forceSync ? " (force)" : ""}…`);
+    if (refreshAfter) clearOperationError();
+    onLog?.(`Updating ${assetId}${requestedForce ? " (force)" : ""}…`);
+    let failure = '';
     try {
       const result = await syncSingleOfflineAsset(
         assetId,
-        forceSync,
+        requestedForce,
         assetId === "tier2_variant_locus" ? selectedSample?.id : undefined
       );
       reportResult(result);
-      if (refreshAfter) await refresh();
+      if (result.errors?.length) {
+        failure = `${assetId} could not be fully updated. Review the error details and retry.`;
+      }
     } catch (e: unknown) {
+      failure = `${assetId} update failed. The last good local resource remains available.`;
       onLog?.(`Update ${assetId} failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
+      if (refreshAfter) await refresh();
       syncingAsset = null;
+      if (failure && refreshAfter) setOperationError(failure, { kind: 'asset', assetId, force: requestedForce });
     }
+    return !failure;
   }
 
-  async function updateAllOutdated() {
-    if (syncingAsset || syncingTier !== null || updateAssets.length === 0) return;
+  async function updateAllOutdated(assetIds = updateAssets.map((asset) => asset.asset_id), requestedForce = forceSync) {
+    if (syncingAsset || syncingTier !== null || assetIds.length === 0) return;
     syncingTier = -2;
-    onLog?.(`Updating ${updateAssets.length} outdated asset(s)…`);
+    clearOperationError();
+    onLog?.(`Updating ${assetIds.length} outdated asset(s)…`);
+    const failedAssetIds: string[] = [];
     try {
-      for (const u of updateAssets) {
-        await updateOne(u.asset_id, false, true);
+      for (const assetId of assetIds) {
+        const previousForce = forceSync;
+        forceSync = requestedForce;
+        const succeeded = await updateOne(assetId, false, true);
+        forceSync = previousForce;
+        if (!succeeded) failedAssetIds.push(assetId);
       }
-      await refresh();
     } catch (e: unknown) {
+      failedAssetIds.push(...assetIds.filter((assetId) => !failedAssetIds.includes(assetId)));
       onLog?.(`Update-all failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
+      await refresh();
       syncingTier = null;
+      if (failedAssetIds.length > 0) {
+        setOperationError(
+          `${failedAssetIds.length} resource update(s) failed. Review the error details and retry.`,
+          { kind: 'outdated', assetIds: failedAssetIds, force: requestedForce },
+        );
+      }
     }
   }
 
@@ -128,15 +194,50 @@
       onLog?.("Select a DNA profile to build Tier 2 variant locus index.");
       return;
     }
+    const sampleId = selectedSample.id;
     syncingTier = 2;
+    clearOperationError();
+    let failure = '';
     try {
-      const result = await buildOfflineTier2(selectedSample.id);
+      const result = await buildOfflineTier2(sampleId);
       reportResult(result);
-      await refresh();
+      if (result.errors?.length) {
+        failure = 'The locus index could not be rebuilt. Review the error details and retry.';
+      }
     } catch (e: unknown) {
+      failure = 'The locus index could not be rebuilt. The previous index remains available.';
       onLog?.(`Tier 2 build failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
+      await refresh();
       syncingTier = null;
+      if (failure) setOperationError(failure, { kind: 'rebuild', sampleId });
+    }
+  }
+
+  async function retryLastOperation() {
+    const target = retryTarget;
+    if (!target) return;
+    retryTarget = null;
+    operationError = '';
+    switch (target.kind) {
+      case 'tier':
+        forceSync = target.force;
+        await runTier(target.tier);
+        break;
+      case 'all':
+        forceSync = target.force;
+        await runAll();
+        break;
+      case 'asset':
+        forceSync = target.force;
+        await updateOne(target.assetId);
+        break;
+      case 'outdated':
+        await updateAllOutdated(target.assetIds, target.force);
+        break;
+      case 'rebuild':
+        await rebuildTier2();
+        break;
     }
   }
 
@@ -163,15 +264,26 @@
   <div class="offline-header">
     <h3 class="subcard-title">Offline reference data</h3>
     {#if loading}
-      <ActivityPulse message="Checking sources…" accent="#34d399" maxWidth="180px" />
-    {:else if status}
+      <ActivityPulse message="Checking sources…" accent="var(--status-success-text)" maxWidth="180px" />
+    {:else if status && !statusStale}
       <span class="update-badge" class:has-updates={updateAssets.length > 0}>
         {updateAssets.length > 0
           ? `${updateAssets.length} newer version(s) available`
           : "Up to date"}
       </span>
+    {:else if status}
+      <span class="update-badge status-stale">Status needs checking</span>
     {/if}
   </div>
+
+  {#if statusError}
+    <div class="offline-status-error" role="status">
+      <span>{statusError}</span>
+      <button type="button" class="btn btn-secondary btn-xs" disabled={disabled || loading} onclick={refresh}>
+        {loading ? "Checking…" : "Retry"}
+      </button>
+    </div>
+  {/if}
 
   <p class="offline-help">
   Tier 0: GWAS catalog, liftover chain, gnomAD manifest. Tier 1: ClinVar, PharmGKB, ClinGen, MANE.
@@ -184,7 +296,7 @@
   {/if}
   </p>
 
-  {#if updateAssets.length > 0}
+  {#if updateAssets.length > 0 && !statusStale}
     <div class="offline-update-list" role="status">
       <strong>Named updates ready:</strong>
       <ul class="offline-update-ul">
@@ -209,10 +321,21 @@
         type="button"
         class="btn btn-primary btn-sm"
         disabled={disabled || syncingTier !== null || syncingAsset !== null}
-        onclick={updateAllOutdated}
+        onclick={() => updateAllOutdated()}
       >
         {syncingTier === -2 ? "Updating all…" : `Update all ${updateAssets.length} outdated`}
       </button>
+    </div>
+  {/if}
+
+  {#if operationError}
+    <div class="offline-operation-error" role="alert">
+      <span>{operationError}</span>
+      {#if retryTarget}
+        <button type="button" class="btn btn-secondary btn-xs" disabled={disabled || loading || syncingTier !== null || syncingAsset !== null} onclick={retryLastOperation}>
+          Retry
+        </button>
+      {/if}
     </div>
   {/if}
 
@@ -279,7 +402,7 @@
           <h4>Tier {tier.tier}</h4>
           <ul class="asset-list">
             {#each tier.assets as asset}
-              <li class:update={asset.update_available}>
+              <li class:update={asset.update_available && !statusStale}>
                 <span class="asset-label">
                   {asset.label}
                   {#if isPrimaryCatalogId(asset.asset_id)}
@@ -294,7 +417,7 @@
                   {:else}
                     missing
                   {/if}
-                  {#if asset.update_available}
+                  {#if asset.update_available && !statusStale}
                     · <em>update</em>
                     <button
                       type="button"
@@ -336,19 +459,37 @@
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
-    background: rgba(52, 211, 153, 0.15);
-    color: #34d399;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
   }
   .update-badge.has-updates {
-    background: rgba(251, 191, 36, 0.15);
-    color: #fbbf24;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+  }
+  .update-badge.status-stale {
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
   }
   .offline-update-list {
     margin: 0 0 0.85rem;
     padding: 0.65rem 0.75rem;
     border-radius: 8px;
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid var(--status-warning-border);
+    background: var(--status-warning-bg);
+  }
+  .offline-status-error,
+  .offline-operation-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--status-danger-border);
+    border-radius: 8px;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+    font-size: 0.8rem;
   }
   .offline-update-ul {
     list-style: none;
@@ -393,13 +534,13 @@
     gap: 0.75rem;
   }
   .tier-card {
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--surface-subtle);
   }
   .tier-card.tier-ready {
-    border-color: rgba(52, 211, 153, 0.35);
+    border-color: var(--status-success-border);
   }
   .tier-card h4 {
     margin: 0 0 0.5rem;
@@ -415,10 +556,10 @@
     display: flex;
     flex-direction: column;
     padding: 0.35rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
   }
   .asset-list li.update .asset-label {
-    color: #fbbf24;
+    color: var(--status-warning-text);
   }
   .asset-label {
     font-weight: 500;

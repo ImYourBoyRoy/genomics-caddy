@@ -9,40 +9,74 @@
 
   let { report }: Props = $props();
   let registry = $derived(buildReportReferenceRegistry(report));
+  let isOpen = $state(false);
+  let referenceQuery = $state('');
+  let normalizedQuery = $derived(referenceQuery.trim().toLowerCase());
+  let filteredReferences = $derived(
+    normalizedQuery
+      ? registry.references.filter((reference) => [
+        reference.id,
+        reference.title,
+        reference.organization,
+        reference.evidenceRole,
+      ].some((value) => value.toLowerCase().includes(normalizedQuery)))
+      : registry.references,
+  );
+  let visibleReferences = $derived(filteredReferences.slice(0, 100));
+  let hasMoreReferences = $derived(visibleReferences.length < filteredReferences.length);
 </script>
 
 {#if registry.references.length > 0}
-  <details class="reference-index">
+  <details class="reference-index" bind:open={isOpen}>
     <summary>Reference index ({registry.references.length})</summary>
-    <p class="reference-index-intro">
-      One compact list for the sources attached to findings in this report.
-    </p>
-    <ol class="reference-list">
-      {#each registry.references as reference (reference.id)}
-        <li id={`reference-${reference.id.toLowerCase()}`}>
-          <span class="reference-id">{reference.id}</span>
-          <div class="reference-body">
-            <div class="reference-title-row">
-              {#if reference.url}
-                {@const safeUrl = safeExternalHref(reference.url)}
-                {#if safeUrl}
-                  <a href={safeUrl} target="_blank" rel="noopener noreferrer">{reference.title}</a>
-                {:else}
-                  <strong>{reference.title}</strong>
-                {/if}
-              {:else}
-                <strong>{reference.title}</strong>
-              {/if}
-            </div>
-            <div class="reference-meta">
-              <span>{reference.organization}</span>
-              <span>{reference.date}</span>
-              <span>{reference.evidenceRole}</span>
-            </div>
-          </div>
-        </li>
-      {/each}
-    </ol>
+    {#if isOpen}
+      <p class="reference-index-intro">
+        Search the sources attached to findings in this report. Results are limited to 100 at a time so this panel stays readable.
+      </p>
+      <label class="reference-search-label" for="report-reference-search">Filter references</label>
+      <input
+        id="report-reference-search"
+        class="reference-search"
+        type="search"
+        bind:value={referenceQuery}
+        placeholder="Search title, organization, role, or ID"
+        autocomplete="off"
+      />
+      <p class="reference-result-count" role="status">
+        {filteredReferences.length} matching {filteredReferences.length === 1 ? 'reference' : 'references'}
+        {#if hasMoreReferences} · Showing the first 100; refine your search to see more.{/if}
+      </p>
+      {#if visibleReferences.length > 0}
+        <ol class="reference-list">
+          {#each visibleReferences as reference (reference.id)}
+            <li id={`reference-${reference.id.toLowerCase()}`}>
+              <span class="reference-id">{reference.id}</span>
+              <div class="reference-body">
+                <div class="reference-title-row">
+                  {#if reference.url}
+                    {@const safeUrl = safeExternalHref(reference.url)}
+                    {#if safeUrl}
+                      <a href={safeUrl} target="_blank" rel="noopener noreferrer">{reference.title}</a>
+                    {:else}
+                      <strong>{reference.title}</strong>
+                    {/if}
+                  {:else}
+                    <strong>{reference.title}</strong>
+                  {/if}
+                </div>
+                <div class="reference-meta">
+                  <span>{reference.organization}</span>
+                  <span>{reference.date}</span>
+                  <span>{reference.evidenceRole}</span>
+                </div>
+              </div>
+            </li>
+          {/each}
+        </ol>
+      {:else}
+        <p class="reference-empty">No references match that search.</p>
+      {/if}
+    {/if}
   </details>
 {/if}
 
@@ -65,6 +99,38 @@
   .reference-index-intro {
     margin: var(--space-3) 0;
     font-size: 0.78rem;
+  }
+
+  .reference-search-label {
+    display: block;
+    margin-top: var(--space-3);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .reference-search {
+    width: min(100%, 34rem);
+    min-height: 2.5rem;
+    margin-top: 0.35rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font: inherit;
+  }
+
+  .reference-search:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .reference-result-count,
+  .reference-empty {
+    margin: 0.5rem 0 var(--space-3);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
   }
 
   .reference-list {

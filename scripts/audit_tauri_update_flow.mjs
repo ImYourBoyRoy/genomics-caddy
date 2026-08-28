@@ -7,7 +7,7 @@ Privacy: Uses a synthetic sample and the public liftover chain; never prints
 sample names, genotype calls, local paths, or report text.
 */
 
-import { access, copyFile, mkdtemp, rm } from "node:fs/promises";
+import { access, copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { execFile, spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -135,9 +135,75 @@ async function assertNoUpdateCopy() {
   }
 }
 
-async function main() {
+async function waitForReport() {
+  return waitFor(
+    async () => {
+      try {
+        const snapshot = await request("/ui/snapshot");
+        return snapshot?.hasReport === true && snapshot?.sample ? snapshot : null;
+      } catch {
+        return null;
+      }
+    },
+    "the disposable Tauri report",
+  );
+}
+
+async function waitForAvailable() {
+  let panelOpened = false;
+  let nextRetryAt = 0;
+  return waitFor(
+    async () => {
+      try {
+        const snapshot = await request("/ui/snapshot");
+        if (snapshot?.resourceUpdatePhase === "available") return snapshot;
+        if (snapshot?.resourceUpdatePhase === "error" && Date.now() >= nextRetryAt) {
+          if (!panelOpened) {
+            await clickText("Data & updates");
+            panelOpened = true;
+          }
+          const retry = await queryText("Retry");
+          if (retry?.count > 0) {
+            await clickText("Retry");
+            nextRetryAt = Date.now() + 1_000;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    },
+    "the disposable liftover update state",
+  );
+}
+
+async function waitForBridgeStopped() {
+  const started = Date.now();
+  while (Date.now() - started < 10_000) {
+    try {
+      await request("/ui/snapshot");
+    } catch {
+      return;
+    }
+    await sleep(100);
+  }
+  throw new Error("Tauri fixture process did not stop cleanly");
+}
+
+async function waitForPhase(phase, label) {
+  return waitFor(
+    async () => {
+      const snapshot = await request("/ui/snapshot");
+      return snapshot?.resourceUpdatePhase === phase ? snapshot : null;
+    },
+    label,
+  );
+}
+
+async function runDesktopUpdateFlow(simulateFailure) {
   const fixtureDir = await prepareFixture();
   let child;
+  const phases = new Set();
   try {
     child = spawn("npm", ["run", "tauri:dev"], {
       cwd: projectRoot,
@@ -145,32 +211,13 @@ async function main() {
       stdio: ["ignore", "ignore", "ignore"],
       detached: true,
     });
-    await waitFor(
-      async () => {
-        try {
-          const snapshot = await request("/ui/snapshot");
-          return snapshot?.hasReport === true && snapshot?.sample ? snapshot : null;
-        } catch {
-          return null;
-        }
-      },
-      "the disposable Tauri report",
-    );
-
-    const available = await waitFor(
-      async () => {
-        try {
-          const snapshot = await request("/ui/snapshot");
-          return snapshot?.resourceUpdatePhase === "available" ? snapshot : null;
-        } catch {
-          return null;
-        }
-      },
-      "the disposable liftover update state",
-    );
+    await waitForReport();
+    const available = await waitForAvailable();
+    phases.add(available.resourceUpdatePhase);
     assert(available.resourceStatus !== "error", "Fixture resource probe failed before update action");
 
-    await clickText("Data & updates");
+    const openUpdatePanel = await queryText("Force re-download existing files");
+    if (openUpdatePanel?.count === 0) await clickText("Data & updates");
     await waitFor(
       async () => {
         const result = await queryText("Update chain");
@@ -178,27 +225,58 @@ async function main() {
       },
       "the liftover Update action",
     );
+
+    const partialPath = join(fixtureDir, "GRCh37_to_GRCh38.chain.gz.part");
+    if (simulateFailure) await mkdir(partialPath);
     await clickText("Update chain");
 
-    const phases = new Set([available.resourceUpdatePhase]);
+    if (simulateFailure) {
+      const failed = await waitForPhase("error", "the terminal error update state");
+      phases.add(failed.resourceUpdatePhase);
+      try {
+        await waitFor(
+          async () => {
+            const retry = await queryText("Retry");
+            return retry?.ok === true && retry.count > 0 ? retry : null;
+          },
+          "the rendered Retry control",
+        );
+      } catch (error) {
+        const snapshot = await request("/ui/snapshot").catch(() => null);
+        const updateError = await queryText("Update error").catch(() => ({ count: -1 }));
+        const retrying = await queryText("Retrying").catch(() => ({ count: -1 }));
+        throw new Error(`${error.message}; phase=${snapshot?.resourceUpdatePhase ?? "unknown"}; resource=${snapshot?.resourceStatus ?? "unknown"}; update_error=${updateError.count}; retrying=${retrying.count}`);
+      }
+      await rm(partialPath, { recursive: true, force: true });
+      await clickText("Retry");
+    }
+
     const ready = await waitFor(
       async () => {
         const snapshot = await request("/ui/snapshot");
         if (snapshot?.resourceUpdatePhase) phases.add(snapshot.resourceUpdatePhase);
         return snapshot?.resourceUpdatePhase === "ready" ? snapshot : null;
       },
-      "the terminal ready update state",
+      simulateFailure ? "the recovered ready update state" : "the terminal ready update state",
     );
     assert(ready.hasReport === true, "Report was not ready after resource sync");
     assert(ready.resourceStatus !== "error", "Resource status ended in error after successful sync");
     await assertNoUpdateCopy();
-
-    console.log("PASS: Tauri desktop update flow audit");
-    console.log(`  resource=liftover_chain; initial_phase=${available.resourceUpdatePhase}; final_phase=${ready.resourceUpdatePhase}; phases_seen=${[...phases].join(",")}; update_copy=0; report=ready`);
+    return { initialPhase: available.resourceUpdatePhase, finalPhase: ready.resourceUpdatePhase, phases };
   } finally {
     await stopProcess(child);
+    await waitForBridgeStopped();
     await rm(fixtureDir, { recursive: true, force: true });
   }
+}
+
+async function main() {
+  const success = await runDesktopUpdateFlow(false);
+  await sleep(1_000);
+  const recovery = await runDesktopUpdateFlow(true);
+  assert(recovery.phases.has("error"), "Recovery flow did not observe an error phase");
+  console.log("PASS: Tauri desktop update flow audit");
+  console.log(`  resource=liftover_chain; success_phases=${[...success.phases].join(",")}; recovery_phases=${[...recovery.phases].join(",")}; update_copy=0; report=ready`);
 }
 
 main().catch((error) => {

@@ -9,6 +9,7 @@ Responsibilities:
 :root {
   color-scheme: dark;
   --sidebar-width: 288px;
+  --report-dashboard-surface-width: 56rem;
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;

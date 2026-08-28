@@ -764,7 +764,7 @@
   .action-queue {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
     background: var(--surface-raised);
-    width: min(100%, 64rem);
+    width: min(100%, var(--report-dashboard-surface-width));
     margin-inline: auto;
   }
 
@@ -887,6 +887,9 @@
 
   .health-area-index {
     padding: 1rem;
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    box-sizing: border-box;
   }
 
   .health-area-index-heading {
@@ -1089,7 +1092,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    width: min(100%, 64rem);
+    width: min(100%, var(--report-dashboard-surface-width));
     margin-inline: auto;
     min-width: 0;
     max-width: 100%;

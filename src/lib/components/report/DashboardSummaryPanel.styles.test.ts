@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./DashboardSummaryPanel.svelte', import.meta.url), 'utf8');
 const styleBlock = source.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
+const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 
 describe('DashboardSummaryPanel semantic styling', () => {
   it('keeps report-panel colors in shared semantic tokens', () => {
@@ -158,7 +159,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     const actionQueueCard = styleBlock.match(/\.action-queue \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(actionQueueCard).toContain('width: min(100%, 64rem);');
+    expect(actionQueueCard).toContain('width: min(100%, var(--report-dashboard-surface-width));');
     expect(actionQueueCard).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('width: min(100%, 48rem);');
     expect(actionQueue).toContain('margin-inline: auto;');
@@ -170,8 +171,17 @@ describe('DashboardSummaryPanel semantic styling', () => {
   it('keeps the secondary guidance stack narrower than the full desktop report pane', () => {
     const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
-    expect(grid).toContain('width: min(100%, 64rem);');
+    expect(grid).toContain('width: min(100%, var(--report-dashboard-surface-width));');
     expect(grid).toContain('margin-inline: auto;');
+  });
+
+  it('uses the shared desktop dashboard width token for secondary surfaces', () => {
+    expect(theme).toContain('--report-dashboard-surface-width: 56rem;');
+    const healthAreaIndex = styleBlock.match(/\.health-area-index \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(healthAreaIndex).toContain('width: min(100%, var(--report-dashboard-surface-width));');
+    expect(healthAreaIndex).toContain('margin-inline: auto;');
+    expect(healthAreaIndex).toContain('box-sizing: border-box;');
   });
 
   it('keeps context selector labels short while retaining their stable IDs', () => {

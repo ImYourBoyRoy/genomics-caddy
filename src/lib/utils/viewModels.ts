@@ -12,6 +12,7 @@ Operational Notes: Tailored for Svelte 5 derived state integration.
 */
 
 import type { GeneratedReport, NormalizedReport, DisplayMarker } from '../types/genomics';
+import { buildReferenceEntries } from './reportReferences';
 
 export function deriveDisplayMarkers(report: NormalizedReport | null | undefined, sectionId: string): DisplayMarker[] {
   if (!report || !report.sections || !report.variants || !report.user_calls || !report.category_links) {
@@ -58,6 +59,15 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       db_enriched_sources: []
     };
 
+    const explicitReferenceIds = [
+      ...(link.reference_ids || []),
+      ...(enrichment.reference_ids || [])
+    ];
+    const reference_ids = explicitReferenceIds.length > 0
+      ? [...new Set(explicitReferenceIds)]
+      : buildReferenceEntries(link.sources || [], enrichment.db_enriched_sources || [])
+        .map(reference => reference.id);
+
     // Determine position based on source build (GRCh38 preferred, fallback to 37)
     let position = variant.position_grch38 ?? variant.position_grch37 ?? null;
     if (enrichment.dbsnp) {
@@ -84,6 +94,7 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       interpretation_allowed: link.interpretation_allowed,
       sources: link.sources || [],
       db_enriched_sources: enrichment.db_enriched_sources || [],
+      reference_ids,
       clinvar_significance: enrichment.clinvar?.clinical_significance ?? null,
       clinvar_conditions: enrichment.clinvar?.conditions ?? null,
       clinvar_review_status: enrichment.clinvar?.review_status ?? null,

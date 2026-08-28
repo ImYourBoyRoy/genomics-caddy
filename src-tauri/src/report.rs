@@ -68,6 +68,139 @@ pub struct EnrichedSource {
     pub url: Option<String>,
 }
 
+/// Stable, deduplicated source metadata exposed alongside every generated report.
+///
+/// The identity contract intentionally mirrors `src/lib/utils/reportReferences.ts`:
+/// URLs are preferred, while URL-less sources use their descriptive fields. The
+/// UTF-16 hash keeps IDs stable across the Rust report generator and TypeScript
+/// exports, including for non-ASCII source text.
+#[derive(Debug, Serialize, Clone)]
+pub struct ReportReference {
+    pub id: String,
+    pub title: String,
+    pub organization: String,
+    pub date: String,
+    pub evidence_role: String,
+    pub url: Option<String>,
+}
+
+#[derive(Clone, Copy)]
+enum ReferenceSource<'a> {
+    Marker(&'a MarkerSource),
+    Enriched(&'a EnrichedSource),
+}
+
+fn clean_reference(value: Option<&str>, fallback: &str) -> String {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or(fallback)
+        .to_string()
+}
+
+fn normalized_reference_url(value: Option<&str>) -> String {
+    let trimmed = value.map(str::trim).unwrap_or_default();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    trimmed.strip_suffix('/').unwrap_or(trimmed).to_lowercase()
+}
+
+fn report_reference_key(source: ReferenceSource<'_>) -> String {
+    let url = match source {
+        ReferenceSource::Marker(marker) => normalized_reference_url(marker.url.as_deref()),
+        ReferenceSource::Enriched(enriched) => normalized_reference_url(enriched.url.as_deref()),
+    };
+    if !url.is_empty() {
+        return format!("url:{url}");
+    }
+
+    match source {
+        ReferenceSource::Marker(marker) => [
+            clean_reference(Some(&marker.name), "Not recorded"),
+            clean_reference(marker.evidence_type.as_deref(), "Not recorded"),
+            clean_reference(marker.notes.as_deref(), "Not recorded"),
+        ]
+        .join("|")
+        .to_lowercase(),
+        ReferenceSource::Enriched(enriched) => [
+            clean_reference(Some(&enriched.source_type), "Not recorded"),
+            clean_reference(Some(&enriched.citation), "Not recorded"),
+            clean_reference(enriched.details.as_deref(), "Not recorded"),
+        ]
+        .join("|")
+        .to_lowercase(),
+    }
+}
+
+fn report_reference_id(key: &str) -> String {
+    let mut hash: u32 = 0x811c_9dc5;
+    for code_unit in key.encode_utf16() {
+        hash ^= u32::from(code_unit);
+        hash = hash.wrapping_mul(0x0100_0193);
+    }
+    format!("REF-{hash:08X}")
+}
+
+fn report_reference_from_source(source: ReferenceSource<'_>, id: String) -> ReportReference {
+    match source {
+        ReferenceSource::Marker(marker) => ReportReference {
+            id,
+            title: clean_reference(Some(&marker.name), "Reference"),
+            organization: clean_reference(Some(&marker.name), "Not specified"),
+            date: clean_reference(marker.accessed.as_deref(), "Access date not recorded"),
+            evidence_role: clean_reference(
+                marker.evidence_type.as_deref(),
+                "Marker-pack reference",
+            ),
+            url: marker.url.as_ref().map(|url| url.trim().to_string()),
+        },
+        ReferenceSource::Enriched(enriched) => ReportReference {
+            id,
+            title: clean_reference(Some(&enriched.citation), "Catalog reference"),
+            organization: clean_reference(Some(&enriched.source_type), "Local reference catalog"),
+            date: "Local catalog record".to_string(),
+            evidence_role: clean_reference(enriched.details.as_deref(), "Catalog evidence"),
+            url: enriched.url.as_ref().map(|url| url.trim().to_string()),
+        },
+    }
+}
+
+#[derive(Default)]
+struct ReportReferenceRegistryBuilder {
+    references: Vec<ReportReference>,
+    ids_by_key: HashMap<String, String>,
+}
+
+impl ReportReferenceRegistryBuilder {
+    fn register(&mut self, source: ReferenceSource<'_>) -> String {
+        let key = report_reference_key(source);
+        if let Some(id) = self.ids_by_key.get(&key) {
+            return id.clone();
+        }
+
+        let id = report_reference_id(&key);
+        let reference = report_reference_from_source(source, id.clone());
+        self.ids_by_key.insert(key, id.clone());
+        self.references.push(reference);
+        id
+    }
+
+    fn register_marker_sources(&mut self, sources: &[MarkerSource]) -> Vec<String> {
+        sources
+            .iter()
+            .map(|source| self.register(ReferenceSource::Marker(source)))
+            .collect()
+    }
+
+    fn register_enriched_sources(&mut self, sources: &[EnrichedSource]) -> Vec<String> {
+        sources
+            .iter()
+            .map(|source| self.register(ReferenceSource::Enriched(source)))
+            .collect()
+    }
+}
+
 /// Local reference DB data fetched per-rsID during report generation.
 #[derive(Debug, Default)]
 struct LocalEnrichment {
@@ -209,6 +342,8 @@ pub struct VariantCategoryLink {
     pub interpretation_blocked_if_unverified: Option<bool>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sources: Vec<MarkerSource>,
+    /// Stable IDs into the report-level reference registry.
+    pub reference_ids: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -302,6 +437,8 @@ pub struct VariantEnrichment {
     pub mane: Option<ManeAnnotation>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub db_enriched_sources: Vec<EnrichedSource>,
+    /// Stable IDs into the report-level reference registry.
+    pub reference_ids: Vec<String>,
 }
 
 /// Direction-aware summary statistics for a report section.
@@ -350,6 +487,8 @@ pub struct GeneratedReport {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub enrichment: HashMap<String, VariantEnrichment>,
     pub sections: Vec<NormalizedSection>,
+    /// Deduplicated source metadata referenced by link/enrichment IDs.
+    pub references: Vec<ReportReference>,
     /// Explicit catalog readiness notes (never silent when ClinVar/dbSNP expected but missing).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub catalog_warnings: Vec<String>,
@@ -1237,6 +1376,7 @@ pub fn generate_report(
     let mut user_calls_map: HashMap<String, UserCall> = HashMap::new();
     let mut category_links_map: HashMap<String, VariantCategoryLink> = HashMap::new();
     let mut enrichment_map_out: HashMap<String, VariantEnrichment> = HashMap::new();
+    let mut reference_registry = ReportReferenceRegistryBuilder::default();
 
     let pack_id = template.title.to_lowercase().replace(' ', "_");
 
@@ -1484,6 +1624,9 @@ pub fn generate_report(
                 all_require_confirmation = false;
             }
 
+            let sources = m.sources.clone().unwrap_or_default();
+            let marker_reference_ids = reference_registry.register_marker_sources(&sources);
+
             // Populate Enrichment
             let rsid_lower = m.rsid.to_lowercase();
             let gene_lower = m.gene.to_lowercase();
@@ -1595,6 +1738,8 @@ pub fn generate_report(
                 || mane.is_some()
                 || !db_enriched_sources.is_empty()
             {
+                let enrichment_reference_ids =
+                    reference_registry.register_enriched_sources(&db_enriched_sources);
                 enrichment_map_out.insert(
                     m.rsid.clone(),
                     VariantEnrichment {
@@ -1606,6 +1751,7 @@ pub fn generate_report(
                         clingen,
                         mane,
                         db_enriched_sources,
+                        reference_ids: enrichment_reference_ids,
                     },
                 );
             }
@@ -1620,7 +1766,16 @@ pub fn generate_report(
                 stable_hash(&assertion_text)
             );
 
-            let sources = m.sources.clone().unwrap_or_default();
+            let enrichment_reference_ids = enrichment_map_out
+                .get(&m.rsid)
+                .map(|enrichment| enrichment.reference_ids.as_slice())
+                .unwrap_or_default();
+            let mut reference_ids = marker_reference_ids;
+            for reference_id in enrichment_reference_ids {
+                if !reference_ids.contains(reference_id) {
+                    reference_ids.push(reference_id.clone());
+                }
+            }
 
             let link = VariantCategoryLink {
                 link_id: link_id.clone(),
@@ -1645,6 +1800,7 @@ pub fn generate_report(
                 sex_scope: m.sex_scope.clone(),
                 interpretation_blocked_if_unverified: m.interpretation_blocked_if_unverified,
                 sources,
+                reference_ids,
             };
 
             category_links_map.insert(link_id.clone(), link);
@@ -1706,6 +1862,7 @@ pub fn generate_report(
         category_links: category_links_map,
         enrichment: enrichment_map_out,
         sections: evaluated_sections,
+        references: reference_registry.references,
         catalog_warnings,
     })
 }
@@ -1837,6 +1994,31 @@ mod tests {
     }
 
     #[test]
+    fn test_report_reference_registry_is_stable_and_deduplicated() {
+        let source = MarkerSource {
+            name: "Shared evidence source".to_string(),
+            url: Some("https://example.test/evidence".to_string()),
+            accessed: Some("2026-08-27".to_string()),
+            evidence_type: Some("Research context".to_string()),
+            conflict_of_interest: None,
+            notes: None,
+        };
+        let source_with_trailing_slash = MarkerSource {
+            url: Some("HTTPS://EXAMPLE.TEST/EVIDENCE/".to_string()),
+            ..source.clone()
+        };
+        let mut registry = ReportReferenceRegistryBuilder::default();
+
+        let first_id = registry.register(ReferenceSource::Marker(&source));
+        let second_id = registry.register(ReferenceSource::Marker(&source_with_trailing_slash));
+
+        assert_eq!(first_id, "REF-5AE32D29");
+        assert_eq!(first_id, second_id);
+        assert_eq!(registry.references.len(), 1);
+        assert_eq!(registry.references[0].evidence_role, "Research context");
+    }
+
+    #[test]
     fn test_dpyd_rs55886062_safety_gate() {
         let conn = setup_test_db();
         let sample_id = 1;
@@ -1965,7 +2147,14 @@ mod tests {
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
             sex_scope: None,
-            sources: None,
+            sources: Some(vec![MarkerSource {
+                name: "Generated report test source".to_string(),
+                url: Some("https://example.test/report-source".to_string()),
+                accessed: Some("2026-08-27".to_string()),
+                evidence_type: Some("Unit-test provenance".to_string()),
+                conflict_of_interest: None,
+                notes: None,
+            }]),
             variant_type: None,
             expected_plus_alleles: None,
             strand: None,
@@ -2072,6 +2261,11 @@ mod tests {
 
         assert_eq!(link1.evidence_tier, "A");
         assert_eq!(link2.evidence_tier, "B");
+
+        assert_eq!(report.references.len(), 1);
+        assert_eq!(link1.reference_ids.len(), 1);
+        assert_eq!(link1.reference_ids[0], report.references[0].id);
+        assert!(link2.reference_ids.is_empty());
 
         // 3. Omission check: effect_count is Some(2) for rs12345, but None for rs67890
         assert_eq!(link1.effect_count, Some(2));

@@ -1,4 +1,9 @@
-import type { EnrichedSource, GeneratedReport, MarkerSource } from '../types/genomics';
+import type {
+  EnrichedSource,
+  GeneratedReport,
+  MarkerSource,
+  ReportReferenceRecord,
+} from '../types/genomics';
 
 export type ReportReferenceSource = MarkerSource | EnrichedSource;
 
@@ -81,6 +86,17 @@ export function reportReferenceFromSource(
   };
 }
 
+function reportReferenceFromRecord(record: ReportReferenceRecord): ReportReference {
+  return {
+    id: record.id,
+    title: clean(record.title, 'Reference'),
+    organization: clean(record.organization, 'Not specified'),
+    date: clean(record.date, 'Date not recorded'),
+    evidenceRole: clean(record.evidence_role, 'Evidence not recorded'),
+    url: record.url?.trim() || null,
+  };
+}
+
 export function buildReferenceEntries(
   sources: MarkerSource[] = [],
   dbSources: EnrichedSource[] = [],
@@ -103,21 +119,36 @@ export function reportMarkerReferenceKey(sectionName: string, linkId: string): s
 export function buildReportReferenceRegistry(report: GeneratedReport): ReportReferenceRegistry {
   const references: ReportReference[] = [];
   const referencesByKey = new Map<string, ReportReference>();
+  const referencesById = new Map<string, ReportReference>();
   const idsByMarker = new Map<string, string[]>();
+
+  for (const record of report.references || []) {
+    if (referencesById.has(record.id)) continue;
+    const reference = reportReferenceFromRecord(record);
+    referencesById.set(reference.id, reference);
+    references.push(reference);
+  }
 
   for (const section of report.sections) {
     for (const marker of section.markers) {
-      const markerIds: string[] = [];
+      const sourceIds: string[] = [];
       for (const source of [...marker.sources, ...marker.db_enriched_sources]) {
         const key = reportReferenceKey(source);
         let reference = referencesByKey.get(key);
         if (!reference) {
-          reference = reportReferenceFromSource(source);
+          const persistedId = reportReferenceId(source);
+          reference = referencesById.get(persistedId) || reportReferenceFromSource(source);
           referencesByKey.set(key, reference);
-          references.push(reference);
+          if (!referencesById.has(reference.id)) {
+            referencesById.set(reference.id, reference);
+            references.push(reference);
+          }
         }
-        markerIds.push(reference.id);
+        sourceIds.push(reference.id);
       }
+
+      const explicitIds = marker.reference_ids || [];
+      const markerIds = explicitIds.length > 0 ? explicitIds : sourceIds;
       idsByMarker.set(
         reportMarkerReferenceKey(section.name, marker.link_id),
         [...new Set(markerIds)],

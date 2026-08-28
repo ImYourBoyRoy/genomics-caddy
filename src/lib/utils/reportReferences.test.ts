@@ -94,4 +94,28 @@ describe('report reference registry', () => {
     expect(firstIds).toEqual(secondIds);
     expect(firstIds?.[0]).toBe(registry.references[0].id);
   });
+
+  it('uses persisted report references and per-finding IDs when available', () => {
+    const persistedId = 'REF-1234ABCD';
+    const payload = report([marker({
+      reference_ids: [persistedId],
+      sources: [],
+      db_enriched_sources: [],
+    })]);
+    payload.references = [{
+      id: persistedId,
+      title: 'Persisted evidence record',
+      organization: 'Local reference registry',
+      date: '2026-08-27',
+      evidence_role: 'Report-level source metadata',
+      url: 'https://example.test/persisted',
+    }];
+
+    const registry = buildReportReferenceRegistry(payload);
+
+    expect(registry.references).toHaveLength(1);
+    expect(registry.references[0].id).toBe(persistedId);
+    expect(registry.references[0].evidenceRole).toBe('Report-level source metadata');
+    expect(registry.idsByMarker.get('Test area:test:marker')).toEqual([persistedId]);
+  });
 });

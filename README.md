@@ -482,7 +482,7 @@ Large offline raw downloads (uncompressed text/JSON over ~64 MiB) are gzip-com
      * `end` (integer, required): End base-pair position.
 
 4. **`generate_report`**
-   * **Description:** Generates a full direction-aware trait report for a sample using a provided template. Returns evaluated markers with severity classes, section summaries, and risk-direction-only signal scores.
+   * **Description:** Generates a full direction-aware trait report for a sample using a provided template. Returns evaluated markers with severity classes, section summaries, risk-direction-only signal scores, stable per-finding `reference_ids`, and a deduplicated report-level `references` registry for desktop, export, and MCP consumers.
    * **Arguments:**
      * `sample_id` (integer, required): The target sample ID.
      * `template_json` (string, required): JSON string of the report template containing sections and markers.

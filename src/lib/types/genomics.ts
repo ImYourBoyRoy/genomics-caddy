@@ -60,6 +60,16 @@ export interface EnrichedSource {
   url?: string;
 }
 
+/** Serialized report-level reference metadata from the Rust report generator. */
+export interface ReportReferenceRecord {
+  id: string;
+  title: string;
+  organization: string;
+  date: string;
+  evidence_role: string;
+  url: string | null;
+}
+
 export interface MarkerDefinition {
   rsid: string;
   gene: string;
@@ -148,6 +158,8 @@ export interface VariantCategoryLink {
   sex_scope?: MarkerSexScope | null;
   interpretation_blocked_if_unverified?: boolean | null;
   sources: MarkerSource[];
+  /** Stable IDs into the report-level reference registry. */
+  reference_ids?: string[];
 }
 
 export interface ClinVarAnnotation {
@@ -211,6 +223,8 @@ export interface VariantEnrichment {
   clingen?: ClinGenAnnotation | null;
   mane?: ManeAnnotation | null;
   db_enriched_sources: EnrichedSource[];
+  /** Stable IDs into the report-level reference registry. */
+  reference_ids?: string[];
 }
 
 /** Direction-aware summary statistics for a report section. */
@@ -255,6 +269,8 @@ export interface NormalizedReport {
   category_links: Record<string, VariantCategoryLink>;
   enrichment: Record<string, VariantEnrichment>;
   sections: NormalizedSection[];
+  /** Deduplicated source metadata from the Rust report generator. */
+  references?: ReportReferenceRecord[];
 }
 
 /** Flattened display-ready model computed once per report/category tab change. */
@@ -278,6 +294,8 @@ export interface DisplayMarker {
   interpretation_allowed: boolean;
   sources: MarkerSource[];
   db_enriched_sources: EnrichedSource[];
+  /** Stable IDs for all sources attached to this finding. */
+  reference_ids?: string[];
   clinvar_significance: string | null;
   clinvar_conditions: string | null;
   clinvar_review_status: string | null;
@@ -317,6 +335,8 @@ export interface GeneratedReport {
   category_links: Record<string, VariantCategoryLink>;
   enrichment: Record<string, VariantEnrichment>;
   sections: EvaluatedSection[];
+  /** Deduplicated source metadata from the normalized report payload. */
+  references?: ReportReferenceRecord[];
   /** Explicit when ClinVar/dbSNP catalogs are missing or empty (never silent). */
   catalog_warnings?: string[];
 }

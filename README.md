@@ -170,6 +170,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Single-resource updates await that final status refresh before the flow completes. Download metadata writes are checked instead of ignored, and ETag changes still count as updates even when a remote export keeps the same filename.
 * Update failures retain their terminal error after the final reconciliation probe and expose a small Retry action for status checks, single-asset updates, and bulk sync/update flows. The retry control appears only when an operation fails.
 * MCP `sync_offline_asset` responses preserve the existing sync fields and add a machine-readable `final_status` snapshot from the same authoritative post-sync probe, so an AI client can confirm whether the local resource inventory is current without a second status call. The payload contains resource metadata and indexed row counts only; it does not contain genotype values.
+* After a successful reference sync, the sidebar awaits a dedicated report regeneration path; MCP also exposes read-only `reload_report` with `status: "ready"`, and all-tier sync responses include `{results, final_status}` for explicit completion checks.
 * The advanced Offline reference data panel uses the same final-refresh boundary: it preserves the last known inventory during a failed check, labels that view as stale, hides unverified update actions, and offers concise retry controls for tier, asset, bulk, and index rebuild failures.
 
 ---

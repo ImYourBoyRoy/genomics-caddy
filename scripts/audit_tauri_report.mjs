@@ -187,6 +187,22 @@ async function clickText(text) {
   assert(result?.ok === true, `Could not activate ${text}`);
 }
 
+async function focusText(text) {
+  const result = await request("/ui/focusText", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  assert(result?.ok === true, `Could not focus ${text}`);
+}
+
+async function pressKey(key) {
+  const result = await request("/ui/pressKey", {
+    method: "POST",
+    body: JSON.stringify({ key }),
+  });
+  assert(result?.ok === true, `Could not press ${key}`);
+}
+
 async function waitForMode(mode) {
   return waitForSnapshot(
     (snapshot) => {
@@ -289,6 +305,10 @@ async function main() {
   await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
 
+  await focusText("Sex estimate from DNA");
+  validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the keyboard-opened sex-estimate tooltip"));
+  await pressKey("Escape");
+  await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 0, "the sex-estimate tooltip to close with Escape");
   await clickText("Sex estimate from DNA");
   validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the sex-estimate tooltip"));
   await clickText("Sex estimate from DNA");

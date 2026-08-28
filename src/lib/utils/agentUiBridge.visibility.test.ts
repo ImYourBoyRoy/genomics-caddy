@@ -40,6 +40,15 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('${wasExpanded ? \'collapsed\' : \'expanded\'}: ${sectionName}');
   });
 
+  it('supports privacy-safe keyboard interaction checks for local QA', () => {
+    expect(source).toContain('focusText: (text: string)');
+    expect(source).toContain('pressKey: (key: string)');
+    expect(source).toContain('function focusByVisibleText(text: string)');
+    expect(source).toContain('function pressAllowlistedKey(key: string)');
+    expect(source).toContain("['Escape', 'Tab', 'Enter', ' '].includes(normalizedKey)");
+    expect(source).toContain('activeElement.dispatchEvent(new KeyboardEvent');
+  });
+
   it('exposes aggregate tooltip bounds without exposing tooltip content', () => {
     expect(source).toContain('export interface AgentUiTooltipMetrics');
     expect(source).toContain('tooltip: AgentUiTooltipMetrics;');

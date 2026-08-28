@@ -113,6 +113,8 @@ declare global {
       setTab: (tab: string) => { ok: true; activeTab: string };
       expandLabs: () => { ok: boolean; detail: string };
       clickText: (text: string) => { ok: boolean; detail: string };
+      focusText: (text: string) => { ok: boolean; detail: string };
+      pressKey: (key: string) => { ok: boolean; detail: string };
       clickSection: (sectionName: string) => { ok: boolean; detail: string };
       queryText: (text: string) => { ok: boolean; count: number; samples: string[] };
     };
@@ -365,6 +367,61 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   return { ok: true, detail: `clicked: ${hit.label.slice(0, 80)}` };
 }
 
+function focusByVisibleText(text: string): { ok: boolean; detail: string } {
+  const needle = normalizeUiLabel(text);
+  if (!needle) return { ok: false, detail: 'empty text' };
+
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>('button, a, [role="button"], .tab-btn, .card-header')
+  );
+  const hit = candidates
+    .map((el) => {
+      const visibleLabel = el.closest(PRIVATE_UI_SELECTORS)
+        ? ''
+        : (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+      const accessibleLabel = el.getAttribute('aria-label')?.replace(/\s+/g, ' ').trim() || '';
+      const label = [visibleLabel, accessibleLabel]
+        .filter(Boolean)
+        .join(' · ')
+        .toLowerCase();
+      const exact = normalizeUiLabel(visibleLabel) === needle || normalizeUiLabel(accessibleLabel) === needle;
+      if (!normalizeUiLabel(label).includes(needle)) return null;
+      const disabled =
+        (el as HTMLButtonElement).disabled === true ||
+        el.getAttribute('aria-disabled') === 'true' ||
+        el.hasAttribute('disabled');
+      return { el, label, disabled, exact };
+    })
+    .filter((x): x is { el: HTMLElement; label: string; disabled: boolean; exact: boolean } => !!x)
+    .sort((a, b) => Number(a.disabled) - Number(b.disabled) || Number(b.exact) - Number(a.exact))[0];
+
+  if (!hit) return { ok: false, detail: `no focusable element containing "${text}"` };
+  if (hit.disabled) return { ok: false, detail: `matched disabled control: ${hit.label.slice(0, 80)}` };
+  hit.el.focus();
+  return { ok: true, detail: `focused: ${hit.label.slice(0, 80)}` };
+}
+
+function pressAllowlistedKey(key: string): { ok: boolean; detail: string } {
+  const normalizedKey = key === 'Spacebar' ? ' ' : key;
+  if (!['Escape', 'Tab', 'Enter', ' '].includes(normalizedKey)) {
+    return { ok: false, detail: `key is not allowed for UI QA: ${key}` };
+  }
+  const activeElement = document.activeElement;
+  if (!(activeElement instanceof HTMLElement)) return { ok: false, detail: 'no active element' };
+
+  activeElement.dispatchEvent(new KeyboardEvent('keydown', {
+    key: normalizedKey,
+    bubbles: true,
+    cancelable: true,
+  }));
+  activeElement.dispatchEvent(new KeyboardEvent('keyup', {
+    key: normalizedKey,
+    bubbles: true,
+    cancelable: true,
+  }));
+  return { ok: true, detail: `pressed: ${normalizedKey === ' ' ? 'Space' : normalizedKey}` };
+}
+
 function clickSectionByName(sectionName: string): { ok: boolean; detail: string } {
   const needle = normalizeUiLabel(sectionName);
   if (!needle) return { ok: false, detail: 'empty section name' };
@@ -447,6 +504,12 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
     clickText(text: string) {
       return clickByVisibleText(text);
     },
+    focusText(text: string) {
+      return focusByVisibleText(text);
+    },
+    pressKey(key: string) {
+      return pressAllowlistedKey(key);
+    },
     clickSection(sectionName: string) {
       return clickSectionByName(sectionName);
     },
@@ -505,6 +568,26 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
                     ?? (args as { arg?: string } | null)?.arg
                     ?? '');
             result = api.clickText(text);
+            break;
+          }
+          case 'focusText': {
+            const text =
+              typeof args === 'string'
+                ? args
+                : String((args as { text?: string; arg?: string } | null)?.text
+                    ?? (args as { arg?: string } | null)?.arg
+                    ?? '');
+            result = api.focusText(text);
+            break;
+          }
+          case 'pressKey': {
+            const key =
+              typeof args === 'string'
+                ? args
+                : String((args as { key?: string; arg?: string } | null)?.key
+                    ?? (args as { arg?: string } | null)?.arg
+                    ?? '');
+            result = api.pressKey(key);
             break;
           }
           case 'clickSection': {

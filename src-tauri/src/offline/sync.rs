@@ -588,7 +588,7 @@ pub async fn sync_offline_assets_subset(
                         bytes_used += n;
                         let hash = sha256_file(&path).ok();
                         let row_count = 0u64;
-                        let _ = with_conn(db_path, |conn| {
+                        if let Err(e) = with_conn(db_path, |conn| {
                             upsert_registry(
                                 conn,
                                 def.id,
@@ -605,7 +605,13 @@ pub async fn sync_offline_assets_subset(
                                     .or(head.last_modified.as_deref()),
                                 false,
                             )
-                        });
+                        }) {
+                            result.errors.push(format!(
+                                "{} downloaded but its local status could not be recorded: {e}",
+                                def.label
+                            ));
+                            continue;
+                        }
                         pending_imports.push(def.id);
                         result
                             .messages
@@ -667,7 +673,7 @@ pub async fn sync_offline_assets_subset(
                                 Ok((n, head)) => {
                                     bytes_used += n;
                                     let hash = sha256_file(&path).ok();
-                                    let _ = with_conn(db_path, |conn| {
+                                    if let Err(e) = with_conn(db_path, |conn| {
                                         upsert_registry(
                                             conn,
                                             def.id,
@@ -684,7 +690,12 @@ pub async fn sync_offline_assets_subset(
                                                 .or(head.last_modified.as_deref()),
                                             false,
                                         )
-                                    });
+                                    }) {
+                                        result.errors.push(format!(
+                                            "GWAS downloaded but its local status could not be recorded: {e}"
+                                        ));
+                                        continue;
+                                    }
                                     result
                                         .messages
                                         .push(format!("Downloaded GWAS catalog ({} bytes)", n));
@@ -1119,7 +1130,7 @@ fn import_asset_sync(
         };
         let n = std::fs::metadata(&final_path).map(|m| m.len()).unwrap_or(0);
         let hash = sha256_file(&final_path).ok();
-        let _ = upsert_registry(
+        upsert_registry(
             conn,
             id,
             def.tier,
@@ -1131,7 +1142,7 @@ fn import_asset_sync(
             row_count_for_asset(conn, id),
             None,
             false,
-        );
+        )?;
     }
 
     Ok(format!("{}: {row_count} rows loaded", def.label))

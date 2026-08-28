@@ -512,9 +512,10 @@ import { onMount, onDestroy } from 'svelte';
       // Clear busy state FIRST so other Download buttons unlock immediately.
       syncingAsset = { ...syncingAsset, [assetId]: false };
       clearAssetProgress(assetId);
-      // Bulk update awaits one final authoritative refresh instead of allowing
-      // per-asset probes to race and restore an older pending-update snapshot.
-      if (refreshAfter) void refreshStatusInBackground();
+      // Await the authoritative refresh for both single and bulk updates. This
+      // keeps the visible badge and per-asset buttons synchronized with the
+      // final backend status before the update flow completes.
+      if (refreshAfter) await refreshStatusInBackground();
     }
   }
 

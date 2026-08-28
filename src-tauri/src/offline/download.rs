@@ -459,9 +459,13 @@ pub fn remote_changed(
         .map(str::trim)
         .filter(|s| !s.is_empty());
 
-    // Stable export filename (ClinGen daily CSV) beats volatile Last-Modified.
+    // A changed stable export filename proves a new version even when a
+    // server reuses the same ETag. This is the version identity used by
+    // ClinGen's dated daily exports.
     if let (Some(remote), Some(stored)) = (remote_name, stored_name) {
-        return remote != stored;
+        if remote != stored {
+            return true;
+        }
     }
 
     // Prefer ETag when both sides have one.
@@ -590,5 +594,22 @@ mod tests {
         };
         assert!(remote_changed(&head, Some("\"a\""), None, Some(100), None));
         assert!(!remote_changed(&head, Some("\"b\""), None, Some(100), None));
+    }
+
+    #[test]
+    fn etag_change_is_detected_when_export_filename_is_unchanged() {
+        let head = RemoteHead {
+            content_length: Some(100),
+            etag: Some("\"b\"".into()),
+            last_modified: Some("Sun, 12 Jul 2026 01:00:00 GMT".into()),
+            content_filename: Some("catalog-2026-07-11.csv".into()),
+        };
+        assert!(remote_changed(
+            &head,
+            Some("\"a\""),
+            Some("Sat, 11 Jul 2026 20:58:34 GMT"),
+            Some(100),
+            Some("catalog-2026-07-11.csv"),
+        ));
     }
 }

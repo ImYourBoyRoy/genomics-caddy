@@ -2,7 +2,7 @@
 /*
 Purpose: Exercise the running Tauri desktop report through its local UI bridge.
 How to run: `npm run audit:tauri-ui` while `npm run tauri:dev` is running.
-Outputs: Aggregate-only desktop mode, geometry, sex-label, and public-copy checks.
+Outputs: Aggregate-only desktop mode, geometry, sex-label, public-copy, and rendered-theme contrast checks.
 Privacy: Never prints sample names, genotype calls, technical disclosures, or raw UI text.
 */
 
@@ -137,6 +137,25 @@ async function selectTheme(label, expectedMode) {
   );
   assert(snapshot.themeMode === expectedMode, `Expected ${expectedMode} theme mode`);
   return snapshot;
+}
+
+function validateContrastSnapshot(contrast, theme) {
+  assert(contrast && typeof contrast === "object", `${theme} contrast probe returned no metrics`);
+  assert(contrast.checkedPairCount > 0, `${theme} contrast probe checked no rendered pairs`);
+  assert(
+    contrast.passingPairCount === contrast.checkedPairCount && contrast.failingPairCount === 0,
+    `${theme} contrast probe found a low-contrast rendered pair`,
+  );
+  assert(contrast.minimumRatio >= 4.5, `${theme} contrast minimum is below normal-text AA`);
+  return contrast;
+}
+
+async function probeContrast(theme) {
+  const contrast = await request("/ui/probeContrast", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  return validateContrastSnapshot(contrast, theme);
 }
 
 function validateTooltipSnapshot(snapshot) {
@@ -399,10 +418,13 @@ async function main() {
 
   await clickText("Appearance");
   await selectTheme("Light mode", "light");
+  const lightContrast = await probeContrast("light");
   await clickText("Appearance");
   await selectTheme("Dark mode", "dark");
+  const darkContrast = await probeContrast("dark");
   await clickText("Appearance");
   await selectTheme("System default", "system");
+  const systemContrast = await probeContrast("system");
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
@@ -411,6 +433,7 @@ async function main() {
     : "n/a";
   console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
+  console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
 }
 
 main().catch((error) => {

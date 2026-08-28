@@ -72,6 +72,18 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('panel.textContent');
   });
 
+  it('exposes only aggregate rendered contrast metrics', () => {
+    expect(source).toContain('export interface AgentUiContrastProbeMetrics');
+    expect(source).toContain('checkedElementCount: number;');
+    expect(source).toContain('minimumRatio: number | null;');
+    expect(source).toContain('failingClassNames: string[];');
+    expect(source).toContain('function probeRenderedContrast()');
+    expect(source).toContain('resolvedBackgroundColor(element)');
+    expect(source).toContain('ratio >= 4.5');
+    expect(source).toContain('probeContrast: () => Promise<AgentUiContrastProbeMetrics>');
+    expect(source).not.toContain('failingClassNames.push(element.textContent');
+  });
+
   it('exposes only aggregate landmark and ARIA relationship metrics', () => {
     expect(source).toContain('export interface AgentUiAccessibilityMetrics');
     expect(source).toContain('accessibility: AgentUiAccessibilityMetrics;');

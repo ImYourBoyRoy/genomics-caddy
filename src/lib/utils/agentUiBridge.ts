@@ -87,6 +87,15 @@ export interface AgentUiTooltipProbeMetrics {
   };
 }
 
+export interface AgentUiContrastProbeMetrics {
+  checkedElementCount: number;
+  checkedPairCount: number;
+  passingPairCount: number;
+  failingPairCount: number;
+  minimumRatio: number | null;
+  failingClassNames: string[];
+}
+
 export interface AgentUiAccessibilityMetrics {
   mainLandmarkCount: number;
   sidebarLandmarkCount: number;
@@ -149,6 +158,7 @@ declare global {
       focusText: (text: string) => { ok: boolean; detail: string };
       pressKey: (key: string) => { ok: boolean; detail: string };
       probeTooltips: () => Promise<AgentUiTooltipProbeMetrics>;
+      probeContrast: () => Promise<AgentUiContrastProbeMetrics>;
       clickSection: (sectionName: string) => { ok: boolean; detail: string };
       queryText: (text: string) => { ok: boolean; count: number; samples: string[] };
     };
@@ -424,6 +434,122 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
   };
 }
 
+type CssColor = { r: number; g: number; b: number; a: number };
+
+function parseCssColor(value: string): CssColor | null {
+  const normalized = value.trim().toLowerCase();
+  const match = normalized.match(/^rgba?\((.*)\)$/);
+  if (!match) return null;
+  const components = match[1].replace('/', ' ').split(/[ ,]+/).filter(Boolean);
+  if (components.length < 3) return null;
+  const channels = components.slice(0, 3).map((component) => Number.parseFloat(component));
+  if (channels.some((channel) => !Number.isFinite(channel))) return null;
+  const alpha = components[3] === undefined ? 1 : Number.parseFloat(components[3]);
+  if (!Number.isFinite(alpha)) return null;
+  return {
+    r: Math.max(0, Math.min(255, channels[0])),
+    g: Math.max(0, Math.min(255, channels[1])),
+    b: Math.max(0, Math.min(255, channels[2])),
+    a: Math.max(0, Math.min(1, alpha)),
+  };
+}
+
+function compositeCssColor(foreground: CssColor, background: CssColor): CssColor {
+  const alpha = foreground.a + background.a * (1 - foreground.a);
+  if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
+  return {
+    r: (foreground.r * foreground.a + background.r * background.a * (1 - foreground.a)) / alpha,
+    g: (foreground.g * foreground.a + background.g * background.a * (1 - foreground.a)) / alpha,
+    b: (foreground.b * foreground.a + background.b * background.a * (1 - foreground.a)) / alpha,
+    a: alpha,
+  };
+}
+
+function resolvedBackgroundColor(element: HTMLElement): CssColor | null {
+  const ancestors: HTMLElement[] = [];
+  let current: HTMLElement | null = element;
+  while (current) {
+    ancestors.push(current);
+    current = current.parentElement;
+  }
+
+  let background: CssColor = { r: 0, g: 0, b: 0, a: 0 };
+  for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+    const layer = parseCssColor(getComputedStyle(ancestors[index]).backgroundColor);
+    if (layer) background = compositeCssColor(layer, background);
+  }
+  return background.a >= 0.99 ? background : null;
+}
+
+function relativeLuminance(color: CssColor): number {
+  const channel = (value: number) => {
+    const normalized = value / 255;
+    return normalized <= 0.03928
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(color.r) + 0.7152 * channel(color.g) + 0.0722 * channel(color.b);
+}
+
+function contrastRatio(first: CssColor, second: CssColor): number {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function probeRenderedContrast(): AgentUiContrastProbeMetrics {
+  const selector = [
+    '.btn-primary',
+    '.btn-accent',
+    '.view-mode-active',
+    '.focus-toggle',
+    '.theme-toggle',
+    '.theme-menu button',
+    '.update-pill',
+    '.missing-pill',
+    '.badge',
+    '.action-queue-next',
+  ].join(', ');
+  const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
+    .filter(isVisibleQaElement);
+  let checkedPairCount = 0;
+  let passingPairCount = 0;
+  let failingPairCount = 0;
+  let minimumRatio: number | null = null;
+  const failingClassNames: string[] = [];
+
+  for (const element of elements) {
+    const style = getComputedStyle(element);
+    const foreground = parseCssColor(style.color);
+    const background = resolvedBackgroundColor(element);
+    if (!foreground || !background) continue;
+    const opacity = Number.parseFloat(style.opacity);
+    foreground.a *= Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 1;
+    const ratio = contrastRatio(foreground, background);
+    checkedPairCount += 1;
+    minimumRatio = minimumRatio === null ? ratio : Math.min(minimumRatio, ratio);
+    if (ratio >= 4.5) {
+      passingPairCount += 1;
+    } else {
+      failingPairCount += 1;
+      if (failingClassNames.length < 12) {
+        failingClassNames.push(Array.from(element.classList).slice(0, 4).join('.'));
+      }
+    }
+  }
+
+  return {
+    checkedElementCount: elements.length,
+    checkedPairCount,
+    passingPairCount,
+    failingPairCount,
+    minimumRatio: minimumRatio === null ? null : Math.round(minimumRatio * 100) / 100,
+    failingClassNames,
+  };
+}
+
 function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
   const sectionToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('.section-toggle'));
   const boundSectionToggles = sectionToggles.filter((toggle) => {
@@ -653,6 +779,10 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
     probeTooltips() {
       return probeVisibleTooltips();
     },
+    async probeContrast() {
+      await waitForQaPaint();
+      return probeRenderedContrast();
+    },
     clickSection(sectionName: string) {
       return clickSectionByName(sectionName);
     },
@@ -735,6 +865,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           }
           case 'probeTooltips':
             result = await api.probeTooltips();
+            break;
+          case 'probeContrast':
+            result = await api.probeContrast();
             break;
           case 'clickSection': {
             const sectionName =

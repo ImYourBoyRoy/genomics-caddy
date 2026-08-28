@@ -116,6 +116,16 @@ export interface AgentUiAccessibilityMetrics {
   focusControlTargetsSidebar: boolean;
 }
 
+export interface AgentUiSimpleCardContractMetrics {
+  cardCount: number;
+  titleCount: number;
+  meaningCount: number;
+  evidenceCount: number;
+  nextStepCount: number;
+  detailsCount: number;
+  technicalDataCount: number;
+}
+
 export interface AgentUiSnapshot {
   title: string;
   activeTab: string;
@@ -134,6 +144,7 @@ export interface AgentUiSnapshot {
   visibleTextSample: string[];
   tooltip: AgentUiTooltipMetrics;
   accessibility: AgentUiAccessibilityMetrics;
+  simpleCardContract: AgentUiSimpleCardContractMetrics;
   layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
@@ -620,6 +631,21 @@ function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
   };
 }
 
+function collectSimpleCardContractMetrics(): AgentUiSimpleCardContractMetrics {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.marker-card'));
+  const countCardsWith = (selector: string): number => cards.filter((card) => card.querySelector(selector) !== null).length;
+
+  return {
+    cardCount: cards.length,
+    titleCount: countCardsWith('.simple-finding-title'),
+    meaningCount: countCardsWith('.simple-meaning-block'),
+    evidenceCount: countCardsWith('.marker-meta .tier-badge'),
+    nextStepCount: countCardsWith('.simple-next-step'),
+    detailsCount: countCardsWith('.simple-details'),
+    technicalDataCount: countCardsWith('.technical-details'),
+  };
+}
+
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   const needle = normalizeUiLabel(text);
   if (!needle) return { ok: false, detail: 'empty text' };
@@ -776,6 +802,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         visibleTextSample: collectVisibleText(30),
         tooltip: collectTooltipMetrics(),
         accessibility: collectAccessibilityMetrics(),
+        simpleCardContract: collectSimpleCardContractMetrics(),
         layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),

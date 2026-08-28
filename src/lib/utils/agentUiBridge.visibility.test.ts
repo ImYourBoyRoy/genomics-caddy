@@ -104,6 +104,19 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('accessibility.textContent');
   });
 
+  it('exposes only aggregate Simple-card contract metrics', () => {
+    expect(source).toContain('export interface AgentUiSimpleCardContractMetrics');
+    expect(source).toContain('simpleCardContract: AgentUiSimpleCardContractMetrics;');
+    expect(source).toContain('function collectSimpleCardContractMetrics()');
+    expect(source).toContain("countCardsWith('.simple-finding-title')");
+    expect(source).toContain("countCardsWith('.simple-meaning-block')");
+    expect(source).toContain("countCardsWith('.marker-meta .tier-badge')");
+    expect(source).toContain("countCardsWith('.simple-next-step')");
+    expect(source).toContain("countCardsWith('.simple-details')");
+    expect(source).toContain("countCardsWith('.technical-details')");
+    expect(source).not.toContain('simpleCardContract.textContent');
+  });
+
   it('exposes aggregate focus geometry without exposing report content', () => {
     expect(source).toContain('focusControlOverlapsContent: boolean;');
     expect(source).toContain('focusControlBottom: number | null;');

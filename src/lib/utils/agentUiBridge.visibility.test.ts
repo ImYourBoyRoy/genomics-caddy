@@ -101,6 +101,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('markerGridColumnGap: number | null;');
     expect(source).toContain('markerCardMinWidth: number | null;');
     expect(source).toContain('markerCardMaxWidth: number | null;');
+    expect(source).toContain('expandedSectionNames: string[];');
     expect(source).toContain('clinicalProvenanceCount: number;');
     expect(source).toContain('themeControlInToolbar: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
@@ -113,6 +114,8 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('getGridColumnGap(markerGrid)');
     expect(source).toContain("getWidthBounds('.marker-card')");
     expect(source).toContain("getWidthBounds('.action-queue-item')");
+    expect(source).toContain("document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded=\"true\"]')");
+    expect(source).toContain('expandedSectionNames,');
     expect(source).toContain("clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length");
     expect(source).toContain('connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null');
     expect(source).toContain('liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null');

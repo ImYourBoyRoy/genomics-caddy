@@ -38,6 +38,7 @@ export interface AgentUiLayoutMetrics {
   markerCardMinWidth: number | null;
   markerCardMaxWidth: number | null;
   markerCardCount: number;
+  expandedSectionNames: string[];
   clinicalTableCount: number;
   clinicalProvenanceCount: number;
   activePresentationMode: 'simple' | 'clinical' | 'compare' | null;
@@ -290,6 +291,11 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const contentRect = firstContent?.getBoundingClientRect();
   const markerCardWidths = getWidthBounds('.marker-card');
   const actionQueueItemWidths = getWidthBounds('.action-queue-item');
+  const expandedSectionNames = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded="true"]'),
+  )
+    .map((toggle) => (toggle.querySelector('.section-heading-label')?.textContent || '').replace(/\s+/g, ' ').trim())
+    .filter((name): name is string => name.length > 0);
   const focusControlOverlapsContent = !!focusRect && !!contentRect
     && focusRect.left < contentRect.right
     && focusRect.right > contentRect.left
@@ -312,6 +318,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     markerCardMinWidth: markerCardWidths.min,
     markerCardMaxWidth: markerCardWidths.max,
     markerCardCount: document.querySelectorAll('.marker-card').length,
+    expandedSectionNames,
     clinicalTableCount: document.querySelectorAll('.clinical-table-wrap').length,
     clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length,
     activePresentationMode: getActivePresentationMode(),

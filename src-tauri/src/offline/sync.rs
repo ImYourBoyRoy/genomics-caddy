@@ -1180,7 +1180,7 @@ pub fn offline_status_summary(conn: &Connection, data_dir: &Path) -> (u64, u64, 
 
 #[cfg(test)]
 mod tests {
-    use super::gwas_download_required;
+    use super::*;
 
     #[test]
     fn gwas_downloads_when_a_newer_remote_identity_is_proven() {
@@ -1196,5 +1196,51 @@ mod tests {
     fn gwas_downloads_when_missing_or_forced() {
         assert!(gwas_download_required(false, false, false));
         assert!(gwas_download_required(true, true, false));
+    }
+
+    #[test]
+    fn local_import_reports_missing_fixture_then_recovers() {
+        static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_import_recovery_{}_{}",
+            std::process::id(),
+            NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&data_dir).expect("create import fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+
+        let missing = import_assets_sync(
+            &data_dir,
+            &db_path,
+            &[OfflineAssetId::LiftoverChain],
+            None,
+            None,
+        )
+        .expect("missing fixture should be reported in the batch result");
+        assert!(missing.synced.is_empty());
+        assert_eq!(missing.errors.len(), 1);
+        assert!(missing.errors[0].contains("Liftover chain missing"));
+
+        let definition = asset_def(OfflineAssetId::LiftoverChain).expect("liftover definition");
+        let fixture_path = local_path(&data_dir, None, definition);
+        std::fs::write(&fixture_path, b"chain-fixture").expect("write recovery fixture");
+
+        let recovered = import_assets_sync(
+            &data_dir,
+            &db_path,
+            &[OfflineAssetId::LiftoverChain],
+            None,
+            None,
+        )
+        .expect("recovery import should complete");
+        assert_eq!(recovered.synced, vec!["liftover_chain"]);
+        assert!(recovered.errors.is_empty());
+
+        let conn = crate::db::connect(&db_path).expect("open recovered registry");
+        let registry = read_registry(&conn, "liftover_chain").expect("recovered registry row");
+        assert_eq!(registry.local_bytes, 13);
+        assert!(!registry.update_available);
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir).expect("remove import fixture directory");
     }
 }

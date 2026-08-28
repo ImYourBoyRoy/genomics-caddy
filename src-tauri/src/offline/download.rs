@@ -503,6 +503,122 @@ fn looks_like_download_filename(s: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::thread;
+
+    fn fixture_directory(label: &str) -> std::path::PathBuf {
+        static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
+        std::env::temp_dir().join(format!(
+            "dna_tools_{label}_{}_{}",
+            std::process::id(),
+            NEXT_ID.fetch_add(1, Ordering::Relaxed)
+        ))
+    }
+
+    fn read_request(stream: &mut TcpStream) -> Option<String> {
+        let mut bytes = Vec::new();
+        let mut chunk = [0u8; 1024];
+        loop {
+            let count = stream.read(&mut chunk).ok()?;
+            if count == 0 {
+                break;
+            }
+            bytes.extend_from_slice(&chunk[..count]);
+            if bytes.windows(4).any(|window| window == b"\r\n\r\n") {
+                break;
+            }
+            if bytes.len() > 16 * 1024 {
+                return None;
+            }
+        }
+        String::from_utf8(bytes).ok()
+    }
+
+    fn write_fixture_response(stream: &mut TcpStream, status: &str, body: &[u8], headers: &str) {
+        let response = format!(
+            "HTTP/1.1 {status}\r\nContent-Length: {}\r\nConnection: close\r\n{headers}\r\n",
+            body.len()
+        );
+        stream
+            .write_all(response.as_bytes())
+            .expect("write fixture response headers");
+        if !body.is_empty() {
+            stream.write_all(body).expect("write fixture response body");
+        }
+    }
+
+    fn write_fixture_head_response(stream: &mut TcpStream, headers: &str) {
+        let response =
+            format!("HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n{headers}\r\n");
+        stream
+            .write_all(response.as_bytes())
+            .expect("write fixture HEAD response");
+    }
+
+    fn spawn_retry_fixture_server(listener: TcpListener) -> thread::JoinHandle<()> {
+        listener
+            .set_nonblocking(true)
+            .expect("set fixture listener nonblocking");
+        thread::spawn(move || {
+            let deadline = std::time::Instant::now() + Duration::from_secs(10);
+            let mut get_attempts = 0u8;
+            let mut requests = 0u8;
+            while requests < 7 && std::time::Instant::now() < deadline {
+                let (mut stream, _) = match listener.accept() {
+                    Ok(connection) => connection,
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                        thread::sleep(Duration::from_millis(5));
+                        continue;
+                    }
+                    Err(_) => break,
+                };
+                requests += 1;
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .expect("set fixture read timeout");
+                let Some(request) = read_request(&mut stream) else {
+                    continue;
+                };
+                let mut request_parts = request.split_whitespace();
+                let method = request_parts.next().unwrap_or_default();
+                let path = request_parts.next().unwrap_or_default();
+                let has_range_probe = request
+                    .lines()
+                    .any(|line| line.to_ascii_lowercase().starts_with("range:"));
+                if path.ends_with(".md5") {
+                    write_fixture_response(&mut stream, "404 Not Found", &[], "");
+                } else if method == "HEAD" {
+                    write_fixture_head_response(
+                        &mut stream,
+                        "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else if method == "GET" && has_range_probe {
+                    write_fixture_response(
+                        &mut stream,
+                        "206 Partial Content",
+                        b"h",
+                        "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else if method == "GET" {
+                    get_attempts += 1;
+                    if get_attempts == 1 {
+                        write_fixture_response(&mut stream, "503 Service Unavailable", &[], "");
+                    } else {
+                        write_fixture_response(
+                            &mut stream,
+                            "200 OK",
+                            b"hello",
+                            "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                        );
+                    }
+                } else {
+                    write_fixture_response(&mut stream, "405 Method Not Allowed", &[], "");
+                }
+            }
+        })
+    }
 
     #[test]
     fn parses_clingen_disposition_filename() {
@@ -611,5 +727,40 @@ mod tests {
             Some(100),
             Some("catalog-2026-07-11.csv"),
         ));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn failed_download_preserves_known_good_file_and_retry_recovers_from_fixture() {
+        let directory = fixture_directory("download_recovery");
+        std::fs::create_dir_all(&directory).expect("create fixture directory");
+        let destination = directory.join("fixture.bin");
+        let part_path = directory.join("fixture.bin.part");
+        std::fs::write(&destination, b"known-good").expect("write known-good file");
+
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind fixture server");
+        let address = listener.local_addr().expect("read fixture address");
+        let server = spawn_retry_fixture_server(listener);
+        let url = format!("http://{address}/fixture.bin");
+
+        let first_attempt = download_to_path(&url, &destination, 1024, |_, _| {}).await;
+        assert!(first_attempt.is_err());
+        assert_eq!(
+            std::fs::read(&destination).expect("read preserved file"),
+            b"known-good"
+        );
+        assert!(!part_path.exists());
+
+        let second_attempt = download_to_path(&url, &destination, 1024, |_, _| {})
+            .await
+            .expect("retry fixture download");
+        assert_eq!(second_attempt.0, 5);
+        assert_eq!(
+            std::fs::read(&destination).expect("read recovered file"),
+            b"hello"
+        );
+        assert!(!part_path.exists());
+
+        server.join().expect("join fixture server");
+        std::fs::remove_dir_all(&directory).expect("remove fixture directory");
     }
 }

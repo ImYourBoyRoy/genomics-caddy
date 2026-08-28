@@ -267,14 +267,21 @@ async function assertNoRedundantPublicCopy() {
 
 async function ensurePopulatedSection() {
   let snapshot = await request("/ui/snapshot");
-  if (snapshot.layout?.markerCardCount > 0) return snapshot;
+  if (
+    snapshot.layout?.markerCardCount > 0 &&
+    snapshot.layout?.expandedSectionNames?.includes("Pharmacogenomics (PGx)")
+  ) return snapshot;
 
-  await request("/ui/clickSection", {
+  const result = await request("/ui/clickSection", {
     method: "POST",
     body: JSON.stringify({ section: "Pharmacogenomics (PGx)" }),
   });
+  assert(result?.ok === true, "Could not activate the PGx report section");
   snapshot = await waitForSnapshot(
-    (candidate) => candidate.layout?.activePresentationMode === "simple" && candidate.layout.markerCardCount > 0,
+    (candidate) =>
+      candidate.layout?.activePresentationMode === "simple" &&
+      candidate.layout.markerCardCount > 0 &&
+      candidate.layout.expandedSectionNames?.includes("Pharmacogenomics (PGx)"),
     "a populated Simple report section",
     5_000,
   );
@@ -282,17 +289,38 @@ async function ensurePopulatedSection() {
   return snapshot;
 }
 
-async function ensureCollapsedSection() {
-  const snapshot = await request("/ui/snapshot");
-  if (snapshot.layout?.markerCardCount === 0) return;
+async function ensureCollapsedSections() {
+  let snapshot = await request("/ui/snapshot");
+  let expandedSections = snapshot.layout?.expandedSectionNames;
+  if (!Array.isArray(expandedSections)) {
+    throw new Error("Desktop bridge did not expose expanded report sections");
+  }
 
-  await request("/ui/clickSection", {
-    method: "POST",
-    body: JSON.stringify({ section: "Pharmacogenomics (PGx)" }),
-  });
+  while (expandedSections.length > 0) {
+    const sectionName = expandedSections[0];
+    const result = await request("/ui/clickSection", {
+      method: "POST",
+      body: JSON.stringify({ section: sectionName }),
+    });
+    assert(result?.ok === true, `Could not collapse report section ${sectionName}`);
+    assert(
+      result.detail?.startsWith("collapsed:"),
+      `Expected report section ${sectionName} to collapse`,
+    );
+    snapshot = await waitForSnapshot(
+      (candidate) => !candidate.layout?.expandedSectionNames?.includes(sectionName),
+      `report section ${sectionName} to collapse`,
+      5_000,
+    );
+    expandedSections = snapshot.layout?.expandedSectionNames;
+    if (!Array.isArray(expandedSections)) {
+      throw new Error("Desktop bridge lost expanded report-section state");
+    }
+  }
+
   await waitForSnapshot(
     (candidate) => candidate.layout?.activePresentationMode === "simple" && candidate.layout.markerCardCount === 0,
-    "the populated section to collapse",
+    "all populated report sections to collapse",
     5_000,
   );
 }
@@ -327,7 +355,7 @@ async function main() {
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();
-  await ensureCollapsedSection();
+  await ensureCollapsedSections();
   await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
 

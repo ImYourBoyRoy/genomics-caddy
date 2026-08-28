@@ -110,6 +110,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * **Tauri Executable Auto-Detection:** Dynamically queries the exact path of the running executable on the user's filesystem.
 * **Active Tool Catalog:** Exposes a list of all active MCP tools and parameters in Svelte using live schemas queried from the Rust backend.
 * **Deterministic UI actions:** The local agent bridge normalizes emoji/punctuation presentation and prefers exact visible or accessible control labels, so commands such as `Clinical` select the reading-mode control instead of a similarly named finding.
+* The privacy-safe desktop bridge exposes aggregate expanded report-section labels so QA can target the sections actually open in the Tauri window without reading report text or genotype-bearing details.
 
 ### 10. Live Chromosome Density & Variant Map
 * **SQLite Live Density Query:** Computes and renders SNP density across 24 chromosomes (1-22, X, Y) based on actual records stored in the local SQLite genotypes database.

@@ -172,6 +172,10 @@ function validateAccessibilitySnapshot(snapshot) {
     accessibility.guidanceToggleCount === accessibility.boundGuidanceToggleCount,
     "At least one dashboard guidance toggle points to a missing panel",
   );
+  assert(
+    accessibility.expandedControlCount === accessibility.boundExpandedControlCount,
+    "At least one expanded-state control points to a missing panel",
+  );
   assert(accessibility.focusControlTargetsSidebar === true, "Focus Report control does not target the data sidebar");
 }
 

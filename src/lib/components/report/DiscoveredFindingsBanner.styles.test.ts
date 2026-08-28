@@ -11,7 +11,7 @@ const bannerStyles = source.slice(source.indexOf('<style>'), source.indexOf('</s
 describe('DiscoveredFindingsBanner disclosure surface', () => {
   it('exposes a labelled disclosure relationship for the findings list', () => {
     expect(source).toContain('aria-expanded={expanded}');
-    expect(source).toContain('aria-controls="discovered-findings-list"');
+    expect(source).toContain('aria-controls={expanded ? "discovered-findings-list" : undefined}');
     expect(source).toContain('id="discovered-findings-list"');
     expect(source).toContain('aria-label={expanded ? "Hide discovered findings" : "Show discovered findings"}');
   });

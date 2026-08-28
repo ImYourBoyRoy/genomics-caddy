@@ -13,6 +13,10 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).not.toContain('if (companion?.update_available)');
   });
 
+  it('does not advertise a missing collapsed data panel as an aria-controls target', () => {
+    expect(sidebarSource).toContain('aria-controls={isPanelCollapsed ? undefined : "data-updates-panel"}');
+  });
+
   it('ignores stale status probes and waits for one final bulk-update refresh', () => {
     expect(sidebarSource).toContain('let statusRefreshGeneration = 0;');
     expect(sidebarSource).toContain('const generation = ++statusRefreshGeneration;');

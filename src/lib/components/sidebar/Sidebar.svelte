@@ -917,7 +917,7 @@ import { onMount, onDestroy } from 'svelte';
       class="data-updates-toggle"
       onclick={() => isPanelCollapsed = !isPanelCollapsed}
       aria-expanded={!isPanelCollapsed}
-      aria-controls="data-updates-panel"
+      aria-controls={isPanelCollapsed ? undefined : "data-updates-panel"}
     >
       <span class="data-updates-heading">
         <strong id="data-updates-title">Data &amp; updates</strong>

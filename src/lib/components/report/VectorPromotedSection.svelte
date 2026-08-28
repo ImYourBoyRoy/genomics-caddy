@@ -80,7 +80,7 @@
         type="button"
         class="toggle"
         aria-expanded={expanded}
-        aria-controls={promotedBodyId}
+        aria-controls={expanded ? promotedBodyId : undefined}
         onclick={() => (expanded = !expanded)}
       >
         {expanded ? "Hide" : "Show"}

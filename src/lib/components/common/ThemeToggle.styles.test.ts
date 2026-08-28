@@ -26,6 +26,13 @@ describe('ThemeToggle desktop toolbar placement', () => {
     expect(source).toContain('aria-label={`Appearance: ${themeModeLabel(mode)}`}');
   });
 
+  it('keeps the menu target mounted while hiding its optional contents', () => {
+    expect(source).toContain('id="theme-options"');
+    expect(source).toContain('aria-hidden={!isOpen}');
+    expect(source).toContain('hidden={!isOpen}');
+    expect(source).not.toContain('{#if isOpen}\n    <div id="theme-options"');
+  });
+
   it('uses theme-aware floating shadow tokens', () => {
     expect(source).toContain('box-shadow: 0 0.5rem 1.25rem var(--shadow-floating);');
     expect(source).toContain('box-shadow: 0 0.75rem 2rem var(--shadow-floating);');

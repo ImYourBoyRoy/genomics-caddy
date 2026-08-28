@@ -84,6 +84,8 @@ export interface AgentUiAccessibilityMetrics {
   boundSectionToggleCount: number;
   guidanceToggleCount: number;
   boundGuidanceToggleCount: number;
+  expandedControlCount: number;
+  boundExpandedControlCount: number;
   focusControlTargetsSidebar: boolean;
 }
 
@@ -356,6 +358,11 @@ function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
     const controlsId = toggle.getAttribute('aria-controls');
     return !!controlsId && !!document.getElementById(controlsId);
   });
+  const expandedControls = Array.from(document.querySelectorAll<HTMLElement>('[aria-expanded][aria-controls]'));
+  const boundExpandedControls = expandedControls.filter((control) => {
+    const controlsId = control.getAttribute('aria-controls');
+    return !!controlsId && !!document.getElementById(controlsId);
+  });
   const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
 
   return {
@@ -370,6 +377,8 @@ function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
     boundSectionToggleCount: boundSectionToggles.length,
     guidanceToggleCount: guidanceToggles.length,
     boundGuidanceToggleCount: boundGuidanceToggles.length,
+    expandedControlCount: expandedControls.length,
+    boundExpandedControlCount: boundExpandedControls.length,
     focusControlTargetsSidebar: focusControl?.getAttribute('aria-controls') === 'data-sidebar',
   };
 }

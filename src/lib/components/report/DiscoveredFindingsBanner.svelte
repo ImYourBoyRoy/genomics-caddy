@@ -64,7 +64,7 @@
         type="button"
         class="toggle-btn"
         aria-expanded={expanded}
-        aria-controls="discovered-findings-list"
+        aria-controls={expanded ? "discovered-findings-list" : undefined}
         aria-label={expanded ? "Hide discovered findings" : "Show discovered findings"}
         onclick={() => (expanded = !expanded)}
       >

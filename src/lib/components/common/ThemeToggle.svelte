@@ -122,21 +122,30 @@
     <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
     <span>{themeModeLabel(mode)}</span>
   </button>
-  {#if isOpen}
-    <div id="theme-options" class="theme-options" role="menu" tabindex="-1" aria-label="Appearance preference" aria-orientation="vertical" bind:this={optionsElement} onkeydown={handleMenuKeydown}>
-      {#each themeOptions as option}
-        <button
-          type="button"
-          class:active={mode === option.id}
-          role="menuitemradio"
-          aria-checked={mode === option.id}
-          onclick={() => selectTheme(option.id)}
-        >
-          <span aria-hidden="true">{option.icon}</span> {option.label}
-        </button>
-      {/each}
-    </div>
-  {/if}
+  <div
+    id="theme-options"
+    class="theme-options"
+    role="menu"
+    tabindex="-1"
+    aria-label="Appearance preference"
+    aria-orientation="vertical"
+    aria-hidden={!isOpen}
+    hidden={!isOpen}
+    bind:this={optionsElement}
+    onkeydown={handleMenuKeydown}
+  >
+    {#each themeOptions as option}
+      <button
+        type="button"
+        class:active={mode === option.id}
+        role="menuitemradio"
+        aria-checked={mode === option.id}
+        onclick={() => selectTheme(option.id)}
+      >
+        <span aria-hidden="true">{option.icon}</span> {option.label}
+      </button>
+    {/each}
+  </div>
 </div>
 
 <style>

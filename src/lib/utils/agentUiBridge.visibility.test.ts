@@ -72,6 +72,8 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('boundSectionToggleCount');
     expect(source).toContain('guidanceToggleCount');
     expect(source).toContain('boundGuidanceToggleCount');
+    expect(source).toContain('expandedControlCount');
+    expect(source).toContain('boundExpandedControlCount');
     expect(source).toContain("focusControl?.getAttribute('aria-controls') === 'data-sidebar'");
     expect(source).not.toContain('accessibility.textContent');
   });

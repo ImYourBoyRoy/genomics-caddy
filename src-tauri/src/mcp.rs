@@ -1807,4 +1807,73 @@ mod tests {
         assert_eq!(payload["results"][0]["tier"], 0);
         assert_eq!(payload["final_status"]["total_updates_available"], 0);
     }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn mcp_offline_sync_and_reload_return_terminal_status() {
+        static NEXT_ID: std::sync::atomic::AtomicUsize =
+            std::sync::atomic::AtomicUsize::new(0);
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_mcp_recovery_{}_{}",
+            std::process::id(),
+            NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&data_dir).expect("create MCP fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+
+        let conn = crate::db::open_user_db(&db_path).expect("bootstrap MCP fixture database");
+        conn.execute(
+            "INSERT INTO samples (name, genetic_sex) VALUES ('mcp-fixture-sample', 'Unknown')",
+            [],
+        )
+        .expect("insert MCP fixture sample");
+        let sample_id = conn.last_insert_rowid();
+        for definition in crate::offline::manifest::all_assets()
+            .iter()
+            .filter(|definition| definition.url.is_some())
+        {
+            conn.execute(
+                "INSERT OR REPLACE INTO reference.offline_asset_registry (
+                    asset_id, tier, local_path, source_url, remote_content_length,
+                    local_bytes, row_count, synced_at, update_available
+                 ) VALUES (?, ?, '', ?, 1, 0, 0, 1, 0)",
+                params![
+                    definition.id.as_str(),
+                    definition.tier as i64,
+                    definition.url.unwrap_or("")
+                ],
+            )
+            .expect("seed deterministic remote metadata");
+        }
+        drop(conn);
+        drop(crate::db::connect_sample(&data_dir, sample_id).expect("create MCP sample database"));
+
+        let status = mcp_offline_tool("get_offline_update_status", json!({}), &db_path)
+            .await
+            .expect("MCP status check");
+        assert_eq!(status["total_updates_available"], 0);
+
+        let sync = mcp_offline_tool(
+            "sync_offline_asset",
+            json!({"asset_id": "tier2_variant_locus"}),
+            &db_path,
+        )
+        .await
+        .expect("MCP derived-resource sync");
+        assert_eq!(sync["assets_synced"][0], "tier2_variant_locus");
+        assert!(sync["errors"].as_array().is_some_and(Vec::is_empty));
+        assert_eq!(sync["final_status"]["total_updates_available"], 0);
+
+        let reload = execute_tool(
+            "reload_report",
+            json!({"sample_id": sample_id}),
+            &db_path,
+            false,
+        )
+        .await
+        .expect("MCP report reload");
+        assert_eq!(reload["status"], "ready");
+        assert_eq!(reload["sample_id"].as_i64(), Some(sample_id));
+
+        std::fs::remove_dir_all(&data_dir).expect("remove MCP fixture directory");
+    }
 }

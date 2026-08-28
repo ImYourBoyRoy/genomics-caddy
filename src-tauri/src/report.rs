@@ -610,6 +610,16 @@ pub fn resolve_normalized_rsids(conn: &Connection, rsids: &[String]) -> HashMap<
     map
 }
 
+fn catalog_table_available(conn: &Connection, schema: &str, table: &str) -> bool {
+    if !schema_attached(conn, schema) {
+        return false;
+    }
+    let sql = format!(
+        "SELECT 1 FROM {schema}.sqlite_master WHERE type = 'table' AND name = ?1 LIMIT 1"
+    );
+    conn.query_row(&sql, [table], |_| Ok(true)).is_ok()
+}
+
 /// Fetch ClinVar and GWAS reference data for a batch of rsIDs in a single SQL query.
 /// Returns a map keyed by rsID. Missing rsIDs will simply be absent from the map.
 fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String, LocalEnrichment> {
@@ -640,32 +650,29 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
 
-    // Query ClinVar (fail loud via catalog_warnings when schema missing — do not silently skip forever)
-    let sql_clinvar = format!(
-        "SELECT rsid, clinical_significance, conditions, review_status 
-         FROM clinvar.clinvar_reference WHERE rsid IN ({})",
-        placeholders
-    );
     let mut clinvar_data = HashMap::new();
-    match conn.prepare(&sql_clinvar) {
-        Ok(mut stmt) => {
-            if let Ok(rows) = stmt.query_map(params.as_slice(), |row| {
+    // ClinVar is optional until the user downloads it. The report-level
+    // catalog_warnings field already explains that state, so do not emit a
+    // duplicate stderr warning for an expected missing table.
+    if catalog_table_available(conn, "clinvar", "clinvar_reference") {
+        let sql_clinvar = format!(
+            "SELECT rsid, clinical_significance, conditions, review_status
+             FROM clinvar.clinvar_reference WHERE rsid IN ({})",
+            placeholders
+        );
+        if let Ok(mut stmt) = conn.prepare(&sql_clinvar)
+            && let Ok(rows) = stmt.query_map(params.as_slice(), |row| {
                 Ok((
                     row.get::<_, String>(0)?,
                     row.get::<_, Option<String>>(1)?,
                     row.get::<_, Option<String>>(2)?,
                     row.get::<_, Option<String>>(3)?,
                 ))
-            }) {
-                for r in rows.flatten() {
-                    clinvar_data.insert(r.0.to_lowercase(), r);
-                }
+            })
+        {
+            for r in rows.flatten() {
+                clinvar_data.insert(r.0.to_lowercase(), r);
             }
-        }
-        Err(e) => {
-            eprintln!(
-                "ClinVar enrichment query failed (catalog missing or not indexed?): {e}"
-            );
         }
     }
 
@@ -1991,6 +1998,34 @@ mod tests {
         )
         .unwrap();
         conn
+    }
+
+    #[test]
+    fn missing_optional_catalog_table_is_detected_without_querying_it() {
+        let conn = setup_test_db();
+        assert!(!catalog_table_available(
+            &conn,
+            "clinvar",
+            "clinvar_reference"
+        ));
+
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", [])
+            .unwrap();
+        assert!(!catalog_table_available(
+            &conn,
+            "clinvar",
+            "clinvar_reference"
+        ));
+        conn.execute(
+            "CREATE TABLE clinvar.clinvar_reference (rsid TEXT PRIMARY KEY)",
+            [],
+        )
+        .unwrap();
+        assert!(catalog_table_available(
+            &conn,
+            "clinvar",
+            "clinvar_reference"
+        ));
     }
 
     #[test]

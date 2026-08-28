@@ -1182,6 +1182,16 @@ pub fn offline_status_summary(conn: &Connection, data_dir: &Path) -> (u64, u64, 
 mod tests {
     use super::*;
 
+    fn fixture_data_dir(label: &str) -> std::path::PathBuf {
+        static NEXT_ID: std::sync::atomic::AtomicUsize =
+            std::sync::atomic::AtomicUsize::new(0);
+        std::env::temp_dir().join(format!(
+            "dna_tools_{label}_{}_{}",
+            std::process::id(),
+            NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ))
+    }
+
     #[test]
     fn gwas_downloads_when_a_newer_remote_identity_is_proven() {
         assert!(gwas_download_required(false, true, true));
@@ -1200,12 +1210,7 @@ mod tests {
 
     #[test]
     fn local_import_reports_missing_fixture_then_recovers() {
-        static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-        let data_dir = std::env::temp_dir().join(format!(
-            "dna_tools_import_recovery_{}_{}",
-            std::process::id(),
-            NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        ));
+        let data_dir = fixture_data_dir("import_recovery");
         std::fs::create_dir_all(&data_dir).expect("create import fixture directory");
         let db_path = data_dir.join("user_genome.db");
 
@@ -1242,5 +1247,58 @@ mod tests {
         assert!(!registry.update_available);
         drop(conn);
         std::fs::remove_dir_all(&data_dir).expect("remove import fixture directory");
+    }
+
+    #[test]
+    fn clingen_import_reports_missing_fixture_then_recovers_with_real_csv_shape() {
+        let data_dir = fixture_data_dir("clingen_recovery");
+        std::fs::create_dir_all(&data_dir).expect("create ClinGen fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+
+        let missing = import_assets_sync(
+            &data_dir,
+            &db_path,
+            &[OfflineAssetId::ClingenGeneValidity],
+            None,
+            None,
+        )
+        .expect("missing ClinGen fixture should be reported in the batch result");
+        assert!(missing.synced.is_empty());
+        assert_eq!(missing.errors.len(), 1);
+        assert!(missing.errors[0].contains("ClinGen CSV missing"));
+
+        let definition =
+            asset_def(OfflineAssetId::ClingenGeneValidity).expect("ClinGen definition");
+        let fixture_path = local_path(&data_dir, None, definition);
+        std::fs::create_dir_all(fixture_path.parent().expect("ClinGen fixture parent"))
+            .expect("create ClinGen fixture parent");
+        std::fs::write(
+            &fixture_path,
+            "ClinGen fixture preamble\n\"GENE SYMBOL\",\"DISEASE LABEL\",\"CLASSIFICATION\",\"MOI\",\"ONLINE REPORT\",\"GENE ID (HGNC)\"\n\"FIXTURE1\",\"Fixture condition\",\"Definitive\",\"Autosomal dominant\",\"https://example.invalid/fixture\",\"HGNC:1\"\n",
+        )
+        .expect("write ClinGen CSV fixture");
+
+        let recovered = import_assets_sync(
+            &data_dir,
+            &db_path,
+            &[OfflineAssetId::ClingenGeneValidity],
+            None,
+            None,
+        )
+        .expect("ClinGen recovery import should complete");
+        assert_eq!(recovered.synced, vec!["clingen_gene_validity"]);
+        assert!(recovered.errors.is_empty());
+
+        let conn = crate::db::connect(&db_path).expect("open recovered ClinGen registry");
+        assert_eq!(
+            row_count_for_asset(&conn, OfflineAssetId::ClingenGeneValidity),
+            1
+        );
+        let registry = read_registry(&conn, "clingen_gene_validity")
+            .expect("recovered ClinGen registry row");
+        assert!(registry.local_bytes > 0);
+        assert!(!registry.update_available);
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir).expect("remove ClinGen fixture directory");
     }
 }

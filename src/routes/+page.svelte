@@ -50,6 +50,7 @@
     runImportGenome,
     warmReport as runWarmReport,
     triggerReport as runTriggerReport,
+    reloadReport as runReloadReport,
     deleteSampleWithConfirm,
     fetchSamples,
     searchVariants,
@@ -168,6 +169,7 @@
   let rawReport = $state<NormalizedReport | null>(null);
   let isGeneratingReport = $state(false);
   let reportError = $state("");
+  let reportRequestGeneration = 0;
 
   let searchRsid = $state("");
   let browseChr = $state("1");
@@ -480,9 +482,11 @@
   }
 
   async function warmReport(sampleId: number) {
+    const generation = ++reportRequestGeneration;
     await runWarmReport({
       sampleId,
       onState: (patch) => {
+        if (generation !== reportRequestGeneration) return;
         if (patch.isGeneratingReport !== undefined) isGeneratingReport = patch.isGeneratingReport;
         if (patch.reportError !== undefined) reportError = patch.reportError;
         if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
@@ -493,6 +497,10 @@
 
   async function triggerReport() {
     await runTriggerReport({ selectedSample, generatedReport, warmReportFn: warmReport });
+  }
+
+  async function reloadReport() {
+    await runReloadReport({ selectedSample, warmReportFn: warmReport });
   }
 
   async function deleteSample(id: number) {
@@ -569,7 +577,7 @@
       onDeleteSample={deleteSample}
       onOpenConnections={() => selectTab("connections")}
       onResourcesUpdated={async () => {
-        await triggerReport();
+        await reloadReport();
       }}
     />
   {/snippet}

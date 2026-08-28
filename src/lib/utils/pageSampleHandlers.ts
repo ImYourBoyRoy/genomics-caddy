@@ -100,6 +100,20 @@ export async function triggerReport({
   await warmReportFn(selectedSample.id);
 }
 
+export interface ReloadReportParams {
+  selectedSample: GenomeSample | null;
+  warmReportFn: (sampleId: number) => Promise<void>;
+}
+
+/** Rebuild an existing report after resource data changes. */
+export async function reloadReport({
+  selectedSample,
+  warmReportFn,
+}: ReloadReportParams): Promise<void> {
+  if (!selectedSample) return;
+  await warmReportFn(selectedSample.id);
+}
+
 export interface DeleteSampleParams {
   id: number;
   selectedSample: GenomeSample | null;

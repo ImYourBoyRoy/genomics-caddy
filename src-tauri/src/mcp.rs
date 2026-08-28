@@ -234,6 +234,18 @@ async fn handle_request(
                         }
                     },
                     {
+                        "name": "reload_report",
+                        "description": "Regenerates a report from the current local resources and returns status=ready only after generation completes. Use after a resource sync to confirm report reload completion.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "sample_id": { "type": "integer", "description": "The target sample ID" },
+                                "template_json": { "type": "string", "description": "Optional JSON string of a custom report template. If omitted, all built-in marker packs are used." }
+                            },
+                            "required": ["sample_id"]
+                        }
+                    },
+                    {
                         "name": "list_packs",
                         "description": "Lists all available predefined genomic marker packs/bundles and their descriptions.",
                         "inputSchema": {
@@ -356,7 +368,7 @@ async fn handle_request(
                     },
                     {
                         "name": "sync_offline_data",
-                        "description": "Syncs one offline data tier or all tiers. Requires --mcp-write; returns sync/validation messages without genotype values.",
+                        "description": "Syncs one offline data tier or all tiers. Requires --mcp-write; a tier request keeps its sync fields and adds final_status, while an all-tier request returns {results, final_status}; no genotype values.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -662,15 +674,23 @@ async fn handle_request(
     }
 }
 
-/// Adds an authoritative post-sync status snapshot without changing the
-/// existing single-asset result fields. The status object contains only local
-/// resource metadata and indexed row counts; it never contains genotype calls.
+/// Adds an authoritative post-sync status snapshot. Object payloads retain
+/// their existing result fields; array payloads are wrapped as `results` so a
+/// bulk sync can return one status snapshot without changing each result item.
+/// The status object contains only local resource metadata and indexed row
+/// counts; it never contains genotype calls.
 fn attach_offline_final_status(sync_payload: Value, status: Value) -> Result<Value, String> {
-    let Value::Object(mut payload) = sync_payload else {
-        return Err("Offline sync serialization did not produce an object".into());
-    };
-    payload.insert("final_status".into(), status);
-    Ok(Value::Object(payload))
+    match sync_payload {
+        Value::Object(mut payload) => {
+            payload.insert("final_status".into(), status);
+            Ok(Value::Object(payload))
+        }
+        Value::Array(results) => Ok(json!({
+            "results": results,
+            "final_status": status,
+        })),
+        _ => Err("Offline sync serialization did not produce an object or array".into()),
+    }
 }
 
 /// Offline resource operations exposed to MCP use the same manifest/sync
@@ -726,8 +746,12 @@ async fn mcp_offline_tool(name: &str, args: Value, db_path: &Path) -> Result<Val
                     None,
                 )
                 .await?;
-                return serde_json::to_value(result)
-                    .map_err(|e| format!("Offline sync serialization error: {e}"));
+                let sync_payload = serde_json::to_value(result)
+                    .map_err(|e| format!("Offline sync serialization error: {e}"))?;
+                let final_status = crate::offline::check_offline_updates(data_dir, db_path).await?;
+                let final_status = serde_json::to_value(final_status)
+                    .map_err(|e| format!("Offline status serialization error: {e}"))?;
+                return attach_offline_final_status(sync_payload, final_status);
             }
 
             let mut results = Vec::new();
@@ -744,11 +768,75 @@ async fn mcp_offline_tool(name: &str, args: Value, db_path: &Path) -> Result<Val
                     .await?,
                 );
             }
-            Ok(serde_json::to_value(results)
-                .map_err(|e| format!("Offline sync serialization error: {e}"))?)
+            let sync_payload = serde_json::to_value(results)
+                .map_err(|e| format!("Offline sync serialization error: {e}"))?;
+            let final_status = crate::offline::check_offline_updates(data_dir, db_path).await?;
+            let final_status = serde_json::to_value(final_status)
+                .map_err(|e| format!("Offline status serialization error: {e}"))?;
+            attach_offline_final_status(sync_payload, final_status)
         }
         _ => Err(format!("Unknown offline tool: {name}")),
     }
+}
+
+/// Generates a fresh report from the current sample database and marker-pack
+/// resources. This is shared by the normal report tool and the explicit
+/// reload tool so both paths use identical report construction.
+async fn mcp_generate_report(args: &Value, db_path: &Path) -> Result<Value, String> {
+    let sample_id = args
+        .get("sample_id")
+        .and_then(|v| v.as_i64())
+        .ok_or("Missing sample_id")?;
+    let app_data_dir = db_path.parent();
+
+    let template = if let Some(template_json) = args.get("template_json").and_then(|v| v.as_str()) {
+        crate::config::validate_template_json(template_json)?;
+        serde_json::from_str::<crate::report::ReportTemplate>(template_json)
+            .map_err(|e| format!("Failed to parse template: {e}"))?
+    } else {
+        #[derive(Debug, Deserialize)]
+        struct ManifestPack {
+            id: String,
+        }
+        #[derive(Debug, Deserialize)]
+        struct Manifest {
+            packs: Vec<ManifestPack>,
+        }
+        #[derive(Debug, Deserialize)]
+        struct PackContent {
+            name: String,
+            markers: Vec<crate::report::MarkerDefinition>,
+        }
+
+        let manifest_str = crate::db::get_manifest_str(app_data_dir);
+        let manifest: Manifest = serde_json::from_str(&manifest_str)
+            .map_err(|e| format!("Failed to parse manifest: {e}"))?;
+
+        let mut sections = Vec::new();
+        for pack in &manifest.packs {
+            crate::config::validate_pack_id(&pack.id)?;
+            let Some(pack_str) = crate::db::get_pack_str(app_data_dir, &pack.id) else {
+                continue;
+            };
+            let pack_content: PackContent = serde_json::from_str(&pack_str)
+                .map_err(|e| format!("Failed to parse pack {}: {e}", pack.id))?;
+            sections.push(crate::report::SectionDefinition {
+                name: pack_content.name,
+                markers: pack_content.markers,
+            });
+        }
+
+        crate::report::ReportTemplate {
+            title: "DNA Analysis & Biohacker Profile Report".to_string(),
+            description: "Personal genomic profile matching candidate markers across multiple health systems.".to_string(),
+            sections,
+        }
+    };
+
+    let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
+        .map_err(|e| e.to_string())?;
+    let report = crate::report::generate_report(&sample_conn, sample_id, &template)?;
+    serde_json::to_value(report).map_err(|e| format!("Serialization error: {e}"))
 }
 
 async fn execute_tool(
@@ -831,63 +919,18 @@ async fn execute_tool(
                 .map_err(|e| format!("Query failed: {}", e))?;
             Ok(json!(results))
         }
-        "generate_report" => {
+        "generate_report" => mcp_generate_report(&args, db_path).await,
+        "reload_report" => {
             let sample_id = args
                 .get("sample_id")
                 .and_then(|v| v.as_i64())
                 .ok_or("Missing sample_id")?;
-            let app_data_dir = db_path.parent();
-
-            let template = if let Some(template_json) = args.get("template_json").and_then(|v| v.as_str())
-            {
-                crate::config::validate_template_json(template_json)?;
-                serde_json::from_str::<crate::report::ReportTemplate>(template_json)
-                    .map_err(|e| format!("Failed to parse template: {}", e))?
-            } else {
-                // Default: all built-in packs (same path as get_report_for_packs with empty pack_ids)
-                #[derive(Debug, Deserialize)]
-                struct ManifestPack {
-                    id: String,
-                }
-                #[derive(Debug, Deserialize)]
-                struct Manifest {
-                    packs: Vec<ManifestPack>,
-                }
-                #[derive(Debug, Deserialize)]
-                struct PackContent {
-                    name: String,
-                    markers: Vec<crate::report::MarkerDefinition>,
-                }
-
-                let manifest_str = crate::db::get_manifest_str(app_data_dir);
-                let manifest: Manifest = serde_json::from_str(&manifest_str)
-                    .map_err(|e| format!("Failed to parse manifest: {}", e))?;
-
-                let mut sections = Vec::new();
-                for pack in &manifest.packs {
-                    crate::config::validate_pack_id(&pack.id)?;
-                    let Some(pack_str) = crate::db::get_pack_str(app_data_dir, &pack.id) else {
-                        continue;
-                    };
-                    let pack_content: PackContent = serde_json::from_str(&pack_str)
-                        .map_err(|e| format!("Failed to parse pack {}: {}", pack.id, e))?;
-                    sections.push(crate::report::SectionDefinition {
-                        name: pack_content.name,
-                        markers: pack_content.markers,
-                    });
-                }
-
-                crate::report::ReportTemplate {
-                    title: "DNA Analysis & Biohacker Profile Report".to_string(),
-                    description: "Personal genomic profile matching candidate markers across multiple health systems.".to_string(),
-                    sections,
-                }
-            };
-
-            let sample_conn = crate::db::connect_sample_from_registry_path(db_path, sample_id)
-                .map_err(|e| e.to_string())?;
-            let report = crate::report::generate_report(&sample_conn, sample_id, &template)?;
-            Ok(serde_json::to_value(report).map_err(|e| format!("Serialization error: {}", e))?)
+            let report = mcp_generate_report(&args, db_path).await?;
+            Ok(json!({
+                "status": "ready",
+                "sample_id": sample_id,
+                "report": report,
+            }))
         }
         "list_packs" => {
             let app_data_dir = db_path.parent();
@@ -1695,6 +1738,8 @@ mod tests {
         }
         assert!(mcp_tool_visible_read_only("list_samples"));
         assert!(mcp_tool_visible_read_only("search_evidence"));
+        assert!(mcp_tool_visible_read_only("reload_report"));
+        assert!(!mcp_tool_requires_write("reload_report"));
     }
 
     #[test]
@@ -1742,7 +1787,24 @@ mod tests {
 
     #[test]
     fn offline_final_status_requires_sync_object() {
-        let error = attach_offline_final_status(json!(["not-an-object"]), json!({}));
+        let error = attach_offline_final_status(json!("not-an-object"), json!({}));
         assert!(error.is_err());
+    }
+
+    #[test]
+    fn offline_final_status_wraps_bulk_results() {
+        let payload = attach_offline_final_status(
+            json!([{
+                "tier": 0,
+                "assets_synced": [],
+                "messages": [],
+                "errors": []
+            }]),
+            json!({"total_updates_available": 0}),
+        )
+        .unwrap();
+
+        assert_eq!(payload["results"][0]["tier"], 0);
+        assert_eq!(payload["final_status"]["total_updates_available"], 0);
     }
 }

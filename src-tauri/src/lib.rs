@@ -1738,6 +1738,14 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
             ]
         },
         {
+            "name": "reload_report",
+            "description": "Regenerates a report from current local resources and returns status=ready only after generation completes. Use after resource sync to confirm report reload completion.",
+            "params": [
+                { "name": "sample_id", "type": "integer", "required": true, "description": "The target sample ID" },
+                { "name": "template_json", "type": "string", "required": false, "description": "Optional JSON string of the report template" }
+            ]
+        },
+        {
             "name": "list_packs",
             "description": "Lists all available predefined genomic marker packs/bundles and their descriptions.",
             "params": []
@@ -1814,7 +1822,7 @@ fn get_mcp_tools() -> Result<serde_json::Value, String> {
         },
         {
             "name": "sync_offline_data",
-            "description": "Syncs one offline data tier or all tiers. Requires --mcp-write.",
+            "description": "Syncs one offline data tier or all tiers. Requires --mcp-write; a tier request keeps its sync fields and adds final_status, while an all-tier request returns {results, final_status}; no genotype values.",
             "params": [
                 { "name": "tier", "type": "integer", "required": false, "description": "Tier 0, 1, or 2; omit for all tiers" },
                 { "name": "force", "type": "boolean", "required": false, "description": "Re-download existing assets" },

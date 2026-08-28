@@ -84,9 +84,11 @@ pub fn import_clingen_gene_validity(conn: &Connection, path: &Path) -> Result<u6
         "reference.clingen_gene_validity"
     };
 
-    conn.execute(&format!("DELETE FROM {table}"), [])
-        .map_err(|e| e.to_string())?;
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
+    // Keep replacement and parsing in one transaction so a malformed stream
+    // rolls back to the previous known-good catalog instead of leaving it empty.
+    tx.execute(&format!("DELETE FROM {table}"), [])
+        .map_err(|e| e.to_string())?;
     let mut count = 0u64;
 
     for result in rdr.records() {
@@ -127,4 +129,87 @@ pub fn import_clingen_gene_validity(conn: &Connection, path: &Path) -> Result<u6
     }
     tx.commit().map_err(|e| e.to_string())?;
     Ok(count)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn malformed_csv_preserves_the_previous_catalog() {
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_clingen_transaction_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&data_dir);
+        std::fs::create_dir_all(&data_dir).expect("create ClinGen transaction fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+        let fixture_path = data_dir.join("gene-validity.csv");
+        let conn = crate::db::connect(&db_path).expect("open ClinGen transaction fixture DB");
+        crate::db::ensure_catalog_db_attached(&conn, &data_dir, "clingen")
+            .expect("attach ClinGen fixture catalog");
+        conn.execute(
+            "INSERT INTO clingen.clingen_gene_validity
+             (hgnc_id, gene_symbol, disease_label, classification, moi, report_url)
+             VALUES (?, ?, ?, ?, ?, ?)",
+            params![
+                "HGNC:OLD",
+                "OLDGENE",
+                "Old fixture condition",
+                "Definitive",
+                "Autosomal dominant",
+                "https://example.invalid/old"
+            ],
+        )
+        .expect("seed previous ClinGen row");
+
+        std::fs::write(
+            &fixture_path,
+            b"metadata\n\"GENE SYMBOL\",\"DISEASE LABEL\",\"CLASSIFICATION\"\n\"NEWGENE\",\"New fixture condition\",\"Definitive\"\n\xff\n",
+        )
+        .expect("write malformed ClinGen fixture");
+        let error = import_clingen_gene_validity(&conn, &fixture_path)
+            .expect_err("malformed ClinGen fixture should fail");
+        assert!(!error.is_empty());
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM clingen.clingen_gene_validity",
+                [],
+                |row| row.get(0),
+            )
+            .expect("count preserved ClinGen rows");
+        assert_eq!(count, 1);
+        assert_eq!(
+            conn.query_row(
+                "SELECT gene_symbol FROM clingen.clingen_gene_validity",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("read preserved ClinGen row"),
+            "OLDGENE"
+        );
+
+        std::fs::write(
+            &fixture_path,
+            "metadata\n\"GENE SYMBOL\",\"DISEASE LABEL\",\"CLASSIFICATION\"\n\"NEWGENE\",\"New fixture condition\",\"Definitive\"\n",
+        )
+        .expect("write valid ClinGen retry fixture");
+        assert_eq!(
+            import_clingen_gene_validity(&conn, &fixture_path)
+                .expect("valid ClinGen retry should succeed"),
+            1
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT gene_symbol FROM clingen.clingen_gene_validity",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("read retried ClinGen row"),
+            "NEWGENE"
+        );
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir).expect("remove ClinGen transaction fixture directory");
+    }
 }

@@ -50,9 +50,6 @@ pub fn import_pharmgkb_clinical_variants(
     } else {
         "reference.pharmgkb_clinical_variants"
     };
-    conn.execute(&format!("DELETE FROM {table}"), [])
-        .map_err(|e| e.to_string())?;
-
     let reader = BufReader::new(bytes.as_slice());
     let mut lines = reader.lines();
     let header = lines
@@ -73,6 +70,10 @@ pub fn import_pharmgkb_clinical_variants(
         col_index(&headers, "Level of Evidence").or_else(|| col_index(&headers, "Evidence Level"));
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
+    // Keep replacement and parsing in one transaction so a malformed stream
+    // rolls back to the previous known-good catalog instead of leaving it empty.
+    tx.execute(&format!("DELETE FROM {table}"), [])
+        .map_err(|e| e.to_string())?;
     let mut count = 0u64;
 
     for line in lines {
@@ -130,9 +131,6 @@ pub fn import_pharmgkb_genes(conn: &Connection, zip_path: &Path) -> Result<u64, 
     } else {
         "reference.pharmgkb_genes"
     };
-    conn.execute(&format!("DELETE FROM {table}"), [])
-        .map_err(|e| e.to_string())?;
-
     let reader = BufReader::new(bytes.as_slice());
     let mut lines = reader.lines();
     let header = lines
@@ -147,6 +145,10 @@ pub fn import_pharmgkb_genes(conn: &Connection, zip_path: &Path) -> Result<u64, 
     let name_idx = col_index(&headers, "Name");
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
+    // Keep replacement and parsing in one transaction so a malformed stream
+    // rolls back to the previous known-good catalog instead of leaving it empty.
+    tx.execute(&format!("DELETE FROM {table}"), [])
+        .map_err(|e| e.to_string())?;
     let mut count = 0u64;
     for line in lines {
         let line = line.map_err(|e| e.to_string())?;
@@ -178,4 +180,167 @@ pub fn import_pharmgkb_genes(conn: &Connection, zip_path: &Path) -> Result<u64, 
     }
     tx.commit().map_err(|e| e.to_string())?;
     Ok(count)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use zip::{ZipWriter, write::SimpleFileOptions};
+
+    fn write_zip(path: &Path, entry_name: &str, contents: &[u8]) {
+        let file = File::create(path).expect("create PharmGKB zip fixture");
+        let mut archive = ZipWriter::new(file);
+        archive
+            .start_file(entry_name, SimpleFileOptions::default())
+            .expect("create PharmGKB zip entry");
+        archive
+            .write_all(contents)
+            .expect("write PharmGKB zip entry");
+        archive.finish().expect("finish PharmGKB zip fixture");
+    }
+
+    #[test]
+    fn malformed_clinical_tsv_preserves_the_previous_catalog() {
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_pharmgkb_clinical_transaction_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&data_dir);
+        std::fs::create_dir_all(&data_dir)
+            .expect("create PharmGKB clinical transaction fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+        let fixture_path = data_dir.join("clinicalVariants.zip");
+        let conn = crate::db::connect(&db_path).expect("open PharmGKB transaction fixture DB");
+        crate::db::ensure_catalog_db_attached(&conn, &data_dir, "pharmgkb")
+            .expect("attach PharmGKB fixture catalog");
+        conn.execute(
+            "INSERT INTO pharmgkb.pharmgkb_clinical_variants
+             (rsid, gene, drug, phenotype, evidence_level, raw_json)
+             VALUES (?, ?, ?, ?, ?, ?)",
+            params![
+                "rs-old",
+                "OLDGENE",
+                "OldDrug",
+                "Old fixture phenotype",
+                "4",
+                "fixture"
+            ],
+        )
+        .expect("seed previous PharmGKB clinical row");
+
+        write_zip(
+            &fixture_path,
+            "clinicalVariants.tsv",
+            b"Variant/Haplotypes\tGene\tDrug(s)\nrs123\tNEWGENE\tNewDrug\n\xff\n",
+        );
+        let error = import_pharmgkb_clinical_variants(&conn, &fixture_path)
+            .expect_err("malformed PharmGKB clinical fixture should fail");
+        assert!(!error.is_empty());
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM pharmgkb.pharmgkb_clinical_variants",
+                [],
+                |row| row.get(0),
+            )
+            .expect("count preserved PharmGKB clinical rows");
+        assert_eq!(count, 1);
+        assert_eq!(
+            conn.query_row(
+                "SELECT rsid FROM pharmgkb.pharmgkb_clinical_variants",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("read preserved PharmGKB clinical row"),
+            "rs-old"
+        );
+
+        write_zip(
+            &fixture_path,
+            "clinicalVariants.tsv",
+            b"Variant/Haplotypes\tGene\tDrug(s)\nrs123\tNEWGENE\tNewDrug\n",
+        );
+        assert_eq!(
+            import_pharmgkb_clinical_variants(&conn, &fixture_path)
+                .expect("valid PharmGKB clinical retry should succeed"),
+            1
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT rsid FROM pharmgkb.pharmgkb_clinical_variants",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("read retried PharmGKB clinical row"),
+            "rs123"
+        );
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir)
+            .expect("remove PharmGKB clinical transaction fixture directory");
+    }
+
+    #[test]
+    fn malformed_genes_tsv_preserves_the_previous_catalog() {
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_pharmgkb_genes_transaction_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&data_dir);
+        std::fs::create_dir_all(&data_dir)
+            .expect("create PharmGKB genes transaction fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+        let fixture_path = data_dir.join("genes.zip");
+        let conn = crate::db::connect(&db_path).expect("open PharmGKB genes fixture DB");
+        crate::db::ensure_catalog_db_attached(&conn, &data_dir, "pharmgkb")
+            .expect("attach PharmGKB genes fixture catalog");
+        conn.execute(
+            "INSERT INTO pharmgkb.pharmgkb_genes
+             (pharmgkb_id, symbol, name, raw_json) VALUES (?, ?, ?, ?)",
+            params!["PA0001", "OLDGENE", "Old fixture gene", "fixture"],
+        )
+        .expect("seed previous PharmGKB genes row");
+
+        write_zip(
+            &fixture_path,
+            "genes.tsv",
+            b"PharmGKB Accession Id\tSymbol\tName\nPA0002\tNEWGENE\tNew fixture gene\n\xff\n",
+        );
+        let error = import_pharmgkb_genes(&conn, &fixture_path)
+            .expect_err("malformed PharmGKB genes fixture should fail");
+        assert!(!error.is_empty());
+
+        let preserved_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM pharmgkb.pharmgkb_genes", [], |row| {
+                row.get(0)
+            })
+            .expect("count preserved PharmGKB genes rows");
+        assert_eq!(preserved_count, 1);
+        let preserved_symbol: String = conn
+            .query_row("SELECT symbol FROM pharmgkb.pharmgkb_genes", [], |row| {
+                row.get(0)
+            })
+            .expect("read preserved PharmGKB genes row");
+        assert_eq!(preserved_symbol, "OLDGENE");
+
+        write_zip(
+            &fixture_path,
+            "genes.tsv",
+            b"PharmGKB Accession Id\tSymbol\tName\nPA0002\tNEWGENE\tNew fixture gene\n",
+        );
+        assert_eq!(
+            import_pharmgkb_genes(&conn, &fixture_path)
+                .expect("valid PharmGKB genes retry should succeed"),
+            1
+        );
+        let retried_symbol: String = conn
+            .query_row("SELECT symbol FROM pharmgkb.pharmgkb_genes", [], |row| {
+                row.get(0)
+            })
+            .expect("read retried PharmGKB genes row");
+        assert_eq!(retried_symbol, "NEWGENE");
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir)
+            .expect("remove PharmGKB genes transaction fixture directory");
+    }
 }

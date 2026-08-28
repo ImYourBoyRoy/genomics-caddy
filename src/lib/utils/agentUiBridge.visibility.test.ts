@@ -61,6 +61,21 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('panel.textContent');
   });
 
+  it('exposes only aggregate landmark and ARIA relationship metrics', () => {
+    expect(source).toContain('export interface AgentUiAccessibilityMetrics');
+    expect(source).toContain('accessibility: AgentUiAccessibilityMetrics;');
+    expect(source).toContain('function collectAccessibilityMetrics()');
+    expect(source).toContain("document.querySelectorAll('main.main-content').length");
+    expect(source).toContain("document.querySelectorAll('aside#data-sidebar[aria-label]').length");
+    expect(source).toContain("document.querySelectorAll('.focus-toolbar[role=\"toolbar\"][aria-label]').length");
+    expect(source).toContain("document.querySelectorAll('[role=\"tabpanel\"][aria-labelledby]').length");
+    expect(source).toContain('boundSectionToggleCount');
+    expect(source).toContain('guidanceToggleCount');
+    expect(source).toContain('boundGuidanceToggleCount');
+    expect(source).toContain("focusControl?.getAttribute('aria-controls') === 'data-sidebar'");
+    expect(source).not.toContain('accessibility.textContent');
+  });
+
   it('exposes aggregate focus geometry without exposing report content', () => {
     expect(source).toContain('focusControlOverlapsContent: boolean;');
     expect(source).toContain('focusControlBottom: number | null;');

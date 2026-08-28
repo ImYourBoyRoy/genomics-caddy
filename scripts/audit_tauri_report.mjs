@@ -154,6 +154,27 @@ function validateTooltipSnapshot(snapshot) {
   );
 }
 
+function validateAccessibilitySnapshot(snapshot) {
+  const accessibility = snapshot.accessibility;
+  assert(accessibility && typeof accessibility === "object", "Bridge snapshot has no accessibility metrics");
+  assert(accessibility.mainLandmarkCount === 1, "Report does not expose one main landmark");
+  assert(accessibility.sidebarLandmarkCount === 1, "Data sidebar landmark is missing or unlabeled");
+  assert(accessibility.labelledToolbarCount === 1, "Report toolbar is missing an accessible label");
+  assert(accessibility.labelledTablistCount >= 1, "Report has no labelled tab list");
+  assert(accessibility.activeTabCount === 1, "Report does not expose one selected tab");
+  assert(accessibility.labelledTabpanelCount === 1, "Active report panel is missing its accessible relationship");
+  assert(accessibility.labelledActionQueueCount === 1, "Action queue is missing its accessible heading relationship");
+  assert(
+    accessibility.sectionToggleCount === accessibility.boundSectionToggleCount,
+    "At least one report section toggle points to a missing panel",
+  );
+  assert(
+    accessibility.guidanceToggleCount === accessibility.boundGuidanceToggleCount,
+    "At least one dashboard guidance toggle points to a missing panel",
+  );
+  assert(accessibility.focusControlTargetsSidebar === true, "Focus Report control does not target the data sidebar");
+}
+
 function validateFocusModeSnapshot(snapshot) {
   const layout = layoutOf(snapshot);
   assert(layout.focusMode === true, "Focus Report did not enter focus mode");
@@ -300,6 +321,7 @@ async function main() {
 
   const modes = {};
   validateDesktopSnapshot(ready, "simple");
+  validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();
   await ensureCollapsedSection();
   await assertClinicalCollapsedHint();

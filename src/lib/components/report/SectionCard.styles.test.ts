@@ -69,4 +69,11 @@ describe('SectionCard semantic status styling', () => {
     expect(styleBlock).toContain('min-height: 44px;');
     expect(styleBlock).toContain('gap: var(--space-1);');
   });
+
+  it('keeps the controlled section target mounted while content is collapsed', () => {
+    expect(source).toContain('class="section-body-target"');
+    expect(source).toContain('aria-hidden={isCollapsed ? \'true\' : undefined}');
+    expect(source).toContain('inert={isCollapsed}');
+    expect(source).toContain('<div class="section-body" transition:slide');
+  });
 });

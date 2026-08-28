@@ -72,6 +72,21 @@ export interface AgentUiTooltipMetrics {
   maxBottomOverflow: number;
 }
 
+export interface AgentUiAccessibilityMetrics {
+  mainLandmarkCount: number;
+  sidebarLandmarkCount: number;
+  labelledToolbarCount: number;
+  labelledTablistCount: number;
+  activeTabCount: number;
+  labelledTabpanelCount: number;
+  labelledActionQueueCount: number;
+  sectionToggleCount: number;
+  boundSectionToggleCount: number;
+  guidanceToggleCount: number;
+  boundGuidanceToggleCount: number;
+  focusControlTargetsSidebar: boolean;
+}
+
 export interface AgentUiSnapshot {
   title: string;
   activeTab: string;
@@ -88,6 +103,7 @@ export interface AgentUiSnapshot {
   themeMode: 'system' | 'light' | 'dark' | null;
   visibleTextSample: string[];
   tooltip: AgentUiTooltipMetrics;
+  accessibility: AgentUiAccessibilityMetrics;
   layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
@@ -329,6 +345,35 @@ function collectTooltipMetrics(): AgentUiTooltipMetrics {
   };
 }
 
+function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
+  const sectionToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('.section-toggle'));
+  const boundSectionToggles = sectionToggles.filter((toggle) => {
+    const controlsId = toggle.getAttribute('aria-controls');
+    return !!controlsId && !!document.getElementById(controlsId);
+  });
+  const guidanceToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('.card-header[aria-controls]'));
+  const boundGuidanceToggles = guidanceToggles.filter((toggle) => {
+    const controlsId = toggle.getAttribute('aria-controls');
+    return !!controlsId && !!document.getElementById(controlsId);
+  });
+  const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
+
+  return {
+    mainLandmarkCount: document.querySelectorAll('main.main-content').length,
+    sidebarLandmarkCount: document.querySelectorAll('aside#data-sidebar[aria-label]').length,
+    labelledToolbarCount: document.querySelectorAll('.focus-toolbar[role="toolbar"][aria-label]').length,
+    labelledTablistCount: document.querySelectorAll('[role="tablist"][aria-label]').length,
+    activeTabCount: document.querySelectorAll('[role="tab"][aria-selected="true"]').length,
+    labelledTabpanelCount: document.querySelectorAll('[role="tabpanel"][aria-labelledby]').length,
+    labelledActionQueueCount: document.querySelectorAll('.action-queue[aria-labelledby]').length,
+    sectionToggleCount: sectionToggles.length,
+    boundSectionToggleCount: boundSectionToggles.length,
+    guidanceToggleCount: guidanceToggles.length,
+    boundGuidanceToggleCount: boundGuidanceToggles.length,
+    focusControlTargetsSidebar: focusControl?.getAttribute('aria-controls') === 'data-sidebar',
+  };
+}
+
 function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   const needle = normalizeUiLabel(text);
   if (!needle) return { ok: false, detail: 'empty text' };
@@ -483,6 +528,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           : null,
         visibleTextSample: collectVisibleText(30),
         tooltip: collectTooltipMetrics(),
+        accessibility: collectAccessibilityMetrics(),
         layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),

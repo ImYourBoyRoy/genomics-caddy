@@ -273,6 +273,10 @@
     padding-top: 1rem;
   }
 
+  .section-body-target {
+    min-width: 0;
+  }
+
   .sec-score-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -328,38 +332,45 @@
   }
 </style>
 
-  {#if !isCollapsed}
-    <div class="section-body" id={sectionBodyId} transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
-      <!-- Direction-aware breakdown pills -->
-      <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
-        {#if viewMode === 'simple'}
-          <span class="summary-line">
-            {simpleCountParts.join(' · ')}{#if noDataCount > 0}{simpleCountParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
-          </span>
-        {:else}
-          {#each countParts as part}
-            <span class="summary-pill">{part}</span>
-          {/each}
-          {#if noDataCount > 0}
-            <span class="summary-pill coverage-note">{noDataCount} not called</span>
+  <div
+    id={sectionBodyId}
+    class="section-body-target"
+    aria-hidden={isCollapsed ? 'true' : undefined}
+    inert={isCollapsed}
+  >
+    {#if !isCollapsed}
+      <div class="section-body" transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
+        <!-- Direction-aware breakdown pills -->
+        <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
+          {#if viewMode === 'simple'}
+            <span class="summary-line">
+              {simpleCountParts.join(' · ')}{#if noDataCount > 0}{simpleCountParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
+            </span>
+          {:else}
+            {#each countParts as part}
+              <span class="summary-pill">{part}</span>
+            {/each}
+            {#if noDataCount > 0}
+              <span class="summary-pill coverage-note">{noDataCount} not called</span>
+            {/if}
           {/if}
+        </div>
+
+        {#if viewMode === 'clinical'}
+          <ClinicalFindingsTable
+            markers={section.markers}
+            {onExploreResearch}
+            {highlightRsid}
+            {onNavigateToVariant}
+          />
+        {:else}
+          <div class="markers-grid">
+            {#each section.markers as marker}
+              <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
+            {/each}
+          </div>
         {/if}
       </div>
-
-      {#if viewMode === 'clinical'}
-        <ClinicalFindingsTable
-          markers={section.markers}
-          {onExploreResearch}
-          {highlightRsid}
-          {onNavigateToVariant}
-        />
-      {:else}
-        <div class="markers-grid">
-          {#each section.markers as marker}
-            <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>

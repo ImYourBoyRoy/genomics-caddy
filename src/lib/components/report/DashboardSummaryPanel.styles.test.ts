@@ -174,4 +174,17 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain("<option value=\"\">Not specified</option>");
     expect(source).toContain('contextOptionLabel(option.id, option.label)');
   });
+
+  it('keeps guidance card aria-controls targets present while collapsed', () => {
+    for (const id of [
+      'dietary-alignment-body',
+      'supplements-body',
+      'cycle-support-body',
+      'activity-body',
+      'medication-body',
+      'lab-followups-body',
+    ]) {
+      expect(source).toContain(`id="${id}" hidden aria-hidden="true"`);
+    }
+  });
 });

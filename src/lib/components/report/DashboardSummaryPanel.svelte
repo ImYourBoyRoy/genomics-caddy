@@ -324,7 +324,9 @@
               <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
             </button>
           </h3>
-          {#if !collapsed.diet}
+          {#if collapsed.diet}
+            <div id="dietary-alignment-body" hidden aria-hidden="true"></div>
+          {:else}
             <div class="card-body" id="dietary-alignment-body">
               <p class="section-hint">Personalized food prompts</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
@@ -428,7 +430,9 @@
               <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
             </button>
           </h3>
-          {#if !collapsed.supplements}
+          {#if collapsed.supplements}
+            <div id="supplements-body" hidden aria-hidden="true"></div>
+          {:else}
             <div class="card-body" id="supplements-body">
               <p class="section-hint">Personalized supplement prompts</p>
               {#if plan.supplements.length > 0}
@@ -478,7 +482,9 @@
               <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
             </button>
           </h3>
-          {#if !collapsed.cycleSupport}
+          {#if collapsed.cycleSupport}
+            <div id="cycle-support-body" hidden aria-hidden="true"></div>
+          {:else}
             <div class="card-body" id="cycle-support-body">
               <p class="section-hint">Support for {selectedReproductiveContextLabel()}</p>
               {#if plan.cycleSupport.diaryReview}
@@ -576,7 +582,9 @@
             <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
           </button>
         </h3>
-        {#if !collapsed.activity}
+        {#if collapsed.activity}
+          <div id="activity-body" hidden aria-hidden="true"></div>
+        {:else}
           <div class="card-body" id="activity-body">
             <p class="section-hint">Training and recovery prompts</p>
             <ul class="guardrail-list">
@@ -624,7 +632,9 @@
             <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
           </button>
         </h3>
-        {#if !collapsed.medication}
+        {#if collapsed.medication}
+          <div id="medication-body" hidden aria-hidden="true"></div>
+        {:else}
           <div class="card-body" id="medication-body">
             <p class="section-hint">Medication-related context</p>
             {#if plan.pgxGuidance.relevantGenes.length > 0}
@@ -668,7 +678,9 @@
             <span class="chevron">{collapsed.labTests ? '▶' : '▼'}</span>
           </button>
         </h3>
-        {#if !collapsed.labTests}
+        {#if collapsed.labTests}
+          <div id="lab-followups-body" hidden aria-hidden="true"></div>
+        {:else}
           <div class="card-body lab-body" id="lab-followups-body">
             <p class="section-hint">Grouped by priority</p>
             <div class="lab-tier-stack">

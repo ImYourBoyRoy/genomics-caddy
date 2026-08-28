@@ -23,7 +23,7 @@ import { onMount, onDestroy } from 'svelte';
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
   import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
-  import { clearOfflineUpdate, formatUpdateSummary, hasFreshProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates } from '../../utils/offlineUpdates';
+  import { clearOfflineUpdate, formatUpdateSummary, hasFreshProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
@@ -258,9 +258,7 @@ import { onMount, onDestroy } from 'svelte';
       if (!offlineStatusFresh) {
         setUpdateState(
           'error',
-          status.remote_check.timed_out
-            ? 'Resource check timed out. Local resources remain available; retry to check again.'
-            : 'Some remote resources could not be verified. Local resources remain available; retry to check again.',
+          offlineStatusFailureMessage(status),
           { kind: 'status' },
         );
         return;
@@ -301,9 +299,7 @@ import { onMount, onDestroy } from 'svelte';
       if (!offlineStatusFresh) {
         setUpdateState(
           'error',
-          status.remote_check.timed_out
-            ? 'Resource check timed out. Local resources remain available; retry to check again.'
-            : 'Some remote resources could not be verified. Local resources remain available; retry to check again.',
+          offlineStatusFailureMessage(status),
           { kind: 'status' },
         );
         return 'error';

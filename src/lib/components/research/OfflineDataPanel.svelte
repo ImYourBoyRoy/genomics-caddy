@@ -9,7 +9,7 @@
     buildOfflineTier2,
   } from "../../api/tauri";
   import type { OfflineUpdateCheck, OfflineSyncResult } from "../../types/research";
-  import { hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates } from "../../utils/offlineUpdates";
+  import { hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from "../../utils/offlineUpdates";
   import { isPrimaryCatalogId } from "../../utils/primaryCatalogs";
   import Tooltip from "../common/Tooltip.svelte";
 
@@ -56,11 +56,7 @@
       if (generation !== statusRefreshGeneration) return false;
       status = nextStatus;
       statusStale = !isCompleteOfflineStatus(nextStatus);
-      statusError = statusStale
-        ? nextStatus.remote_check.timed_out
-          ? 'Resource check timed out. Retry to verify updates.'
-          : 'Some remote resources could not be verified. Retry to verify updates.'
-        : '';
+      statusError = statusStale ? offlineStatusFailureMessage(nextStatus) : '';
       return true;
     } catch (e: unknown) {
       if (generation !== statusRefreshGeneration) return false;

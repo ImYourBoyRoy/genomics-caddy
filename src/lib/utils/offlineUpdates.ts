@@ -20,11 +20,25 @@ export interface OfflineUpdateItem {
 
 /** Only a complete remote probe can make update flags actionable. */
 export function isCompleteOfflineStatus(status: OfflineUpdateCheck | null | undefined): boolean {
+  const remote = status?.remote_check;
   return Boolean(
-    status &&
-      !status.remote_check.timed_out &&
-      status.remote_check.assets_failed === 0,
+    remote &&
+      !remote.timed_out &&
+      remote.assets_failed === 0,
   );
+}
+
+/** Keep an incomplete remote check concise while preserving local usability. */
+export function offlineStatusFailureMessage(status: OfflineUpdateCheck | null | undefined): string {
+  if (status?.remote_check?.timed_out) {
+    return 'Resource check timed out. Local resources remain available; retry to check again.';
+  }
+  const failed = status?.remote_check?.assets_failed ?? 0;
+  if (failed > 0) {
+    const noun = failed === 1 ? 'resource' : 'resources';
+    return `${failed} remote ${noun} could not be verified. Local resources remain available; retry to check again.`;
+  }
+  return 'Remote resource status could not be verified. Local resources remain available; retry to check again.';
 }
 
 /** A remote update is actionable only when the corresponding local asset exists. */

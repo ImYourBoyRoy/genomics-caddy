@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates } from './offlineUpdates';
+import { clearOfflineUpdate, hasFreshProvenOfflineUpdate, hasProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from './offlineUpdates';
 import type { OfflineUpdateCheck } from '../types/research';
 
 function makeStatus(): OfflineUpdateCheck {
@@ -59,6 +59,14 @@ describe('listOfflineUpdates', () => {
       ...complete,
       remote_check: { assets_checked: 0, assets_failed: 0, timed_out: true },
     })).toBe(false);
+    expect(offlineStatusFailureMessage({
+      ...complete,
+      remote_check: { assets_checked: 3, assets_failed: 3, timed_out: false },
+    })).toContain('3 remote resources could not be verified');
+    expect(offlineStatusFailureMessage({
+      ...complete,
+      remote_check: { assets_checked: 0, assets_failed: 0, timed_out: true },
+    })).toContain('timed out');
   });
 
   it('requires a local asset before treating a remote flag as an update', () => {

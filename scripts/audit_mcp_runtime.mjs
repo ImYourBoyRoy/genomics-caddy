@@ -55,6 +55,13 @@ function summarizeStatus(status) {
       const rows = Number.isInteger(asset?.row_count) && asset.row_count > 0 ? asset.row_count : 0;
       return total + rows;
     }, 0),
+    remoteChecked: Number.isInteger(status?.remote_check?.assets_checked)
+      ? status.remote_check.assets_checked
+      : -1,
+    remoteFailed: Number.isInteger(status?.remote_check?.assets_failed)
+      ? status.remote_check.assets_failed
+      : -1,
+    remoteTimedOut: status?.remote_check?.timed_out === true,
   };
 }
 
@@ -206,6 +213,12 @@ async function run() {
     const statusSummary = summarizeStatus(status);
     assert(statusSummary.tiers > 0, "MCP status returned no resource tiers");
     assert(statusSummary.updates >= 0, "MCP status omitted its update count");
+    assert(statusSummary.remoteChecked >= 0, "MCP status omitted remote probe count");
+    assert(statusSummary.remoteFailed >= 0, "MCP status omitted remote probe failures");
+    assert(
+      statusSummary.remoteTimedOut || statusSummary.remoteFailed <= statusSummary.remoteChecked,
+      "MCP status returned an invalid remote probe summary",
+    );
 
     const samples = toolPayload(
       await requestWithTimeout("tools/call", withAuth({
@@ -262,7 +275,9 @@ async function run() {
     console.log(
       `  tools=${toolNames.size}; tiers=${statusSummary.tiers}; assets=${statusSummary.assets}; ` +
       `local_assets=${statusSummary.localAssets}; updates=${statusSummary.updates}; ` +
-      `indexed_rows=${statusSummary.indexedRows}; reload=ready; sections=${reload.report.sections.length}`,
+      `indexed_rows=${statusSummary.indexedRows}; remote_checked=${statusSummary.remoteChecked}; ` +
+      `remote_failed=${statusSummary.remoteFailed}; remote_timed_out=${statusSummary.remoteTimedOut}; ` +
+      `reload=ready; sections=${reload.report.sections.length}`,
     );
   } finally {
     settled = true;

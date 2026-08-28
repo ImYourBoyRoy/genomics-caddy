@@ -7,6 +7,7 @@ const panelSource = readFileSync(resolve(process.cwd(), 'src/lib/components/rese
 describe('OfflineDataPanel update-state ordering', () => {
   it('does not render an update state for a missing local asset', () => {
     expect(panelSource).toContain('hasProvenOfflineUpdate');
+    expect(panelSource).toContain('offlineStatusFailureMessage(nextStatus)');
     expect(panelSource).toContain('hasProvenOfflineUpdate(asset) && !statusStale');
     expect(panelSource).not.toContain('asset.update_available && !statusStale');
   });

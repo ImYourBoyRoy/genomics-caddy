@@ -7,7 +7,6 @@
   import ClinicalFindingsTable from './ClinicalFindingsTable.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import { slide } from 'svelte/transition';
-  import { browser } from '$app/environment';
 
   /*
   Module Docstring:
@@ -16,7 +15,7 @@
   - Display category title and either a risk-only percent score OR a
     descriptive plain-language summary (for sections like cancer/PGx).
   - Show direction-aware tallied counts so users see the breakdown.
-  - Persist collapse/expand state to localStorage across report regenerations.
+  - Render a controlled collapse/expand surface for the parent report.
   Key Inputs: section (EvaluatedSection).
   Key Outputs: Category report segment.
   Operational Notes: Uses SectionSummary from backend to decide display mode.
@@ -59,17 +58,8 @@
     return () => mediaQuery.removeEventListener('change', updateMotionPreference);
   });
 
-  // Collapse/expand state — persisted to localStorage so it survives report regeneration.
-  let storageKey = $derived(`section-collapsed-${section.name}`);
   let sectionAnchorId = $derived(`report-section-${section.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
   let sectionBodyId = $derived(`section-body-${section.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
-
-  // Write new collapse state to localStorage whenever it changes
-  $effect(() => {
-    if (browser) {
-      localStorage.setItem(storageKey, String(isCollapsed));
-    }
-  });
 
   function toggleCollapse() {
     const nextCollapsed = !isCollapsed;

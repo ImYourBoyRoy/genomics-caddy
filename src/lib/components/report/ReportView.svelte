@@ -87,6 +87,7 @@
   let helpCloseButton = $state<HTMLButtonElement | undefined>(undefined);
   let previousHelpFocus: HTMLElement | null = null;
   let collapsedSections = $state<Record<string, boolean>>({});
+  let loadedCollapseProfileId = $state<number | null>(null);
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
   let clinicalProvenanceExpanded = $state(false);
@@ -186,9 +187,25 @@
     return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   }
 
+  function sectionCollapseStorageKey(sampleId: number, sectionName: string): string {
+    return `section-collapsed-${sampleId}-${sectionName}`;
+  }
+
+  function persistSectionCollapsed(sectionName: string, isCollapsed: boolean): void {
+    if (!browser || !selectedSample?.id) return;
+    try {
+      localStorage.setItem(
+        sectionCollapseStorageKey(selectedSample.id, sectionName),
+        String(isCollapsed),
+      );
+    } catch {
+      // The in-memory report state remains usable when localStorage is unavailable.
+    }
+  }
+
   function handleJumpToSection(sectionName: string) {
     if (!generatedReport?.sections.some((section) => section.name === sectionName)) return;
-    collapsedSections = { ...collapsedSections, [sectionName]: false };
+    setSectionCollapsed(sectionName, false);
     void tick().then(() => {
       document.getElementById(sectionAnchorId(sectionName))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -207,7 +224,7 @@
       }
     }
     if (foundSectionName && foundRsid) {
-      collapsedSections = { ...collapsedSections, [foundSectionName]: false };
+      setSectionCollapsed(foundSectionName, false);
       highlightRsid = foundRsid;
       setTimeout(() => {
         const el = document.getElementById(`variant-${foundRsid.toLowerCase()}`);
@@ -219,40 +236,50 @@
   }
 
   $effect(() => {
-    if (generatedReport) {
-      const sections = generatedReport.sections;
-      untrack(() => {
-        const initial = { ...collapsedSections };
-        let changed = false;
-        for (const sec of sections) {
-          if (initial[sec.name] === undefined) {
-            const storageKey = `section-collapsed-${sec.name}`;
-            const val = browser ? (localStorage.getItem(storageKey) !== 'false') : true;
-            initial[sec.name] = val;
-            changed = true;
+    if (!generatedReport || !selectedSample?.id) return;
+    const profileId = selectedSample.id;
+    const sections = generatedReport.sections;
+    untrack(() => {
+      const profileChanged = loadedCollapseProfileId !== profileId;
+      const initial = profileChanged ? {} : { ...collapsedSections };
+      let changed = profileChanged;
+      for (const sec of sections) {
+        if (initial[sec.name] === undefined) {
+          const storageKey = sectionCollapseStorageKey(profileId, sec.name);
+          let value = true;
+          if (browser) {
+            try {
+              value = localStorage.getItem(storageKey) !== 'false';
+            } catch {
+              value = true;
+            }
           }
+          initial[sec.name] = value;
+          changed = true;
         }
-        if (changed) {
-          collapsedSections = initial;
-        }
-      });
-    }
+      }
+      loadedCollapseProfileId = profileId;
+      if (changed) {
+        collapsedSections = initial;
+      }
+    });
   });
 
   function expandAll() {
     for (const sec of filteredSections) {
-      collapsedSections[sec.name] = false;
+      setSectionCollapsed(sec.name, false);
     }
   }
 
   function collapseAll() {
     for (const sec of filteredSections) {
-      collapsedSections[sec.name] = true;
+      setSectionCollapsed(sec.name, true);
     }
   }
 
   function setSectionCollapsed(sectionName: string, isCollapsed: boolean) {
     collapsedSections = { ...collapsedSections, [sectionName]: isCollapsed };
+    persistSectionCollapsed(sectionName, isCollapsed);
   }
 
   async function printReport() {

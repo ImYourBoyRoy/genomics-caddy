@@ -63,6 +63,8 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('onCollapsedChange?: (collapsed: boolean) => void;');
     expect(source).toContain('onCollapsedChange(nextCollapsed);');
     expect(source).toContain('collapsed = nextCollapsed;');
+    expect(source).not.toContain('localStorage');
+    expect(source).not.toContain("import { browser } from '$app/environment';");
   });
 
   it('keeps section toggles usable as touch controls', () => {

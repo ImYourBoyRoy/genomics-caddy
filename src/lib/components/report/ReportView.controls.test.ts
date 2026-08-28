@@ -43,6 +43,15 @@ describe('Simple-first report controls', () => {
     expect(source).not.toContain('bind:collapsed={collapsedSections[section.name]}');
   });
 
+  it('owns and scopes section-collapse persistence per profile', () => {
+    expect(source).toContain('function sectionCollapseStorageKey(sampleId: number, sectionName: string)');
+    expect(source).toContain('return `section-collapsed-${sampleId}-${sectionName}`;');
+    expect(source).toContain('let loadedCollapseProfileId = $state<number | null>(null);');
+    expect(source).toContain('const profileChanged = loadedCollapseProfileId !== profileId;');
+    expect(source).toContain('persistSectionCollapsed(sectionName, isCollapsed);');
+    expect(source).not.toContain('section-collapsed-${sec.name}');
+  });
+
   it('keeps the Simple landing focused on the profile and action queue', () => {
     const reportHeaderIndex = source.indexOf('<ReportHeader');
     const summaryIndex = source.indexOf('<DashboardSummaryPanel');

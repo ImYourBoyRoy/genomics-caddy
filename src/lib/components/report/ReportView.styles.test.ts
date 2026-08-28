@@ -40,7 +40,7 @@ describe('ReportView Help Guide surface', () => {
 
   it('expands a health-area target before scrolling to its findings', () => {
     expect(source).toContain('function handleJumpToSection(sectionName: string)');
-    expect(source).toContain('collapsedSections = { ...collapsedSections, [sectionName]: false };');
+    expect(source).toContain('setSectionCollapsed(sectionName, false);');
     expect(source).toContain('onJumpToSection={handleJumpToSection}');
   });
 });

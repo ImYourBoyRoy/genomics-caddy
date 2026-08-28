@@ -388,7 +388,7 @@ function clickByVisibleText(text: string): { ok: boolean; detail: string } {
   if (!needle) return { ok: false, detail: 'empty text' };
 
   const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>('button, a, [role="button"], .tab-btn, .card-header')
+    document.querySelectorAll<HTMLElement>('button, a, summary, [role="button"], .tab-btn, .card-header')
   );
   // Prefer enabled matches so automation does not "click" disabled Start/Cancel shells.
   const ranked = candidates
@@ -427,7 +427,7 @@ function focusByVisibleText(text: string): { ok: boolean; detail: string } {
 
   const candidates = Array.from(
     document.querySelectorAll<HTMLElement>(
-      'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])',
+      'button, a[href], summary, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])',
     )
   );
   const hit = candidates

@@ -114,8 +114,11 @@ describe('agent UI bridge visibility boundary', () => {
 
   it('exposes only aggregate toolbar and action-queue geometry plus the selected theme mode', () => {
     expect(source).toContain('actionQueueWidth: number | null;');
+    expect(source).toContain('actionQueueShellWidth: number | null;');
     expect(source).toContain('actionQueueItemMaxWidth: number | null;');
     expect(source).toContain('actionQueueItemCount: number;');
+    expect(source).toContain('dashboardGuidanceWidth: number | null;');
+    expect(source).toContain('dashboardGuidanceCardMaxWidth: number | null;');
     expect(source).toContain('connectionsLaunchHeight: number | null;');
     expect(source).toContain('liftoverStatusHeight: number | null;');
     expect(source).toContain('markerGridWidth: number | null;');
@@ -126,6 +129,8 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('clinicalProvenanceCount: number;');
     expect(source).toContain('themeControlInToolbar: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.action-queue')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.grid-layout')");
     expect(source).toContain("document.querySelector('.focus-toolbar .theme-toggle') !== null");
     expect(source).toContain("themeMode: 'system' | 'light' | 'dark' | null;");
     expect(source).toContain('document.documentElement.dataset.theme');
@@ -135,6 +140,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('getGridColumnGap(markerGrid)');
     expect(source).toContain("getWidthBounds('.marker-card')");
     expect(source).toContain("getWidthBounds('.action-queue-item')");
+    expect(source).toContain("getWidthBounds('.grid-layout .summary-card')");
     expect(source).toContain("document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded=\"true\"]')");
     expect(source).toContain('expandedSectionNames,');
     expect(source).toContain("clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length");

@@ -78,8 +78,20 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }
+  if (layout.actionQueueShellWidth !== null && layout.mainContentWidth !== null) {
+    assert(layout.actionQueueShellWidth < layout.mainContentWidth, "Action queue shell still stretches across the full report pane");
+  }
   if (layout.actionQueueWidth !== null && layout.actionQueueItemMaxWidth !== null) {
     assert(layout.actionQueueItemMaxWidth <= layout.actionQueueWidth + 1, "Action queue item exceeds its reading surface");
+  }
+  if (layout.dashboardGuidanceWidth !== null && layout.mainContentWidth !== null) {
+    assert(layout.dashboardGuidanceWidth < layout.mainContentWidth, "Dashboard guidance still stretches across the full report pane");
+  }
+  if (layout.dashboardGuidanceWidth !== null && layout.dashboardGuidanceCardMaxWidth !== null) {
+    assert(
+      layout.dashboardGuidanceCardMaxWidth <= layout.dashboardGuidanceWidth + 1,
+      "Dashboard guidance card exceeds its measured guidance surface",
+    );
   }
   if (layout.connectionsLaunchHeight !== null) {
     assert(layout.connectionsLaunchHeight <= 72, "Advanced Connections launch surface is too tall for the default sidebar");
@@ -443,7 +455,7 @@ async function main() {
   const toolbarGap = ready.layout.firstContentTop !== null && ready.layout.focusControlBottom !== null
     ? ready.layout.firstContentTop - ready.layout.focusControlBottom
     : "n/a";
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
   console.log(`  resource_status=${resourceStatus}`);

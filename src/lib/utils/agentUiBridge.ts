@@ -47,8 +47,11 @@ export interface AgentUiLayoutMetrics {
   focusControlBottom: number | null;
   firstContentTop: number | null;
   actionQueueWidth: number | null;
+  actionQueueShellWidth: number | null;
   actionQueueItemMaxWidth: number | null;
   actionQueueItemCount: number;
+  dashboardGuidanceWidth: number | null;
+  dashboardGuidanceCardMaxWidth: number | null;
   themeControlInToolbar: boolean;
   overflowingElements: Array<{
     tag: string;
@@ -317,6 +320,9 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const contentRect = firstContent?.getBoundingClientRect();
   const markerCardWidths = getWidthBounds('.marker-card');
   const actionQueueItemWidths = getWidthBounds('.action-queue-item');
+  const actionQueueShell = document.querySelector<HTMLElement>('.action-queue');
+  const dashboardGuidance = document.querySelector<HTMLElement>('.grid-layout');
+  const dashboardGuidanceCardWidths = getWidthBounds('.grid-layout .summary-card');
   const expandedSectionNames = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded="true"]'),
   )
@@ -353,8 +359,11 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
     firstContentTop: contentRect ? Math.round(contentRect.top) : null,
     actionQueueWidth: actionQueue ? Math.round(actionQueue.getBoundingClientRect().width) : null,
+    actionQueueShellWidth: actionQueueShell ? Math.round(actionQueueShell.getBoundingClientRect().width) : null,
     actionQueueItemMaxWidth: actionQueueItemWidths.max,
     actionQueueItemCount: actionQueue?.querySelectorAll('.action-queue-item').length ?? 0,
+    dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
+    dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,
     themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
     overflowingElements: collectOverflowingElements(mainContent),
   };

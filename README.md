@@ -54,7 +54,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
   * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
   * **Compact secondary details:** Simple finding cards keep Details, Technical data, and References in one compact disclosure rail so the plain-language meaning and next step remain the focus.
   * **Desktop theme control:** A compact Appearance control lives in the top report toolbar. Its System default, Light mode, and Dark mode choices reserve toolbar space instead of covering the report, and close after a choice, Escape, click-away, focus-away, or report scrolling.
-  * **Compact guidance surfaces:** Simple dietary and activity guidance shows a short actionable preview first; additional food rules, notes, and guardrails remain available through accessible Show more/details disclosures.
+  * **Compact guidance surfaces:** Simple dietary and activity guidance uses short plain-language labels and a small actionable preview first; additional food rules, notes, and guardrails remain available through accessible Show more/details disclosures.
 
 ### 4. Local RAG Evidence Library & Search Engine
 * **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.

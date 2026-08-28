@@ -1847,30 +1847,70 @@ mod tests {
         drop(conn);
         drop(crate::db::connect_sample(&data_dir, sample_id).expect("create MCP sample database"));
 
-        let status = mcp_offline_tool("get_offline_update_status", json!({}), &db_path)
-            .await
-            .expect("MCP status check");
+        fn tool_request(name: &str, arguments: Value) -> JsonRpcRequest {
+            JsonRpcRequest {
+                jsonrpc: "2.0".into(),
+                method: "tools/call".into(),
+                params: json!({"name": name, "arguments": arguments}),
+                id: Some(json!(1)),
+            }
+        }
+
+        fn tool_payload(response: JsonRpcResponse) -> Value {
+            assert!(response.error.is_none());
+            let result = response.result.expect("MCP tool result");
+            let text = result["content"][0]["text"]
+                .as_str()
+                .expect("MCP tool text content");
+            serde_json::from_str(text).expect("MCP tool JSON payload")
+        }
+
+        let status_response = handle_request(
+            tool_request("get_offline_update_status", json!({})),
+            &db_path,
+            false,
+            &None,
+        )
+        .await;
+        let status = tool_payload(status_response);
         assert_eq!(status["total_updates_available"], 0);
 
-        let sync = mcp_offline_tool(
-            "sync_offline_asset",
-            json!({"asset_id": "tier2_variant_locus"}),
+        let denied = handle_request(
+            tool_request(
+                "sync_offline_asset",
+                json!({"asset_id": "tier2_variant_locus"}),
+            ),
             &db_path,
+            false,
+            &None,
         )
-        .await
-        .expect("MCP derived-resource sync");
+        .await;
+        assert!(denied.result.is_none());
+        assert!(denied.error.is_some());
+
+        let sync_response = handle_request(
+            tool_request(
+                "sync_offline_asset",
+                json!({"asset_id": "tier2_variant_locus"}),
+            ),
+            &db_path,
+            true,
+            &None,
+        )
+        .await;
+        let sync = tool_payload(sync_response);
         assert_eq!(sync["assets_synced"][0], "tier2_variant_locus");
         assert!(sync["errors"].as_array().is_some_and(Vec::is_empty));
         assert_eq!(sync["final_status"]["total_updates_available"], 0);
 
-        let reload = execute_tool(
-            "reload_report",
-            json!({"sample_id": sample_id}),
+        let reload_response = handle_request(
+            tool_request("reload_report", json!({"sample_id": sample_id})),
             &db_path,
             false,
+            &None,
         )
-        .await
-        .expect("MCP report reload");
+        .await;
+        let reload = tool_payload(reload_response);
         assert_eq!(reload["status"], "ready");
         assert_eq!(reload["sample_id"].as_i64(), Some(sample_id));
 

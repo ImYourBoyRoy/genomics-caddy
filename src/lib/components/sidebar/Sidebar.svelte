@@ -957,6 +957,7 @@ import { onMount, onDestroy } from 'svelte';
     <button
       type="button"
       class="data-updates-toggle"
+      data-resource-update-phase={updatePhase}
       onclick={() => isPanelCollapsed = !isPanelCollapsed}
       aria-expanded={!isPanelCollapsed}
       aria-controls={isPanelCollapsed ? undefined : "data-updates-panel"}

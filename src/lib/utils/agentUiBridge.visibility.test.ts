@@ -163,6 +163,10 @@ describe('agent UI bridge visibility boundary', () => {
 
   it('exposes only the aggregate collapsed resource-status category', () => {
     expect(source).toContain("resourceStatus: 'checking' | 'current' | 'attention' | 'error' | null;");
+    expect(source).toContain('resourceUpdatePhase: AgentUiResourceUpdatePhase | null;');
+    expect(source).toContain("document.querySelector<HTMLElement>('[data-resource-update-phase]')?.dataset.resourceUpdatePhase");
+    expect(source).toContain("'reloading'");
+    expect(source).toContain('resourceUpdatePhase: collectResourceUpdatePhase(),');
     expect(source).toContain('function collectResourceStatus()');
     expect(source).toContain("statusPill?.classList.contains('resource-status-current')");
     expect(source).toContain("statusPill?.classList.contains('resource-status-error')");

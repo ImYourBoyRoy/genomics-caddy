@@ -141,6 +141,7 @@ export interface AgentUiSnapshot {
   urgentBadgeCount: number;
   themeMode: 'system' | 'light' | 'dark' | null;
   resourceStatus: 'checking' | 'current' | 'attention' | 'error' | null;
+  resourceUpdatePhase: AgentUiResourceUpdatePhase | null;
   visibleTextSample: string[];
   tooltip: AgentUiTooltipMetrics;
   accessibility: AgentUiAccessibilityMetrics;
@@ -149,6 +150,16 @@ export interface AgentUiSnapshot {
   href: string;
   capturedAt: string;
 }
+
+export type AgentUiResourceUpdatePhase =
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'validating'
+  | 'installed'
+  | 'reloading'
+  | 'ready'
+  | 'error';
 
 export interface AgentUiControllers {
   getActiveTab: () => string;
@@ -389,6 +400,23 @@ function collectResourceStatus(): AgentUiSnapshot['resourceStatus'] {
   if (statusPill) return 'checking';
   if (statusToggle.querySelector('.update-pill, .missing-pill')) return 'attention';
   return null;
+}
+
+function collectResourceUpdatePhase(): AgentUiSnapshot['resourceUpdatePhase'] {
+  const phase = document.querySelector<HTMLElement>('[data-resource-update-phase]')?.dataset.resourceUpdatePhase;
+  const phases: AgentUiResourceUpdatePhase[] = [
+    'checking',
+    'available',
+    'downloading',
+    'validating',
+    'installed',
+    'reloading',
+    'ready',
+    'error',
+  ];
+  return phases.includes(phase as AgentUiResourceUpdatePhase)
+    ? phase as AgentUiResourceUpdatePhase
+    : null;
 }
 
 function collectTooltipMetrics(): AgentUiTooltipMetrics {
@@ -799,6 +827,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           ? document.documentElement.dataset.theme
           : null,
         resourceStatus: collectResourceStatus(),
+        resourceUpdatePhase: collectResourceUpdatePhase(),
         visibleTextSample: collectVisibleText(30),
         tooltip: collectTooltipMetrics(),
         accessibility: collectAccessibilityMetrics(),

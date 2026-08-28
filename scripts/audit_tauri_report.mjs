@@ -168,6 +168,28 @@ function validateResourceStatus(snapshot) {
   return snapshot.resourceStatus;
 }
 
+function validateResourceUpdatePhase(snapshot) {
+  const phase = snapshot.resourceUpdatePhase;
+  assert(
+    phase === null || [
+      "checking",
+      "available",
+      "downloading",
+      "validating",
+      "installed",
+      "reloading",
+      "ready",
+      "error",
+    ].includes(phase),
+    "Desktop bridge returned an unknown resource update phase",
+  );
+  assert(phase !== "checking", "Resource update status remained in checking without reaching a terminal phase");
+  if (snapshot.resourceStatus === "error") {
+    assert(phase === "error", "Resource status error was not reflected by the update state machine");
+  }
+  return phase;
+}
+
 async function selectTheme(label, expectedMode) {
   await clickText(label);
   const snapshot = await waitForSnapshot(
@@ -400,7 +422,7 @@ async function assertClinicalCollapsedHint() {
 
 async function main() {
   let ready = await waitForSnapshot(
-    (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode && snapshot.resourceStatus !== null,
+    (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode && snapshot.resourceStatus !== null && snapshot.resourceUpdatePhase !== "checking",
     "a loaded Tauri report"
   );
 
@@ -411,6 +433,7 @@ async function main() {
 
   const modes = {};
   const resourceStatus = validateResourceStatus(ready);
+  const resourceUpdatePhase = validateResourceUpdatePhase(ready);
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();
@@ -476,7 +499,7 @@ async function main() {
   console.log(`  simple_contract=${simpleContract?.cardCount ?? "n/a"}; title=${simpleContract?.titleCount ?? "n/a"}; meaning=${simpleContract?.meaningCount ?? "n/a"}; evidence=${simpleContract?.evidenceCount ?? "n/a"}; next_step=${simpleContract?.nextStepCount ?? "n/a"}; details=${simpleContract?.detailsCount ?? "n/a"}; technical=${simpleContract?.technicalDataCount ?? "n/a"}`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
-  console.log(`  resource_status=${resourceStatus}`);
+  console.log(`  resource_status=${resourceStatus}; update_phase=${resourceUpdatePhase ?? "idle"}`);
 }
 
 main().catch((error) => {

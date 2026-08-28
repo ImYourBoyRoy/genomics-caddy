@@ -158,6 +158,7 @@ export interface OfflineUpdateCheck {
 export interface OfflineRemoteCheckStatus {
   assets_checked: number;
   assets_failed: number;
+  head_fallbacks: number;
   timed_out: boolean;
 }
 

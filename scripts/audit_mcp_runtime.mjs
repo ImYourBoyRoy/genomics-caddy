@@ -61,6 +61,9 @@ function summarizeStatus(status) {
     remoteFailed: Number.isInteger(status?.remote_check?.assets_failed)
       ? status.remote_check.assets_failed
       : -1,
+    headFallbacks: Number.isInteger(status?.remote_check?.head_fallbacks)
+      ? status.remote_check.head_fallbacks
+      : -1,
     remoteTimedOut: status?.remote_check?.timed_out === true,
   };
 }
@@ -215,6 +218,11 @@ async function run() {
     assert(statusSummary.updates >= 0, "MCP status omitted its update count");
     assert(statusSummary.remoteChecked >= 0, "MCP status omitted remote probe count");
     assert(statusSummary.remoteFailed >= 0, "MCP status omitted remote probe failures");
+    assert(statusSummary.headFallbacks >= 0, "MCP status omitted HEAD fallback count");
+    assert(
+      statusSummary.headFallbacks <= statusSummary.remoteChecked,
+      "MCP status returned an invalid HEAD fallback count",
+    );
     assert(
       statusSummary.remoteTimedOut || statusSummary.remoteFailed <= statusSummary.remoteChecked,
       "MCP status returned an invalid remote probe summary",
@@ -277,6 +285,7 @@ async function run() {
       `local_assets=${statusSummary.localAssets}; updates=${statusSummary.updates}; ` +
       `indexed_rows=${statusSummary.indexedRows}; remote_checked=${statusSummary.remoteChecked}; ` +
       `remote_failed=${statusSummary.remoteFailed}; remote_timed_out=${statusSummary.remoteTimedOut}; ` +
+      `head_fallbacks=${statusSummary.headFallbacks}; ` +
       `reload=ready; sections=${reload.report.sections.length}`,
     );
   } finally {

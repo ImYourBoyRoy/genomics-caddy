@@ -1876,6 +1876,7 @@ mod tests {
         assert_eq!(status["total_updates_available"], 0);
         assert_eq!(status["remote_check"]["assets_checked"], 0);
         assert_eq!(status["remote_check"]["assets_failed"], 0);
+        assert_eq!(status["remote_check"]["head_fallbacks"], 0);
         assert_eq!(status["remote_check"]["timed_out"], false);
 
         let denied = handle_request(

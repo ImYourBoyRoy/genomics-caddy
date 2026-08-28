@@ -6,7 +6,7 @@ function makeStatus(): OfflineUpdateCheck {
   return {
     total_updates_available: 2,
     indexed_summary: { gwas_rows: 0, clinvar_rows: 0, variant_locus_rows: 0 },
-    remote_check: { assets_checked: 1, assets_failed: 0, timed_out: false },
+    remote_check: { assets_checked: 1, assets_failed: 0, head_fallbacks: 0, timed_out: false },
     tiers: [
       {
         tier: 0,
@@ -53,19 +53,19 @@ describe('listOfflineUpdates', () => {
     expect(isCompleteOfflineStatus(complete)).toBe(true);
     expect(isCompleteOfflineStatus({
       ...complete,
-      remote_check: { assets_checked: 1, assets_failed: 1, timed_out: false },
+      remote_check: { assets_checked: 1, assets_failed: 1, head_fallbacks: 0, timed_out: false },
     })).toBe(false);
     expect(isCompleteOfflineStatus({
       ...complete,
-      remote_check: { assets_checked: 0, assets_failed: 0, timed_out: true },
+      remote_check: { assets_checked: 0, assets_failed: 0, head_fallbacks: 0, timed_out: true },
     })).toBe(false);
     expect(offlineStatusFailureMessage({
       ...complete,
-      remote_check: { assets_checked: 3, assets_failed: 3, timed_out: false },
+      remote_check: { assets_checked: 3, assets_failed: 3, head_fallbacks: 0, timed_out: false },
     })).toContain('3 remote resources could not be verified');
     expect(offlineStatusFailureMessage({
       ...complete,
-      remote_check: { assets_checked: 0, assets_failed: 0, timed_out: true },
+      remote_check: { assets_checked: 0, assets_failed: 0, head_fallbacks: 0, timed_out: true },
     })).toContain('timed out');
   });
 

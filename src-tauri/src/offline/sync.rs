@@ -3,7 +3,8 @@ use super::compress::{
     DEFAULT_COMPRESSION_THRESHOLD_BYTES, compress_if_large, resolve_local_asset_path,
 };
 use super::download::{
-    download_to_path, head_remote, remote_changed, sha256_file, verify_local_hash_sidecar,
+    download_to_path, head_remote, probe_remote, remote_changed, sha256_file,
+    verify_local_hash_sidecar, RemoteProbeMethod,
 };
 use super::import_clingen::import_clingen_gene_validity;
 use super::import_clinvar::import_clinvar_variant_summary;
@@ -119,6 +120,7 @@ pub struct OfflineUpdateCheck {
 pub struct OfflineRemoteCheckStatus {
     pub assets_checked: u32,
     pub assets_failed: u32,
+    pub head_fallbacks: u32,
     pub timed_out: bool,
 }
 
@@ -210,9 +212,10 @@ async fn refresh_missing_remote_sizes(db_path: &Path) {
 struct RemoteProbeSummary {
     assets_checked: u32,
     assets_failed: u32,
+    head_fallbacks: u32,
 }
 
-/// Compare local registry metadata to remote HEAD for already-downloaded assets.
+/// Compare local registry metadata to remote identity metadata for already-downloaded assets.
 async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSummary {
     struct UpdateProbe {
         id: OfflineAssetId,
@@ -248,29 +251,40 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
         return RemoteProbeSummary {
             assets_checked: 0,
             assets_failed: 0,
+            head_fallbacks: 0,
         };
     }
 
     let mut handles = JoinSet::new();
     for probe in probes {
         handles.spawn(async move {
-            let head = head_remote(&probe.url).await.ok()?;
+            let remote = probe_remote(&probe.url).await.ok()?;
             let newer = remote_changed(
-                &head,
+                &remote.head,
                 probe.etag.as_deref(),
                 probe.last_modified.as_deref(),
                 probe.content_length,
                 probe.version_label.as_deref(),
             );
-            Some((probe.id, newer, head.content_length, probe.url))
+            Some((
+                probe.id,
+                newer,
+                remote.head.content_length,
+                remote.method,
+                probe.url,
+            ))
         });
     }
 
     let db_path = db_path.to_path_buf();
     let assets_checked = handles.len() as u32;
     let mut assets_succeeded = 0u32;
+    let mut head_fallbacks = 0u32;
     while let Some(result) = handles.join_next().await {
-        if let Ok(Some((id, newer, content_length, url))) = result {
+        if let Ok(Some((id, newer, content_length, method, url))) = result {
+            if method == RemoteProbeMethod::RangeGetFallback {
+                head_fallbacks += 1;
+            }
             let persisted = with_conn(&db_path, |conn| {
                 if let Some(len) = content_length.filter(|n| *n > 0)
                     && let Some(def) = asset_def(id)
@@ -288,6 +302,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
     RemoteProbeSummary {
         assets_checked,
         assets_failed: assets_checked.saturating_sub(assets_succeeded),
+        head_fallbacks,
     }
 }
 
@@ -304,25 +319,33 @@ pub async fn check_offline_updates(
     })?;
 
     // Probe before returning so the frontend receives one authoritative status
-    // snapshot instead of stale flags from a previous check.
-    let (remote_probe, remote_check_timed_out) = match tokio::time::timeout(
+    // snapshot instead of stale flags from a previous check. Missing-size
+    // enrichment is best effort and must not turn an otherwise authoritative
+    // update probe into a timeout.
+    let remote_probe_result = tokio::time::timeout(
         std::time::Duration::from_secs(8),
-        async {
-            refresh_missing_remote_sizes(&db_path).await;
-            probe_remote_updates(&data_dir, &db_path).await
-        },
+        probe_remote_updates(&data_dir, &db_path),
     )
-    .await
-    {
+    .await;
+    let (remote_probe, remote_check_timed_out) = match remote_probe_result {
         Ok(summary) => (summary, false),
         Err(_) => (
             RemoteProbeSummary {
                 assets_checked: 0,
                 assets_failed: 0,
+                head_fallbacks: 0,
             },
             true,
         ),
     };
+
+    // Size lookup is display metadata only. Bound it separately so a slow
+    // missing resource cannot make the authoritative update state ambiguous.
+    let _ = tokio::time::timeout(
+        std::time::Duration::from_secs(4),
+        refresh_missing_remote_sizes(&db_path),
+    )
+    .await;
 
     let custom_dir = get_custom_download_dir_from_db(&db_path);
 
@@ -474,6 +497,7 @@ pub async fn check_offline_updates(
         remote_check: OfflineRemoteCheckStatus {
             assets_checked: remote_probe.assets_checked,
             assets_failed: remote_probe.assets_failed,
+            head_fallbacks: remote_probe.head_fallbacks,
             timed_out: remote_check_timed_out,
         },
     })

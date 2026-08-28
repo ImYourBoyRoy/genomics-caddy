@@ -96,64 +96,125 @@ fn remote_head_from_headers(
     }
 }
 
-pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
-    let client = reqwest::Client::builder()
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RemoteProbeMethod {
+    Head,
+    RangeGetFallback,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct RemoteProbeResult {
+    pub head: RemoteHead,
+    pub method: RemoteProbeMethod,
+}
+
+fn remote_probe_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
         // Sync-time probe only — keep this short so a dead mirror cannot stall the UI.
         .timeout(Duration::from_secs(8))
         .connect_timeout(Duration::from_secs(3))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())
+}
+
+fn content_range_total(headers: &reqwest::header::HeaderMap) -> Option<u64> {
+    let raw = headers
+        .get(reqwest::header::CONTENT_RANGE)
+        .and_then(|value| value.to_str().ok())?;
+    let total = raw.split_once('/')?.1.trim();
+    if total == "*" {
+        None
+    } else {
+        total.parse::<u64>().ok()
+    }
+}
+
+async fn range_metadata_probe(client: &reqwest::Client, url: &str) -> Result<RemoteHead, String> {
+    let response = client
+        .get(url)
+        .header(reqwest::header::RANGE, "bytes=0-0")
+        .send()
+        .await
+        .map_err(|e| format!("Range metadata probe failed for {url}: {e}"))?;
+    let status = response.status();
+    if status != reqwest::StatusCode::PARTIAL_CONTENT {
+        return Err(format!(
+            "Range metadata probe for {url} returned HTTP {status} instead of 206 Partial Content"
+        ));
+    }
+    // Do not accept a server that ignores Range and sends an unbounded partial
+    // response. The body is intentionally not read: dropping the response
+    // cancels the probe without downloading the resource.
+    if response.content_length().is_some_and(|length| length > 1) {
+        return Err(format!(
+            "Range metadata probe for {url} returned more than one byte"
+        ));
+    }
+    Ok(remote_head_from_headers(
+        response.headers(),
+        content_range_total(response.headers()),
+    ))
+}
+
+fn merge_missing_remote_metadata(head: &mut RemoteHead, supplement: RemoteHead) {
+    if head.content_length.is_none() {
+        head.content_length = supplement.content_length;
+    }
+    if head.content_filename.is_none() {
+        head.content_filename = supplement.content_filename;
+    }
+    if head.etag.is_none() {
+        head.etag = supplement.etag;
+    }
+    if head.last_modified.is_none() {
+        head.last_modified = supplement.last_modified;
+    }
+}
+
+pub(crate) async fn probe_remote(url: &str) -> Result<RemoteProbeResult, String> {
+    let client = remote_probe_client()?;
     let response = client
         .head(url)
         .send()
         .await
         .map_err(|e| format!("HEAD failed for {url}: {e}"))?;
-    if !response.status().is_success() {
-        return Err(format!("HEAD {} returned HTTP {}", url, response.status()));
+    let status = response.status();
+
+    if status == reqwest::StatusCode::METHOD_NOT_ALLOWED
+        || status == reqwest::StatusCode::NOT_IMPLEMENTED
+    {
+        let head = range_metadata_probe(&client, url).await?;
+        return Ok(RemoteProbeResult {
+            head,
+            method: RemoteProbeMethod::RangeGetFallback,
+        });
     }
-    let mut content_length = response.content_length();
-    let mut head = remote_head_from_headers(response.headers(), content_length);
-    // Some CDNs omit Content-Length on HEAD; try a 1-byte ranged GET as fallback.
-    if content_length.is_none() || content_length == Some(0) {
-        if let Ok(probe) = client
-            .get(url)
-            .header("Range", "bytes=0-0")
-            .send()
-            .await
-        {
-            if let Some(cr) = probe.headers().get(reqwest::header::CONTENT_RANGE)
-                && let Ok(s) = cr.to_str()
-                && let Some(total) = s.split('/').nth(1)
-                && let Ok(n) = total.trim().parse::<u64>()
-                && n > 0
-            {
-                content_length = Some(n);
-            } else if let Some(n) = probe.content_length().filter(|n| *n > 0) {
-                content_length = Some(n);
-            }
-            // Prefer Content-Disposition from the ranged GET when HEAD omitted it.
-            if head.content_filename.is_none() {
-                head.content_filename = content_filename_from_headers(probe.headers());
-            }
-            if head.etag.is_none() {
-                head.etag = probe
-                    .headers()
-                    .get(reqwest::header::ETAG)
-                    .and_then(|v| v.to_str().ok())
-                    .map(String::from);
-            }
-            if head.last_modified.is_none() {
-                head.last_modified = probe
-                    .headers()
-                    .get(reqwest::header::LAST_MODIFIED)
-                    .and_then(|v| v.to_str().ok())
-                    .map(String::from);
-            }
+    if !status.is_success() {
+        return Err(format!("HEAD {url} returned HTTP {status}"));
+    }
+
+    let mut head = remote_head_from_headers(response.headers(), response.content_length());
+    // Some CDNs omit Content-Length or identity headers on HEAD. A bounded
+    // ranged GET can supplement those fields, but it is never used when the
+    // server ignores Range or returns a full response.
+    if head.content_length.is_none_or(|length| length == 0)
+        || head.content_filename.is_none()
+        || head.etag.is_none()
+        || head.last_modified.is_none()
+    {
+        if let Ok(supplement) = range_metadata_probe(&client, url).await {
+            merge_missing_remote_metadata(&mut head, supplement);
         }
     }
-    head.content_length = content_length;
-    Ok(head)
+    Ok(RemoteProbeResult {
+        head,
+        method: RemoteProbeMethod::Head,
+    })
+}
+
+pub async fn head_remote(url: &str) -> Result<RemoteHead, String> {
+    Ok(probe_remote(url).await?.head)
 }
 
 pub fn sha256_file(path: &Path) -> Result<String, String> {
@@ -444,11 +505,17 @@ pub fn remote_changed(
     stored_content_filename: Option<&str>,
 ) -> bool {
     let stored_etag = stored_etag.map(str::trim).filter(|s| !s.is_empty());
-    let stored_lm = stored_last_modified.map(str::trim).filter(|s| !s.is_empty());
+    let stored_lm = stored_last_modified
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
     let stored_name = stored_content_filename
         .map(str::trim)
         .filter(|s| !s.is_empty() && looks_like_download_filename(s));
-    let remote_etag = head.etag.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let remote_etag = head
+        .etag
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
     let remote_lm = head
         .last_modified
         .as_deref()
@@ -621,6 +688,40 @@ mod tests {
         })
     }
 
+    fn spawn_head_fallback_fixture_server(
+        listener: TcpListener,
+        head_status: &'static str,
+        honors_range: bool,
+    ) -> thread::JoinHandle<()> {
+        thread::spawn(move || {
+            for _ in 0..2 {
+                let (mut stream, _) = listener.accept().expect("accept fallback fixture request");
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .expect("set fallback fixture read timeout");
+                let request = read_request(&mut stream).expect("read fallback fixture request");
+                let method = request.split_whitespace().next().unwrap_or_default();
+                if method == "HEAD" {
+                    write_fixture_response(&mut stream, head_status, &[], "");
+                } else if honors_range {
+                    write_fixture_response(
+                        &mut stream,
+                        "206 Partial Content",
+                        b"h",
+                        "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else {
+                    write_fixture_response(
+                        &mut stream,
+                        "200 OK",
+                        b"hello",
+                        "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                }
+            }
+        })
+    }
+
     #[test]
     fn parses_clingen_disposition_filename() {
         let name = parse_content_disposition_filename(
@@ -748,6 +849,41 @@ mod tests {
             Some(100),
             Some("catalog-2026-07-11.csv"),
         ));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn head_method_rejection_uses_bounded_range_metadata_fallback() {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind HEAD fallback fixture");
+        let address = listener
+            .local_addr()
+            .expect("read HEAD fallback fixture address");
+        let server = spawn_head_fallback_fixture_server(listener, "405 Method Not Allowed", true);
+        let url = format!("http://{address}/fixture.bin");
+
+        let result = probe_remote(&url).await.expect("range fallback probe");
+        assert_eq!(result.method, RemoteProbeMethod::RangeGetFallback);
+        assert_eq!(result.head.content_length, Some(5));
+        assert_eq!(result.head.etag.as_deref(), Some("\"fixture-v1\""));
+        assert_eq!(result.head.content_filename.as_deref(), Some("fixture.bin"));
+
+        server.join().expect("join HEAD fallback fixture");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn head_fallback_rejects_servers_that_ignore_range() {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind ignored-range fixture");
+        let address = listener
+            .local_addr()
+            .expect("read ignored-range fixture address");
+        let server = spawn_head_fallback_fixture_server(listener, "501 Not Implemented", false);
+        let url = format!("http://{address}/fixture.bin");
+
+        let error = probe_remote(&url)
+            .await
+            .expect_err("full-body response must not be accepted as metadata");
+        assert!(error.contains("instead of 206 Partial Content"));
+
+        server.join().expect("join ignored-range fixture");
     }
 
     #[tokio::test(flavor = "current_thread")]

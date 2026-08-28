@@ -130,7 +130,7 @@ Many public genomic analysis platforms sell user data or require uploading sensi
 * Simple next-step text uses the authored lab, symptom, or clinical follow-up labels when available instead of repeating a generic follow-up sentence; longer authored lists are bounded with a compact remainder count and stay available in Details.
 * Simple finding titles hide leading gene symbols and replace technical `marker` wording with plain research-context language; exact gene and rsID details remain under Technical data.
 * The report header keeps the aggregate association count as quiet secondary context; the technical association-match metric remains inside its collapsed technical disclosure rather than acting as a health score.
-* Expanded Simple and Compare finding grids use a centered 72rem maximum measure so two-column cards retain readable line lengths and intentional whitespace.
+* Expanded Simple and Compare finding grids use a centered 64rem maximum measure so two-column cards retain readable line lengths while leaving more intentional whitespace around the report content. The privacy-safe desktop UI audit also verifies aggregate card widths against their grid columns.
 * A top-toolbar color control supports System default, Light mode, and Dark mode preferences without storing profile or genotype data. Print output uses the same semantic theme vocabulary.
 * Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
 * Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.

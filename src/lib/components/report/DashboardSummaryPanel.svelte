@@ -326,7 +326,7 @@
           </h3>
           {#if !collapsed.diet}
             <div class="card-body" id="dietary-alignment-body">
-              <p class="section-hint">Conditional prompts, not permanent food rules.</p>
+              <p class="section-hint">Personalized food prompts</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
                 <div class="dietary-profile-safety" role="note">
                   <strong>🛡️ Explicit food context</strong>
@@ -430,7 +430,7 @@
           </h3>
           {#if !collapsed.supplements}
             <div class="card-body" id="supplements-body">
-              <p class="section-hint">Review interactions and health context before use.</p>
+              <p class="section-hint">Personalized supplement prompts</p>
               {#if plan.supplements.length > 0}
                 <div class="supplements-list">
                   {#each plan.supplements as s (`${s.name}:${s.reason}`)}
@@ -480,7 +480,7 @@
           </h3>
           {#if !collapsed.cycleSupport}
             <div class="card-body" id="cycle-support-body">
-              <p class="section-hint">Guidance for {selectedReproductiveContextLabel()}: timing, symptoms, products, and follow-up questions.</p>
+              <p class="section-hint">Support for {selectedReproductiveContextLabel()}</p>
               {#if plan.cycleSupport.diaryReview}
                 <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
                   <h4 id="cycle-diary-review-title">📈 Observed diary review</h4>
@@ -578,7 +578,7 @@
         </h3>
         {#if !collapsed.activity}
           <div class="card-body" id="activity-body">
-            <p class="section-hint">Planning prompts for training and recovery — not activity clearance.</p>
+            <p class="section-hint">Training and recovery prompts</p>
             <ul class="guardrail-list">
               {#each plan.activity.principles as principle (principle)}
                 <li>{principle}</li>
@@ -626,7 +626,7 @@
         </h3>
         {#if !collapsed.medication}
           <div class="card-body" id="medication-body">
-            <p class="section-hint">Compare this with current medications and past responses.</p>
+            <p class="section-hint">Medication-related context</p>
             {#if plan.pgxGuidance.relevantGenes.length > 0}
               <div class="pgx-readiness" role="note">
                 <strong>🧪 PGx completeness check</strong>
@@ -670,7 +670,7 @@
         </h3>
         {#if !collapsed.labTests}
           <div class="card-body lab-body" id="lab-followups-body">
-            <p class="section-hint">Grouped by priority for clinician discussion.</p>
+            <p class="section-hint">Grouped by priority</p>
             <div class="lab-tier-stack">
               {#each plan.labGroups as group (group.label)}
                 <section class="lab-tier-block">

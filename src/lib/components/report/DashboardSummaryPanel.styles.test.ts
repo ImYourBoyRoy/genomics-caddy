@@ -33,11 +33,16 @@ describe('DashboardSummaryPanel semantic styling', () => {
   it('keeps repeated guidance boundaries compact and available on demand', () => {
     expect(source).toContain("import Tooltip from '../common/Tooltip.svelte';");
     expect(source).toContain('Optional self-reported context used to tailor guidance.');
-    expect(source).toContain('Conditional prompts, not permanent food rules.');
-    expect(source).toContain('Review interactions and health context before use.');
-    expect(source).toContain('Planning prompts for training and recovery — not activity clearance.');
-    expect(source).toContain('Compare this with current medications and past responses.');
-    expect(source).toContain('Grouped by priority for clinician discussion.');
+    expect(source).toContain('Personalized food prompts');
+    expect(source).toContain('Personalized supplement prompts');
+    expect(source).toContain('Training and recovery prompts');
+    expect(source).toContain('Medication-related context');
+    expect(source).toContain('Grouped by priority');
+    expect(source).not.toContain('Conditional prompts, not permanent food rules.');
+    expect(source).not.toContain('Review interactions and health context before use.');
+    expect(source).not.toContain('Planning prompts for training and recovery — not activity clearance.');
+    expect(source).not.toContain('Compare this with current medications and past responses.');
+    expect(source).not.toContain('Grouped by priority for clinician discussion.');
     expect(source).toContain('Up to five prioritized follow-up prompts from this report.');
     expect(source).toContain('{Math.min(plan.topFindings.length, 5)} shown');
     expect(source).not.toContain('A genotype match is not a permanent food restriction;');

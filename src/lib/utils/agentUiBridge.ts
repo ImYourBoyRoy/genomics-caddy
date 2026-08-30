@@ -191,6 +191,7 @@ export type AgentUiResourceUpdatePhase =
   | 'installed'
   | 'reloading'
   | 'ready'
+  | 'attention'
   | 'error';
 
 export interface AgentUiControllers {
@@ -480,6 +481,7 @@ function collectResourceUpdatePhase(): AgentUiSnapshot['resourceUpdatePhase'] {
     'installed',
     'reloading',
     'ready',
+    'attention',
     'error',
   ];
   return phases.includes(phase as AgentUiResourceUpdatePhase)

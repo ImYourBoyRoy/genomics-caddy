@@ -718,6 +718,11 @@
   background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
+.resource-update-state-attention {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+}
+
 .resource-update-state-ready {
   border-color: color-mix(in srgb, var(--success) 45%, var(--border-color));
   background: color-mix(in srgb, var(--success) 9%, transparent);
@@ -741,6 +746,11 @@
 .resource-update-state-error .resource-update-state-dot {
   background: var(--danger);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
+.resource-update-state-attention .resource-update-state-dot {
+  background: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
 .resource-update-state-ready .resource-update-state-dot {

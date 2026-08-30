@@ -34,18 +34,6 @@
     DB_TICKER_MESSAGES,
     type BootstrapPhase,
   } from "$lib/components/common/bootstrap/bootstrapPhases";
-  import ReportView from "$lib/components/report/ReportView.svelte";
-  import GenomeMap from "$lib/components/genome/GenomeMap.svelte";
-  import DiscoveryPanel from "$lib/components/discovery/DiscoveryPanel.svelte";
-  import VariantSearchPanel from "$lib/components/search/VariantSearchPanel.svelte";
-  import McpPanel from "$lib/components/mcp/McpPanel.svelte";
-  import AiAssistantPanel from "$lib/components/ai/AiAssistantPanel.svelte";
-  import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
-  import ResearchPanel from "$lib/components/research/ResearchPanel.svelte";
-  import ConnectionsPanel from "$lib/components/settings/ConnectionsPanel.svelte";
-  import ContextPanel from "$lib/components/context/ContextPanel.svelte";
-  import DiaryPanel from "$lib/components/context/DiaryPanel.svelte";
-  import LegalPrivacyPanel from "$lib/components/legal/LegalPrivacyPanel.svelte";
   import { dialogStore } from "$lib/utils/dialogState.svelte";
   import GlobalDialogs from "$lib/components/common/GlobalDialogs.svelte";
   import { runPageBootstrap } from "$lib/utils/pageBootstrap";
@@ -66,6 +54,7 @@
   import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
   import { installDesktopContextMenu } from "$lib/utils/desktopContextMenu";
   import { formatGeneticSexLabel } from "$lib/utils/uiLabels";
+  import type { Component } from "svelte";
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
@@ -133,6 +122,68 @@
   ] as const;
 
   let advancedActive = $derived(ADVANCED_TABS.some((t) => t.id === activeTab));
+
+  type DeferredPanel = Component<Record<string, unknown>>;
+  let deferredPanels = $state<Record<string, DeferredPanel>>({});
+  let deferredPanelLoading = $state<string | null>(null);
+  let deferredPanelErrors = $state<Record<string, string>>({});
+
+  async function loadDeferredPanel(tab: string): Promise<void> {
+    if (deferredPanels[tab] || deferredPanelLoading === tab) return;
+    const deferredTabs = new Set([
+      "report",
+      "context",
+      "diary",
+      "map",
+      "discovery",
+      "connections",
+      "browser",
+      "mcp",
+      "agent",
+      "research",
+      "ai",
+      "legal",
+    ]);
+    if (!deferredTabs.has(tab)) return;
+
+    deferredPanelLoading = tab;
+    delete deferredPanelErrors[tab];
+    try {
+      const module = await (async () => {
+        switch (tab) {
+          case "report": return import("$lib/components/report/ReportView.svelte");
+          case "context": return import("$lib/components/context/ContextPanel.svelte");
+          case "diary": return import("$lib/components/context/DiaryPanel.svelte");
+          case "map": return import("$lib/components/genome/GenomeMap.svelte");
+          case "discovery": return import("$lib/components/discovery/DiscoveryPanel.svelte");
+          case "connections": return import("$lib/components/settings/ConnectionsPanel.svelte");
+          case "browser": return import("$lib/components/search/VariantSearchPanel.svelte");
+          case "mcp": return import("$lib/components/mcp/McpPanel.svelte");
+          case "agent": return import("$lib/components/agent/AgentResearchPanel.svelte");
+          case "research": return import("$lib/components/research/ResearchPanel.svelte");
+          case "ai": return import("$lib/components/ai/AiAssistantPanel.svelte");
+          case "legal": return import("$lib/components/legal/LegalPrivacyPanel.svelte");
+          default: return null;
+        }
+      })();
+      if (module) deferredPanels[tab] = module.default as DeferredPanel;
+    } catch (error) {
+      deferredPanelErrors[tab] = error instanceof Error ? error.message : String(error);
+    } finally {
+      if (deferredPanelLoading === tab) deferredPanelLoading = null;
+    }
+  }
+
+  $effect(() => {
+    void loadDeferredPanel(activeTab);
+  });
+
+  function deferredPanelStatus(tab: string, label: string): string {
+    if (deferredPanelErrors[tab] && deferredPanelLoading === null) {
+      return `Could not load ${label}. Select it again to retry.`;
+    }
+    return `Loading ${label}…`;
+  }
 
   $effect(() => {
     const contextKey = selectedSample?.id == null ? "none" : String(selectedSample.id);
@@ -698,93 +749,153 @@
 
         <div class="tab-content" role="tabpanel" id="panel-{activeTab}" aria-labelledby="tab-{activeTab}">
           {#if activeTab === "report"}
-            <ReportView
-              {generatedReport}
-              {rawReport}
-              {isGeneratingReport}
-              {selectedSample}
-              {foundMarkersCount}
-              {totalMarkersChecked}
-              {reportError}
-              {profileContext}
-              {highlightRsid}
-              onExploreResearch={handleExploreResearch}
-              onNavigateToVariant={navigateToVariant}
-              onOpenDiscovery={() => selectTab("discovery")}
-            />
+            {#if deferredPanels.report}
+              {@const ReportPanel = deferredPanels.report}
+              <ReportPanel
+                {generatedReport}
+                {rawReport}
+                {isGeneratingReport}
+                {selectedSample}
+                {foundMarkersCount}
+                {totalMarkersChecked}
+                {reportError}
+                {profileContext}
+                {highlightRsid}
+                onExploreResearch={handleExploreResearch}
+                onNavigateToVariant={navigateToVariant}
+                onOpenDiscovery={() => selectTab("discovery")}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("report", "Trait Report")}</div>
+            {/if}
           {:else if activeTab === "context"}
-            <ContextPanel
-              {selectedSample}
-              bind:profileContext
-              onOpenDiary={() => selectTab("diary")}
-            />
+            {#if deferredPanels.context}
+              {@const ContextPanel = deferredPanels.context}
+              <ContextPanel
+                {selectedSample}
+                bind:profileContext
+                onOpenDiary={() => selectTab("diary")}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("context", "Context")}</div>
+            {/if}
           {:else if activeTab === "diary"}
-            <DiaryPanel
-              {selectedSample}
-              bind:profileContext
-              onOpenContext={() => selectTab("context")}
-            />
+            {#if deferredPanels.diary}
+              {@const DiaryPanel = deferredPanels.diary}
+              <DiaryPanel
+                {selectedSample}
+                bind:profileContext
+                onOpenContext={() => selectTab("context")}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("diary", "Diary")}</div>
+            {/if}
           {:else if activeTab === "map"}
-            <GenomeMap {selectedSample} {generatedReport} focusRsid={mapFocusRsid} onNavigateToVariant={navigateToVariant} />
+            {#if deferredPanels.map}
+              {@const GenomeMapPanel = deferredPanels.map}
+              <GenomeMapPanel {selectedSample} {generatedReport} focusRsid={mapFocusRsid} onNavigateToVariant={navigateToVariant} />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("map", "Chromosome Map")}</div>
+            {/if}
           {:else if activeTab === "discovery"}
-            <DiscoveryPanel
-              {selectedSample}
-              onNavigate={(rsid) => navigateToVariant(rsid, "report")}
-            />
+            {#if deferredPanels.discovery}
+              {@const DiscoveryPanel = deferredPanels.discovery}
+              <DiscoveryPanel
+                {selectedSample}
+                onNavigate={(rsid: string) => navigateToVariant(rsid, "report")}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("discovery", "Discovery")}</div>
+            {/if}
           {:else if activeTab === "legal"}
-            <LegalPrivacyPanel {selectedSample} />
+            {#if deferredPanels.legal}
+              {@const LegalPrivacyPanel = deferredPanels.legal}
+              <LegalPrivacyPanel {selectedSample} />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("legal", "Legal & Privacy")}</div>
+            {/if}
           {:else if activeTab === "connections"}
-            <ConnectionsPanel
-              bind:ollamaUrl={aiOllamaUrl}
-              bind:ollamaToken={aiOllamaToken}
-            />
+            {#if deferredPanels.connections}
+              {@const ConnectionsPanel = deferredPanels.connections}
+              <ConnectionsPanel
+                bind:ollamaUrl={aiOllamaUrl}
+                bind:ollamaToken={aiOllamaToken}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("connections", "Connections")}</div>
+            {/if}
           {:else if activeTab === "browser"}
-            <VariantSearchPanel
-              {selectedSample}
-              bind:searchRsid
-              bind:browseChr
-              bind:browseStart
-              bind:browseEnd
-              {browserResults}
-              {isBrowsing}
-              {highlightRsid}
-              onSearch={searchVariant}
-              onNavigateToVariant={navigateToVariant}
-            />
+            {#if deferredPanels.browser}
+              {@const VariantSearchPanel = deferredPanels.browser}
+              <VariantSearchPanel
+                {selectedSample}
+                bind:searchRsid
+                bind:browseChr
+                bind:browseStart
+                bind:browseEnd
+                {browserResults}
+                {isBrowsing}
+                {highlightRsid}
+                onSearch={searchVariant}
+                onNavigateToVariant={navigateToVariant}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("browser", "Variant browser")}</div>
+            {/if}
           {:else if activeTab === "mcp"}
-            <McpPanel {appPaths} />
+            {#if deferredPanels.mcp}
+              {@const McpPanel = deferredPanels.mcp}
+              <McpPanel {appPaths} />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("mcp", "MCP Integration")}</div>
+            {/if}
           {:else if activeTab === "agent"}
-            <AgentResearchPanel
-              {selectedSample}
-              {generatedReport}
-              bind:ollamaUrl={aiOllamaUrl}
-              bind:ollamaToken={aiOllamaToken}
-              bind:selectedModel={aiSelectedModel}
-            />
+            {#if deferredPanels.agent}
+              {@const AgentResearchPanel = deferredPanels.agent}
+              <AgentResearchPanel
+                {selectedSample}
+                {generatedReport}
+                bind:ollamaUrl={aiOllamaUrl}
+                bind:ollamaToken={aiOllamaToken}
+                bind:selectedModel={aiSelectedModel}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("agent", "Research Agent")}</div>
+            {/if}
           {:else if activeTab === "research"}
-            <ResearchPanel
-              {selectedSample}
-              bind:ollamaUrl={aiOllamaUrl}
-              bind:ollamaToken={aiOllamaToken}
-              bind:job={researchJob}
-            />
+            {#if deferredPanels.research}
+              {@const ResearchPanel = deferredPanels.research}
+              <ResearchPanel
+                {selectedSample}
+                bind:ollamaUrl={aiOllamaUrl}
+                bind:ollamaToken={aiOllamaToken}
+                bind:job={researchJob}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("research", "Vector Research")}</div>
+            {/if}
           {:else if activeTab === "ai"}
-            <AiAssistantPanel
-              {selectedSample}
-              {generatedReport}
-              bind:profileContext
-              onOpenContext={() => selectTab("context")}
-              bind:ollamaUrl={aiOllamaUrl}
-              bind:ollamaToken={aiOllamaToken}
-              bind:selectedModel={aiSelectedModel}
-              bind:messages={aiMessages}
-              bind:selectedPacks={aiSelectedPacks}
-              bind:onlyActiveFindings={aiOnlyActiveFindings}
-              bind:temperature={aiTemperature}
-              bind:initialSearchQuery={aiInitialSearchQuery}
-              bind:activeView={aiActiveView}
-              onNavigateToVariant={navigateToVariant}
-            />
+            {#if deferredPanels.ai}
+              {@const AiAssistantPanel = deferredPanels.ai}
+              <AiAssistantPanel
+                {selectedSample}
+                {generatedReport}
+                bind:profileContext
+                onOpenContext={() => selectTab("context")}
+                bind:ollamaUrl={aiOllamaUrl}
+                bind:ollamaToken={aiOllamaToken}
+                bind:selectedModel={aiSelectedModel}
+                bind:messages={aiMessages}
+                bind:selectedPacks={aiSelectedPacks}
+                bind:onlyActiveFindings={aiOnlyActiveFindings}
+                bind:temperature={aiTemperature}
+                bind:initialSearchQuery={aiInitialSearchQuery}
+                bind:activeView={aiActiveView}
+                onNavigateToVariant={navigateToVariant}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("ai", "AI Consultation")}</div>
+            {/if}
           {/if}
         </div>
       {/if}

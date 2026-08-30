@@ -792,6 +792,15 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
+.tab-loading-state {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 .app-reference-note {
   border-top: 1px solid var(--border-color);
   color: var(--text-secondary);

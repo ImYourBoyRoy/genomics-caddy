@@ -283,7 +283,7 @@
   </div>
 
   {#if statusError}
-    <div class="offline-status-error" role="status">
+    <div class="offline-status-error offline-status-attention" role="status">
       <span>{statusError}</span>
       <button type="button" class="btn btn-secondary btn-xs" disabled={disabled || loading} onclick={refresh}>
         {loading ? "Checking…" : "Retry"}
@@ -496,6 +496,11 @@
     background: var(--status-danger-bg);
     color: var(--status-danger-text);
     font-size: 0.8rem;
+  }
+  .offline-status-attention {
+    border-color: var(--status-warning-border);
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
   }
   .offline-update-ul {
     list-style: none;

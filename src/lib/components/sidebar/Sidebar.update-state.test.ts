@@ -46,13 +46,14 @@ describe('Sidebar update-state ordering', () => {
 
   it('shows a concise collapsed-row status after the authoritative probe settles', () => {
     expect(sidebarSource).toContain("if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';");
-    expect(sidebarSource).toContain("if (updatePhase === 'error' && updateRetry?.kind === 'status') return 'Check incomplete';");
+    expect(sidebarSource).toContain("if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Check incomplete';");
     expect(sidebarSource).toContain("if (updatePhase === 'error') return 'Update issue';");
     expect(sidebarSource).toContain("if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';");
     expect(sidebarSource).toContain('class="resource-status-pill"');
     expect(sidebarSource).toContain('class:resource-status-current={collapsedStatusLabel === \'Current\'}');
     expect(sidebarSource).toContain('class:resource-status-incomplete={collapsedStatusLabel === \'Check incomplete\'}');
     expect(sidebarSource).toContain('class:resource-status-error={collapsedStatusLabel === \'Update issue\'}');
+    expect(sidebarSource).toContain("'attention',\n          offlineStatusFailureMessage(status)");
   });
 
   it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {
@@ -62,7 +63,7 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).toContain("{ kind: 'asset', assetId, force }");
     expect(sidebarSource).toContain("{ kind: 'missing' }");
     expect(sidebarSource).toContain('function handleRetryUpdate()');
-    expect(sidebarSource).toContain("{#if updatePhase === 'error' && updateRetry}");
+    expect(sidebarSource).toContain("{#if (updatePhase === 'attention' || updatePhase === 'error') && updateRetry}");
     expect(sidebarSource).toContain('aria-live="polite"');
     expect(sidebarSource).toContain('resource-update-retry');
     expect(sidebarSource).toContain('if (failureMessage && failureRetry) setUpdateState');

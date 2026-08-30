@@ -25,16 +25,8 @@ export default defineConfig(async () => ({
               test: /node_modules[\\/]@tauri-apps[\\/]/,
             },
             {
-              name: "feature-ai",
-              test: /src[\\/]lib[\\/]components[\\/]ai[\\/]/,
-            },
-            {
               name: "feature-research",
               test: /src[\\/]lib[\\/]components[\\/]research[\\/]/,
-            },
-            {
-              name: "feature-evidence",
-              test: /src[\\/]lib[\\/]components[\\/]ai[\\/]evidence[\\/]/,
             },
           ],
         },

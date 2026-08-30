@@ -141,7 +141,7 @@ import { onMount, onDestroy } from 'svelte';
   }
   let syncPhase = $state<Record<string, SyncPhaseInfo>>({});
   let isCheckingStatus = $state(false);
-  type ResourceUpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'validating' | 'installed' | 'reloading' | 'ready' | 'error';
+  type ResourceUpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'validating' | 'installed' | 'reloading' | 'ready' | 'attention' | 'error';
   type UpdateRetryTarget =
     | { kind: 'status' }
     | { kind: 'asset'; assetId: string; force: boolean }
@@ -170,6 +170,7 @@ import { onMount, onDestroy } from 'svelte';
       case 'installed': return 'Resources installed';
       case 'reloading': return 'Reloading report';
       case 'ready': return 'Resources ready';
+      case 'attention': return 'Remote check incomplete';
       case 'error': return 'Update error';
       default: return '';
     }
@@ -268,7 +269,7 @@ import { onMount, onDestroy } from 'svelte';
       offlineStatusFresh = isCompleteOfflineStatus(status);
       if (!offlineStatusFresh) {
         setUpdateState(
-          'error',
+          'attention',
           offlineStatusFailureMessage(status),
           { kind: 'status' },
         );
@@ -309,7 +310,7 @@ import { onMount, onDestroy } from 'svelte';
       offlineStatusFresh = isCompleteOfflineStatus(status);
       if (!offlineStatusFresh) {
         setUpdateState(
-          'error',
+          'attention',
           offlineStatusFailureMessage(status),
           { kind: 'status' },
         );
@@ -884,7 +885,7 @@ import { onMount, onDestroy } from 'svelte';
 
   let collapsedStatusLabel = $derived.by(() => {
     if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';
-    if (updatePhase === 'error' && updateRetry?.kind === 'status') return 'Check incomplete';
+    if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Check incomplete';
     if (updatePhase === 'error') return 'Update issue';
     if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';
     return '';
@@ -1019,15 +1020,15 @@ import { onMount, onDestroy } from 'svelte';
       <div id="data-updates-panel" class="data-updates-body" role="region" aria-labelledby="data-updates-title">
 
         {#if updatePhase !== 'idle'}
-          <div class="resource-update-state" class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
+          <div class="resource-update-state" class:resource-update-state-attention={updatePhase === 'attention'} class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
             <div class="resource-update-state-heading">
               <span class="resource-update-state-dot" aria-hidden="true"></span>
-              <strong>{updatePhase === 'error' && updateRetry?.kind === 'status' ? 'Check incomplete' : updatePhaseLabel(updatePhase)}</strong>
+              <strong>{updatePhase === 'attention' && updateRetry?.kind === 'status' ? 'Check incomplete' : updatePhaseLabel(updatePhase)}</strong>
             </div>
             {#if updateMessage}
               <div class="resource-update-state-message">{updateMessage}</div>
             {/if}
-            {#if updatePhase === 'error' && updateRetry}
+            {#if (updatePhase === 'attention' || updatePhase === 'error') && updateRetry}
               <button
                 type="button"
                 class="btn btn-secondary btn-xs resource-update-retry"

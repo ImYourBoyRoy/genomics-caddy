@@ -24,7 +24,7 @@ describe('OfflineDataPanel update-state ordering', () => {
     expect(panelSource).toContain('let statusStale = $state(false);');
     expect(panelSource).toContain('let retryTarget = $state<RetryTarget | null>(null);');
     expect(panelSource).toContain('async function retryLastOperation()');
-    expect(panelSource).toContain('class="offline-status-error" role="status"');
+    expect(panelSource).toContain('class="offline-status-error offline-status-attention" role="status"');
     expect(panelSource).toContain('class="offline-operation-error" role="alert"');
     expect(panelSource).toContain('kind: \'outdated\'; assetIds: string[]; force: boolean');
     expect(panelSource).toContain('statusError = \'Could not verify the latest resource status.\';');

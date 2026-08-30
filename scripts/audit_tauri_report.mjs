@@ -234,6 +234,7 @@ function validateResourceUpdatePhase(snapshot) {
       "installed",
       "reloading",
       "ready",
+      "attention",
       "error",
     ].includes(phase),
     "Desktop bridge returned an unknown resource update phase",
@@ -246,7 +247,7 @@ function validateResourceUpdatePhase(snapshot) {
 }
 
 async function assertNoUnverifiedUpdateCopy(snapshot) {
-  if (snapshot.resourceStatus !== "error") return;
+  if (snapshot.resourceStatus !== "error" && snapshot.resourceStatus !== "attention") return;
 
   for (const text of ["newer remote", "Update available", "updates available"]) {
     const result = await request("/ui/queryText", {

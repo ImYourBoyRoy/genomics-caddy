@@ -137,6 +137,27 @@ describe('plain-English claim framing', () => {
     expect(translation.simpleMeaning).not.toContain('does not measure current pathway activity');
   });
 
+  it('uses an identifier-aware template for non-rsid clinical panels', () => {
+    const translation = getLaypersonTranslation({
+      rsid: 'PANEL_EXAMPLE_CLINICAL_ROUTE',
+      gene: 'EXAMPLE',
+      variant_name: 'Example hereditary condition panel',
+      variant_type: 'gene_panel',
+      impact: 'Clinical panel context',
+      interpretation: 'A targeted clinical panel may be relevant.',
+      raw_dna_limitation: 'A consumer array does not provide the full panel result.',
+      clinical_confirmation_required: true,
+    });
+
+    expect(translation.simpleImpact).toBe('Clinical gene-panel signal');
+    expect(translation.plainTitle).toBe('Clinical gene-panel signal');
+    expect(translation.signal).toContain('Example hereditary condition panel');
+    expect(translation.whyItMatters).toContain('symptoms, family history');
+    expect(translation.reviewAction).toContain('targeted clinical testing');
+    expect(translation.simpleMeaning).not.toContain('dedicated plain-English explanation');
+    expect(translation.isFallback).not.toBe(true);
+  });
+
   it('keeps Simple cards concise while retaining the full authored meaning for details and exports', () => {
     const translation = {
       simpleImpact: 'Blood sugar research context',

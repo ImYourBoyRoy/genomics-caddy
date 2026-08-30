@@ -28,6 +28,16 @@ export interface LaypersonTranslation {
   isFallback?: boolean;
 }
 
+interface LaypersonIdentifierTemplate extends LaypersonTranslation {
+  id: string;
+  variant_types: string[];
+}
+
+interface IdentifierMarkerContext {
+  variant_name?: string | null;
+  variant_type?: string | null;
+}
+
 interface LaypersonTranslationGroup {
   id: string;
   rsids: string[];
@@ -87,6 +97,27 @@ function buildLaypersonMap(): Record<string, LaypersonTranslation> {
 export const LAYPERSON_MAP = buildLaypersonMap();
 
 export const DEFAULT_LAYPERSON_TRANSLATION: LaypersonTranslation = laypersonTranslations.fallback;
+
+const IDENTIFIER_TEMPLATES = (laypersonTranslations.identifier_templates ?? []) as LaypersonIdentifierTemplate[];
+
+function renderIdentifierTemplate(value: string, markerName: string): string {
+  return value.replace(/\{name\}/g, markerName);
+}
+
+function identifierDisplayName(marker: Pick<EvaluatedMarker, 'gene'> & IdentifierMarkerContext): string {
+  const name = marker.variant_name?.trim() || marker.gene?.trim() || 'this pathway';
+  return name.replace(/\s+/g, ' ').slice(0, 140).trim();
+}
+
+function getIdentifierTemplate(
+  marker: IdentifierMarkerContext,
+): LaypersonIdentifierTemplate | undefined {
+  const variantType = marker.variant_type?.trim().toLowerCase();
+  if (!variantType) return undefined;
+  return IDENTIFIER_TEMPLATES.find((template) =>
+    template.variant_types.some((item) => item.trim().toLowerCase() === variantType),
+  );
+}
 
 const GENERIC_TITLE_PREFIXES = new Set(['DNA', 'RNA', 'SNP']);
 
@@ -452,11 +483,26 @@ export function getLaypersonTranslation(
   marker: Pick<
     EvaluatedMarker,
     "rsid" | "gene" | "impact" | "interpretation" | "raw_dna_limitation" | "clinical_confirmation_required"
-  >,
+  > & IdentifierMarkerContext,
   translations: Record<string, LaypersonTranslation> = LAYPERSON_MAP,
 ): LaypersonTranslation {
   const explicit = translations[marker.rsid] || translations[marker.rsid.trim().toLowerCase()];
   if (explicit) return explicit;
+
+  const template = getIdentifierTemplate(marker);
+  if (template) {
+    const name = identifierDisplayName(marker);
+    return {
+      simpleImpact: renderIdentifierTemplate(template.simpleImpact, name),
+      simpleMeaning: renderIdentifierTemplate(template.simpleMeaning, name),
+      ...(template.simpleNextStep ? { simpleNextStep: renderIdentifierTemplate(template.simpleNextStep, name) } : {}),
+      ...(template.plainTitle ? { plainTitle: renderIdentifierTemplate(template.plainTitle, name) } : {}),
+      ...(template.signal ? { signal: renderIdentifierTemplate(template.signal, name) } : {}),
+      ...(template.whyItMatters ? { whyItMatters: renderIdentifierTemplate(template.whyItMatters, name) } : {}),
+      ...(template.reviewAction ? { reviewAction: renderIdentifierTemplate(template.reviewAction, name) } : {}),
+      ...(template.evidenceLabel ? { evidenceLabel: renderIdentifierTemplate(template.evidenceLabel, name) } : {}),
+    };
+  }
 
   if (marker.clinical_confirmation_required) {
     return {

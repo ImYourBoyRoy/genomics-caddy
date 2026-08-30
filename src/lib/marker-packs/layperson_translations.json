@@ -1,6 +1,6 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "last_updated": "2026-08-30",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
@@ -12,6 +12,129 @@
     "simpleImpact": "Genetic context marker",
     "simpleMeaning": "A dedicated plain-English explanation is not yet available for this marker. Treat the technical interpretation as a probabilistic association, keep the marker's claim boundaries in view, and use symptoms, measured labs, and clinical context before acting."
   },
+  "identifier_templates": [
+    {
+      "id": "clinical_interpretation_route",
+      "variant_types": ["guardrail", "no_claim_guardrail"],
+      "simpleImpact": "Clinical interpretation route",
+      "simpleMeaning": "This entry marks the {name} route used to interpret related DNA findings. It is most useful when the related health question or symptom is present.",
+      "plainTitle": "Clinical interpretation route",
+      "signal": "This entry marks the {name} route used to interpret related DNA findings.",
+      "whyItMatters": "It keeps the related result tied to the right clinical question and test.",
+      "reviewAction": "Review the related finding and its indicated clinical test.",
+      "evidenceLabel": "Clinical interpretation route"
+    },
+    {
+      "id": "clinical_gene_panel",
+      "variant_types": ["gene_panel", "syndrome_panel", "copy_number_variant_panel", "pharmacogenomic_panel"],
+      "simpleImpact": "Clinical gene-panel signal",
+      "simpleMeaning": "This result relates to the {name} pathway and is designed to answer a focused clinical question. Its value comes from matching it to the relevant symptoms, family history, medication, or screening question.",
+      "plainTitle": "Clinical gene-panel signal",
+      "signal": "This result relates to the {name} pathway and is designed to answer a focused clinical question.",
+      "whyItMatters": "Its value comes from matching it to the relevant symptoms, family history, medication, or screening question.",
+      "reviewAction": "Discuss whether targeted clinical testing or genetic counseling is relevant.",
+      "evidenceLabel": "Clinical testing route"
+    },
+    {
+      "id": "polygenic_research_module",
+      "variant_types": ["polygenic_panel", "polygenic_trait", "prs_module", "prs_panel", "research_panel", "pathway_panel"],
+      "simpleImpact": "Polygenic research signal",
+      "simpleMeaning": "This result summarizes a group of variants studied together for {name}. Use it as background alongside the matching trait, family history, measured health data, and lifestyle factors.",
+      "plainTitle": "Polygenic research signal",
+      "signal": "This result summarizes a group of variants studied together for {name}.",
+      "whyItMatters": "Use it as background alongside the matching trait, family history, measured health data, and lifestyle factors.",
+      "reviewAction": "Compare it with the related health measures and history.",
+      "evidenceLabel": "Polygenic research"
+    },
+    {
+      "id": "hla_clinical_context",
+      "variant_types": ["hla_panel", "hla_allele"],
+      "simpleImpact": "HLA-related clinical signal",
+      "simpleMeaning": "This result relates to {name}, an HLA-associated compatibility or medication-safety pathway. Its importance depends on the exact HLA result and the specific clinical question.",
+      "plainTitle": "HLA-related clinical signal",
+      "signal": "This result relates to {name}, an HLA-associated compatibility or medication-safety pathway.",
+      "whyItMatters": "Its importance depends on the exact HLA result and the specific clinical question.",
+      "reviewAction": "Discuss targeted HLA testing when the related medicine or condition is relevant.",
+      "evidenceLabel": "Clinical medication or disease context"
+    },
+    {
+      "id": "copy_number_context",
+      "variant_types": ["copy_number_variant", "cnv"],
+      "simpleImpact": "Copy-number context signal",
+      "simpleMeaning": "This result relates to {name}, a copy-number pathway that ordinary SNP data may not resolve. Copy-number status can change how some genes or medicines are interpreted.",
+      "plainTitle": "Copy-number context signal",
+      "signal": "This result relates to {name}, a copy-number pathway that ordinary SNP data may not resolve.",
+      "whyItMatters": "Copy-number status can change how some genes or medicines are interpreted.",
+      "reviewAction": "Ask whether validated copy-number testing is relevant.",
+      "evidenceLabel": "Clinical testing route"
+    },
+    {
+      "id": "repeat_length_context",
+      "variant_types": ["vntr", "str_repeat", "repeat", "microsatellite"],
+      "simpleImpact": "Repeat-length signal",
+      "simpleMeaning": "This result relates to {name}, a repeat-length marker that requires the right assay and interpretation. Repeat number can matter differently from an ordinary SNP call.",
+      "plainTitle": "Repeat-length signal",
+      "signal": "This result relates to {name}, a repeat-length marker that requires the right assay and interpretation.",
+      "whyItMatters": "Repeat number can matter differently from an ordinary SNP call.",
+      "reviewAction": "Discuss targeted repeat testing if the related trait or medication question is relevant.",
+      "evidenceLabel": "Specialized genetic testing"
+    },
+    {
+      "id": "rare_variant_route",
+      "variant_types": ["rare_variant"],
+      "simpleImpact": "Rare-variant clinical route",
+      "simpleMeaning": "This result relates to {name}, a rare-variant pathway with potential clinical significance. Confirmation and the surrounding clinical picture determine whether it matters.",
+      "plainTitle": "Rare-variant clinical route",
+      "signal": "This result relates to {name}, a rare-variant pathway with potential clinical significance.",
+      "whyItMatters": "Confirmation and the surrounding clinical picture determine whether it matters.",
+      "reviewAction": "Discuss targeted clinical confirmation if the related symptoms or family history fit.",
+      "evidenceLabel": "Clinical review route"
+    },
+    {
+      "id": "research_locus",
+      "variant_types": ["locus"],
+      "simpleImpact": "Research-locus signal",
+      "simpleMeaning": "This result marks the {name} region, which has been studied in relation to a health or behavioral trait. Use it as a research signal alongside lived experience and relevant testing.",
+      "plainTitle": "Research-locus signal",
+      "signal": "This result marks the {name} region, which has been studied in relation to a health or behavioral trait.",
+      "whyItMatters": "Use it as a research signal alongside lived experience and relevant testing.",
+      "reviewAction": "Compare it with the related trait and current health data.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "id": "clinical_overlay",
+      "variant_types": ["clinical_overlay"],
+      "simpleImpact": "Clinical context overlay",
+      "simpleMeaning": "This result adds the {name} clinical context to the report. It organizes a question that is answered with history, symptoms, labs, or imaging.",
+      "plainTitle": "Clinical context overlay",
+      "signal": "This result adds the {name} clinical context to the report.",
+      "whyItMatters": "It organizes a question that is answered with history, symptoms, labs, or imaging.",
+      "reviewAction": "Review the related history or test route if the question fits.",
+      "evidenceLabel": "Clinical context"
+    },
+    {
+      "id": "evidence_gap",
+      "variant_types": ["research_gap"],
+      "simpleImpact": "Evidence-gap note",
+      "simpleMeaning": "This entry records the {name} evidence gap. It helps show where current DNA data does not provide a useful individual prediction.",
+      "plainTitle": "Evidence-gap note",
+      "signal": "This entry records the {name} evidence gap.",
+      "whyItMatters": "It helps show where current DNA data does not provide a useful individual prediction.",
+      "reviewAction": "Use the related clinical or symptom route instead.",
+      "evidenceLabel": "Evidence gap"
+    },
+    {
+      "id": "focused_variant_context",
+      "variant_types": ["variant_panel", "snp", "indel"],
+      "simpleImpact": "Focused DNA context signal",
+      "simpleMeaning": "This result relates to {name}, a focused DNA signal in the report. It is most useful alongside the related trait, symptom pattern, or measured data.",
+      "plainTitle": "Focused DNA context signal",
+      "signal": "This result relates to {name}, a focused DNA signal in the report.",
+      "whyItMatters": "It is most useful alongside the related trait, symptom pattern, or measured data.",
+      "reviewAction": "Compare it with the related trait and health history.",
+      "evidenceLabel": "Research context"
+    }
+  ],
   "translations": [
     {
       "rsid": "rs80357159",

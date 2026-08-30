@@ -79,6 +79,7 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       rsid: link.rsid,
       gene: variant.gene || '',
       variant_name: variant.variant_name || rsid,
+      variant_type: variant.variant_type ?? null,
       chromosome: variant.chromosome || enrichment.dbsnp?.chromosome || '',
       position,
       user_genotype: call.user_genotype,

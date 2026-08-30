@@ -129,4 +129,41 @@ describe('content-quality audit metrics', () => {
     expect(serialized).not.toContain('genotype');
     expect(serialized).not.toContain('allele');
   });
+
+  it('counts identifier-aware Simple templates separately from generic fallback rows', () => {
+    const result = analyzeContentQuality({
+      packDocs: [{
+        id: 'panel-pack',
+        markers: [{
+          rsid: 'PANEL_EXAMPLE',
+          gene: 'EXAMPLE',
+          variant_name: 'Example clinical panel',
+          variant_type: 'gene_panel',
+          impact: 'Clinical panel context',
+          interpretation: 'A focused clinical panel route.',
+          confirm_with: ['targeted testing'],
+        }],
+      }],
+      laypersonTranslations: {
+        fallback: { simpleMeaning: 'Generic fallback.' },
+        identifier_templates: [{
+          id: 'clinical_gene_panel',
+          variant_types: ['gene_panel'],
+          simpleImpact: 'Clinical gene-panel signal',
+          simpleMeaning: 'This result relates to the {name} pathway.',
+          plainTitle: 'Clinical gene-panel signal',
+          signal: 'This result relates to the {name} pathway.',
+          whyItMatters: 'It helps organize a focused clinical question.',
+          reviewAction: 'Discuss whether targeted testing is relevant.',
+          evidenceLabel: 'Clinical testing route',
+        }],
+      },
+    });
+
+    expect(result.plain_meaning.templated).toBe(1);
+    expect(result.plain_meaning.fallback).toBe(0);
+    expect(result.plain_meaning.missing).toBe(0);
+    expect(result.copy.reuse_classes.fallback_copy.candidate_entries).toBe(0);
+    expect(result.warnings).not.toContain(expect.stringContaining('generic Simple-mode fallback'));
+  });
 });

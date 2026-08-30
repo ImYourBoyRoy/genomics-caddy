@@ -314,6 +314,8 @@ export interface DisplayMarker {
   rsid: string;
   gene: string;
   variant_name: string;
+  /** Resource-defined marker class used for category-aware plain-language copy. */
+  variant_type?: string | null;
   chromosome: string;
   position: number | null;
   user_genotype: string;

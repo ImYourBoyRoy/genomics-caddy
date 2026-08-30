@@ -226,7 +226,7 @@ const supportContracts = {
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
   lab_overlays: { arrays: ['overlays'] },
-  layperson_translations: { arrays: ['translations', 'translation_groups'], objects: ['fallback'] },
+  layperson_translations: { arrays: ['translations', 'translation_groups', 'identifier_templates'], objects: ['fallback'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
   phenotype_prompts: { arrays: ['domains'] },
   pgx_diplotype_guidance: { arrays: ['genes', 'do_not_do'], objects: ['policy'] },
@@ -990,6 +990,35 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
           errors.push(`${location}: rsid ${rsid} is not present in curated marker packs`);
         }
         translationIds.add(normalizedRsid);
+      }
+    }
+    const templateIds = new Set();
+    for (const [index, template] of (resource.identifier_templates || []).entries()) {
+      const location = `layperson_translations.json identifier template ${index + 1}`;
+      if (typeof template.id !== 'string' || template.id.trim() === '') {
+        errors.push(`${location}: id must be a non-empty string`);
+      } else if (templateIds.has(template.id)) {
+        errors.push(`${location}: duplicate id ${template.id}`);
+      }
+      templateIds.add(template.id);
+      if (!isStringArray(template.variant_types) || template.variant_types.length === 0) {
+        errors.push(`${location}: variant_types must be a non-empty string array`);
+      }
+      for (const field of ['simpleImpact', 'simpleMeaning', 'plainTitle', 'signal', 'whyItMatters', 'reviewAction', 'evidenceLabel']) {
+        if (typeof template[field] !== 'string' || template[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (typeof template.simpleMeaning === 'string' && !template.simpleMeaning.includes('{name}')) {
+        errors.push(`${location}: simpleMeaning must include the {name} placeholder`);
+      }
+      if (typeof template.signal === 'string' && !template.signal.includes('{name}')) {
+        errors.push(`${location}: signal must include the {name} placeholder`);
+      }
+      for (const variantType of template.variant_types || []) {
+        if (typeof variantType !== 'string' || variantType.trim() === '') {
+          errors.push(`${location}: variant_types cannot contain empty values`);
+        }
       }
     }
     const translatedCount = [...translationIds].filter((rsid) => curatedStandardRsids.has(rsid)).length;

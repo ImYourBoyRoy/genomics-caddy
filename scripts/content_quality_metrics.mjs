@@ -410,11 +410,22 @@ function buildTranslationIndex(laypersonTranslations = {}) {
   return translated;
 }
 
+/** @param {JsonObject} marker @param {JsonObject[]} identifierTemplates */
+function markerHasIdentifierTemplate(marker, identifierTemplates = []) {
+  const variantType = text(marker?.variant_type).toLowerCase();
+  if (!variantType) return false;
+  return identifierTemplates.some((template) =>
+    isStringArray(template?.variant_types)
+      && template.variant_types.some((item) => text(item).toLowerCase() === variantType),
+  );
+}
+
 /** @param {JsonObject} laypersonTranslations */
 function inspectSimpleCopyContract(laypersonTranslations = {}) {
   const entries = [
     ...(Array.isArray(laypersonTranslations?.translations) ? laypersonTranslations.translations : []),
     ...(Array.isArray(laypersonTranslations?.translation_groups) ? laypersonTranslations.translation_groups : []),
+    ...(Array.isArray(laypersonTranslations?.identifier_templates) ? laypersonTranslations.identifier_templates : []),
   ];
   const missingFields = Object.fromEntries(SIMPLE_COPY_FIELDS.map((field) => [field, 0]));
   let fullyStructured = 0;
@@ -446,10 +457,11 @@ function inspectSimpleCopyContract(laypersonTranslations = {}) {
   };
 }
 
-/** @param {JsonObject} marker @param {Set<string>} translatedIds @param {boolean} fallbackAvailable */
-function markerHasPlainMeaning(marker, translatedIds, fallbackAvailable) {
+/** @param {JsonObject} marker @param {Set<string>} translatedIds @param {boolean} fallbackAvailable @param {JsonObject[]} identifierTemplates */
+function markerHasPlainMeaning(marker, translatedIds, fallbackAvailable, identifierTemplates = []) {
   if (text(marker?.simpleMeaning) || text(marker?.simple_meaning)) return 'authored';
   if (translatedIds.has(normalizedRsid(marker?.rsid))) return 'authored';
+  if (markerHasIdentifierTemplate(marker, identifierTemplates)) return 'templated';
   return fallbackAvailable ? 'fallback' : 'missing';
 }
 
@@ -461,14 +473,15 @@ function markerHasAction(marker, actionabilityRules) {
   return actionabilityRules.some((rule) => actionabilityMatchesMarker(rule, marker));
 }
 
-/** @param {string} packId @param {MarkerRow[]} rows @param {Set<string>} translatedIds @param {boolean} fallbackAvailable @param {JsonObject[]} actionabilityRules */
-function packSummary(packId, rows, translatedIds, fallbackAvailable, actionabilityRules) {
+/** @param {string} packId @param {MarkerRow[]} rows @param {Set<string>} translatedIds @param {boolean} fallbackAvailable @param {JsonObject[]} actionabilityRules @param {JsonObject[]} identifierTemplates */
+function packSummary(packId, rows, translatedIds, fallbackAvailable, actionabilityRules, identifierTemplates = []) {
   const standardCounts = new Map();
   for (const row of rows) {
     const rsid = normalizedRsid(row.marker?.rsid);
     if (rsid) addCount(standardCounts, rsid);
   }
   let authoredPlain = 0;
+  let templatedPlain = 0;
   let fallbackPlain = 0;
   let missingPlain = 0;
   let missingAction = 0;
@@ -477,8 +490,9 @@ function packSummary(packId, rows, translatedIds, fallbackAvailable, actionabili
   /** @type {CopyEntry[]} */
   const topicEntries = [];
   for (const row of rows) {
-    const plainStatus = markerHasPlainMeaning(row.marker, translatedIds, fallbackAvailable);
+    const plainStatus = markerHasPlainMeaning(row.marker, translatedIds, fallbackAvailable, identifierTemplates);
     if (plainStatus === 'authored') authoredPlain += 1;
+    else if (plainStatus === 'templated') templatedPlain += 1;
     else if (plainStatus === 'fallback') fallbackPlain += 1;
     else missingPlain += 1;
     if (!markerHasAction(row.marker, actionabilityRules)) missingAction += 1;
@@ -494,6 +508,7 @@ function packSummary(packId, rows, translatedIds, fallbackAvailable, actionabili
     duplicate_standard_excess_rows: Array.from(standardCounts.values()).reduce((total, count) => total + Math.max(count - 1, 0), 0),
     plain_meaning: {
       authored: authoredPlain,
+      templated: templatedPlain,
       fallback: fallbackPlain,
       missing: missingPlain,
     },
@@ -519,6 +534,9 @@ export function analyzeContentQuality({
   const rows = packDocs.flatMap((pack) => (Array.isArray(pack?.markers) ? pack.markers : [])
     .map((marker, index) => ({ packId: text(pack?.id) || 'unknown', marker, index })));
   const translatedIds = buildTranslationIndex(laypersonTranslations);
+  const identifierTemplates = Array.isArray(laypersonTranslations?.identifier_templates)
+    ? laypersonTranslations.identifier_templates
+    : [];
   const fallbackAvailable = text(laypersonTranslations?.fallback?.simpleMeaning) !== '';
   const simpleCopyContract = inspectSimpleCopyContract(laypersonTranslations);
   const actionabilityRules = Array.isArray(actionability?.rules) ? actionability.rules : [];
@@ -528,7 +546,7 @@ export function analyzeContentQuality({
 
   for (const pack of packDocs) {
     const packRows = rows.filter((row) => row.packId === text(pack?.id));
-    const summary = packSummary(text(pack?.id) || 'unknown', packRows, translatedIds, fallbackAvailable, actionabilityRules);
+    const summary = packSummary(text(pack?.id) || 'unknown', packRows, translatedIds, fallbackAvailable, actionabilityRules, identifierTemplates);
     packSummaries.push({
       id: summary.id,
       marker_rows: summary.marker_rows,
@@ -601,10 +619,11 @@ export function analyzeContentQuality({
 
   const plainMeaning = packSummaries.reduce((result, pack) => {
     result.authored += pack.plain_meaning.authored;
+    result.templated += pack.plain_meaning.templated;
     result.fallback += pack.plain_meaning.fallback;
     result.missing += pack.plain_meaning.missing;
     return result;
-  }, { authored: 0, fallback: 0, missing: 0 });
+  }, { authored: 0, templated: 0, fallback: 0, missing: 0 });
   const findingsWithoutAction = packSummaries.reduce((total, pack) => total + pack.findings_without_action, 0);
   const standardRsidCounts = new Map();
   for (const row of rows) addCount(standardRsidCounts, normalizedRsid(row.marker?.rsid));

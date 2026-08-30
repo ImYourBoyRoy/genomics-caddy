@@ -94,9 +94,19 @@ describe('AI marker payload claim boundaries', () => {
     });
     expect(payload.assertion_status).toBe('Verified');
     expect(payload.interpretation_allowed).toBe(true);
+    expect(payload.clinical_semantics).toEqual({
+      condition_label: null,
+      interpretation_class: 'research_context',
+      inheritance_model: 'unknown',
+      clinical_state: 'unknown',
+      evidence_level: 'C_candidate_OR_mechanistic',
+      clinical_confirmation_required: true,
+      applicability_scopes: [],
+    });
     expect(payload.source_names).toEqual(['Example source']);
-    expect(payload.layperson_summary?.simple_impact).toBe('A biological pathway studied in genetic research.');
-    expect(payload.layperson_summary?.simple_meaning).toContain('does not predict whether you have a condition');
+    expect(payload.layperson_summary?.simple_impact).toBe('Genetic research signal');
+    expect(payload.layperson_summary?.simple_meaning).toContain('biological pathway studied in research');
+    expect(payload.layperson_summary?.simple_meaning).not.toContain('does not predict whether you have a condition');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('This is an association context.');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('A consumer SNP is incomplete.');
   });
@@ -156,5 +166,48 @@ describe('AI marker payload claim boundaries', () => {
     expect(prompt).toContain('cycle_symptom_diary');
     expect(prompt).toContain('needs quiet');
     expect(prompt).toContain('self-reported context for this DNA profile, not genotype evidence');
+  });
+
+  it('does not route or include canonical profile context when Chat context is disabled', () => {
+    const prompt = buildSystemPrompt({
+      selectedSample: { id: 7, name: 'Example', genetic_sex: 'unknown' } as unknown as GenomeSample,
+      generatedReport: { sections: [] } as unknown as GeneratedReport,
+      selectedPacks: {},
+      onlyActiveFindings: true,
+      contextMode: 'active_findings',
+      consultationMode: 'general',
+      userProfile: {
+        goals: '',
+        challenges: '',
+        relevantBodySystems: '',
+        reproductiveHormoneContext: '',
+        diet: '',
+        supplements: '',
+        medications: '',
+        bloodwork: '',
+        diagnoses: '',
+        supportiveTests: '',
+        injectProfile: false,
+      },
+      reproductiveContext: 'cyclic_mood_symptoms',
+      personalSafetyContext: {
+        medications: ['private medication'],
+        supplements: ['private supplement'],
+        allergies: ['private allergy'],
+        symptoms: ['private symptom'],
+        labObservations: ['private lab'],
+        cycleDiary: [{ id: 'private-entry', values: { entry_date: '2026-08-01' } }],
+      },
+      systemInstructions: 'Test instructions',
+      laypersonMap: {},
+    });
+
+    const payload = JSON.parse(prompt.slice(prompt.indexOf('[JSON CONTEXT]') + '[JSON CONTEXT]'.length));
+    expect(payload.sample_context.profile).toBeUndefined();
+    expect(payload.sample_context.personal_safety_context).toBeUndefined();
+    expect(payload.support_resources.context_routing.profile_context_ids).toEqual([]);
+    expect(payload.support_resources.cycle_support.active_context_ids).toEqual([]);
+    expect(payload.support_resources.cycle_support.selected_context_id).toBeNull();
+    expect(payload.support_resources.cycle_support.diary_review).toBeNull();
   });
 });

@@ -3,11 +3,13 @@
 Purpose: Remove project-local, rebuildable frontend and Tauri artifacts.
 Responsibilities:
   - Purge frontend installs, lockfile, caches, and generated build output.
-  - Purge every project-local Rust/Tauri target and regenerate Cargo.lock on rebuild.
+  - Purge every project-local Rust/Tauri target.
+  - Optionally remove Cargo.lock for an explicitly requested fresh dependency rebuild.
   - Remove staged portable binaries/resources produced by the release build.
   - Keep private app data, downloaded references, profiles, exports, and marker packs intact.
 How to run:
   npm run clean:deep
+  npm run clean:deep:fresh
   npm run clean:deep:dry
 */
 
@@ -30,7 +32,6 @@ const artifacts = [
   ['Tauri generated schemas', 'src-tauri/gen/schemas'],
   ['Rust/Tauri build target', 'target'],
   ['Rust/Tauri build target', 'src-tauri/target'],
-  ['Rust dependency lockfile', 'src-tauri/Cargo.lock'],
   ['staged Linux portable binary', 'App/DNA-Tools'],
   ['staged Windows portable binary', 'App/DNA-Tools.exe'],
   ['staged macOS portable binary', 'App/Genomics Caddy'],
@@ -41,16 +42,22 @@ const artifacts = [
 const args = new Set(process.argv.slice(2).map((arg) => arg.trim()).filter(Boolean));
 if (args.has('--help') || args.has('-h')) {
   console.log('Usage: npm run clean:deep [-- --dry-run]');
+  console.log('Usage: npm run clean:deep:fresh [-- --dry-run]');
   console.log('Removes project-local rebuildable frontend/Tauri artifacts only.');
+  console.log('Cargo.lock is preserved unless --fresh-dependencies is explicitly supplied.');
   process.exit(0);
 }
 
-const unknownArgs = [...args].filter((arg) => arg !== '--dry-run');
+const freshDependencies = args.has('--fresh-dependencies');
+const unknownArgs = [...args].filter((arg) => arg !== '--dry-run' && arg !== '--fresh-dependencies');
 if (unknownArgs.length > 0) {
   throw new Error(`Unknown option: ${unknownArgs.join(', ')}`);
 }
 
 const dryRun = args.has('--dry-run');
+if (freshDependencies) {
+  artifacts.push(['Rust dependency lockfile (fresh dependency rebuild)', 'src-tauri/Cargo.lock']);
+}
 const protectedPaths = [
   path.resolve(repoRoot, 'App/Data'),
   path.resolve(repoRoot, 'src/lib/marker-packs'),
@@ -87,6 +94,7 @@ console.log(`Genomics Caddy — deep project cleanup${dryRun ? ' (dry run)' : ''
 console.log(`Repository: ${repoRoot}`);
 console.log('Preserved: App/Data, private profiles/genomes/exports, downloaded references, and protected marker packs.');
 console.log('Not touched: global npm/Cargo caches, Rust toolchains, or files outside this repository.');
+console.log(`Cargo.lock: ${freshDependencies ? 'included by explicit fresh-dependencies request' : 'preserved'}.`);
 
 let removed = 0;
 for (const [label, relativePath] of artifacts) {

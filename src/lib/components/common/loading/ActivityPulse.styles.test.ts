@@ -21,4 +21,12 @@ describe('ActivityPulse error surface', () => {
     expect(baseStyles).toContain('box-sizing: border-box;');
     expect(baseStyles).toContain('min-width: 0;');
   });
+
+  it('uses the active theme surface for non-error loading pulses', () => {
+    const pulseInner = source.match(/\.pulse-inner \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(pulseInner).toContain('var(--surface-control);');
+    expect(pulseInner).toContain('color: var(--text-primary);');
+    expect(pulseInner).not.toMatch(/rgba\(18, 19, 26, 0\.88\)/);
+  });
 });

@@ -884,7 +884,8 @@ import { onMount, onDestroy } from 'svelte';
 
   let collapsedStatusLabel = $derived.by(() => {
     if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';
-    if (updatePhase === 'error') return 'Check failed';
+    if (updatePhase === 'error' && updateRetry?.kind === 'status') return 'Check incomplete';
+    if (updatePhase === 'error') return 'Update issue';
     if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';
     return '';
   });
@@ -984,7 +985,9 @@ import { onMount, onDestroy } from 'svelte';
           <span
             class="resource-status-pill"
             class:resource-status-current={collapsedStatusLabel === 'Current'}
-            class:resource-status-error={collapsedStatusLabel === 'Check failed'}
+            class:resource-status-incomplete={collapsedStatusLabel === 'Check incomplete'}
+            class:resource-status-error={collapsedStatusLabel === 'Update issue'}
+            aria-label={`Reference data status: ${collapsedStatusLabel}`}
             aria-live="polite"
           >{collapsedStatusLabel}</span>
         {/if}
@@ -1019,7 +1022,7 @@ import { onMount, onDestroy } from 'svelte';
           <div class="resource-update-state" class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
             <div class="resource-update-state-heading">
               <span class="resource-update-state-dot" aria-hidden="true"></span>
-              <strong>{updatePhaseLabel(updatePhase)}</strong>
+              <strong>{updatePhase === 'error' && updateRetry?.kind === 'status' ? 'Check incomplete' : updatePhaseLabel(updatePhase)}</strong>
             </div>
             {#if updateMessage}
               <div class="resource-update-state-message">{updateMessage}</div>

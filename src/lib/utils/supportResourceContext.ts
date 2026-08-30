@@ -11,6 +11,7 @@
 
 import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
+import allergySensitivityCatalog from '../marker-packs/allergy_sensitivity_catalog.json';
 import callabilityRules from '../marker-packs/callability_rules.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import consultationModes from '../marker-packs/consultation_modes.json';
@@ -98,12 +99,20 @@ export interface SupportResourceContext {
     intake_questions: typeof foodRequirementPrompts.global_first_run_questions;
     conditional_questions: Record<string, string[]>;
   };
+  allergy_sensitivity: {
+    display: typeof allergySensitivityCatalog.display;
+    dna_contexts: typeof allergySensitivityCatalog.dna_contexts;
+    clinical_safety_routes: typeof allergySensitivityCatalog.clinical_safety_routes;
+    exposure_checklists: typeof allergySensitivityCatalog.exposure_checklists;
+    source_registry: Record<string, unknown>;
+  };
   prs_policy: {
     principle: string;
     modules: typeof prsRegistry.prs_modules;
   };
   activity_safety: {
     principles: typeof activityGuardrails.principles;
+    simple_framework: typeof activityGuardrails.simple_framework;
     stop_and_escalate: typeof activityGuardrails.stop_and_escalate;
     relevant_domains: typeof activityGuardrails.domains;
     sources: typeof activityGuardrails.sources;
@@ -269,6 +278,14 @@ function selectPgxGenes(packIds: Set<string>): typeof pgxDiplotypeGuidance.genes
   return packIds.has('pgx') ? pgxDiplotypeGuidance.genes : [];
 }
 
+function selectAllergyDnaContexts(packIds: Set<string>): typeof allergySensitivityCatalog.dna_contexts {
+  return packIds.has('allergy_atopy_mast_cell') ? allergySensitivityCatalog.dna_contexts : [];
+}
+
+function selectAllergyMedicationRoutes(packIds: Set<string>): typeof allergySensitivityCatalog.clinical_safety_routes {
+  return packIds.has('pgx') ? allergySensitivityCatalog.clinical_safety_routes : [];
+}
+
 function selectActivityDomains(
   packIds: Set<string>,
   reproductiveContext?: string,
@@ -330,10 +347,15 @@ export function buildSupportResourceContext({
     ? reviewCycleDiary(personalSafetyContext?.cycleDiary)
     : null;
   const relevantPgxGenes = selectPgxGenes(selectedPackIds);
+  const relevantAllergyDnaContexts = selectAllergyDnaContexts(selectedPackIds);
+  const relevantAllergyMedicationRoutes = selectAllergyMedicationRoutes(selectedPackIds);
   const selectedSourceRecords = selectSourceRecords([
     ...supportSourceIds(selectedPackIds, relevantCycleDomains),
     ...relevantCycleEvidenceLayers.flatMap((layer) => layer.sources || []),
     ...relevantPgxGenes.flatMap((gene) => gene.sources || []),
+    ...(selectedPackIds.has('allergy_atopy_mast_cell') || selectedPackIds.has('pgx')
+      ? allergySensitivityCatalog.source_ids
+      : []),
   ]);
 
   return {
@@ -405,12 +427,20 @@ export function buildSupportResourceContext({
       intake_questions: foodRequirementPrompts.global_first_run_questions,
       conditional_questions: selectConditionalQuestions(selectedPackIds),
     },
+    allergy_sensitivity: {
+      display: allergySensitivityCatalog.display,
+      dna_contexts: relevantAllergyDnaContexts,
+      clinical_safety_routes: relevantAllergyMedicationRoutes,
+      exposure_checklists: allergySensitivityCatalog.exposure_checklists,
+      source_registry: selectedSourceRecords,
+    },
     prs_policy: {
       principle: prsRegistry.principle,
       modules: prsRegistry.prs_modules,
     },
     activity_safety: {
       principles: activityGuardrails.principles,
+      simple_framework: activityGuardrails.simple_framework,
       stop_and_escalate: activityGuardrails.stop_and_escalate,
       relevant_domains: selectActivityDomains(
         selectedPackIds,

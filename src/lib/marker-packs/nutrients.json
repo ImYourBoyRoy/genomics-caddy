@@ -139,6 +139,12 @@
       "impact": "Impaired iron clearance / elevated ferritin (Hemochromatosis risk)",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "The HFE C282Y A allele prevents proper cell-surface expression of HFE, leading to unrestrained iron absorption. Homozygotes are at high risk of hereditary hemochromatosis, characterized by iron overload in organs.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "hemochromatosis diagnosis"
       ],
@@ -170,6 +176,12 @@
       "impact": "Impaired iron clearance / elevated ferritin (Hemochromatosis risk)",
       "evidence_tier": "A_clinical_guideline",
       "interpretation": "H63D (G allele) is generally a milder modifier than C282Y. Compound C282Y/H63D status may be associated with iron overload in some individuals, while H63D/H63D has low clinical penetrance in many populations; iron studies and clinical context determine concern.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "hemochromatosis diagnosis"
       ],

@@ -108,6 +108,7 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       clinical_confirmation_required: link.clinical_confirmation_required ?? undefined,
       sex_scope: link.sex_scope ?? undefined,
       raw_dna_limitation: link.raw_dna_limitation ?? undefined,
+      clinical_semantics: link.clinical_semantics ?? null,
       pharmgkb: enrichment.pharmgkb ?? null,
       clingen: enrichment.clingen ?? null,
       mane: enrichment.mane ?? null

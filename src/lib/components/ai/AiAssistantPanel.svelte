@@ -18,7 +18,6 @@
   import {
     loadAiAssistantPreferences,
     persistAiAssistantPreferences,
-    persistUserBiohackingProfile,
   } from "../../utils/aiAssistantPreferences";
   import { fetchVectorResearchDiagnostics } from "../../utils/aiAssistantVectorDiagnostics";
   import { sendConsultationPrompt, stopConsultationGeneration } from "../../utils/aiAssistantSendActions";
@@ -32,11 +31,7 @@
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
-  import { loadReproductiveContext, reproductiveContextStorageKey } from "../../utils/reproductiveContext";
-  import {
-    EMPTY_PERSONAL_SAFETY_CONTEXT,
-    type PersonalSafetyContext,
-  } from "../../utils/personalSafetyContext";
+  import type { ProfileContext } from '../../utils/profileContext';
   import "$lib/styles/components/ai-assistant-panel.css";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
@@ -56,7 +51,8 @@
     temperature: number;
     initialSearchQuery?: string;
     activeView?: "chat" | "evidence";
-    personalSafetyContext: PersonalSafetyContext;
+    profileContext: ProfileContext;
+    onOpenContext?: () => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
   }
   let {
@@ -70,7 +66,8 @@
     temperature = $bindable(0.0),
     initialSearchQuery = $bindable(""),
     activeView = $bindable("chat"),
-    personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
+    profileContext = $bindable(),
+    onOpenContext,
     onNavigateToVariant,
   }: Props = $props();
 
@@ -123,16 +120,13 @@
   let modelDetails = $state<any>(null), contextWindow = $state<number>(4096), isVisionCapable = $state<boolean>(false);
   let attachedImages = $state<{ name: string; base64: string; previewUrl: string }[]>([]);
   let userProfile = $state<UserBiohackingProfile>({ goals: "", challenges: "", relevantBodySystems: "", reproductiveHormoneContext: "", diet: "", supplements: "", medications: "", bloodwork: "", diagnoses: "", supportiveTests: "", injectProfile: true });
-  let userProfileHydrated = $state(false);
   let systemInstructions = $state("");
-  let reproductiveContext = $state("");
-  let loadedReproductiveContextKey = $state("");
-
-  $effect(() => {
-    const contextKey = reproductiveContextStorageKey(selectedSample?.id);
-    if (loadedReproductiveContextKey === contextKey) return;
-    loadedReproductiveContextKey = contextKey;
-    reproductiveContext = loadReproductiveContext(selectedSample?.id);
+  let promptProfile = $derived<UserBiohackingProfile>({
+    ...profileContext.notes,
+    supplements: profileContext.safety.supplements.join('\n'),
+    medications: profileContext.safety.medications.join('\n'),
+    bloodwork: profileContext.safety.labObservations.join('\n'),
+    injectProfile: userProfile.injectProfile,
   });
 
   let useVectorResearch = $state(
@@ -182,8 +176,8 @@
       messages,
       selectedSample,
       selectedModel,
-      userProfile,
-      personalSafetyContext,
+      userProfile: promptProfile,
+      personalSafetyContext: profileContext.safety,
       currentSystemPrompt,
       generatedReport,
       includeTraceInExport,
@@ -232,9 +226,9 @@
       onlyActiveFindings,
       contextMode,
       consultationMode,
-      userProfile,
-      reproductiveContext,
-      personalSafetyContext,
+      userProfile: promptProfile,
+      reproductiveContext: profileContext.selectedReproductiveContext,
+      personalSafetyContext: profileContext.safety,
       systemInstructions,
       alert: (message) => dialogStore.alert(message),
       onExportModal: () => { showExportModal = true; },
@@ -344,7 +338,7 @@
 
   $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile, reproductiveContext, personalSafetyContext, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
+  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile: promptProfile, reproductiveContext: profileContext.selectedReproductiveContext, personalSafetyContext: profileContext.safety, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
   let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
   let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : {});
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
@@ -379,8 +373,7 @@
     consultationMode = prefs.consultationMode;
     reviewModel = prefs.reviewModel;
     twoModelReview = prefs.twoModelReview;
-    userProfile = prefs.userProfile as UserBiohackingProfile;
-    userProfileHydrated = true;
+    userProfile = { ...userProfile, injectProfile: prefs.userProfile.injectProfile !== false };
     systemInstructions = prefs.systemInstructions;
     sessionStore.load(selectedSample, selectedModel, models, markerPacksStore.manifest.packs);
     if (sessionStore.currentSessionId) loadSession(sessionStore.currentSessionId);
@@ -408,10 +401,6 @@
     });
   });
 
-  $effect(() => {
-    const profileSnapshot = JSON.stringify(userProfile);
-    if (userProfileHydrated && profileSnapshot) persistUserBiohackingProfile(userProfile);
-  });
 </script>
 
 <div class="ai-consultation-container">
@@ -491,9 +480,8 @@
       bind:onlyActiveFindings={onlyActiveFindings}
       contextStats={contextStats}
         bind:userProfile={userProfile}
-        bind:personalSafetyContext
-        bind:reproductiveContext={reproductiveContext}
-        sampleId={selectedSample?.id}
+        {profileContext}
+        {onOpenContext}
       bind:systemInstructions={systemInstructions}
       defaultInstructions={DEFAULT_INSTRUCTIONS}
       bind:showThinkingProcess={showThinkingProcess}

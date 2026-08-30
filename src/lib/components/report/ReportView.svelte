@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/report/ReportView.svelte -->
 <script lang="ts">
   import type { GeneratedReport, NormalizedReport, GenomeSample, SeverityClass } from '../../types/genomics';
-  import { saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
+  import { saveReportBundle, saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
   import ReferenceIndex from './ReferenceIndex.svelte';
@@ -14,14 +14,8 @@
   import { getSeverityInfo } from '../../utils/evidence';
   import { tick, untrack } from 'svelte';
   import { browser } from '$app/environment';
-  import {
-    loadReproductiveContext,
-    reproductiveMarkerContextRank,
-    reproductiveSectionHasContext,
-    reproductiveContextStorageKey,
-    selectedReproductiveContextOption,
-  } from '../../utils/reproductiveContext';
-  import type { PersonalSafetyContext } from '../../utils/personalSafetyContext';
+  import type { ProfileContext } from '../../utils/profileContext';
+  import { EMPTY_PROFILE_CONTEXT } from '../../utils/profileContext';
   import {
     DEFAULT_PRESENTATION_MODE,
     readPresentationMode,
@@ -29,10 +23,10 @@
     type PresentationMode,
   } from '../../utils/presentationPreferences';
   import {
-    buildReportAudienceMarkdown,
-    reportAudienceFilename,
     type ReportExportAudience,
   } from '../../utils/reportAudienceExport';
+  import { buildReportBundleFiles, reportBundleFilename } from '../../utils/reportBundleExport';
+  import { buildCanonicalFindingGroups } from '../../utils/findingIdentity';
 
   /*
   Module Docstring:
@@ -54,7 +48,7 @@
     foundMarkersCount: number;
     totalMarkersChecked: number;
     reportError?: string;
-    personalSafetyContext?: PersonalSafetyContext;
+    profileContext?: ProfileContext;
     highlightRsid?: string;
     onExploreResearch?: (rsid: string) => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
@@ -69,7 +63,7 @@
     foundMarkersCount,
     totalMarkersChecked,
     reportError,
-    personalSafetyContext = $bindable(),
+    profileContext,
     highlightRsid = "",
     onExploreResearch,
     onNavigateToVariant,
@@ -80,6 +74,7 @@
   let severityFilter = $state<"all" | "risk_only">("all");
   let tierFilter = $state<string>("all");
   let sortBy = $state<"default" | "severity">("default");
+  let reportFiltersOpen = $state(false);
   let presentationMode = $state<PresentationMode>(DEFAULT_PRESENTATION_MODE);
   let loadedPresentationModeKey = $state("");
   let showHelpGuide = $state(false);
@@ -91,9 +86,6 @@
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
   let clinicalProvenanceExpanded = $state(false);
-  let reproductiveContext = $state('');
-  let loadedReproductiveContextKey = $state('');
-  let prioritizeReproductiveContext = $state(true);
 
   function presentationModeStorageKey(sampleId: number): string {
     return `genomics_presentation_mode_${sampleId}`;
@@ -172,23 +164,13 @@
     'no_data',
   ];
 
-  $effect(() => {
-    const contextKey = reproductiveContextStorageKey(selectedSample?.id);
-    if (loadedReproductiveContextKey === contextKey) return;
-    loadedReproductiveContextKey = contextKey;
-    reproductiveContext = browser ? loadReproductiveContext(selectedSample?.id) : '';
-  });
-
-  function selectedReproductiveContextLabel(): string {
-    return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
-  }
-
   function sectionAnchorId(sectionName: string): string {
     return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   }
 
   function sectionCollapseStorageKey(sampleId: number, sectionName: string): string {
-    return `section-collapsed-${sampleId}-${sectionName}`;
+    // Version the key so stale preferences cannot reopen a dense section on first view.
+    return `section-collapsed-v2-${sampleId}-${sectionName}`;
   }
 
   function persistSectionCollapsed(sectionName: string, isCollapsed: boolean): void {
@@ -271,6 +253,22 @@
     }
   }
 
+  function handleJumpToMarkers(linkIds: string[]) {
+    if (!generatedReport || linkIds.length === 0) return;
+    const targets = linkIds.flatMap((linkId) => generatedReport.sections.flatMap((section) => {
+      const marker = section.markers.find((candidate) => candidate.link_id === linkId);
+      return marker ? [{ sectionName: section.name, rsid: marker.rsid }] : [];
+    }));
+    const uniqueSections = Array.from(new Set(targets.map((target) => target.sectionName)));
+    uniqueSections.forEach((sectionName) => setSectionCollapsed(sectionName, false));
+    const first = targets[0];
+    if (!first) return;
+    highlightRsid = first.rsid;
+    void tick().then(() => {
+      document.getElementById(`variant-${first.rsid.toLowerCase()}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
   function collapseAll() {
     for (const sec of filteredSections) {
       setSectionCollapsed(sec.name, true);
@@ -330,7 +328,7 @@
     }
   }
 
-  let filteredSections = $derived(
+  let filteredSourceSections = $derived(
     generatedReport?.sections.map(sec => {
       let markers = sec.markers.filter(m => {
         if (!showBenign && (m.severity_class === "benign" || m.severity_class === "no_data")) return false;
@@ -344,19 +342,7 @@
         return true;
       });
 
-      if (
-        reproductiveContext
-        && prioritizeReproductiveContext
-        && reproductiveSectionHasContext(sec.name, sec.markers.map((marker) => marker.rsid))
-      ) {
-        markers = [...markers].sort((a, b) => {
-          const contextRank = reproductiveMarkerContextRank(b.rsid, reproductiveContext)
-            - reproductiveMarkerContextRank(a.rsid, reproductiveContext);
-          if (contextRank !== 0) return contextRank;
-          if (sortBy === "severity") return getSeverityRank(a.severity_class) - getSeverityRank(b.severity_class);
-          return 0;
-        });
-      } else if (sortBy === "severity") {
+      if (sortBy === "severity") {
         markers = [...markers].sort((a, b) => getSeverityRank(a.severity_class) - getSeverityRank(b.severity_class));
       }
 
@@ -365,6 +351,36 @@
         markers
       };
     }).filter(sec => sec.markers.length > 0) ?? []
+  );
+
+  // Source rows remain available in Clinical mode. Simple mode instead shows
+  // one representative card per canonical locus so a repeated rsID across
+  // packs does not read like several unrelated concerns.
+  let simpleCanonicalGroups = $derived(
+    presentationMode === 'simple'
+      ? buildCanonicalFindingGroups({ sections: filteredSourceSections })
+      : [],
+  );
+  let simpleRepresentativeLinkIds = $derived(
+    new Set(simpleCanonicalGroups.map((group) => group.representativeSource.marker.link_id)),
+  );
+  let simpleRelatedMarkerCounts = $derived(
+    Object.fromEntries(
+      simpleCanonicalGroups.map((group) => [
+        group.representativeSource.marker.link_id,
+        group.sourceMarkerIds.length,
+      ]),
+    ) as Record<string, number>,
+  );
+  let filteredSections = $derived(
+    filteredSourceSections
+      .map((section) => ({
+        ...section,
+        markers: presentationMode === 'simple'
+          ? section.markers.filter((marker) => simpleRepresentativeLinkIds.has(marker.link_id))
+          : section.markers,
+      }))
+      .filter((section) => section.markers.length > 0),
   );
 
   let clinicalSectionsExpanded = $derived(
@@ -434,17 +450,25 @@
     audienceExportBusy = audience;
     audienceExportHint = '';
     try {
-      const content = buildReportAudienceMarkdown({
+      const options = {
         audience,
         report: generatedReport,
         sample: selectedSample,
-        includeRawGenotypes: audience !== 'personal',
-        reproductiveContext,
-        personalSafetyContext,
-      });
-      const saved = await saveReportJson(content, reportAudienceFilename(selectedSample.name, audience));
+        includeRawGenotypes: audience === 'clinician'
+          ? profileContext?.exportPreferences.includeRawGenotypesInClinician ?? true
+          : audience === 'ai'
+            ? profileContext?.exportPreferences.includeRawGenotypesInAi ?? true
+            : false,
+        reproductiveContext: profileContext?.selectedReproductiveContext,
+        personalSafetyContext: profileContext?.safety,
+        profileContext: profileContext || EMPTY_PROFILE_CONTEXT,
+      };
+      const saved = await saveReportBundle(
+        buildReportBundleFiles(options),
+        reportBundleFilename(selectedSample.name, audience),
+      );
       audienceExportHint = saved
-        ? `${audience === 'personal' ? 'Personal Simple' : audience === 'clinician' ? 'Clinician Handoff' : 'AI Review'} export saved locally.`
+        ? `${audience === 'personal' ? 'Personal Simple' : audience === 'clinician' ? 'Clinician Handoff' : 'AI Review'} bundle saved locally.`
         : 'Export canceled; no file was written.';
     } catch (e: unknown) {
       audienceExportHint = `Export failed: ${String(e)}`;
@@ -466,11 +490,30 @@
 {/if}
 
 {#if isGeneratingReport}
-  <PanelLoadingState
-    message="Analyzing genetic markers across marker packs…"
-    submessage="Evaluating curated SNPs against your local genotype database."
-    accent="var(--status-warning-text)"
-  />
+  <section
+    class="report-loading-state"
+    aria-busy="true"
+    aria-labelledby="report-loading-title"
+    role="status"
+  >
+    <div class="report-loading-content">
+      <div class="report-loading-mark" aria-hidden="true">🧬</div>
+      <span class="report-loading-kicker">Preparing report</span>
+      <h3 id="report-loading-title">Mapping {selectedSample.name}'s DNA</h3>
+      <p class="report-loading-lead">Reviewing curated markers and assembling the most useful findings for this profile.</p>
+      <PanelLoadingState
+        compact
+        message="Analyzing genetic markers across marker packs…"
+        submessage="Local analysis · your DNA stays on this computer."
+        accent="var(--status-warning-text)"
+      />
+      <div class="report-loading-meta" aria-label="Report preparation details">
+        <span><span class="report-loading-dot" aria-hidden="true"></span> Curated marker packs</span>
+        <span>•</span>
+        <span>On-device analysis</span>
+      </div>
+    </div>
+  </section>
 {:else if generatedReport}
   <!-- Start with profile/data quality, then the bounded action queue. -->
   <ReportHeader
@@ -484,11 +527,9 @@
     <DashboardSummaryPanel
       report={generatedReport}
       sampleId={selectedSample.id}
-      geneticSex={selectedSample.genetic_sex}
-      bind:personalSafetyContext
-      bind:reproductiveContext
       presentationMode={presentationMode}
       onJumpToMarker={handleJumpToMarker}
+      onJumpToMarkers={handleJumpToMarkers}
       onJumpToSection={handleJumpToSection}
       />
   {/if}
@@ -542,54 +583,6 @@
     </details>
   {/if}
 
-  <details class="report-chrome-details no-print">
-    <summary>Export &amp; print</summary>
-    <div class="report-actions">
-      <span class="export-privacy-note">
-        🔒 Everything stays on your computer. No data is uploaded.
-      </span>
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        onclick={exportCuratedJson}
-      >
-        Export curated report JSON
-      </button>
-      <div class="export-audience-group" aria-label="Audience-specific markdown exports">
-        <span class="export-audience-label">Audience exports</span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'personal' ? 'Saving…' : 'Personal Simple'}
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'clinician' ? 'Saving…' : 'Clinician Handoff'}
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'ai' ? 'Saving…' : 'AI Review'}
-        </button>
-      </div>
-      <button
-        type="button"
-        class="btn btn-secondary btn-sm"
-        onclick={exportFullCatalogJson}
-        disabled={discoveryExportBusy}
-      >
-        {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" onclick={printReport} disabled={isPreparingPrint}>
-        {isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'}
-      </button>
-    </div>
-    {#if discoveryExportHint}
-      <p class="export-hint">{discoveryExportHint}</p>
-    {/if}
-    {#if audienceExportHint}
-      <p class="export-hint" role="status">{audienceExportHint}</p>
-    {/if}
-    <p class="export-hint">
-      Prefer the <strong>Discovery</strong> tab to browse beyond-pack associations in-app.
-    </p>
-  </details>
-
   <details class="report-chrome-details report-legend-details">
     <summary>How to read this report</summary>
     <div class="report-legend card">
@@ -611,47 +604,6 @@
 
   <!-- Keep advanced filtering out of the Simple-first reading path while keeping it one click away. -->
   <div class="report-controls no-print">
-    <details class="report-filter-details" open={presentationMode !== 'simple'}>
-      <summary>Filters &amp; ordering</summary>
-      <div class="filter-bar card">
-    <div class="filter-group">
-      <span class="filter-label">Show</span>
-      <label class="filter-toggle">
-        <input type="checkbox" bind:checked={showBenign} aria-label="Show benign and uncalled markers" />
-        Show benign &amp; uncalled
-      </label>
-      <label class="filter-toggle">
-        <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
-        Risk-focused
-      </label>
-      <select class="filter-select" aria-label="Evidence tier filter" bind:value={tierFilter}>
-        <option value="all">All evidence tiers</option>
-        <option value="ab">Tier A & B only</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <span class="filter-label">Order</span>
-      <select class="filter-select" aria-label="Sort report sections" bind:value={sortBy}>
-        <option value="default">Default order</option>
-        <option value="severity">Highest priority first</option>
-      </select>
-      <div class="filter-actions" role="group" aria-label="Section visibility">
-        <button type="button" class="view-mode-btn" onclick={expandAll}>Expand all</button>
-        <button type="button" class="view-mode-btn" onclick={collapseAll}>Collapse all</button>
-      </div>
-    </div>
-
-    {#if reproductiveContext}
-      <label class="filter-toggle" aria-describedby="reproductive-priority-hint">
-        <input type="checkbox" bind:checked={prioritizeReproductiveContext} />
-        Prioritize {selectedReproductiveContextLabel()}
-      </label>
-      <span id="reproductive-priority-hint" class="filter-context-hint">This changes ordering only; all reproductive markers remain visible.</span>
-    {/if}
-      </div>
-    </details>
-
     <div class="mode-group" role="group" aria-labelledby="reading-mode-label">
       <span id="reading-mode-label" class="filter-label">Reading mode</span>
       <div class="view-mode-buttons">
@@ -693,6 +645,41 @@
       </button>
       </div>
     </div>
+
+    <details class="report-filter-details" bind:open={reportFiltersOpen}>
+      <summary>Filters &amp; ordering</summary>
+      <div class="filter-bar card">
+    <div class="filter-group">
+      <span class="filter-label">Show</span>
+      <label class="filter-toggle">
+        <input type="checkbox" bind:checked={showBenign} aria-label="Show benign and uncalled markers" />
+        Show benign &amp; uncalled
+      </label>
+      <label class="filter-toggle">
+        <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
+        Risk-focused
+      </label>
+      <select class="filter-select" aria-label="Evidence tier filter" bind:value={tierFilter}>
+        <option value="all">All evidence tiers</option>
+        <option value="ab">Tier A & B only</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Order</span>
+      <select class="filter-select" aria-label="Sort report sections" bind:value={sortBy}>
+        <option value="default">Default order</option>
+        <option value="severity">Highest priority first</option>
+      </select>
+      <div class="filter-actions" role="group" aria-label="Section visibility">
+        <button type="button" class="view-mode-btn" onclick={expandAll}>Expand all</button>
+        <button type="button" class="view-mode-btn" onclick={collapseAll}>Collapse all</button>
+      </div>
+    </div>
+
+      </div>
+    </details>
+
   </div>
 
   <div class="sections-container">
@@ -707,8 +694,9 @@
         {section} 
         viewMode={presentationMode}
         {onExploreResearch} 
-        {highlightRsid} 
+        {highlightRsid}
         onNavigateToVariant={onNavigateToVariant}
+        simpleRelatedMarkerCounts={simpleRelatedMarkerCounts}
         collapsed={collapsedSections[section.name]}
         onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}
       />
@@ -716,6 +704,54 @@
   </div>
 
   <ReferenceIndex report={generatedReport} />
+
+  <details class="report-chrome-details no-print">
+    <summary>Export &amp; print</summary>
+    <div class="report-actions">
+      <span class="export-privacy-note">
+        🔒 Everything stays on your computer. No data is uploaded.
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        onclick={exportCuratedJson}
+      >
+        Export curated report JSON
+      </button>
+      <div class="export-audience-group" aria-label="Audience-specific ZIP bundles">
+        <span class="export-audience-label">Audience exports</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'personal' ? 'Saving…' : 'Personal Simple bundle'}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'clinician' ? 'Saving…' : 'Clinician Handoff bundle'}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'ai' ? 'Saving…' : 'AI Review bundle'}
+        </button>
+      </div>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        onclick={exportFullCatalogJson}
+        disabled={discoveryExportBusy}
+      >
+        {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" onclick={printReport} disabled={isPreparingPrint}>
+        {isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'}
+      </button>
+    </div>
+    {#if discoveryExportHint}
+      <p class="export-hint">{discoveryExportHint}</p>
+    {/if}
+    {#if audienceExportHint}
+      <p class="export-hint" role="status">{audienceExportHint}</p>
+    {/if}
+    <p class="export-hint">
+      Prefer the <strong>Discovery</strong> tab to browse beyond-pack associations in-app.
+    </p>
+  </details>
 
   <!-- Secondary research surfaces stay below the core report and remain optional. -->
   <VectorPromotedSection {selectedSample} {presentationMode} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
@@ -790,6 +826,125 @@
 {/if}
 
 <style>
+  .report-loading-state {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: clamp(320px, 52vh, 500px);
+    padding: clamp(2rem, 6vw, 4rem);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    background:
+      radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 44%),
+      var(--surface-raised);
+    box-shadow: var(--shadow-card);
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .report-loading-state::before {
+    content: "";
+    position: absolute;
+    inset: auto 14% -45% 14%;
+    height: 70%;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  .report-loading-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100%, 680px);
+  }
+
+  .report-loading-mark {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-bottom: 0.9rem;
+    border: 1px solid var(--status-accent-border);
+    border-radius: 1rem;
+    background: var(--status-accent-bg);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 18%, transparent);
+    font-size: 1.45rem;
+    animation: report-loading-breathe 2.4s ease-in-out infinite;
+  }
+
+  .report-loading-kicker {
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .report-loading-state h3 {
+    margin: 0.3rem 0 0;
+    color: var(--text-primary);
+    font-size: clamp(1.25rem, 2vw, 1.6rem);
+  }
+
+  .report-loading-lead {
+    max-width: 38rem;
+    margin: 0.55rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .report-loading-content :global(.panel-loading) {
+    width: min(100%, 560px);
+    margin-top: 1.35rem;
+  }
+
+  .report-loading-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: 0.15rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .report-loading-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .report-loading-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--status-success-text);
+    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--status-success-text) 55%, transparent);
+  }
+
+  @keyframes report-loading-breathe {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-2px) scale(1.04);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .report-loading-mark {
+      animation: none;
+    }
+  }
+
   .filter-context-hint {
     color: var(--text-secondary);
     font-size: 0.72rem;

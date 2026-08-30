@@ -5,9 +5,10 @@ const source = readFileSync(new URL('./ReportView.svelte', import.meta.url), 'ut
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 
 describe('Simple-first report controls', () => {
-  it('keeps advanced filters in a disclosure that opens by default outside Simple mode', () => {
+  it('keeps advanced filters in a disclosure that starts closed in every reading mode', () => {
     expect(source).toContain('<div class="report-controls no-print">');
-    expect(source).toContain('<details class="report-filter-details" open={presentationMode !== \'simple\'}>');
+    expect(source).toContain('let reportFiltersOpen = $state(false);');
+    expect(source).toContain('<details class="report-filter-details" bind:open={reportFiltersOpen}>');
     expect(source).toContain('<summary>Filters &amp; ordering</summary>');
   });
 
@@ -21,7 +22,15 @@ describe('Simple-first report controls', () => {
     expect(filterDetails).toContain('bind:value={tierFilter}');
     expect(filterDetails).toContain('bind:value={sortBy}');
     expect(filterDetails).not.toContain('class="mode-group"');
-    expect(modeGroupIndex).toBeGreaterThan(detailsEnd);
+    expect(modeGroupIndex).toBeLessThan(detailsStart);
+  });
+
+  it('starts the report reading flow with mode selection, then optional filters', () => {
+    const modeGroupIndex = source.indexOf('<div class="mode-group"');
+    const filterDetailsIndex = source.indexOf('<details class="report-filter-details"');
+    expect(modeGroupIndex).toBeGreaterThan(-1);
+    expect(filterDetailsIndex).toBeGreaterThan(modeGroupIndex);
+    expect(theme).toContain('.mode-group {\n  margin-left: 0;\n}');
   });
 
   it('gives the disclosure a keyboard-sized target and preserves narrow mode controls', () => {
@@ -45,7 +54,7 @@ describe('Simple-first report controls', () => {
 
   it('owns and scopes section-collapse persistence per profile', () => {
     expect(source).toContain('function sectionCollapseStorageKey(sampleId: number, sectionName: string)');
-    expect(source).toContain('return `section-collapsed-${sampleId}-${sectionName}`;');
+    expect(source).toContain('return `section-collapsed-v2-${sampleId}-${sectionName}`;');
     expect(source).toContain('let loadedCollapseProfileId = $state<number | null>(null);');
     expect(source).toContain('const profileChanged = loadedCollapseProfileId !== profileId;');
     expect(source).toContain('persistSectionCollapsed(sectionName, isCollapsed);');

@@ -29,8 +29,8 @@ describe('report card wrapping', () => {
     expect(markerHover).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
-  it('uses a theme-aware floating shadow for the focus control', () => {
-    const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
+  it('uses a theme-aware floating shadow for the sidebar focus control', () => {
+    const focusToggle = source.match(/\.sidebar-focus-toggle,[\s\S]*?\.focus-restore-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
 
     expect(focusToggle).toContain('var(--shadow-floating)');
     expect(focusToggle).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
@@ -78,14 +78,15 @@ describe('report card wrapping', () => {
     expect(severity).toContain('overflow-wrap: anywhere;');
   });
 
-  it('keeps the desktop Focus report control in normal layout flow', () => {
-    const toolbar = source.match(/\.focus-toolbar \{[\s\S]*?\n\}/)?.[0] ?? '';
-    const focusToggle = source.match(/\.focus-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
+  it('keeps the desktop Focus report control in the sidebar footer', () => {
+    const sidebarFooter = source.match(/\.sidebar-footer \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const focusToggle = source.match(/\.sidebar-focus-toggle,[\s\S]*?\.focus-restore-toggle \{[\s\S]*?\n\}/)?.[0] ?? '';
 
-    expect(toolbar).toContain('flex: 0 0 auto;');
-    expect(toolbar).toContain('padding: var(--space-2) clamp(20px, 3vw, 36px);');
-    expect(focusToggle).toContain('position: static;');
+    expect(sidebarFooter).toContain('flex: 0 0 auto;');
+    expect(sidebarFooter).toContain('border-top: 1px solid var(--border-color);');
+    expect(focusToggle).toContain('min-width: 36px;');
     expect(focusToggle).not.toContain('position: fixed;');
+    expect(source).toContain('.app-layout.focus-mode .sidebar-region {');
   });
 
   it('keeps report filter controls on the active theme border token', () => {

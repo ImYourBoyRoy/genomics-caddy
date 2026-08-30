@@ -24,8 +24,8 @@ describe('ClinicalFindingsTable copy', () => {
   });
 
   it('stacks the clinical table before the sidebar-constrained widths become cramped', () => {
-    expect(source).toContain('@media (max-width: 1100px)');
-    expect(source).toContain('.clinical-findings-table {\n      min-width: 0;');
+    expect(source).toContain('@media (max-width: 1400px)');
+    expect(source).toContain('.clinical-findings-table {\n      display: block;\n      width: 100%;\n      min-width: 0;');
     expect(source).toContain('.clinical-findings-table thead {');
   });
 

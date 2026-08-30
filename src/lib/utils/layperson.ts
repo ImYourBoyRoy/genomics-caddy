@@ -16,6 +16,14 @@ import laypersonTranslations from "../marker-packs/layperson_translations.json";
 export interface LaypersonTranslation {
   simpleImpact: string;
   simpleMeaning: string;
+  /** Optional action written for the first-screen Simple queue. */
+  simpleNextStep?: string;
+  /** Optional structured fields for the Simple finding contract. */
+  plainTitle?: string;
+  signal?: string;
+  whyItMatters?: string;
+  reviewAction?: string;
+  evidenceLabel?: string;
   /** True when the safe generic fallback is being used instead of authored copy. */
   isFallback?: boolean;
 }
@@ -25,14 +33,30 @@ interface LaypersonTranslationGroup {
   rsids: string[];
   simpleImpact: string;
   simpleMeaning: string;
+  simpleNextStep?: string;
+  plainTitle?: string;
+  signal?: string;
+  whyItMatters?: string;
+  reviewAction?: string;
+  evidenceLabel?: string;
+}
+
+interface LaypersonTranslationResourceEntry extends LaypersonTranslationGroup {
+  rsid: string;
 }
 
 function buildLaypersonMap(): Record<string, LaypersonTranslation> {
   const map: Record<string, LaypersonTranslation> = {};
-  for (const translation of laypersonTranslations.translations) {
+  for (const translation of laypersonTranslations.translations as LaypersonTranslationResourceEntry[]) {
     map[translation.rsid.trim().toLowerCase()] = {
       simpleImpact: translation.simpleImpact,
       simpleMeaning: translation.simpleMeaning,
+      ...(translation.simpleNextStep ? { simpleNextStep: translation.simpleNextStep } : {}),
+      ...(translation.plainTitle ? { plainTitle: translation.plainTitle } : {}),
+      ...(translation.signal ? { signal: translation.signal } : {}),
+      ...(translation.whyItMatters ? { whyItMatters: translation.whyItMatters } : {}),
+      ...(translation.reviewAction ? { reviewAction: translation.reviewAction } : {}),
+      ...(translation.evidenceLabel ? { evidenceLabel: translation.evidenceLabel } : {}),
     };
   }
 
@@ -47,6 +71,12 @@ function buildLaypersonMap(): Record<string, LaypersonTranslation> {
         map[key] = {
           simpleImpact: group.simpleImpact,
           simpleMeaning: group.simpleMeaning,
+          ...(group.simpleNextStep ? { simpleNextStep: group.simpleNextStep } : {}),
+          ...(group.plainTitle ? { plainTitle: group.plainTitle } : {}),
+          ...(group.signal ? { signal: group.signal } : {}),
+          ...(group.whyItMatters ? { whyItMatters: group.whyItMatters } : {}),
+          ...(group.reviewAction ? { reviewAction: group.reviewAction } : {}),
+          ...(group.evidenceLabel ? { evidenceLabel: group.evidenceLabel } : {}),
         };
       }
     }
@@ -87,6 +117,20 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   const withoutGeneSuffix = title
     .replace(/\s+\([^()]*\bgene(?:\s+region)?\b[^()]*\)\s*$/i, '')
     .trim();
+
+  // Star-allele, haplotype, and HLA component names are useful in Clinical
+  // mode but are not meaningful first-screen labels. Keep the Simple queue
+  // focused on the medication question while the exact allele remains in
+  // Technical data.
+  if (/(?:allele|haplotype)\s+component|clinical\s+pgx|\bHLA[-*]|oxidative-medication-safety/i.test(withoutGeneSuffix)) {
+    if (/warfarin/i.test(withoutGeneSuffix)) return 'Warfarin response context';
+    if (/statin|SLCO1B1/i.test(withoutGeneSuffix)) return 'Statin medication context';
+    if (/DPYD|fluoropyrimidine|chemotherapy/i.test(withoutGeneSuffix)) return 'Chemotherapy medication context';
+    if (/TPMT|NUDT15|thiopurine/i.test(withoutGeneSuffix)) return 'Thiopurine medication context';
+    if (/HLA|hypersensitivity|safety/i.test(withoutGeneSuffix)) return 'Medication safety context';
+    return 'Medication processing context';
+  }
+
   const leadingTechnical = withoutGeneSuffix.match(
     /^((?:[A-Z]{2,}[A-Z0-9]*(?:\*[A-Z0-9]+)?(?:\/(?:[A-Z]{2,}[A-Z0-9]*(?:\*[A-Z0-9]+)?)|\/(?=[a-z]))?|[0-9]+p[0-9.]+))\s*(.+)$/,
   );
@@ -96,6 +140,68 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   }
 
   return humanizeSimpleTitle(leadingTechnical[2].trim() || withoutGeneSuffix);
+}
+
+export interface SimpleFindingCopy {
+  plain_title: string;
+  signal: string;
+  why_it_matters: string;
+  review_action: string;
+  evidence_label: string;
+  is_fallback: boolean;
+}
+
+function firstMeaningSentence(text: string): string {
+  return text.split(/(?<=[.!?])\s+/)[0]?.trim() || text.trim();
+}
+
+function meaningAfterFirstSentence(text: string): string {
+  const first = firstMeaningSentence(text);
+  return text.slice(first.length).trim();
+}
+
+/** Keep evidence understandable without repeating the full evidence policy. */
+export function getSimpleEvidenceLabel(evidenceTier: string): string {
+  const tier = evidenceTier.trim().toUpperCase();
+  if (/PHARMACOGENOMIC|DRUG|CLINICAL|HIGH.?STAKE|TIER\s*A\b/.test(tier)) return 'Clinical or medication evidence';
+  if (/TIER\s*B\b|REPLICAT|STRONG/.test(tier)) return 'Replicated research signal';
+  if (/TIER\s*C\b|MODERATE/.test(tier)) return 'Moderate research signal';
+  if (/TIER\s*[DE]\b|LIMITED|EXPLOR/.test(tier)) return 'Early or limited research';
+  return 'Research context';
+}
+
+/**
+ * Normalize legacy two-field translations into the Simple-mode contract.
+ * Authored structured fields win; the legacy meaning remains the source for
+ * the useful signal when a resource has not migrated yet.
+ */
+export function getSimpleFindingCopy(
+  marker: Pick<
+    EvaluatedMarker,
+    'evidence_tier' | 'effect_direction' | 'clinical_confirmation_required' | 'severity_class' | 'confirm_with'
+  >,
+  translation: LaypersonTranslation,
+): SimpleFindingCopy {
+  const compactMeaning = getCompactSimpleMeaning(translation);
+  const sentence = firstMeaningSentence(compactMeaning);
+  const remainder = meaningAfterFirstSentence(compactMeaning);
+  const plainTitle = translation.plainTitle?.trim() || getSimpleFindingTitle(translation.simpleImpact);
+  const signal = translation.signal?.trim() || sentence || plainTitle;
+  const whyItMatters = translation.whyItMatters?.trim()
+    || remainder
+    || (signal === plainTitle
+      ? 'A useful context signal to compare with the related health measure, symptom pattern, or goal.'
+      : signal);
+  const reviewAction = translation.reviewAction?.trim() || getSimpleNextStep(marker, translation);
+
+  return {
+    plain_title: plainTitle,
+    signal,
+    why_it_matters: whyItMatters,
+    review_action: reviewAction,
+    evidence_label: translation.evidenceLabel?.trim() || getSimpleEvidenceLabel(marker.evidence_tier),
+    is_fallback: translation.isFallback === true,
+  };
 }
 
 const GENERIC_GUARDRAIL_PATTERNS = [
@@ -137,15 +243,6 @@ const SIMPLE_GUIDANCE_REWRITES: Array<[RegExp, string]> = [
   [/^Long-term restrictive diets.*$/i, "Don't use restrictive diets, probiotics, enzymes, or detox products as DNA treatment"],
 ];
 
-const SIMPLE_NOTE_REWRITES: Array<[RegExp, string]> = [
-  [/^TMPRSS6 and TF markers can modestly shift.*$/i, 'Iron SNPs are modest context; iron studies and bleeding history matter more.'],
-  [/^FUT2, TCN2, and CUBN markers can point.*$/i, 'B12 SNPs are modest context; B12, CBC, symptoms, diet, and medicines matter more.'],
-  [/^Common metabolic markers shift.*$/i, 'Metabolic SNPs are modest context; symptoms, history, and labs matter more.'],
-  [/^LPA and LDL-pathway markers can suggest.*$/i, 'Lipid SNPs suggest checking the phenotype; measured lipids and overall risk matter more.'],
-  [/^Bone density and fracture decisions.*$/i, 'Bone SNPs are modest context; DXA and clinical risk factors matter more.'],
-  [/^IBD susceptibility is polygenic.*$/i, 'IBD SNPs are research context; symptoms, blood/stool tests, and clinical evaluation lead.'],
-];
-
 /**
  * Remove repeated actionability framing from secondary Simple guidance lists.
  * The section heading provides the shared context; authored plan data remains
@@ -154,21 +251,6 @@ const SIMPLE_NOTE_REWRITES: Array<[RegExp, string]> = [
 export function getCompactGuidanceText(text: string): string {
   const compact = text.replace(COMPACT_GUIDANCE_PREFIX, '').trim();
   return SIMPLE_GUIDANCE_REWRITES.find(([pattern]) => pattern.test(compact))?.[1] ?? compact;
-}
-
-/** Turn aggregate dietary notes into short, non-technical Simple-view bullets. */
-export function getCompactDietNotes(text: string): string[] {
-  const notes = text
-    .split('\n')
-    .map((line) => line.replace(/^\s*[•*-]\s*/, '').trim())
-    .filter(Boolean)
-    .map((line) => {
-      const note = line.includes(': ') ? line.slice(line.indexOf(': ') + 2) : line;
-      const firstSentence = note.split(/(?<=[.!?])\s+/)[0]?.trim() || note;
-      return SIMPLE_NOTE_REWRITES.find(([pattern]) => pattern.test(firstSentence))?.[1] ?? firstSentence;
-    });
-
-  return Array.from(new Set(notes));
 }
 
 /** Keep Simple supplement rows readable while preserving the authored plan. */
@@ -203,6 +285,31 @@ function isGenericGuardrail(text: string): boolean {
   return GENERIC_GUARDRAIL_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+function compactGuardrailSentence(sentence: string): string {
+  const clauses = sentence
+    .split(/;\s+/)
+    .map((clause) => clause.trim())
+    .filter(Boolean);
+  const compactClauses = clauses
+    .map((clause) => {
+      if (!isGenericGuardrail(clause)) return clause;
+      const boundary = clause.search(/\b(?:does not diagnose|cannot diagnose|does not prove|does not establish|is not a diagnosis|is not an? treatment|is not an? prescription)\b/i);
+      // Keep a useful association clause when the generic boundary is only a
+      // trailing clause. A sentence made entirely of a boundary is removed.
+      if (boundary > 24) {
+        return clause
+          .slice(0, boundary)
+          .replace(/(?:,\s*|;\s*|\s+)(?:but|and)\s+(?:it|this\s+(?:marker|result))\s*$/i, '')
+          .replace(/[\s,;:]+$/, '')
+          .trim();
+      }
+      return '';
+    })
+    .filter(Boolean);
+
+  return compactClauses.join('; ').trim();
+}
+
 /**
  * Keep the visible Simple card focused on the finding itself. Broad claim
  * boundaries remain available in the card's disclosure and in clinical/AI
@@ -216,14 +323,52 @@ export function getCompactSimpleMeaning(translation: LaypersonTranslation): stri
     .map((sentence) => sentence.trim())
     .filter(Boolean);
   const compact = sentences
-    .map((sentence) => sentence
-      .split(/;\s+/)
-      .filter((clause) => !isGenericGuardrail(clause))
-      .join('; ')
-      .trim())
-    .filter((sentence) => sentence && !isGenericGuardrail(sentence));
+    .map(compactGuardrailSentence)
+    .filter(Boolean);
 
   return compact.join(' ') || getSimpleFindingTitle(translation.simpleImpact);
+}
+
+/**
+ * Keep the first-screen action queue to one useful sentence. The full authored
+ * wording remains available on the finding card and in clinical/AI exports;
+ * the queue only needs a short reason for why an item was surfaced.
+ */
+export function getCompactActionMeaning(translation: LaypersonTranslation): string {
+  const compact = getCompactSimpleMeaning(translation);
+  const firstSentence = compact.split(/(?<=[.!?])\s+/)[0]?.trim() || compact;
+  const firstClause = firstSentence.split(/;\s+/)[0]?.trim() || firstSentence;
+  return firstClause
+    .replace(/^This\s+(?:(?:[A-Z][A-Z0-9]*(?:\/[A-Z][A-Z0-9]*)?)\s+)?(?:common\s+)?(?:marker|variant)\b/i, 'This finding')
+    .replace(/^This\s+is\s+a\s+research-only\s+marker\b/i, 'This finding')
+    .trim();
+}
+
+/**
+ * Keep follow-up guidance at the section level in Simple mode. Individual
+ * cards explain the signal; this one compact line gives the section a single
+ * practical route without repeating the same review language on every card.
+ */
+export function getSimpleSectionFollowUp(
+  markers: ReadonlyArray<Pick<EvaluatedMarker, 'confirm_with' | 'clinical_confirmation_required' | 'severity_class'>>,
+): string | null {
+  const followUps = Array.from(new Set(
+    markers
+      .flatMap((marker) => marker.confirm_with || [])
+      .map((item) => item.replace(/[.;:]+$/, '').replace(/\s+/g, ' ').trim())
+      .filter((item) => item.length > 3)
+      .filter((item) => !/^(?:clinical|medical|doctor|clinician|healthcare|specialist)\s+(?:review|confirmation|testing|evaluation)$/i.test(item)),
+  ));
+  if (followUps.length === 0) return null;
+
+  const visible = followUps.slice(0, 3);
+  const summary = visible.length === 1
+    ? visible[0]
+    : `${visible.slice(0, -1).join(', ')}, or ${visible.at(-1)}`;
+  const needsConfirmation = markers.some((marker) =>
+    marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required'
+  );
+  return `${needsConfirmation ? 'Confirm' : 'Review'} ${summary}.`;
 }
 
 /** Keep the primary Simple action consistent between cards and the dashboard queue. */
@@ -261,10 +406,12 @@ export function getSimpleNextStep(
     EvaluatedMarker,
     'clinical_confirmation_required' | 'severity_class' | 'confirm_with' | 'effect_direction'
   >,
+  translation?: Pick<LaypersonTranslation, 'simpleNextStep'>,
 ): string {
+  if (translation?.simpleNextStep) return translation.simpleNextStep;
   if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
     const followUp = compactFollowUpSummary(marker.confirm_with);
-    return followUp ? `Confirm with ${followUp}.` : 'Consider clinical confirmation.';
+    return followUp ? `Confirm with ${followUp}.` : 'Review the related clinical test route.';
   }
   if (marker.confirm_with.length > 0) {
     const followUp = compactFollowUpSummary(marker.confirm_with);
@@ -286,9 +433,13 @@ export function getSimpleNextStep(
 }
 
 const SAFE_FALLBACK: LaypersonTranslation = {
-  simpleImpact: "A biological pathway studied in genetic research.",
+  simpleImpact: "Genetic research signal",
   simpleMeaning:
-    "This DNA result is associated with a research finding. It does not predict whether you have a condition, measure your current health, or tell you what treatment to use.",
+    "This result relates to a biological pathway studied in research; compare it with the relevant health measure, symptoms, or goal.",
+  signal: "A biological pathway signal is present.",
+  whyItMatters: "Its value is in helping you choose the relevant health measure, symptom pattern, or goal to review.",
+  reviewAction: "Review the related health context.",
+  evidenceLabel: "Research context",
   isFallback: true,
 };
 
@@ -310,7 +461,8 @@ export function getLaypersonTranslation(
   if (marker.clinical_confirmation_required) {
     return {
       ...SAFE_FALLBACK,
-      simpleMeaning: `${SAFE_FALLBACK.simpleMeaning} A clinical test may be needed before medical decisions.`,
+      reviewAction: 'Review the related clinical test route.',
+      evidenceLabel: 'Clinical follow-up',
     };
   }
 

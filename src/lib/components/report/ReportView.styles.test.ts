@@ -2,12 +2,22 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./ReportView.svelte', import.meta.url), 'utf8');
+const dashboardSource = readFileSync(new URL('./DashboardSummaryPanel.svelte', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 const interactiveTheme = theme.split('@media print')[0];
 const modalSurfaceStyles = source.match(/\.help-backdrop[\s\S]*?\.help-body/)?.[0] ?? '';
 const catalogWarningStyles = theme.match(/\.catalog-warnings-banner \{[\s\S]*?\n\}/)?.[0] ?? '';
 
 describe('ReportView Help Guide surface', () => {
+  it('gives report generation a focused, theme-aware loading surface', () => {
+    expect(source).toContain('class="report-loading-state"');
+    expect(source).toContain('Mapping {selectedSample.name}\'s DNA');
+    expect(source).toContain('Local analysis · your DNA stays on this computer.');
+    expect(source).toContain('min-height: clamp(320px, 52vh, 500px);');
+    expect(source).toContain('background: var(--surface-raised);');
+    expect(source).toContain('prefers-reduced-motion: reduce');
+  });
+
   it('keeps the general safety reminder in the application footer instead of repeating it in the Guide', () => {
     expect(source).not.toContain('Crucial Safety Information');
     expect(source).not.toContain('Never change medications, supplement dosages, or medical therapies based on this report alone.');
@@ -37,6 +47,18 @@ describe('ReportView Help Guide surface', () => {
     expect(theme).toContain('.catalog-warnings-banner > summary:focus-visible {');
     expect(theme).toContain('.catalog-warnings-banner[open] > summary::before');
     expect(catalogWarningStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
+  it('uses the dashboard health-area directory as the single technical-report boundary', () => {
+    const summaryIndex = source.indexOf('<DashboardSummaryPanel');
+    const healthAreaIndex = dashboardSource.indexOf('Explore all health areas');
+    const sectionsIndex = source.indexOf('<div class="sections-container">');
+
+    expect(source).not.toContain('report-deep-dive-heading');
+    expect(source).not.toContain('report-deep-dive-title');
+    expect(healthAreaIndex).toBeGreaterThan(-1);
+    expect(sectionsIndex).toBeGreaterThan(summaryIndex);
+    expect(dashboardSource).toContain('Jump to a health area for complete findings, evidence, and technical details.');
   });
 
   it('labels the additional-marker filter according to what it reveals', () => {

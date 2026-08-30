@@ -3,6 +3,7 @@
   import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
+  import Tooltip from '../common/Tooltip.svelte';
   let focusMode = $state(false);
   let mobileSidebarOpen = $state(false);
   let isNarrowViewport = $state(false);
@@ -100,30 +101,56 @@
 </script>
 
 <div class="app-layout" class:focus-mode={focusMode} class:mobile-sidebar-open={mobileSidebarOpen}>
-  <div
-    class="sidebar-slot"
-    bind:this={sidebarSlot}
-    aria-hidden={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? 'true' : undefined}
-    inert={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? true : undefined}
-  >
-    {@render sidebar()}
-  </div>
-  <div class="main-slot">
-    <div class="focus-toolbar no-print" role="toolbar" aria-label="Report toolbar">
-      <div class="focus-toolbar-inner">
+  <div class="sidebar-region">
+    {#if !isNarrowViewport}
+      <Tooltip
+        label="Hide data sidebar"
+        description="Hide profile and data controls to give the report more room."
+        placement="right"
+        interactiveChildren={true}
+        interactiveClickBehavior="dismiss"
+      >
         <button
           type="button"
-          class="focus-toggle"
-          aria-label={focusMode ? 'Show data sidebar' : 'Hide data sidebar'}
+          class="sidebar-focus-toggle"
+          aria-label="Hide data sidebar"
           aria-controls="data-sidebar"
           aria-pressed={focusMode}
-          onclick={() => focusMode = !focusMode}
+          onclick={() => focusMode = true}
         >
-          {focusMode ? '☰ Show data' : '⤢ Focus report'}
+          <span class="sidebar-toggle-icon" aria-hidden="true">‹</span>
+          <span class="visually-hidden">Hide data sidebar</span>
         </button>
+      </Tooltip>
+    {/if}
+    <div
+      class="sidebar-slot"
+      bind:this={sidebarSlot}
+      aria-hidden={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? 'true' : undefined}
+      inert={focusMode || (isNarrowViewport && !mobileSidebarOpen) ? true : undefined}
+    >
+      {@render sidebar()}
+    </div>
+    {#if !isNarrowViewport}
+      <div class="sidebar-footer no-print" role="toolbar" aria-label="Sidebar appearance controls">
         <ThemeToggle />
       </div>
-    </div>
+    {/if}
+  </div>
+  <div class="main-slot">
+    {#if focusMode}
+      <button
+        type="button"
+        class="focus-restore-toggle no-print"
+        aria-label="Show data sidebar"
+        aria-controls="data-sidebar"
+        aria-pressed={focusMode}
+        onclick={() => focusMode = false}
+      >
+        <span class="sidebar-toggle-icon" aria-hidden="true">›</span>
+        <span class="visually-hidden">Show data sidebar</span>
+      </button>
+    {/if}
     {@render children()}
   </div>
   {#if isNarrowViewport && mobileSidebarOpen}

@@ -461,6 +461,12 @@
       "impact": "Iron overload/oxidative aging context",
       "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
       "interpretation": "HFE is included as aging-resilience context. Interpret as healthspan-relevant biology, not lifespan prediction.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "lifespan prediction",
         "biological age diagnosis",

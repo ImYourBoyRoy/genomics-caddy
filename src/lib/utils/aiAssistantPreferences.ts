@@ -21,12 +21,9 @@ export interface AiAssistantPreferences {
 export function loadAiAssistantPreferences(
   baseProfile: UserBiohackingProfile,
 ): AiAssistantPreferences {
-  let userProfile: Partial<UserBiohackingProfile> = {};
-  try {
-    userProfile = JSON.parse(localStorage.getItem("genomics_user_biohacking_profile") || "{}");
-  } catch {
-    userProfile = {};
-  }
+  // The former global profile is legacy, unassigned data. It is surfaced by
+  // the Context workspace for an explicit one-time import, never attached to
+  // the active genome through Chat Settings.
   return {
     showThinkingProcess: localStorage.getItem("genomics_show_thinking_process") !== "false",
     autoCollapseThinking: localStorage.getItem("genomics_auto_collapse_thinking") !== "false",
@@ -35,7 +32,7 @@ export function loadAiAssistantPreferences(
     consultationMode: (localStorage.getItem("genomics_consultation_mode") || "general") as ConsultationMode,
     reviewModel: localStorage.getItem("genomics_review_model") || "",
     twoModelReview: localStorage.getItem("genomics_two_model_review") === "true",
-    userProfile: { ...baseProfile, ...userProfile },
+    userProfile: { ...baseProfile, injectProfile: baseProfile.injectProfile },
     systemInstructions: localStorage.getItem("genomics_system_instructions") || DEFAULT_INSTRUCTIONS,
   };
 }

@@ -213,6 +213,47 @@ struct LocalEnrichment {
     pub population_af: Option<f64>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FindingInterpretationClass {
+    SusceptibilityContext,
+    CarrierPossibility,
+    ClinicallyActionableVariant,
+    ResearchContext,
+    ProtectiveContext,
+    TraitContext,
+    Unknown,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FindingInheritanceModel {
+    AutosomalDominant,
+    AutosomalRecessive,
+    XLinked,
+    YLinked,
+    Mitochondrial,
+    Unknown,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FindingClinicalState {
+    ClinicallyConfirmed,
+    CarrierPossibility,
+    Unknown,
+    NotApplicable,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ClinicalSemantics {
+    pub condition_label: Option<String>,
+    pub interpretation_class: Option<FindingInterpretationClass>,
+    pub inheritance_model: Option<FindingInheritanceModel>,
+    pub clinical_state: Option<FindingClinicalState>,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct MarkerDefinition {
@@ -240,6 +281,8 @@ pub struct MarkerDefinition {
     pub allele_orientation_verified: Option<bool>,
     pub orientation_source: Option<String>,
     pub interpretation_blocked_if_unverified: Option<bool>,
+    /// Explicit disease/inheritance semantics; never inferred from a gene name.
+    pub clinical_semantics: Option<ClinicalSemantics>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -340,6 +383,8 @@ pub struct VariantCategoryLink {
     pub sex_scope: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interpretation_blocked_if_unverified: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clinical_semantics: Option<ClinicalSemantics>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sources: Vec<MarkerSource>,
     /// Stable IDs into the report-level reference registry.
@@ -1806,6 +1851,7 @@ pub fn generate_report(
                 clinical_confirmation_required: m.clinical_confirmation_required,
                 sex_scope: m.sex_scope.clone(),
                 interpretation_blocked_if_unverified: m.interpretation_blocked_if_unverified,
+                clinical_semantics: m.clinical_semantics.clone(),
                 sources,
                 reference_ids,
             };
@@ -2097,6 +2143,7 @@ mod tests {
             allele_orientation_verified: Some(true),
             orientation_source: Some("dbSNP".to_string()),
             interpretation_blocked_if_unverified: Some(true),
+            clinical_semantics: None,
         };
 
         let template = ReportTemplate {
@@ -2198,6 +2245,7 @@ mod tests {
             allele_orientation_verified: None,
             orientation_source: None,
             interpretation_blocked_if_unverified: None,
+            clinical_semantics: None,
         };
 
         let m2 = MarkerDefinition {
@@ -2223,6 +2271,7 @@ mod tests {
             allele_orientation_verified: None,
             orientation_source: None,
             interpretation_blocked_if_unverified: None,
+            clinical_semantics: None,
         };
 
         let m_missing = MarkerDefinition {
@@ -2248,6 +2297,7 @@ mod tests {
             allele_orientation_verified: None,
             orientation_source: None,
             interpretation_blocked_if_unverified: None,
+            clinical_semantics: None,
         };
 
         let template = ReportTemplate {

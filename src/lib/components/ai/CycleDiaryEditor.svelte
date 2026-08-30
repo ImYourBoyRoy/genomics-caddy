@@ -17,12 +17,14 @@
     personalSafetyContext: PersonalSafetyContext;
     sampleId?: number;
     reproductiveContext?: string;
+    expandedByDefault?: boolean;
   }
 
   let {
     personalSafetyContext = $bindable(),
     sampleId,
     reproductiveContext,
+    expandedByDefault = false,
   }: Props = $props();
 
   let expanded = $state(false);
@@ -31,6 +33,10 @@
   let applicable = $derived(cycleDiaryAppliesToContext(reproductiveContext));
   let entries = $derived(personalSafetyContext.cycleDiary || []);
   let visibleEntries = $derived(entries.slice(0, 14));
+
+  $effect(() => {
+    if (expandedByDefault) expanded = true;
+  });
 
   function fieldMin(field: CycleDiaryField): number | undefined {
     return 'min' in field ? field.min : undefined;

@@ -7,6 +7,7 @@
   import ClinicalFindingsTable from './ClinicalFindingsTable.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import { slide } from 'svelte/transition';
+  import { getSimpleSectionFollowUp } from '../../utils/layperson';
 
   /*
   Module Docstring:
@@ -29,6 +30,7 @@
     onExploreResearch?: (rsid: string) => void;
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
+    simpleRelatedMarkerCounts?: Record<string, number>;
     collapsed?: boolean;
     onCollapsedChange?: (collapsed: boolean) => void;
   }
@@ -39,6 +41,7 @@
     onExploreResearch,
     highlightRsid = "",
     onNavigateToVariant,
+    simpleRelatedMarkerCounts = {},
     collapsed = $bindable(),
     onCollapsedChange,
   }: Props = $props();
@@ -85,6 +88,9 @@
     section.summary.total_markers > 0
       ? Math.round((callableCount / section.summary.total_markers) * 100)
       : 0
+  );
+  let sectionFollowUp = $derived(
+    viewMode === 'simple' ? getSimpleSectionFollowUp(section.markers) : null,
   );
 </script>
 
@@ -308,6 +314,26 @@
     background: var(--coverage-note-bg);
   }
 
+  .section-follow-up {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.55rem;
+    margin-top: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    border-left: 3px solid var(--status-info-border);
+    border-radius: 0.35rem;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .section-follow-up-label {
+    color: var(--status-info-text);
+    font-weight: 800;
+  }
+
   @media (max-width: 720px) {
     .section-header,
     .section-score-area {
@@ -356,9 +382,22 @@
         {:else}
           <div class="markers-grid">
             {#each section.markers as marker}
-              <VariantCard {marker} {viewMode} {onExploreResearch} {highlightRsid} {onNavigateToVariant} />
+              <VariantCard
+                {marker}
+                {viewMode}
+                {onExploreResearch}
+                {highlightRsid}
+                {onNavigateToVariant}
+                relatedMarkerCount={simpleRelatedMarkerCounts[marker.link_id]}
+              />
             {/each}
           </div>
+          {#if sectionFollowUp}
+            <div class="section-follow-up" role="note">
+              <span class="section-follow-up-label">Useful follow-up</span>
+              <span>{sectionFollowUp}</span>
+            </div>
+          {/if}
         {/if}
       </div>
     {/if}

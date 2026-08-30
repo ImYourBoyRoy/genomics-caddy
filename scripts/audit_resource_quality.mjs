@@ -176,6 +176,7 @@ for (const pack of manifest?.packs || []) {
   let guardrails = 0;
   let clinicalConfirmation = 0;
   let sourceBacked = 0;
+  let explicitSemantics = 0;
   for (const marker of doc.markers) {
     allMarkers.push({ packId, marker });
     tiers[marker.evidence_tier] = (tiers[marker.evidence_tier] || 0) + 1;
@@ -184,6 +185,9 @@ for (const pack of manifest?.packs || []) {
     if (marker.variant_type === 'guardrail') guardrails += 1;
     if (marker.clinical_confirmation_required === true) clinicalConfirmation += 1;
     if (Array.isArray(marker.sources) && marker.sources.length > 0) sourceBacked += 1;
+    if (marker.clinical_semantics && typeof marker.clinical_semantics === 'object' && !Array.isArray(marker.clinical_semantics)) {
+      explicitSemantics += 1;
+    }
 
     const missing = ['do_not_claim', 'confirm_with', 'raw_dna_limitation', 'evidence_tier', 'effect_direction']
       .filter((field) => field === 'raw_dna_limitation'
@@ -215,6 +219,7 @@ packSummaries.push({
     clinical_confirmation: clinicalConfirmation,
     guardrails,
     sex_scoped: scoped,
+    explicit_semantics: explicitSemantics,
     evidence_tiers: tiers,
     variant_types: variants,
   });
@@ -540,7 +545,7 @@ if (outputJson) {
   console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; clinical allele conflicts: ${clinicalAlleleConflicts.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
   console.log(`Plain-English translation coverage: ${laypersonTranslationCoverage.translated}/${laypersonTranslationCoverage.total} curated standard rsIDs; fallback=${laypersonTranslationCoverage.fallback_available ? 'available' : 'missing'}.`);
   for (const pack of packSummaries) {
-    console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped}`);
+    console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped} explicit_semantics=${pack.explicit_semantics}`);
   }
   for (const warning of warnings) console.log(`WARN: ${warning}`);
   for (const error of errors) console.error(`ERROR: ${error}`);

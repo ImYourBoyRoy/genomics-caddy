@@ -9,6 +9,11 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('if (closedDetails && !element.closest(\'summary\')) return false;');
   });
 
+  it('keeps single-character visual symbols queryable for desktop QA', () => {
+    expect(source).toContain('profile sex symbols');
+    expect(source).toContain('if (value.length >= 1 && value.toLowerCase().includes(needle))');
+  });
+
   it('reports only safe width metadata for overflowing report descendants', () => {
     expect(source).toContain('overflowingElements: Array<{');
     expect(source).toContain('classes: Array.from(element.classList).slice(0, 4),');
@@ -93,14 +98,14 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('function collectAccessibilityMetrics()');
     expect(source).toContain("document.querySelectorAll('main.main-content').length");
     expect(source).toContain("document.querySelectorAll('aside#data-sidebar[aria-label]').length");
-    expect(source).toContain("document.querySelectorAll('.focus-toolbar[role=\"toolbar\"][aria-label]').length");
+    expect(source).toContain("document.querySelectorAll('.sidebar-footer[role=\"toolbar\"][aria-label]').length");
     expect(source).toContain("document.querySelectorAll('[role=\"tabpanel\"][aria-labelledby]').length");
     expect(source).toContain('boundSectionToggleCount');
     expect(source).toContain('guidanceToggleCount');
     expect(source).toContain('boundGuidanceToggleCount');
     expect(source).toContain('expandedControlCount');
     expect(source).toContain('boundExpandedControlCount');
-    expect(source).toContain("focusControl?.getAttribute('aria-controls') === 'data-sidebar'");
+    expect(source).toContain("focusControls.some((control) => control.getAttribute('aria-controls') === 'data-sidebar')");
     expect(source).not.toContain('accessibility.textContent');
   });
 
@@ -109,27 +114,57 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('simpleCardContract: AgentUiSimpleCardContractMetrics;');
     expect(source).toContain('function collectSimpleCardContractMetrics()');
     expect(source).toContain("countCardsWith('.simple-finding-title')");
-    expect(source).toContain("countCardsWith('.simple-meaning-block')");
-    expect(source).toContain("countCardsWith('.marker-meta .tier-badge')");
+    expect(source).toContain("countCardsWith('.simple-copy-signal')");
+    expect(source).toContain("countCardsWith('.simple-copy-field:not(.simple-copy-signal)')");
     expect(source).toContain("countCardsWith('.simple-next-step')");
+    expect(source).toContain("countCardsWith('.marker-meta .tier-badge')");
+    expect(source).toContain("document.querySelectorAll('.section-follow-up').length");
     expect(source).toContain("countCardsWith('.simple-details')");
     expect(source).toContain("countCardsWith('.technical-details')");
     expect(source).not.toContain('simpleCardContract.textContent');
+  });
+
+  it('exposes only aggregate warning-routing metrics', () => {
+    expect(source).toContain('export interface AgentUiWarningMetrics');
+    expect(source).toContain('warningMetrics: AgentUiWarningMetrics;');
+    expect(source).toContain('function collectWarningMetrics()');
+    expect(source).toContain('genericWarningPhraseCount');
+    expect(source).toContain('duplicateGenericWarningPhraseCount');
+    expect(source).toContain('actionableAlertCount');
+    expect(source).toContain('clinicalReviewAlertCount');
+    expect(source).toContain("document.querySelectorAll('[data-warning-kind=\"actionable_safety\"]')");
+    expect(source).toContain("document.querySelectorAll('.report-legend-details').length");
+    expect(source).toContain("document.querySelectorAll('.app-reference-note').length");
+    expect(source).toContain("document.querySelectorAll('.legal-page').length");
+    expect(source).not.toContain('genericWarningPhraseCount: genericPhrases.join');
   });
 
   it('exposes aggregate focus geometry without exposing report content', () => {
     expect(source).toContain('focusControlOverlapsContent: boolean;');
     expect(source).toContain('focusControlBottom: number | null;');
     expect(source).toContain('firstContentTop: number | null;');
-    expect(source).toContain("document.querySelector<HTMLElement>('.focus-toggle')");
+    expect(source).toContain('sidebarFocusControlTop: number | null;');
+    expect(source).toContain('sidebarFocusControlRightGap: number | null;');
+    expect(source).toContain('sidebarFocusControlInsideSidebar: boolean;');
+    expect(source).toContain('sidebarFocusControlOverlapsBrand: boolean;');
+    expect(source).toContain("document.querySelector<HTMLElement>('.focus-restore-toggle')");
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.sidebar-focus-toggle, .focus-restore-toggle')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.sidebar-focus-toggle')");
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.sidebar .brand-logo, .sidebar .brand h2')");
+    expect(source).toContain('sidebarFocusControlInsideSidebar');
+    expect(source).toContain('sidebarFocusControlOverlapsBrand');
     expect(source).toContain("document.querySelector<HTMLElement>('.main-content > *')");
   });
 
   it('exposes only aggregate toolbar and action-queue geometry plus the selected theme mode', () => {
     expect(source).toContain('actionQueueWidth: number | null;');
+    expect(source).toContain('profileNameCount: number;');
+    expect(source).toContain('profileNameMinWidth: number | null;');
     expect(source).toContain('actionQueueShellWidth: number | null;');
+    expect(source).toContain('actionQueueColumnCount: number | null;');
     expect(source).toContain('actionQueueItemMaxWidth: number | null;');
     expect(source).toContain('actionQueueItemCount: number;');
+    expect(source).toContain('reportOverviewWidth: number | null;');
     expect(source).toContain('dashboardGuidanceWidth: number | null;');
     expect(source).toContain('dashboardGuidanceCardMaxWidth: number | null;');
     expect(source).toContain('connectionsLaunchHeight: number | null;');
@@ -140,18 +175,22 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('markerCardMaxWidth: number | null;');
     expect(source).toContain('expandedSectionNames: string[];');
     expect(source).toContain('clinicalProvenanceCount: number;');
-    expect(source).toContain('themeControlInToolbar: boolean;');
+    expect(source).toContain('themeControlInSidebarFooter: boolean;');
+    expect(source).toContain('themeModeOptionCount: number;');
+    expect(source).toContain('topToolbarPresent: boolean;');
     expect(source).toContain('themeMenuOpen: boolean;');
-    expect(source).toContain('themeMenuInToolbarFlow: boolean;');
-    expect(source).toContain('themeMenuOverlapsReport: boolean;');
+    expect(source).toContain('appContextMenuInstalled: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.samples-card .sample-name-text')");
+    expect(source).toContain('profileNameWidths.length ? Math.min(...profileNameWidths) : null');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue')");
+    expect(source).toContain(".report-header[data-presentation-mode=\"simple\"]");
     expect(source).toContain("document.querySelector<HTMLElement>('.grid-layout')");
-    expect(source).toContain("document.querySelector('.focus-toolbar .theme-toggle') !== null");
-    expect(source).toContain("document.querySelector<HTMLElement>('.theme-options')");
-    expect(source).toContain("themeMenu.closest('.focus-toolbar') !== null");
-    expect(source).toContain("getComputedStyle(themeMenu).position === 'static'");
-    expect(source).toContain('themeMenuOverlapsReport');
+    expect(source).toContain("document.querySelector('.sidebar-footer .theme-toggle') !== null");
+    expect(source).toContain("document.querySelectorAll('.sidebar-footer [data-theme-mode]').length");
+    expect(source).toContain("document.querySelector('.focus-toolbar') !== null");
+    expect(source).toContain("document.querySelector('.theme-options') !== null");
+    expect(source).toContain("document.documentElement.dataset.contextMenu === 'genomics-caddy'");
     expect(source).toContain("themeMode: 'system' | 'light' | 'dark' | null;");
     expect(source).toContain('document.documentElement.dataset.theme');
     expect(source).not.toContain('actionQueue.textContent');
@@ -177,6 +216,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('function collectResourceStatus()');
     expect(source).toContain("statusPill?.classList.contains('resource-status-current')");
     expect(source).toContain("statusPill?.classList.contains('resource-status-error')");
+    expect(source).toContain("statusPill?.classList.contains('resource-status-incomplete')");
     expect(source).toContain("statusToggle.querySelector('.update-pill, .missing-pill')");
     expect(source).toContain('resourceStatus: collectResourceStatus(),');
     expect(source).not.toContain('statusPill.textContent');

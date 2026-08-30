@@ -96,7 +96,7 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('# Personal Simple Genomics Report');
     expect(output).toContain('- Sex: Female');
     expect(output).not.toContain('Female-like');
-    expect(output).toContain('This DNA result is associated with a research finding');
+    expect(output).toContain('This result relates to a biological pathway studied in research');
     expect(output).not.toContain('SYNTHETIC_CALL');
     expect(output).not.toContain('Technical impact text');
     expect(output).not.toContain('Clinical interpretation text');
@@ -115,6 +115,9 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('TEST1 — rs123');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
     expect(output).toContain('Technical interpretation: Clinical interpretation text');
+    expect(output).toContain('Interpretation class: Research context');
+    expect(output).toContain('Inheritance model: Not established');
+    expect(output).toContain('Clinical state: Not determined from this DNA result');
     const referenceId = reportReferenceId(marker().sources[0]);
     expect(output.match(new RegExp(`### ${referenceId} —`, 'g'))).toHaveLength(1);
     expect(output.match(/### REF-[A-F0-9]{8} —/g)).toHaveLength(1);
@@ -132,6 +135,43 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('Do not diagnose');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
     expect(output).toContain(`Reference IDs: ${reportReferenceId(marker().sources[0])}`);
+  });
+
+  it('includes DNA-linked allergy context without a generic exposure checklist', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'personal',
+      report: report([marker({ rsid: 'rs20541', gene: 'IL13' })]),
+      sample,
+    });
+
+    expect(output).toContain('## Allergy & sensitivity map');
+    expect(output).toContain('Atopy & IgE tendency');
+    expect(output).toContain('Examples: seasonal or year-round rhinitis');
+    expect(output).toContain('What it points toward: Matched variants point to immune-response pathways');
+    expect(output).toContain('Relevant when: Most useful when seasonal allergies');
+    expect(output).toContain('Matched genes: IL13');
+    expect(output).toContain('### Focused follow-up');
+    expect(output).not.toContain('Exposure history checklist');
+    expect(output).not.toContain('Peanut: peanut, peanut butter, sauces');
+    expect(output).not.toContain('Cold: cold air, water, or cold objects');
+    expect(output).not.toContain('confirmed allergy');
+  });
+
+  it('includes a concise grouped clinician request list for DNA-linked labs', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'clinician',
+      report: report([marker({
+        rsid: 'rs602662',
+        gene: 'FUT2',
+        interpretation: 'FUT2 B12-status context marker; not diagnostic.',
+      })]),
+      sample,
+    });
+
+    expect(output).toContain('### Clinician request list');
+    expect(output).toContain('Nutrients & methylation');
+    expect(output).toContain('Serum or plasma vitamin B12 — DNA-linked FUT2/TCN2/CUBN pathway');
+    expect(output).not.toContain('A1c');
   });
 
   it('creates safe deterministic filenames', () => {

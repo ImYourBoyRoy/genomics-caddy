@@ -1,10 +1,10 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
-  "version": "1.7.0",
-  "last_updated": "2026-08-26",
+  "version": "1.10.0",
+  "last_updated": "2026-08-30",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
-  "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. Do not hardcode parallel rules in the UI. Every item is conditional guidance, never a diagnosis, prescription, permanent elimination diet, or medication instruction. Soft genetic context must yield to allergies, medical diets, pregnancy/lactation context, medications, labs, and clinician orders (see meal_planning_rules.json).",
+  "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. `dietary_favor` and `dietary_avoid` contain concise food or beverage ideas; `supplement_favor` and `supplement_avoid` contain concise product-level prompts. Generic `favor`, `avoid`, and legacy supplement guardrails remain available to advanced consumers and safety disclosures. Do not hardcode parallel rules in the UI. Soft genetic context must yield to allergies, medical diets, pregnancy/lactation context, medications, labs, and clinician orders (see meal_planning_rules.json).",
   "disclaimer": "Educational suggestions only. Not medical advice. Confirm symptoms, labs, medications, and clinical context before changing diet or supplements.",
   "policy": {
     "default_actionability": "symptom_or_lab_conditioned",
@@ -89,6 +89,120 @@
       "order": 99,
       "keywords": [],
       "fallback": true
+    }
+  ],
+  "lab_catalog": [
+    {
+      "id": "hba1c",
+      "name": "HbA1c",
+      "category": "Metabolic",
+      "aliases": ["A1c", "hemoglobin A1c", "glycated hemoglobin"],
+      "purpose": "Average blood-glucose context over the previous 2–3 months."
+    },
+    {
+      "id": "fasting_glucose",
+      "name": "Fasting plasma glucose",
+      "category": "Metabolic",
+      "aliases": ["fasting glucose", "plasma glucose"],
+      "purpose": "Current glucose context after an appropriate fast."
+    },
+    {
+      "id": "apob",
+      "name": "ApoB (Apolipoprotein B)",
+      "category": "Heart & lipids",
+      "aliases": ["ApoB", "apolipoprotein B"],
+      "purpose": "A count of atherogenic lipoprotein particles."
+    },
+    {
+      "id": "lipoprotein_a",
+      "name": "Lipoprotein(a) [Lp(a)] blood test",
+      "category": "Heart & lipids",
+      "aliases": ["Lp(a)", "LPA", "lipoprotein(a)", "lipoprotein a"],
+      "purpose": "Inherited lipid-risk context; commonly checked at least once."
+    },
+    {
+      "id": "standard_lipid_panel",
+      "name": "Standard lipid panel (LDL-C, HDL-C, triglycerides)",
+      "category": "Heart & lipids",
+      "aliases": ["lipid panel", "standard lipid panel", "fasting lipid panel including triglycerides"],
+      "purpose": "Measured cholesterol and triglyceride context."
+    },
+    {
+      "id": "ferritin_transferrin_saturation",
+      "name": "Ferritin and transferrin saturation",
+      "category": "Iron studies",
+      "aliases": ["ferritin & transferrin saturation", "ferritin and transferrin saturation"],
+      "purpose": "Iron-storage and iron-transport context."
+    },
+    {
+      "id": "cbc",
+      "name": "Complete blood count (CBC)",
+      "category": "Iron studies",
+      "aliases": ["CBC", "complete blood count"],
+      "purpose": "Blood-count and anemia context."
+    },
+    {
+      "id": "serum_b12",
+      "name": "Serum or plasma vitamin B12",
+      "category": "Nutrients & methylation",
+      "aliases": ["vitamin B12", "serum vitamin B12", "plasma vitamin B12", "B12"],
+      "purpose": "Measured vitamin B12 status."
+    },
+    {
+      "id": "methylmalonic_acid",
+      "name": "Methylmalonic acid (MMA)",
+      "category": "Nutrients & methylation",
+      "aliases": ["MMA", "methylmalonic acid"],
+      "purpose": "A follow-up marker when B12 status is borderline or uncertain."
+    },
+    {
+      "id": "homocysteine",
+      "name": "Homocysteine (plasma)",
+      "category": "Nutrients & methylation",
+      "aliases": ["homocysteine"],
+      "purpose": "One-carbon, B12/folate, kidney, and medication context."
+    },
+    {
+      "id": "vitamin_d",
+      "name": "25-hydroxyvitamin D [25(OH)D]",
+      "category": "Bone & minerals",
+      "aliases": ["25(OH)D", "25 hydroxyvitamin D", "vitamin D level"],
+      "purpose": "Measured vitamin D status when clinically relevant."
+    },
+    {
+      "id": "tsh",
+      "name": "TSH",
+      "category": "Thyroid & immune",
+      "aliases": ["thyroid stimulating hormone", "thyroid-stimulating hormone"],
+      "purpose": "A first-line thyroid-function marker."
+    },
+    {
+      "id": "free_t4",
+      "name": "Free T4",
+      "category": "Thyroid & immune",
+      "aliases": ["free thyroxine", "FT4"],
+      "purpose": "Thyroid-hormone context interpreted with TSH and symptoms."
+    },
+    {
+      "id": "liver_enzymes",
+      "name": "Liver Enzyme Panel (ALT/AST)",
+      "category": "Liver",
+      "aliases": ["ALT/AST", "ALT AST", "liver enzymes", "liver function tests"],
+      "purpose": "Measured liver-enzyme context."
+    },
+    {
+      "id": "kidney_function",
+      "name": "Kidney function/eGFR",
+      "category": "Kidney & fluids",
+      "aliases": ["eGFR", "creatinine/eGFR", "kidney function"],
+      "purpose": "Measured kidney-function context."
+    },
+    {
+      "id": "blood_pressure",
+      "name": "Blood pressure measurement",
+      "category": "Heart & lipids",
+      "aliases": ["blood pressure", "blood-pressure measurement"],
+      "purpose": "Measured blood-pressure context."
     }
   ],
   "lab_tiers": [
@@ -206,6 +320,10 @@
       "favor": [
         "Folate-rich foods (leafy greens, beans, eggs) as part of a balanced diet"
       ],
+      "dietary_favor": [
+        "Folate-rich foods (leafy greens, beans, eggs)",
+        "Asparagus, citrus, and avocado"
+      ],
       "supplements": [],
       "lab_tests": [
         {
@@ -248,8 +366,28 @@
         "Saturated fats (butter, coconut oil)",
         "Trans fats"
       ],
+      "dietary_favor": [
+        "Fatty fish (salmon, sardines)",
+        "Walnuts",
+        "Extra-virgin olive oil",
+        "High-fiber vegetables",
+        "Beans, lentils, oats, and barley",
+        "Avocado"
+      ],
+      "dietary_avoid": [
+        "Red meat",
+        "Saturated fats (butter, coconut oil)",
+        "Trans fats",
+        "Processed meats"
+      ],
       "supplements": [
         "Omega-3 food or supplement options after reviewing diet, lipids, and medication interactions"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Omega-3 (fish or algae oil)",
+          "reason": "EPA/DHA is a discussion option when dietary intake is low or a lipid-related goal is present."
+        }
       ],
       "lab_tests": [
         {
@@ -291,6 +429,16 @@
         "Algae oil"
       ],
       "avoid": [],
+      "dietary_favor": [
+        "Pre-formed DHA/EPA foods (seafood, fatty fish)",
+        "Low-mercury fish that fits your diet"
+      ],
+      "supplement_favor": [
+        {
+          "name": "DHA/EPA (algae or fish oil)",
+          "reason": "Useful to discuss when pre-formed omega-3 intake is low or an omega-3 goal is present."
+        }
+      ],
       "supplements": [
         "Algae-derived DHA/EPA or high-quality fish oil"
       ],
@@ -327,8 +475,26 @@
         "Iron-fortified cereals",
         "Vitamin C supplements with meals"
       ],
+      "dietary_favor": [
+        "Green or black tea with meals",
+        "Calcium-rich foods"
+      ],
+      "dietary_avoid": [
+        "Red meat",
+        "Iron-fortified cereals"
+      ],
       "supplements": [
         "Avoid any supplements containing iron"
+      ],
+      "supplement_avoid": [
+        {
+          "name": "Iron-containing supplements",
+          "reason": "Confirm iron studies before adding iron; avoid unnecessary iron loading."
+        },
+        {
+          "name": "Vitamin C supplements with iron",
+          "reason": "Avoid pairing concentrated vitamin C with high-iron intake until iron status is clear."
+        }
       ],
       "lab_tests": [
         {
@@ -358,6 +524,12 @@
       ],
       "favor": [
         "Iron-containing foods that fit the person's diet while the reason for an abnormal iron result is clarified"
+      ],
+      "dietary_favor": [
+        "Iron-rich foods, if they fit your diet",
+        "Beans, lentils, tofu, and leafy greens",
+        "Lean meat or seafood, if eaten",
+        "Vitamin-C-rich produce with plant-based iron"
       ],
       "avoid": [
         "Treating an iron-status marker as proof of iron deficiency, iron overload, or anemia",
@@ -411,8 +583,25 @@
         "Ice cream",
         "Soft unaged cheeses"
       ],
+      "dietary_favor": [
+        "Lactose-free alternatives",
+        "Fermented dairy (kefir, Greek yogurt)",
+        "Hard or aged cheeses",
+        "Calcium- and vitamin-D-fortified non-dairy milk"
+      ],
+      "dietary_avoid": [
+        "Cow's milk",
+        "Ice cream",
+        "Soft, unaged cheeses"
+      ],
       "supplements": [
         "Lactase enzyme (when consuming dairy)"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Lactase enzyme",
+          "reason": "A practical option when dairy causes symptoms and you choose to consume it."
+        }
       ],
       "lab_tests": [
         {
@@ -442,6 +631,9 @@
       "avoid": [
         "Alcohol",
         "Acetaldehyde exposure"
+      ],
+      "dietary_avoid": [
+        "Alcohol"
       ],
       "supplements": [],
       "lab_tests": [
@@ -476,6 +668,12 @@
         "Alcohol when it causes flushing, tachycardia, nausea, headache, sleep disruption, or other adverse effects",
         "Using a possibly protective ADH1B association to justify heavier drinking or dismiss alcohol-related risk"
       ],
+      "dietary_favor": [
+        "Alcohol-free options"
+      ],
+      "dietary_avoid": [
+        "Alcohol when it causes adverse symptoms"
+      ],
       "supplements": [],
       "notes": "ADH1B rs1229984 can alter ethanol-to-acetaldehyde conversion and may be associated with drinking-pattern phenotypes, but the result is not an alcohol-use-disorder prediction or a safe-drinking threshold. Interpret with ALDH2, actual exposure, symptoms, medications, liver status, body size, and personal or cultural context.",
       "sources": [
@@ -507,6 +705,18 @@
         "High-purine foods (organ meats, shellfish)",
         "Beer",
         "High-fructose corn syrup"
+      ],
+      "dietary_favor": [
+        "Water",
+        "Tart cherry juice",
+        "Low-fat dairy",
+        "Vegetables, fruit, and whole grains"
+      ],
+      "dietary_avoid": [
+        "High-purine foods (organ meats, shellfish)",
+        "Beer",
+        "High-fructose corn syrup",
+        "Sugar-sweetened drinks"
       ],
       "supplements": [],
       "lab_tests": [
@@ -543,9 +753,28 @@
         "Egg yolks",
         "UV-irradiated mushrooms"
       ],
+      "dietary_favor": [
+        "Wild fish",
+        "Egg yolks",
+        "UV-irradiated mushrooms",
+        "Vitamin-D-fortified milk or non-dairy alternatives",
+        "Fortified yogurt"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Vitamin D",
+          "reason": "Discuss measured 25-hydroxyvitamin D before choosing a dose."
+        }
+      ],
       "avoid": [
         "Megadose vitamin D or calcium without measured status and kidney, calcium, medication, and clinical context",
         "Using a vitamin-D pathway genotype to choose a dose or claim vitamin D deficiency"
+      ],
+      "supplement_avoid": [
+        {
+          "name": "Megadose vitamin D or calcium",
+          "reason": "Confirm blood calcium, kidney, medication, and measured vitamin-D context first."
+        }
       ],
       "supplements": [],
       "lab_tests": [
@@ -582,6 +811,11 @@
         "Cruciferous vegetables (broccoli, brussels sprouts)",
         "Allium vegetables (garlic, onions)"
       ],
+      "dietary_favor": [
+        "Cruciferous vegetables (broccoli, Brussels sprouts)",
+        "Allium vegetables (garlic, onions)",
+        "Colorful vegetables and berries"
+      ],
       "supplements": [],
       "lab_tests": [
         {
@@ -617,6 +851,21 @@
         "Excessive caffeine",
         "Chronic sleep deprivation"
       ],
+      "dietary_favor": [
+        "Magnesium-rich foods (pumpkin seeds, dark chocolate)",
+        "Cruciferous vegetables",
+        "Leafy greens, beans, and whole grains"
+      ],
+      "dietary_avoid": [
+        "Excessive caffeine",
+        "High-caffeine energy drinks"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Magnesium",
+          "reason": "Discuss intake, kidney function, symptoms, and medication timing before supplementing."
+        }
+      ],
       "supplements": [],
       "lab_tests": [
         {
@@ -646,6 +895,10 @@
         "Caffeine after 12:00 PM",
         "High-dose caffeine stimulants"
       ],
+      "dietary_avoid": [
+        "Caffeine after noon",
+        "High-dose caffeine drinks"
+      ],
       "notes": "Caffeine response varies. Use sleep, anxiety, blood-pressure, pregnancy, medication, and personal-response context; this marker does not establish a fixed personal limit.",
       "sources": [
         "nih_caffeine_general_context"
@@ -672,6 +925,9 @@
         "High-dose or late-day caffeine when sleep, anxiety, palpitations, or blood-pressure symptoms worsen",
         "Treating an ADORA2A marker as proof of an anxiety disorder or a universal caffeine limit"
       ],
+      "dietary_avoid": [
+        "High-dose or late-day caffeine when symptoms worsen"
+      ],
       "supplements": [],
       "notes": "ADORA2A rs5751876 may modify caffeine-related arousal, anxiety, or sleep response, especially under caffeine exposure. Combine it with CYP1A2, timing, dose, smoking, medications, pregnancy status when relevant, and observed response; no genotype establishes a universal cutoff.",
       "sources": [
@@ -695,6 +951,11 @@
       "favor": [
         "Beetroot / Beet juice",
         "Arugula & leafy spinach",
+        "Pomegranates"
+      ],
+      "dietary_favor": [
+        "Beetroot or beet juice",
+        "Arugula and leafy spinach",
         "Pomegranates"
       ],
       "supplements": [],
@@ -727,6 +988,11 @@
         "Seafood",
         "Sunflower seeds"
       ],
+      "dietary_favor": [
+        "Ordinary portions of selenium-containing foods",
+        "Seafood",
+        "Sunflower seeds"
+      ],
       "supplements": [],
       "lab_tests": [
         {
@@ -755,12 +1021,23 @@
         "B12-containing foods or fortified foods that fit the person's diet and goals",
         "Use measured B12 status, symptoms, dietary pattern, and medication context before deciding whether supplementation is worth discussing"
       ],
+      "dietary_favor": [
+        "Fish, eggs, dairy, or other B12-rich foods",
+        "Fortified plant milks, cereals, or nutritional yeast",
+        "B12-rich foods that fit your dietary pattern"
+      ],
       "avoid": [
         "Treating a FUT2, TCN2, or CUBN marker as proof of vitamin B12 deficiency",
         "Using folate or an energy formula to cover unresolved B12-related symptoms without checking the underlying cause"
       ],
       "supplements": [
         "A B12 supplement only after reviewing diet, measured status, medications, total intake, and clinician or pharmacist guidance"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Vitamin B12",
+          "reason": "Discuss diet, measured B12 status, medications, and total intake before choosing a product."
+        }
       ],
       "medication_context": [
         "Metformin and acid-suppressing medicines can be part of a B12 review; do not stop or change them from raw DNA."
@@ -924,6 +1201,12 @@
         "A balanced eating pattern built around fiber-rich foods, adequate protein, and minimally processed carbohydrate sources",
         "Regular physical activity progressed gradually to fit current ability, symptoms, and recovery"
       ],
+      "dietary_favor": [
+        "Fiber-rich foods, adequate protein, and minimally processed carbohydrates",
+        "Fiber-rich vegetables, beans, lentils, oats, and whole grains",
+        "Protein with meals",
+        "Minimally processed carbohydrates"
+      ],
       "avoid": [
         "Treating a common metabolic SNP as a diabetes diagnosis or as a reason to start medication",
         "Using a highly restrictive diet to chase a genotype without symptom, lab, medication, or clinician context"
@@ -968,6 +1251,16 @@
       "favor": [
         "A balanced, fiber-forward eating pattern and regular movement",
         "If triglycerides or liver tests are elevated, discuss reducing sugar-sweetened beverages and frequent alcohol exposure"
+      ],
+      "dietary_favor": [
+        "Fiber-forward foods and minimally processed meals",
+        "Oats, beans, vegetables, and other high-fiber foods",
+        "Fish or other protein-rich foods that fit your diet"
+      ],
+      "dietary_avoid": [
+        "Sugar-sweetened beverages",
+        "Frequent alcohol exposure",
+        "Highly refined carbohydrate-heavy meals"
       ],
       "avoid": [
         "Assuming normal blood lipids rule out fatty-liver susceptibility",
@@ -1017,6 +1310,11 @@
         "Use hunger, fullness, meal timing, sleep, and activity observations to personalize meal structure",
         "Build meals around satisfying protein- and fiber-containing foods that fit the person's goals and dietary requirements"
       ],
+      "dietary_favor": [
+        "Satisfying protein- and fiber-containing foods",
+        "Vegetables, beans, fruit, and whole grains",
+        "Protein-rich breakfasts or first meals"
+      ],
       "avoid": [
         "Treating an MC4R association as an obesity diagnosis, a willpower judgment, or a fixed calorie target",
         "Using a satiety marker to justify extreme restriction or unmonitored weight-loss medication use"
@@ -1058,6 +1356,10 @@
       "favor": [
         "Use a heart-healthy eating pattern and regular activity as general cardiovascular foundations",
         "Review measured Lp(a), ApoB, LDL-C, triglycerides, blood pressure, and family history together rather than reading one SNP in isolation"
+      ],
+      "dietary_favor": [
+        "Fish, nuts, olive oil, beans, oats, and other high-fiber foods",
+        "Vegetables, fruit, and minimally processed meals"
       ],
       "avoid": [
         "Assuming a protective-leaning LDL-pathway marker removes the need for lipid monitoring",
@@ -1109,6 +1411,16 @@
       ],
       "avoid": [
         "High-dose iodine or selenium supplements without clinical guidance"
+      ],
+      "supplement_avoid": [
+        {
+          "name": "High-dose iodine",
+          "reason": "Confirm thyroid status, iodine intake, and medication context first."
+        },
+        {
+          "name": "High-dose selenium",
+          "reason": "Review total intake and thyroid or kidney context before supplementing."
+        }
       ],
       "lab_tests": [
         {
@@ -1958,12 +2270,30 @@
         "Adequate protein and calcium-rich or fortified foods that fit the person's diet, plus weight-bearing or resistance activity when safe",
         "Track low-trauma fractures, height loss, bone pain, steroid exposure, relevant menstrual or menopause or hormone-therapy context, and family history before interpreting a bone marker"
       ],
+      "dietary_favor": [
+        "Protein-rich foods",
+        "Calcium-rich or calcium-fortified foods",
+        "Leafy greens, beans, and tofu",
+        "Vitamin-K-containing foods such as leafy greens"
+      ],
       "avoid": [
         "Using a bone SNP to diagnose osteoporosis, predict a fracture, or prescribe calcium, vitamin D, or hormone therapy",
         "High-dose calcium or vitamin D, unmonitored bone-building products, or abrupt changes to activity or medication without measured and clinical context"
       ],
       "supplements": [
         "Review calcium, vitamin D, magnesium, vitamin K, and any bone-health product against diet, kidney or stone history, medications, and measured status with a clinician or pharmacist; a genotype does not establish need or dose"
+      ],
+      "supplement_favor": [
+        {
+          "name": "Vitamin D, calcium, magnesium, or vitamin K",
+          "reason": "Discuss only when diet, measured status, kidney or stone history, and medications support it."
+        }
+      ],
+      "supplement_avoid": [
+        {
+          "name": "High-dose calcium or vitamin D",
+          "reason": "Confirm measured status, kidney or stone history, and current medicines first."
+        }
       ],
       "lab_tests": [
         {

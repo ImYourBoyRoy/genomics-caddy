@@ -78,4 +78,10 @@ describe('SectionCard semantic status styling', () => {
     expect(source).toContain('inert={isCollapsed}');
     expect(source).toContain('<div class="section-body" transition:slide');
   });
+
+  it('renders one compact follow-up at section level in Simple mode', () => {
+    expect(source).toContain('getSimpleSectionFollowUp(section.markers)');
+    expect(source).toContain('class="section-follow-up"');
+    expect(source).toContain('<span class="section-follow-up-label">Useful follow-up</span>');
+  });
 });

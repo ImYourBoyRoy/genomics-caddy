@@ -43,6 +43,9 @@
   import AgentResearchPanel from "$lib/components/agent/AgentResearchPanel.svelte";
   import ResearchPanel from "$lib/components/research/ResearchPanel.svelte";
   import ConnectionsPanel from "$lib/components/settings/ConnectionsPanel.svelte";
+  import ContextPanel from "$lib/components/context/ContextPanel.svelte";
+  import DiaryPanel from "$lib/components/context/DiaryPanel.svelte";
+  import LegalPrivacyPanel from "$lib/components/legal/LegalPrivacyPanel.svelte";
   import { dialogStore } from "$lib/utils/dialogState.svelte";
   import GlobalDialogs from "$lib/components/common/GlobalDialogs.svelte";
   import { runPageBootstrap } from "$lib/utils/pageBootstrap";
@@ -61,6 +64,7 @@
   import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
   import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
   import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
+  import { installDesktopContextMenu } from "$lib/utils/desktopContextMenu";
   import { formatGeneticSexLabel } from "$lib/utils/uiLabels";
 
   // Stylesheet imports
@@ -70,15 +74,21 @@
   import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
   import {
-    loadPersonalSafetyContext,
-    type PersonalSafetyContext,
-  } from "$lib/utils/personalSafetyContext";
+    EMPTY_PROFILE_CONTEXT,
+    loadProfileContext,
+    type ProfileContext,
+  } from "$lib/utils/profileContext";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
   let selectedSample = $state<GenomeSample | null>(null);
-  let personalSafetyContext = $state<PersonalSafetyContext>(loadPersonalSafetyContext());
-  let loadedPersonalSafetyContextKey = $state("");
+  let profileContext = $state<ProfileContext>({
+    ...EMPTY_PROFILE_CONTEXT,
+    notes: { ...EMPTY_PROFILE_CONTEXT.notes },
+    safety: { ...EMPTY_PROFILE_CONTEXT.safety },
+    exportPreferences: { ...EMPTY_PROFILE_CONTEXT.exportPreferences },
+  });
+  let loadedProfileContextKey = $state("");
   let filePath = $state("");
   let sampleNameInput = $state("");
   let appPaths = $state<AppPaths | null>(null);
@@ -101,11 +111,13 @@
   let importError = $state("");
   let importSuccess = $state("");
 
-  let activeTab = $state("report"); // report | map | discovery | browser | mcp | agent | research | ai | connections
+  let activeTab = $state("report"); // report | context | diary | map | discovery | legal | browser | mcp | agent | research | ai | connections
   const ADVANCED_TAB_KEY = "genomics_caddy_last_advanced_tab";
 
   const PRIMARY_TABS = [
     { id: "report", label: "Trait Report" },
+    { id: "context", label: "Context" },
+    { id: "diary", label: "Diary" },
     { id: "map", label: "Chromosome Map" },
     { id: "discovery", label: "Discovery" },
   ] as const;
@@ -117,15 +129,16 @@
     { id: "agent", label: "Research Agent" },
     { id: "research", label: "Vector Research" },
     { id: "ai", label: "AI Consultation" },
+    { id: "legal", label: "Legal & Privacy" },
   ] as const;
 
   let advancedActive = $derived(ADVANCED_TABS.some((t) => t.id === activeTab));
 
   $effect(() => {
     const contextKey = selectedSample?.id == null ? "none" : String(selectedSample.id);
-    if (loadedPersonalSafetyContextKey === contextKey) return;
-    loadedPersonalSafetyContextKey = contextKey;
-    personalSafetyContext = loadPersonalSafetyContext(selectedSample?.id);
+    if (loadedProfileContextKey === contextKey) return;
+    loadedProfileContextKey = contextKey;
+    profileContext = loadProfileContext(selectedSample?.id);
   });
 
   function selectTab(tab: string) {
@@ -340,6 +353,14 @@
       getReport: () => generatedReport,
     });
 
+    const uninstallDesktopContextMenu = installDesktopContextMenu({
+      hasReport: () => generatedReport !== null,
+      onReloadReport: reloadReport,
+      onOpenDiscovery: () => selectTab("discovery"),
+      onOpenAiConsultation: () => selectTab("ai"),
+      onImportGenome: handleWelcomeImport,
+    });
+
     async function init() {
       if (typeof localStorage !== "undefined") {
         aiOllamaUrl = await resolveInitialOllamaUrl();
@@ -366,6 +387,7 @@
     void startResearchEventListeners();
 
     return () => {
+      uninstallDesktopContextMenu();
       uninstallAgentUi();
       if (unlistenProgress) unlistenProgress();
       if (unlistenBootstrap) unlistenBootstrap();
@@ -684,11 +706,23 @@
               {foundMarkersCount}
               {totalMarkersChecked}
               {reportError}
-              bind:personalSafetyContext
+              {profileContext}
               {highlightRsid}
               onExploreResearch={handleExploreResearch}
               onNavigateToVariant={navigateToVariant}
               onOpenDiscovery={() => selectTab("discovery")}
+            />
+          {:else if activeTab === "context"}
+            <ContextPanel
+              {selectedSample}
+              bind:profileContext
+              onOpenDiary={() => selectTab("diary")}
+            />
+          {:else if activeTab === "diary"}
+            <DiaryPanel
+              {selectedSample}
+              bind:profileContext
+              onOpenContext={() => selectTab("context")}
             />
           {:else if activeTab === "map"}
             <GenomeMap {selectedSample} {generatedReport} focusRsid={mapFocusRsid} onNavigateToVariant={navigateToVariant} />
@@ -697,6 +731,8 @@
               {selectedSample}
               onNavigate={(rsid) => navigateToVariant(rsid, "report")}
             />
+          {:else if activeTab === "legal"}
+            <LegalPrivacyPanel {selectedSample} />
           {:else if activeTab === "connections"}
             <ConnectionsPanel
               bind:ollamaUrl={aiOllamaUrl}
@@ -736,7 +772,8 @@
             <AiAssistantPanel
               {selectedSample}
               {generatedReport}
-              bind:personalSafetyContext
+              bind:profileContext
+              onOpenContext={() => selectTab("context")}
               bind:ollamaUrl={aiOllamaUrl}
               bind:ollamaToken={aiOllamaToken}
               bind:selectedModel={aiSelectedModel}

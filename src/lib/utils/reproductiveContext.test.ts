@@ -21,6 +21,8 @@ describe('reproductive marker context routing', () => {
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Female')).toBe(false);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Male')).toBe(true);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Male')).toBe(false);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Male-like (XY chromosome pattern)')).toBe(false);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Female-like (XX chromosome pattern; no Y calls observed)')).toBe(false);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Unknown')).toBe(true);
   });
 

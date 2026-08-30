@@ -23,6 +23,7 @@ import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
 import { buildSupportResourceContext } from "./supportResourceContext";
 import { getLaypersonTranslation, getSimpleFindingTitle, type LaypersonTranslation } from "./layperson";
+import { normalizeFindingSemantics } from './findingSemantics';
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 // ---------------------------------------------------------------------------
@@ -126,6 +127,7 @@ export function buildMarkerPayload(
     evidence_tier: m.evidence_tier,
     sex_scope: m.sex_scope || undefined,
     severity: m.severity_class,
+    clinical_semantics: normalizeFindingSemantics(m),
     assertion_status: m.assertion_status,
     interpretation_allowed: m.interpretation_allowed,
     claim_boundaries: {
@@ -159,6 +161,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   } = params;
 
   const todayStr = new Date().toDateString();
+  const sharedReproductiveContext = userProfile.injectProfile ? reproductiveContext : undefined;
+  const sharedPersonalSafetyContext = userProfile.injectProfile ? personalSafetyContext : undefined;
 
   // --- Genomic JSON Context ---
   let sectionsData: any[] = [];
@@ -217,8 +221,8 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   const supportResources = buildSupportResourceContext({
     packIds: supportPackIds,
     consultationMode,
-    reproductiveContext,
-    personalSafetyContext,
+    reproductiveContext: sharedReproductiveContext,
+    personalSafetyContext: sharedPersonalSafetyContext,
     profileContext: userProfile.injectProfile
       ? [
           userProfile.goals,
@@ -247,7 +251,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         sample_name: selectedSample.name,
         chromosome_call_context: selectedSample.genetic_sex,
         profile: userProfile.injectProfile ? userProfile : undefined,
-        personal_safety_context: userProfile.injectProfile ? personalSafetyContext : undefined,
+        personal_safety_context: sharedPersonalSafetyContext,
         raw_report: generatedReport,
         support_resources: supportResources
       }
@@ -284,7 +288,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
           diagnoses: userProfile.diagnoses.trim() || undefined,
           supportiveTests: userProfile.supportiveTests.trim() || undefined
         } : undefined,
-        personal_safety_context: userProfile.injectProfile ? personalSafetyContext : undefined,
+        personal_safety_context: sharedPersonalSafetyContext,
         sections: sectionsData
       },
       support_resources: supportResources,

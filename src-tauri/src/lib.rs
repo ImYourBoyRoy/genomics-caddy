@@ -84,8 +84,10 @@ mod stream_control;
 
 use db::{DbSnpRecord, SampleInfo};
 use report::GeneratedReport;
+use std::io::Write;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
+use zip::{ZipWriter, write::SimpleFileOptions};
 
 #[derive(Clone, serde::Serialize)]
 struct ProgressPayload {
@@ -138,6 +140,69 @@ async fn save_report_json(content: String, default_filename: String) -> Result<b
     } else {
         Ok(false)
     }
+}
+
+#[derive(serde::Deserialize)]
+struct ExportBundleFile {
+    filename: String,
+    content: String,
+}
+
+#[tauri::command]
+async fn save_report_bundle(
+    files: Vec<ExportBundleFile>,
+    default_filename: String,
+) -> Result<bool, String> {
+    if files.is_empty() {
+        return Err("Cannot export an empty report bundle".into());
+    }
+
+    let file = rfd::FileDialog::new()
+        .set_file_name(&default_filename)
+        .add_filter("Genomics Caddy bundle", &["zip"])
+        .save_file();
+
+    let Some(path) = file else {
+        return Ok(false);
+    };
+
+    let temp_name = format!(
+        ".{}.{}.tmp",
+        path.file_name().and_then(|name| name.to_str()).unwrap_or("genomics_bundle"),
+        std::process::id(),
+    );
+    let temp_path = path.with_file_name(temp_name);
+
+    let write_result = (|| -> Result<(), String> {
+        let file = std::fs::File::create(&temp_path)
+            .map_err(|e| format!("Failed to create bundle: {e}"))?;
+        let mut archive = ZipWriter::new(file);
+        for entry in files {
+            let name = entry.filename.trim();
+            if name.is_empty() || name.contains('/') || name.contains('\\') || name == "." || name == ".." {
+                return Err("Bundle contains an invalid file name".into());
+            }
+            archive
+                .start_file(name, SimpleFileOptions::default())
+                .map_err(|e| format!("Failed to create bundle entry: {e}"))?;
+            archive
+                .write_all(entry.content.as_bytes())
+                .map_err(|e| format!("Failed to write bundle entry: {e}"))?;
+        }
+        archive
+            .finish()
+            .map_err(|e| format!("Failed to finalize bundle: {e}"))?;
+        std::fs::rename(&temp_path, &path)
+            .map_err(|e| format!("Failed to finalize bundle path: {e}"))?;
+        Ok(())
+    })();
+
+    if write_result.is_err() {
+        let _ = std::fs::remove_file(&temp_path);
+    } else {
+        config::register_export_path(&path.to_string_lossy());
+    }
+    write_result.map(|()| true)
 }
 
 #[tauri::command]
@@ -1958,6 +2023,7 @@ pub fn run() {
             select_file,
             select_directory,
             save_report_json,
+            save_report_bundle,
             get_app_bootstrap,
             get_app_paths,
             get_all_marker_packs,

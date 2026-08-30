@@ -5,6 +5,12 @@
   import { getEffectAllele, getEffectCount } from '../../utils/genotype';
   import { getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
   import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';
+  import {
+    clinicalStateLabel,
+    inheritanceModelLabel,
+    interpretationClassLabel,
+    normalizeFindingSemantics,
+  } from '../../utils/findingSemantics';
   import SourcesList from './SourcesList.svelte';
 
   interface Props {
@@ -51,6 +57,8 @@
         <th scope="col">Finding</th>
         <th scope="col">DNA result</th>
         <th scope="col">Evidence</th>
+        <th scope="col">Interpretation</th>
+        <th scope="col">Inheritance</th>
         <th scope="col">Applicability</th>
         <th scope="col">Clinical status</th>
         <th scope="col">Next helpful step</th>
@@ -63,6 +71,7 @@
         {@const tier = getTierInfo(marker.evidence_tier)}
         {@const effectCount = getEffectCount(marker)}
         {@const effectAllele = getEffectAllele(marker)}
+        {@const semantics = normalizeFindingSemantics(marker)}
         <tr class:clinical-row-highlight={isHighlighted(marker)}>
           <td data-label="Finding">
             <span class="clinical-mobile-label">Finding</span>
@@ -86,6 +95,17 @@
             <strong>{tier.label}</strong>
             <span class="clinical-cell-note">{tier.confidenceLabel}</span>
           </td>
+          <td data-label="Interpretation">
+            <span class="clinical-mobile-label">Interpretation</span>
+            {interpretationClassLabel(semantics.interpretation_class)}
+            {#if semantics.condition_label}
+              <span class="clinical-cell-note">{semantics.condition_label}</span>
+            {/if}
+          </td>
+          <td data-label="Inheritance">
+            <span class="clinical-mobile-label">Inheritance</span>
+            {inheritanceModelLabel(semantics.inheritance_model)}
+          </td>
           <td data-label="Applicability">
             <span class="clinical-mobile-label">Applicability</span>
             {marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}
@@ -108,6 +128,12 @@
                 <div><dt>Effect allele / count</dt><dd>{effectAllele} / {effectCount}</dd></div>
                 <div><dt>Assertion</dt><dd>{marker.assertion_status}</dd></div>
                 <div><dt>Clinical confirmation</dt><dd>{marker.clinical_confirmation_required ? 'Discuss confirmation' : 'Not specifically required by this marker'}</dd></div>
+                {#if semantics.condition_label}
+                  <div><dt>Condition / topic</dt><dd>{semantics.condition_label}</dd></div>
+                {/if}
+                <div><dt>Interpretation class</dt><dd>{interpretationClassLabel(semantics.interpretation_class)}</dd></div>
+                <div><dt>Inheritance model</dt><dd>{inheritanceModelLabel(semantics.inheritance_model)}</dd></div>
+                <div><dt>Clinical state</dt><dd>{clinicalStateLabel(semantics.clinical_state)}</dd></div>
                 <div><dt>Interpretation</dt><dd>{marker.interpretation}</dd></div>
                 <div><dt>Claim boundary</dt><dd>{marker.do_not_claim.join('; ') || marker.raw_dna_limitation || 'Do not treat as diagnostic.'}</dd></div>
               </dl>
@@ -267,13 +293,20 @@
     border: 0;
   }
 
-  @media (max-width: 1100px) {
+  /* The sidebar leaves a narrow clinical reading surface well before the
+     application viewport itself becomes tablet-sized. Stack the table while
+     there is still room for comfortable labels and values. */
+  @media (max-width: 1400px) {
     .clinical-table-wrap {
       overflow-x: visible;
     }
 
     .clinical-findings-table {
+      display: block;
+      width: 100%;
       min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
     }
 
     .clinical-findings-table,
@@ -298,10 +331,16 @@
     .clinical-findings-table tbody {
       display: grid;
       gap: 0.75rem;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       padding: 0.75rem;
     }
 
     .clinical-findings-table tbody tr {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       border: 1px solid var(--border-color);
       border-radius: 0.6rem;
       background: var(--surface-raised);
@@ -317,6 +356,8 @@
       display: grid;
       grid-template-columns: minmax(7rem, 0.45fr) minmax(0, 1fr);
       gap: 0.65rem;
+      min-width: 0;
+      box-sizing: border-box;
       align-items: start;
       padding: 0.65rem 0.75rem;
       border-top: 1px solid var(--border-color);

@@ -1,5 +1,7 @@
 <!-- ./src/lib/components/import/GenomeImportPanel.svelte -->
 <script lang="ts">
+  import Tooltip from '../common/Tooltip.svelte';
+
   /*
   Module Docstring:
   Purpose: DNA ingestion panel for selecting and processing raw genomic data.
@@ -45,7 +47,14 @@
     <div class="form-group">
       <label for="file-path">File Path (.txt or .zip)</label>
       <div class="file-input-wrapper">
-        <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled} />
+        <Tooltip
+          label="Selected DNA file"
+          description={filePath || 'No genome file selected yet.'}
+          interactiveChildren={true}
+          interactiveClickBehavior="dismiss"
+        >
+          <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled} aria-label={filePath || 'No genome file selected'} />
+        </Tooltip>
         <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={disabled}>Browse...</button>
       </div>
     </div>

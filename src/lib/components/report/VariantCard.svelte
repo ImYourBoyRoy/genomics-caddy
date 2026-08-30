@@ -8,7 +8,13 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
-  import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
+  import { getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle } from '../../utils/layperson';
+  import {
+    clinicalStateLabel,
+    inheritanceModelLabel,
+    interpretationClassLabel,
+    normalizeFindingSemantics,
+  } from '../../utils/findingSemantics';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -17,16 +23,25 @@
     onExploreResearch?: (rsid: string) => void;
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
+    relatedMarkerCount?: number;
   }
 
-  let { marker, viewMode, onExploreResearch, highlightRsid = "", onNavigateToVariant }: Props = $props();
+  let {
+    marker,
+    viewMode,
+    onExploreResearch,
+    highlightRsid = "",
+    onNavigateToVariant,
+    relatedMarkerCount = 1,
+  }: Props = $props();
 
   let effectCount = $derived(getEffectCount(marker));
   let effectAllele = $derived(getEffectAllele(marker));
   let severity = $derived(getSeverityInfo(marker.severity_class as SeverityClass));
   let laypersonTranslation = $derived(getLaypersonTranslation(marker));
-  let simpleFindingTitle = $derived(getSimpleFindingTitle(laypersonTranslation.simpleImpact));
-  let compactSimpleMeaning = $derived(getCompactSimpleMeaning(laypersonTranslation));
+  let simpleCopy = $derived(getSimpleFindingCopy(marker, laypersonTranslation));
+  let simpleFindingTitle = $derived(simpleCopy.plain_title || getSimpleFindingTitle(laypersonTranslation.simpleImpact));
+  let findingSemantics = $derived(normalizeFindingSemantics(marker));
 
   /** True when the variant was actually detected (not benign / no_data) */
   let isActiveFindings = $derived(
@@ -66,10 +81,6 @@
     const exp = Math.floor(Math.log10(p));
     const base = p / Math.pow(10, exp);
     return `${base.toFixed(1)}×10${exp < 0 ? '⁻' : ''}${Math.abs(exp)}`;
-  }
-
-  function nextHelpfulStep(): string {
-    return getSimpleNextStep(marker);
   }
 
 </script>
@@ -124,6 +135,9 @@
           <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
           {severity.plainLabel}
         </span>
+        {#if relatedMarkerCount > 1}
+          <span class="related-finding-count">{relatedMarkerCount} related DNA findings</span>
+        {/if}
       {/if}
     </div>
   </div>
@@ -254,14 +268,20 @@
       {/if}
 
       {#if viewMode === 'simple'}
-        <div class="simple-meaning-block">
-          <strong>What this might mean for you:</strong>
-          <span class="layperson-text">{compactSimpleMeaning}</span>
-        </div>
-
-        <div class="simple-next-step">
-          <strong>Next helpful step:</strong>
-          <span>{nextHelpfulStep()}</span>
+        <div class="simple-finding-summary">
+          <div class="simple-copy-field simple-copy-signal">
+            <span class="simple-copy-label">Signal</span>
+            <span class="layperson-text">{simpleCopy.signal}</span>
+          </div>
+          <div class="simple-copy-field">
+            <span class="simple-copy-label">Why it matters</span>
+            <span class="layperson-text">{simpleCopy.why_it_matters}</span>
+          </div>
+          <span class="simple-copy-evidence">{simpleCopy.evidence_label}</span>
+          <div class="simple-next-step">
+            <strong>Review</strong>
+            <span>{simpleCopy.review_action}</span>
+          </div>
         </div>
 
         <!-- Secondary catalog context remains available in compact disclosures. -->
@@ -276,6 +296,12 @@
               <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
               <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
               <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
+              {#if findingSemantics.condition_label}
+                <div><dt>Condition / topic</dt><dd>{findingSemantics.condition_label}</dd></div>
+              {/if}
+              <div><dt>Interpretation</dt><dd>{interpretationClassLabel(findingSemantics.interpretation_class)}</dd></div>
+              <div><dt>Inheritance</dt><dd>{inheritanceModelLabel(findingSemantics.inheritance_model)}</dd></div>
+              <div><dt>Clinical state</dt><dd>{clinicalStateLabel(findingSemantics.clinical_state)}</dd></div>
               <div><dt>Claim boundary</dt><dd>{getClaimFrame(marker.evidence_tier, marker.clinical_confirmation_required === true, marker.interpretation_allowed)}</dd></div>
               {#if marker.clinvar_significance}
                 <div>
@@ -586,23 +612,64 @@
   }
   .gwas-count { opacity: 0.7; font-size: 0.7rem; margin-left: 0.3rem; }
 
-  .simple-meaning-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+  .simple-finding-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.55rem 1rem;
     padding: 0.15rem 0;
     color: var(--text-primary);
     font-size: 0.82rem;
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
-  .simple-meaning-block strong {
-    font-size: 0.76rem;
-    letter-spacing: 0.01em;
+  .simple-copy-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.18rem;
   }
 
-  .simple-meaning-block .layperson-text {
+  .simple-copy-label,
+  .simple-copy-evidence {
+    color: var(--status-accent-text);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .simple-copy-field .layperson-text {
     color: var(--text-secondary);
+  }
+
+  .simple-copy-evidence {
+    align-self: start;
+    color: var(--text-muted);
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+
+  .simple-next-step {
+    display: flex;
+    min-width: 0;
+    grid-column: 1 / -1;
+    gap: 0.35rem;
+    padding: 0.48rem 0.6rem;
+    border-left: 2px solid var(--status-success-border);
+    border-radius: 0.25rem;
+    background: var(--status-success-bg);
+    color: var(--text-secondary);
+  }
+
+  .simple-next-step strong {
+    flex: 0 0 auto;
+    color: var(--status-success-text);
+  }
+
+  .simple-next-step span {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .genotype-info-icon {
@@ -625,19 +692,17 @@
     font-size: 0.74rem;
   }
 
-  .simple-next-step {
-    display: block;
-    padding: 0.45rem 0.6rem;
-    border-radius: 0.5rem;
-    background: var(--accent-soft);
+  .related-finding-count {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.18rem 0.42rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
     color: var(--text-secondary);
-    font-size: 0.78rem;
-    line-height: 1.4;
-  }
-
-  .simple-next-step strong {
-    color: var(--text-primary);
-    margin-right: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   .simple-details {
@@ -741,5 +806,15 @@
 
   :global(.simple-card-disclosures > .marker-sources-details[open] summary) {
     margin-bottom: 0.6rem;
+  }
+
+  @media (max-width: 760px) {
+    .simple-finding-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .simple-next-step {
+      grid-column: auto;
+    }
   }
 </style>

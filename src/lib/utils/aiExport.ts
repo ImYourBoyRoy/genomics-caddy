@@ -5,6 +5,12 @@ import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { populatedCycleDiaryFields } from "./cycleDiary";
 import { populatedReproductiveIntake } from "./reproductiveIntake";
 import { formatGeneticSexLabel } from "./uiLabels";
+import {
+  clinicalStateLabel,
+  inheritanceModelLabel,
+  interpretationClassLabel,
+  normalizeFindingSemantics,
+} from "./findingSemantics";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -124,9 +130,14 @@ export function buildClinicalHandoffMarkdown(
       for (const m of sec.markers) {
         if (m.effect_count > 0 && (m.clinical_confirmation_required || m.severity_class === "high_risk" || m.severity_class === "moderate_risk")) {
           clinicalCount++;
+          const semantics = normalizeFindingSemantics(m);
           md += `### ⚠️ ${m.gene} (${m.rsid})\n`;
           md += `* **Genotype:** ${m.user_genotype} (Effect allele: ${m.effect_allele}, count: ${m.effect_count})\n`;
           md += `* **Severity Rating:** ${m.severity_class.toUpperCase().replace("_", " ")}\n`;
+          md += `* **Interpretation Class:** ${interpretationClassLabel(semantics.interpretation_class)}\n`;
+          md += `* **Inheritance Model:** ${inheritanceModelLabel(semantics.inheritance_model)}\n`;
+          md += `* **Clinical State:** ${clinicalStateLabel(semantics.clinical_state)}\n`;
+          if (semantics.condition_label) md += `* **Condition / Topic:** ${semantics.condition_label}\n`;
           md += `* **Clinical Confirmation Required:** ${m.clinical_confirmation_required ? "Yes" : "No"}\n`;
           md += `* **Layperson Summary:** ${m.impact || "N/A"}\n`;
           md += `* **Medical Context:** ${m.interpretation || "N/A"}\n\n`;

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { deriveActionablePlan } from './actionabilityEngine';
+import {
+  buildLabRequestListText,
+  canonicalizeLabName,
+  deriveActionablePlan,
+  deriveAllergySensitivityGuidance,
+  priorityMetadataForMarker,
+  type LabTest,
+} from './actionabilityEngine';
 import type { GeneratedReport, EvaluatedMarker } from '../types/genomics';
 import type { PersonalSafetyContext } from './personalSafetyContext';
 
@@ -63,7 +70,7 @@ function report(markers: EvaluatedMarker[]): GeneratedReport {
 
 describe('actionability engine safety policy', () => {
   it('keeps the dashboard action queue bounded while retaining full report data', () => {
-    const markers = Array.from({ length: 7 }, (_, index) => marker({
+    const markers = Array.from({ length: 11 }, (_, index) => marker({
       rsid: `rs-queue-${index}`,
       gene: `GENE${index}`,
       link_id: `test:queue:${index}`,
@@ -72,18 +79,238 @@ describe('actionability engine safety policy', () => {
 
     const plan = deriveActionablePlan(report(markers));
 
-    expect(plan.topFindings).toHaveLength(5);
+    expect(plan.topFindings).toHaveLength(9);
+  });
+
+  it('removes harmless cancer-language markers from the concern queue', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs-harmless-repair',
+      gene: 'BRCA2',
+      link_id: 'test:harmless-repair',
+      variant_name: 'Harmless DNA repair variant',
+      impact: 'Benign DNA repair change',
+      interpretation: 'This does not indicate a classic hereditary cancer risk.',
+      severity_class: 'moderate_risk',
+      effect_count: 1,
+    })]));
+
+    expect(plan.topFindings).toHaveLength(0);
+  });
+
+  it('groups related clinical medication components into one queue topic', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs-cyp2c9-a',
+        gene: 'CYP2C9',
+        link_id: 'test:cyp2c9:a',
+        variant_name: 'Clinical PGx allele component',
+        clinical_confirmation_required: true,
+        severity_class: 'moderate_risk',
+      }),
+      marker({
+        rsid: 'rs-cyp2c9-b',
+        gene: 'CYP2C9',
+        link_id: 'test:cyp2c9:b',
+        variant_name: 'Clinical PGx allele component',
+        clinical_confirmation_required: true,
+        severity_class: 'moderate_risk',
+      }),
+    ]));
+
+    expect(plan.topFindings).toHaveLength(1);
+    expect(plan.topFindings[0]?.priority_group).toBe('clinical-medication:CYP2C9');
+    expect(plan.topFindings[0]?.related_marker_count).toBe(2);
+  });
+
+  it('groups the same locus across health areas into one canonical queue finding', () => {
+    const base = report([]);
+    base.sections = [
+      {
+        name: 'Cardiovascular',
+        markers: [marker({
+          rsid: 'rs-shared-signal',
+          gene: 'SHARED1',
+          link_id: 'test:shared:cardio',
+          variant_name: 'Shared cardiovascular signal',
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+      {
+        name: 'Nutrients',
+        markers: [marker({
+          rsid: 'rs-shared-signal',
+          gene: 'SHARED1',
+          link_id: 'test:shared:nutrients',
+          variant_name: 'Shared nutrient signal',
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+    ];
+
+    const plan = deriveActionablePlan(base);
+
+    expect(plan.topFindings).toHaveLength(1);
+    expect(plan.topFindings[0]?.finding_id).toBe('finding-rsid-rs-shared-signal');
+    expect(plan.topFindings[0]?.source_marker_ids).toEqual([
+      'test:shared:cardio',
+      'test:shared:nutrients',
+    ]);
+    expect(plan.topFindings[0]?.topic_ids).toEqual(['cardiovascular', 'nutrients']);
+    expect(plan.topFindings[0]?.health_area_labels).toEqual(['Cardiovascular', 'Nutrients']);
+    expect(plan.topFindings[0]?.related_marker_count).toBe(2);
+  });
+
+  it('does not turn unknown-only source rows into a priority concern', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs-unknown-only',
+      link_id: 'test:unknown-only',
+      user_genotype: '--',
+      assertion_status: 'NoData',
+      interpretation_allowed: true,
+      severity_class: 'moderate_risk',
+      effect_count: 1,
+    })]));
+
+    expect(plan.topFindings).toHaveLength(0);
+  });
+
+  it('retains mixed call state when a canonical finding has one known and one unknown source', () => {
+    const base = report([]);
+    base.sections = [
+      {
+        name: 'Cardiovascular',
+        markers: [marker({
+          rsid: 'rs-mixed-signal',
+          link_id: 'test:mixed:known',
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+      {
+        name: 'Nutrients',
+        markers: [marker({
+          rsid: 'rs-mixed-signal',
+          link_id: 'test:mixed:unknown',
+          user_genotype: '--',
+          assertion_status: 'NotInRawFile',
+          interpretation_allowed: false,
+          severity_class: 'no_data',
+          effect_count: 0,
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+    ];
+
+    const plan = deriveActionablePlan(base);
+
+    expect(plan.topFindings[0]?.call_state).toBe('mixed');
+    expect(plan.topFindings[0]?.source_marker_ids).toHaveLength(2);
+  });
+
+  it('ranks concrete follow-up routes above equally severe generic associations', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs-generic-moderate',
+        gene: 'GENERIC1',
+        link_id: 'test:generic-moderate',
+      }),
+      marker({
+        rsid: 'rs1801133',
+        gene: 'MTHFR',
+        link_id: 'test:mthfr-follow-up',
+        confirm_with: ['Homocysteine (plasma)'],
+      }),
+    ]));
+
+    expect(plan.topFindings[0]?.gene).toBe('MTHFR');
+  });
+
+  it('keeps severity ordering ahead of concrete follow-up bonuses', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs-high',
+        gene: 'HIGH1',
+        link_id: 'test:high',
+        severity_class: 'high_risk',
+      }),
+      marker({
+        rsid: 'rs-moderate',
+        gene: 'MODERATE1',
+        link_id: 'test:moderate',
+        severity_class: 'moderate_risk',
+        confirm_with: ['CBC', 'Ferritin', 'Transferrin saturation'],
+      }),
+    ]));
+
+    expect(plan.topFindings[0]?.severity_class).toBe('high_risk');
+  });
+
+  it('ranks a concrete medication safety route above a high-severity research signal', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs-vague-high',
+        gene: 'RESEARCH1',
+        link_id: 'test:vague-high',
+        variant_name: 'Research-only association',
+        evidence_tier: 'D_research_only',
+        effect_direction: 'context_dependent',
+        severity_class: 'high_risk',
+      }),
+      marker({
+        rsid: 'rs-medication-safety',
+        gene: 'CYP2C9',
+        link_id: 'test:medication-safety',
+        variant_name: 'Drug-specific clinical PGx allele component',
+        interpretation: 'A medication dose component requiring clinical confirmation.',
+        severity_class: 'moderate_risk',
+        clinical_confirmation_required: true,
+      }),
+    ]));
+
+    expect(plan.topFindings[0]?.gene).toBe('CYP2C9');
+    expect(plan.topFindings[0]?.priority_reason).toBe('Check before exposure');
+    expect(plan.topFindings[0]?.priority_urgency).toBe('safety');
+    expect(plan.topFindings[0]?.priority_tone).toBe('danger');
+    expect(plan.topFindings[1]?.priority_reason).toBe('Worth discussing');
+    expect(plan.topFindings[1]?.priority_tone).toBe('warning');
+  });
+
+  it('labels lower-evidence context without turning it into a danger state', () => {
+    const priority = priorityMetadataForMarker(marker({
+      severity_class: 'context_dependent',
+      evidence_tier: 'D_research_only',
+      effect_direction: 'context_dependent',
+    }));
+
+    expect(priority.reason).toBe('Research context');
+    expect(priority.urgency).toBe('research');
+    expect(priority.tone).toBe('info');
+  });
+
+  it('describes protective context as potentially favorable rather than guaranteed benefit', () => {
+    const priority = priorityMetadataForMarker(marker({
+      severity_class: 'protective',
+      effect_direction: 'protective',
+    }));
+
+    expect(priority.reason).toBe('Potentially favorable context');
+    expect(priority.urgency).toBe('favorable');
+    expect(priority.tone).toBe('positive');
   });
 
   it('qualifies diet guidance and never revives the MTHFR folic-acid avoidance myth', () => {
     const plan = deriveActionablePlan(report([marker({})]));
-    expect(plan.diet.favor.some((item) => item.startsWith('Consider only if symptoms'))).toBe(true);
+    expect(plan.diet.favor).toContain('Folate-rich foods (leafy greens, beans, eggs)');
+    expect(plan.advancedGuidance.some((item) => item.startsWith('Consider only if symptoms'))).toBe(true);
     expect(plan.diet.avoid.join(' ')).not.toContain('Folic acid fortified foods');
     expect(plan.supplements).toHaveLength(0);
     expect(plan.safetyNotes.some((note) => note.includes('More markers increase coverage'))).toBe(true);
   });
 
-  it('qualifies iron avoidance as clinical-confirmation guidance', () => {
+  it('keeps food limits concise while preserving clinical-confirmation guidance for advanced consumers', () => {
     const plan = deriveActionablePlan(report([
       marker({
         rsid: 'rs1800562',
@@ -92,8 +319,95 @@ describe('actionability engine safety policy', () => {
         severity_class: 'high_risk',
       }),
     ]));
-    expect(plan.diet.avoid.some((item) => item.startsWith('Do not make this change from raw DNA'))).toBe(true);
-    expect(plan.supplements.some((item) => item.reason.includes('Discuss with a clinician or pharmacist'))).toBe(true);
+    expect(plan.diet.avoid).toContain('Red meat');
+    expect(plan.diet.avoid.join(' ')).not.toContain('raw DNA');
+    expect(plan.advancedGuidance.some((item) => item.startsWith('Do not make this change from raw DNA'))).toBe(true);
+    expect(plan.supplementAvoid.some((item) => item.name === 'Iron-containing supplements')).toBe(true);
+  });
+
+  it('retains a broad DNA-linked food and supplement menu without mixing in generic warnings', () => {
+    const plan = deriveActionablePlan(report([
+      marker({ gene: 'APOE', rsid: 'rs429358', interpretation: 'APOE4 lipid context; not diagnostic.' }),
+      marker({ gene: 'FADS1', rsid: 'rs174547', interpretation: 'FADS1 fatty-acid conversion context; not diagnostic.' }),
+      marker({ gene: 'LCT/MCM6', rsid: 'rs4988235', interpretation: 'Lactase persistence context; not a milk-allergy diagnosis.' }),
+      marker({ gene: 'VDR', rsid: 'rs2228570', interpretation: 'Vitamin-D pathway context; not diagnostic.' }),
+      marker({ gene: 'COMT', rsid: 'rs4680', interpretation: 'slow COMT catecholamine context; not diagnostic.' }),
+    ]));
+
+    expect(plan.diet.favor.length).toBeGreaterThanOrEqual(12);
+    expect(plan.diet.favor.join(' ')).toMatch(/fish|walnuts|olive oil|beans|vitamin|magnesium/i);
+    expect(plan.diet.avoid.join(' ')).toMatch(/red meat|saturated|caffeine|coconut/i);
+    expect(plan.supplements.some((item) => item.name === 'Omega-3 (fish or algae oil)')).toBe(true);
+    expect(plan.supplements.some((item) => item.name === 'DHA/EPA (algae or fish oil)')).toBe(true);
+    expect(plan.supplements.some((item) => item.name === 'Magnesium')).toBe(true);
+    expect(plan.supplementAvoid.some((item) => /megadose vitamin d or calcium/i.test(item.name))).toBe(true);
+    expect(plan.diet.favor.join(' ')).not.toMatch(/diagnos|raw DNA|genotype|SNP/i);
+    expect(plan.diet.avoid.join(' ')).not.toMatch(/diagnos|raw DNA|genotype|SNP/i);
+  });
+
+  it('retains provenance for DNA-linked foods and supplements while keeping legacy labels available', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        gene: 'APOE',
+        rsid: 'rs429358',
+        interpretation: 'APOE4 lipid context.',
+      }),
+      marker({
+        gene: 'FADS1',
+        rsid: 'rs174547',
+        interpretation: 'FADS1 fatty-acid conversion context.',
+      }),
+    ]));
+
+    const fish = plan.diet.favorItems.find((item) => item.name.includes('Fatty fish'));
+    const omega3 = plan.supplements.find((item) => item.basis_rule_ids.includes('fads_fatty_acids'));
+
+    expect(fish).toMatchObject({
+      category: 'food',
+      basis_rule_ids: ['apoe_lipid'],
+      basis_topic_ids: ['apoe_lipid'],
+      basis_marker_ids: ['rs429358'],
+      basis_genes: ['APOE'],
+      evidence_level: 'Moderate evidence',
+    });
+    expect(fish?.why_it_appears).toContain('APOE');
+    expect(fish?.when_relevant).toContain('symptoms');
+    expect(omega3?.category).toBe('supplement');
+    expect(omega3?.basis_rule_ids).toContain('fads_fatty_acids');
+    expect(omega3?.basis_marker_ids).toContain('rs174547');
+    expect(plan.diet.favor).toContain(fish?.name);
+    expect(plan.supplements.map((item) => item.name)).toContain(omega3?.name);
+  });
+
+  it('retains matched marker provenance for DNA-linked activity recommendations', () => {
+    const plan = deriveActionablePlan({
+      ...report([]),
+      sections: [{
+        name: 'Muscle Performance & Recovery',
+        markers: [marker({
+          link_id: 'test:actn3',
+          rsid: 'rs1815739',
+          gene: 'ACTN3',
+          variant_name: 'ACTN3 performance context',
+          interpretation: 'ACTN3 muscle-performance context.',
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      }],
+    });
+
+    const domain = plan.activity.relevantDomains.find((item) => item.id === 'muscle_performance_recovery');
+    const buildItem = plan.activity.recommendationItems.find((item) =>
+      item.kind === 'build' && item.basis_topic_ids.includes('muscle_performance_recovery'));
+
+    expect(domain?.matched_marker_ids).toEqual(['test:actn3']);
+    expect(domain?.matched_genes).toEqual(['ACTN3']);
+    expect(buildItem).toMatchObject({
+      category: 'activity',
+      basis_topic_ids: ['muscle_performance_recovery'],
+      basis_marker_ids: ['test:actn3'],
+      basis_genes: ['ACTN3'],
+    });
   });
 
   it('routes B12 and vitamin-D pathway markers to measured status and supplement safety', () => {
@@ -113,11 +427,42 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name === 'Serum or plasma vitamin B12')).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('Methylmalonic acid'))).toBe(true);
     expect(plan.labTests.some((test) => test.name === '25-hydroxyvitamin D [25(OH)D]')).toBe(true);
-    expect(plan.diet.avoid.some((item) => item.includes('vitamin B12 deficiency'))).toBe(true);
+    expect(plan.diet.avoid.join(' ')).not.toContain('vitamin B12 deficiency');
+    expect(plan.advancedGuidance.some((item) => item.includes('vitamin B12 deficiency'))).toBe(true);
     expect(plan.supplementSafety.relevantRules.map((rule) => rule.id)).toEqual(expect.arrayContaining([
       'b12_status',
       'vitamin_d',
     ]));
+  });
+
+  it('canonicalizes common lab aliases and keeps the request list concise', () => {
+    const a1c = canonicalizeLabName('A1c');
+    const hba1c = canonicalizeLabName('HbA1c');
+    expect(a1c.canonical_id).toBe(hba1c.canonical_id);
+    expect(a1c.name).toBe('HbA1c');
+    expect(a1c.purpose).toContain('blood-glucose');
+
+    const lab = (name: string, reason: string, category = 'Metabolic'): LabTest => ({
+      ...canonicalizeLabName(name),
+      reason,
+      reason_topics: [reason],
+      basis_rule_ids: ['test_rule'],
+      basis_marker_ids: ['rs-test'],
+      basis_genes: ['TEST1'],
+      urgency: 'consider',
+      tier: 'discuss',
+      requires_counselor: false,
+      category,
+    });
+    const request = buildLabRequestListText([
+      lab('A1c', 'DNA-linked glucose pathway'),
+      lab('HbA1c', 'Duplicate glucose pathway'),
+      lab('ApoB', 'DNA-linked lipid pathway', 'Heart & lipids'),
+    ]);
+
+    expect(request).toContain('HbA1c — DNA-linked glucose pathway');
+    expect(request).not.toContain('Duplicate glucose pathway');
+    expect(request).toContain('ApoB (Apolipoprotein B) — DNA-linked lipid pathway');
   });
 
   it('routes alcohol and caffeine response markers to exposure-aware guardrails', () => {
@@ -134,9 +479,11 @@ describe('actionability engine safety policy', () => {
       }),
     ]));
     const avoidText = plan.diet.avoid.join(' ');
-    expect(avoidText).toContain('heavier drinking');
+    expect(avoidText).toContain('Alcohol when it causes adverse symptoms');
     expect(avoidText).toContain('High-dose or late-day caffeine');
-    expect(avoidText).toContain('universal caffeine limit');
+    expect(avoidText).not.toContain('universal caffeine limit');
+    expect(plan.advancedGuidance.join(' ')).toContain('heavier drinking');
+    expect(plan.advancedGuidance.join(' ')).toContain('universal caffeine limit');
     expect(plan.diet.favor.join(' ')).toContain('Alcohol-free options');
   });
 
@@ -174,8 +521,9 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name === 'Ferritin and transferrin saturation')).toBe(true);
     expect(plan.supplements.some((item) => item.reason.includes('Iron supplementation only'))).toBe(true);
     expect(plan.supplementSafety.relevantRules.map((rule) => rule.id)).toContain('iron_status');
-    expect(plan.diet.favor.join(' ')).toContain('hunger, fullness');
-    expect(plan.diet.avoid.join(' ')).toContain('fixed calorie target');
+    expect(plan.diet.favor.join(' ')).toMatch(/fiber-rich foods/i);
+    expect(plan.diet.avoid.join(' ')).not.toContain('fixed calorie target');
+    expect(plan.advancedGuidance.join(' ')).toContain('fixed calorie target');
   });
 
   it('routes bone, inflammatory-bowel, and celiac markers to measured clinical follow-up', () => {
@@ -203,7 +551,8 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('DXA/BMD'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('fecal calprotectin'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('tTG-IgA'))).toBe(true);
-    expect(dietAvoidance).toContain('lifelong gluten avoidance');
+    expect(dietAvoidance).not.toContain('lifelong gluten avoidance');
+    expect(plan.advancedGuidance.join(' ')).toContain('lifelong gluten avoidance');
     expect(plan.supplements.some((item) => item.name.includes('bone-health'))).toBe(true);
     expect(medicationText).toContain('raw DNA');
   });
@@ -235,8 +584,9 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('bone-fragility gene-panel'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('ALPL sequencing'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('ALDOB sequencing'))).toBe(true);
-    expect(avoidance).toContain('fructose challenge');
-    expect(avoidance).toContain('osteogenesis imperfecta');
+    expect(avoidance).toBe('');
+    expect(plan.advancedGuidance.join(' ')).toContain('fructose challenge');
+    expect(plan.advancedGuidance.join(' ')).toContain('osteogenesis imperfecta');
     expect(medicationText).toContain('consumer-array panel');
     expect(medicationText).not.toContain('Start enzyme');
   });
@@ -311,11 +661,12 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('transferrin saturation'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('Ceruloplasmin'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('pain-neuropathy sequencing'))).toBe(true);
-    expect(avoidance).toContain('low-histamine diet');
-    expect(avoidance).toContain('diagnose or exclude Wilson disease');
-    expect(avoidance).toContain('megadose vitamins');
+    expect(avoidance).toBe('');
+    expect(plan.advancedGuidance.join(' ')).toContain('low-histamine diet');
+    expect(plan.advancedGuidance.join(' ')).toContain('diagnose or exclude Wilson disease');
+    expect(plan.advancedGuidance.join(' ')).toContain('megadose vitamins');
     expect(avoidance).not.toContain('Do not avoid solely');
-    expect(avoidance).toContain('Do not make this change from raw DNA');
+    expect(plan.advancedGuidance.join(' ')).toContain('Do not make this change from raw DNA');
     expect(medicationText).toContain('raw DNA');
     expect(medicationText).not.toContain('select therapy');
   });
@@ -362,8 +713,9 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('MUTYH sequencing'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('APC testing'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('HOXB13 testing'))).toBe(true);
-    expect(avoidance).toContain('diagnose amyloidosis');
-    expect(avoidance).toContain('classic familial adenomatous polyposis');
+    expect(avoidance).toBe('');
+    expect(plan.advancedGuidance.join(' ')).toContain('diagnose amyloidosis');
+    expect(plan.advancedGuidance.join(' ')).toContain('classic familial adenomatous polyposis');
     expect(medicationText).toContain('raw DNA');
     expect(medicationText).not.toContain('select cardiac');
   });
@@ -393,9 +745,10 @@ describe('actionability engine safety policy', () => {
 
     expect(plan.labTests.some((test) => test.name.includes('HbA1c'))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('transvaginal ultrasound'))).toBe(true);
-    expect(avoidance).toContain('estrogen spike');
-    expect(avoidance).toContain('diagnose PCOS');
-    expect(avoidance).toContain('diagnose or exclude endometriosis');
+    expect(avoidance).toBe('');
+    expect(plan.advancedGuidance.join(' ')).toContain('estrogen spike');
+    expect(plan.advancedGuidance.join(' ')).toContain('diagnose PCOS');
+    expect(plan.advancedGuidance.join(' ')).toContain('diagnose or exclude endometriosis');
     expect(medicationText).toContain('exact contraceptive');
     expect(medicationText).toContain('raw DNA');
   });
@@ -515,6 +868,16 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).toContain('raw DNA');
     expect(medicationText).not.toContain('Start clopidogrel');
     expect(medicationText).not.toContain('Change warfarin dose');
+
+    expect(plan.medicationPathways.map((pathway) => pathway.label)).toEqual(expect.arrayContaining([
+      'Clopidogrel',
+      'Warfarin',
+      'Statins',
+      'Codeine & tramadol',
+      'Tamoxifen',
+      'SSRIs & related antidepressants',
+    ]));
+    expect(plan.medicationPathways.every((pathway) => !pathway.detail.toLowerCase().includes('raw dna'))).toBe(true);
   });
 
   it('routes CYP2C9 to NSAID exposure and menstrual-pain safety review', () => {
@@ -817,11 +1180,12 @@ describe('actionability engine safety policy', () => {
       sections: [{ ...base.sections[0], name: 'Metabolic Health' }],
     });
 
-    expect(plan.diet.favor.some((item) => item.includes('fiber-rich foods'))).toBe(true);
+    expect(plan.diet.favor.some((item) => /fiber-rich foods/i.test(item))).toBe(true);
     expect(plan.labTests.some((test) => test.name === 'HbA1c')).toBe(true);
     expect(plan.labTests.some((test) => test.name === 'Fasting plasma glucose')).toBe(true);
     expect(plan.activity.relevantDomains.some((domain) => domain.id === 'metabolic')).toBe(true);
-    expect(plan.diet.avoid.some((item) => item.includes('diabetes diagnosis'))).toBe(true);
+    expect(plan.diet.avoid.join(' ')).not.toContain('diabetes diagnosis');
+    expect(plan.advancedGuidance.join(' ')).toContain('diabetes diagnosis');
   });
 
   it('uses LPA context to request phenotype testing without prescribing therapy', () => {
@@ -846,7 +1210,8 @@ describe('actionability engine safety policy', () => {
 
     expect(plan.labTests.some((test) => test.name === 'TSH')).toBe(true);
     expect(plan.labTests.some((test) => test.name === 'Free T4')).toBe(true);
-    expect(plan.diet.avoid.some((item) => item.includes('High-dose iodine'))).toBe(true);
+    expect(plan.diet.avoid.join(' ')).not.toContain('High-dose iodine');
+    expect(plan.advancedGuidance.join(' ')).toContain('High-dose iodine');
     expect(plan.medication.rules.some((item) => item.includes('levothyroxine'))).toBe(true);
   });
 
@@ -858,7 +1223,8 @@ describe('actionability engine safety policy', () => {
     })]));
 
     expect(plan.labTests.some((test) => test.name.includes('Sleep study'))).toBe(true);
-    expect(plan.diet.favor.some((item) => item.includes('consistent sleep opportunity'))).toBe(true);
+    expect(plan.diet.favor.join(' ')).not.toContain('consistent sleep opportunity');
+    expect(plan.advancedGuidance.join(' ')).toContain('consistent sleep opportunity');
     expect(plan.medication.rules.some((item) => item.includes('chronotype'))).toBe(true);
   });
 
@@ -870,8 +1236,82 @@ describe('actionability engine safety policy', () => {
     })]));
 
     expect(plan.labTests.some((test) => test.name.includes('Allergist-directed'))).toBe(true);
-    expect(plan.diet.avoid.some((item) => item.includes('Permanent food elimination'))).toBe(true);
+    expect(plan.diet.avoid.join(' ')).not.toContain('Permanent food elimination');
+    expect(plan.advancedGuidance.join(' ')).toContain('Permanent food elimination');
     expect(plan.medication.rules.some((item) => item.includes('AOC1'))).toBe(true);
+  });
+
+  it('builds a categorized allergy map with linked DNA meaning and exposure examples', () => {
+    const allergyReport = report([
+      marker({ rsid: 'rs20541', gene: 'IL13', variant_name: 'IL13 allergic inflammation locus' }),
+      marker({ rsid: 'rs11591147_FLG_LOF_PANEL', gene: 'FLG', variant_name: 'Skin barrier panel' }),
+      marker({ rsid: 'PANEL_FOOD_ALLERGY_CONTEXT', gene: 'HLA/IL4/IL13/FLG/STAT6', variant_name: 'Food allergy context panel' }),
+      marker({
+        rsid: 'HLA-B*57:01',
+        gene: 'HLA-B',
+        severity_class: 'confirmation_required',
+        clinical_confirmation_required: true,
+        variant_name: 'HLA-B*57:01',
+      }),
+    ]);
+
+    const allergy = deriveAllergySensitivityGuidance(allergyReport);
+    const plan = deriveActionablePlan(allergyReport);
+
+    expect(allergy.hasDnaSignal).toBe(true);
+    expect(allergy.dnaContexts.map((context) => context.id)).toEqual(expect.arrayContaining([
+      'atopy_ige',
+      'skin_barrier',
+      'food_allergy_context',
+    ]));
+    const atopy = allergy.dnaContexts.find((context) => context.id === 'atopy_ige');
+    expect(atopy?.signal_label).toBe('Immune-allergy signal');
+    expect(atopy?.relevance).toContain('seasonal allergies');
+    expect(atopy?.matched_genes).toContain('IL13');
+    expect(atopy?.matched_marker_link_ids).toContain('test:marker');
+    expect(allergy.medicationSafety.map((route) => route.id)).toContain('abacavir_hypersensitivity');
+    const abacavir = allergy.medicationSafety.find((route) => route.id === 'abacavir_hypersensitivity');
+    expect(abacavir?.signal_label).toContain('Medication alert');
+    expect(abacavir?.relevance).toContain('abacavir');
+    expect(abacavir?.matched_genes).toContain('HLA-B');
+    expect(allergy.exposureChecklists).toHaveLength(5);
+    expect(allergy.exposureChecklists.find((group) => group.id === 'foods')?.items.map((item) => item.label))
+      .toEqual(expect.arrayContaining(['Peanut', 'Tree nuts', 'Sesame']));
+    expect(allergy.exposureChecklists.find((group) => group.id === 'physical_triggers')?.items.map((item) => item.label))
+      .toEqual(expect.arrayContaining(['Cold', 'Sun / UV']));
+    expect(plan.allergy).toEqual(allergy);
+  });
+
+  it('does not invent allergy contexts from unrelated markers', () => {
+    const allergy = deriveAllergySensitivityGuidance(report([marker({ rsid: 'rs1801133', gene: 'MTHFR' })]));
+
+    expect(allergy.hasDnaSignal).toBe(false);
+    expect(allergy.dnaContexts).toHaveLength(0);
+    expect(allergy.medicationSafety).toHaveLength(0);
+    expect(allergy.exposureChecklists.length).toBeGreaterThan(0);
+  });
+
+  it('counts each linked allergy finding once when a report repeats it across sections', () => {
+    const repeated = marker({
+      link_id: 'test:allergy-repeat',
+      rsid: 'rs20541',
+      gene: 'IL13',
+      variant_name: 'IL13 allergic inflammation locus',
+    });
+    const base = report([]);
+    const allergy = deriveAllergySensitivityGuidance({
+      ...base,
+      sections: [
+        { ...base.sections[0], name: 'Allergy A', markers: [repeated] },
+        { ...base.sections[0], name: 'Allergy B', markers: [repeated] },
+      ],
+    });
+    const atopy = allergy.dnaContexts.find((context) => context.id === 'atopy_ige');
+
+    expect(atopy?.matched_marker_count).toBe(1);
+    expect(atopy?.matched_marker_ids).toEqual(['rs20541']);
+    expect(atopy?.matched_marker_link_ids).toEqual(['test:allergy-repeat']);
+    expect(allergy.matchedMarkerCount).toBe(1);
   });
 
   it('connects high-impact PGx findings to drug-specific clinical review', () => {

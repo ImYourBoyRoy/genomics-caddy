@@ -77,12 +77,12 @@
         var(--bootstrap-shimmer) 45%,
         rgba(255, 255, 255, 0.02) 90%
       ),
-      rgba(18, 19, 26, 0.88);
+      var(--surface-control);
     background-size: 220% 100%;
     animation: bootstrap-shimmer-slide 3.2s linear infinite;
     border: 1px solid color-mix(in srgb, var(--phase-accent) 22%, var(--border-color));
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     backdrop-filter: blur(14px);
   }
 

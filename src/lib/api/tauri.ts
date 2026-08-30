@@ -42,6 +42,13 @@ export async function saveReportJson(content: string, defaultFilename: string): 
   return invoke<boolean>("save_report_json", { content, defaultFilename });
 }
 
+export async function saveReportBundle(
+  files: Array<{ filename: string; content: string }>,
+  defaultFilename: string,
+): Promise<boolean> {
+  return invoke<boolean>('save_report_bundle', { files, defaultFilename });
+}
+
 export async function getAppPaths(): Promise<AppPaths> {
   return invoke<AppPaths>("get_app_paths");
 }

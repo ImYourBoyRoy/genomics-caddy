@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./components/sidebar.css', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 const sidebarComponent = readFileSync(new URL('../components/sidebar/Sidebar.svelte', import.meta.url), 'utf8');
+const sampleList = readFileSync(new URL('../components/samples/SampleList.svelte', import.meta.url), 'utf8');
 const progressTrack = readFileSync(new URL('../components/sidebar/ProgressTrack.svelte', import.meta.url), 'utf8');
 
 describe('sidebar status theme tokens', () => {
@@ -48,6 +49,8 @@ describe('sidebar status theme tokens', () => {
 
   it('keeps profile actions keyboard-visible and comfortably targetable', () => {
     expect(source).toContain('.samples-card .sample-name:focus-visible');
+    expect(source).toContain('.samples-card .sample-name-text');
+    expect(source).toContain('.samples-card .sample-sex-symbol');
     expect(source).toContain('.samples-card .btn-delete:focus-visible');
     expect(source).toContain('.reset-dir-btn:focus-visible');
     expect(source).toContain('min-width: 2.25rem;');
@@ -61,16 +64,41 @@ describe('sidebar status theme tokens', () => {
       '.samples-card .sample-item',
       '.samples-card .sample-name-wrap',
       '.samples-card .sample-name',
-      '.samples-card .sample-scope-help',
+      '.samples-card .sample-name-text',
     ]) {
       expect(source).toContain(selector);
     }
+    expect(sampleList).toContain('class="sample-name-text"');
+    expect(sampleList).toContain('class="sample-sex-symbol"');
+    expect(sampleList).toContain("label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•'");
+    expect(sampleList).not.toContain('Tooltip');
+    expect(sampleList).not.toContain('sample-scope-help');
 
     expect(theme).not.toMatch(/\.sample-list\s*\{/);
     expect(theme).not.toMatch(/\.sample-item(?:\.active)?\s*\{/);
     expect(theme).not.toMatch(/\.sample-name(?:-wrap)?\s*\{/);
     expect(theme).not.toMatch(/\.sample-scope-help\s*\{/);
     expect(theme).not.toMatch(/\.btn-delete\s*\{/);
+  });
+
+  it('gives profile names a stable readable track beside the sex symbol and actions', () => {
+    expect(source).toContain('grid-template-columns: minmax(0, 1fr) auto;');
+    expect(source).toContain('grid-template-columns: 1.4rem minmax(5rem, 1fr);');
+    expect(source).toContain('display: block;');
+    expect(source).toContain('min-width: 0;');
+  });
+
+  it('uses semantic tokens for visible shell surfaces and scrollbars', () => {
+    expect(theme).toContain('--app-gradient-highlight:');
+    expect(theme).toContain('--sidebar-surface:');
+    expect(theme).toContain('--scrollbar-track:');
+    expect(theme).toContain('--scrollbar-thumb:');
+    expect(theme).toContain('--scrollbar-thumb-hover:');
+    expect(theme).toContain('background: var(--scrollbar-track);');
+    expect(theme).toContain('background: var(--scrollbar-thumb);');
+    expect(theme).toContain('background: var(--scrollbar-thumb-hover);');
+    expect(theme).toContain('background: radial-gradient(circle at top right, var(--app-gradient-highlight), var(--bg-primary));');
+    expect(theme).toContain('background-color: var(--sidebar-surface);');
   });
 
   it('keeps the advanced Connections launch surface compact', () => {

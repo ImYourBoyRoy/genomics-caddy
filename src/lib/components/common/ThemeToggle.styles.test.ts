@@ -3,48 +3,55 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const source = readFileSync(resolve(process.cwd(), 'src/lib/components/common/ThemeToggle.svelte'), 'utf8');
-describe('ThemeToggle desktop toolbar placement', () => {
-  it('uses the title-toolbar flow instead of a fixed bottom-corner control', () => {
+
+describe('ThemeToggle sidebar footer control', () => {
+  it('uses a compact inline control with no floating menu', () => {
     const toggle = source.match(/\.theme-toggle \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    expect(toggle).toContain('position: relative;');
+    const options = source.match(/\.theme-toggle-options \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(toggle).toContain('width: 100%;');
     expect(toggle).not.toContain('position: fixed;');
-    expect(source).not.toContain('bottom: 0.75rem');
+    expect(options).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+    expect(source).toContain('min-height: 44px;');
+    expect(source).not.toContain('theme-options');
+    expect(source).not.toContain('aria-haspopup="menu"');
   });
 
-  it('keeps the open theme menu in toolbar flow instead of covering the report', () => {
-    const options = source.match(/\.theme-options \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    expect(options).toContain('margin-top: 0.4rem;');
-    expect(options).not.toContain('position: absolute;');
-    expect(options).not.toContain('position: fixed;');
-  });
-
-  it('uses clear mode labels instead of the generic Theme label', () => {
+  it('exposes direct Auto, Light, and Dark choices', () => {
+    expect(source).toContain('shortLabel: \'Auto\'');
+    expect(source).toContain('shortLabel: \'Light\'');
+    expect(source).toContain('shortLabel: \'Dark\'');
+    expect(source).toContain('data-theme-mode={option.id}');
+    expect(source).toContain('aria-pressed={mode === option.id}');
+    expect(source).toContain('aria-label={option.label}');
     expect(source).toContain('System default');
     expect(source).toContain('Light mode');
     expect(source).toContain('Dark mode');
-    expect(source).not.toContain('<span>Theme</span>');
-    expect(source).toContain('<span>Appearance</span>');
-    expect(source).toContain('aria-label={`Appearance: ${themeModeLabel(mode)}`}');
   });
 
-  it('closes when focus leaves the control or the report scrolls', () => {
-    expect(source).toContain('function handleDocumentFocusIn(event: FocusEvent)');
-    expect(source).toContain('function handleDocumentScroll()');
-    expect(source).toContain("document.addEventListener('focusin', handleDocumentFocusIn);");
-    expect(source).toContain("document.addEventListener('scroll', handleDocumentScroll, true);");
-    expect(source).toContain("document.removeEventListener('scroll', handleDocumentScroll, true);");
+  it('persists the selected mode without document-level menu listeners', () => {
+    expect(source).toContain("localStorage.setItem(STORAGE_KEY, nextMode);");
+    expect(source).toContain('root.dataset.theme = nextMode;');
+    expect(source).toContain('document.documentElement.dataset.theme = mode;');
+    expect(source).not.toContain('document.addEventListener');
+    expect(source).not.toContain('handleDocumentScroll');
+    expect(source).not.toContain('isOpen');
   });
 
-  it('keeps the menu target mounted while hiding its optional contents', () => {
-    expect(source).toContain('id="theme-options"');
-    expect(source).toContain('aria-hidden={!isOpen}');
-    expect(source).toContain('hidden={!isOpen}');
-    expect(source).not.toContain('{#if isOpen}\n    <div id="theme-options"');
+  it('uses a short, temporary transition state when changing themes', () => {
+    expect(source).toContain('const THEME_TRANSITION_MS = 2500;');
+    expect(source).toContain("root.dataset.themeTransition = 'cover';");
+    expect(source).toContain("root.dataset.themeTransition = 'reveal';");
+    expect(source).toContain('window.requestAnimationFrame');
+    expect(source).toContain('window.cancelAnimationFrame');
+    expect(source).toContain('void root.offsetWidth;');
+    expect(source).toContain('delete root.dataset.themeTransition;');
+    expect(source).toContain('applyTheme(nextMode, true);');
   });
 
-  it('uses theme-aware floating shadow tokens', () => {
-    expect(source).toContain('box-shadow: 0 0.5rem 1.25rem var(--shadow-floating);');
-    expect(source).toContain('box-shadow: 0 0.75rem 2rem var(--shadow-floating);');
+  it('uses theme-aware controls without hard-coded shadow colors', () => {
+    expect(source).toContain('border-color: var(--accent);');
+    expect(source).toContain('background: var(--accent-soft);');
     expect(source).not.toMatch(/box-shadow:[^;]*(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 });

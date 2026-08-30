@@ -145,13 +145,16 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .samples-card .sample-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  gap: 0.5rem;
+  min-height: 4rem;
+  box-sizing: border-box;
   padding: 8px 12px;
   border-radius: 6px;
   background: var(--surface-subtle);
@@ -165,16 +168,18 @@
 }
 
 .samples-card .sample-name-wrap {
-  display: flex;
-  flex: 1;
+  display: block;
   min-width: 0;
-  align-items: center;
-  gap: 0.25rem;
 }
 
 .samples-card .sample-name {
-  flex: 1;
+  display: grid;
+  grid-template-columns: 1.4rem minmax(5rem, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
   min-width: 0;
+  min-height: 2.75rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -182,11 +187,7 @@
   font: inherit;
   font-size: 0.85rem;
   text-align: left;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
 }
 
 .samples-card .sample-name:hover:not(:disabled) {
@@ -198,9 +199,31 @@
   opacity: 0.65;
 }
 
-.samples-card .sample-scope-help {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+.samples-card .sample-name-text {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.samples-card .sample-sex-symbol {
+  display: inline-grid;
+  flex: 0 0 1.4rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  place-items: center;
+  border: 1px solid var(--status-accent-border);
+  border-radius: 999px;
+  background: var(--status-accent-bg);
+  color: var(--status-accent-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.samples-card .sex-pill {
+  flex: 0 0 auto;
 }
 
 .samples-card .btn-delete {
@@ -641,6 +664,12 @@
   background: var(--status-danger-bg);
   border-color: var(--status-danger-border);
   color: var(--status-danger-strong-text);
+}
+
+.resource-status-pill.resource-status-incomplete {
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+  color: var(--status-warning-text);
 }
 
 .missing-pill {

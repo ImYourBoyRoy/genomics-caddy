@@ -1,0 +1,217 @@
+{
+  "name": "Allergy & Sensitivity Guidance Catalog",
+  "version": "1.0.0",
+  "last_updated": "2026-08-29",
+  "type": "support_resource",
+  "purpose": "Organizes DNA-linked allergy and atopy context beside exposure categories that require personal history or clinical testing.",
+  "display": {
+    "title": "Allergy & sensitivity map",
+    "subtitle": "DNA signals worth matching to your history.",
+    "dna_intro": "Matched variants in immune, skin-barrier, airway, and medication-sensitivity pathways.",
+    "exposure_intro": "Record repeatable reactions to these exposures. They are not resolved by this consumer DNA file.",
+    "compact_footer": "Use matched pathways to focus symptom, exposure, or medication review."
+  },
+  "dna_contexts": [
+    {
+      "id": "atopy_ige",
+      "label": "Atopy & IgE tendency",
+      "signal_label": "Immune-allergy signal",
+      "summary": "Matched variants point to immune-response pathways seen in hay fever, asthma, eczema, and higher IgE.",
+      "relevance": "Most useful when seasonal allergies, wheeze, eczema, or elevated IgE/eosinophils fit your history.",
+      "matched_marker_ids": [
+        "PRS_ATOPY_ALLERGIC_DISEASE", "rs61816761", "rs1801275", "rs20541", "rs2243250", "rs7216389", "rs1837253", "rs2251746", "rs61839660", "rs3771166", "rs3939286", "rs4794820", "rs7212938", "rs17513503", "rs730012", "rs1800896", "rs1143634", "rs2289276", "rs1042713", "rs1042714", "rs763361", "rs2201841", "rs3024505", "rs10760117", "rs9500927", "rs2305480", "rs9273349", "rs1295686", "rs2070874", "rs1805010", "rs41423247", "rs2228145", "rs755622", "rs1051931"
+      ],
+      "evidence_label": "Polygenic research context",
+      "examples": ["seasonal or year-round rhinitis", "wheeze or asthma symptoms", "eczema or recurrent itchy rash", "elevated IgE or eosinophils"],
+      "next_step": "Compare with your symptom and exposure history; ask about IgE, eosinophils, or spirometry when symptoms fit.",
+      "sources": ["gwas_catalog", "aaaai_food_allergy_diagnosis", "phenotype_required"]
+    },
+    {
+      "id": "skin_barrier",
+      "label": "Skin barrier & eczema",
+      "signal_label": "Skin-barrier signal",
+      "summary": "Matched variants point to skin-barrier and type-2 immune pathways.",
+      "relevance": "Most useful when dry skin, recurrent eczema, itching, or barrier flares are part of your history.",
+      "matched_marker_ids": ["rs11591147_FLG_LOF_PANEL", "rs20541", "rs61816761", "rs1801275", "rs1837253", "PANEL_ECZEMA_BARRIER_INFLAMMATION"],
+      "evidence_label": "Clinical and replicated context",
+      "examples": ["dry or cracked skin", "recurrent eczema", "itching after irritants", "skin infection or barrier flares"],
+      "next_step": "Track skin triggers and discuss dermatology or allergy review if flares are persistent or severe.",
+      "sources": ["gwas_catalog", "aaaai_food_allergy_diagnosis", "phenotype_required"]
+    },
+    {
+      "id": "food_allergy_context",
+      "label": "Food-allergy research context",
+      "signal_label": "Food-sensitization signal",
+      "summary": "Matched variants overlap food-sensitization and skin-barrier pathways. The named foods are a tracking shortlist, not an automatic avoid list.",
+      "relevance": "Most useful when a repeatable reaction follows one of the listed foods or ingredients.",
+      "matched_marker_ids": ["PANEL_FOOD_ALLERGY_CONTEXT", "rs7775228", "rs9500927", "rs9273349", "rs11591147_FLG_LOF_PANEL", "rs20541", "rs1295686"],
+      "evidence_label": "Research context",
+      "examples": ["milk, cheese, yogurt", "egg and baked egg", "peanut and peanut butter", "almond, walnut, cashew, pistachio", "wheat and pasta", "soy, tofu, edamame", "fish such as salmon or cod", "shrimp, crab, lobster", "sesame and tahini"],
+      "next_step": "Record the food, amount, timing, symptoms, and repeatability; use allergist-directed testing when the history fits.",
+      "sources": ["gwas_catalog", "fda_major_food_allergens", "aaaai_food_allergy_diagnosis", "phenotype_required"]
+    },
+    {
+      "id": "inhalant_atopy",
+      "label": "Inhalant & seasonal triggers",
+      "signal_label": "Airway-allergy signal",
+      "summary": "Matched variants overlap airway and seasonal-allergy pathways.",
+      "relevance": "Pollen, dust, mold, dander, or workplace exposures matter most when congestion, itchy eyes, cough, or wheeze follows them.",
+      "matched_marker_ids": ["PANEL_MOLD_DUST_POLLEN_ATOPY", "rs7216389", "rs1837253", "rs3771166", "rs3939286", "rs4794820", "rs7212938", "rs10760117", "rs2305480"],
+      "evidence_label": "Replicated association context",
+      "examples": ["tree, grass, and ragweed pollen", "dust mites", "mold", "cat or dog dander", "workplace dusts or fumes"],
+      "next_step": "Log location and timing with congestion, itchy eyes, cough, or wheeze; ask about targeted testing or spirometry if needed.",
+      "sources": ["gwas_catalog", "aaaai_food_allergy_diagnosis", "phenotype_required"]
+    },
+    {
+      "id": "urticaria_mediator",
+      "label": "Hives & mediator biology",
+      "signal_label": "Hives and mediator signal",
+      "summary": "Matched variants overlap mast-cell, hives, and mediator pathways.",
+      "relevance": "Most useful when episodes include hives, flushing, swelling, or reactions after heat, pressure, exercise, alcohol, or medicines.",
+      "matched_marker_ids": ["PANEL_CHRONIC_URTICARIA_CONTEXT", "PANEL_MAST_CELL_MEDIATOR_CONTEXT", "rs2251746", "rs730012", "rs1051931"],
+      "evidence_label": "Clinical workup context",
+      "examples": ["hives or flushing", "swelling of lips, face, or throat", "wheeze or faintness with episodes", "reactions after heat, pressure, exercise, alcohol, or medicines"],
+      "next_step": "Keep a dated episode log; discuss baseline or event tryptase and allergy/immunology review when clinically appropriate.",
+      "sources": ["hereditary_alpha_tryptasemia_review", "phenotype_required"]
+    },
+    {
+      "id": "angioedema",
+      "label": "Angioedema pathway",
+      "signal_label": "Swelling pathway — check this",
+      "summary": "A matched panel points to a hereditary swelling pathway.",
+      "relevance": "Recurrent swelling without hives, abdominal attacks, or a family history makes this finding more important to discuss promptly.",
+      "matched_marker_ids": ["PANEL_HEREDITARY_ANGIOEDEMA"],
+      "evidence_label": "Clinical confirmation route",
+      "examples": ["recurrent swelling without hives", "abdominal swelling episodes", "family history of unexplained swelling", "swelling after trauma or procedures"],
+      "next_step": "Discuss complement testing and specialist evaluation; urgent breathing or throat swelling needs emergency care.",
+      "sources": ["wao_hae_guideline_2025", "clinical_confirmation_required"]
+    }
+  ],
+  "clinical_safety_routes": [
+    {
+      "id": "abacavir_hypersensitivity",
+      "actionability_rule_id": "hla_b5701_abacavir_safety",
+      "label": "Abacavir hypersensitivity",
+      "medications": ["abacavir"],
+      "signal_label": "Medication alert · check before use",
+      "summary": "If abacavir is considered, this matched signal is relevant to serious hypersensitivity risk.",
+      "relevance": "Keep this finding with your medication record and show it before abacavir exposure.",
+      "next_step": "Use validated clinical HLA testing and prescriber guidance before first exposure.",
+      "evidence_label": "Drug-specific clinical guidance",
+      "sources": ["cpic_hla_abacavir", "fda_pharmacogenomic_biomarkers"]
+    },
+    {
+      "id": "aromatic_anticonvulsant_hypersensitivity",
+      "actionability_rule_id": "hla_carbamazepine_oxcarbazepine_safety",
+      "label": "Carbamazepine / oxcarbazepine hypersensitivity",
+      "medications": ["carbamazepine", "oxcarbazepine"],
+      "signal_label": "Medication alert · check before use",
+      "summary": "If carbamazepine or oxcarbazepine is considered, this matched signal is relevant to severe skin-reaction risk.",
+      "relevance": "Keep this finding visible before either medicine is started.",
+      "next_step": "Confirm the relevant HLA alleles clinically before first exposure when the prescriber is considering these medicines.",
+      "evidence_label": "Drug-specific clinical guidance",
+      "sources": ["cpic_hla_carbamazepine", "fda_pharmacogenomic_biomarkers"]
+    },
+    {
+      "id": "phenytoin_hypersensitivity",
+      "actionability_rule_id": "hla_b1502_phenytoin_safety",
+      "label": "Phenytoin hypersensitivity",
+      "medications": ["phenytoin"],
+      "signal_label": "Medication alert · check before use",
+      "summary": "If phenytoin is considered, this matched signal is relevant to severe skin-reaction risk and medication exposure.",
+      "relevance": "Keep this finding visible before phenytoin exposure and include the medication question in review.",
+      "next_step": "Ask the prescriber about validated HLA/CYP2C9 review and serum-level monitoring before use.",
+      "evidence_label": "Drug-specific clinical guidance",
+      "sources": ["cpic_cyp2c9_hla_phenytoin_2020", "fda_pharmacogenomic_biomarkers"]
+    },
+    {
+      "id": "allopurinol_hypersensitivity",
+      "actionability_rule_id": "hla_b5801_allopurinol_safety",
+      "label": "Allopurinol hypersensitivity",
+      "medications": ["allopurinol"],
+      "signal_label": "Medication alert · check before use",
+      "summary": "If allopurinol is considered, this matched signal is relevant to severe skin-reaction risk.",
+      "relevance": "Keep this finding visible before allopurinol exposure.",
+      "next_step": "Use validated clinical HLA testing and prescribing guidance before initiation.",
+      "evidence_label": "Drug-specific clinical guidance",
+      "sources": ["cpic_hla_allopurinol", "fda_pharmacogenomic_biomarkers"]
+    }
+  ],
+  "exposure_checklists": [
+    {
+      "id": "foods",
+      "label": "Foods",
+      "items": [
+        {"label": "Milk", "examples": "milk, cheese, yogurt, whey"},
+        {"label": "Egg", "examples": "egg, mayonnaise, baked goods"},
+        {"label": "Fish", "examples": "salmon, cod, tuna"},
+        {"label": "Crustacean shellfish", "examples": "shrimp, crab, lobster"},
+        {"label": "Tree nuts", "examples": "almond, walnut, pecan, cashew, pistachio"},
+        {"label": "Peanut", "examples": "peanut, peanut butter, sauces"},
+        {"label": "Wheat", "examples": "bread, pasta, crackers"},
+        {"label": "Soy", "examples": "tofu, edamame, soy milk"},
+        {"label": "Sesame", "examples": "sesame seeds, tahini, hummus"},
+        {"label": "Other foods", "examples": "record the specific food, ingredient, and preparation"}
+      ],
+      "source_ids": ["fda_major_food_allergens", "aaaai_food_allergy_diagnosis"]
+    },
+    {
+      "id": "medicines",
+      "label": "Medicines & treatments",
+      "items": [
+        {"label": "Antibiotics", "examples": "penicillin, amoxicillin, sulfa medicines"},
+        {"label": "Pain relievers", "examples": "ibuprofen, aspirin, naproxen"},
+        {"label": "Anesthesia or contrast", "examples": "procedure medicines, dyes, or antiseptics"},
+        {"label": "Biologics or injections", "examples": "infusions, vaccines, or injectable treatments"},
+        {"label": "Topicals", "examples": "adhesives, latex, creams, or skin products"}
+      ],
+      "source_ids": ["fda_pharmacogenomic_biomarkers", "aaaai_food_allergy_diagnosis"]
+    },
+    {
+      "id": "inhaled_contact",
+      "label": "Air, plants & contact",
+      "items": [
+        {"label": "Pollen", "examples": "trees, grass, ragweed"},
+        {"label": "Dust, mold & dander", "examples": "dust mites, mold, cats, dogs"},
+        {"label": "Plants", "examples": "poison ivy, poison oak, garden or workplace plants"},
+        {"label": "Latex & materials", "examples": "gloves, balloons, rubber, adhesives"}
+      ],
+      "source_ids": ["aaaai_food_allergy_diagnosis", "phenotype_required"]
+    },
+    {
+      "id": "venom",
+      "label": "Venom",
+      "items": [
+        {"label": "Bee", "examples": "honeybee or bumblebee sting"},
+        {"label": "Wasp & hornet", "examples": "wasp, hornet, or yellow-jacket sting"},
+        {"label": "Fire ant", "examples": "fire-ant sting or bite"}
+      ],
+      "source_ids": ["phenotype_required", "clinical_confirmation_required"]
+    },
+    {
+      "id": "physical_triggers",
+      "label": "Physical triggers",
+      "items": [
+        {"label": "Cold", "examples": "cold air, water, or cold objects"},
+        {"label": "Heat or pressure", "examples": "heat, sweating, tight clothing, or scratching"},
+        {"label": "Sun / UV", "examples": "sunlight or photosensitive rash"},
+        {"label": "Exercise", "examples": "exercise, exertion, or food-plus-exercise episodes"}
+      ],
+      "source_ids": ["phenotype_required", "clinical_confirmation_required"]
+    }
+  ],
+  "source_ids": [
+    "fda_major_food_allergens",
+    "aaaai_food_allergy_diagnosis",
+    "fda_pharmacogenomic_biomarkers",
+    "phenotype_required",
+    "clinical_confirmation_required",
+    "gwas_catalog",
+    "hereditary_alpha_tryptasemia_review",
+    "wao_hae_guideline_2025",
+    "cpic_hla_abacavir",
+    "cpic_hla_carbamazepine",
+    "cpic_cyp2c9_hla_phenytoin_2020",
+    "cpic_hla_allopurinol"
+  ]
+}

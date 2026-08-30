@@ -20,14 +20,17 @@ describe('VariantCard enrichment surface', () => {
     expect(enrichmentStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
-  it('keeps the Simple next-step copy compact', () => {
-    expect(source).toContain("import { getCompactSimpleMeaning, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep }");
-    expect(source).toContain('return getSimpleNextStep(marker);');
-    expect(source).toContain('.simple-next-step {\n    display: block;');
+  it('keeps the complete Simple copy contract visible on individual cards', () => {
+    expect(source).toContain("getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle");
+    expect(source).toContain('simpleCopy.signal');
+    expect(source).toContain('simpleCopy.why_it_matters');
+    expect(source).toContain('simpleCopy.review_action');
+    expect(source).toContain('simpleCopy.evidence_label');
+    expect(source).toContain('class="simple-next-step"');
   });
 
   it('keeps technical gene identifiers out of the Simple card heading', () => {
-    expect(source).toContain('getSimpleFindingTitle(laypersonTranslation.simpleImpact)');
+    expect(source).toContain('simpleCopy.plain_title');
     expect(source).toContain('<strong>{simpleFindingTitle}</strong>');
     expect(source).toContain('if (viewMode === \'simple\') return simpleFindingTitle;');
   });

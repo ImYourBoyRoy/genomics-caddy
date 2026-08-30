@@ -31,33 +31,40 @@ describe('DashboardSummaryPanel semantic styling', () => {
     }
   });
 
-  it('keeps repeated guidance boundaries compact and available on demand', () => {
-    expect(source).toContain("import Tooltip from '../common/Tooltip.svelte';");
-    expect(source).toContain('Optional self-reported context used to tailor guidance.');
-    expect(source).toContain('Personalized food prompts');
-    expect(source).toContain('Personalized supplement prompts');
-    expect(source).toContain('Training and recovery prompts');
-    expect(source).toContain('Medication-related context');
+  it('keeps repeated guidance boundaries compact and keeps personal context out of the report', () => {
+    expect(source).toContain('DNA-linked food ideas');
+    expect(source).toContain('DNA-linked options to consider');
+    expect(source).toContain('DNA-informed starting points for training, recovery, and self-tracking.');
+    expect(source).toContain('DNA-linked medication and treatment topics found in this report.');
+    expect(source).toContain('Medication pathways');
+    expect(source).toContain('plan.medicationPathways');
     expect(source).toContain('Grouped by priority');
     expect(source).not.toContain('Conditional prompts, not permanent food rules.');
     expect(source).not.toContain('Review interactions and health context before use.');
     expect(source).not.toContain('Planning prompts for training and recovery — not activity clearance.');
     expect(source).not.toContain('Compare this with current medications and past responses.');
     expect(source).not.toContain('Grouped by priority for clinician discussion.');
-    expect(source).toContain('Up to five prioritized follow-up prompts from this report.');
-    expect(source).toContain('{Math.min(plan.topFindings.length, 5)} shown');
+    expect(source).toContain('DNA signals with the clearest reason to review them first.');
+    expect(source).toContain('{Math.min(plan.topFindings.length, 9)} shown');
     expect(source).not.toContain('A genotype match is not a permanent food restriction;');
     expect(source).not.toContain('This selection is self-reported, stored per DNA profile, and is never inferred');
     expect(source).not.toContain('Every supplement item is a discussion prompt, not a prescription.');
     expect(source).not.toContain('Genotype may provide weak context for training questions.');
     expect(source).not.toContain('Raw consumer DNA is not a complete clinical PGx result');
     expect(source).not.toContain('DNA cannot measure current hormones or diagnose a condition or medication response.');
+    expect(source).not.toContain('Ask for / record');
+    expect(source).not.toContain('Do not do from raw DNA');
+    expect(source).not.toContain('medication-columns');
     expect(source).not.toContain('Grouped by priority for clinician discussion; seek care promptly for acute symptoms.');
     expect(source).not.toContain('{Math.min(plan.topFindings.length, 5)} of 5');
     expect(source).toContain("{#if presentationMode !== 'simple' && plan.safetyNotes.length > 0}");
     expect(source).toContain('<summary>Safety details</summary>');
-    expect(source).toContain('Profile context only; kept separate from DNA findings.');
-    expect(source).not.toContain('This information is self-reported for this DNA profile. It is not genetic evidence');
+    expect(source).not.toContain('Profile context only; kept separate from DNA findings.');
+    expect(source).not.toContain('Optional reproductive & hormone context');
+    expect(source).not.toContain('Optional cycle and hormone context');
+    expect(source).not.toContain('personalSafetyContext');
+    expect(source).not.toContain('CycleDiaryEditor');
+    expect(source).not.toContain('ReproductiveContextEditor');
   });
 
   it('compacts repeated supplement review prefixes without changing the underlying plan', () => {
@@ -67,36 +74,74 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('{getCompactSupplementReason(s.reason)}');
   });
 
-  it('compacts repeated conditional guidance prefixes in the Simple dietary view', () => {
+  it('keeps Simple dietary lists focused on authored food content', () => {
     expect(source).toContain('getCompactGuidanceText');
-    expect(source).toContain('const GUIDANCE_PREVIEW_LIMIT = 3;');
-    expect(source).toContain('previewGuidance(plan.diet.favor)');
-    expect(source).toContain('remainingGuidance(plan.diet.favor)');
-    expect(source).toContain('previewGuidance(plan.diet.avoid)');
-    expect(source).toContain('remainingGuidance(plan.diet.avoid)');
-    expect(source).toContain('getCompactDietNotes');
-    expect(source).toContain('<summary>More context ({compactDietNotes.length})</summary>');
-    expect(source).toContain('<ul class="compact-notes">');
+    expect(source).toContain('{#each plan.diet.favorItems as item (item.recommendation_id)}');
+    expect(source).toContain('{#each plan.diet.avoidItems as item (item.recommendation_id)}');
+    expect(source).toContain('{#each plan.supplements as s (`${s.name}:${s.reason}`)}');
+    expect(source).toContain('{#each plan.supplementAvoid as s (s.name)}');
+    expect(source).toContain('plan.supplementAvoid');
+    expect(source).not.toContain('getCompactDietNotes');
+    expect(source).not.toContain('diet-notes');
+    expect(source).not.toContain('compact-notes');
+    expect(source).toContain('<h4><span aria-hidden="true">👍</span> Food ideas</h4>');
+    expect(source).toContain('<h4><span aria-hidden="true">👎</span> Foods to limit</h4>');
+    expect(source).toContain('<h4>👍 Consider</h4>');
+    expect(source).toContain('<h4>👎 Avoid / confirm first</h4>');
+    expect(source).toContain('class="dietary-items"');
+    expect(source).toContain('class="insight-tile insight-tile-favor dietary-item"');
+    expect(source).toContain('class="insight-tile insight-tile-avoid dietary-item"');
+    expect(source).toContain('class="insight-tile-text dietary-item-text"');
     expect(source).toContain('<summary>Food safety checks ({plan.foodSafety.relevantRules.length})</summary>');
   });
 
-  it('keeps long activity guidance readable without rendering every rule at once', () => {
-    expect(source).toContain('const DETAIL_PREVIEW_LIMIT = 2;');
-    expect(source).toContain('previewGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT)');
-    expect(source).toContain('previewGuidance(domain.favor, DETAIL_PREVIEW_LIMIT)');
-    expect(source).toContain('remainingGuidance(domain.favor, DETAIL_PREVIEW_LIMIT)');
-    expect(source).toContain('Show 1 more');
+  it('renders a compact DNA-linked allergy map without the generic exposure checklist', () => {
+    expect(source).toContain('Allergy &amp; sensitivity map');
+    expect(source).toContain('Matched pathways');
+    expect(source).toContain('Medication safety routes');
+    expect(source).toContain('allergySensitivityCatalog.display.dna_intro');
+    expect(source).toContain('context.relevance');
+    expect(source).toContain('context.matched_genes');
+    expect(source).toContain('matched DNA {context.matched_marker_link_ids.length === 1 ?');
+    expect(source).not.toContain('Exposure history');
+    expect(source).not.toContain('plan.allergy.exposureChecklists');
+    expect(source).not.toContain('allergySensitivityCatalog.display.exposure_intro');
+    expect(source).not.toContain('allergy-next-line');
+    expect(styleBlock).not.toContain('.allergy-map-grid');
+    expect(styleBlock).not.toContain('.allergy-exposure-grid');
+    expect(styleBlock).toContain('.insight-tile-relevance');
+  });
+
+  it('renders complete guidance lists without Show more controls', () => {
+    expect(source).toContain('simpleFramework');
+    expect(source).toContain('activity-framework');
+    expect(source).toContain('activity-domain-grid');
+    expect(source).toContain('Build around');
+    expect(source).toContain('Watch for');
+    expect(source).toContain('Verify when relevant');
+    expect(source).toContain('Pause and get prompt care for');
+    expect(styleBlock).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(source).toContain('{#each plan.activity.principles as principle (principle)}');
+    expect(source).toContain("function activityItems(domain: ActivityDomain, kind: ActivityListKey): string[]");
+    expect(source).toContain("const compactKey = kind === 'favor'");
+    expect(source).toContain("activityItems(domain, 'favor')");
+    expect(source).toContain("activityItems(domain, 'confirm_with')");
+    expect(source).not.toContain('Show 1 more');
+    expect(source).not.toContain('guidance-more');
+    expect(source).not.toContain('previewGuidance');
+    expect(source).not.toContain('remainingGuidance');
     expect(styleBlock).toContain('.guidance-details > summary');
-    expect(styleBlock).toContain('.guidance-more > summary');
     expect(styleBlock).toContain('min-height: 32px;');
   });
 
   it('keeps repeated action steps concise instead of repeating warning copy', () => {
-    expect(source).toContain('getSimpleNextStep');
-    expect(source).toContain('return marker ? getSimpleNextStep(marker) :');
-    expect(source).toContain('<strong class="action-queue-next-label">Next:</strong>');
+    expect(source).toContain('getSimpleFindingCopy');
+    expect(source).toContain('return getSimpleFindingCopy(marker, translation).review_action;');
+    expect(source).toContain('<strong class="action-queue-next-label">Next</strong>');
     expect(source).not.toContain('<strong>Next helpful step:</strong>');
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
+    expect(source).toContain('getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).why_it_matters');
+    expect(source).toContain('data-priority={item.rank}');
   });
 
   it('keeps collapsible guidance titles as real headings outside button descendants', () => {
@@ -116,11 +161,12 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('provides a compact health-area index that targets report section headers', () => {
-    expect(source).toContain('Health areas');
+    expect(source).toContain('Explore all health areas');
     expect(source).toContain('healthAreaSections');
     expect(source).toContain("href={'#' + sectionAnchorId(section.name)}");
     expect(source).toContain('onJumpToSection?.(section.name)');
     expect(source).toContain('{section.markers.length} markers');
+    expect(source).toContain('Jump to a health area for complete findings, evidence, and technical details.');
 
     const index = styleBlock.match(/\.health-area-index \{[\s\S]*?\.actionability-safety/)?.[0] ?? '';
     expect(index).toContain('grid-template-columns: repeat(auto-fit');
@@ -129,25 +175,80 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(index).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
-  it('organizes reproductive context options without silently removing any', () => {
-    expect(source).toContain('geneticSex?: string;');
-    expect(source).toContain('Suggested for this profile');
-    expect(source).toContain('Other contexts — select if relevant');
-    expect(source).toContain('contextOptions as option');
-    expect(source).toContain('reproductiveContextOptionIsSuggestedForGeneticSex');
+  it('scopes collapsed dashboard preferences per profile and starts each profile closed', () => {
+    expect(source).toContain('sampleId: number;');
+    expect(source).toContain('let loadedCollapseProfileId = $state<number | null>(null);');
+    expect(source).toContain('genomics_dashboard_collapsed_v2_${profileId}');
+    expect(source).toContain('const defaults = {');
+    expect(source).toContain('loadedCollapseProfileId === sampleId');
+    expect(source).not.toContain("localStorage.getItem('genomics_dashboard_collapsed')");
+  });
+
+  it('keeps personal-context controls out of the report surface', () => {
+    expect(source).not.toContain('geneticSex?: string;');
+    expect(source).not.toContain('Suggested for this profile');
+    expect(source).not.toContain('Other contexts — select if relevant');
+    expect(source).not.toContain('reproductiveContextOptionIsSuggestedForGeneticSex');
+  });
+
+  it('organizes secondary guidance into a navigable desktop reading flow', () => {
+    expect(source).toContain('class="guidance-index" aria-labelledby="guidance-index-title"');
+    expect(source).toContain('<h3 id="guidance-index-title">Use your results</h3>');
+    expect(source).toContain('href="#allergy-guidance-group"');
+    expect(source).toContain('href="#nutrition-guidance-group"');
+    expect(source).toContain('href="#training-guidance-group"');
+    expect(source).toContain('href="#clinical-guidance-group"');
+    expect(source).toContain('id="allergy-guidance-group"');
+    expect(source).toContain('id="nutrition-guidance-group"');
+    expect(source).toContain('id="training-guidance-group"');
+    expect(source).toContain('id="clinical-guidance-group"');
+    expect(source).toContain('let hasAllergyGuidance = $derived(');
+    expect(source).toContain('let hasNutritionGuidance = $derived(');
+    expect(source).toContain('let hasTrainingGuidance = $derived(');
+    expect(source).toContain('let hasClinicalGuidance = $derived(');
+    expect(styleBlock).toContain('.guidance-index {');
+    expect(styleBlock).toContain('grid-template-columns: repeat(4, minmax(0, 1fr));');
+    expect(styleBlock).toContain('.guidance-flow {');
+    expect(styleBlock).toContain('.guidance-group {');
+    expect(styleBlock).toContain('scroll-margin-top:');
+  });
+
+  it('uses the wide desktop surface for clinical follow-up without forcing a single long stack', () => {
+    expect(source).toContain('class="grid-layout clinical-guidance-grid"');
+    expect(styleBlock).toContain('.clinical-guidance-grid {');
+    expect(styleBlock).toContain('grid-template-columns: minmax(20rem, 0.85fr) minmax(0, 1.15fr);');
+    expect(styleBlock).toContain('.clinical-guidance-grid {\n      grid-template-columns: 1fr;');
+  });
+
+  it('keeps medication guidance focused on matched pathways without a warning block', () => {
+    expect(source).toContain('hasMedicationGuidance');
+    expect(source).toContain('class="medication-pathways"');
+    expect(source).toContain('class="medication-pathway"');
+    expect(source).toContain('pathway.matchedMarkerLinkIds');
+    expect(source).toContain('View matching DNA');
+    expect(styleBlock).toContain('.medication-pathways {');
+    expect(styleBlock).toContain('.medication-pathway {');
+    expect(source).not.toContain('pgx-readiness');
+    expect(source).not.toContain('Coverage details');
   });
 
   it('allows long guidance text to wrap inside narrow cards', () => {
     const cardBody = styleBlock.match(/\.card-body \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const notes = styleBlock.match(/\.compact-notes \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const dietaryProfile = styleBlock.match(/\.dietary-profile-list span \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    const insightTile = styleBlock.match(/\.insight-tile \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementItem = styleBlock.match(/\.supplement-item \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementReason = styleBlock.match(/\.supp-reason \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const supplementSafetyDetails = styleBlock.match(/\.supplement-safety-details > summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(cardBody).toContain('min-width: 0;');
-    expect(notes).toContain('overflow-wrap: anywhere;');
-    expect(notes).toContain('word-break: break-word;');
-    expect(supplementItem).toContain('box-sizing: border-box;');
+    expect(dietaryProfile).toContain('overflow-wrap: anywhere;');
+    expect(dietaryProfile).toContain('word-break: break-word;');
+    expect(styleBlock).toContain('.dietary-items {');
+    expect(styleBlock).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(styleBlock).toContain('.dietary-item {');
+    expect(styleBlock).toContain('border-left: 2px solid var(--status-success-border);');
+    expect(styleBlock).toContain('word-break: break-word;');
+    expect(insightTile).toContain('box-sizing: border-box;');
     expect(supplementReason).toContain('display: block;');
     expect(supplementReason).toContain('overflow-wrap: anywhere;');
     expect(supplementSafetyDetails).toContain('min-height: 44px;');
@@ -155,38 +256,37 @@ describe('DashboardSummaryPanel semantic styling', () => {
 
   it('bounds the optional context selector and dashboard containers', () => {
     const dashboard = styleBlock.match(/\.dashboard-v2 \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const context = styleBlock.match(/\.context-selector \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const heading = styleBlock.match(/\.context-selector-heading \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const select = styleBlock.match(/\.context-selector select \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const summaryCard = styleBlock.match(/\.summary-card \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const labCard = styleBlock.match(/\.card-lab-followups \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(dashboard).toContain('box-sizing: border-box;');
-    expect(context).toContain('max-width: 100%;');
-    expect(heading).toContain('flex-wrap: wrap;');
-    expect(select).toContain('box-sizing: border-box;');
-    expect(select).toContain('max-width: 100%;');
-    expect(select).toContain('text-overflow: ellipsis;');
     expect(grid).toContain('min-width: 0;');
     expect(summaryCard).toContain('box-sizing: border-box;');
     expect(labCard).toContain('max-width: 100%;');
   });
 
-  it('keeps the primary action queue readable without breaking its one-column priority order', () => {
+  it('uses a full-width three-column priority queue on wide desktop', () => {
     const actionQueueCard = styleBlock.match(/\.action-queue \{[\s\S]*?\n  \}/)?.[0] ?? '';
     const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(actionQueueCard).toContain('width: min(100%, var(--report-dashboard-surface-width));');
     expect(actionQueueCard).toContain('margin-inline: auto;');
-    expect(actionQueue).toContain('width: min(100%, 48rem);');
+    expect(actionQueue).toContain('width: 100%;');
     expect(actionQueue).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('box-sizing: border-box;');
     expect(source).toContain('<div class="action-queue-list">');
-    expect(actionQueue).not.toContain('grid-template-columns:');
+    expect(actionQueue).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+    expect(source).toContain('action-queue-column');
+    expect(source).toContain('columnIndex * 3 + rowIndex + 1');
+    expect(source).toContain('data-concern={priorityTone(item.finding)}');
+    expect(styleBlock).toContain('.action-queue-item[data-concern="high"]');
+    expect(styleBlock).toContain('.action-queue-item[data-concern="moderate"]');
+    expect(styleBlock).toContain('.action-queue-item[data-concern="low"]');
+    expect(source).not.toContain('action-queue-priority');
   });
 
-  it('keeps the secondary guidance stack narrower than the full desktop report pane', () => {
+  it('uses the available desktop report pane without exceeding the shared surface cap', () => {
     const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(grid).toContain('width: min(100%, var(--report-dashboard-surface-width));');
@@ -194,7 +294,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('uses the shared desktop dashboard width token for secondary surfaces', () => {
-    expect(theme).toContain('--report-dashboard-surface-width: 56rem;');
+    expect(theme).toContain('--report-dashboard-surface-width: 92rem;');
     const healthAreaIndex = styleBlock.match(/\.health-area-index \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(healthAreaIndex).toContain('width: min(100%, var(--report-dashboard-surface-width));');
@@ -202,19 +302,18 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(healthAreaIndex).toContain('box-sizing: border-box;');
   });
 
-  it('keeps context selector labels short while retaining their stable IDs', () => {
-    expect(source).toContain("const contextOptionLabels: Record<string, string>");
-    expect(source).toContain("menstrual_cycle: 'Menstrual cycle / PMS'");
-    expect(source).toContain("suspected_adenomyosis: 'Adenomyosis / heavy bleeding'");
-    expect(source).toContain("<option value=\"\">Not specified</option>");
-    expect(source).toContain('contextOptionLabel(option.id, option.label)');
+  it('leaves context labels and stable context IDs to the Context workspace', () => {
+    expect(source).not.toContain("const contextOptionLabels: Record<string, string>");
+    expect(source).not.toContain("menstrual_cycle: 'Menstrual cycle / PMS'");
+    expect(source).not.toContain("suspected_adenomyosis: 'Adenomyosis / heavy bleeding'");
+    expect(source).not.toContain('<option value="">Not specified</option>');
+    expect(source).not.toContain('contextOptionLabel(option.id, option.label)');
   });
 
   it('keeps guidance card aria-controls targets present while collapsed', () => {
     for (const id of [
       'dietary-alignment-body',
       'supplements-body',
-      'cycle-support-body',
       'activity-body',
       'medication-body',
       'lab-followups-body',

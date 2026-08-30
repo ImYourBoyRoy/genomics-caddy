@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import hormonePack from '../marker-packs/hormones_reproductive.json';
 import {
   DEFAULT_LAYPERSON_TRANSLATION,
-  getCompactDietNotes,
+  getCompactActionMeaning,
   getCompactGuidanceText,
   getCompactSimpleMeaning,
   getCompactSupplementName,
   getCompactSupplementReason,
+  getSimpleEvidenceLabel,
+  getSimpleFindingCopy,
   getSimpleFindingTitle,
   getSimpleNextStep,
   getLaypersonTranslation,
@@ -105,10 +107,12 @@ describe('plain-English claim framing', () => {
       clinical_confirmation_required: false,
     });
 
-    expect(metabolic.simpleImpact).toBe('Blood sugar and metabolism research context');
-    expect(reproductive.simpleImpact).toBe('Thyroid and immune research context');
-    expect(metabolic.simpleMeaning).toContain('does not diagnose diabetes');
-    expect(reproductive.simpleMeaning).toContain('does not diagnose thyroid disease');
+    expect(metabolic.simpleImpact).toBe('Blood sugar and body-weight signal');
+    expect(reproductive.simpleImpact).toBe('Thyroid and immune signal');
+    expect(metabolic.simpleMeaning).toContain('glucose or HbA1c');
+    expect(reproductive.simpleMeaning).toContain('measured thyroid or immune tests');
+    expect(metabolic.simpleMeaning).not.toMatch(/diagnos|raw DNA|genotype/i);
+    expect(reproductive.simpleMeaning).not.toMatch(/diagnos|raw DNA|genotype/i);
     expect(metabolic.isFallback).not.toBe(true);
     expect(reproductive.isFallback).not.toBe(true);
   });
@@ -123,10 +127,12 @@ describe('plain-English claim framing', () => {
       clinical_confirmation_required: true,
     });
 
-    expect(translation.simpleImpact).toBe('A biological pathway studied in genetic research.');
-    expect(translation.simpleMeaning).toContain('associated with a research finding');
-    expect(translation.simpleMeaning).toContain('does not predict whether you have a condition');
-    expect(translation.simpleMeaning).toContain('A clinical test may be needed');
+    expect(translation.simpleImpact).toBe('Genetic research signal');
+    expect(translation.simpleMeaning).toContain('biological pathway studied in research');
+    expect(translation.simpleMeaning).not.toContain('does not predict whether you have a condition');
+    expect(translation.simpleMeaning).not.toContain('A clinical test may be needed');
+    expect(translation.reviewAction).toBe('Review the related clinical test route.');
+    expect(translation.evidenceLabel).toBe('Clinical follow-up');
     expect(translation.simpleMeaning).not.toContain('This marker has been studied in pathway research.');
     expect(translation.simpleMeaning).not.toContain('does not measure current pathway activity');
   });
@@ -138,6 +144,20 @@ describe('plain-English claim framing', () => {
     };
 
     expect(getCompactSimpleMeaning(translation)).toBe('This marker has been studied in insulin signaling.');
+  });
+
+  it('keeps the useful association when a claim boundary trails the same sentence', () => {
+    expect(getCompactSimpleMeaning({
+      simpleImpact: 'Heart rhythm research context',
+      simpleMeaning: 'This marker has been associated with cardiac conduction, but it does not diagnose an arrhythmia.',
+    })).toBe('This marker has been associated with cardiac conduction');
+  });
+
+  it('keeps the dashboard action reason to one plain-language sentence', () => {
+    expect(getCompactActionMeaning({
+      simpleImpact: 'SLC30A8 beta-cell association marker',
+      simpleMeaning: 'This SLC30A8 marker is studied in zinc transport and pancreatic beta-cell function. Any association is probabilistic; it does not measure insulin release or diagnose diabetes.',
+    })).toBe('This finding is studied in zinc transport and pancreatic beta-cell function.');
   });
 
   it('falls back to the plain title when a meaning contains only generic guardrails', () => {
@@ -165,7 +185,7 @@ describe('plain-English claim framing', () => {
     expect(getSimpleFindingTitle('ESR1 hormone-response research marker')).toBe('Hormone response research context');
     expect(getSimpleFindingTitle('9p21 cardiovascular-association marker')).toBe('Cardiovascular research context');
     expect(getSimpleFindingTitle('FBN1/connective-tissue association marker')).toBe('Connective tissue research context');
-    expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('No function allele component');
+    expect(getSimpleFindingTitle('CYP2D6*4 no-function allele component')).toBe('Medication processing context');
     expect(getSimpleFindingTitle('A biological pathway studied in genetic research.')).toBe('A biological pathway studied in genetic research.');
   });
 
@@ -187,7 +207,62 @@ describe('plain-English claim framing', () => {
     expect(getSimpleNextStep({ ...base, effect_direction: 'trait' })).toBe('Compare this with your lived experience.');
     expect(getSimpleNextStep({ ...base, effect_direction: 'protective' })).toBe('Use this as background context with your health history.');
     expect(getSimpleNextStep({ ...base, effect_direction: 'risk', severity_class: 'low_risk' })).toBe('Compare with symptoms, history, and relevant labs.');
-    expect(getSimpleNextStep({ ...base, effect_direction: 'trait', clinical_confirmation_required: true })).toBe('Consider clinical confirmation.');
+    expect(getSimpleNextStep({ ...base, effect_direction: 'trait', clinical_confirmation_required: true })).toBe('Review the related clinical test route.');
+  });
+
+  it('normalizes legacy translations into the complete Simple finding contract', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        evidence_tier: 'Tier B — replicated association',
+        effect_direction: 'risk',
+        clinical_confirmation_required: false,
+        severity_class: 'moderate_risk',
+        confirm_with: ['HbA1c'],
+      },
+      {
+        simpleImpact: 'Blood sugar pathway',
+        simpleMeaning: 'This marker is associated with insulin signaling. Pair it with measured glucose and HbA1c.',
+      },
+    );
+
+    expect(copy).toEqual({
+      plain_title: 'Blood sugar pathway',
+      signal: 'This marker is associated with insulin signaling.',
+      why_it_matters: 'Pair it with measured glucose and HbA1c.',
+      review_action: 'Review HbA1c.',
+      evidence_label: 'Replicated research signal',
+      is_fallback: false,
+    });
+  });
+
+  it('prefers authored structured Simple fields and keeps evidence labels compact', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        evidence_tier: 'Tier A — clinical confirmation',
+        effect_direction: 'risk',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+        confirm_with: ['validated testing'],
+      },
+      {
+        simpleImpact: 'Technical legacy title',
+        simpleMeaning: 'Legacy meaning that should not replace authored copy.',
+        plainTitle: 'Medication safety signal',
+        signal: 'A medication-related safety signal is present.',
+        whyItMatters: 'It may affect how a specific medicine is reviewed.',
+        reviewAction: 'Check the matching medication before use.',
+        evidenceLabel: 'Clinical safety route',
+      },
+    );
+
+    expect(copy).toMatchObject({
+      plain_title: 'Medication safety signal',
+      signal: 'A medication-related safety signal is present.',
+      why_it_matters: 'It may affect how a specific medicine is reviewed.',
+      review_action: 'Check the matching medication before use.',
+      evidence_label: 'Clinical safety route',
+    });
+    expect(getSimpleEvidenceLabel('Tier E — exploratory')).toBe('Early or limited research');
   });
 
   it('surfaces a bounded summary of the authored follow-up items', () => {
@@ -242,15 +317,6 @@ describe('plain-English claim framing', () => {
     expect(getCompactGuidanceText(
       'Review measured Lp(a), ApoB, LDL-C, triglycerides, blood pressure, and family history together rather than reading one SNP in isolation',
     )).toBe('Review lipids, blood pressure, and family history together');
-  });
-
-  it('reduces aggregate dietary notes to unique plain-language bullets', () => {
-    expect(getCompactDietNotes(
-      '• TMPRSS6/TF: TMPRSS6 and TF markers can modestly shift population iron or hemoglobin traits, but they do not distinguish deficiency.\n• FUT2/TCN2: FUT2, TCN2, and CUBN markers can point to a B12-status or absorption question, but effects are modest.\n• FUT2/TCN2: FUT2, TCN2, and CUBN markers can point to a B12-status or absorption question, but effects are modest.',
-    )).toEqual([
-      'Iron SNPs are modest context; iron studies and bleeding history matter more.',
-      'B12 SNPs are modest context; B12, CBC, symptoms, diet, and medicines matter more.',
-    ]);
   });
 
   it('compacts supplement labels and attribution for Simple rows', () => {

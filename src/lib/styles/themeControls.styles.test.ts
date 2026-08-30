@@ -49,6 +49,16 @@ describe('shared theme controls', () => {
     expect(source.match(/--status-danger-hover-bg:/g)).toHaveLength(3);
   });
 
+  it('crossfades intentional theme changes without affecting initial paint', () => {
+    expect(source).toContain(':root[data-theme-transition]');
+    expect(source).toContain('transition-property: opacity;');
+    expect(source).toContain('background: #0b1020;');
+    expect(source).toContain('transition-duration: 2500ms;');
+    expect(source).toContain(':root[data-theme-transition="cover"] body::after');
+    expect(source).toContain('transition: none;');
+    expect(source).toContain('/* Printed reports use a neutral paper palette');
+  });
+
   it('keeps accent button foregrounds at normal-text AA contrast in active and hover states', () => {
     for (const [name, block] of [['dark', darkTheme], ['light', lightTheme]] as const) {
       expect(
@@ -88,6 +98,16 @@ describe('shared theme controls', () => {
     ].map(firstRule);
 
     expect(rules.every((rule) => rule && !rawColor.test(rule))).toBe(true);
+  });
+
+  it('keeps the shell gradient, sidebar, and scrollbar styling theme-token driven', () => {
+    expect(source).toContain('--app-gradient-highlight:');
+    expect(source).toContain('--sidebar-surface:');
+    expect(source).toContain('--scrollbar-track:');
+    expect(source).toContain('--scrollbar-thumb:');
+    expect(source).toContain('--scrollbar-thumb-hover:');
+    expect(source).toContain('background: radial-gradient(circle at top right, var(--app-gradient-highlight), var(--bg-primary));');
+    expect(source).toContain('background-color: var(--sidebar-surface);');
   });
 
   it('keeps navigation, dual explanations, settings, and hero surfaces theme-aware', () => {

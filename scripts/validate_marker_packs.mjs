@@ -29,6 +29,35 @@ const allowedActionability = new Set([
   'symptom_or_lab_conditioned',
   'clinical_confirmation',
 ]);
+const allowedInterpretationClasses = new Set([
+  'susceptibility_context',
+  'carrier_possibility',
+  'clinically_actionable_variant',
+  'research_context',
+  'protective_context',
+  'trait_context',
+  'unknown',
+]);
+const allowedInheritanceModels = new Set([
+  'autosomal_dominant',
+  'autosomal_recessive',
+  'x_linked',
+  'y_linked',
+  'mitochondrial',
+  'unknown',
+]);
+const allowedClinicalStates = new Set([
+  'clinically_confirmed',
+  'carrier_possibility',
+  'unknown',
+  'not_applicable',
+]);
+const allowedClinicalSemanticsFields = new Set([
+  'condition_label',
+  'interpretation_class',
+  'inheritance_model',
+  'clinical_state',
+]);
 const errors = [];
 const warnings = [];
 
@@ -92,6 +121,42 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
       if (marker.sex_scope !== undefined && marker.sex_scope !== null && typeof marker.sex_scope !== 'string') {
         errors.push(`${location} ${marker.rsid || '(unknown)'}: sex_scope must be a string when present`);
       }
+      if (marker.clinical_semantics !== undefined && marker.clinical_semantics !== null) {
+        const semantics = marker.clinical_semantics;
+        if (!semantics || typeof semantics !== 'object' || Array.isArray(semantics)) {
+          errors.push(`${location} ${marker.rsid || '(unknown)'}: clinical_semantics must be an object when present`);
+        } else {
+          for (const field of Object.keys(semantics)) {
+            if (!allowedClinicalSemanticsFields.has(field)) {
+              errors.push(`${location} ${marker.rsid || '(unknown)'}: clinical_semantics has unknown field ${field}`);
+            }
+          }
+          if (semantics.condition_label !== undefined && semantics.condition_label !== null
+            && (typeof semantics.condition_label !== 'string' || semantics.condition_label.trim() === '')) {
+            errors.push(`${location} ${marker.rsid || '(unknown)'}: clinical_semantics.condition_label must be a non-empty string when present`);
+          }
+          for (const [field, allowed] of [
+            ['interpretation_class', allowedInterpretationClasses],
+            ['inheritance_model', allowedInheritanceModels],
+            ['clinical_state', allowedClinicalStates],
+          ]) {
+            const value = semantics[field];
+            if (value !== undefined && value !== null && (typeof value !== 'string' || !allowed.has(value))) {
+              errors.push(`${location} ${marker.rsid || '(unknown)'}: clinical_semantics.${field} is invalid`);
+            }
+          }
+          const isCarrier = semantics.interpretation_class === 'carrier_possibility'
+            || semantics.clinical_state === 'carrier_possibility';
+          if (isCarrier && (!semantics.condition_label
+            || !allowedInheritanceModels.has(semantics.inheritance_model)
+            || semantics.inheritance_model === 'unknown')) {
+            errors.push(`${location} ${marker.rsid || '(unknown)'}: carrier possibility requires condition_label and a supported inheritance_model`);
+          }
+          if (semantics.inheritance_model && semantics.inheritance_model !== 'unknown' && !semantics.condition_label) {
+            errors.push(`${location} ${marker.rsid || '(unknown)'}: a non-unknown inheritance_model requires condition_label`);
+          }
+        }
+      }
     }
   }
 }
@@ -113,6 +178,19 @@ for (const rule of actionability?.rules || []) {
   }
   if (rule.marker_ids !== undefined && (!isStringArray(rule.marker_ids) || rule.marker_ids.length === 0)) {
     errors.push(`actionability rule ${rule.id || '(unnamed)'}: marker_ids must be a non-empty string array when present`);
+  }
+  for (const field of ['dietary_favor', 'dietary_avoid']) {
+    if (rule[field] !== undefined && !isStringArray(rule[field])) {
+      errors.push(`actionability rule ${rule.id || '(unnamed)'}: ${field} must be a string array when present`);
+    }
+  }
+  for (const field of ['supplement_favor', 'supplement_avoid']) {
+    if (rule[field] !== undefined && (!Array.isArray(rule[field]) || rule[field].some((item) =>
+      !item || typeof item !== 'object' || typeof item.name !== 'string' || item.name.trim() === '' ||
+      (item.reason !== undefined && typeof item.reason !== 'string')
+    ))) {
+      errors.push(`actionability rule ${rule.id || '(unnamed)'}: ${field} must contain {name, reason?} objects when present`);
+    }
   }
 }
 const conditionalPromptIds = new Set(Object.keys(foodRequirementPrompts?.conditional_prompts || {}));
@@ -138,6 +216,7 @@ const supportContracts = {
   agent_research_prompts: { objects: ['templates'] },
   ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'], objects: ['safety_review_prompt'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
+  allergy_sensitivity_catalog: { arrays: ['dna_contexts', 'clinical_safety_routes', 'exposure_checklists', 'source_ids'], objects: ['display'] },
   callability_rules: { arrays: ['rules'] },
   consultation_modes: { arrays: ['modes'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
@@ -321,6 +400,65 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       if (!isStringArray(resource.lab_confirmation_filter?.[field]) || resource.lab_confirmation_filter[field].length === 0) {
         errors.push(`actionability_guidance.json: lab_confirmation_filter.${field} must be a non-empty string array`);
       }
+    }
+  }
+  if (resourceId === 'allergy_sensitivity_catalog') {
+    const sourceIds = new Set(Object.keys(sourceRegistry?.sources || {}));
+    for (const [index, context] of (resource.dna_contexts || []).entries()) {
+      const location = `allergy_sensitivity_catalog.json dna context ${index + 1}`;
+      for (const field of ['id', 'label', 'signal_label', 'summary', 'relevance', 'evidence_label', 'next_step']) {
+        if (typeof context[field] !== 'string' || context[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['matched_marker_ids', 'examples', 'sources']) {
+        if (!isStringArray(context[field])) errors.push(`${location}: ${field} must be a non-empty string array`);
+      }
+      for (const sourceId of context.sources || []) {
+        if (!sourceIds.has(sourceId)) errors.push(`${location}: sources references unknown source ${sourceId}`);
+      }
+    }
+    for (const [index, route] of (resource.clinical_safety_routes || []).entries()) {
+      const location = `allergy_sensitivity_catalog.json clinical safety route ${index + 1}`;
+      for (const field of ['id', 'actionability_rule_id', 'label', 'signal_label', 'summary', 'relevance', 'next_step', 'evidence_label']) {
+        if (typeof route[field] !== 'string' || route[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      for (const field of ['medications', 'sources']) {
+        if (!isStringArray(route[field])) errors.push(`${location}: ${field} must be a non-empty string array`);
+      }
+      for (const sourceId of route.sources || []) {
+        if (!sourceIds.has(sourceId)) errors.push(`${location}: sources references unknown source ${sourceId}`);
+      }
+    }
+    const actionabilityRuleIds = new Set((readJson(path.join(sourceDir, 'actionability_guidance.json'))?.rules || []).map((rule) => rule.id));
+    for (const [index, route] of (resource.clinical_safety_routes || []).entries()) {
+      if (!actionabilityRuleIds.has(route.actionability_rule_id)) {
+        errors.push(`allergy_sensitivity_catalog.json clinical safety route ${index + 1}: unknown actionability rule ${route.actionability_rule_id}`);
+      }
+    }
+    for (const [index, group] of (resource.exposure_checklists || []).entries()) {
+      const location = `allergy_sensitivity_catalog.json exposure checklist ${index + 1}`;
+      if (typeof group.id !== 'string' || !group.id.trim() || typeof group.label !== 'string' || !group.label.trim()) {
+        errors.push(`${location}: id and label must be non-empty strings`);
+      }
+      if (!Array.isArray(group.items) || group.items.length === 0) {
+        errors.push(`${location}: items must be a non-empty array`);
+      } else {
+        for (const item of group.items) {
+          if (typeof item?.label !== 'string' || !item.label.trim() || typeof item?.examples !== 'string' || !item.examples.trim()) {
+            errors.push(`${location}: each item needs label and examples`);
+          }
+        }
+      }
+      if (!isStringArray(group.source_ids)) errors.push(`${location}: source_ids must be a non-empty string array`);
+      for (const sourceId of group.source_ids || []) {
+        if (!sourceIds.has(sourceId)) errors.push(`${location}: source_ids references unknown source ${sourceId}`);
+      }
+    }
+    for (const sourceId of resource.source_ids || []) {
+      if (!sourceIds.has(sourceId)) errors.push(`allergy_sensitivity_catalog.json: source_ids references unknown source ${sourceId}`);
     }
   }
   if (resourceId === 'phenotype_prompts') {
@@ -898,6 +1036,11 @@ for (const [index, domain] of (activityGuardrails?.domains || []).entries()) {
   for (const field of ['section_keywords', 'favor', 'avoid', 'confirm_with', 'personal_context_keywords']) {
     if (!isStringArray(domain[field]) || domain[field].length === 0) {
       errors.push(`${location}: ${field} must be a non-empty string array`);
+    }
+  }
+  for (const field of ['simple_favor', 'simple_watch', 'simple_verify']) {
+    if (domain[field] !== undefined && (!isStringArray(domain[field]) || domain[field].length === 0)) {
+      errors.push(`${location}: optional ${field} must be a non-empty string array`);
     }
   }
   for (const field of ['relevant_pack_signals', 'context_ids']) {

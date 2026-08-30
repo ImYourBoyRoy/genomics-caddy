@@ -207,6 +207,15 @@ describe('support resource context', () => {
     expect(context.cycle_support.source_registry.gene_reviews_alpha1_antitrypsin).toBeDefined();
     expect(context.cycle_support.source_registry.gene_reviews_wilson).toBeDefined();
     expect(context.cycle_support.source_registry.gene_reviews_riboflavin_transport).toBeDefined();
+    expect(context.allergy_sensitivity.dna_contexts.map((context) => context.id)).toEqual(expect.arrayContaining([
+      'atopy_ige',
+      'food_allergy_context',
+      'inhalant_atopy',
+    ]));
+    expect(context.allergy_sensitivity.exposure_checklists.find((group) => group.id === 'foods')?.items.map((item) => item.label))
+      .toEqual(expect.arrayContaining(['Peanut', 'Tree nuts', 'Sesame']));
+    expect(context.allergy_sensitivity.source_registry.fda_major_food_allergens).toBeDefined();
+    expect(context.allergy_sensitivity.source_registry.fda_pharmacogenomic_biomarkers).toBeDefined();
   });
 
   it('routes preconception and fertility context across body and partner factors', () => {

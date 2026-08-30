@@ -211,6 +211,13 @@
     align-items: center;
     width: 100%;
     max-width: 640px;
+    padding: 2rem 2.25rem 1.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: rgba(8, 12, 24, 0.72);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(18px);
+    box-sizing: border-box;
     animation: bootstrap-fade-up 0.65s ease both;
   }
 

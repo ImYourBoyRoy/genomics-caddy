@@ -14,8 +14,11 @@ import { normalizeUiLabel } from './uiLabels';
 
 export type AgentUiTab =
   | 'report'
+  | 'context'
+  | 'diary'
   | 'map'
   | 'discovery'
+  | 'legal'
   | 'browser'
   | 'mcp'
   | 'agent'
@@ -30,6 +33,8 @@ export interface AgentUiLayoutMetrics {
   mainContentWidth: number | null;
   mainContentScrollWidth: number | null;
   sidebarWidth: number | null;
+  profileNameCount: number;
+  profileNameMinWidth: number | null;
   connectionsLaunchHeight: number | null;
   liftoverStatusHeight: number | null;
   markerGridWidth: number | null;
@@ -46,16 +51,23 @@ export interface AgentUiLayoutMetrics {
   focusControlOverlapsContent: boolean;
   focusControlBottom: number | null;
   firstContentTop: number | null;
+  sidebarFocusControlTop: number | null;
+  sidebarFocusControlRightGap: number | null;
+  sidebarFocusControlInsideSidebar: boolean;
+  sidebarFocusControlOverlapsBrand: boolean;
   actionQueueWidth: number | null;
   actionQueueShellWidth: number | null;
+  actionQueueColumnCount: number | null;
   actionQueueItemMaxWidth: number | null;
   actionQueueItemCount: number;
+  reportOverviewWidth: number | null;
   dashboardGuidanceWidth: number | null;
   dashboardGuidanceCardMaxWidth: number | null;
-  themeControlInToolbar: boolean;
+  themeControlInSidebarFooter: boolean;
+  themeModeOptionCount: number;
+  topToolbarPresent: boolean;
   themeMenuOpen: boolean;
-  themeMenuInToolbarFlow: boolean;
-  themeMenuOverlapsReport: boolean;
+  appContextMenuInstalled: boolean;
   overflowingElements: Array<{
     tag: string;
     classes: string[];
@@ -85,6 +97,10 @@ export interface AgentUiTooltipProbeMetrics {
   openedPanelCount: number;
   withinViewportCount: number;
   accessiblePanelCount: number;
+  maxLeftOverflow: number;
+  maxTopOverflow: number;
+  maxRightOverflow: number;
+  maxBottomOverflow: number;
   triggerEdgeCounts: {
     top: number;
     right: number;
@@ -122,11 +138,23 @@ export interface AgentUiAccessibilityMetrics {
 export interface AgentUiSimpleCardContractMetrics {
   cardCount: number;
   titleCount: number;
-  meaningCount: number;
+  signalCount: number;
+  whyItMattersCount: number;
+  reviewActionCount: number;
   evidenceCount: number;
-  nextStepCount: number;
+  sectionFollowUpCount: number;
   detailsCount: number;
   technicalDataCount: number;
+}
+
+export interface AgentUiWarningMetrics {
+  genericWarningPhraseCount: number;
+  duplicateGenericWarningPhraseCount: number;
+  actionableAlertCount: number;
+  clinicalReviewAlertCount: number;
+  reportGuideCount: number;
+  footerReminderCount: number;
+  legalPrivacyPageCount: number;
 }
 
 export interface AgentUiSnapshot {
@@ -149,6 +177,7 @@ export interface AgentUiSnapshot {
   tooltip: AgentUiTooltipMetrics;
   accessibility: AgentUiAccessibilityMetrics;
   simpleCardContract: AgentUiSimpleCardContractMetrics;
+  warningMetrics: AgentUiWarningMetrics;
   layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
@@ -338,24 +367,27 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const connectionsLaunch = document.querySelector<HTMLElement>('.connections-launch-card');
   const liftoverStatus = document.querySelector<HTMLElement>('.liftover-status-card');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
-  const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
+  const focusControl = document.querySelector<HTMLElement>('.focus-restore-toggle');
+  const sidebarFocusControl = document.querySelector<HTMLElement>('.sidebar-focus-toggle');
+  const sidebarBrandParts = Array.from(
+    document.querySelectorAll<HTMLElement>('.sidebar .brand-logo, .sidebar .brand h2'),
+  );
+  const profileNameWidths = Array.from(
+    document.querySelectorAll<HTMLElement>('.samples-card .sample-name-text'),
+  ).map((name) => Math.round(name.getBoundingClientRect().width));
   const actionQueue = document.querySelector<HTMLElement>('.action-queue-list');
   const firstContent = document.querySelector<HTMLElement>('.main-content > *');
   const focusRect = focusControl?.getBoundingClientRect();
+  const sidebarFocusRect = sidebarFocusControl?.getBoundingClientRect();
   const contentRect = firstContent?.getBoundingClientRect();
+  const sidebarRect = sidebar?.getBoundingClientRect();
+  const brandRects = sidebarBrandParts.map((part) => part.getBoundingClientRect());
   const markerCardWidths = getWidthBounds('.marker-card');
   const actionQueueItemWidths = getWidthBounds('.action-queue-item');
   const actionQueueShell = document.querySelector<HTMLElement>('.action-queue');
+  const reportOverview = document.querySelector<HTMLElement>('.report-header[data-presentation-mode="simple"]');
   const dashboardGuidance = document.querySelector<HTMLElement>('.grid-layout');
   const dashboardGuidanceCardWidths = getWidthBounds('.grid-layout .summary-card');
-  const themeMenu = document.querySelector<HTMLElement>('.theme-options');
-  const themeMenuOpen = !!themeMenu && !themeMenu.hidden;
-  const themeMenuRect = themeMenuOpen ? themeMenu.getBoundingClientRect() : null;
-  const themeMenuOverlapsReport = !!themeMenuRect && !!contentRect
-    && themeMenuRect.left < contentRect.right
-    && themeMenuRect.right > contentRect.left
-    && themeMenuRect.top < contentRect.bottom
-    && themeMenuRect.bottom > contentRect.top;
   const expandedSectionNames = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded="true"]'),
   )
@@ -366,6 +398,16 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     && focusRect.right > contentRect.left
     && focusRect.top < contentRect.bottom
     && focusRect.bottom > contentRect.top;
+  const sidebarFocusControlInsideSidebar = !!sidebarFocusRect && !!sidebarRect
+    && sidebarFocusRect.top >= sidebarRect.top
+    && sidebarFocusRect.right <= sidebarRect.right
+    && sidebarFocusRect.bottom <= sidebarRect.bottom;
+  const sidebarFocusControlOverlapsBrand = !!sidebarFocusRect && brandRects.some((brandRect) =>
+    sidebarFocusRect.left < brandRect.right
+    && sidebarFocusRect.right > brandRect.left
+    && sidebarFocusRect.top < brandRect.bottom
+    && sidebarFocusRect.bottom > brandRect.top
+  );
 
   return {
     viewportWidth: window.innerWidth,
@@ -375,6 +417,8 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     mainContentWidth: mainContent?.getBoundingClientRect().width ?? null,
     mainContentScrollWidth: mainContent?.scrollWidth ?? null,
     sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
+    profileNameCount: profileNameWidths.length,
+    profileNameMinWidth: profileNameWidths.length ? Math.min(...profileNameWidths) : null,
     connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
     liftoverStatusHeight: liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null,
     markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
@@ -391,18 +435,25 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     focusControlOverlapsContent,
     focusControlBottom: focusRect ? Math.round(focusRect.bottom) : null,
     firstContentTop: contentRect ? Math.round(contentRect.top) : null,
+    sidebarFocusControlTop: sidebarFocusRect ? Math.round(sidebarFocusRect.top) : null,
+    sidebarFocusControlRightGap: sidebarFocusRect && sidebarRect
+      ? Math.round(sidebarRect.right - sidebarFocusRect.right)
+      : null,
+    sidebarFocusControlInsideSidebar,
+    sidebarFocusControlOverlapsBrand,
     actionQueueWidth: actionQueue ? Math.round(actionQueue.getBoundingClientRect().width) : null,
     actionQueueShellWidth: actionQueueShell ? Math.round(actionQueueShell.getBoundingClientRect().width) : null,
+    actionQueueColumnCount: getGridColumnCount(actionQueue),
     actionQueueItemMaxWidth: actionQueueItemWidths.max,
     actionQueueItemCount: actionQueue?.querySelectorAll('.action-queue-item').length ?? 0,
+    reportOverviewWidth: reportOverview ? Math.round(reportOverview.getBoundingClientRect().width) : null,
     dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
     dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,
-    themeControlInToolbar: document.querySelector('.focus-toolbar .theme-toggle') !== null,
-    themeMenuOpen,
-    themeMenuInToolbarFlow: !!themeMenu
-      && themeMenu.closest('.focus-toolbar') !== null
-      && getComputedStyle(themeMenu).position === 'static',
-    themeMenuOverlapsReport,
+    themeControlInSidebarFooter: document.querySelector('.sidebar-footer .theme-toggle') !== null,
+    themeModeOptionCount: document.querySelectorAll('.sidebar-footer [data-theme-mode]').length,
+    topToolbarPresent: document.querySelector('.focus-toolbar') !== null,
+    themeMenuOpen: document.querySelector('.theme-options') !== null,
+    appContextMenuInstalled: document.documentElement.dataset.contextMenu === 'genomics-caddy',
     overflowingElements: collectOverflowingElements(mainContent),
   };
 }
@@ -413,6 +464,7 @@ function collectResourceStatus(): AgentUiSnapshot['resourceStatus'] {
   const statusPill = statusToggle.querySelector<HTMLElement>('.resource-status-pill');
   if (statusPill?.classList.contains('resource-status-current')) return 'current';
   if (statusPill?.classList.contains('resource-status-error')) return 'error';
+  if (statusPill?.classList.contains('resource-status-incomplete')) return 'attention';
   if (statusPill) return 'checking';
   if (statusToggle.querySelector('.update-pill, .missing-pill')) return 'attention';
   return null;
@@ -433,6 +485,24 @@ function collectResourceUpdatePhase(): AgentUiSnapshot['resourceUpdatePhase'] {
   return phases.includes(phase as AgentUiResourceUpdatePhase)
     ? phase as AgentUiResourceUpdatePhase
     : null;
+}
+
+function collectWarningMetrics(): AgentUiWarningMetrics {
+  const visibleText = document.body.innerText || '';
+  const genericPhrases = Array.from(
+    visibleText.matchAll(/\b(?:not a diagnosis|raw DNA|genotype alone|do not (?:start|stop|change) [^.!?]{0,100})\b/gi),
+  ).map((match) => (match[0] || '').replace(/\s+/g, ' ').trim().toLowerCase());
+  const uniqueGenericPhrases = new Set(genericPhrases);
+
+  return {
+    genericWarningPhraseCount: genericPhrases.length,
+    duplicateGenericWarningPhraseCount: Math.max(0, genericPhrases.length - uniqueGenericPhrases.size),
+    actionableAlertCount: document.querySelectorAll('[data-warning-kind="actionable_safety"]').length,
+    clinicalReviewAlertCount: document.querySelectorAll('[data-warning-kind="clinical_review"]').length,
+    reportGuideCount: document.querySelectorAll('.report-legend-details').length,
+    footerReminderCount: document.querySelectorAll('.app-reference-note').length,
+    legalPrivacyPageCount: document.querySelectorAll('.legal-page').length,
+  };
 }
 
 function collectTooltipMetrics(): AgentUiTooltipMetrics {
@@ -460,7 +530,11 @@ function isVisibleQaElement(element: HTMLElement): boolean {
   const style = getComputedStyle(element);
   if (style.display === 'none' || style.visibility === 'hidden') return false;
   const rect = element.getBoundingClientRect();
-  return rect.width > 0 && rect.height > 0;
+  return rect.width > 0 && rect.height > 0
+    && rect.right > 0
+    && rect.bottom > 0
+    && rect.left < window.innerWidth
+    && rect.top < window.innerHeight;
 }
 
 function waitForQaPaint(): Promise<void> {
@@ -486,6 +560,10 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
   let openedPanelCount = 0;
   let withinViewportCount = 0;
   let accessiblePanelCount = 0;
+  let maxLeftOverflow = 0;
+  let maxTopOverflow = 0;
+  let maxRightOverflow = 0;
+  let maxBottomOverflow = 0;
 
   for (const trigger of triggers) {
     dismissOpenTooltipForQa();
@@ -501,6 +579,10 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
       openedPanelCount += metrics.openPanelCount;
       withinViewportCount += metrics.withinViewportCount;
       accessiblePanelCount += metrics.accessiblePanelCount;
+      maxLeftOverflow = Math.max(maxLeftOverflow, metrics.maxLeftOverflow);
+      maxTopOverflow = Math.max(maxTopOverflow, metrics.maxTopOverflow);
+      maxRightOverflow = Math.max(maxRightOverflow, metrics.maxRightOverflow);
+      maxBottomOverflow = Math.max(maxBottomOverflow, metrics.maxBottomOverflow);
       const rect = trigger.getBoundingClientRect();
       const edgeThreshold = 80;
       if (rect.top <= edgeThreshold) triggerEdgeCounts.top += 1;
@@ -519,6 +601,10 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
     openedPanelCount,
     withinViewportCount,
     accessiblePanelCount,
+    maxLeftOverflow,
+    maxTopOverflow,
+    maxRightOverflow,
+    maxBottomOverflow,
     triggerEdgeCounts,
   };
 }
@@ -593,9 +679,9 @@ function probeRenderedContrast(): AgentUiContrastProbeMetrics {
     '.btn-primary',
     '.btn-accent',
     '.view-mode-active',
-    '.focus-toggle',
+    '.sidebar-focus-toggle, .focus-restore-toggle',
     '.theme-toggle',
-    '.theme-menu button',
+    '.theme-toggle-options button',
     '.update-pill',
     '.missing-pill',
     '.badge',
@@ -655,12 +741,14 @@ function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
     const controlsId = control.getAttribute('aria-controls');
     return !!controlsId && !!document.getElementById(controlsId);
   });
-  const focusControl = document.querySelector<HTMLElement>('.focus-toggle');
+  const focusControls = Array.from(
+    document.querySelectorAll<HTMLElement>('.sidebar-focus-toggle, .focus-restore-toggle'),
+  );
 
   return {
     mainLandmarkCount: document.querySelectorAll('main.main-content').length,
     sidebarLandmarkCount: document.querySelectorAll('aside#data-sidebar[aria-label]').length,
-    labelledToolbarCount: document.querySelectorAll('.focus-toolbar[role="toolbar"][aria-label]').length,
+    labelledToolbarCount: document.querySelectorAll('.sidebar-footer[role="toolbar"][aria-label]').length,
     labelledTablistCount: document.querySelectorAll('[role="tablist"][aria-label]').length,
     activeTabCount: document.querySelectorAll('[role="tab"][aria-selected="true"]').length,
     labelledTabpanelCount: document.querySelectorAll('[role="tabpanel"][aria-labelledby]').length,
@@ -671,7 +759,7 @@ function collectAccessibilityMetrics(): AgentUiAccessibilityMetrics {
     boundGuidanceToggleCount: boundGuidanceToggles.length,
     expandedControlCount: expandedControls.length,
     boundExpandedControlCount: boundExpandedControls.length,
-    focusControlTargetsSidebar: focusControl?.getAttribute('aria-controls') === 'data-sidebar',
+    focusControlTargetsSidebar: focusControls.some((control) => control.getAttribute('aria-controls') === 'data-sidebar'),
   };
 }
 
@@ -682,9 +770,11 @@ function collectSimpleCardContractMetrics(): AgentUiSimpleCardContractMetrics {
   return {
     cardCount: cards.length,
     titleCount: countCardsWith('.simple-finding-title'),
-    meaningCount: countCardsWith('.simple-meaning-block'),
+    signalCount: countCardsWith('.simple-copy-signal'),
+    whyItMattersCount: countCardsWith('.simple-copy-field:not(.simple-copy-signal)'),
+    reviewActionCount: countCardsWith('.simple-next-step'),
     evidenceCount: countCardsWith('.marker-meta .tier-badge'),
-    nextStepCount: countCardsWith('.simple-next-step'),
+    sectionFollowUpCount: document.querySelectorAll('.section-follow-up').length,
     detailsCount: countCardsWith('.simple-details'),
     technicalDataCount: countCardsWith('.technical-details'),
   };
@@ -848,6 +938,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         tooltip: collectTooltipMetrics(),
         accessibility: collectAccessibilityMetrics(),
         simpleCardContract: collectSimpleCardContractMetrics(),
+        warningMetrics: collectWarningMetrics(),
         layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),
@@ -904,7 +995,8 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
           continue;
         }
         const value = (node.textContent || '').replace(/\s+/g, ' ').trim();
-        if (value.length >= 2 && value.toLowerCase().includes(needle)) {
+        // Keep one-character visual symbols queryable for desktop QA (for example, profile sex symbols).
+        if (value.length >= 1 && value.toLowerCase().includes(needle)) {
           hits.push(value.slice(0, 160));
           if (hits.length >= 25) break;
         }

@@ -46,11 +46,13 @@ describe('Sidebar update-state ordering', () => {
 
   it('shows a concise collapsed-row status after the authoritative probe settles', () => {
     expect(sidebarSource).toContain("if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';");
-    expect(sidebarSource).toContain("if (updatePhase === 'error') return 'Check failed';");
+    expect(sidebarSource).toContain("if (updatePhase === 'error' && updateRetry?.kind === 'status') return 'Check incomplete';");
+    expect(sidebarSource).toContain("if (updatePhase === 'error') return 'Update issue';");
     expect(sidebarSource).toContain("if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';");
     expect(sidebarSource).toContain('class="resource-status-pill"');
     expect(sidebarSource).toContain('class:resource-status-current={collapsedStatusLabel === \'Current\'}');
-    expect(sidebarSource).toContain('class:resource-status-error={collapsedStatusLabel === \'Check failed\'}');
+    expect(sidebarSource).toContain('class:resource-status-incomplete={collapsedStatusLabel === \'Check incomplete\'}');
+    expect(sidebarSource).toContain('class:resource-status-error={collapsedStatusLabel === \'Update issue\'}');
   });
 
   it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {

@@ -291,6 +291,12 @@
       "impact": "HFE-related iron overload susceptibility when homozygous or compound heterozygous",
       "evidence_tier": "A_clinically_relevant_but_incomplete",
       "interpretation": "HFE rs1800562 A encodes C282Y, the major common HFE hemochromatosis variant. Homozygous C282Y has the strongest common genetic association with iron overload, but penetrance is incomplete and phenotype must be confirmed with iron studies.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "hemochromatosis diagnosis from SNP alone",
         "organ damage prediction",
@@ -326,6 +332,12 @@
       "impact": "Mild HFE iron-loading modifier, especially with C282Y",
       "evidence_tier": "B_replicated_common_marker",
       "interpretation": "HFE rs1799945 G encodes H63D. Alone it usually has low clinical penetrance, but it can modify iron loading when combined with C282Y or relevant clinical context.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "hemochromatosis diagnosis",
         "iron overload certainty",

@@ -1,111 +1,87 @@
 <!-- ./src/lib/components/report/DashboardSummaryPanel.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import type { GeneratedReport, SeverityClass } from '../../types/genomics';
-  import { deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
-  import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
-  import { reproductiveContextOptionIsSuggestedForGeneticSex, saveReproductiveContext, selectedReproductiveContextOption } from '../../utils/reproductiveContext';
-  import ReproductiveContextEditor from '../ai/ReproductiveContextEditor.svelte';
-  import CycleDiaryEditor from '../ai/CycleDiaryEditor.svelte';
-  import { EMPTY_PERSONAL_SAFETY_CONTEXT, type PersonalSafetyContext } from '../../utils/personalSafetyContext';
-  import { populatedReproductiveIntake } from '../../utils/reproductiveIntake';
-  import { getCompactDietNotes, getCompactGuidanceText, getCompactSimpleMeaning, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingTitle, getSimpleNextStep } from '../../utils/layperson';
-  import type { PresentationMode } from '../../utils/presentationPreferences';
-  import Tooltip from '../common/Tooltip.svelte';
-  import { formatGeneticSexLabel } from '../../utils/uiLabels';
+import type { GeneratedReport } from '../../types/genomics';
+import allergySensitivityCatalog from '../../marker-packs/allergy_sensitivity_catalog.json';
+import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
+import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
+import type { PresentationMode } from '../../utils/presentationPreferences';
 
   interface Props {
     report: GeneratedReport;
-    sampleId?: number;
-    geneticSex?: string;
+    sampleId: number;
     onJumpToMarker?: (linkId: string) => void;
+    onJumpToMarkers?: (linkIds: string[]) => void;
     onJumpToSection?: (sectionName: string) => void;
     presentationMode?: PresentationMode;
-    reproductiveContext?: string;
-    personalSafetyContext?: PersonalSafetyContext;
   }
 
   let {
     report,
     sampleId,
-    geneticSex = '',
     onJumpToMarker,
-    reproductiveContext = $bindable(''),
-    personalSafetyContext = $bindable({ ...EMPTY_PERSONAL_SAFETY_CONTEXT }),
+    onJumpToMarkers,
     onJumpToSection,
     presentationMode = 'simple',
   }: Props = $props();
 
-  let contextOptions = $derived(cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown'));
-  let suggestedContextOptions = $derived(
-    contextOptions.filter((option) => reproductiveContextOptionIsSuggestedForGeneticSex(option.id, geneticSex)),
-  );
-  let otherContextOptions = $derived(
-    contextOptions.filter((option) => !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, geneticSex)),
-  );
-  let hasKnownGeneticSex = $derived(['Male', 'Female'].includes(formatGeneticSexLabel(geneticSex)));
+  let plan = $derived<ActionablePlan>(deriveActionablePlan(report));
 
-  let plan = $derived<ActionablePlan>(deriveActionablePlan(report, { reproductiveContext, personalSafetyContext }));
-
-  // Collapsible states with localStorage persistence
+  // Fresh profile defaults are collapsed. Deliberate expansion is retained per profile.
   let collapsed = $state({
     topFindings: true,
+    allergy: true,
     diet: true,
-    cycleSupport: true,
     supplements: true,
     activity: true,
     medication: true,
     labTests: true,
   });
+  let loadedCollapseProfileId = $state<number | null>(null);
 
   let expandedLabReasons = $state<Record<string, boolean>>({});
+  let labRequestCopied = $state(false);
 
-  onMount(() => {
+  function dashboardCollapseStorageKey(profileId: number): string {
+    // Version the key so the old global preference cannot reopen a dense dashboard.
+    return `genomics_dashboard_collapsed_v2_${profileId}`;
+  }
+
+  $effect(() => {
+    if (!sampleId || loadedCollapseProfileId === sampleId) return;
+    const defaults = {
+      topFindings: true,
+      allergy: true,
+      diet: true,
+      supplements: true,
+      activity: true,
+      medication: true,
+      labTests: true,
+    };
+    let next = defaults;
     try {
-      const stored = localStorage.getItem('genomics_dashboard_collapsed');
+      const stored = localStorage.getItem(dashboardCollapseStorageKey(sampleId));
       if (stored) {
-        collapsed = { ...collapsed, ...JSON.parse(stored) };
+        const parsed = JSON.parse(stored) as Partial<typeof defaults>;
+        next = { ...defaults, ...parsed };
       }
-    } catch (e) {
-      console.warn('Failed to load dashboard collapsed state:', e);
+    } catch {
+      next = defaults;
     }
+    loadedCollapseProfileId = sampleId;
+    collapsed = next;
   });
 
   function toggle(section: keyof typeof collapsed) {
     collapsed = { ...collapsed, [section]: !collapsed[section] };
     try {
-      localStorage.setItem('genomics_dashboard_collapsed', JSON.stringify(collapsed));
-    } catch (e) {
-      console.warn('Failed to save dashboard collapsed state:', e);
+      if (sampleId) {
+        localStorage.setItem(dashboardCollapseStorageKey(sampleId), JSON.stringify(collapsed));
+      }
+    } catch {
+      // The in-memory dashboard remains usable when localStorage is unavailable.
     }
   }
 
-  function setReproductiveContext(event: Event) {
-    reproductiveContext = (event.currentTarget as HTMLSelectElement).value;
-    saveReproductiveContext(sampleId, reproductiveContext);
-  }
-
-  function selectedReproductiveContextLabel(): string {
-    return selectedReproductiveContextOption(reproductiveContext)?.label || 'the selected context';
-  }
-
-  const contextOptionLabels: Record<string, string> = {
-    menstrual_cycle: 'Menstrual cycle / PMS',
-    cycle_linked_pain_headache: 'Cycle-linked pain / migraine',
-    cyclic_mood_symptoms: 'Cyclic mood symptoms',
-    ovarian_reproductive: 'Ovarian / reproductive care',
-    uterine_pelvic: 'Uterine / pelvic symptoms',
-    suspected_adenomyosis: 'Adenomyosis / heavy bleeding',
-    androgen_reproductive: 'Androgen / prostate / testicular',
-    menopause_hormone_therapy: 'Menopause / hormone therapy',
-    hormone_therapy_context: 'Hormone therapy context',
-    pregnancy_postpartum: 'Pregnancy / postpartum / lactation',
-    preconception_fertility: 'Preconception / fertility',
-  };
-
-  function contextOptionLabel(id: string, fallback: string): string {
-    return contextOptionLabels[id] || fallback;
-  }
 
   function markerForFinding(finding: ActionablePlan['topFindings'][number]) {
     for (const section of report.sections || []) {
@@ -118,30 +94,45 @@
   function findingMeaning(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
     return marker
-      ? getCompactSimpleMeaning(getLaypersonTranslation(marker))
-      : 'This is a research association that may be useful to discuss in the right personal context.';
+      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).why_it_matters
+      : 'A research finding is available to review in the right personal context.';
   }
 
   function findingTitle(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
     return marker
-      ? getSimpleFindingTitle(getLaypersonTranslation(marker).simpleImpact)
+      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).plain_title
       : 'Research finding';
   }
 
   function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
-    return marker ? getSimpleNextStep(marker) : 'Review the detailed finding for personal relevance.';
+    if (!marker) return 'Review the detailed finding for personal relevance.';
+    const translation = getLaypersonTranslation(marker);
+    return getSimpleFindingCopy(marker, translation).review_action;
   }
 
-  function getSeverityLabel(sc: SeverityClass): string {
-    switch (sc) {
-      case 'high_risk': return 'Stronger association';
-      case 'moderate_risk': return 'Possible association';
-      case 'low_risk': return 'Preliminary association';
-      case 'confirmation_required': return 'Confirm clinically';
-      default: return sc;
-    }
+  function priorityTone(finding: ActionablePlan['topFindings'][number]): 'high' | 'moderate' | 'low' {
+    if (finding.priority_tone === 'danger') return 'high';
+    if (finding.priority_tone === 'warning') return 'moderate';
+    return 'low';
+  }
+
+  function activityDomainLabel(domain: { id: string; label?: string }): string {
+    return domain.label || domain.id.replaceAll('_', ' ');
+  }
+
+  type ActivityDomain = ActionablePlan['activity']['relevantDomains'][number];
+  type ActivityListKey = 'favor' | 'avoid' | 'confirm_with';
+
+  function activityItems(domain: ActivityDomain, kind: ActivityListKey): string[] {
+    const compactKey = kind === 'favor'
+      ? 'simple_favor'
+      : kind === 'avoid'
+        ? 'simple_watch'
+        : 'simple_verify';
+    const compactItems = presentationMode === 'simple' ? domain[compactKey] : undefined;
+    return [...(compactItems?.length ? compactItems : domain[kind])];
   }
 
   function getTierBadgeClass(tier: LabTest['tier']): string {
@@ -169,6 +160,19 @@
     expandedLabReasons = { ...expandedLabReasons, [key]: !expandedLabReasons[key] };
   }
 
+  async function copyLabRequestList() {
+    const text = buildLabRequestListText(plan.labTests);
+    try {
+      await navigator.clipboard.writeText(text);
+      labRequestCopied = true;
+      window.setTimeout(() => { labRequestCopied = false; }, 1800);
+    } catch {
+      labRequestCopied = false;
+    }
+  }
+
+  let labRequestListText = $derived(buildLabRequestListText(plan.labTests));
+
   function labsByCategory(tests: LabTest[]): { category: string; tests: LabTest[] }[] {
     const map = new Map<string, LabTest[]>();
     for (const test of tests) {
@@ -185,23 +189,36 @@
     return `report-section-${sectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   }
 
-  const GUIDANCE_PREVIEW_LIMIT = 3;
-  const DETAIL_PREVIEW_LIMIT = 2;
-
-  function previewGuidance(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string[] {
-    return items.slice(0, limit);
-  }
-
-  function remainingGuidance(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string[] {
-    return items.slice(limit);
-  }
-
-  function guidanceMoreLabel(items: string[], limit = GUIDANCE_PREVIEW_LIMIT): string {
-    const count = Math.max(0, items.length - limit);
-    return count === 1 ? 'Show 1 more' : `Show ${count} more`;
-  }
-
   let healthAreaSections = $derived((report.sections || []).filter((section) => section.markers.length > 0));
+  let hasAllergyGuidance = $derived(
+    plan.allergy.dnaContexts.length > 0
+      || plan.allergy.medicationSafety.length > 0,
+  );
+  let hasNutritionGuidance = $derived(
+    plan.diet.favor.length > 0
+      || plan.diet.avoid.length > 0
+      || plan.foodSafety.explicitExclusions.length > 0
+      || plan.foodSafety.confirmedAllergies.length > 0
+      || plan.foodSafety.suspectedAllergies.length > 0
+      || plan.foodSafety.relevantRules.length > 0
+      || plan.foodSafety.suppressedSuggestions.length > 0
+      || plan.supplements.length > 0
+      || plan.supplementAvoid.length > 0
+      || plan.supplementSafety.relevantRules.length > 0,
+  );
+  let hasTrainingGuidance = $derived(plan.activity.relevantDomains.length > 0);
+  let hasMedicationGuidance = $derived(
+    plan.medicationPathways.length > 0,
+  );
+  let hasClinicalGuidance = $derived(hasMedicationGuidance || plan.labTests.length > 0);
+  let priorityColumns = $derived(
+    Array.from({ length: Math.min(3, Math.ceil(Math.min(plan.topFindings.length, 9) / 3)) }, (_, columnIndex) =>
+      plan.topFindings.slice(columnIndex * 3, columnIndex * 3 + 3).map((finding, rowIndex) => ({
+        finding,
+        rank: columnIndex * 3 + rowIndex + 1,
+      })),
+    ),
+  );
 </script>
 
 <div class="dashboard-v2">
@@ -209,31 +226,47 @@
     <div class="action-queue-header">
       <div>
         <span class="section-kicker">Start here</span>
-        <h3 id="action-queue-title">Your next steps</h3>
-        <p>Up to five prioritized follow-up prompts from this report.</p>
+        <h3 id="action-queue-title">Priority findings</h3>
+        <p>DNA signals with the clearest reason to review them first.</p>
       </div>
-      <span class="action-queue-count">{Math.min(plan.topFindings.length, 5)} shown</span>
+      <span class="action-queue-count">{Math.min(plan.topFindings.length, 9)} shown</span>
     </div>
 
     {#if plan.topFindings.length > 0}
       <div class="action-queue-list">
-        {#each plan.topFindings.slice(0, 5) as finding (finding.link_id || `${finding.rsid}:${finding.gene}`)}
-          <article class="action-queue-item">
-            <div class="action-queue-item-top">
-              <div>
-                <h4>{findingTitle(finding)}</h4>
-                <span class="action-queue-context">{finding.section_name}</span>
-              </div>
-              <span class="severity-badge {finding.severity_class}">{getSeverityLabel(finding.severity_class)}</span>
-            </div>
-            <p>{findingMeaning(finding)}</p>
-            <div class="action-queue-next"><strong class="action-queue-next-label">Next:</strong> {findingNextStep(finding)}</div>
-            {#if onJumpToMarker}
-              <button class="btn btn-xs btn-link jump-btn" type="button" onclick={() => onJumpToMarker?.(finding.link_id)}>
-                View finding details →
-              </button>
-            {/if}
-          </article>
+        {#each priorityColumns as column, columnIndex}
+          <div class="action-queue-column" data-column={columnIndex + 1}>
+            {#each column as item (item.finding.link_id || `${item.finding.rsid}:${item.finding.gene}`)}
+              <article class="action-queue-item" data-priority={item.rank} data-concern={priorityTone(item.finding)}>
+                <span class="action-queue-rank" aria-label={`Priority ${item.rank}`}>{item.rank}</span>
+                <div class="action-queue-item-content">
+                  <div class="action-queue-item-top">
+                    <div>
+                      <h4>{findingTitle(item.finding)}</h4>
+                      <span class="action-queue-context">{item.finding.section_name}</span>
+                    </div>
+                    <span class="action-queue-concern {priorityTone(item.finding)}">
+                      <span class="concern-dot" aria-hidden="true"></span>
+                      {item.finding.priority_reason}
+                    </span>
+                  </div>
+                  <div class="action-queue-signal-row">
+                    <span class="action-queue-signal">DNA-linked</span>
+                    {#if item.finding.related_marker_count && item.finding.related_marker_count > 1}
+                      <span>{item.finding.related_marker_count} related markers</span>
+                    {/if}
+                  </div>
+                  <p>{findingMeaning(item.finding)}</p>
+                  <div class="action-queue-next"><strong class="action-queue-next-label">Next</strong> {findingNextStep(item.finding)}</div>
+                  {#if onJumpToMarker}
+                    <button class="btn btn-xs btn-link jump-btn" type="button" onclick={() => onJumpToMarker?.(item.finding.link_id)}>
+                      View DNA finding →
+                    </button>
+                  {/if}
+                </div>
+              </article>
+            {/each}
+          </div>
         {/each}
       </div>
     {:else}
@@ -255,79 +288,154 @@
     </details>
   {/if}
 
-  <div class="context-selector summary-card card" role="region" aria-labelledby="reproductive-context-label">
-    <div class="context-selector-copy">
-      <div class="context-selector-heading">
-        <strong id="reproductive-context-label">Optional reproductive &amp; hormone context</strong>
-        <Tooltip
-          label="About context selection"
-          description="This is self-reported context stored for this DNA profile. Known chromosome-pattern results only organize the options; they do not establish gender, anatomy, fertility, pregnancy, or hormone status."
-        >
-          <span class="context-info-icon" aria-hidden="true">ⓘ</span>
-        </Tooltip>
+  {#if hasAllergyGuidance || hasNutritionGuidance || hasTrainingGuidance || hasClinicalGuidance}
+    <nav class="guidance-index" aria-labelledby="guidance-index-title">
+      <div class="guidance-index-heading">
+        <div>
+          <span class="section-kicker">Personalized guidance</span>
+          <h3 id="guidance-index-title">Use your results</h3>
+        </div>
+        <span>Jump to a section</span>
       </div>
-      <span>Optional self-reported context used to tailor guidance.</span>
-    </div>
-    <select aria-labelledby="reproductive-context-label" value={reproductiveContext} onchange={setReproductiveContext}>
-      <option value="">Not specified</option>
-      {#if hasKnownGeneticSex}
-        <optgroup label="Suggested for this profile">
-          {#each suggestedContextOptions as option (option.id)}
-            <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
-          {/each}
-        </optgroup>
-        {#if otherContextOptions.length > 0}
-          <optgroup label="Other contexts — select if relevant">
-            {#each otherContextOptions as option (option.id)}
-              <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
-            {/each}
-          </optgroup>
+      <div class="guidance-index-links">
+        {#if hasAllergyGuidance}
+          <a href="#allergy-guidance-group">Allergy &amp; sensitivity <span>→</span></a>
         {/if}
-      {:else}
-        {#each contextOptions as option (option.id)}
-          <option value={option.id}>{contextOptionLabel(option.id, option.label)}</option>
-        {/each}
-      {/if}
-    </select>
-  </div>
-
-  <ReproductiveContextEditor bind:personalSafetyContext sampleId={sampleId} reproductiveContext={reproductiveContext} />
-  <CycleDiaryEditor bind:personalSafetyContext sampleId={sampleId} reproductiveContext={reproductiveContext} />
-
-  {#if plan.personalContext.priorityNotes.length > 0}
-    <div class="personal-context-card summary-card card" role="region" aria-labelledby="personal-context-label">
-      <div class="context-selector-copy">
-        <strong id="personal-context-label">🧾 Personal safety context applied</strong>
-        <span>Profile context only; kept separate from DNA findings.</span>
-      </div>
-      <ul class="guardrail-list personal-context-notes">
-        {#each plan.personalContext.priorityNotes as note (note)}<li>{note}</li>{/each}
-      </ul>
-      <div class="personal-context-grid">
-        {#if plan.personalContext.medications.length > 0}
-          <div><strong>Medications</strong><span>{plan.personalContext.medications.join(' · ')}</span></div>
+        {#if hasNutritionGuidance}
+          <a href="#nutrition-guidance-group">Food &amp; supplements <span>→</span></a>
         {/if}
-        {#if plan.personalContext.supplements.length > 0}
-          <div><strong>Supplements</strong><span>{plan.personalContext.supplements.join(' · ')}</span></div>
+        {#if hasTrainingGuidance}
+          <a href="#training-guidance-group">Training &amp; recovery <span>→</span></a>
         {/if}
-        {#if plan.personalContext.allergies.length > 0}
-          <div><strong>Allergies / intolerances</strong><span>{plan.personalContext.allergies.join(' · ')}</span></div>
-        {/if}
-        {#if plan.personalContext.symptoms.length > 0}
-          <div><strong>Symptoms / timing</strong><span>{plan.personalContext.symptoms.join(' · ')}</span></div>
-        {/if}
-        {#if plan.personalContext.labObservations.length > 0}
-          <div><strong>Recent labs / findings</strong><span>{plan.personalContext.labObservations.join(' · ')}</span></div>
-        {/if}
-        {#each populatedReproductiveIntake(plan.personalContext.reproductiveIntake) as item (item.field.id)}
-          <div><strong>{item.field.label}</strong><span>{item.value}</span></div>
-        {/each}
-        {#if plan.personalContext.cycleDiary && plan.personalContext.cycleDiary.length > 0}
-          <div><strong>Daily cycle diary</strong><span>{plan.personalContext.cycleDiary.length} self-reported observation{plan.personalContext.cycleDiary.length === 1 ? '' : 's'}</span></div>
+        {#if hasClinicalGuidance}
+          <a href="#clinical-guidance-group">Medication &amp; labs <span>→</span></a>
         {/if}
       </div>
-    </div>
+    </nav>
   {/if}
+
+  <div class="guidance-flow">
+    {#if hasAllergyGuidance}
+    <section id="allergy-guidance-group" class="guidance-group" aria-labelledby="allergy-guidance-group-title">
+      <div class="guidance-group-heading">
+        <div>
+          <span class="section-kicker">Protect &amp; understand</span>
+          <h3 id="allergy-guidance-group-title">Allergy &amp; sensitivity</h3>
+          <p>DNA-linked allergy, sensitivity, and medication pathways found in this report.</p>
+        </div>
+      </div>
+
+    <section class="summary-card card allergy-card" class:collapsed={collapsed.allergy} aria-labelledby="allergy-map-title">
+      <h3 class="card-header-heading">
+        <button type="button" class="card-header" onclick={() => toggle('allergy')} aria-expanded={!collapsed.allergy} aria-controls="allergy-map-body">
+          <span class="card-header-title">🧬 Allergy &amp; sensitivity map</span>
+          <span class="chevron">{collapsed.allergy ? '▶' : '▼'}</span>
+        </button>
+      </h3>
+      {#if collapsed.allergy}
+        <div id="allergy-map-body" hidden aria-hidden="true"></div>
+      {:else}
+        <div class="card-body allergy-map-body" id="allergy-map-body">
+          <div class="allergy-map-intro">
+            <div>
+              <h3 id="allergy-map-title">Allergy &amp; sensitivity signals</h3>
+              <p>{allergySensitivityCatalog.display.dna_intro}</p>
+            </div>
+            {#if plan.allergy.hasDnaSignal}
+              <span class="allergy-signal-count">{plan.allergy.matchedMarkerCount} DNA-linked markers</span>
+            {/if}
+          </div>
+
+          <section class="allergy-dna-section" aria-labelledby="allergy-dna-title">
+              <div class="allergy-section-heading">
+                <div>
+                  <h4 id="allergy-dna-title">Matched pathways</h4>
+                  <span>What the matched variants point toward</span>
+                </div>
+                <span class="allergy-section-count">{plan.allergy.dnaContexts.length}</span>
+              </div>
+              {#if plan.allergy.dnaContexts.length > 0}
+                <div class="allergy-context-grid">
+                  {#each plan.allergy.dnaContexts as context (context.id)}
+                    <article class="insight-tile insight-tile-info allergy-context-card">
+                      <div class="insight-tile-heading">
+                        <div>
+                          <h5 class="insight-tile-title">{context.label}</h5>
+                            <span class="insight-tile-eyebrow">{context.signal_label}</span>
+                        </div>
+                        <span class="insight-tile-count">{context.matched_marker_count} DNA</span>
+                      </div>
+                      <p class="insight-tile-copy">{context.summary}</p>
+                      <div class="insight-tile-relevance"><strong>Relevant when</strong> {context.relevance}</div>
+                      <div class="insight-tile-examples"><strong>Examples</strong> {context.examples.join(' · ')}</div>
+                      <div class="insight-tile-footer">
+                        <span class="insight-tile-meta">Genes: {context.matched_genes.join(' · ')}</span>
+                        {#if (onJumpToMarkers || onJumpToMarker) && context.matched_marker_link_ids.length > 0}
+                          <button class="btn btn-xs btn-link insight-tile-link" type="button" onclick={() => onJumpToMarkers?.(context.matched_marker_link_ids) ?? onJumpToMarker?.(context.matched_marker_link_ids[0])}>
+                            View {context.matched_marker_link_ids.length} matched DNA {context.matched_marker_link_ids.length === 1 ? 'finding' : 'findings'} →
+                          </button>
+                        {/if}
+                      </div>
+                    </article>
+                  {/each}
+                </div>
+              {:else}
+                <p class="allergy-empty">No active allergy-pathway finding was matched in this report.</p>
+              {/if}
+
+              {#if plan.allergy.medicationSafety.length > 0}
+                <div class="allergy-medication-section">
+                  <div class="allergy-section-heading">
+                    <div>
+                      <h4>Medication safety routes</h4>
+                      <span>Only shown for a matching drug-specific marker</span>
+                    </div>
+                    <span class="allergy-section-count">{plan.allergy.medicationSafety.length}</span>
+                  </div>
+                  <div class="allergy-medication-grid">
+                    {#each plan.allergy.medicationSafety as route (route.id)}
+                      <article class="insight-tile insight-tile-alert allergy-medication-card" data-warning-kind="actionable_safety">
+                        <div class="insight-tile-heading">
+                          <div>
+                            <h5 class="insight-tile-title">{route.label}</h5>
+                            <span class="insight-tile-eyebrow">{route.signal_label}</span>
+                          </div>
+                          <span class="insight-tile-count">{route.matched_marker_count} DNA</span>
+                        </div>
+                        <div class="insight-tile-tags">{route.medications.join(' · ')}</div>
+                        <p class="insight-tile-copy">{route.summary}</p>
+                        <div class="insight-tile-relevance"><strong>Relevant when</strong> {route.relevance}</div>
+                        <div class="insight-tile-footer">
+                          <span class="insight-tile-meta">Genes: {route.matched_genes.join(' · ')}</span>
+                          {#if (onJumpToMarkers || onJumpToMarker) && route.matched_marker_link_ids.length > 0}
+                            <button class="btn btn-xs btn-link insight-tile-link" type="button" onclick={() => onJumpToMarkers?.(route.matched_marker_link_ids) ?? onJumpToMarker?.(route.matched_marker_link_ids[0])}>
+                              View {route.matched_marker_link_ids.length} matched DNA {route.matched_marker_link_ids.length === 1 ? 'finding' : 'findings'} →
+                            </button>
+                          {/if}
+                        </div>
+                      </article>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+            <p class="allergy-map-footer">{allergySensitivityCatalog.display.compact_footer}</p>
+          </section>
+        </div>
+      {/if}
+    </section>
+
+    </section>
+    {/if}
+
+    {#if hasNutritionGuidance}
+    <section id="nutrition-guidance-group" class="guidance-group" aria-labelledby="nutrition-guidance-group-title">
+      <div class="guidance-group-heading">
+        <div>
+          <span class="section-kicker">Build your baseline</span>
+          <h3 id="nutrition-guidance-group-title">Food &amp; supplements</h3>
+          <p>Concrete food ideas and DNA-linked supplement pathways.</p>
+        </div>
+      </div>
 
   <div class="grid-layout">
     <div class="action-row">
@@ -344,7 +452,7 @@
             <div id="dietary-alignment-body" hidden aria-hidden="true"></div>
           {:else}
             <div class="card-body" id="dietary-alignment-body">
-              <p class="section-hint">Personalized food prompts</p>
+              <p class="section-hint">DNA-linked food ideas</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
                 <div class="dietary-profile-safety" role="note">
                   <strong>🛡️ Explicit food context</strong>
@@ -410,68 +518,63 @@
               <div class="diet-section">
                 {#if plan.diet.favor.length > 0}
                   <div class="diet-column favor">
-                    <h4>👍 Lean Into / Favor</h4>
-                    <ul>
-                      {#each previewGuidance(plan.diet.favor) as item (item)}
-                        <li>{getCompactGuidanceText(item)}</li>
+                    <div class="diet-column-heading">
+                      <h4><span aria-hidden="true">👍</span> Food ideas</h4>
+                      <span class="diet-column-count">{plan.diet.favorItems.length}</span>
+                    </div>
+                    <div class="dietary-items">
+                      {#each plan.diet.favorItems as item (item.recommendation_id)}
+                        <article class="insight-tile insight-tile-favor dietary-item">
+                          <span class="insight-tile-indicator" aria-hidden="true">＋</span>
+                          <span class="insight-tile-content">
+                            <span class="insight-tile-text dietary-item-text">{getCompactGuidanceText(item.name)}</span>
+                            <span class="insight-tile-meta">DNA-linked · {item.basis_genes.join(' / ')} · {item.evidence_level}</span>
+                            <details class="recommendation-provenance">
+                              <summary>Why this appears</summary>
+                              <span>{item.why_it_appears} · Topic: {item.basis_topic_ids.join(' / ')}</span>
+                            </details>
+                          </span>
+                        </article>
                       {/each}
-                    </ul>
-                    {#if plan.diet.favor.length > GUIDANCE_PREVIEW_LIMIT}
-                      <details class="guidance-more">
-                        <summary>{guidanceMoreLabel(plan.diet.favor)}</summary>
-                        <ul>
-                          {#each remainingGuidance(plan.diet.favor) as item (item)}
-                            <li>{getCompactGuidanceText(item)}</li>
-                          {/each}
-                        </ul>
-                      </details>
-                    {/if}
+                    </div>
                   </div>
                 {/if}
 
                 {#if plan.diet.avoid.length > 0}
                   <div class="diet-column avoid">
-                    <h4>👎 Limit / Avoid</h4>
-                    <ul>
-                      {#each previewGuidance(plan.diet.avoid) as item (item)}
-                        <li>{getCompactGuidanceText(item)}</li>
+                    <div class="diet-column-heading">
+                      <h4><span aria-hidden="true">👎</span> Foods to limit</h4>
+                      <span class="diet-column-count">{plan.diet.avoidItems.length}</span>
+                    </div>
+                    <div class="dietary-items">
+                      {#each plan.diet.avoidItems as item (item.recommendation_id)}
+                        <article class="insight-tile insight-tile-avoid dietary-item">
+                          <span class="insight-tile-indicator" aria-hidden="true">!</span>
+                          <span class="insight-tile-content">
+                            <span class="insight-tile-text dietary-item-text">{getCompactGuidanceText(item.name)}</span>
+                            <span class="insight-tile-meta">DNA-linked · {item.basis_genes.join(' / ')} · {item.evidence_level}</span>
+                            <details class="recommendation-provenance">
+                              <summary>Why this appears</summary>
+                              <span>{item.why_it_appears} · Topic: {item.basis_topic_ids.join(' / ')}</span>
+                            </details>
+                          </span>
+                        </article>
                       {/each}
-                    </ul>
-                    {#if plan.diet.avoid.length > GUIDANCE_PREVIEW_LIMIT}
-                      <details class="guidance-more">
-                        <summary>{guidanceMoreLabel(plan.diet.avoid)}</summary>
-                        <ul>
-                          {#each remainingGuidance(plan.diet.avoid) as item (item)}
-                            <li>{getCompactGuidanceText(item)}</li>
-                          {/each}
-                        </ul>
-                      </details>
-                    {/if}
+                    </div>
                   </div>
                 {/if}
               </div>
-              {#if plan.diet.notes}
-                {@const compactDietNotes = getCompactDietNotes(plan.diet.notes)}
-                <details class="guidance-details diet-notes">
-                  <summary>More context ({compactDietNotes.length})</summary>
-                  <div class="guidance-details-body">
-                    <ul class="compact-notes">
-                      {#each compactDietNotes as note (note)}<li>{note}</li>{/each}
-                    </ul>
-                  </div>
-                </details>
-              {/if}
             </div>
           {/if}
         </div>
       {/if}
 
-      <!-- Panel 3: Supplements to Discuss -->
-      {#if plan.supplements.length > 0 || plan.supplementSafety.relevantRules.length > 0}
+      <!-- Panel 3: Supplements -->
+      {#if plan.supplements.length > 0 || plan.supplementAvoid.length > 0 || plan.supplementSafety.relevantRules.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
           <h3 class="card-header-heading">
             <button type="button" class="card-header" onclick={() => toggle('supplements')} aria-expanded={!collapsed.supplements} aria-controls="supplements-body">
-              <span class="card-header-title">💊 Supplements to Discuss</span>
+              <span class="card-header-title">💊 Supplements</span>
               <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
             </button>
           </h3>
@@ -479,17 +582,51 @@
             <div id="supplements-body" hidden aria-hidden="true"></div>
           {:else}
             <div class="card-body" id="supplements-body">
-              <p class="section-hint">Personalized supplement prompts</p>
-              {#if plan.supplements.length > 0}
-                <div class="supplements-list">
-                  {#each plan.supplements as s (`${s.name}:${s.reason}`)}
-                    <div class="supplement-item">
-                      <span class="supp-name">{getCompactSupplementName(s.name)}</span>
-                      <span class="supp-reason">{getCompactSupplementReason(s.reason)}</span>
+              <p class="section-hint">DNA-linked options to consider</p>
+              <div class="supplement-columns">
+                {#if plan.supplements.length > 0}
+                  <div class="supplement-column">
+                    <h4>👍 Consider</h4>
+                    <div class="supplements-list">
+                      {#each plan.supplements as s (`${s.name}:${s.reason}`)}
+                        <article class="insight-tile insight-tile-consider supplement-item">
+                          <span class="insight-tile-indicator" aria-hidden="true">＋</span>
+                          <span class="insight-tile-content">
+                            <span class="supp-name">{getCompactSupplementName(s.name)}</span>
+                            <span class="supp-reason">{getCompactSupplementReason(s.reason)}</span>
+                            <span class="insight-tile-meta">DNA-linked · {s.basis_genes.join(' / ')} · {s.evidence_level}</span>
+                            <details class="recommendation-provenance">
+                              <summary>Why this appears</summary>
+                              <span>{s.why_it_appears} · Topic: {s.basis_topic_ids.join(' / ')}</span>
+                            </details>
+                          </span>
+                        </article>
+                      {/each}
                     </div>
-                  {/each}
-                </div>
-              {/if}
+                  </div>
+                {/if}
+                {#if plan.supplementAvoid.length > 0}
+                  <div class="supplement-column avoid">
+                    <h4>👎 Avoid / confirm first</h4>
+                    <div class="supplements-list">
+                      {#each plan.supplementAvoid as s (s.name)}
+                        <article class="insight-tile insight-tile-avoid supplement-item">
+                          <span class="insight-tile-indicator" aria-hidden="true">!</span>
+                          <span class="insight-tile-content">
+                            <span class="supp-name">{s.name}</span>
+                            {#if s.reason}<span class="supp-reason">{s.reason}</span>{/if}
+                            <span class="insight-tile-meta">DNA-linked · {s.basis_genes.join(' / ')} · {s.evidence_level}</span>
+                            <details class="recommendation-provenance">
+                              <summary>Why this appears</summary>
+                              <span>{s.why_it_appears} · Topic: {s.basis_topic_ids.join(' / ')}</span>
+                            </details>
+                          </span>
+                        </article>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              </div>
               {#if plan.supplementSafety.relevantRules.length > 0}
                 <details class="supplement-safety-details">
                   <summary>Safety details</summary>
@@ -518,112 +655,27 @@
         </div>
       {/if}
 
-      <!-- Cycle/reproductive support is a phenotype and safety layer, not a diagnosis. -->
-      {#if plan.cycleSupport.relevantDomains.length > 0}
-        <div class="summary-card card card-cycle-support" class:collapsed={collapsed.cycleSupport}>
-          <h3 class="card-header-heading">
-            <button type="button" class="card-header" onclick={() => toggle('cycleSupport')} aria-expanded={!collapsed.cycleSupport} aria-controls="cycle-support-body">
-              <span class="card-header-title">⚕️ Reproductive &amp; Hormone Support</span>
-              <span class="chevron">{collapsed.cycleSupport ? '▶' : '▼'}</span>
-            </button>
-          </h3>
-          {#if collapsed.cycleSupport}
-            <div id="cycle-support-body" hidden aria-hidden="true"></div>
-          {:else}
-            <div class="card-body" id="cycle-support-body">
-              <p class="section-hint">Support for {selectedReproductiveContextLabel()}</p>
-              {#if plan.cycleSupport.diaryReview}
-                <div class="cycle-diary-review" role="region" aria-labelledby="cycle-diary-review-title">
-                  <h4 id="cycle-diary-review-title">📈 Observed diary review</h4>
-                  <p>{plan.cycleSupport.diaryReview.entry_count} saved observation{plan.cycleSupport.diaryReview.entry_count === 1 ? '' : 's'} across {plan.cycleSupport.diaryReview.observed_date_count} dated day{plan.cycleSupport.diaryReview.observed_date_count === 1 ? '' : 's'}{#if plan.cycleSupport.diaryReview.first_observed_date && plan.cycleSupport.diaryReview.last_observed_date} ({plan.cycleSupport.diaryReview.first_observed_date} to {plan.cycleSupport.diaryReview.last_observed_date}{#if plan.cycleSupport.diaryReview.observation_span_days !== null}, {plan.cycleSupport.diaryReview.observation_span_days} day span{/if}).{/if}</p>
-                  <div class="cycle-diary-review-metrics">
-                    {#each plan.cycleSupport.diaryReview.metrics as metric (metric.id)}
-                      <div class="cycle-diary-review-metric">
-                        <strong>{metric.label}</strong>
-                        <span>{metric.elevated_days} day{metric.elevated_days === 1 ? '' : 's'} at or above self-rated {metric.threshold} ({metric.recorded_days} recorded)</span>
-                      </div>
-                    {/each}
-                  </div>
-                  {#if plan.cycleSupport.diaryReview.cycle_day_observation_count > 0}
-                    <p><strong>Cycle-day entries:</strong> {plan.cycleSupport.diaryReview.cycle_day_observation_count}. These are user-entered labels only; they do not establish ovulation, luteal phase, hormone levels, or a cause.</p>
-                    <div class="cycle-diary-review-days" aria-label="Observed cycle-day comparisons">
-                      {#each plan.cycleSupport.diaryReview.cycle_day_summary.slice(0, 12) as day (day.cycle_day)}
-                        {#each day.metrics as metric (metric.metric_id)}
-                          {#if metric.recorded_days > 0}
-                            <span>
-                              Day {day.cycle_day}: {metric.label} {metric.elevated_days}/{metric.recorded_days} recorded entries at or above {metric.threshold}
-                              {#if metric.enough_observations}
-                                ({metric.observed_share_percent}% observed share)
-                              {:else}
-                                (one recorded entry; collect at least {metric.minimum_observations} before comparing)
-                              {/if}
-                            </span>
-                          {/if}
-                        {/each}
-                      {/each}
-                    </div>
-                  {/if}
-                  {#if plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days > 0 || plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days > 0}
-                    <p><strong>Observed co-occurrence:</strong> mood/behavior impact and bleeding were both recorded on {plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days} day{plan.cycleSupport.diaryReview.co_occurrence.mood_behavior_with_bleeding_days === 1 ? '' : 's'}; pain/headache impact and bleeding were both recorded on {plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days} day{plan.cycleSupport.diaryReview.co_occurrence.pain_headache_with_bleeding_days === 1 ? '' : 's'}. This is descriptive only, not evidence of a hormone cause.</p>
-                  {/if}
-                  <ul class="guardrail-list">
-                    {#each plan.cycleSupport.diaryReview.notes as note (note)}<li>{note}</li>{/each}
-                  </ul>
-                </div>
-              {/if}
-              {#if plan.cycleSupport.relevantEvidenceLayers.length > 0}
-                <div class="reproductive-evidence-layer" role="note">
-                  <strong>🧬 How to read the DNA for this context</strong>
-                  {#if plan.cycleSupport.dnaCoverage}
-                    <p class="reproductive-coverage"><strong>Selected-context DNA coverage:</strong> {plan.cycleSupport.dnaCoverage.present_marker_count} of {plan.cycleSupport.dnaCoverage.tracked_marker_count} tracked markers have a raw call; {plan.cycleSupport.dnaCoverage.callable_marker_count} are verified for interpretation; {plan.cycleSupport.dnaCoverage.unknown_marker_count} are unknown or unavailable. Coverage is not a risk score.</p>
-                  {/if}
-                  {#each plan.cycleSupport.relevantEvidenceLayers as layer (layer.id)}
-                    <div class="reproductive-evidence-item">
-                      <h4>{layer.title}</h4>
-                      <p>{layer.summary}</p>
-                      <p><strong>Useful next step:</strong> {layer.next_step}</p>
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-              <ul class="guardrail-list">
-                {#each plan.cycleSupport.principles as principle (principle)}<li>{principle}</li>{/each}
-              </ul>
-              {#each plan.cycleSupport.relevantDomains as domain (domain.id)}
-                <div class="cycle-support-domain">
-                  <strong>{domain.title}</strong>
-                  <p>{domain.context}</p>
-                  <div class="activity-columns">
-                    <div>
-                      <h4>Ask / record</h4>
-                      <ul class="guardrail-list">
-                        {#each domain.questions as item (item)}<li>{item}</li>{/each}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4>Support / confirm</h4>
-                      <ul class="guardrail-list">
-                        {#each domain.support_options as item (item)}<li>{item}</li>{/each}
-                        {#each domain.confirm_with as item (item)}<li>Confirm with: {item}</li>{/each}
-                      </ul>
-                    </div>
-                  </div>
-                  {#if domain.red_flags?.length}
-                    <p class="activity-stop-list"><strong>Escalate promptly for:</strong> {domain.red_flags.join('; ')}</p>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/if}
     </div>
+  </div>
+    </section>
+    {/if}
 
+    {#if hasTrainingGuidance}
+    <section id="training-guidance-group" class="guidance-group" aria-labelledby="training-guidance-group-title">
+      <div class="guidance-group-heading">
+        <div>
+          <span class="section-kicker">Move with feedback</span>
+          <h3 id="training-guidance-group-title">Training &amp; recovery</h3>
+          <p>Use your current ability, symptoms, and recovery signals to guide progression.</p>
+        </div>
+      </div>
+
+    <div class="grid-layout">
     {#if plan.activity.relevantDomains.length > 0}
       <div class="summary-card card" class:collapsed={collapsed.activity}>
         <h3 class="card-header-heading">
           <button type="button" class="card-header" onclick={() => toggle('activity')} aria-expanded={!collapsed.activity} aria-controls="activity-body">
-            <span class="card-header-title">🏃 Activity &amp; Recovery Guardrails</span>
+            <span class="card-header-title">🏃 Training &amp; Recovery</span>
             <span class="chevron">{collapsed.activity ? '▶' : '▼'}</span>
           </button>
         </h3>
@@ -631,72 +683,107 @@
           <div id="activity-body" hidden aria-hidden="true"></div>
         {:else}
           <div class="card-body" id="activity-body">
-            <p class="section-hint">Training and recovery prompts</p>
-            <ul class="guardrail-list">
-              {#each previewGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT) as principle (principle)}
-                <li>{principle}</li>
-              {/each}
-            </ul>
-            {#if plan.activity.principles.length > DETAIL_PREVIEW_LIMIT}
-              <details class="guidance-more">
-                <summary>{guidanceMoreLabel(plan.activity.principles, DETAIL_PREVIEW_LIMIT)}</summary>
-                <ul class="guardrail-list">
-                  {#each remainingGuidance(plan.activity.principles, DETAIL_PREVIEW_LIMIT) as principle (principle)}<li>{principle}</li>{/each}
-                </ul>
-              </details>
-            {/if}
-            {#each plan.activity.relevantDomains as domain (domain.id)}
-              <div class="activity-domain">
-                <strong>{domain.id.replaceAll('_', ' ')}</strong>
-                <span class="activity-context">{domain.context}</span>
-                <div class="activity-columns">
-                  <div>
-                    <h4>Favor</h4>
-                    <ul class="guardrail-list">
-                      {#each previewGuidance(domain.favor, DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
-                    </ul>
-                    {#if domain.favor.length > DETAIL_PREVIEW_LIMIT}
-                      <details class="guidance-more">
-                        <summary>{guidanceMoreLabel(domain.favor, DETAIL_PREVIEW_LIMIT)}</summary>
-                        <ul class="guardrail-list">
-                          {#each remainingGuidance(domain.favor, DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
-                        </ul>
-                      </details>
-                    {/if}
+            <p class="section-hint">DNA-informed starting points for training, recovery, and self-tracking.</p>
+            {#if presentationMode === 'simple'}
+              <div class="activity-framework" aria-label="Training framework">
+                {#each plan.activity.simpleFramework as item (item.label)}
+                  <div class="activity-framework-item">
+                    <span>{item.label}</span>
+                    <p>{item.text}</p>
                   </div>
-                  <div>
-                    <h4>Avoid / confirm</h4>
-                    <ul class="guardrail-list">
-                      {#each previewGuidance([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
-                    </ul>
-                    {#if domain.avoid.length + domain.confirm_with.length > DETAIL_PREVIEW_LIMIT}
-                      <details class="guidance-more">
-                        <summary>{guidanceMoreLabel([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT)}</summary>
-                        <ul class="guardrail-list">
-                          {#each remainingGuidance([...domain.avoid, ...domain.confirm_with], DETAIL_PREVIEW_LIMIT) as item (item)}<li>{item}</li>{/each}
-                        </ul>
-                      </details>
-                    {/if}
-                  </div>
-                </div>
+                {/each}
               </div>
-            {/each}
-            <div class="activity-stop-list">
-              <strong>Stop activity and seek appropriate care for:</strong>
+            {:else}
               <ul class="guardrail-list">
-                {#each plan.activity.stopAndEscalate as item (item)}<li>{item}</li>{/each}
+                {#each plan.activity.principles as principle (principle)}
+                  <li>{principle}</li>
+                {/each}
               </ul>
+            {/if}
+            <div class:activity-domain-grid={presentationMode === 'simple'}>
+              {#each plan.activity.relevantDomains as domain (domain.id)}
+                <div class="activity-domain">
+                  <div class="activity-domain-heading">
+                    <strong>{activityDomainLabel(domain)}</strong>
+                    <span class="activity-domain-label">
+                      {domain.matched_marker_ids?.length ? 'DNA-linked' : 'Context-linked'}
+                    </span>
+                  </div>
+                  <span class="activity-context">{domain.context}</span>
+                  {#if domain.matched_marker_ids?.length}
+                    <span class="activity-provenance">
+                      {domain.matched_marker_ids.length} DNA {domain.matched_marker_ids.length === 1 ? 'finding' : 'findings'}
+                      {#if domain.matched_genes?.length} · {domain.matched_genes.join(' / ')}{/if}
+                    </span>
+                  {/if}
+                  <div class="activity-columns">
+                    <div class="activity-column-build">
+                      <h4>{presentationMode === 'simple' ? 'Build around' : 'Favor'}</h4>
+                      <ul class="guardrail-list">
+                        {#each activityItems(domain, 'favor') as item (item)}<li>{item}</li>{/each}
+                      </ul>
+                    </div>
+                    <div class="activity-column-watch">
+                      <h4>{presentationMode === 'simple' ? 'Watch for' : 'Avoid'}</h4>
+                      <ul class="guardrail-list">
+                        {#each activityItems(domain, 'avoid') as item (item)}<li>{item}</li>{/each}
+                      </ul>
+                      <h4 class="activity-verify-heading">{presentationMode === 'simple' ? 'Verify when relevant' : 'Confirm with'}</h4>
+                      <ul class="guardrail-list">
+                        {#each activityItems(domain, 'confirm_with') as item (item)}<li>{item}</li>{/each}
+                      </ul>
+                    </div>
+                  </div>
+                  {#if plan.activity.recommendationItems.some((item) => item.basis_topic_ids.includes(domain.id))}
+                    <details class="recommendation-provenance activity-provenance-details">
+                      <summary>Why these prompts appear</summary>
+                      <div class="activity-provenance-list">
+                        {#each plan.activity.recommendationItems.filter((item) => item.basis_topic_ids.includes(domain.id)) as item (item.recommendation_id)}
+                          <span><strong>{item.kind}:</strong> {item.name} — {item.why_it_appears} · Basis: {item.basis_marker_ids.join(' / ')}</span>
+                        {/each}
+                      </div>
+                    </details>
+                  {/if}
+                </div>
+              {/each}
             </div>
+            {#if presentationMode === 'simple'}
+              <div class="activity-stop-list activity-stop-compact">
+                <strong>Pause and get prompt care for</strong>
+                <span>{plan.activity.stopAndEscalate.join(' · ')}</span>
+              </div>
+            {:else}
+              <div class="activity-stop-list">
+                <strong>Stop activity and seek appropriate care for:</strong>
+                <ul class="guardrail-list">
+                  {#each plan.activity.stopAndEscalate as item (item)}<li>{item}</li>{/each}
+                </ul>
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
     {/if}
+    </div>
+    </section>
+    {/if}
 
-    {#if plan.medication.rules.length > 0}
+    {#if hasClinicalGuidance}
+    <section id="clinical-guidance-group" class="guidance-group" aria-labelledby="clinical-guidance-group-title">
+      <div class="guidance-group-heading">
+        <div>
+          <span class="section-kicker">Clarify with care</span>
+          <h3 id="clinical-guidance-group-title">Medication &amp; clinical follow-up</h3>
+          <p>DNA-linked medication topics and focused labs that can clarify a genetic finding.</p>
+        </div>
+      </div>
+
+    <div class="grid-layout clinical-guidance-grid">
+    {#if hasMedicationGuidance}
       <div class="summary-card card" class:collapsed={collapsed.medication}>
         <h3 class="card-header-heading">
           <button type="button" class="card-header" onclick={() => toggle('medication')} aria-expanded={!collapsed.medication} aria-controls="medication-body">
-            <span class="card-header-title">💊 Medication Safety &amp; Context</span>
+            <span class="card-header-title">💊 Medication pathways</span>
             <span class="chevron">{collapsed.medication ? '▶' : '▼'}</span>
           </button>
         </h3>
@@ -704,34 +791,30 @@
           <div id="medication-body" hidden aria-hidden="true"></div>
         {:else}
           <div class="card-body" id="medication-body">
-            <p class="section-hint">Medication-related context</p>
-            {#if plan.pgxGuidance.relevantGenes.length > 0}
-              <div class="pgx-readiness" role="note">
-                <strong>🧪 PGx completeness check</strong>
-                <p>{plan.pgxGuidance.policy.summary}</p>
-                {#each plan.pgxGuidance.relevantGenes as gene (gene.id)}
-                  <div class="pgx-readiness-item">
-                    <strong>{gene.label}</strong>
-                    <p>{gene.limitation}</p>
-                    <p><strong>Useful next step:</strong> {gene.clinical_next_step}</p>
-                  </div>
+            <p class="section-hint">DNA-linked medication and treatment topics found in this report.</p>
+            {#if plan.medicationPathways.length > 0}
+              <div class="medication-pathways">
+                {#each plan.medicationPathways as pathway (pathway.id)}
+                  <article class="medication-pathway" data-warning-kind="clinical_review">
+                    <div class="medication-pathway-heading">
+                      <strong>{pathway.label}</strong>
+                      <span>{pathway.genes.join(' · ')} · {pathway.matchedMarkerCount} DNA {pathway.matchedMarkerCount === 1 ? 'marker' : 'markers'}</span>
+                    </div>
+                    <p>{pathway.detail}</p>
+                    <div class="medication-pathway-footer">
+                      <span>{pathway.matchedMarkerCount} matched DNA {pathway.matchedMarkerCount === 1 ? 'finding' : 'findings'}</span>
+                      {#if onJumpToMarker && pathway.matchedMarkerLinkIds.length > 0}
+                        <button class="btn btn-xs btn-link" type="button" onclick={() => onJumpToMarker?.(pathway.matchedMarkerLinkIds[0])}>
+                          View matching DNA →
+                        </button>
+                      {/if}
+                    </div>
+                  </article>
                 {/each}
               </div>
+            {:else}
+              <p class="medication-empty">PGx pathway coverage is available for review in the detailed findings.</p>
             {/if}
-            <div class="medication-columns">
-              <div>
-                <h4>Ask for / record</h4>
-                <ul class="guardrail-list">
-                  {#each plan.medication.askFor as item (item)}<li>{item}</li>{/each}
-                </ul>
-              </div>
-              <div>
-                <h4>Do not do from raw DNA</h4>
-                <ul class="guardrail-list">
-                  {#each plan.medication.rules as item (item)}<li>{item}</li>{/each}
-                </ul>
-              </div>
-            </div>
           </div>
         {/if}
       </div>
@@ -778,6 +861,7 @@
                               {/if}
                             </button>
                             {#if expandedLabReasons[labKey(lt)]}
+                              <p class="lab-chip-purpose">{lt.purpose}</p>
                               <p class="lab-chip-reason">{lt.reason}</p>
                             {/if}
                           </div>
@@ -788,9 +872,22 @@
                 </section>
               {/each}
             </div>
+            <details class="lab-request-details">
+              <summary>Clinician request list</summary>
+              <div class="lab-request-content">
+                <p>Copy these DNA-linked follow-ups by clinical question.</p>
+                <pre>{labRequestListText}</pre>
+                <button class="btn btn-xs btn-secondary" type="button" onclick={copyLabRequestList}>
+                  {labRequestCopied ? 'Copied' : 'Copy request list'}
+                </button>
+              </div>
+            </details>
           </div>
         {/if}
       </div>
+    {/if}
+  </div>
+    </section>
     {/if}
   </div>
 
@@ -798,8 +895,9 @@
     <nav class="health-area-index summary-card card" aria-labelledby="health-area-index-title">
       <div class="health-area-index-heading">
         <div>
-          <span class="section-kicker">Explore</span>
-          <h3 id="health-area-index-title">Health areas</h3>
+          <span class="section-kicker">Deep dive</span>
+          <h3 id="health-area-index-title">Explore all health areas</h3>
+          <p>Jump to a health area for complete findings, evidence, and technical details.</p>
         </div>
         <span class="health-area-index-count">{healthAreaSections.length} areas</span>
       </div>
@@ -829,6 +927,140 @@
     box-sizing: border-box;
   }
 
+  .guidance-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .guidance-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    min-width: 0;
+    scroll-margin-top: 1.5rem;
+  }
+
+  .guidance-group-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 0.25rem;
+  }
+
+  .guidance-group-heading h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .guidance-group-heading p {
+    max-width: 48rem;
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    line-height: 1.4;
+  }
+
+  .guidance-index {
+    display: grid;
+    grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 2fr);
+    align-items: center;
+    gap: 1rem;
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin: 0 auto;
+    padding: 0.7rem 0.85rem;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+  }
+
+  .guidance-index-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .guidance-index-heading h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .guidance-index-heading > span {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .guidance-index-links {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .guidance-index-links a {
+    display: flex;
+    min-width: 0;
+    min-height: 2.35rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-subtle);
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  .guidance-index-links a:hover,
+  .guidance-index-links a:focus-visible {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .guidance-index-links a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .guidance-index-links a:first-child {
+    border-left: 2px solid var(--status-info-border);
+  }
+
+  .guidance-index-links a:nth-child(2) {
+    border-left: 2px solid var(--status-success-border);
+  }
+
+  .guidance-index-links a:nth-child(3) {
+    border-left: 2px solid var(--status-accent-soft-border);
+  }
+
+  .guidance-index-links a:nth-child(4) {
+    border-left: 2px solid var(--status-warning-border);
+  }
+
+  .guidance-index-links a > span {
+    flex: 0 0 auto;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+
   .action-queue {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
     background: var(--surface-raised);
@@ -841,7 +1073,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border-color);
   }
 
@@ -863,7 +1095,7 @@
 
   .action-queue-header p {
     max-width: 46rem;
-    margin: 0.4rem 0 0;
+    margin: 0.3rem 0 0;
     color: var(--text-secondary);
     font-size: 0.78rem;
     line-height: 1.45;
@@ -881,32 +1113,104 @@
 
   .action-queue-list {
     display: grid;
-    gap: 0.75rem;
-    width: min(100%, 48rem);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+    width: 100%;
     margin-inline: auto;
-    padding-top: 1rem;
+    padding-top: 0.75rem;
     box-sizing: border-box;
   }
 
+  .action-queue-column {
+    display: grid;
+    align-content: start;
+    gap: 0.65rem;
+    min-width: 0;
+  }
+
   .action-queue-item {
-    padding: 0.9rem 1rem;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.7rem;
+    padding: 0.75rem 0.85rem;
     border: 1px solid var(--border-color);
     border-left: 3px solid var(--accent);
     border-radius: 0.65rem;
     background: var(--surface-subtle);
   }
 
+  .action-queue-item[data-concern="high"] {
+    border-left-color: var(--status-danger-border);
+  }
+
+  .action-queue-item[data-concern="moderate"] {
+    border-left-color: var(--status-warning-border);
+  }
+
+  .action-queue-item[data-concern="low"] {
+    border-left-color: var(--status-caution-border);
+  }
+
+  .action-queue-rank {
+    display: inline-flex;
+    width: 2.1rem;
+    height: 2.1rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--status-accent-soft-border);
+    border-radius: 50%;
+    background: var(--status-accent-bg);
+    color: var(--status-accent-soft-text);
+    font-size: 0.85rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .action-queue-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
   .action-queue-item-top {
+    grid-column: 1 / -1;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
   }
 
+  .action-queue-concern {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .action-queue-concern.high { color: var(--status-danger-strong-text); }
+  .action-queue-concern.moderate { color: var(--status-warning-text); }
+  .action-queue-concern.low { color: var(--status-caution-text); }
+
+  .concern-dot {
+    display: inline-block;
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
   .action-queue-item h4 {
     margin: 0;
     color: var(--text-primary);
     font-size: 0.9rem;
+    line-height: 1.3;
   }
 
   .action-queue-context {
@@ -916,28 +1220,37 @@
     font-size: 0.7rem;
   }
 
-  .action-queue-item > p {
-    margin: 0.65rem 0;
+  .action-queue-item-content > p {
+    max-width: none;
+    margin: 0.35rem 0 0;
     color: var(--text-primary);
-    font-size: 0.8rem;
-    line-height: 1.45;
-  }
-
-  .action-queue-next {
-    padding: 0.55rem 0.65rem;
-    border-radius: 0.45rem;
-    background: var(--accent-soft);
-    color: var(--text-primary);
-    font-size: 0.75rem;
+    font-size: 0.76rem;
     line-height: 1.4;
   }
 
+  .action-queue-next {
+    align-self: stretch;
+    max-width: none;
+    margin-top: 0.2rem;
+    padding: 0.45rem 0.55rem;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 0.4rem 0.4rem 0;
+    background: var(--surface-card);
+    color: var(--text-primary);
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
   .action-queue-next strong {
+    margin-right: 0.25rem;
     color: var(--text-primary);
   }
 
   .action-queue-item .jump-btn {
-    margin-top: 0.55rem;
+    margin-top: 0.1rem;
+    padding-inline: 0;
+    grid-column: 2;
+    justify-self: start;
   }
 
   .action-queue-empty {
@@ -1050,110 +1363,288 @@
     margin: 0.35rem 0 0;
     padding-left: 1.2rem;
   }
-  .context-selector {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--coverage-border);
-    background: var(--coverage-bg);
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
+
+  .allergy-card {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    border-color: color-mix(in srgb, var(--status-info-border) 70%, var(--border-color));
+    background: var(--surface-raised);
   }
 
-  .context-selector-copy {
+  .allergy-map-body {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 0.72rem;
-    line-height: 1.4;
+    gap: 1rem;
   }
 
-  .context-selector-heading {
+  .allergy-map-intro,
+  .allergy-section-heading {
     display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    min-width: 0;
-    max-width: 100%;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
   }
 
-  .context-selector-heading strong {
-    display: block;
-    flex: 1 1 10rem;
+  .allergy-map-intro {
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .allergy-map-intro h3,
+  .allergy-section-heading h4 {
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .allergy-map-intro h3 {
+    font-size: 1rem;
+  }
+
+  .allergy-map-intro p,
+  .allergy-section-heading span,
+  .allergy-map-footer,
+  .allergy-empty {
+    margin: 0.3rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    line-height: 1.45;
+  }
+
+  .allergy-signal-count,
+  .allergy-section-count {
+    flex: 0 0 auto;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--status-info-border);
+    border-radius: 999px;
+    color: var(--status-info-text);
+    font-size: 0.66rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .allergy-dna-section {
     min-width: 0;
+  }
+
+  .allergy-section-heading {
+    margin-bottom: 0.6rem;
+  }
+
+  .allergy-section-heading h4 {
+    font-size: 0.86rem;
+  }
+
+  .allergy-context-grid,
+  .allergy-medication-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .insight-tile {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.45rem;
+    box-sizing: border-box;
+    padding: 0.72rem 0.78rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-subtle);
+  }
+
+  .insight-tile-info { border-left: 3px solid var(--status-info-border); }
+  .insight-tile-consider,
+  .insight-tile-favor { border-left: 3px solid var(--status-success-border); }
+  .insight-tile-review { border-left: 3px solid var(--status-warning-border); }
+  .insight-tile-alert { border-left: 3px solid var(--status-danger-border); }
+  .insight-tile-avoid { border-left: 3px solid var(--status-danger-border); }
+
+  .insight-tile-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+  }
+
+  .insight-tile-title {
+    min-width: 0;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .insight-tile-eyebrow,
+  .insight-tile-meta {
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    line-height: 1.3;
+  }
+
+  .insight-tile-eyebrow {
+    display: block;
+    margin-top: 0.12rem;
+    color: var(--status-info-text);
+    font-weight: 700;
+  }
+
+  .insight-tile-count {
+    flex: 0 0 auto;
+    padding: 0.16rem 0.34rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .insight-tile-copy,
+  .insight-tile-examples,
+  .insight-tile-tags,
+  .insight-tile-relevance {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .insight-tile-examples strong { color: var(--text-primary); }
+
+  .insight-tile-relevance {
+    padding: 0.42rem 0.5rem;
+    border-radius: 0.38rem;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+  }
+
+  .insight-tile-relevance strong { color: var(--text-primary); }
+
+  .insight-tile-tags {
+    color: var(--status-warning-text);
+    font-weight: 700;
+  }
+
+  .insight-tile-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .insight-tile-link {
+    margin: 0;
+    padding: 0;
+  }
+
+  .insight-tile-indicator {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 1.05rem;
+    height: 1.05rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--status-success-border);
+    border-radius: 50%;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .insight-tile-avoid .insight-tile-indicator {
+    border-color: var(--status-danger-border);
+    background: var(--status-danger-bg);
+    color: var(--status-danger-strong-text);
+  }
+
+  .insight-tile-text {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    line-height: 1.3;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
-  .context-info-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.1rem;
-    min-height: 1.1rem;
-    color: var(--text-secondary);
-    font-size: 0.72rem;
-  }
-
-  .context-selector-copy strong {
-    color: var(--coverage-text);
-  }
-
-  .context-selector-copy span {
-    color: var(--text-secondary);
-  }
-
-  .personal-context-card {
-    gap: 0.65rem;
-    border-color: var(--status-success-border);
-    background: var(--status-success-bg);
-  }
-
-  .personal-context-notes {
-    margin: 0;
-  }
-
-  .personal-context-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.6rem 1rem;
-    font-size: 0.72rem;
-  }
-
-  .personal-context-grid div {
+  .insight-tile-content {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.12rem;
     min-width: 0;
   }
 
-  .personal-context-grid strong {
-    color: var(--status-success-text);
-  }
-
-  .personal-context-grid span {
-    color: var(--text-secondary);
+  .insight-tile-meta {
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    line-height: 1.25;
     overflow-wrap: anywhere;
   }
 
-  .context-selector select {
-    min-width: min(320px, 42%);
-    max-width: 100%;
-    background: var(--surface-control);
-    border: 1px solid var(--coverage-border);
-    border-radius: 5px;
-    color: var(--text-primary);
-    padding: 0.45rem 0.55rem;
-    font: inherit;
-    box-sizing: border-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .recommendation-provenance {
+    margin-top: 0.22rem;
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    line-height: 1.3;
+  }
+
+  .recommendation-provenance summary {
+    display: inline-block;
+    min-height: 1.35rem;
+    color: var(--status-info-text);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .recommendation-provenance summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  .recommendation-provenance > span,
+  .activity-provenance-list {
+    display: block;
+    margin-top: 0.18rem;
+    overflow-wrap: anywhere;
+  }
+
+  .activity-provenance-details {
+    margin-top: 0.55rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .activity-provenance-list {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .allergy-medication-section {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .allergy-map-footer {
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--border-color);
+    font-style: italic;
+  }
+
+  @media (max-width: 760px) {
+    .allergy-context-grid,
+    .allergy-medication-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .grid-layout {
@@ -1167,6 +1658,12 @@
     box-sizing: border-box;
   }
 
+  .clinical-guidance-grid {
+    display: grid;
+    grid-template-columns: minmax(20rem, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+  }
+
   .action-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1178,22 +1675,6 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-  }
-
-  .card-cycle-support {
-    grid-column: 1 / -1;
-  }
-
-  @media (max-width: 720px) {
-    .context-selector {
-      align-items: stretch;
-      flex-direction: column;
-    }
-
-    .context-selector select {
-      min-width: 0;
-      width: 100%;
-    }
   }
 
   .lab-body {
@@ -1335,6 +1816,55 @@
     opacity: 0.72;
     line-height: 1.3;
     max-width: 42rem;
+  }
+
+  .lab-chip-purpose {
+    margin: 0.45rem 0 0 0.15rem;
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    line-height: 1.35;
+    max-width: 42rem;
+  }
+
+  .lab-request-details {
+    margin-top: 0.85rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+  }
+
+  .lab-request-details > summary {
+    cursor: pointer;
+    color: var(--accent-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .lab-request-content {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.65rem;
+    max-width: 52rem;
+  }
+
+  .lab-request-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+  }
+
+  .lab-request-content pre {
+    max-height: 14rem;
+    overflow: auto;
+    margin: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-subtle);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
   }
 
   .card-top-findings {
@@ -1502,6 +2032,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
+    align-items: start;
   }
 
   .dietary-profile-safety,
@@ -1525,6 +2056,11 @@
     flex-direction: column;
     gap: 0.12rem;
     margin: 0.45rem 0;
+  }
+
+  .dietary-profile-list span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .dietary-profile-list strong,
@@ -1578,28 +2114,65 @@
     color: var(--status-warning-text);
   }
 
-  .diet-column h4 {
-    margin: 0 0 0.4rem 0;
-    font-size: 0.75rem;
-    font-weight: bold;
+  .diet-column {
+    min-width: 0;
   }
+
+  .diet-column-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .diet-column h4 {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
   .diet-column.favor h4 { color: var(--status-success-text); }
   .diet-column.avoid h4 { color: var(--status-danger-strong-text); }
-  .diet-column ul {
-    margin: 0;
-    padding-left: 1.1rem;
-    font-size: 0.72rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+
+  .diet-column-count {
+    flex: 0 0 auto;
+    min-width: 1.35rem;
+    padding: 0.12rem 0.35rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
   }
-  .guidance-details,
-  .guidance-more {
+
+  .dietary-items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .diet-column.avoid .dietary-items {
+    grid-template-columns: 1fr;
+  }
+
+  .dietary-item {
+    align-items: flex-start;
+    flex-direction: row;
+  }
+  .guidance-details {
     margin-top: 0.55rem;
     min-width: 0;
   }
-  .guidance-details > summary,
-  .guidance-more > summary {
+  .guidance-details > summary {
     display: inline-flex;
     min-height: 32px;
     align-items: center;
@@ -1609,13 +2182,10 @@
     font-weight: 700;
   }
   .guidance-details > summary:hover,
-  .guidance-details > summary:focus-visible,
-  .guidance-more > summary:hover,
-  .guidance-more > summary:focus-visible {
+  .guidance-details > summary:focus-visible {
     color: var(--text-primary);
   }
-  .guidance-details > summary:focus-visible,
-  .guidance-more > summary:focus-visible {
+  .guidance-details > summary:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
     border-radius: 3px;
@@ -1623,32 +2193,6 @@
   .guidance-details-body {
     min-width: 0;
   }
-  .guidance-more ul {
-    margin-bottom: 0;
-  }
-  .diet-notes {
-    margin-top: 0.75rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.7rem;
-    opacity: 0.8;
-    min-width: 0;
-    max-width: 100%;
-  }
-  .compact-notes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin: 0.35rem 0 0;
-    padding-left: 1.1rem;
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-    line-height: 1.35;
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
   .supplements-list {
     display: flex;
     flex-direction: column;
@@ -1656,29 +2200,46 @@
     min-width: 0;
     max-width: 100%;
   }
-  .supplement-item {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface-subtle);
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    border-left: 2px solid var(--status-accent-soft-border);
+  .supplement-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
     min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
   }
-  .supp-name {
+  .supplement-column {
+    min-width: 0;
+  }
+  .supplement-column h4 {
+    margin: 0 0 0.45rem;
+    color: var(--status-success-text);
     font-size: 0.75rem;
-    font-weight: bold;
-    color: var(--status-accent-soft-text);
   }
+  .supplement-column.avoid h4 {
+    color: var(--status-danger-strong-text);
+  }
+  .supplement-item {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .supp-name {
+    color: var(--status-accent-soft-text);
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .supplement-column.avoid .supp-name { color: var(--status-danger-strong-text); }
+
   .supp-reason {
     display: block;
-    font-size: 0.68rem;
-    opacity: 0.75;
-    margin-top: 0.1rem;
     min-width: 0;
     max-width: 100%;
+    margin-top: 0.1rem;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.35;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
@@ -1721,125 +2282,133 @@
     flex-direction: column;
     gap: 0.25rem;
   }
+
+  .activity-framework {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .activity-framework-item {
+    min-width: 0;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--status-info-soft-border);
+    border-top: 2px solid var(--status-info-text);
+    border-radius: 0.45rem;
+    background: var(--status-info-soft-bg);
+  }
+
+  .activity-framework-item > span {
+    color: var(--status-info-soft-text);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .activity-framework-item p {
+    margin: 0.25rem 0 0;
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .activity-domain-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
   .activity-domain {
-    margin-top: 0.85rem;
+    min-width: 0;
+    margin-top: 0.65rem;
     padding: 0.55rem 0.65rem;
     border-left: 2px solid var(--status-info-soft-border);
     background: var(--status-info-soft-bg);
     border-radius: 4px;
   }
-  .cycle-support-domain {
-    margin-top: 0.85rem;
-    padding: 0.55rem 0.65rem;
-    border-left: 2px solid var(--status-accent-soft-border);
-    background: var(--status-accent-soft-bg);
-    border-radius: 4px;
+
+  .activity-domain-grid .activity-domain {
+    margin-top: 0;
   }
-  .cycle-diary-review {
-    margin: 0.65rem 0 0.85rem;
-    padding: 0.65rem 0.75rem;
-    border: 1px solid var(--status-success-border);
-    border-left: 3px solid var(--status-success-text);
-    background: var(--status-success-bg);
-    border-radius: 5px;
-  }
-  .cycle-diary-review h4 {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--status-success-text);
-  }
-  .cycle-diary-review > p,
-  .cycle-diary-review-metric span,
-  .cycle-diary-review-days span {
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .cycle-diary-review > p {
-    margin: 0.3rem 0 0;
-  }
-  .cycle-diary-review-metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-    gap: 0.45rem;
-    margin-top: 0.6rem;
-  }
-  .cycle-diary-review-metric {
+
+  .activity-domain-heading {
     display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    padding: 0.4rem 0.5rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .activity-domain-heading strong {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .activity-domain-label {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    white-space: nowrap;
+  }
+  .medication-pathways {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.65rem;
+  }
+  .medication-pathway {
+    min-width: 0;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--status-info-soft-border);
+    border-left: 3px solid var(--status-info-text);
     border-radius: 4px;
     background: var(--surface-subtle);
   }
-  .cycle-diary-review-metric strong {
-    font-size: 0.7rem;
-  }
-  .cycle-diary-review-metric span,
-  .cycle-diary-review-days span {
-    color: var(--text-secondary);
-  }
-  .cycle-diary-review-days {
+  .medication-pathway-heading {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-top: 0.4rem;
+    align-items: baseline;
+    gap: 0.25rem 0.55rem;
   }
-  .cycle-diary-review-days span {
-    padding: 0.25rem 0.4rem;
-    border: 1px solid var(--status-success-border);
-    border-radius: 4px;
+  .medication-pathway-heading strong {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
   }
-  .reproductive-evidence-layer {
-    margin: 0.65rem 0 0.85rem;
-    padding: 0.65rem 0.75rem;
-    border: 1px solid var(--status-info-soft-border);
-    border-left: 3px solid var(--status-info-text);
-    background: var(--status-info-soft-bg);
-    border-radius: 5px;
+  .medication-pathway-heading span {
+    color: var(--text-muted);
+    font-size: 0.62rem;
   }
-  .reproductive-evidence-item {
-    margin-top: 0.65rem;
-    padding-top: 0.55rem;
+  .medication-pathway p,
+  .medication-empty {
+    margin: 0.3rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .medication-pathway-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding-top: 0.45rem;
     border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.62rem;
   }
-  .reproductive-evidence-item h4 {
+
+  .medication-pathway-footer .btn {
     margin: 0;
-    font-size: 0.75rem;
-    color: var(--status-info-soft-text);
-  }
-  .reproductive-evidence-item p {
-    margin: 0.25rem 0 0;
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .reproductive-coverage {
-    margin: 0.35rem 0 0;
-    font-size: 0.7rem;
-    line-height: 1.45;
-    color: var(--status-info-soft-text);
-  }
-  .pgx-readiness {
-    margin: 0.65rem 0 0.85rem;
-    padding: 0.65rem 0.75rem;
-    border: 1px solid var(--status-info-soft-border);
-    border-left: 3px solid var(--status-info-text);
-    background: var(--status-info-soft-bg);
-    border-radius: 5px;
-  }
-  .pgx-readiness > p,
-  .pgx-readiness-item p {
-    margin: 0.25rem 0 0;
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .pgx-readiness-item {
-    margin-top: 0.65rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid var(--border-color);
-  }
-  .pgx-readiness-item > strong {
-    font-size: 0.75rem;
-    color: var(--status-info-soft-text);
+    padding: 0;
   }
   .activity-context {
     display: block;
@@ -1847,18 +2416,50 @@
     font-size: 0.68rem;
     opacity: 0.72;
   }
-  .activity-columns,
-  .medication-columns {
+  .activity-provenance {
+    display: block;
+    margin-top: 0.18rem;
+    color: var(--status-info-soft-text);
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+  .activity-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
     margin-top: 0.45rem;
   }
-  .activity-columns h4,
-  .medication-columns h4 {
+  .activity-columns h4 {
     margin: 0;
     font-size: 0.72rem;
     color: var(--status-info-soft-text);
+  }
+
+  .activity-column-build,
+  .activity-column-watch {
+    min-width: 0;
+  }
+
+  .activity-column-watch {
+    padding-left: 0.7rem;
+    border-left: 1px solid var(--border-color);
+  }
+
+  .activity-columns .activity-verify-heading {
+    margin-top: 0.65rem;
+  }
+
+  .activity-stop-compact {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.65rem;
+  }
+
+  .activity-stop-compact > span {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.4;
   }
   .activity-stop-list {
     margin-top: 0.85rem;
@@ -1869,6 +2470,22 @@
   }
 
   @media (max-width: 1100px) {
+    .guidance-index {
+      grid-template-columns: 1fr;
+    }
+
+    .guidance-index-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .clinical-guidance-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .action-queue-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     .action-row {
       grid-template-columns: 1fr;
     }
@@ -1879,7 +2496,41 @@
       grid-template-columns: 1fr;
     }
     .activity-columns,
-    .medication-columns {
+    .medication-pathways {
+      grid-template-columns: 1fr;
+    }
+
+    .activity-domain-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .activity-column-watch {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .activity-stop-compact {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+  }
+
+  @media (min-width: 1101px) and (max-width: 1400px) {
+    .guidance-index-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .action-queue-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .guidance-index-links {
+      grid-template-columns: 1fr;
+    }
+
+    .dietary-items {
       grid-template-columns: 1fr;
     }
   }

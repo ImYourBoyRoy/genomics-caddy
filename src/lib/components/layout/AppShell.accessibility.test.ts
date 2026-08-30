@@ -32,14 +32,20 @@ describe('responsive data-sidebar access', () => {
     expect(theme).toContain('min-height: 44px;');
   });
 
-  it('keeps the desktop focus control in a reserved toolbar row', () => {
+  it('keeps the hide control at the sidebar edge and appearance controls in the footer', () => {
     expect(appShell).toContain('<div class="main-slot">');
-    expect(appShell).toContain('<div class="focus-toolbar no-print" role="toolbar" aria-label="Report toolbar">');
-    expect(appShell).toContain('class="focus-toggle"');
+    expect(appShell).toContain('<div class="sidebar-region">');
+    expect(appShell).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Sidebar appearance controls">');
+    expect(appShell).toContain('class="sidebar-focus-toggle"');
+    expect(appShell).toContain('aria-label="Hide data sidebar"');
+    expect(appShell).toContain('class="focus-restore-toggle no-print"');
     expect(appShell).toContain('<ThemeToggle />');
-    expect(theme).toContain('.focus-toolbar-inner {');
-    expect(theme).toContain('justify-content: space-between;');
-    expect(theme).toContain('position: static;');
-    expect(theme).toContain('padding: var(--space-2) clamp(20px, 3vw, 36px);');
+    expect(appShell).not.toContain('class="focus-toolbar');
+    expect(theme).toContain('.sidebar-region {');
+    expect(theme).toContain('.sidebar-footer {');
+    expect(theme).toContain('right: 0.7rem;');
+    expect(theme).toContain('box-shadow: none;');
+    expect(theme).toContain('.focus-restore-toggle {');
+    expect(theme).toContain('position: absolute;');
   });
 });

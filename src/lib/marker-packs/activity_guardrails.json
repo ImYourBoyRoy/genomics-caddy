@@ -1,14 +1,27 @@
 {
   "name": "Activity Guidance & Exercise Safety Guardrails",
-  "version": "1.2.0",
-  "last_updated": "2026-08-26",
+  "version": "1.3.0",
+  "last_updated": "2026-08-28",
   "type": "support_engine",
   "purpose": "Use genotype as a weak context modifier for training questions while keeping symptoms, medical history, progression, and professional clearance ahead of genetic optimization.",
   "principles": [
-    "Do not use raw DNA to clear a person for high-intensity, contact, endurance, heat, altitude, or maximal-load activity.",
-    "Start with the user's current ability, goals, symptoms, medications, sleep, nutrition, and training history; increase load gradually.",
-    "If phenotype, clinical history, or a professional's restriction conflicts with a genetic suggestion, the phenotype or clinical direction wins.",
-    "Treat training recommendations as adjustable experiments with symptom and recovery feedback, never as genetic destiny."
+    "Build from current ability, goals, symptoms, medications, sleep, nutrition, and training history; increase load gradually.",
+    "Let symptoms, medical history, measured data, and professional guidance outrank a genetic suggestion.",
+    "Use training recommendations as adjustable experiments with recovery feedback, not as a fixed genetic program."
+  ],
+  "simple_framework": [
+    {
+      "label": "Train",
+      "text": "Progressive loading matched to current ability, symptoms, and recovery."
+    },
+    {
+      "label": "Recover",
+      "text": "Treat sleep, hydration, nutrition, and recovery days as training variables."
+    },
+    {
+      "label": "Track",
+      "text": "Log training load, soreness, performance, sleep, and symptoms; change one variable at a time."
+    }
   ],
   "stop_and_escalate": [
     "Chest pain, pressure, or unusual tightness during or after activity",
@@ -21,10 +34,25 @@
   "domains": [
     {
       "id": "muscle_performance_recovery",
+      "label": "Strength & muscle recovery",
       "section_keywords": ["muscle", "performance", "hypertrophy", "recovery"],
       "context_ids": [],
       "personal_context_keywords": ["exercise intolerance", "recurrent injury", "muscle cramp", "dark urine", "severe muscle pain"],
       "context": "ACTN3, recovery, mitochondrial, creatine, and myopathy-related markers",
+      "simple_favor": [
+        "Progressive overload with recovery days",
+        "Track soreness, sleep, hydration, training volume, and performance",
+        "Keep a sports-medicine review route open if exercise intolerance, recurrent injury, or severe cramping appears"
+      ],
+      "simple_watch": [
+        "Skip maximal testing during severe fatigue, cramping, dark urine, or exercise intolerance",
+        "Avoid rapid training-load jumps during poor recovery"
+      ],
+      "simple_verify": [
+        "CK during concerning muscle symptoms",
+        "Training history and recovery log",
+        "Sports-medicine review if red flags occur"
+      ],
       "favor": [
         "progressive overload with recovery days",
         "training-log review of soreness, sleep, performance, and hydration",
@@ -42,6 +70,7 @@
     },
     {
       "id": "connective_tissue",
+      "label": "Connective tissue & joint control",
       "relevant_pack_signals": [
         "connective_tissue",
         "bone_growth_mineral_density"
@@ -50,6 +79,20 @@
       "context_ids": [],
       "personal_context_keywords": ["joint instability", "hypermobility", "recurrent injury", "fracture history", "tendon pain", "ligament injury"],
       "context": "Collagen, ligament, tendon, hypermobility, and bone-density context",
+      "simple_favor": [
+        "Technique-first resistance training with low-impact conditioning as tolerated",
+        "Prioritize joint control, range-of-motion quality, and progressive loading",
+        "Use physical therapy or sports medicine for instability or recurrent injury"
+      ],
+      "simple_watch": [
+        "Avoid aggressive stretching, contact sport, or heavy loading when instability or pain is active",
+        "Avoid rapid load changes after injury or with neurologic symptoms"
+      ],
+      "simple_verify": [
+        "Joint-stability and injury history",
+        "Movement assessment",
+        "DXA or imaging when clinically indicated"
+      ],
       "favor": [
         "technique-first progressive resistance and low-impact conditioning when tolerated",
         "physical-therapy or sports-medicine movement assessment when instability or recurrent injury is present"
@@ -66,10 +109,24 @@
     },
     {
       "id": "cardiovascular",
+      "label": "Cardiovascular conditioning",
       "section_keywords": ["cardiovascular", "lipid", "blood pressure", "vascular"],
       "context_ids": [],
       "personal_context_keywords": ["chest pain", "palpitations", "fainting", "blood pressure", "arrhythmia", "heart disease", "cardiac"],
       "context": "Blood-pressure, lipid, thrombosis, arrhythmia, and vascular context",
+      "simple_favor": [
+        "Build an aerobic base and resistance routine gradually from current capacity",
+        "Track blood pressure, exertion, recovery, and symptoms when relevant"
+      ],
+      "simple_watch": [
+        "Avoid maximal-effort testing without appropriate clinical clearance",
+        "Pause for exertional chest pain, fainting, palpitations, or unusual breathlessness"
+      ],
+      "simple_verify": [
+        "Blood-pressure and lipid measurements",
+        "ECG or exercise testing when a clinician indicates",
+        "Cardiology review for exertional red flags"
+      ],
       "favor": [
         "gradual aerobic and resistance progression matched to current symptoms and clinical status",
         "blood-pressure, lipid, and recovery monitoring when those markers are relevant"
@@ -86,10 +143,24 @@
     },
     {
       "id": "metabolic",
+      "label": "Glucose & metabolic conditioning",
       "section_keywords": ["metabolic", "glucose", "insulin", "diabetes", "weight", "triglyceride", "fatty liver"],
       "context_ids": [],
       "personal_context_keywords": ["a1c", "hba1c", "fasting glucose", "insulin", "diabetes", "triglyceride", "fatty liver", "eating disorder"],
       "context": "Glucose, insulin, lipid, body-composition, and fatty-liver context",
+      "simple_favor": [
+        "Pair regular aerobic movement with progressive resistance training",
+        "Use measured glucose, blood pressure, lipids, medications, and recovery to adjust training"
+      ],
+      "simple_watch": [
+        "Avoid rapid weight-loss or training changes that ignore symptoms, medications, eating-disorder risk, or recovery",
+        "Use a glucose or weight association as a planning cue, not a performance prescription"
+      ],
+      "simple_verify": [
+        "HbA1c and fasting glucose when clinically appropriate",
+        "Lipid panel and blood-pressure measurements",
+        "Liver enzymes or imaging when liver disease is suspected"
+      ],
       "favor": [
         "regular aerobic and resistance activity progressed gradually to current ability and recovery",
         "use symptoms, blood pressure, and clinician-directed laboratory context to adjust training"
@@ -106,6 +177,7 @@
     },
     {
       "id": "respiratory_airway",
+      "label": "Breathing & airway readiness",
       "relevant_pack_signals": [
         "respiratory_airway",
         "sleep",
@@ -115,6 +187,19 @@
       "context_ids": [],
       "personal_context_keywords": ["wheeze", "wheezing", "asthma", "shortness of breath", "breathlessness", "low oxygen", "sleep apnea", "snoring"],
       "context": "Asthma, airway, lung-function, oxygenation, and sleep-apnea context",
+      "simple_favor": [
+        "Use symptom- and environment-aware conditioning with an appropriate warm-up",
+        "Keep a clinician-guided asthma or airway plan available when symptoms limit exercise"
+      ],
+      "simple_watch": [
+        "Do not push through wheeze, severe breathlessness, low oxygen, or faintness",
+        "Do not use genotype to rule out exercise-induced airway or sleep-related breathing problems"
+      ],
+      "simple_verify": [
+        "Spirometry or peak-flow review",
+        "Sleep study when indicated",
+        "Pulmonary review for persistent or severe symptoms"
+      ],
       "favor": [
         "symptom- and environment-aware conditioning with appropriate warm-up",
         "clinician-guided asthma or airway plan when symptoms limit exercise"
@@ -131,6 +216,7 @@
     },
     {
       "id": "sleep_recovery",
+      "label": "Sleep & circadian recovery",
       "relevant_pack_signals": [
         "sleep"
       ],
@@ -138,6 +224,18 @@
       "context_ids": [],
       "personal_context_keywords": ["insomnia", "sleep apnea", "snoring", "daytime sleepiness", "fatigue", "shift work"],
       "context": "Sleep opportunity, alertness, circadian timing, and recovery context",
+      "simple_favor": [
+        "Anchor a consistent wake time and protect a realistic sleep opportunity",
+        "Use sleep, daytime-alertness, and training logs before changing training load"
+      ],
+      "simple_watch": [
+        "Avoid repeated maximal training when sleep deprivation or impaired alertness is present",
+        "Do not force a schedule from a chronotype marker"
+      ],
+      "simple_verify": [
+        "Sleep study for snoring, witnessed apneas, gasping, or daytime sleepiness",
+        "Clinician review for persistent insomnia or severe daytime sleepiness"
+      ],
       "favor": [
         "protect a consistent sleep opportunity and wake-time routine that fits the person's work, caregiving, and health needs",
         "use a brief sleep, daytime-alertness, and training log before changing training load"
@@ -153,6 +251,7 @@
     },
     {
       "id": "kidney_fluid_electrolytes",
+      "label": "Hydration & electrolyte resilience",
       "relevant_pack_signals": [
         "kidney_fluid_electrolytes"
       ],
@@ -160,6 +259,18 @@
       "context_ids": [],
       "personal_context_keywords": ["kidney disease", "kidney stone", "gout", "creatinine", "egfr", "electrolyte", "dark urine", "dehydration"],
       "context": "Hydration, kidney-function, urate, stone, and electrolyte context",
+      "simple_favor": [
+        "Match hydration and conditioning to kidney function, climate, medications, and training load",
+        "Track cramps, dizziness, urine changes, and exercise tolerance when relevant"
+      ],
+      "simple_watch": [
+        "Avoid deliberate dehydration, extreme heat exposure, or rapid weight-cutting when kidney concerns are present",
+        "Do not use a urate or kidney marker to replace kidney-function testing"
+      ],
+      "simple_verify": [
+        "Creatinine/eGFR, electrolytes, and urinalysis when indicated",
+        "Clinician or sports-medicine review for recurrent stones, gout, fainting, or exercise-related urine changes"
+      ],
       "favor": [
         "individualized hydration and gradual conditioning based on kidney function, climate, medications, and clinician guidance",
         "track unusual cramps, dizziness, urine changes, and exercise tolerance when those symptoms are relevant"
@@ -175,6 +286,7 @@
     },
     {
       "id": "pain_migraine_sensory",
+      "label": "Pain, migraine & sensory pacing",
       "relevant_pack_signals": [
         "pain_migraine_sensory"
       ],
@@ -182,6 +294,18 @@
       "context_ids": [],
       "personal_context_keywords": ["migraine", "headache", "neurologic", "neuropathy", "chronic pain", "pain"],
       "context": "Migraine, pain, sensory-trigger, and symptom-paced activity context",
+      "simple_favor": [
+        "Use graded activity with a symptom and trigger log instead of all-or-nothing training",
+        "Support regular meals, hydration, sleep, and recovery as symptoms permit"
+      ],
+      "simple_watch": [
+        "Avoid pushing through a new severe headache, sudden neurologic symptoms, fainting, or rapidly worsening pain",
+        "Do not use a common pain marker to predict pain tolerance or analgesic response"
+      ],
+      "simple_verify": [
+        "Clinician evaluation for new, severe, or changing headache or neurologic symptoms",
+        "Symptom, activity, sleep, hydration, and medication-response log"
+      ],
       "favor": [
         "graded activity with a symptom and trigger log rather than all-or-nothing training",
         "adequate hydration, regular meals, recovery, and clinician-guided return to activity when symptoms permit"
@@ -197,6 +321,7 @@
     },
     {
       "id": "hormones_reproductive",
+      "label": "Cycle-aware training & recovery",
       "section_keywords": ["menstrual", "hormone", "reproductive", "pmdd", "ovarian"],
       "context_ids": [
         "menstrual_cycle",
@@ -213,6 +338,19 @@
       ],
       "personal_context_keywords": ["menstrual", "cycle", "pms", "pmdd", "pelvic", "bleeding", "pregnancy", "postpartum", "lactation", "menopause", "hormone", "contracept", "birth control", "testosterone", "androgen"],
       "context": "Cycle timing, contraception, menopause, pregnancy/postpartum, and hormone-therapy context",
+      "simple_favor": [
+        "Adjust training load, sleep, hydration, and recovery to observed symptoms and cycle or life-stage context",
+        "Track symptoms and training across cycles when cyclic changes are reported"
+      ],
+      "simple_watch": [
+        "Do not infer hormone levels, ovulation, pregnancy, or exercise restrictions from DNA",
+        "Do not change contraception or hormone medication because of a genotype or training response"
+      ],
+      "simple_verify": [
+        "Exact medication and active ingredients",
+        "Cycle or life-stage context supplied by the user",
+        "Clinician review for bleeding, pelvic pain, pregnancy, or postpartum red flags"
+      ],
       "favor": [
         "symptom- and cycle-aware adjustment of training load, sleep, hydration, and recovery",
         "prospective symptom and training tracking across cycles when cyclic changes are reported"

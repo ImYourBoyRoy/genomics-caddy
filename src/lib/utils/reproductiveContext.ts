@@ -1,5 +1,6 @@
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import type { GeneratedReport } from '../types/genomics';
+import { formatGeneticSexLabel } from './uiLabels';
 
 export interface ReproductivePersonalContextLike {
   reproductiveIntake?: Record<string, unknown> | null;
@@ -49,7 +50,7 @@ export function reproductiveContextOptionIsSuggestedForGeneticSex(
   contextId: string,
   geneticSex?: string | null,
 ): boolean {
-  const normalizedSex = String(geneticSex || '').trim().toLowerCase();
+  const normalizedSex = formatGeneticSexLabel(geneticSex).toLowerCase();
   const normalizedContext = String(contextId || '').trim().toLowerCase();
   if (normalizedSex === 'male') return !FEMALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
   if (normalizedSex === 'female') return !MALE_ASSOCIATED_CONTEXTS.has(normalizedContext);

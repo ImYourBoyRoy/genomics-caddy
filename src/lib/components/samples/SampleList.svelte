@@ -1,14 +1,13 @@
 <!-- ./src/lib/components/samples/SampleList.svelte -->
 <script lang="ts">
   import type { GenomeSample } from '../../types/genomics';
-  import Tooltip from '../common/Tooltip.svelte';
   import { formatGeneticSexLabel } from '../../utils/uiLabels';
 
   /*
   Module Docstring:
   Purpose: Displays a list of active imported genomic profiles.
   Responsibilities:
-  - Render list items containing sample name and conservative chromosome-call context.
+  - Render list items containing sample name and concise chromosome-call context.
   - Highlight the currently active profile.
   - Expose select and delete event bindings.
   Key Inputs: samples, selectedSample, onSelectSample, onDeleteSample.
@@ -31,6 +30,15 @@
     onSelectSample,
     onDeleteSample
   }: Props = $props();
+
+  function sexSymbol(value: string): string {
+    const label = formatGeneticSexLabel(value);
+    return label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•';
+  }
+
+  function sexSymbolLabel(value: string): string {
+    return `${formatGeneticSexLabel(value)} profile`;
+  }
 </script>
 
 <div class="samples-card card">
@@ -49,14 +57,13 @@
               aria-current={selectedSample?.id === s.id ? 'true' : undefined}
               onclick={() => onSelectSample(s)}
             >
-              👤 {s.name} <span class="sex-pill">{formatGeneticSexLabel(s.genetic_sex)}</span>
+              <span
+                class="sample-sex-symbol"
+                role="img"
+                aria-label={sexSymbolLabel(s.genetic_sex)}
+              >{sexSymbol(s.genetic_sex)}</span>
+              <span class="sample-name-text">{s.name}</span>
             </button>
-            <Tooltip
-              label="Sex estimate from DNA"
-              description="Based on X/Y chromosome call coverage. It is not gender identity, anatomy, fertility, pregnancy, or hormone status."
-            >
-              <span class="sample-scope-help" aria-label="Explain sex estimate from DNA">ⓘ</span>
-            </Tooltip>
           </div>
           <button type="button" class="btn-delete" aria-label={`Delete profile ${s.name}`} disabled={disabled} onclick={() => onDeleteSample(s.id)}>🗑️</button>
         </li>

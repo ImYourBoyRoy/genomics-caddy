@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
-use tauri::{AppHandle, Emitter, Listener, Manager};
+use tauri::{AppHandle, Emitter, Listener, Manager, PhysicalSize, Size};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -270,6 +270,38 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
         };
     }
 
+    if method == "POST" && path == "/ui/resize" {
+        let body = req.split("\r\n\r\n").nth(1).unwrap_or("{}").trim();
+        let args: Value = serde_json::from_str(if body.is_empty() { "{}" } else { body })
+            .unwrap_or_else(|_| json!({}));
+        let Some(width) = args.get("width").and_then(Value::as_u64) else {
+            return (400, json!({"ok": false, "error": "width must be a positive integer"}).to_string());
+        };
+        let Some(height) = args.get("height").and_then(Value::as_u64) else {
+            return (400, json!({"ok": false, "error": "height must be a positive integer"}).to_string());
+        };
+        if !(640..=3_840).contains(&width) || !(480..=2_160).contains(&height) {
+            return (
+                400,
+                json!({"ok": false, "error": "desktop QA size must be within 640..3840 by 480..2160"}).to_string(),
+            );
+        }
+        let Some(window) = app.get_webview_window("main") else {
+            return (504, json!({"ok": false, "error": "main Genomics Caddy window is unavailable"}).to_string());
+        };
+        let size = Size::Physical(PhysicalSize {
+            width: width as u32,
+            height: height as u32,
+        });
+        let result = window
+            .unmaximize()
+            .and_then(|()| window.set_size(size));
+        return match result {
+            Ok(()) => (200, json!({"ok": true, "width": width, "height": height}).to_string()),
+            Err(error) => (500, json!({"ok": false, "error": format!("could not resize desktop QA window: {error}")}).to_string()),
+        };
+    }
+
     if method == "POST" && path.starts_with("/ui/") {
         let ui_method = path.trim_start_matches("/ui/");
         let body = req.split("\r\n\r\n").nth(1).unwrap_or("{}").trim();
@@ -317,7 +349,8 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "POST /ui/probeTooltips",
                 "POST /ui/probeContrast",
                 "POST /ui/clickSection",
-                "POST /ui/queryText"
+                "POST /ui/queryText",
+                "POST /ui/resize"
             ]
         })
         .to_string(),

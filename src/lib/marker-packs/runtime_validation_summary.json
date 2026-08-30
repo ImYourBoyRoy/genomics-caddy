@@ -32,6 +32,7 @@
     "actionability_guidance.json",
     "agent_research_prompts.json",
     "activity_guardrails.json",
+    "allergy_sensitivity_catalog.json",
     "ai_prompt_helpers.json",
     "ai_prompt_policy.json",
     "callability_rules.json",

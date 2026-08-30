@@ -498,6 +498,12 @@
       "raw_dna_limitation": "Indel representation can vary by build and platform. Confirm with clinical targeted testing or sequencing. ClinVar/dbSNP rsID corrected to rs386833395 for c.68_69delAG / 185delAG.",
       "clinical_confirmation_required": true,
       "variant_type": "indel",
+      "clinical_semantics": {
+        "condition_label": "BRCA1/2-associated hereditary breast and ovarian cancer",
+        "interpretation_class": "clinically_actionable_variant",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "ClinVar BRCA1 c.68_69del",
@@ -550,6 +556,12 @@
       "raw_dna_limitation": "Consumer array indel calls and nomenclature may vary. Confirm clinically before interpretation.",
       "clinical_confirmation_required": true,
       "variant_type": "indel",
+      "clinical_semantics": {
+        "condition_label": "BRCA1/2-associated hereditary breast and ovarian cancer",
+        "interpretation_class": "clinically_actionable_variant",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "ClinVar BRCA1 c.5266dup",
@@ -602,6 +614,12 @@
       "raw_dna_limitation": "Indel calls may be absent, miscoded, or represented differently in raw consumer data.",
       "clinical_confirmation_required": true,
       "variant_type": "indel",
+      "clinical_semantics": {
+        "condition_label": "BRCA1/2-associated hereditary breast and ovarian cancer",
+        "interpretation_class": "clinically_actionable_variant",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "ClinVar BRCA2 c.5946del",
@@ -654,6 +672,12 @@
       "raw_dna_limitation": "Single-site consumer-array calls for rare clinically important variants can be false positive. Confirm clinically.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "clinical_semantics": {
+        "condition_label": "BRCA1/2-associated hereditary breast and ovarian cancer",
+        "interpretation_class": "clinically_actionable_variant",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "ClinVar BRCA1 p.Ala1708Glu",
@@ -816,6 +840,12 @@
       "raw_dna_limitation": "Indel calls may be unreliable in consumer raw DNA and penetrance is not deterministic.",
       "clinical_confirmation_required": true,
       "variant_type": "indel",
+      "clinical_semantics": {
+        "condition_label": "CHEK2-related cancer predisposition",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "NCBI ClinVar",
@@ -1906,6 +1936,12 @@
       "raw_dna_limitation": "Single raw-DNA variant status is insufficient for recessive MAP diagnosis.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "clinical_semantics": {
+        "condition_label": "MUTYH-associated polyposis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "NCI PDQ Genetics of Colorectal Cancer",
@@ -1960,6 +1996,12 @@
       "raw_dna_limitation": "Single raw-DNA variant status is insufficient for recessive MAP diagnosis.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "clinical_semantics": {
+        "condition_label": "MUTYH-associated polyposis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "NCI PDQ Genetics of Colorectal Cancer",

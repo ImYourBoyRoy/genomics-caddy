@@ -1495,6 +1495,12 @@
       "impact": "Activated protein C resistance / increased venous thromboembolism risk",
       "evidence_tier": "A_clinically_actionable_common_variant",
       "interpretation": "F5 rs6025 A is Factor V Leiden, one of the most established inherited thrombophilia variants. It increases venous clot risk, especially with estrogen exposure, surgery, immobility, pregnancy/postpartum, smoking, obesity, or prior VTE.",
+      "clinical_semantics": {
+        "condition_label": "Factor V Leiden thrombophilia",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "current clot diagnosis",
         "arterial heart attack prediction",
@@ -1537,6 +1543,12 @@
       "impact": "Higher prothrombin levels / increased venous thromboembolism risk",
       "evidence_tier": "A_clinically_actionable_common_variant",
       "interpretation": "F2 rs1799963 A is the prothrombin G20210A variant, a well-established inherited thrombophilia marker. It is weaker than many monogenic disorders but clinically relevant in VTE risk contexts.",
+      "clinical_semantics": {
+        "condition_label": "Prothrombin thrombophilia",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "current clot diagnosis",
         "anticoagulation need",
@@ -2327,6 +2339,12 @@
       "raw_dna_limitation": "This is one of the few single variants where clinical confirmation matters. Presence is not diagnosis; absence does not rule out wild-type ATTR or other TTR variants.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "clinical_semantics": {
+        "condition_label": "Hereditary transthyretin amyloidosis",
+        "interpretation_class": "clinically_actionable_variant",
+        "inheritance_model": "autosomal_dominant",
+        "clinical_state": "unknown"
+      },
       "sources": [
         {
           "name": "ClinVar TTR Val142Ile/V122I",
@@ -2697,6 +2715,12 @@
       "impact": "Hereditary hemochromatosis susceptibility / iron-overload cardiomyopathy context",
       "evidence_tier": "A_clinically_relevant_common_variant",
       "interpretation": "HFE rs1800562 A encodes C282Y. Homozygosity can cause hereditary hemochromatosis with potential cardiomyopathy/arrhythmia from iron overload, but penetrance is incomplete and labs are decisive.",
+      "clinical_semantics": {
+        "condition_label": "HFE-related hemochromatosis",
+        "interpretation_class": "susceptibility_context",
+        "inheritance_model": "autosomal_recessive",
+        "clinical_state": "unknown"
+      },
       "do_not_claim": [
         "hemochromatosis diagnosis from raw DNA",
         "cardiomyopathy diagnosis",

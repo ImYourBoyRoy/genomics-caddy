@@ -2,7 +2,7 @@
 /*
 Purpose: Exercise the running Tauri desktop report through its local UI bridge.
 How to run: `npm run audit:tauri-ui` while `npm run tauri:dev` is running.
-Outputs: Aggregate-only desktop mode, geometry, sex-label, public-copy, and rendered-theme contrast checks.
+Outputs: Aggregate-only desktop mode, geometry, sex-label, medication-surface, public-copy, and rendered-theme contrast checks.
 Privacy: Never prints sample names, genotype calls, technical disclosures, or raw UI text.
 */
 
@@ -11,6 +11,11 @@ import { setTimeout as sleep } from "node:timers/promises";
 const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_TIMEOUT_MS, 120_000);
 const pollMs = 500;
+const requestedViewportWidth = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_WIDTH, 0);
+const requestedViewportHeight = parsePositiveInteger(
+  process.env.GENOMICS_TAURI_AUDIT_HEIGHT,
+  requestedViewportWidth > 0 ? Math.max(720, Math.round(requestedViewportWidth * 0.5625)) : 0,
+);
 
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value || "", 10);
@@ -64,6 +69,12 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       "Desktop report content overflows horizontally"
     );
   }
+  if (layout.profileNameCount > 0) {
+    assert(
+      layout.profileNameMinWidth !== null && layout.profileNameMinWidth >= 80,
+      "Active profile names do not have a readable sidebar text region",
+    );
+  }
   assert(layout.overflowingElements.length === 0, "Desktop bridge reported overflowing elements");
   assert(layout.focusControlOverlapsContent === false, "Focus Report control overlaps the first content block");
   if (layout.focusControlBottom !== null && layout.firstContentTop !== null) {
@@ -73,8 +84,31 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       "Focus Report control has no visual separation from the first content block",
     );
   }
-  assert(layout.themeControlInToolbar === true, "Theme control is not in the desktop toolbar");
-  assert(layout.actionQueueItemCount <= 5, "Action queue exceeds the five-item desktop contract");
+  assert(layout.themeControlInSidebarFooter === true, "Theme control is not in the sidebar footer");
+  assert(layout.themeModeOptionCount === 3, "Sidebar theme control does not expose Auto, Light, and Dark choices");
+  assert(layout.topToolbarPresent === false, "Redundant top report toolbar is still present");
+  assert(layout.themeMenuOpen === false, "Theme control still exposes a popover menu");
+  assert(layout.appContextMenuInstalled === true, "Application context menu is not installed in the desktop app");
+  assert(layout.sidebarFocusControlInsideSidebar === true, "Sidebar hide control is not contained by the sidebar");
+  assert(layout.sidebarFocusControlOverlapsBrand === false, "Sidebar hide control overlaps the sidebar brand");
+  if (layout.sidebarFocusControlTop !== null) {
+    assert(layout.sidebarFocusControlTop <= 24, "Sidebar hide control is not anchored near the sidebar top");
+  }
+  if (layout.sidebarFocusControlRightGap !== null) {
+    assert(layout.sidebarFocusControlRightGap >= 4 && layout.sidebarFocusControlRightGap <= 20, "Sidebar hide control is not aligned to the sidebar edge");
+  }
+  assert(layout.actionQueueItemCount <= 9, "Action queue exceeds the nine-item desktop contract");
+  if (expectedMode === "simple" && layout.reportOverviewWidth !== null && layout.mainContentWidth !== null) {
+    assert(
+      layout.reportOverviewWidth >= Math.min(Math.round(layout.mainContentWidth * 0.9), 1100),
+      "Simple report overview is not using the available desktop banner width",
+    );
+  }
+  if (expectedMode === "simple" && layout.viewportWidth > 1400 && layout.actionQueueColumnCount !== null) {
+    assert(layout.actionQueueColumnCount === 3, "Simple action queue is not using the three-column desktop layout");
+  } else if (expectedMode === "simple" && layout.viewportWidth > 1100 && layout.actionQueueColumnCount !== null) {
+    assert(layout.actionQueueColumnCount === 2, "Simple action queue is not using the two-column desktop layout");
+  }
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }
@@ -128,19 +162,39 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     assert(layout.clinicalProvenanceCount === 0, `${expectedMode} mode rendered Clinical provenance content`);
   }
 
+  const warnings = snapshot.warningMetrics;
+  assert(warnings && typeof warnings === "object", "Desktop bridge returned no warning-routing metrics");
+  assert(warnings.duplicateGenericWarningPhraseCount === 0, "Visible report repeats a generic warning phrase");
+  assert(warnings.reportGuideCount <= 1, "Report contains more than one interpretation guide");
+  assert(warnings.footerReminderCount <= 1, "Report contains more than one shared footer reminder");
+  assert(warnings.legalPrivacyPageCount === 0, "Legal & Privacy page is visible inside the Trait Report");
+  if (expectedMode === "simple") {
+    assert(warnings.genericWarningPhraseCount <= 2, "Simple mode exposes a generic warning wall");
+  }
+
   if (expectedMode === "simple" && layout.markerCardCount > 0) {
     const contract = snapshot.simpleCardContract;
     assert(contract && typeof contract === "object", "Simple card contract metrics are missing");
     for (const [key, label] of [
       ["titleCount", "title"],
-      ["meaningCount", "meaning"],
+      ["signalCount", "signal"],
+      ["whyItMattersCount", "why-it-matters"],
+      ["reviewActionCount", "review-action"],
       ["evidenceCount", "evidence"],
-      ["nextStepCount", "next-step"],
       ["detailsCount", "Details"],
       ["technicalDataCount", "Technical data"],
     ]) {
       assert(contract[key] === contract.cardCount, `Simple cards are missing a ${label} contract surface`);
     }
+    // Follow-up is intentionally a section-level surface, not a repeated
+    // per-card block. One section can cover many cards, and sections with no
+    // concrete confirm_with route correctly have no follow-up line.
+    assert(
+      Number.isInteger(contract.sectionFollowUpCount) &&
+        contract.sectionFollowUpCount >= 0 &&
+        contract.sectionFollowUpCount <= contract.cardCount,
+      "Simple section follow-up metrics are not aggregate and bounded",
+    );
   }
 
   return {
@@ -152,6 +206,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     gridWidth: layout.markerGridWidth,
     cardWidth: layout.markerCardMaxWidth,
     simpleCardContract: snapshot.simpleCardContract,
+    warningMetrics: snapshot.warningMetrics,
     connectionsHeight: layout.connectionsLaunchHeight,
     liftoverHeight: layout.liftoverStatusHeight,
   };
@@ -208,10 +263,11 @@ async function assertNoUnverifiedUpdateCopy(snapshot) {
 async function selectTheme(label, expectedMode) {
   await clickText(label);
   const snapshot = await waitForSnapshot(
-    (candidate) => candidate.themeMode === expectedMode,
+    (candidate) => candidate.themeMode === expectedMode && candidate.layout?.themeMenuOpen === false,
     `${expectedMode} theme mode`,
   );
   assert(snapshot.themeMode === expectedMode, `Expected ${expectedMode} theme mode`);
+  assert(snapshot.layout?.themeMenuOpen === false, `Expected ${expectedMode} theme selection to close`);
   return snapshot;
 }
 
@@ -299,6 +355,22 @@ async function waitForSnapshot(predicate, label, waitMs = timeoutMs) {
   throw new Error(`Timed out waiting for ${label}${detail}`);
 }
 
+async function prepareRequestedViewport() {
+  if (!requestedViewportWidth) return;
+  const result = await request("/ui/resize", {
+    method: "POST",
+    body: JSON.stringify({ width: requestedViewportWidth, height: requestedViewportHeight }),
+  });
+  assert(result?.ok === true, "Could not resize the Tauri window for the requested desktop audit width");
+  await waitForSnapshot(
+    (snapshot) => {
+      const width = snapshot.layout?.viewportWidth;
+      return Number.isFinite(width) && Math.abs(width - requestedViewportWidth) <= 80;
+    },
+    `${requestedViewportWidth}px desktop viewport`,
+  );
+}
+
 async function clickText(text) {
   const result = await request("/ui/clickText", {
     method: "POST",
@@ -358,6 +430,126 @@ async function assertNoRedundantPublicCopy() {
     genericConfirmation?.ok === true && genericConfirmation.count === 0,
     "Generic confirmation copy is visible instead of an authored confirmation step",
   );
+}
+
+async function assertAllergySurface() {
+  const dnaContext = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Matched pathways" }),
+  });
+  if (dnaContext?.ok === true && dnaContext.count === 0) {
+    const toggle = await request("/ui/clickText", {
+      method: "POST",
+      body: JSON.stringify({ text: "Allergy & sensitivity map" }),
+    });
+    assert(toggle?.ok === true, "Could not expand the allergy and sensitivity map for verification");
+    await sleep(100);
+  }
+
+  for (const text of [
+    "Allergy & sensitivity map",
+    "Matched pathways",
+  ]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    assert(result?.ok === true && result.count > 0, `Allergy surface is missing ${text}`);
+  }
+
+  for (const text of [
+    "Allergy & exposure",
+    "Exposure history checklist",
+    "almond, walnut, pecan, cashew, pistachio",
+    "honeybee or bumblebee sting",
+    "cold air, water, or cold objects",
+    "sunlight or photosensitive rash",
+  ]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    assert(result?.ok === true && result.count === 0, `Non-DNA allergy checklist content is visible: ${text}`);
+  }
+
+  const showMore = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Show more" }),
+  });
+  assert(showMore?.ok === true && showMore.count === 0, "Allergy and dietary surfaces still use Show more truncation");
+}
+
+async function assertReportOrganization() {
+  for (const text of [
+    "Use your results",
+    "Allergy & sensitivity",
+    "Food & supplements",
+    "Training & recovery",
+    "Medication & clinical follow-up",
+    "Explore all health areas",
+  ]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    assert(result?.ok === true && result.count > 0, `Report organization is missing ${text}`);
+  }
+}
+
+async function assertMedicationSurface() {
+  const pathwayHeader = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Medication pathways" }),
+  });
+  assert(pathwayHeader?.ok === true && pathwayHeader.count > 0, "Medication pathway surface is missing");
+
+  let pathwayIntro = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "DNA-linked medication and treatment topics found in this report." }),
+  });
+  if (pathwayIntro?.ok === true && pathwayIntro.count === 0) {
+    const toggle = await request("/ui/clickText", {
+      method: "POST",
+      body: JSON.stringify({ text: "Medication pathways" }),
+    });
+    assert(toggle?.ok === true, "Could not expand the medication pathway surface for verification");
+    await sleep(100);
+    pathwayIntro = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text: "DNA-linked medication and treatment topics found in this report." }),
+    });
+  }
+  assert(pathwayIntro?.ok === true && pathwayIntro.count > 0, "Medication pathway surface has no DNA-linked intro");
+
+  for (const text of ["Ask for / record", "Do not do from raw DNA", "PGx completeness check"]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    assert(result?.ok === true && result.count === 0, `Generic medication boilerplate is visible: ${text}`);
+  }
+}
+
+async function assertProfileSexSymbols() {
+  for (const symbol of ["♀", "♂"]) {
+    const result = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text: symbol }),
+    });
+    assert(result?.ok === true && result.count > 0, `Active Profiles is missing the ${symbol} sex symbol`);
+  }
+
+  const legacyIcon = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "👤" }),
+  });
+  assert(legacyIcon?.ok === true && legacyIcon.count === 0, "Active Profiles still uses the generic person icon");
+
+  const profileHelp = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Sex estimate from DNA" }),
+  });
+  assert(profileHelp?.ok === true && profileHelp.count === 0, "Active Profiles still exposes the delayed sex-estimate tooltip");
 }
 
 async function ensurePopulatedSection() {
@@ -436,6 +628,7 @@ async function assertClinicalCollapsedHint() {
 }
 
 async function main() {
+  await prepareRequestedViewport();
   let ready = await waitForSnapshot(
     (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode && snapshot.resourceStatus !== null && snapshot.resourceUpdatePhase !== "checking",
     "a loaded Tauri report"
@@ -453,6 +646,10 @@ async function main() {
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
   await assertNoRedundantPublicCopy();
+  await assertAllergySurface();
+  await assertReportOrganization();
+  await assertMedicationSurface();
+  await assertProfileSexSymbols();
   await ensureCollapsedSections();
   await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
@@ -472,15 +669,6 @@ async function main() {
     "A visible tooltip panel was clipped or lacked accessible metadata",
   );
 
-  await focusText("Sex estimate from DNA");
-  validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the keyboard-opened sex-estimate tooltip"));
-  await pressKey("Escape");
-  await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 0, "the sex-estimate tooltip to close with Escape");
-  await clickText("Sex estimate from DNA");
-  validateTooltipSnapshot(await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 1, "the sex-estimate tooltip"));
-  await clickText("Sex estimate from DNA");
-  await waitForSnapshot((snapshot) => snapshot.tooltip?.openPanelCount === 0, "the sex-estimate tooltip to close");
-
   await clickText("Clinical");
   modes.clinical = validateDesktopSnapshot(await waitForMode("clinical"), "clinical");
 
@@ -490,45 +678,28 @@ async function main() {
   await clickText("Simple");
   const restored = validateDesktopSnapshot(await waitForMode("simple"), "simple");
 
-  await clickText("Focus report");
+  await clickText("Hide data sidebar");
   validateFocusModeSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === true, "Focus Report mode"));
-  await clickText("Show data");
+  await clickText("Show data sidebar");
   validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
 
-  await clickText("Appearance");
-  const openTheme = await waitForSnapshot(
-    (snapshot) => snapshot.layout?.themeMenuOpen === true,
-    "the Appearance menu to open",
-  );
-  assert(openTheme.layout.themeMenuInToolbarFlow === true, "Appearance menu is not in toolbar layout flow");
-  assert(openTheme.layout.themeMenuOverlapsReport === false, "Appearance menu overlaps the report content");
-  await pressKey("Escape");
-  await waitForSnapshot(
-    (snapshot) => snapshot.layout?.themeMenuOpen === false,
-    "the Appearance menu to close with Escape",
-  );
-
-  await clickText("Appearance");
   await selectTheme("Light mode", "light");
   const lightContrast = await probeContrast("light");
-  await clickText("Appearance");
   await selectTheme("Dark mode", "dark");
   const darkContrast = await probeContrast("dark");
-  await clickText("Appearance");
   await selectTheme("System default", "system");
   const systemContrast = await probeContrast("system");
 
   console.log("PASS: Tauri desktop report audit");
-  console.log(`  sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
-  const toolbarGap = ready.layout.firstContentTop !== null && ready.layout.focusControlBottom !== null
-    ? ready.layout.firstContentTop - ready.layout.focusControlBottom
-    : "n/a";
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; toolbar_gap=${toolbarGap}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; public_copy=clean`);
+  console.log(`  viewport=${ready.layout.viewportWidth}x${ready.layout.viewportHeight}; requested_viewport=${requestedViewportWidth || "current"}x${requestedViewportHeight || "current"}; sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; overview=${ready.layout.reportOverviewWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; action_queue_columns=${ready.layout.actionQueueColumnCount ?? "n/a"}; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; profiles=${ready.layout.profileNameCount}; profile_name_min_width=${ready.layout.profileNameMinWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; sidebar_hide_top=${ready.layout.sidebarFocusControlTop ?? "n/a"}px; sidebar_hide_edge_gap=${ready.layout.sidebarFocusControlRightGap ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; medication_surface=clean; public_copy=clean`);
   const simpleContract = modes.simple.simpleCardContract;
-  console.log(`  simple_contract=${simpleContract?.cardCount ?? "n/a"}; title=${simpleContract?.titleCount ?? "n/a"}; meaning=${simpleContract?.meaningCount ?? "n/a"}; evidence=${simpleContract?.evidenceCount ?? "n/a"}; next_step=${simpleContract?.nextStepCount ?? "n/a"}; details=${simpleContract?.detailsCount ?? "n/a"}; technical=${simpleContract?.technicalDataCount ?? "n/a"}`);
+  console.log(`  simple_contract=${simpleContract?.cardCount ?? "n/a"}; title=${simpleContract?.titleCount ?? "n/a"}; signal=${simpleContract?.signalCount ?? "n/a"}; why_it_matters=${simpleContract?.whyItMattersCount ?? "n/a"}; review_action=${simpleContract?.reviewActionCount ?? "n/a"}; evidence=${simpleContract?.evidenceCount ?? "n/a"}; section_follow_up=${simpleContract?.sectionFollowUpCount ?? "n/a"}; details=${simpleContract?.detailsCount ?? "n/a"}; technical=${simpleContract?.technicalDataCount ?? "n/a"}`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
-  console.log(`  resource_status=${resourceStatus}; update_phase=${resourceUpdatePhase ?? "idle"}`);
+  const warningMetrics = restored.warningMetrics;
+  console.log(`  warnings=generic:${warningMetrics?.genericWarningPhraseCount ?? "n/a"};duplicates:${warningMetrics?.duplicateGenericWarningPhraseCount ?? "n/a"};actionable:${warningMetrics?.actionableAlertCount ?? "n/a"};clinical_review:${warningMetrics?.clinicalReviewAlertCount ?? "n/a"};guide:${warningMetrics?.reportGuideCount ?? "n/a"};footer:${warningMetrics?.footerReminderCount ?? "n/a"};legal:${warningMetrics?.legalPrivacyPageCount ?? "n/a"}`);
+  console.log(`  resource_status=${resourceStatus}; update_phase=${resourceUpdatePhase ?? "idle"}; app_context_menu=installed`);
 }
 
 main().catch((error) => {

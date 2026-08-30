@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(resolve(process.cwd(), 'src/lib/components/report/ReportHeader.svelte'), 'utf8');
-const summaryStyles = source.slice(source.indexOf('.overall-summary'), source.indexOf('.technical-score-details'));
+const styleBlock = source.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
+const summaryStyles = styleBlock.match(/\.overall-summary \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
 describe('ReportHeader summary', () => {
   it('does not repeat the title-row sex result in the report body', () => {
@@ -12,10 +13,21 @@ describe('ReportHeader summary', () => {
     expect(source).not.toContain('Sex estimate from DNA');
   });
 
-  it('keeps Simple-mode coverage compact and avoids duplicate technical copy', () => {
-    expect(source).toContain('<span class="quality-kicker">DNA coverage</span>');
-    expect(source).toContain('<span>markers called</span>');
-    expect(source).toContain('<span class="quality-note">Uncalled = unknown</span>');
+  it('keeps Simple mode as a wide, non-sticky mini stats banner', () => {
+    expect(source).toContain('<div class="simple-report-overview" aria-label="Report overview">');
+    expect(source).toContain('<span class="quality-kicker">Report overview</span>');
+    expect(source).toContain('on review board');
+    expect(source).toContain('class="report-stat-grid" aria-label="Report overview statistics"');
+    expect(source).toContain('Review queue');
+    expect(source).toContain('Higher concern');
+    expect(source).toContain('Context findings');
+    expect(source).toContain('Protective context');
+    expect(source).toContain('<span>DNA coverage</span>');
+    expect(source).toContain('role="progressbar"');
+    expect(source).toContain('class="overview-coverage-meter"');
+    expect(source).toContain('coveragePercent');
+    expect(source).toContain('--report-dashboard-surface-width');
+    expect(source).toContain('box-sizing: border-box;');
     expect(source).not.toContain('Markers Checked');
     expect(source).not.toContain('curated SNPs found');
   });
@@ -27,7 +39,8 @@ describe('ReportHeader summary', () => {
 
     expect(source).toContain("if (mode === 'simple')");
     expect(source).toContain('const associationCount = high + mod;');
-    expect(source).toContain('possible protective ${prot === 1 ? \'association\' : \'associations\'}');
+    expect(source).toContain('protective-context ${prot === 1 ? \'finding\' : \'findings\'}');
+    expect(source).toContain('research ${associationCount === 1 ? \'finding\' : \'findings\'} to review');
     expect(source).toContain("return simpleParts.join(' · ');");
     expect(source).toContain('computeSummaryLine(generatedReport, presentationMode)');
     expect(simpleMode).not.toContain('stronger association');
@@ -42,6 +55,8 @@ describe('ReportHeader summary', () => {
   });
 
   it('keeps long report header content inside its flex layout', () => {
+    expect(source).toContain('.simple-report-overview {');
+    expect(source).toContain('grid-template-columns: minmax(14rem, 1fr) minmax(0, 2.4fr) minmax(9rem, 13rem);');
     expect(source).toContain('.report-desc {');
     expect(source).toContain('flex: 1 1 auto;');
     expect(source).toContain('min-width: 0;');

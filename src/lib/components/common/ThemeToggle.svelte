@@ -1,24 +1,20 @@
 <!-- ./src/lib/components/common/ThemeToggle.svelte -->
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount } from 'svelte';
 
   type ThemeMode = 'system' | 'light' | 'dark';
   const STORAGE_KEY = 'genomics_theme_mode';
+  const THEME_TRANSITION_MS = 2500;
   let mode = $state<ThemeMode>('system');
-  let isOpen = $state(false);
-  let rootElement: HTMLDivElement;
-  let toggleButton = $state<HTMLButtonElement | undefined>(undefined);
-  let optionsElement = $state<HTMLDivElement | undefined>(undefined);
+  let transitionTimer: ReturnType<typeof setTimeout> | undefined;
+  let transitionId = 0;
+  let transitionFrame: number | undefined;
 
-  const themeOptions: Array<{ id: ThemeMode; label: string; icon: string }> = [
-    { id: 'system', label: 'System default', icon: '◐' },
-    { id: 'light', label: 'Light mode', icon: '☀️' },
-    { id: 'dark', label: 'Dark mode', icon: '🌙' },
+  const themeOptions: Array<{ id: ThemeMode; label: string; shortLabel: string; icon: string }> = [
+    { id: 'system', label: 'System default', shortLabel: 'Auto', icon: '◐' },
+    { id: 'light', label: 'Light mode', shortLabel: 'Light', icon: '☀️' },
+    { id: 'dark', label: 'Dark mode', shortLabel: 'Dark', icon: '🌙' },
   ];
-
-  function themeModeLabel(value: ThemeMode): string {
-    return themeOptions.find((option) => option.id === value)?.label ?? 'System default';
-  }
 
   function readStoredTheme(): ThemeMode {
     try {
@@ -29,9 +25,7 @@
     }
   }
 
-  function applyTheme(nextMode: ThemeMode) {
-    mode = nextMode;
-    document.documentElement.dataset.theme = nextMode;
+  function persistTheme(nextMode: ThemeMode) {
     try {
       localStorage.setItem(STORAGE_KEY, nextMode);
     } catch {
@@ -39,123 +33,73 @@
     }
   }
 
-  function handleDocumentPointerDown(event: PointerEvent) {
-    const target = event.target;
-    if (target instanceof Node && !rootElement?.contains(target)) isOpen = false;
-  }
-
-  function handleDocumentFocusIn(event: FocusEvent) {
-    const target = event.target;
-    if (target instanceof Node && !rootElement?.contains(target)) isOpen = false;
-  }
-
-  function handleDocumentScroll() {
-    if (isOpen) isOpen = false;
-  }
-
-  function handleDocumentKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && isOpen) {
-      event.preventDefault();
-      closeMenu(true);
+  function applyTheme(nextMode: ThemeMode, animate = false) {
+    const root = document.documentElement;
+    const currentTransitionId = ++transitionId;
+    mode = nextMode;
+    if (transitionFrame !== undefined) {
+      window.cancelAnimationFrame(transitionFrame);
+      transitionFrame = undefined;
     }
-  }
-
-  function openMenu() {
-    isOpen = true;
-    void tick().then(() => {
-      optionsElement?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
-    });
-  }
-
-  function closeMenu(returnFocus = false) {
-    isOpen = false;
-    if (returnFocus) toggleButton?.focus();
-  }
-
-  function toggleMenu() {
-    if (isOpen) {
-      closeMenu();
-    } else {
-      openMenu();
+    if (transitionTimer) {
+      clearTimeout(transitionTimer);
+      transitionTimer = undefined;
     }
-  }
 
-  function selectTheme(nextMode: ThemeMode) {
-    applyTheme(nextMode);
-    closeMenu(true);
-  }
-
-  function handleMenuKeydown(event: KeyboardEvent) {
-    const buttons = Array.from(optionsElement?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]') ?? []);
-    const currentIndex = buttons.findIndex((button) => button === document.activeElement);
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeMenu(true);
+    if (!animate || root.dataset.theme === nextMode) {
+      delete root.dataset.themeTransition;
+      root.dataset.theme = nextMode;
+      persistTheme(nextMode);
       return;
     }
 
-    let nextIndex: number | undefined;
-    if (event.key === 'ArrowDown') nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
-    if (event.key === 'ArrowUp') nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
-    if (event.key === 'Home') nextIndex = 0;
-    if (event.key === 'End') nextIndex = buttons.length - 1;
-    if (nextIndex !== undefined && buttons.length > 0) {
-      event.preventDefault();
-      buttons[nextIndex]?.focus();
-    }
+    // Always establish a fully opaque cover before swapping the theme. This
+    // keeps repeated rapid switches from inheriting a partially revealed veil.
+    root.dataset.themeTransition = 'cover';
+    void root.offsetWidth;
+    transitionFrame = window.requestAnimationFrame(() => {
+      if (currentTransitionId !== transitionId) return;
+      root.dataset.theme = nextMode;
+      persistTheme(nextMode);
+      transitionFrame = window.requestAnimationFrame(() => {
+        if (currentTransitionId === transitionId) {
+          root.dataset.themeTransition = 'reveal';
+          transitionFrame = undefined;
+        }
+      });
+    });
+    transitionTimer = setTimeout(() => {
+      if (currentTransitionId === transitionId) {
+        delete root.dataset.themeTransition;
+        transitionTimer = undefined;
+      }
+    }, THEME_TRANSITION_MS + 60);
+  }
+
+  function selectTheme(nextMode: ThemeMode) {
+    applyTheme(nextMode, true);
   }
 
   onMount(() => {
     mode = readStoredTheme();
     document.documentElement.dataset.theme = mode;
-    document.addEventListener('pointerdown', handleDocumentPointerDown);
-    document.addEventListener('focusin', handleDocumentFocusIn);
-    document.addEventListener('keydown', handleDocumentKeydown);
-    document.addEventListener('scroll', handleDocumentScroll, true);
-    return () => {
-      document.removeEventListener('pointerdown', handleDocumentPointerDown);
-      document.removeEventListener('focusin', handleDocumentFocusIn);
-      document.removeEventListener('keydown', handleDocumentKeydown);
-      document.removeEventListener('scroll', handleDocumentScroll, true);
-    };
   });
 </script>
 
-<div class="theme-toggle no-print" data-theme-toggle bind:this={rootElement}>
-  <button
-    type="button"
-    class="theme-toggle-button"
-    bind:this={toggleButton}
-    aria-expanded={isOpen}
-    aria-controls="theme-options"
-    aria-haspopup="menu"
-    aria-label={`Appearance: ${themeModeLabel(mode)}`}
-    onclick={toggleMenu}
-  >
-    <span aria-hidden="true">{mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '◐'}</span>
-    <span>Appearance</span>
-  </button>
-  <div
-    id="theme-options"
-    class="theme-options"
-    role="menu"
-    tabindex="-1"
-    aria-label="Appearance preference"
-    aria-orientation="vertical"
-    aria-hidden={!isOpen}
-    hidden={!isOpen}
-    bind:this={optionsElement}
-    onkeydown={handleMenuKeydown}
-  >
+<div class="theme-toggle no-print" data-theme-toggle aria-label="Color theme">
+  <span class="theme-toggle-label">Theme</span>
+  <div class="theme-toggle-options" role="group" aria-label="Color theme options">
     {#each themeOptions as option}
       <button
         type="button"
         class:active={mode === option.id}
-        role="menuitemradio"
-        aria-checked={mode === option.id}
+        data-theme-mode={option.id}
+        aria-pressed={mode === option.id}
+        aria-label={option.label}
         onclick={() => selectTheme(option.id)}
       >
-        <span aria-hidden="true">{option.icon}</span> {option.label}
+        <span aria-hidden="true">{option.icon}</span>
+        <span>{option.shortLabel}</span>
       </button>
     {/each}
   </div>
@@ -163,58 +107,59 @@
 
 <style>
   .theme-toggle {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    position: relative;
-    z-index: 120;
-    flex: 0 0 auto;
+    display: grid;
+    gap: 0.35rem;
+    width: 100%;
+    color: var(--text-secondary);
   }
 
-  .theme-toggle-button,
-  .theme-options button {
-    min-height: 44px;
+  .theme-toggle-label {
+    padding-inline: 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .theme-toggle-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.2rem;
     border: 1px solid var(--border-color);
-    border-radius: 0.6rem;
-    background: var(--surface-raised);
-    color: var(--text-primary);
+    border-radius: 0.65rem;
+    background: var(--control-group-bg);
+  }
+
+  .theme-toggle-options button {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.2rem;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: var(--text-secondary);
     font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
     cursor: pointer;
   }
 
-  .theme-toggle-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.45rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    box-shadow: 0 0.5rem 1.25rem var(--shadow-floating);
-  }
-
-  .theme-options {
-    display: grid;
-    align-self: stretch;
-    min-width: 9rem;
-    gap: 0.3rem;
-    margin-top: 0.4rem;
-    padding: 0.4rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.7rem;
-    background: var(--surface-raised);
-    box-shadow: 0 0.75rem 2rem var(--shadow-floating);
-  }
-
-  .theme-options button {
-    padding: 0.4rem 0.6rem;
-    text-align: left;
-  }
-
-  .theme-options button:hover,
-  .theme-options button.active,
-  .theme-options button:focus-visible {
+  .theme-toggle-options button:hover,
+  .theme-toggle-options button:focus-visible,
+  .theme-toggle-options button.active {
     border-color: var(--accent);
     background: var(--accent-soft);
+    color: var(--text-primary);
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle-options button {
+      transition: none;
+    }
+  }
 </style>

@@ -123,9 +123,6 @@
       nextTrigger.setAttribute('aria-haspopup', 'dialog');
       if (isOpen) nextTrigger.setAttribute('aria-controls', tooltipId);
       else nextTrigger.removeAttribute('aria-controls');
-    } else {
-      nextTrigger.removeAttribute('aria-haspopup');
-      nextTrigger.removeAttribute('aria-controls');
     }
   }
 

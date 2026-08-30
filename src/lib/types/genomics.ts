@@ -13,6 +13,38 @@ Operational Notes: Matches the Rust backend structs in report.rs and db.rs.
 
 export type EffectDirection = "risk" | "protective" | "context_dependent" | "trait" | "unknown" | "not_applicable" | "no_claim";
 
+/** Explicit interpretation semantics; these labels never turn an association into a diagnosis. */
+export type FindingInterpretationClass =
+  | "susceptibility_context"
+  | "carrier_possibility"
+  | "clinically_actionable_variant"
+  | "research_context"
+  | "protective_context"
+  | "trait_context"
+  | "unknown";
+
+export type FindingInheritanceModel =
+  | "autosomal_dominant"
+  | "autosomal_recessive"
+  | "x_linked"
+  | "y_linked"
+  | "mitochondrial"
+  | "unknown";
+
+export type FindingClinicalState =
+  | "clinically_confirmed"
+  | "carrier_possibility"
+  | "unknown"
+  | "not_applicable";
+
+/** Optional pack-authored semantics. Missing fields remain unknown. */
+export interface ClinicalSemantics {
+  condition_label?: string | null;
+  interpretation_class?: FindingInterpretationClass | null;
+  inheritance_model?: FindingInheritanceModel | null;
+  clinical_state?: FindingClinicalState | null;
+}
+
 export type VariantType = "snp" | "indel" | "repeat" | "cnv" | "hla" | "haplotype" | "star_allele" | "gene_panel";
 
 /**
@@ -93,6 +125,8 @@ export interface MarkerDefinition {
   allele_orientation_verified?: boolean | null;
   orientation_source?: string | null;
   interpretation_blocked_if_unverified?: boolean | null;
+  /** Explicit disease/inheritance semantics; never inferred from a gene name. */
+  clinical_semantics?: ClinicalSemantics | null;
 }
 
 export interface SectionDefinition {
@@ -157,6 +191,7 @@ export interface VariantCategoryLink {
   clinical_confirmation_required?: boolean | null;
   sex_scope?: MarkerSexScope | null;
   interpretation_blocked_if_unverified?: boolean | null;
+  clinical_semantics?: ClinicalSemantics | null;
   sources: MarkerSource[];
   /** Stable IDs into the report-level reference registry. */
   reference_ids?: string[];
@@ -309,6 +344,7 @@ export interface DisplayMarker {
   clinical_confirmation_required?: boolean;
   sex_scope?: MarkerSexScope;
   raw_dna_limitation?: string;
+  clinical_semantics?: ClinicalSemantics | null;
   pharmgkb?: PharmGkbAnnotation | null;
   clingen?: ClinGenAnnotation | null;
   mane?: ManeAnnotation | null;

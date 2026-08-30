@@ -51,6 +51,13 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).not.toContain('.clinical-provenance');
   });
 
+  it('groups exact repeated clinical interpretations once without dropping the row reference', () => {
+    expect(source).toContain('Shared clinical context ({sharedInterpretations.length})');
+    expect(source).toContain('These explanations apply to more than one finding in this section and are shown once');
+    expect(source).toContain('Shared clinical context shown above.');
+    expect(source).toContain('sharedInterpretationKeys.has(normalizeSharedCopy(marker.interpretation))');
+  });
+
   it('keeps the clinical table markup structurally balanced', () => {
     expect(source.match(/<tbody>/g)).toHaveLength(1);
     expect(source.match(/<\/tbody>/g)).toHaveLength(1);

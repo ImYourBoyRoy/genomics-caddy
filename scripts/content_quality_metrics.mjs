@@ -94,6 +94,61 @@ const SIMPLE_COPY_VAGUE_PATTERNS = [
   /studied in genetic research/i,
 ];
 
+/**
+ * Literal reuse is not automatically a content defect. These classes keep
+ * the audit useful by separating copy that should be centralized at render
+ * time from copy that likely needs a resource rewrite.
+ */
+/** @type {Record<string, { label: string, keys: Set<string> }>} */
+const COPY_REUSE_CLASSES = {
+  shared_boundary: {
+    label: 'Shared evidence boundary',
+    keys: new Set(['raw_dna_limitation', 'do_not_claim', 'disclaimer', 'safety_notes']),
+  },
+  shared_follow_up: {
+    label: 'Shared follow-up target',
+    keys: new Set(['confirm_with', 'next_step', 'next_helpful_step']),
+  },
+  shared_recommendation: {
+    label: 'Shared recommendation',
+    keys: new Set([
+      'favor',
+      'avoid',
+      'dietary_favor',
+      'dietary_avoid',
+      'supplements',
+      'supplement_favor',
+      'supplement_avoid',
+      'activity_favor',
+      'activity_avoid',
+      'food_favor',
+      'food_avoid',
+      'recommendation',
+      'recommendations',
+    ]),
+  },
+  repeated_marker_interpretation: {
+    label: 'Repeated marker interpretation',
+    keys: new Set(['interpretation']),
+  },
+  marker_impact: {
+    label: 'Marker technical impact',
+    keys: new Set(['impact']),
+  },
+  shared_simple_translation: {
+    label: 'Shared Simple translation',
+    keys: new Set(['simpleMeaning', 'simple_meaning', 'simpleImpact', 'simple_impact']),
+  },
+  shared_metadata_copy: {
+    label: 'Shared metadata copy',
+    keys: new Set(['summary', 'relevance', 'description', 'purpose', 'implementation_note', 'hint']),
+  },
+  other_copy: {
+    label: 'Other repeated copy',
+    keys: new Set(),
+  },
+};
+
 /** @param {unknown} value */
 function text(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -140,6 +195,50 @@ function mapToRepeatedSummary(map) {
     repeated_occurrences: rows.reduce((total, [, count]) => total + count, 0),
     top: rows.slice(0, 10).map(([value, count]) => ({ occurrences: count, characters: value.length })),
   };
+}
+
+/** @param {string} key @param {string} value */
+function copyReuseClass(key, value) {
+  for (const [id, definition] of Object.entries(COPY_REUSE_CLASSES)) {
+    if (id !== 'other_copy' && definition.keys.has(key)) return id;
+  }
+  if (/dedicated plain-English explanation is not yet available|genetic context marker/i.test(value)) {
+    return 'fallback_copy';
+  }
+  return 'other_copy';
+}
+
+/** @param {CopyEntry[]} entries @param {number} [fallbackCount] */
+function copyReuseSummary(entries, fallbackCount = 0) {
+  /** @type {Map<string, Map<string, number>>} */
+  const classMaps = new Map();
+  for (const id of Object.keys(COPY_REUSE_CLASSES)) classMaps.set(id, new Map());
+  classMaps.set('fallback_copy', new Map());
+
+  for (const entry of entries) {
+    const classId = copyReuseClass(entry.key, entry.value);
+    const values = classMaps.get(classId);
+    if (values) addCount(values, normalizedText(entry.value));
+  }
+
+  /** @type {Record<string, { label: string, candidate_entries: number, repeated_values: number, repeated_occurrences: number }>} */
+  const result = {};
+  for (const [id, values] of classMaps.entries()) {
+    const summary = mapToRepeatedSummary(values);
+    result[id] = {
+      label: id === 'fallback_copy' ? 'Generic fallback copy' : COPY_REUSE_CLASSES[id]?.label || 'Repeated copy',
+      candidate_entries: values.values().reduce((total, count) => total + count, 0),
+      repeated_values: summary.repeated_values,
+      repeated_occurrences: summary.repeated_occurrences,
+    };
+  }
+  result.fallback_copy = {
+    label: 'Generic fallback meaning',
+    candidate_entries: fallbackCount,
+    repeated_values: fallbackCount > 0 ? 1 : 0,
+    repeated_occurrences: fallbackCount,
+  };
+  return result;
 }
 
 /** @param {unknown} value @param {string} [key] @param {string} [location] @param {CopyEntry[]} [entries] @returns {CopyEntry[]} */
@@ -525,7 +624,10 @@ export function analyzeContentQuality({
   if (simpleCopyContract.vague_entries > 0) warnings.push(`Simple finding copy entries with vague fallback language: ${simpleCopyContract.vague_entries}`);
   if (simpleCopyContract.overlong_entries > 0) warnings.push(`Simple finding copy entries over 360 characters: ${simpleCopyContract.overlong_entries}`);
   if (recommendationsWithoutBasis > 0) warnings.push(`recommendation rules without an explicit marker/gene basis: ${recommendationsWithoutBasis}`);
-  if (mapToRepeatedSummary(copyCounts).repeated_values > 0) warnings.push('repeated copy values require presentation-level deduplication review');
+  const reuseSummary = copyReuseSummary(allCopyEntries, plainMeaning.fallback);
+  if (reuseSummary.repeated_marker_interpretation.repeated_values > 0) {
+    warnings.push(`repeated marker interpretations need resource or section-level deduplication review: ${reuseSummary.repeated_marker_interpretation.repeated_values} values / ${reuseSummary.repeated_marker_interpretation.repeated_occurrences} occurrences`);
+  }
 
   return {
     marker_rows: rows.length,
@@ -537,6 +639,7 @@ export function analyzeContentQuality({
       candidate_entries: allCopyEntries.length,
       repeated_visible_phrases: mapToRepeatedSummary(copyCounts),
       generic_interpretation_phrases: mapToRepeatedSummary(interpretationCounts),
+      reuse_classes: reuseSummary,
       generic_boundary_hits: Object.fromEntries(Array.from(genericPatternCounts.entries()).map(([id, count]) => [
         id,
         { entries: count, unique: genericUniqueValues.get(id)?.size || 0 },

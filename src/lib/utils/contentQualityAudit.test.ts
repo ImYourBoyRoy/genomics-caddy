@@ -59,6 +59,12 @@ describe('content-quality audit metrics', () => {
     expect(result.duplicate_standard_excess_rows).toBe(1);
     expect(result.copy.repeated_visible_phrases.repeated_values).toBeGreaterThan(0);
     expect(result.copy.generic_interpretation_phrases.repeated_values).toBe(1);
+    expect(result.copy.reuse_classes.repeated_marker_interpretation.repeated_values).toBe(1);
+    expect(result.copy.reuse_classes.shared_follow_up.repeated_values).toBe(1);
+    expect(result.copy.reuse_classes.marker_impact.repeated_values).toBe(1);
+    expect(result.copy.reuse_classes.other_copy.repeated_values).toBe(0);
+    expect(result.copy.reuse_classes.fallback_copy.candidate_entries).toBe(1);
+    expect(result.warnings).not.toContain(expect.stringContaining('unclassified repeated copy'));
     expect(result.plain_meaning.authored).toBe(2);
     expect(result.plain_meaning.fallback).toBe(1);
     expect(result.plain_meaning.missing).toBe(0);
@@ -117,6 +123,7 @@ describe('content-quality audit metrics', () => {
     expect(result.multi_marker.duplicate_references).toBe(1);
     expect(result.recommendations.rules_without_marker_basis).toBe(1);
     expect(result.warnings).toContain('recommendation rules without an explicit marker/gene basis: 1');
+    expect(result.copy.reuse_classes.fallback_copy.candidate_entries).toBe(0);
 
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain('genotype');

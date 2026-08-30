@@ -47,7 +47,44 @@
   function isHighlighted(marker: EvaluatedMarker): boolean {
     return highlightRsid !== '' && marker.rsid.toLowerCase() === highlightRsid.toLowerCase();
   }
+
+  function normalizeSharedCopy(value: string): string {
+    return value.trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  let sharedInterpretations = $derived.by(() => {
+    const groups = new Map<string, { text: string; count: number }>();
+    for (const marker of markers) {
+      const interpretation = marker.interpretation?.trim() || '';
+      const key = normalizeSharedCopy(interpretation);
+      if (!key) continue;
+      const existing = groups.get(key);
+      if (existing) existing.count += 1;
+      else groups.set(key, { text: interpretation, count: 1 });
+    }
+    return Array.from(groups.values())
+      .filter((item) => item.count > 1)
+      .sort((left, right) => right.count - left.count || left.text.localeCompare(right.text));
+  });
+
+  let sharedInterpretationKeys = $derived.by(() =>
+    new Set(sharedInterpretations.map((item) => normalizeSharedCopy(item.text))),
+  );
 </script>
+
+{#if sharedInterpretations.length > 0}
+  <details class="clinical-shared-context">
+    <summary>Shared clinical context ({sharedInterpretations.length})</summary>
+    <div class="clinical-shared-context-body">
+      <p>These explanations apply to more than one finding in this section and are shown once to keep the table readable.</p>
+      <ul>
+        {#each sharedInterpretations as item (item.text)}
+          <li><strong>{item.count} findings:</strong> {item.text}</li>
+        {/each}
+      </ul>
+    </div>
+  </details>
+{/if}
 
 <div class="clinical-table-wrap" role="region" aria-label="Clinical findings table">
   <table class="clinical-findings-table">
@@ -134,7 +171,11 @@
                 <div><dt>Interpretation class</dt><dd>{interpretationClassLabel(semantics.interpretation_class)}</dd></div>
                 <div><dt>Inheritance model</dt><dd>{inheritanceModelLabel(semantics.inheritance_model)}</dd></div>
                 <div><dt>Clinical state</dt><dd>{clinicalStateLabel(semantics.clinical_state)}</dd></div>
-                <div><dt>Interpretation</dt><dd>{marker.interpretation}</dd></div>
+                {#if sharedInterpretationKeys.has(normalizeSharedCopy(marker.interpretation))}
+                  <div><dt>Interpretation</dt><dd>Shared clinical context shown above.</dd></div>
+                {:else}
+                  <div><dt>Interpretation</dt><dd>{marker.interpretation}</dd></div>
+                {/if}
                 <div><dt>Claim boundary</dt><dd>{marker.do_not_claim.join('; ') || marker.raw_dna_limitation || 'Do not treat as diagnostic.'}</dd></div>
               </dl>
               <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
@@ -153,6 +194,39 @@
     border: 1px solid var(--border-color);
     border-radius: 0.65rem;
     background: var(--surface-subtle);
+  }
+
+  .clinical-shared-context {
+    margin-bottom: 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-subtle);
+  }
+
+  .clinical-shared-context summary {
+    min-height: 2.5rem;
+    padding: 0.65rem 0.8rem;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .clinical-shared-context-body {
+    padding: 0 0.8rem 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    line-height: 1.45;
+  }
+
+  .clinical-shared-context-body p {
+    margin: 0 0 0.55rem;
+  }
+
+  .clinical-shared-context-body ul {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding-left: 1.15rem;
   }
 
   .clinical-table-wrap:focus-visible {

@@ -59,6 +59,15 @@ describe('content-quality audit metrics', () => {
     expect(result.duplicate_standard_excess_rows).toBe(1);
     expect(result.copy.repeated_visible_phrases.repeated_values).toBeGreaterThan(0);
     expect(result.copy.generic_interpretation_phrases.repeated_values).toBe(1);
+    expect(result.copy.repeated_interpretation_review).toEqual({
+      repeated_values: 1,
+      repeated_occurrences: 2,
+      classifications: {
+        marker_family_context: { values: 1, occurrences: 2 },
+        section_shared_context: { values: 0, occurrences: 0 },
+        cross_section_reuse: { values: 0, occurrences: 0 },
+      },
+    });
     expect(result.copy.reuse_classes.repeated_marker_interpretation.repeated_values).toBe(1);
     expect(result.copy.reuse_classes.shared_follow_up.repeated_values).toBe(1);
     expect(result.copy.reuse_classes.marker_impact.repeated_values).toBe(1);
@@ -165,5 +174,40 @@ describe('content-quality audit metrics', () => {
     expect(result.plain_meaning.missing).toBe(0);
     expect(result.copy.reuse_classes.fallback_copy.candidate_entries).toBe(0);
     expect(result.warnings).not.toContain(expect.stringContaining('generic Simple-mode fallback'));
+  });
+
+  it('flags repeated interpretations that cross pack sections', () => {
+    const result = analyzeContentQuality({
+      packDocs: [
+        { id: 'alpha', markers: [{ interpretation: 'Shared wording.', gene: 'GENE1' }] },
+        { id: 'beta', markers: [{ interpretation: 'Shared wording.', gene: 'GENE2' }] },
+      ],
+    });
+
+    expect(result.copy.repeated_interpretation_review.classifications).toEqual({
+      marker_family_context: { values: 0, occurrences: 0 },
+      section_shared_context: { values: 0, occurrences: 0 },
+      cross_section_reuse: { values: 1, occurrences: 2 },
+    });
+    expect(result.warnings).toContain('repeated marker interpretations cross pack sections and need review: 1 values / 2 occurrences');
+  });
+
+  it('classifies same-pack interpretation reuse across genes as section-shared context', () => {
+    const result = analyzeContentQuality({
+      packDocs: [{
+        id: 'shared-pack',
+        markers: [
+          { interpretation: 'Shared pathway context.', gene: 'GENE1' },
+          { interpretation: 'Shared pathway context.', gene: 'GENE2' },
+        ],
+      }],
+    });
+
+    expect(result.copy.repeated_interpretation_review.classifications).toEqual({
+      marker_family_context: { values: 0, occurrences: 0 },
+      section_shared_context: { values: 1, occurrences: 2 },
+      cross_section_reuse: { values: 0, occurrences: 0 },
+    });
+    expect(result.warnings).toEqual([]);
   });
 });

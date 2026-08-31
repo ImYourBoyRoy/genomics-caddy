@@ -11,6 +11,7 @@
 /** @typedef {{ location: string, expected: number, actual: number, mismatch: boolean }} LinkCountCheck */
 /** @typedef {{ location: string, count: number, unique: number, duplicate_references: number }} MultiMarkerGroup */
 /** @typedef {{ packId: string, marker: JsonObject, index: number }} MarkerRow */
+/** @typedef {{ packId: string, gene: string }} InterpretationOccurrence */
 
 const COPY_KEYS = new Set([
   'simpleMeaning',
@@ -239,6 +240,51 @@ function copyReuseSummary(entries, fallbackCount = 0) {
     repeated_occurrences: fallbackCount,
   };
   return result;
+}
+
+/** @param {MarkerRow[]} rows */
+function classifyRepeatedInterpretations(rows) {
+  /** @type {Map<string, InterpretationOccurrence[]>} */
+  const interpretationGroups = new Map();
+  for (const row of rows) {
+    const interpretation = text(row.marker?.interpretation);
+    if (!interpretation) continue;
+    const key = normalizedText(interpretation);
+    const existing = interpretationGroups.get(key);
+    const occurrence = {
+      packId: text(row.packId),
+      gene: text(row.marker?.gene).toUpperCase(),
+    };
+    if (existing) existing.push(occurrence);
+    else interpretationGroups.set(key, [occurrence]);
+  }
+
+  const repeatedGroups = /** @type {InterpretationOccurrence[][]} */ (
+    Array.from(interpretationGroups.values()).filter((group) => group.length > 1)
+  );
+  const summary = {
+    repeated_values: repeatedGroups.length,
+    repeated_occurrences: repeatedGroups.reduce((total, group) => total + group.length, 0),
+    classifications: {
+      marker_family_context: { values: 0, occurrences: 0 },
+      section_shared_context: { values: 0, occurrences: 0 },
+      cross_section_reuse: { values: 0, occurrences: 0 },
+    },
+  };
+
+  for (const group of repeatedGroups) {
+    const packs = new Set(group.map((row) => row.packId));
+    const genes = new Set(group.map((row) => row.gene).filter(Boolean));
+    const classification = packs.size > 1
+      ? 'cross_section_reuse'
+      : genes.size <= 1
+        ? 'marker_family_context'
+        : 'section_shared_context';
+    summary.classifications[classification].values += 1;
+    summary.classifications[classification].occurrences += group.length;
+  }
+
+  return summary;
 }
 
 /** @param {unknown} value @param {string} [key] @param {string} [location] @param {CopyEntry[]} [entries] @returns {CopyEntry[]} */
@@ -595,6 +641,7 @@ export function analyzeContentQuality({
   const recommendationsWithoutBasis = actionabilityRules
     .filter((rule) => recommendationItems(rule).length > 0 && !hasRecommendationBasis(rule)).length;
   const recommendationCount = recommendationEntries.length;
+  const repeatedInterpretationReview = classifyRepeatedInterpretations(rows);
 
   const sourceRegistryIds = new Set(Object.keys(sourceRegistry?.sources || {}));
   const referenceArrays = [
@@ -644,8 +691,8 @@ export function analyzeContentQuality({
   if (simpleCopyContract.overlong_entries > 0) warnings.push(`Simple finding copy entries over 360 characters: ${simpleCopyContract.overlong_entries}`);
   if (recommendationsWithoutBasis > 0) warnings.push(`recommendation rules without an explicit marker/gene basis: ${recommendationsWithoutBasis}`);
   const reuseSummary = copyReuseSummary(allCopyEntries, plainMeaning.fallback);
-  if (reuseSummary.repeated_marker_interpretation.repeated_values > 0) {
-    warnings.push(`repeated marker interpretations need resource or section-level deduplication review: ${reuseSummary.repeated_marker_interpretation.repeated_values} values / ${reuseSummary.repeated_marker_interpretation.repeated_occurrences} occurrences`);
+  if (repeatedInterpretationReview.classifications.cross_section_reuse.values > 0) {
+    warnings.push(`repeated marker interpretations cross pack sections and need review: ${repeatedInterpretationReview.classifications.cross_section_reuse.values} values / ${repeatedInterpretationReview.classifications.cross_section_reuse.occurrences} occurrences`);
   }
 
   return {
@@ -658,6 +705,7 @@ export function analyzeContentQuality({
       candidate_entries: allCopyEntries.length,
       repeated_visible_phrases: mapToRepeatedSummary(copyCounts),
       generic_interpretation_phrases: mapToRepeatedSummary(interpretationCounts),
+      repeated_interpretation_review: repeatedInterpretationReview,
       reuse_classes: reuseSummary,
       generic_boundary_hits: Object.fromEntries(Array.from(genericPatternCounts.entries()).map(([id, count]) => [
         id,

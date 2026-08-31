@@ -98,6 +98,20 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     assert(layout.sidebarFocusControlRightGap >= 4 && layout.sidebarFocusControlRightGap <= 20, "Sidebar hide control is not aligned to the sidebar edge");
   }
   assert(layout.actionQueueItemCount <= 9, "Action queue exceeds the nine-item desktop contract");
+  if (expectedMode === "simple" && layout.actionQueueItemCount > 0) {
+    assert(
+      Array.isArray(layout.actionQueueRanks) &&
+        layout.actionQueueRanks.length === layout.actionQueueItemCount &&
+        layout.actionQueueRanks.every((rank, index) => rank === index + 1),
+      "Simple action queue ranks are missing or not sequential",
+    );
+    assert(
+      Array.isArray(layout.actionQueueConcernTones) &&
+        layout.actionQueueConcernTones.length === layout.actionQueueItemCount &&
+        layout.actionQueueConcernTones.every((tone) => ["high", "moderate", "low"].includes(tone)),
+      "Simple action queue concern tones are missing or invalid",
+    );
+  }
   if (expectedMode === "simple" && layout.reportOverviewWidth !== null && layout.mainContentWidth !== null) {
     assert(
       layout.reportOverviewWidth >= Math.min(Math.round(layout.mainContentWidth * 0.9), 1100),

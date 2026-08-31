@@ -164,6 +164,8 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('actionQueueColumnCount: number | null;');
     expect(source).toContain('actionQueueItemMaxWidth: number | null;');
     expect(source).toContain('actionQueueItemCount: number;');
+    expect(source).toContain('actionQueueRanks: number[];');
+    expect(source).toContain('actionQueueConcernTones: string[];');
     expect(source).toContain('reportOverviewWidth: number | null;');
     expect(source).toContain('dashboardGuidanceWidth: number | null;');
     expect(source).toContain('dashboardGuidanceCardMaxWidth: number | null;');
@@ -181,6 +183,9 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('themeMenuOpen: boolean;');
     expect(source).toContain('appContextMenuInstalled: boolean;');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.action-queue-item')");
+    expect(source).toContain('item.dataset.priority');
+    expect(source).toContain('item.dataset.concern');
     expect(source).toContain("document.querySelectorAll<HTMLElement>('.samples-card .sample-name-text')");
     expect(source).toContain('profileNameWidths.length ? Math.min(...profileNameWidths) : null');
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue')");
@@ -194,7 +199,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("themeMode: 'system' | 'light' | 'dark' | null;");
     expect(source).toContain('document.documentElement.dataset.theme');
     expect(source).not.toContain('actionQueue.textContent');
-    expect(source).toContain("actionQueue?.querySelectorAll('.action-queue-item').length ?? 0");
+    expect(source).toContain('actionQueueItemCount: actionQueueItems.length');
     expect(source).toContain('markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null');
     expect(source).toContain('getGridColumnGap(markerGrid)');
     expect(source).toContain("getWidthBounds('.marker-card')");

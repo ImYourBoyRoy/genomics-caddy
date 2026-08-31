@@ -42,7 +42,7 @@ describe('ReportHeader summary', () => {
     expect(source).toContain('protective-context ${prot === 1 ? \'finding\' : \'findings\'}');
     expect(source).toContain('research ${associationCount === 1 ? \'finding\' : \'findings\'} to review');
     expect(source).toContain("return simpleParts.join(' · ');");
-    expect(source).toContain('computeSummaryLine(generatedReport, presentationMode)');
+    expect(source).toContain('computeSummaryLine(reportStats, presentationMode)');
     expect(simpleMode).not.toContain('stronger association');
   });
 

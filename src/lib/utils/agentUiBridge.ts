@@ -60,6 +60,9 @@ export interface AgentUiLayoutMetrics {
   actionQueueColumnCount: number | null;
   actionQueueItemMaxWidth: number | null;
   actionQueueItemCount: number;
+  /** Aggregate-only QA data; no visible titles, names, or genotype values. */
+  actionQueueRanks: number[];
+  actionQueueConcernTones: string[];
   reportOverviewWidth: number | null;
   dashboardGuidanceWidth: number | null;
   dashboardGuidanceCardMaxWidth: number | null;
@@ -385,6 +388,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const brandRects = sidebarBrandParts.map((part) => part.getBoundingClientRect());
   const markerCardWidths = getWidthBounds('.marker-card');
   const actionQueueItemWidths = getWidthBounds('.action-queue-item');
+  const actionQueueItems = Array.from(document.querySelectorAll<HTMLElement>('.action-queue-item'));
   const actionQueueShell = document.querySelector<HTMLElement>('.action-queue');
   const reportOverview = document.querySelector<HTMLElement>('.report-header[data-presentation-mode="simple"]');
   const dashboardGuidance = document.querySelector<HTMLElement>('.grid-layout');
@@ -446,7 +450,13 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     actionQueueShellWidth: actionQueueShell ? Math.round(actionQueueShell.getBoundingClientRect().width) : null,
     actionQueueColumnCount: getGridColumnCount(actionQueue),
     actionQueueItemMaxWidth: actionQueueItemWidths.max,
-    actionQueueItemCount: actionQueue?.querySelectorAll('.action-queue-item').length ?? 0,
+    actionQueueItemCount: actionQueueItems.length,
+    actionQueueRanks: actionQueueItems
+      .map((item) => Number.parseInt(item.dataset.priority || '', 10))
+      .filter((rank) => Number.isInteger(rank)),
+    actionQueueConcernTones: actionQueueItems
+      .map((item) => item.dataset.concern || '')
+      .filter(Boolean),
     reportOverviewWidth: reportOverview ? Math.round(reportOverview.getBoundingClientRect().width) : null,
     dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
     dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,

@@ -136,6 +136,10 @@ function humanizeSimpleTitle(title: string): string {
   return normalized ? `${normalized[0].toUpperCase()}${normalized.slice(1)}` : normalized;
 }
 
+function titleNeedsSimplification(title: string): boolean {
+  return /\b(?:allele|haplotype)\s+component\b|clinical\s+PGx|\bHLA[-*]|\brs\d+\b|\b(?:CYP|DPYD|TPMT|NUDT|SLCO|UGT|NAT|RYR|BCHE|G6PD)\d+/i.test(title);
+}
+
 /**
  * Keep gene symbols and locus identifiers in Technical data for Simple mode.
  * The authored wording remains unchanged in the resource and technical
@@ -156,8 +160,11 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   if (/(?:allele|haplotype)\s+component|clinical\s+pgx|\bHLA[-*]|oxidative-medication-safety/i.test(withoutGeneSuffix)) {
     if (/warfarin/i.test(withoutGeneSuffix)) return 'Warfarin response context';
     if (/statin|SLCO1B1/i.test(withoutGeneSuffix)) return 'Statin medication context';
-    if (/DPYD|fluoropyrimidine|chemotherapy/i.test(withoutGeneSuffix)) return 'Chemotherapy medication context';
-    if (/TPMT|NUDT15|thiopurine/i.test(withoutGeneSuffix)) return 'Thiopurine medication context';
+    if (/clopidogrel/i.test(withoutGeneSuffix)) return 'Clopidogrel response context';
+    if (/thiopurine|TPMT|NUDT15/i.test(withoutGeneSuffix)) return 'Thiopurine medication context';
+    if (/fluorouracil|capecitabine|fluoropyrimidine|chemotherapy/i.test(withoutGeneSuffix)) return 'Chemotherapy medication context';
+    if (/tacrolimus/i.test(withoutGeneSuffix)) return 'Tacrolimus response context';
+    if (/SSRI|sertraline|fluoxetine|antidepressant/i.test(withoutGeneSuffix)) return 'Antidepressant response context';
     if (/HLA|hypersensitivity|safety/i.test(withoutGeneSuffix)) return 'Medication safety context';
     return 'Medication processing context';
   }
@@ -171,6 +178,18 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   }
 
   return humanizeSimpleTitle(leadingTechnical[2].trim() || withoutGeneSuffix);
+}
+
+function compactSimpleText(text: string, fallback: string): string {
+  const compact = text
+    .trim()
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .map(compactGuardrailSentence)
+    .filter(Boolean)
+    .join(' ');
+  return compact || fallback;
 }
 
 export interface SimpleFindingCopy {
@@ -216,10 +235,14 @@ export function getSimpleFindingCopy(
   const compactMeaning = getCompactSimpleMeaning(translation);
   const sentence = firstMeaningSentence(compactMeaning);
   const remainder = meaningAfterFirstSentence(compactMeaning);
-  const plainTitle = translation.plainTitle?.trim() || getSimpleFindingTitle(translation.simpleImpact);
+  const authoredTitle = translation.plainTitle?.trim() || '';
+  const plainTitle = authoredTitle && !titleNeedsSimplification(authoredTitle)
+    ? authoredTitle
+    : getSimpleFindingTitle(translation.simpleImpact);
   const signal = translation.signal?.trim() || sentence || plainTitle;
   const whyItMatters = translation.whyItMatters?.trim()
-    || remainder
+    ? compactSimpleText(translation.whyItMatters, signal)
+    : remainder
     || (signal === plainTitle
       ? 'A useful context signal to compare with the related health measure, symptom pattern, or goal.'
       : signal);
@@ -348,16 +371,7 @@ function compactGuardrailSentence(sentence: string): string {
  * semicolon clauses that would otherwise repeat the report-level notice.
  */
 export function getCompactSimpleMeaning(translation: LaypersonTranslation): string {
-  const sentences = translation.simpleMeaning
-    .trim()
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim())
-    .filter(Boolean);
-  const compact = sentences
-    .map(compactGuardrailSentence)
-    .filter(Boolean);
-
-  return compact.join(' ') || getSimpleFindingTitle(translation.simpleImpact);
+  return compactSimpleText(translation.simpleMeaning, getSimpleFindingTitle(translation.simpleImpact));
 }
 
 /**

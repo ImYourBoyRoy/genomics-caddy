@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/report/ReportHeader.svelte -->
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
+  import { computeReportOverviewStats, type ReportOverviewStats } from '../../utils/reportOverview';
 
   /*
   Module Docstring:
@@ -21,13 +22,6 @@
     presentationMode?: "simple" | "clinical" | "compare";
   }
 
-  interface ReportStats {
-    priority: number;
-    higherConcern: number;
-    context: number;
-    protective: number;
-  }
-
   let {
     generatedReport,
     foundMarkersCount,
@@ -37,27 +31,7 @@
 
   let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
 
-  function computeReportStats(report: GeneratedReport): ReportStats {
-    const stats: ReportStats = { priority: 0, higherConcern: 0, context: 0, protective: 0 };
-    for (const section of report.sections || []) {
-      for (const marker of section.markers || []) {
-        if (!marker.interpretation_allowed) continue;
-        if (marker.severity_class === 'high_risk') {
-          stats.priority++;
-          stats.higherConcern++;
-        } else if (marker.severity_class === 'confirmation_required' || marker.severity_class === 'moderate_risk') {
-          stats.priority++;
-        } else if (marker.severity_class === 'low_risk' || marker.severity_class === 'trait' || marker.severity_class === 'context_dependent') {
-          stats.context++;
-        } else if (marker.severity_class === 'protective') {
-          stats.protective++;
-        }
-      }
-    }
-    return stats;
-  }
-
-  let reportStats = $derived(computeReportStats(generatedReport));
+  let reportStats = $derived<ReportOverviewStats>(computeReportOverviewStats(generatedReport));
   let reviewQueueCount = $derived(Math.min(reportStats.priority, 9));
   let coveragePercent = $derived(
     totalMarkersChecked > 0
@@ -65,21 +39,10 @@
       : 0,
   );
 
-  function computeSummaryLine(report: GeneratedReport, mode: "simple" | "clinical" | "compare"): string {
-    let high = 0;
-    let mod = 0;
-    let prot = 0;
-    for (const sec of report.sections || []) {
-      for (const m of sec.markers || []) {
-        if (m.severity_class === 'high_risk' || m.severity_class === 'confirmation_required') {
-          high++;
-        } else if (m.severity_class === 'moderate_risk') {
-          mod++;
-        } else if (m.severity_class === 'protective') {
-          prot++;
-        }
-      }
-    }
+  function computeSummaryLine(stats: ReportOverviewStats, mode: "simple" | "clinical" | "compare"): string {
+    const high = stats.higherConcern;
+    const mod = Math.max(0, stats.priority - stats.higherConcern);
+    const prot = stats.protective;
     if (mode === 'simple') {
       const associationCount = high + mod;
       const simpleParts = [];
@@ -102,7 +65,7 @@
     return parts.join(', ') + ' among curated pack markers.';
   }
 
-  let summaryLine = $derived(computeSummaryLine(generatedReport, presentationMode));
+  let summaryLine = $derived(computeSummaryLine(reportStats, presentationMode));
 </script>
 
 <div class="report-header card" data-presentation-mode={presentationMode}>
@@ -117,7 +80,7 @@
           </span>
         </div>
         <h3>Your DNA overview</h3>
-        <p>Research signals grouped by review value.</p>
+        <p>Unique DNA signals grouped by review value.</p>
       </div>
       <div class="report-stat-grid" aria-label="Report overview statistics">
         <div class="report-stat report-stat-priority">
@@ -156,7 +119,7 @@
         >
           <span style={`width: ${coveragePercent}%`}></span>
         </div>
-        <p>Curated marker calls available for {coveragePercent}% of the panel. Uncalled markers remain unknown.</p>
+        <p>{foundMarkersCount.toLocaleString()} of {totalMarkersChecked.toLocaleString()} curated markers called. Uncalled markers remain unknown.</p>
       </details>
     </div>
   {:else}

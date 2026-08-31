@@ -180,6 +180,35 @@ fn display_size_for(def: &OfflineAssetDef, remote_len: Option<u64>) -> String {
     }
 }
 
+/// Returns true when a catalog has rows but its meaning-bearing columns are
+/// empty. This catches a silent schema drift that a row-count-only freshness
+/// check cannot see (for example, ClinPGx rows imported without chemicals or
+/// phenotypes).
+fn asset_semantic_refresh_required(conn: &Connection, asset_id: OfflineAssetId) -> bool {
+    if asset_id != OfflineAssetId::PharmgkbClinicalVariants {
+        return false;
+    }
+    let table = if super::schema::schema_attached(conn, "pharmgkb") {
+        "pharmgkb.pharmgkb_clinical_variants"
+    } else {
+        "reference.pharmgkb_clinical_variants"
+    };
+    conn.query_row(
+        &format!(
+            "SELECT COUNT(*), COALESCE(SUM(CASE WHEN trim(COALESCE(drug, '')) <> ''
+             OR trim(COALESCE(phenotype, '')) <> '' THEN 1 ELSE 0 END), 0)
+             FROM {table}"
+        ),
+        [],
+        |row| {
+            let rows: i64 = row.get(0)?;
+            let semantic_rows: i64 = row.get(1)?;
+            Ok(rows > 0 && semantic_rows == 0)
+        },
+    )
+    .unwrap_or(false)
+}
+
 const APP_OWNED_SQLITE_DATABASES: &[&str] = &[
     "api_cache.db",
     "genomics_reference.db",
@@ -487,6 +516,7 @@ pub async fn check_offline_updates(
         #[allow(dead_code)]
         tier: u8,
         row_count: u64,
+        semantic_refresh_required: bool,
         reg: Option<crate::offline::registry::RegistryRow>,
     }
 
@@ -512,6 +542,7 @@ pub async fn check_offline_updates(
                     asset_enum: *asset_enum,
                     tier: *tier,
                     row_count,
+                    semantic_refresh_required: asset_semantic_refresh_required(conn, *asset_enum),
                     reg,
                 });
             }
@@ -540,12 +571,13 @@ pub async fn check_offline_updates(
 
             // Retrieve the pre-fetched row from the batch read.
             let db_row = db_rows.iter().find(|r| r.asset_enum == def.id);
-            let (row_count, reg) = db_row
-                .map(|r| (r.row_count, r.reg.clone()))
-                .unwrap_or((0, None));
+            let (row_count, semantic_refresh_required, reg) = db_row
+                .map(|r| (r.row_count, r.semantic_refresh_required, r.reg.clone()))
+                .unwrap_or((0, false, None));
 
-            let mut update_available = local_present
-                && reg.as_ref().map(|r| r.update_available).unwrap_or(false);
+            let mut update_available = semantic_refresh_required
+                || (local_present
+                    && reg.as_ref().map(|r| r.update_available).unwrap_or(false));
             // Ignore stale flags that were set from Content-Length-only probes
             // (no ETag / Last-Modified baseline means we cannot prove an update).
             let has_identity = reg.as_ref().is_some_and(|r| {
@@ -558,7 +590,7 @@ pub async fn check_offline_updates(
                         .map(str::trim)
                         .is_some_and(|s| !s.is_empty())
             });
-            if update_available && !has_identity {
+            if update_available && !semantic_refresh_required && !has_identity {
                 update_available = false;
             }
             let remote_len = reg.as_ref().and_then(|r| r.remote_content_length.map(|n| n as u64));
@@ -570,7 +602,9 @@ pub async fn check_offline_updates(
                 updates += 1;
             }
 
-            let message = if !local_present {
+            let message = if semantic_refresh_required {
+                "Refresh required: ClinPGx annotations need re-import".to_string()
+            } else if !local_present {
                 "Not downloaded".to_string()
             } else if update_available {
                 "Update available on server".to_string()
@@ -706,6 +740,10 @@ pub async fn sync_offline_assets_subset(
                 if !force && let Some(existing) = resolve_local_asset_path(&path) {
                     // Quick sync-time update probe (not used during sidebar status).
                     let reg = with_conn(db_path, |conn| Ok(read_registry(conn, def.id.as_str()))).ok().flatten();
+                    let semantic_refresh_required = with_conn(db_path, |conn| {
+                        Ok(asset_semantic_refresh_required(conn, def.id))
+                    })
+                    .unwrap_or(false);
                     let remote_is_newer = match head_remote(url).await {
                         Ok(head) => {
                             let newer = remote_changed(
@@ -735,7 +773,10 @@ pub async fn sync_offline_assets_subset(
                             def.id,
                             OfflineAssetId::LiftoverChain | OfflineAssetId::GnomadIndexManifest
                         );
-                        if skip_if_current && (file_only || indexed_rows > 0) {
+                        if skip_if_current
+                            && !semantic_refresh_required
+                            && (file_only || indexed_rows > 0)
+                        {
                             emit_sync_phase(
                                 app,
                                 def.id.as_str(),
@@ -1419,6 +1460,45 @@ mod tests {
     fn gwas_downloads_when_missing_or_forced() {
         assert!(gwas_download_required(false, false, false));
         assert!(gwas_download_required(true, true, false));
+    }
+
+    #[test]
+    fn semantic_catalog_check_detects_empty_clinpgx_annotations() {
+        let data_dir = fixture_data_dir("clinpgx_semantics");
+        std::fs::create_dir_all(&data_dir).expect("create ClinPGx semantic fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+        let conn = crate::db::connect(&db_path).expect("open ClinPGx semantic fixture DB");
+        crate::db::ensure_catalog_db_attached(&conn, &data_dir, "pharmgkb")
+            .expect("attach ClinPGx fixture catalog");
+
+        conn.execute(
+            "INSERT INTO pharmgkb.pharmgkb_clinical_variants
+             (rsid, gene, drug, phenotype, evidence_level, raw_json)
+             VALUES (?, ?, ?, ?, ?, ?)",
+            rusqlite::params!["rs-semantic", "GENE", "", "", "1A", "fixture"],
+        )
+        .expect("seed semantically incomplete ClinPGx row");
+        assert!(asset_semantic_refresh_required(
+            &conn,
+            OfflineAssetId::PharmgkbClinicalVariants
+        ));
+
+        conn.execute(
+            "UPDATE pharmgkb.pharmgkb_clinical_variants SET drug = ? WHERE rsid = ?",
+            rusqlite::params!["fixture drug", "rs-semantic"],
+        )
+        .expect("repair semantic fixture row");
+        assert!(!asset_semantic_refresh_required(
+            &conn,
+            OfflineAssetId::PharmgkbClinicalVariants
+        ));
+        assert!(!asset_semantic_refresh_required(
+            &conn,
+            OfflineAssetId::ClinvarVariantSummary
+        ));
+
+        drop(conn);
+        std::fs::remove_dir_all(&data_dir).expect("remove ClinPGx semantic fixture directory");
     }
 
     #[test]

@@ -212,8 +212,10 @@ fn load_findings_via_join(
                 "rsid": rsid,
                 "genotype": format!("{a1}/{a2}"),
                 "clinvar": null,
+                "clinvar_annotations": [],
                 "gwas": null,
                 "pharmgkb": null,
+                "pharmgkb_annotations": [],
             })
         });
     };
@@ -225,10 +227,11 @@ fn load_findings_via_join(
         let mut stmt = conn
             .prepare(
                 "SELECT e.rsid, e.allele1, e.allele2,
-                        c.clinical_significance, c.gene_symbol, c.phenotype_list,
-                        c.review_status, c.variation_id
+                        c.clinical_significance, COALESCE(c.gene_symbol, ''),
+                        COALESCE(c.phenotype_list, c.conditions, ''),
+                        COALESCE(c.review_status, ''), COALESCE(c.variation_id, '')
                  FROM temp.export_rsids e
-                 JOIN clinvar.clinvar_reference c ON c.rsid = e.rsid
+                 JOIN clinvar.clinvar_reference c ON LOWER(c.rsid) = e.rsid
                  WHERE c.clinical_significance IS NOT NULL
                    AND TRIM(c.clinical_significance) != ''",
             )
@@ -250,7 +253,7 @@ fn load_findings_via_join(
         for row in rows.flatten() {
             ensure(&mut by_rsid, &row.0, &row.1, &row.2);
             if let Some(entry) = by_rsid.get_mut(&row.0) {
-                entry["clinvar"] = json!({
+                let annotation = json!({
                     "clinical_significance": row.3,
                     "gene": row.4,
                     "phenotypes": row.5,
@@ -258,6 +261,13 @@ fn load_findings_via_join(
                     "variation_id": row.7,
                     "source": "clinvar",
                 });
+                if entry.get("clinvar").is_some_and(Value::is_null) {
+                    entry["clinvar"] = annotation.clone();
+                }
+                entry["clinvar_annotations"]
+                    .as_array_mut()
+                    .expect("discovery ClinVar annotations array")
+                    .push(annotation);
             }
         }
     }
@@ -329,15 +339,20 @@ fn load_findings_via_join(
         for row in rows.flatten() {
             ensure(&mut by_rsid, &row.0, &row.1, &row.2);
             if let Some(entry) = by_rsid.get_mut(&row.0) {
-                if entry.get("pharmgkb").and_then(|v| v.as_object()).is_none() {
-                    entry["pharmgkb"] = json!({
-                        "gene": row.3,
-                        "drug": row.4,
-                        "phenotype": row.5,
-                        "evidence_level": row.6,
-                        "source": "pharmgkb",
-                    });
+                let annotation = json!({
+                    "gene": row.3,
+                    "drug": row.4,
+                    "phenotype": row.5,
+                    "evidence_level": row.6,
+                    "source": "clinpgx",
+                });
+                if entry.get("pharmgkb").is_some_and(Value::is_null) {
+                    entry["pharmgkb"] = annotation.clone();
                 }
+                entry["pharmgkb_annotations"]
+                    .as_array_mut()
+                    .expect("discovery ClinPGx annotations array")
+                    .push(annotation);
             }
         }
     }
@@ -445,10 +460,29 @@ pub fn export_discovery_jsons(
 
 fn finding_priority(v: &Value) -> i32 {
     let mut s = 0;
-    if let Some(c) = v.get("clinvar") {
+    let clinvar_records = v
+        .get("clinvar_annotations")
+        .and_then(Value::as_array)
+        .filter(|records| !records.is_empty());
+    if let Some(records) = clinvar_records {
+        for record in records {
+            let sig = record
+                .get("clinical_significance")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_lowercase();
+            if sig.contains("pathogenic") {
+                s += 100;
+            } else if sig.contains("risk") || sig.contains("association") {
+                s += 40;
+            } else if !sig.is_empty() {
+                s += 10;
+            }
+        }
+    } else if let Some(c) = v.get("clinvar").and_then(Value::as_object) {
         let sig = c
             .get("clinical_significance")
-            .and_then(|x| x.as_str())
+            .and_then(Value::as_str)
             .unwrap_or("")
             .to_lowercase();
         if sig.contains("pathogenic") {
@@ -459,7 +493,12 @@ fn finding_priority(v: &Value) -> i32 {
             s += 10;
         }
     }
-    if v.get("pharmgkb").and_then(|x| x.as_object()).is_some() {
+    if v.get("pharmgkb").and_then(|x| x.as_object()).is_some()
+        || v
+            .get("pharmgkb_annotations")
+            .and_then(Value::as_array)
+            .is_some_and(|records| !records.is_empty())
+    {
         s += 30;
     }
     if v.get("gwas").and_then(|x| x.as_object()).is_some() {
@@ -470,9 +509,17 @@ fn finding_priority(v: &Value) -> i32 {
 
 fn finding_matches_source(entry: &Value, source: &str) -> bool {
     match source {
-        "clinvar" => entry.get("clinvar").and_then(|v| v.as_object()).is_some(),
+        "clinvar" => entry.get("clinvar").and_then(|v| v.as_object()).is_some()
+            || entry
+                .get("clinvar_annotations")
+                .and_then(Value::as_array)
+                .is_some_and(|records| !records.is_empty()),
         "gwas" => entry.get("gwas").and_then(|v| v.as_object()).is_some(),
-        "pharmgkb" => entry.get("pharmgkb").and_then(|v| v.as_object()).is_some(),
+        "pharmgkb" => entry.get("pharmgkb").and_then(|v| v.as_object()).is_some()
+            || entry
+                .get("pharmgkb_annotations")
+                .and_then(Value::as_array)
+                .is_some_and(|records| !records.is_empty()),
         _ => true,
     }
 }
@@ -635,5 +682,25 @@ mod tests {
         assert!(!finding_matches_source(&entry, "pharmgkb"));
         assert!(finding_matches_query(&entry, "mthfr"));
         assert!(!finding_matches_query(&entry, "cyp2c19"));
+    }
+
+    #[test]
+    fn plural_reference_records_drive_priority_and_filters() {
+        let entry = json!({
+            "rsid": "rs456",
+            "clinvar_annotations": [
+                { "clinical_significance": "Pathogenic", "variation_id": "200" },
+                { "clinical_significance": "Benign", "variation_id": "201" }
+            ],
+            "pharmgkb_annotations": [
+                { "drug": "clopidogrel", "phenotype": "reduced response" },
+                { "drug": "omeprazole", "phenotype": "increased exposure" }
+            ]
+        });
+        assert!(finding_priority(&entry) >= 130);
+        assert!(finding_matches_source(&entry, "clinvar"));
+        assert!(finding_matches_source(&entry, "pharmgkb"));
+        assert!(finding_matches_query(&entry, "clopidogrel"));
+        assert!(finding_matches_query(&entry, "201"));
     }
 }

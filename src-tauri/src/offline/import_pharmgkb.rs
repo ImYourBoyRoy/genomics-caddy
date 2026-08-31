@@ -35,9 +35,21 @@ fn extract_tsv_from_zip(zip_path: &Path, needle: &str) -> Result<Vec<u8>, String
 }
 
 fn col_index(headers: &[&str], name: &str) -> Option<usize> {
+    let normalized_name: String = name
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .flat_map(|c| c.to_lowercase())
+        .collect();
     headers
         .iter()
-        .position(|h| h.eq_ignore_ascii_case(name) || h.replace(' ', "") == name.replace(' ', ""))
+        .position(|h| {
+            let normalized_header: String = h
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric())
+                .flat_map(|c| c.to_lowercase())
+                .collect();
+            normalized_header == normalized_name
+        })
 }
 
 pub fn import_pharmgkb_clinical_variants(
@@ -63,11 +75,37 @@ pub fn import_pharmgkb_clinical_variants(
         .or_else(|| col_index(&headers, "RSID"))
         .or_else(|| col_index(&headers, "Variant"));
     let gene_idx = col_index(&headers, "Gene");
-    let drug_idx = col_index(&headers, "Drug(s)").or_else(|| col_index(&headers, "Chemical"));
-    let pheno_idx =
-        col_index(&headers, "Phenotype Category").or_else(|| col_index(&headers, "Phenotype"));
+    let drug_idx = ["Drug(s)", "Chemical", "Chemicals", "Drug", "Drugs"]
+        .iter()
+        .find_map(|name| col_index(&headers, name));
+    let pheno_idx = [
+        "Phenotype Category",
+        "Phenotype",
+        "Phenotypes",
+        "Phenotype(s)",
+    ]
+    .iter()
+    .find_map(|name| col_index(&headers, name));
     let level_idx =
         col_index(&headers, "Level of Evidence").or_else(|| col_index(&headers, "Evidence Level"));
+
+    if rs_idx.is_none() {
+        return Err(
+            "ClinPGx clinical variants TSV is missing a variant/rsID column; import aborted."
+                .to_string(),
+        );
+    }
+    if gene_idx.is_none() {
+        return Err(
+            "ClinPGx clinical variants TSV is missing a gene column; import aborted.".to_string(),
+        );
+    }
+    if drug_idx.is_none() && pheno_idx.is_none() {
+        return Err(
+            "ClinPGx clinical variants TSV is missing both chemical and phenotype columns; import aborted."
+                .to_string(),
+        );
+    }
 
     let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
     // Keep replacement and parsing in one transaction so a malformed stream
@@ -75,6 +113,8 @@ pub fn import_pharmgkb_clinical_variants(
     tx.execute(&format!("DELETE FROM {table}"), [])
         .map_err(|e| e.to_string())?;
     let mut count = 0u64;
+    let mut non_empty_drugs = 0u64;
+    let mut non_empty_phenotypes = 0u64;
 
     for line in lines {
         let line = line.map_err(|e| e.to_string())?;
@@ -101,10 +141,16 @@ pub fn import_pharmgkb_clinical_variants(
             .and_then(|i| parts.get(i))
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
+        if drug.is_some() {
+            non_empty_drugs += 1;
+        }
         let phenotype = pheno_idx
             .and_then(|i| parts.get(i))
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
+        if phenotype.is_some() {
+            non_empty_phenotypes += 1;
+        }
         let evidence = level_idx
             .and_then(|i| parts.get(i))
             .map(|s| s.trim().to_string())
@@ -119,6 +165,15 @@ pub fn import_pharmgkb_clinical_variants(
         )
         .map_err(|e| e.to_string())?;
         count += 1;
+    }
+    if count == 0 {
+        return Err("ClinPGx clinical variants TSV contained no importable variant rows; import aborted.".to_string());
+    }
+    if non_empty_drugs == 0 && non_empty_phenotypes == 0 {
+        return Err(
+            "ClinPGx clinical variants TSV imported no chemical or phenotype values; import aborted to protect the existing catalog."
+                .to_string(),
+        );
     }
     tx.commit().map_err(|e| e.to_string())?;
     Ok(count)
@@ -259,7 +314,7 @@ mod tests {
         write_zip(
             &fixture_path,
             "clinicalVariants.tsv",
-            b"Variant/Haplotypes\tGene\tDrug(s)\nrs123\tNEWGENE\tNewDrug\n",
+            b"variant\tgene\tchemicals\tphenotypes\tlevel of evidence\nrs123\tNEWGENE\tNewDrug\tNew phenotype\t1A\n",
         );
         assert_eq!(
             import_pharmgkb_clinical_variants(&conn, &fixture_path)
@@ -275,6 +330,14 @@ mod tests {
             .expect("read retried PharmGKB clinical row"),
             "rs123"
         );
+        let imported: (String, String, String) = conn
+            .query_row(
+                "SELECT drug, phenotype, evidence_level FROM pharmgkb.pharmgkb_clinical_variants",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("read imported ClinPGx clinical fields");
+        assert_eq!(imported, ("NewDrug".into(), "New phenotype".into(), "1A".into()));
         drop(conn);
         std::fs::remove_dir_all(&data_dir)
             .expect("remove PharmGKB clinical transaction fixture directory");

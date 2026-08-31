@@ -204,6 +204,7 @@ impl ReportReferenceRegistryBuilder {
 /// Local reference DB data fetched per-rsID during report generation.
 #[derive(Debug, Default)]
 struct LocalEnrichment {
+    pub clinvar_annotations: Vec<ClinVarAnnotation>,
     pub clinvar_significance: Option<String>,
     pub clinvar_conditions: Option<String>,
     pub clinvar_review_status: Option<String>,
@@ -398,6 +399,34 @@ pub struct ClinVarAnnotation {
     pub conditions: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub review_status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rsid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allele_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub variation_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gene_symbol: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phenotype_ids: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assembly: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chromosome: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stop: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_evaluated: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub number_submitters: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference_allele: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alternate_allele: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -440,6 +469,20 @@ fn default_allele_source() -> String {
 pub struct PopulationAnnotation {
     pub allele_frequency: f64,
     pub rarity_bucket: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dataset: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_build: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub popmax: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub popmax_population: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub faf95_popmax: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub homozygote_count: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -447,6 +490,8 @@ pub struct PharmGkbAnnotation {
     pub drug: String,
     pub phenotype: String,
     pub evidence_level: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gene: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -454,6 +499,12 @@ pub struct ClinGenAnnotation {
     pub gene_symbol: String,
     pub disease_label: String,
     pub classification: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hgnc_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode_of_inheritance: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub report_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -462,12 +513,16 @@ pub struct ManeAnnotation {
     pub ensembl_transcript: String,
     pub refseq_transcript: String,
     pub mane_status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grch38_coordinates: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct VariantEnrichment {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clinvar: Option<ClinVarAnnotation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub clinvar_annotations: Vec<ClinVarAnnotation>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub gwas_hits: Vec<GwasHit>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -476,10 +531,16 @@ pub struct VariantEnrichment {
     pub population: Option<PopulationAnnotation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pharmgkb: Option<PharmGkbAnnotation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub pharmgkb_annotations: Vec<PharmGkbAnnotation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clingen: Option<ClinGenAnnotation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub clingen_annotations: Vec<ClinGenAnnotation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mane: Option<ManeAnnotation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub mane_annotations: Vec<ManeAnnotation>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub db_enriched_sources: Vec<EnrichedSource>,
     /// Stable IDs into the report-level reference registry.
@@ -665,6 +726,14 @@ fn catalog_table_available(conn: &Connection, schema: &str, table: &str) -> bool
     conn.query_row(&sql, [table], |_| Ok(true)).is_ok()
 }
 
+fn non_empty_option(value: Option<String>) -> Option<String> {
+    value.filter(|text| !text.trim().is_empty())
+}
+
+fn first_non_empty(primary: Option<String>, fallback: Option<String>) -> Option<String> {
+    non_empty_option(primary).or_else(|| non_empty_option(fallback))
+}
+
 /// Fetch ClinVar and GWAS reference data for a batch of rsIDs in a single SQL query.
 /// Returns a map keyed by rsID. Missing rsIDs will simply be absent from the map.
 fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String, LocalEnrichment> {
@@ -695,28 +764,54 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
 
-    let mut clinvar_data = HashMap::new();
+    let mut clinvar_data: HashMap<String, Vec<ClinVarAnnotation>> = HashMap::new();
     // ClinVar is optional until the user downloads it. The report-level
     // catalog_warnings field already explains that state, so do not emit a
     // duplicate stderr warning for an expected missing table.
     if catalog_table_available(conn, "clinvar", "clinvar_reference") {
         let sql_clinvar = format!(
-            "SELECT rsid, clinical_significance, conditions, review_status
-             FROM clinvar.clinvar_reference WHERE rsid IN ({})",
+            "SELECT rsid, allele_id, variation_id, name, gene_symbol,
+                    clinical_significance, clin_sig_simple, phenotype_ids,
+                    phenotype_list, conditions, review_status, assembly,
+                    chromosome, start, stop, last_evaluated, number_submitters,
+                    reference_allele_vcf, alternate_allele_vcf
+             FROM clinvar.clinvar_reference
+             WHERE LOWER(rsid) IN ({})
+             ORDER BY LOWER(rsid), variation_id, allele_id, gene_symbol,
+                      clinical_significance",
             placeholders
         );
         if let Ok(mut stmt) = conn.prepare(&sql_clinvar)
             && let Ok(rows) = stmt.query_map(params.as_slice(), |row| {
                 Ok((
                     row.get::<_, String>(0)?,
-                    row.get::<_, Option<String>>(1)?,
-                    row.get::<_, Option<String>>(2)?,
-                    row.get::<_, Option<String>>(3)?,
+                    ClinVarAnnotation {
+                        clinical_significance: row.get::<_, String>(5)?,
+                        conditions: first_non_empty(
+                            row.get::<_, Option<String>>(8)?,
+                            row.get::<_, Option<String>>(9)?,
+                        ),
+                        review_status: non_empty_option(row.get(10)?),
+                        rsid: non_empty_option(row.get(0)?),
+                        allele_id: non_empty_option(row.get(1)?),
+                        variation_id: non_empty_option(row.get(2)?),
+                        gene_symbol: non_empty_option(row.get(4)?),
+                        name: non_empty_option(row.get(3)?),
+                        phenotype_ids: non_empty_option(row.get(7)?),
+                        assembly: non_empty_option(row.get(11)?),
+                        chromosome: non_empty_option(row.get(12)?),
+                        start: row.get(13)?,
+                        stop: row.get(14)?,
+                        last_evaluated: non_empty_option(row.get(15)?),
+                        number_submitters: row.get(16)?,
+                        reference_allele: non_empty_option(row.get(17)?),
+                        alternate_allele: non_empty_option(row.get(18)?),
+                    },
                 ))
             })
         {
             for r in rows.flatten() {
-                clinvar_data.insert(r.0.to_lowercase(), r);
+                clinvar_data.entry(r.0.to_lowercase()).or_default().push(r.1);
             }
         }
     }
@@ -751,10 +846,13 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
         let mut entry = LocalEnrichment::default();
         let mut has_data = false;
 
-        if let Some(c_row) = clinvar_data.get(&curr) {
-            entry.clinvar_significance = c_row.1.clone();
-            entry.clinvar_conditions = c_row.2.clone();
-            entry.clinvar_review_status = c_row.3.clone();
+        if let Some(c_rows) = clinvar_data.get(&curr) {
+            entry.clinvar_annotations = c_rows.clone();
+            if let Some(c_row) = c_rows.first() {
+                entry.clinvar_significance = Some(c_row.clinical_significance.clone());
+                entry.clinvar_conditions = c_row.conditions.clone();
+                entry.clinvar_review_status = c_row.review_status.clone();
+            }
             has_data = true;
         }
 
@@ -774,27 +872,63 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
 }
 
 /// Build enriched sources from a LocalEnrichment record for a specific rsID.
-fn build_enriched_sources(rsid: &str, enr: &LocalEnrichment) -> Vec<EnrichedSource> {
+fn gnomad_source(rsid: &str, af: f64, record: Option<&RawDbsnpGnomad>) -> EnrichedSource {
+    let citation = match record {
+        Some(record) if !record.dataset.is_empty() => format!(
+            "gnomAD {} AF: {:.4} ({})",
+            record.dataset,
+            af,
+            classify_population_rarity(af)
+        ),
+        _ => format!("gnomAD AF: {:.4} ({})", af, classify_population_rarity(af)),
+    };
+    let details = record.map(|record| {
+        let mut details = format!(
+            "Release {}; source mode {}",
+            record.release, record.source_mode
+        );
+        if let Some(popmax) = record.popmax {
+            details.push_str(&format!("; popmax {:.4}", popmax));
+            if let Some(population) = &record.popmax_population {
+                details.push_str(&format!(" ({population})"));
+            }
+        }
+        details
+    });
+    EnrichedSource {
+        source_type: "gnomAD".to_string(),
+        citation,
+        details,
+        url: Some(gnomad_url(rsid)),
+    }
+}
+
+fn build_enriched_sources(
+    rsid: &str,
+    enr: &LocalEnrichment,
+    gnomad: Option<&RawDbsnpGnomad>,
+) -> Vec<EnrichedSource> {
     let mut sources = Vec::new();
 
     // ClinVar
-    if let Some(ref sig) = enr.clinvar_significance {
-        let review = enr
-            .clinvar_review_status
+    for annotation in &enr.clinvar_annotations {
+        let review = annotation
+            .review_status
             .as_deref()
-            .unwrap_or("unknown review status");
-        let conditions = enr.clinvar_conditions.as_deref().unwrap_or("");
+            .unwrap_or("review status unavailable");
+        let condition = annotation.conditions.as_deref().unwrap_or("");
+        let identifier = annotation.variation_id.as_deref().unwrap_or(rsid);
         sources.push(EnrichedSource {
             source_type: "ClinVar".to_string(),
-            citation: format!("ClinVar: {} ({})", sig, review),
-            details: if conditions.is_empty() {
-                None
+            citation: format!("ClinVar: {} ({})", annotation.clinical_significance, review),
+            details: if condition.is_empty() {
+                annotation.name.clone()
             } else {
-                Some(conditions.to_string())
+                Some(condition.to_string())
             },
             url: Some(format!(
                 "https://www.ncbi.nlm.nih.gov/clinvar/?term={}%5BVariant+ID%5D",
-                rsid
+                identifier
             )),
         });
     }
@@ -821,12 +955,7 @@ fn build_enriched_sources(rsid: &str, enr: &LocalEnrichment) -> Vec<EnrichedSour
 
     // gnomAD population frequency
     if let Some(af) = enr.population_af {
-        sources.push(EnrichedSource {
-            source_type: "gnomAD".to_string(),
-            citation: format!("gnomAD AF: {:.4} ({})", af, classify_population_rarity(af)),
-            details: None,
-            url: Some(gnomad_url(rsid)),
-        });
+        sources.push(gnomad_source(rsid, af, gnomad));
     }
 
     sources
@@ -970,6 +1099,12 @@ struct RawDbsnpGnomad {
     alt_allele: String,
     af: Option<f64>,
     release: String,
+    source_mode: String,
+    dataset: String,
+    popmax: Option<f64>,
+    popmax_population: Option<String>,
+    faf95_popmax: Option<f64>,
+    homozygote_count: Option<i64>,
 }
 
 fn fetch_gnomad_dbsnp_metadata(
@@ -981,7 +1116,8 @@ fn fetch_gnomad_dbsnp_metadata(
     }
     let mut map = HashMap::new();
     // Offline gnomAD VCF hits use `remote_vcf_hit`; older API paths used `found`.
-    let sql = "SELECT chrom, pos, ref, alt, af, release, rsids_json 
+    let sql = "SELECT chrom, pos, ref, alt, af, release, source_mode, dataset,
+                      popmax, popmax_population, faf95_popmax, homozygote_count, rsids_json
                FROM reference.gnomad_variant_cache 
                WHERE lookup_status IN ('found', 'remote_vcf_hit')";
     if let Ok(mut stmt) = conn.prepare(sql) {
@@ -993,11 +1129,31 @@ fn fetch_gnomad_dbsnp_metadata(
                 row.get::<_, String>(3)?,
                 row.get::<_, Option<f64>>(4).ok().flatten(),
                 row.get::<_, String>(5)?,
-                row.get::<_, Option<String>>(6)?,
+                row.get::<_, String>(6)?,
+                row.get::<_, String>(7)?,
+                row.get::<_, Option<f64>>(8).ok().flatten(),
+                row.get::<_, Option<String>>(9).ok().flatten(),
+                row.get::<_, Option<f64>>(10).ok().flatten(),
+                row.get::<_, Option<i64>>(11).ok().flatten(),
+                row.get::<_, Option<String>>(12)?,
             ))
         }) {
             for row_res in rows.flatten() {
-                if let (chrom, pos, ref_allele, alt_allele, af, release, Some(rsids_json)) = row_res
+                if let (
+                    chrom,
+                    pos,
+                    ref_allele,
+                    alt_allele,
+                    af,
+                    release,
+                    source_mode,
+                    dataset,
+                    popmax,
+                    popmax_population,
+                    faf95_popmax,
+                    homozygote_count,
+                    Some(rsids_json),
+                ) = row_res
                 {
                     if let Ok(rsid_list) = serde_json::from_str::<Vec<String>>(&rsids_json) {
                         for r in rsid_list {
@@ -1012,6 +1168,12 @@ fn fetch_gnomad_dbsnp_metadata(
                                     alt_allele: alt_allele.clone(),
                                     af,
                                     release: release.clone(),
+                                    source_mode: source_mode.clone(),
+                                    dataset: dataset.clone(),
+                                    popmax,
+                                    popmax_population: popmax_population.clone(),
+                                    faf95_popmax,
+                                    homozygote_count,
                                 },
                             );
                         }
@@ -1037,6 +1199,12 @@ fn fetch_gnomad_dbsnp_metadata(
                     alt_allele: meta.alt_allele.clone(),
                     af: meta.af,
                     release: meta.release.clone(),
+                    source_mode: meta.source_mode.clone(),
+                    dataset: meta.dataset.clone(),
+                    popmax: meta.popmax,
+                    popmax_population: meta.popmax_population.clone(),
+                    faf95_popmax: meta.faf95_popmax,
+                    homozygote_count: meta.homozygote_count,
                 },
             );
         }
@@ -1045,13 +1213,29 @@ fn fetch_gnomad_dbsnp_metadata(
 }
 
 fn build_clinvar_annotation(enr: &LocalEnrichment) -> Option<ClinVarAnnotation> {
-    enr.clinvar_significance
-        .as_ref()
-        .map(|sig| ClinVarAnnotation {
-            clinical_significance: sig.clone(),
-            conditions: enr.clinvar_conditions.clone(),
-            review_status: enr.clinvar_review_status.clone(),
-        })
+    enr.clinvar_annotations.first().cloned().or_else(|| {
+        enr.clinvar_significance
+            .as_ref()
+            .map(|sig| ClinVarAnnotation {
+                clinical_significance: sig.clone(),
+                conditions: enr.clinvar_conditions.clone(),
+                review_status: enr.clinvar_review_status.clone(),
+                rsid: None,
+                allele_id: None,
+                variation_id: None,
+                gene_symbol: None,
+                name: None,
+                phenotype_ids: None,
+                assembly: None,
+                chromosome: None,
+                start: None,
+                stop: None,
+                last_evaluated: None,
+                number_submitters: None,
+                reference_allele: None,
+                alternate_allele: None,
+            })
+    })
 }
 
 fn build_gwas_hits(enr: &LocalEnrichment) -> Vec<GwasHit> {
@@ -1101,7 +1285,7 @@ fn is_gene_on_negative_strand(conn: &Connection, gene: &str) -> bool {
 fn fetch_pharmgkb_enrichment(
     conn: &Connection,
     rsids: &[String],
-) -> HashMap<String, PharmGkbAnnotation> {
+) -> HashMap<String, Vec<PharmGkbAnnotation>> {
     if rsids.is_empty() {
         return HashMap::new();
     }
@@ -1123,7 +1307,10 @@ fn fetch_pharmgkb_enrichment(
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(rsid), drug, phenotype, evidence_level FROM pharmgkb_clinical_variants WHERE rsid IN ({})",
+        "SELECT LOWER(rsid), gene, drug, phenotype, evidence_level
+         FROM pharmgkb_clinical_variants
+         WHERE LOWER(rsid) IN ({})
+         ORDER BY LOWER(rsid), drug, phenotype, evidence_level",
         placeholders
     );
     let params: Vec<&dyn rusqlite::types::ToSql> = current_rsids
@@ -1131,22 +1318,26 @@ fn fetch_pharmgkb_enrichment(
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
 
-    let mut query_map = HashMap::new();
+    let mut query_map: HashMap<String, Vec<PharmGkbAnnotation>> = HashMap::new();
     if let Ok(mut stmt) = conn.prepare(&sql) {
         if let Ok(mut rows) = stmt.query(params.as_slice()) {
             while let Ok(Some(row)) = rows.next() {
                 let rsid: String = row.get(0).unwrap_or_default();
-                let drug: String = row.get(1).unwrap_or_default();
-                let phenotype: String = row.get(2).unwrap_or_default();
-                let evidence_level: String = row.get(3).unwrap_or_default();
-                query_map.insert(
-                    rsid.to_lowercase(),
-                    PharmGkbAnnotation {
-                        drug,
-                        phenotype,
-                        evidence_level,
-                    },
-                );
+                let annotation = PharmGkbAnnotation {
+                    gene: non_empty_option(row.get(1).unwrap_or(None)),
+                    drug: row.get::<_, Option<String>>(2).unwrap_or(None).unwrap_or_default(),
+                    phenotype: row.get::<_, Option<String>>(3).unwrap_or(None).unwrap_or_default(),
+                    evidence_level: row.get::<_, Option<String>>(4).unwrap_or(None).unwrap_or_default(),
+                };
+                let annotations = query_map.entry(rsid.to_lowercase()).or_default();
+                if !annotations.iter().any(|existing| {
+                    existing.gene == annotation.gene
+                        && existing.drug == annotation.drug
+                        && existing.phenotype == annotation.phenotype
+                        && existing.evidence_level == annotation.evidence_level
+                }) {
+                    annotations.push(annotation);
+                }
             }
         }
     }
@@ -1165,7 +1356,7 @@ fn fetch_pharmgkb_enrichment(
 fn fetch_clingen_enrichment(
     conn: &Connection,
     genes: &[String],
-) -> HashMap<String, ClinGenAnnotation> {
+) -> HashMap<String, Vec<ClinGenAnnotation>> {
     if genes.is_empty() {
         return HashMap::new();
     }
@@ -1176,35 +1367,45 @@ fn fetch_clingen_enrichment(
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(gene_symbol), disease_label, classification FROM clingen_gene_validity WHERE gene_symbol IN ({})",
+        "SELECT LOWER(gene_symbol), disease_label, classification, hgnc_id, moi, report_url
+         FROM clingen_gene_validity
+         WHERE LOWER(gene_symbol) IN ({})
+         ORDER BY LOWER(gene_symbol), disease_label, classification",
         placeholders
     );
-    let params: Vec<&dyn rusqlite::types::ToSql> = genes
+    let normalized_genes: Vec<String> = genes.iter().map(|gene| gene.to_lowercase()).collect();
+    let params: Vec<&dyn rusqlite::types::ToSql> = normalized_genes
         .iter()
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
-    let mut map = HashMap::new();
+    let mut map: HashMap<String, Vec<ClinGenAnnotation>> = HashMap::new();
     if let Ok(mut stmt) = conn.prepare(&sql) {
         if let Ok(mut rows) = stmt.query(params.as_slice()) {
             while let Ok(Some(row)) = rows.next() {
                 let gene_symbol: String = row.get(0).unwrap_or_default();
                 let disease_label: String = row.get(1).unwrap_or_default();
-                let classification: String = row.get(2).unwrap_or_default();
-                map.insert(
-                    gene_symbol,
-                    ClinGenAnnotation {
-                        gene_symbol: row.get::<_, String>(0).unwrap_or_default(),
-                        disease_label,
-                        classification,
-                    },
-                );
+                let annotation = ClinGenAnnotation {
+                    gene_symbol: gene_symbol.clone(),
+                    disease_label,
+                    classification: row.get::<_, Option<String>>(2).unwrap_or(None).unwrap_or_default(),
+                    hgnc_id: non_empty_option(row.get(3).unwrap_or(None)),
+                    mode_of_inheritance: non_empty_option(row.get(4).unwrap_or(None)),
+                    report_url: non_empty_option(row.get(5).unwrap_or(None)),
+                };
+                let annotations = map.entry(gene_symbol).or_default();
+                if !annotations.iter().any(|existing| {
+                    existing.disease_label == annotation.disease_label
+                        && existing.classification == annotation.classification
+                }) {
+                    annotations.push(annotation);
+                }
             }
         }
     }
     map
 }
 
-fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String, ManeAnnotation> {
+fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String, Vec<ManeAnnotation>> {
     if genes.is_empty() {
         return HashMap::new();
     }
@@ -1215,30 +1416,31 @@ fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String,
         .collect::<Vec<_>>()
         .join(",");
     let sql = format!(
-        "SELECT LOWER(gene_symbol), ensembl_transcript, refseq_transcript, mane_status FROM mane_transcripts WHERE gene_symbol IN ({})",
+        "SELECT LOWER(gene_symbol), ensembl_transcript, refseq_transcript, mane_status,
+                grch38_coordinates
+         FROM mane_transcripts
+         WHERE LOWER(gene_symbol) IN ({})
+         ORDER BY LOWER(gene_symbol)",
         placeholders
     );
-    let params: Vec<&dyn rusqlite::types::ToSql> = genes
+    let normalized_genes: Vec<String> = genes.iter().map(|gene| gene.to_lowercase()).collect();
+    let params: Vec<&dyn rusqlite::types::ToSql> = normalized_genes
         .iter()
         .map(|s| s as &dyn rusqlite::types::ToSql)
         .collect();
-    let mut map = HashMap::new();
+    let mut map: HashMap<String, Vec<ManeAnnotation>> = HashMap::new();
     if let Ok(mut stmt) = conn.prepare(&sql) {
         if let Ok(mut rows) = stmt.query(params.as_slice()) {
             while let Ok(Some(row)) = rows.next() {
                 let gene_symbol: String = row.get(0).unwrap_or_default();
-                let ensembl_transcript: String = row.get(1).unwrap_or_default();
-                let refseq_transcript: String = row.get(2).unwrap_or_default();
-                let mane_status: String = row.get(3).unwrap_or_default();
-                map.insert(
-                    gene_symbol,
-                    ManeAnnotation {
-                        gene_symbol: row.get::<_, String>(0).unwrap_or_default(),
-                        ensembl_transcript,
-                        refseq_transcript,
-                        mane_status,
-                    },
-                );
+                let annotation = ManeAnnotation {
+                    gene_symbol: gene_symbol.clone(),
+                    ensembl_transcript: row.get::<_, Option<String>>(1).unwrap_or(None).unwrap_or_default(),
+                    refseq_transcript: row.get::<_, Option<String>>(2).unwrap_or(None).unwrap_or_default(),
+                    mane_status: row.get::<_, Option<String>>(3).unwrap_or(None).unwrap_or_default(),
+                    grch38_coordinates: non_empty_option(row.get(4).unwrap_or(None)),
+                };
+                map.entry(gene_symbol).or_default().push(annotation);
             }
         }
     }
@@ -1709,14 +1911,31 @@ pub fn generate_report(
                 db.af.map(|af| PopulationAnnotation {
                     allele_frequency: af,
                     rarity_bucket: classify_population_rarity(af).to_string(),
+                    source_mode: Some(db.source_mode.clone()),
+                    dataset: Some(db.dataset.clone()),
+                    source_build: Some(db.release.clone()),
+                    popmax: db.popmax,
+                    popmax_population: db.popmax_population.clone(),
+                    faf95_popmax: db.faf95_popmax,
+                    homozygote_count: db.homozygote_count,
                 })
             });
 
-            let pharmgkb = pharmgkb_map.get(&rsid_lower).cloned();
-            let clingen = clingen_map.get(&gene_lower).cloned();
-            let mane = mane_map.get(&gene_lower).cloned();
+            let pharmgkb_annotations = pharmgkb_map
+                .get(&rsid_lower)
+                .cloned()
+                .unwrap_or_default();
+            let pharmgkb = pharmgkb_annotations.first().cloned();
+            let clingen_annotations = clingen_map
+                .get(&gene_lower)
+                .cloned()
+                .unwrap_or_default();
+            let clingen = clingen_annotations.first().cloned();
+            let mane_annotations = mane_map.get(&gene_lower).cloned().unwrap_or_default();
+            let mane = mane_annotations.first().cloned();
 
             let enr_with_af = enrichment_map.get(&rsid_lower).map(|e| LocalEnrichment {
+                clinvar_annotations: e.clinvar_annotations.clone(),
                 clinvar_significance: e.clinvar_significance.clone(),
                 clinvar_conditions: e.clinvar_conditions.clone(),
                 clinvar_review_status: e.clinvar_review_status.clone(),
@@ -1727,67 +1946,88 @@ pub fn generate_report(
             });
 
             let mut db_enriched_sources = if let Some(ref e) = enr_with_af {
-                build_enriched_sources(&m.rsid, e)
+                build_enriched_sources(&m.rsid, e, dbsnp_data.get(&m.rsid))
             } else if let Some(ref pop) = population {
-                vec![EnrichedSource {
-                    source_type: "gnomAD".to_string(),
-                    citation: format!(
-                        "gnomAD AF: {:.4} ({})",
-                        pop.allele_frequency, pop.rarity_bucket
-                    ),
-                    details: None,
-                    url: Some(gnomad_url(&m.rsid)),
-                }]
+                vec![gnomad_source(
+                    &m.rsid,
+                    pop.allele_frequency,
+                    dbsnp_data.get(&m.rsid),
+                )]
             } else {
                 Vec::new()
             };
 
-            if let Some(ref pkb) = pharmgkb {
+            for pkb in &pharmgkb_annotations {
+                let drug = if pkb.drug.is_empty() {
+                    "clinical variant annotation"
+                } else {
+                    &pkb.drug
+                };
                 db_enriched_sources.push(EnrichedSource {
-                    source_type: "PharmGKB".to_string(),
+                    source_type: "ClinPGx".to_string(),
                     citation: format!(
-                        "PharmGKB PGx Level {} (Drug: {})",
-                        pkb.evidence_level, pkb.drug
+                        "ClinPGx: {} (Level {}, {})",
+                        drug,
+                        if pkb.evidence_level.is_empty() {
+                            "evidence unavailable"
+                        } else {
+                            &pkb.evidence_level
+                        },
+                        pkb.gene.as_deref().unwrap_or("gene unavailable")
                     ),
-                    details: Some(pkb.phenotype.clone()),
-                    url: Some(format!("https://www.pharmgkb.org/rsid/{}", m.rsid)),
+                    details: non_empty_option(Some(pkb.phenotype.clone())),
+                    url: Some(format!(
+                        "https://api.clinpgx.org/v1/variant?name={}",
+                        m.rsid
+                    )),
                 });
             }
 
-            if let Some(ref cg) = clingen {
+            for cg in &clingen_annotations {
                 db_enriched_sources.push(EnrichedSource {
                     source_type: "ClinGen".to_string(),
                     citation: format!(
                         "ClinGen Gene Validity: {} (Gene: {})",
                         cg.classification, cg.gene_symbol
                     ),
-                    details: Some(cg.disease_label.clone()),
-                    url: Some(format!(
-                        "https://search.clinicalgenome.org/kb/genes/{}",
-                        cg.gene_symbol
-                    )),
+                    details: Some(match cg.mode_of_inheritance.as_deref() {
+                        Some(moi) => format!("{} · inheritance: {moi}", cg.disease_label),
+                        None => cg.disease_label.clone(),
+                    }),
+                    url: cg.report_url.clone().or_else(|| {
+                        Some(format!(
+                            "https://search.clinicalgenome.org/kb/genes/{}",
+                            cg.gene_symbol
+                        ))
+                    }),
                 });
             }
 
-            if let Some(ref mn) = mane {
+            for mn in &mane_annotations {
                 db_enriched_sources.push(EnrichedSource {
                     source_type: "MANE".to_string(),
                     citation: format!(
                         "MANE Transcript: {} / {}",
                         mn.refseq_transcript, mn.ensembl_transcript
                     ),
-                    details: Some(format!("Status: {}", mn.mane_status)),
+                    details: mn.grch38_coordinates.clone().or_else(|| {
+                        non_empty_option(Some(format!("Status: {}", mn.mane_status)))
+                    }),
                     url: None,
                 });
             }
 
             if clinvar.is_some()
+                || !enrichment_map
+                    .get(&rsid_lower)
+                    .map(|e| e.clinvar_annotations.is_empty())
+                    .unwrap_or(true)
                 || !gwas_hits.is_empty()
                 || dbsnp.is_some()
                 || population.is_some()
-                || pharmgkb.is_some()
-                || clingen.is_some()
-                || mane.is_some()
+                || !pharmgkb_annotations.is_empty()
+                || !clingen_annotations.is_empty()
+                || !mane_annotations.is_empty()
                 || !db_enriched_sources.is_empty()
             {
                 let enrichment_reference_ids =
@@ -1796,12 +2036,19 @@ pub fn generate_report(
                     m.rsid.clone(),
                     VariantEnrichment {
                         clinvar,
+                        clinvar_annotations: enrichment_map
+                            .get(&rsid_lower)
+                            .map(|e| e.clinvar_annotations.clone())
+                            .unwrap_or_default(),
                         gwas_hits,
                         dbsnp,
                         population,
                         pharmgkb,
+                        pharmgkb_annotations,
                         clingen,
+                        clingen_annotations,
                         mane,
+                        mane_annotations,
                         db_enriched_sources,
                         reference_ids: enrichment_reference_ids,
                     },
@@ -2097,6 +2344,105 @@ mod tests {
         assert_eq!(first_id, second_id);
         assert_eq!(registry.references.len(), 1);
         assert_eq!(registry.references[0].evidence_role, "Research context");
+    }
+
+    #[test]
+    fn local_catalog_enrichment_preserves_one_to_many_annotations() {
+        let conn = setup_test_db();
+        conn.execute(
+            "CREATE TABLE pharmgkb_clinical_variants (
+                rsid TEXT NOT NULL,
+                gene TEXT,
+                drug TEXT,
+                phenotype TEXT,
+                evidence_level TEXT
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO pharmgkb_clinical_variants (rsid, gene, drug, phenotype, evidence_level)
+             VALUES
+                ('rs123', 'GENE1', 'Drug A', 'Phenotype A', '1A'),
+                ('rs123', 'GENE1', 'Drug B', 'Phenotype B', '2A')",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "CREATE TABLE clingen_gene_validity (
+                hgnc_id TEXT,
+                gene_symbol TEXT NOT NULL,
+                disease_label TEXT NOT NULL,
+                classification TEXT,
+                moi TEXT,
+                report_url TEXT
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO clingen_gene_validity
+             (hgnc_id, gene_symbol, disease_label, classification, moi, report_url)
+             VALUES
+                ('HGNC:1', 'GENE1', 'Condition A', 'Definitive', 'Autosomal dominant', 'https://example.test/a'),
+                ('HGNC:1', 'GENE1', 'Condition B', 'Limited', 'Autosomal recessive', 'https://example.test/b')",
+            [],
+        )
+        .unwrap();
+
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", [])
+            .unwrap();
+        conn.execute(
+            "CREATE TABLE clinvar.clinvar_reference (
+                rsid TEXT,
+                allele_id TEXT,
+                variation_id TEXT,
+                name TEXT,
+                gene_symbol TEXT,
+                clinical_significance TEXT,
+                clin_sig_simple TEXT,
+                phenotype_ids TEXT,
+                phenotype_list TEXT,
+                conditions TEXT,
+                review_status TEXT,
+                assembly TEXT,
+                chromosome TEXT,
+                start INTEGER,
+                stop INTEGER,
+                last_evaluated TEXT,
+                number_submitters INTEGER,
+                reference_allele_vcf TEXT,
+                alternate_allele_vcf TEXT
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO clinvar.clinvar_reference
+             (rsid, allele_id, variation_id, name, gene_symbol, clinical_significance,
+              conditions, review_status, assembly, chromosome, start, stop)
+             VALUES
+                ('rs123', '1', '101', 'Variant A', 'GENE1', 'Pathogenic', 'Condition A', 'reviewed', 'GRCh38', '1', 10, 10),
+                ('rs123', '2', '102', 'Variant B', 'GENE1', 'Benign', 'Condition B', 'criteria provided', 'GRCh38', '1', 11, 11)",
+            [],
+        )
+        .unwrap();
+
+        let pharmgkb = fetch_pharmgkb_enrichment(&conn, &["rs123".to_string()]);
+        assert_eq!(pharmgkb["rs123"].len(), 2);
+        assert_eq!(pharmgkb["rs123"][0].drug, "Drug A");
+        assert_eq!(pharmgkb["rs123"][1].phenotype, "Phenotype B");
+
+        let clingen = fetch_clingen_enrichment(&conn, &["GENE1".to_string()]);
+        assert_eq!(clingen["gene1"].len(), 2);
+        assert_eq!(clingen["gene1"][0].mode_of_inheritance.as_deref(), Some("Autosomal dominant"));
+        assert_eq!(clingen["gene1"][1].disease_label, "Condition B");
+
+        let local = fetch_local_enrichment(&conn, &["rs123".to_string()]);
+        assert_eq!(local["rs123"].clinvar_annotations.len(), 2);
+        assert_eq!(local["rs123"].clinvar_annotations[0].variation_id.as_deref(), Some("101"));
+        assert_eq!(local["rs123"].clinvar_annotations[1].clinical_significance, "Benign");
     }
 
     #[test]

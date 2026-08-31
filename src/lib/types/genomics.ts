@@ -84,9 +84,9 @@ export interface MarkerSource {
   notes?: string;
 }
 
-/** A citation derived from the local reference database (ClinVar, GWAS, evidence_library). */
+/** A citation derived from the local reference database (ClinVar, GWAS, ClinPGx, evidence_library). */
 export interface EnrichedSource {
-  source_type: string;   // "ClinVar", "GWAS", "PharmGKB", "EvidenceLibrary"
+  source_type: string;   // "ClinVar", "GWAS", "ClinPGx" (formerly PharmGKB), "EvidenceLibrary"
   citation: string;      // Human-readable citation, e.g. "ClinVar: Pathogenic (expert panel)"
   details?: string;
   url?: string;
@@ -201,6 +201,20 @@ export interface ClinVarAnnotation {
   clinical_significance: string;
   conditions?: string | null;
   review_status?: string | null;
+  rsid?: string | null;
+  allele_id?: string | null;
+  variation_id?: string | null;
+  gene_symbol?: string | null;
+  name?: string | null;
+  phenotype_ids?: string | null;
+  assembly?: string | null;
+  chromosome?: string | null;
+  start?: number | null;
+  stop?: number | null;
+  last_evaluated?: string | null;
+  number_submitters?: number | null;
+  reference_allele?: string | null;
+  alternate_allele?: string | null;
 }
 
 export interface GwasHit {
@@ -228,18 +242,29 @@ export interface DbsnpAnnotation {
 export interface PopulationAnnotation {
   allele_frequency: number;
   rarity_bucket: string;
+  source_mode?: string | null;
+  dataset?: string | null;
+  source_build?: string | null;
+  popmax?: number | null;
+  popmax_population?: string | null;
+  faf95_popmax?: number | null;
+  homozygote_count?: number | null;
 }
 
 export interface PharmGkbAnnotation {
   drug: string;
   phenotype: string;
   evidence_level: string;
+  gene?: string | null;
 }
 
 export interface ClinGenAnnotation {
   gene_symbol: string;
   disease_label: string;
   classification: string;
+  hgnc_id?: string | null;
+  mode_of_inheritance?: string | null;
+  report_url?: string | null;
 }
 
 export interface ManeAnnotation {
@@ -247,16 +272,21 @@ export interface ManeAnnotation {
   ensembl_transcript: string;
   refseq_transcript: string;
   mane_status: string;
+  grch38_coordinates?: string | null;
 }
 
 export interface VariantEnrichment {
   clinvar?: ClinVarAnnotation | null;
+  clinvar_annotations?: ClinVarAnnotation[];
   gwas_hits: GwasHit[];
   dbsnp?: DbsnpAnnotation | null;
   population?: PopulationAnnotation | null;
   pharmgkb?: PharmGkbAnnotation | null;
+  pharmgkb_annotations?: PharmGkbAnnotation[];
   clingen?: ClinGenAnnotation | null;
+  clingen_annotations?: ClinGenAnnotation[];
   mane?: ManeAnnotation | null;
+  mane_annotations?: ManeAnnotation[];
   db_enriched_sources: EnrichedSource[];
   /** Stable IDs into the report-level reference registry. */
   reference_ids?: string[];
@@ -348,8 +378,11 @@ export interface DisplayMarker {
   raw_dna_limitation?: string;
   clinical_semantics?: ClinicalSemantics | null;
   pharmgkb?: PharmGkbAnnotation | null;
+  pharmgkb_annotations?: PharmGkbAnnotation[];
   clingen?: ClinGenAnnotation | null;
+  clingen_annotations?: ClinGenAnnotation[];
   mane?: ManeAnnotation | null;
+  mane_annotations?: ManeAnnotation[];
 }
 
 export interface EvaluatedMarker extends DisplayMarker {}

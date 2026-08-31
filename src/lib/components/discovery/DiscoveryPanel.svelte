@@ -107,26 +107,48 @@
   });
 
   function geneLabel(item: DiscoveryFindingItem): string {
-    return item.clinvar?.gene || item.pharmgkb?.gene || item.gwas?.primary_gene || "—";
+    return item.clinvar_annotations?.[0]?.gene
+      || item.clinvar?.gene
+      || item.pharmgkb_annotations?.[0]?.gene
+      || item.pharmgkb?.gene
+      || item.gwas?.primary_gene
+      || "—";
   }
 
   function sourcesFor(item: DiscoveryFindingItem): Array<"clinvar" | "gwas" | "pharmgkb"> {
     const out: Array<"clinvar" | "gwas" | "pharmgkb"> = [];
-    if (item.clinvar) out.push("clinvar");
+    if (item.clinvar || (item.clinvar_annotations?.length ?? 0) > 0) out.push("clinvar");
     if (item.gwas) out.push("gwas");
-    if (item.pharmgkb) out.push("pharmgkb");
+    if (item.pharmgkb || (item.pharmgkb_annotations?.length ?? 0) > 0) out.push("pharmgkb");
     return out;
   }
 
   function associationLines(item: DiscoveryFindingItem): string[] {
     const lines: string[] = [];
-    if (item.clinvar?.clinical_significance) {
-      const pheno = item.clinvar.phenotypes ? ` · ${item.clinvar.phenotypes}` : "";
-      lines.push(`ClinVar · ${item.clinvar.clinical_significance}${pheno}`);
+    const clinvarRows = item.clinvar_annotations?.length
+      ? item.clinvar_annotations
+      : item.clinvar
+        ? [item.clinvar]
+        : [];
+    for (const clinvar of clinvarRows) {
+      if (clinvar.clinical_significance) {
+        const pheno = clinvar.phenotypes ? ` · ${clinvar.phenotypes}` : "";
+        const variation = clinvar.variation_id ? ` · Variation ${clinvar.variation_id}` : "";
+        lines.push(`ClinVar · ${clinvar.clinical_significance}${pheno}${variation}`);
+      }
     }
-    if (item.pharmgkb?.drug) {
-      const level = item.pharmgkb.evidence_level ? ` (${item.pharmgkb.evidence_level})` : "";
-      lines.push(`PharmGKB · ${item.pharmgkb.drug}${level}`);
+    const pharmgkbRows = item.pharmgkb_annotations?.length
+      ? item.pharmgkb_annotations
+      : item.pharmgkb
+        ? [item.pharmgkb]
+        : [];
+    for (const pharmgkb of pharmgkbRows) {
+      if (pharmgkb.drug || pharmgkb.phenotype) {
+        const label = pharmgkb.drug || "Clinical PGx annotation";
+        const level = pharmgkb.evidence_level ? ` (${pharmgkb.evidence_level})` : "";
+        const phenotype = pharmgkb.phenotype ? ` · ${pharmgkb.phenotype}` : "";
+        lines.push(`ClinPGx · ${label}${level}${phenotype}`);
+      }
     }
     if (item.gwas?.top_trait) {
       const p = item.gwas.best_pvalue != null ? ` · p=${item.gwas.best_pvalue}` : "";

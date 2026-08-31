@@ -53,11 +53,36 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
 
     const enrichment = enrichmentMap[rsid] || {
       clinvar: null,
+      clinvar_annotations: [],
       gwas_hits: [],
       dbsnp: null,
       population: null,
+      pharmgkb_annotations: [],
+      clingen_annotations: [],
+      mane_annotations: [],
       db_enriched_sources: []
     };
+
+    const clinvarAnnotations = enrichment.clinvar_annotations?.length
+      ? enrichment.clinvar_annotations
+      : enrichment.clinvar
+        ? [enrichment.clinvar]
+        : [];
+    const pharmgkbAnnotations = enrichment.pharmgkb_annotations?.length
+      ? enrichment.pharmgkb_annotations
+      : enrichment.pharmgkb
+        ? [enrichment.pharmgkb]
+        : [];
+    const clingenAnnotations = enrichment.clingen_annotations?.length
+      ? enrichment.clingen_annotations
+      : enrichment.clingen
+        ? [enrichment.clingen]
+        : [];
+    const maneAnnotations = enrichment.mane_annotations?.length
+      ? enrichment.mane_annotations
+      : enrichment.mane
+        ? [enrichment.mane]
+        : [];
 
     const explicitReferenceIds = [
       ...(link.reference_ids || []),
@@ -96,9 +121,9 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       sources: link.sources || [],
       db_enriched_sources: enrichment.db_enriched_sources || [],
       reference_ids,
-      clinvar_significance: enrichment.clinvar?.clinical_significance ?? null,
-      clinvar_conditions: enrichment.clinvar?.conditions ?? null,
-      clinvar_review_status: enrichment.clinvar?.review_status ?? null,
+      clinvar_significance: clinvarAnnotations[0]?.clinical_significance ?? null,
+      clinvar_conditions: clinvarAnnotations[0]?.conditions ?? null,
+      clinvar_review_status: clinvarAnnotations[0]?.review_status ?? null,
       gwas_top_trait: enrichment.gwas_hits?.[0]?.trait_name ?? null,
       gwas_best_pvalue: enrichment.gwas_hits?.[0] ? parseFloat(enrichment.gwas_hits[0].p_value_string) : null,
       gwas_association_count: enrichment.gwas_hits?.[0]?.association_count ?? null,
@@ -110,9 +135,12 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       sex_scope: link.sex_scope ?? undefined,
       raw_dna_limitation: link.raw_dna_limitation ?? undefined,
       clinical_semantics: link.clinical_semantics ?? null,
-      pharmgkb: enrichment.pharmgkb ?? null,
-      clingen: enrichment.clingen ?? null,
-      mane: enrichment.mane ?? null
+      pharmgkb: pharmgkbAnnotations[0] ?? null,
+      pharmgkb_annotations: pharmgkbAnnotations,
+      clingen: clingenAnnotations[0] ?? null,
+      clingen_annotations: clingenAnnotations,
+      mane: maneAnnotations[0] ?? null,
+      mane_annotations: maneAnnotations
     });
   }
 

@@ -984,7 +984,15 @@ export interface DiscoveryFindingItem {
     gene?: string;
     phenotypes?: string;
     review_status?: string;
+    variation_id?: string;
   } | null;
+  clinvar_annotations?: Array<{
+    clinical_significance?: string;
+    gene?: string;
+    phenotypes?: string;
+    review_status?: string;
+    variation_id?: string;
+  }>;
   gwas?: {
     top_trait?: string;
     best_pvalue?: number | null;
@@ -996,6 +1004,12 @@ export interface DiscoveryFindingItem {
     phenotype?: string;
     evidence_level?: string;
   } | null;
+  pharmgkb_annotations?: Array<{
+    gene?: string;
+    drug?: string;
+    phenotype?: string;
+    evidence_level?: string;
+  }>;
 }
 
 export interface DiscoveryQueryResult {

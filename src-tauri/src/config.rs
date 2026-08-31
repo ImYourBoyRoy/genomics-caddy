@@ -581,7 +581,6 @@ pub fn validate_external_url(url: &str) -> Result<(), String> {
         "platform.opentargets.org",
         "api.platform.opentargets.org",
         "pharmgkb.org",
-        "api.pharmgkb.org",
         "clinpgx.org",
         "api.clinpgx.org",
     ];

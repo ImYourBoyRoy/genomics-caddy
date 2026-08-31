@@ -135,8 +135,8 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
         OfflineAssetDef {
             id: OfflineAssetId::PharmgkbClinicalVariants,
             tier: 1,
-            label: "PharmGKB clinical variants",
-            url: Some("https://api.pharmgkb.org/v1/download/file/data/clinicalVariants.zip"),
+            label: "ClinPGx (PharmGKB) clinical variants",
+            url: Some("https://api.clinpgx.org/v1/download/file/data/clinicalVariants.zip"),
             category: "pharmgkb",
             filename: "clinicalVariants.zip",
             max_bytes: 200 * 1024 * 1024,
@@ -146,8 +146,8 @@ pub fn all_assets() -> &'static [OfflineAssetDef] {
         OfflineAssetDef {
             id: OfflineAssetId::PharmgkbGenes,
             tier: 1,
-            label: "PharmGKB genes",
-            url: Some("https://api.pharmgkb.org/v1/download/file/data/genes.zip"),
+            label: "ClinPGx (PharmGKB) genes",
+            url: Some("https://api.clinpgx.org/v1/download/file/data/genes.zip"),
             category: "pharmgkb",
             filename: "genes.zip",
             max_bytes: 100 * 1024 * 1024,
@@ -272,4 +272,22 @@ pub struct OfflineTierStatus {
     pub assets: Vec<OfflineAssetStatus>,
     pub ready: bool,
     pub updates_available: u32,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{OfflineAssetId, asset_def};
+
+    #[test]
+    fn pharmgkb_downloads_use_the_current_clinpgx_host() {
+        for id in [
+            OfflineAssetId::PharmgkbClinicalVariants,
+            OfflineAssetId::PharmgkbGenes,
+        ] {
+            let def = asset_def(id).expect("PharmGKB asset must be registered");
+            let url = def.url.expect("PharmGKB asset must have a download URL");
+            assert!(url.starts_with("https://api.clinpgx.org/v1/download/file/data/"));
+            assert!(!url.contains("api.pharmgkb.org"));
+        }
+    }
 }

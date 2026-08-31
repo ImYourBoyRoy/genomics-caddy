@@ -18,7 +18,6 @@ use std::path::Path;
 const PGS_BASE: &str = "https://www.pgscatalog.org/rest";
 const REACTOME_BASE: &str = "https://reactome.org/ContentService";
 const OPENTARGETS_GRAPHQL: &str = "https://api.platform.opentargets.org/api/v4/graphql";
-const PHARMGKB_BASE: &str = "https://api.pharmgkb.org/v1";
 const CLINPGX_BASE: &str = "https://api.clinpgx.org/v1";
 
 #[derive(Debug, Clone, Default)]
@@ -453,7 +452,7 @@ async fn fetch_pharmgkb_context(db_path: &Path, rsid: &str, gene: Option<&str>) 
     let _permit = acquire_adapter_permit(&PHARMGKB_SEMAPHORE).await;
     let url = format!(
         "{}/data/clinicalAnnotation?location.rsId={}",
-        PHARMGKB_BASE, rsid
+        CLINPGX_BASE, rsid
     );
     let cache_key = format!("pharmgkb|clinical_annotation|{}", rsid);
 

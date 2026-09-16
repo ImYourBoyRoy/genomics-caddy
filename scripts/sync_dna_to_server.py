@@ -28,7 +28,8 @@ Outputs / side effects:
   Never syncs into or cleans remote `biolume` (other-project game tree).
 
 Operational notes:
-  Prefer LAN REMOTE_HOST=192.168.1.21. Guest is only reachable via the builder jump.
+  Set REMOTE_HOST to the builder address in your local, untracked .env file.
+  The guest is only reachable via the builder jump.
   Config uses toolkit-native REMOTE_*/VM_* names — not other-project aliases.
 """
 
@@ -65,19 +66,34 @@ def load_dotenv() -> None:
 load_dotenv()
 
 # Toolkit-native keys (aligned with Remote_Build). Defaults keep DNA slug isolation.
-REMOTE_HOST = os.environ.get("REMOTE_HOST", "192.168.1.21")
-REMOTE_USER = os.environ.get("REMOTE_USER", "builder-user")
-REMOTE_DIR = os.environ.get("REMOTE_DIR", "/home/builder-user/dna_tools")
-# Production guest is Tahoe domain macOS @ .142 (Sonoma rollback was typically .75).
-VM_HOST = os.environ.get("VM_HOST", "192.168.122.142")
-VM_USER = os.environ.get("VM_USER", "guest-user")
+REMOTE_HOST = os.environ.get("REMOTE_HOST", "")
+REMOTE_USER = os.environ.get("REMOTE_USER", "")
+REMOTE_DIR = os.environ.get("REMOTE_DIR", "")
+VM_HOST = os.environ.get("VM_HOST", "")
+VM_USER = os.environ.get("VM_USER", "")
 VM_SSH_KEY = os.environ.get("VM_SSH_KEY", "~/.ssh/id_ed25519")
 VM_NAME = os.environ.get("VM_NAME", "macOS")
-GUEST_DIR = os.environ.get("GUEST_DIR", f"/Users/{VM_USER}/dna_tools")
+GUEST_DIR = os.environ.get("GUEST_DIR", "")
 
 
 def assert_dna_isolation() -> None:
     """Refuse to run if REMOTE_DIR / GUEST_DIR point at another project's tree."""
+    required = {
+        "REMOTE_HOST": REMOTE_HOST,
+        "REMOTE_USER": REMOTE_USER,
+        "REMOTE_DIR": REMOTE_DIR,
+        "VM_HOST": VM_HOST,
+        "VM_USER": VM_USER,
+        "GUEST_DIR": GUEST_DIR,
+    }
+    missing = [key for key, value in required.items() if not value.strip()]
+    if missing:
+        print(
+            "[FAIL] Configure these local .env values before using this deprecated script: "
+            + ", ".join(missing),
+            file=sys.stderr,
+        )
+        sys.exit(2)
     for label, path in (("REMOTE_DIR", REMOTE_DIR), ("GUEST_DIR", GUEST_DIR)):
         normalized = path.rstrip("/").lower()
         for slug in _FORBIDDEN_REMOTE_SLUGS:
@@ -151,7 +167,7 @@ def main() -> None:
             and tarinfo.name != "package.json"
             and not tarinfo.name.endswith("tauri.conf.json")
         ):
-            if "report" in tarinfo.name or "ancestry" in tarinfo.name or "Roy" in tarinfo.name:
+            if "report" in tarinfo.name.lower() or "ancestry" in tarinfo.name.lower() or "profile" in tarinfo.name.lower():
                 return None
         return tarinfo
 

@@ -39,7 +39,7 @@ _EXCLUDE_NAMES: frozenset[str] = frozenset(
 )
 
 # Patterns inside the tarball that identify large data files not needed for compilation
-_SKIP_REPORT_PATTERNS = ("report", "ancestry", "Roy", "Taye", "Clara", "Jen")
+_SKIP_REPORT_PATTERNS = ("report", "ancestry", "profile")
 
 
 def build_frontend(project_root: Path) -> None:

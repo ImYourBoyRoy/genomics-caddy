@@ -2,11 +2,8 @@
 """
 Remote_Build toolkit path shim + re-exports.
 
-The Remote_Build toolkit lives in a package also named `remote_build` at:
-  /home/builder-user/Desktop/AI/Remote_Build/remote_build/
-
-This DNA_Tools sub-package lives at:
-  scripts/remote_build/
+The Remote_Build toolkit lives in a sibling checkout's `remote_build` package.
+This DNA_Tools sub-package also uses the name `remote_build`.
 
 Python can only resolve `import remote_build` to ONE of these. This shim
 ensures the sibling Remote_Build project root is on sys.path at position 0,

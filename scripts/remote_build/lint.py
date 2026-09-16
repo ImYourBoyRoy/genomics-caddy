@@ -36,7 +36,7 @@ _SVELTE_CHECK_STRICT = "pnpm run check -- --fail-on-warnings 2>&1"
 _MACOS_LINT_SCRIPT = """
 set -uo pipefail
 source ~/.cargo/env 2>/dev/null || true
-export PATH="/Users/guest-user/.cargo/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
 cd '{guest_dir}'
 
 echo ""

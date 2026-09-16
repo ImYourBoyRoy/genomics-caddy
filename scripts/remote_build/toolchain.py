@@ -29,7 +29,7 @@ from remote_build.ssh import vm_ssh
 _MACOS_UPGRADE_SCRIPT = """
 set -euo pipefail
 source ~/.cargo/env 2>/dev/null || true
-export PATH="/Users/guest-user/.cargo/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
 
 echo "[TOOLCHAIN] Auto-healing and checking prerequisites on macOS guest…"
 

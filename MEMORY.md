@@ -29,13 +29,19 @@
 - Keep generated `builds/`, portable `App/` output, local databases, profile
   exports, dated tasklists, strategy notes, and detailed local memory out of
   tracked history.
-- The publishable `master` history was scrubbed of generated/profile artifacts
-  and detailed local memory/notes. Internal Codex checkpoint refs are local
-  recovery state; do not mirror-push them.
+- A follow-up privacy audit found one tracked personal DNA report, a user-specific
+  planning document, private build-network defaults, and identity strings in
+  earlier commits. These are being removed from publishable `master` history;
+  do not push until the full reachable-history scan passes.
+- Preserve local report and planning files on disk; ignore them rather than
+  deleting user data. Internal Codex checkpoint refs are local recovery state;
+  do not mirror-push them.
 
 ## Latest checkpoint
 
-- Local checkpoint commit: `Checkpoint import, reporting, and privacy improvements`.
+- Local checkpoint commits: `Checkpoint import, reporting, and privacy improvements`
+  and `Checkpoint public history privacy scrub`; a further privacy checkpoint
+  is pending after source and history remediation.
 - No remote is configured; no push was performed.
 - Recent validation passed: resource audits, 587 frontend tests, Svelte check,
   frontend build, 121 Rust tests, reproducibility audit, and Git whitespace

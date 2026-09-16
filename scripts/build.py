@@ -22,13 +22,13 @@ Flags:
   --lint-only        run lint and exit, do not build
 
 Config (DNA_Tools/.env or Remote_Build/.env):
-  REMOTE_HOST          Ubuntu builder IP    (default: 192.168.1.21)
-  REMOTE_USER          builder SSH user     (default: builder-user)
-  REMOTE_DIR           staging dir on host  (default: /home/builder-user/dna_tools)
-  VM_HOST              macOS guest IP       (default: 192.168.122.142)
-  VM_USER              macOS guest SSH user (default: builder-user)
+  REMOTE_HOST          Ubuntu builder hostname or IP
+  REMOTE_USER          builder SSH user
+  REMOTE_DIR           staging directory on builder
+  VM_HOST              macOS guest hostname or IP
+  VM_USER              macOS guest SSH user
   VM_SSH_KEY           SSH key path         (default: ~/.ssh/id_ed25519)
-  GUEST_DIR            macOS guest workdir  (default: /Users/{VM_USER}/dna_tools)
+  GUEST_DIR            macOS guest work directory
   WIN_VM_HOST          WinServer guest IP   (unset = Windows disabled)
   WIN_VM_USER          WinServer SSH user   (unset = Windows disabled)
   WIN_GUEST_DIR        WinServer workdir    (default: C:/Users/{WIN_VM_USER}/dna_tools)

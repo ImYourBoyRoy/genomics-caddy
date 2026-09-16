@@ -134,8 +134,8 @@ Profile lifecycle is explicit: importing into an existing profile name opens a R
 * **Session Token Tracker:** Live statistics bar in the sidebar tracking accumulated prompt, response, and total tokens. Includes a visual context gauge reflecting how much of the context window has been consumed.
 * **Prompt Context Inspector:** Collapse/expand modal that lets you audit the exact system prompt and JSON context payload currently being sent to the AI.
 * **Copy & Export Options:** Instantly copy assistant responses to the clipboard (stripping raw thinking tags) or export entire conversations as Markdown files saved locally.
-* **Global Dialog State Store:** Extracted custom alert and confirmation dialog states into a global, reactive Svelte 5 store ([dialogState.svelte.ts](src/lib/utils/dialogState.svelte.ts)), replacing browser popups and component prop boilerplate.
-* **Session Management Serialization:** Offloaded session loading, saving, and template factory creation to [chatSession.ts](src/lib/utils/chatSession.ts) to keep components modular and under 500 lines.
+* **Global Dialog State Store:** Extracted custom alert and confirmation dialog states into a global, reactive Svelte 5 store ([`src/lib/utils/dialogState.svelte.ts`](src/lib/utils/dialogState.svelte.ts)), replacing browser popups and component prop boilerplate.
+* **Session Management Serialization:** Offloaded session loading, saving, and template factory creation to [`src/lib/utils/chatSession.ts`](src/lib/utils/chatSession.ts) to keep components modular and under 500 lines.
 * **Privacy Controls:** Choose which trait packs to feed into the model, and toggle the `Only active findings (effect > 0)` option to restrict context strictly to positive variants, saving tokens and preserving privacy.
 * **Anti-Hallucination Formatting:** Uses bullet-point structures and clear bracketed markers rather than numbered lists to prevent low-parameter models (like `gemma4:e4b` or `tinyllama`) from mimicking the prompt rules.
 * **Strict Parameters:** Enforces `temperature: 0.0` in Ollama options by default to completely eliminate genomic hallucinations.
@@ -415,7 +415,7 @@ Add the server configuration to your global `claude_desktop_config.json` (`%APPD
         "command": "pnpm",
         "args": ["run", "mcp"],
         "options": {
-          "cwd": "/path/to/AI/DNA_Tools"
+          "cwd": "C:/path/to/DNA_Tools"
         }
       }
     }
@@ -667,7 +667,7 @@ Large offline raw downloads (uncompressed text/JSON over ~64 MiB) are gzip-com
 
 ## 🔧 Troubleshooting Remote Ollama Servers
 
-If you are connecting to a remote Ollama server (e.g., `http://192.168.1.21:11434`) and your chat consultation responses are failing, review these issues:
+If you are connecting to a remote Ollama server (for example, `http://ollama.example.net:11434`) and your chat consultation responses are failing, review these issues:
 
 ### 1. Connection Refused
 * **Problem:** Ollama is only listening on `localhost:11434` on the remote machine.

@@ -75,7 +75,7 @@
     qdrant: {
       label: "Qdrant",
       urlLabel: "Qdrant URL",
-      urlPlaceholder: "http://192.168.1.21:6333 or http://127.0.0.1:6333",
+      urlPlaceholder: "http://qdrant.local:6333 or http://127.0.0.1:6333",
       collectionLabel: "Collection",
       collectionHint: "Existing collection name (created from Research or Connections).",
       needsCollection: true,

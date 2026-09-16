@@ -10,7 +10,7 @@
 #   bash scripts/smoketest_macos.sh [--verbose]
 #
 # Inputs:
-#   - Root `.env` REMOTE_*/VM_*/GUEST_DIR (optional; DNA defaults below)
+#   - Root `.env` REMOTE_*/VM_*/GUEST_DIR or exported environment values
 #   - SSH key from VM_SSH_KEY (default ~/.ssh/id_ed25519)
 #
 # Outputs:
@@ -48,13 +48,12 @@ if [[ -f "$ENV_FILE" ]]; then
   done < "$ENV_FILE"
 fi
 
-REMOTE_HOST="${REMOTE_HOST:-192.168.1.21}"
-REMOTE_USER="${REMOTE_USER:-builder-user}"
-# Production guest is Tahoe domain macOS @ .142 (Sonoma rollback was typically .75).
-VM_HOST="${VM_HOST:-192.168.122.142}"
-VM_USER="${VM_USER:-guest-user}"
+REMOTE_HOST="${REMOTE_HOST:?Set REMOTE_HOST in .env or the environment}"
+REMOTE_USER="${REMOTE_USER:?Set REMOTE_USER in .env or the environment}"
+VM_HOST="${VM_HOST:?Set VM_HOST in .env or the environment}"
+VM_USER="${VM_USER:?Set VM_USER in .env or the environment}"
 VM_SSH_KEY="${VM_SSH_KEY:-$HOME/.ssh/id_ed25519}"
-GUEST_DIR="${GUEST_DIR:-/Users/${VM_USER}/dna_tools}"
+GUEST_DIR="${GUEST_DIR:?Set GUEST_DIR in .env or the environment}"
 
 # Expand ~ in key path
 SSH_KEY="${VM_SSH_KEY/#\~/$HOME}"

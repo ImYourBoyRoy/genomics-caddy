@@ -15,7 +15,7 @@ All commands are delivered via stdin (bash -s) through the builder jump-host,
 so no secrets appear in argv or SSH command strings.
 
 Inputs:
-  guest_dir:  Path on the macOS guest where sources are ready (e.g. /Users/guest-user/dna_tools)
+  guest_dir:  Path on the macOS guest where sources are ready (e.g. ~/dna_tools)
   clean:      If True, run `cargo clean` before building (cold build)
   settings:   Remote_Build Settings
 
@@ -31,7 +31,7 @@ from remote_build.ssh import vm_ssh
 _BUILD_SCRIPT = r"""
 set -euo pipefail
 source ~/.cargo/env 2>/dev/null || true
-export PATH="/Users/guest-user/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 GUEST_DIR='{guest_dir}'
 cd "$GUEST_DIR/src-tauri"

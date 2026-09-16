@@ -51,6 +51,7 @@ output/playwright/
 /MEMORY.local.md
 /*_tasklist.md
 /*_strategy.md
+/Toolkit_Enhancement_Plan.md
 
 # Dependency lockfiles are intentionally not retained for local build testing.
 package-lock.json

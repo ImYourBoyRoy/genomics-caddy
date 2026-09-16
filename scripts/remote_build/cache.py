@@ -35,7 +35,7 @@ _PURGEABLE_SUBDIRS = ["build", "deps", "incremental", ".fingerprint"]
 _MACOS_PURGE_SCRIPT_INCREMENTAL = """
 set -euo pipefail
 source ~/.cargo/env 2>/dev/null || true
-export PATH="/Users/guest-user/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 GUEST_DIR='{guest_dir}'
 TARGETS=(
@@ -73,7 +73,7 @@ echo "PURGE_OK"
 _MACOS_PURGE_SCRIPT_FULL = """
 set -euo pipefail
 source ~/.cargo/env 2>/dev/null || true
-export PATH="/Users/guest-user/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 GUEST_DIR='{guest_dir}'
 echo "[CACHE] Full cargo clean — macOS"

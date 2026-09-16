@@ -35,9 +35,9 @@ describe("ollamaSettings", () => {
   });
 
   it("persists and reloads URL", () => {
-    saveOllamaUrl("http://192.168.1.10:11434");
-    expect(localStorage.getItem(OLLAMA_URL_STORAGE_KEY)).toBe("http://192.168.1.10:11434");
-    expect(loadOllamaUrl()).toBe("http://192.168.1.10:11434");
+    saveOllamaUrl("http://ollama.example.test:11434");
+    expect(localStorage.getItem(OLLAMA_URL_STORAGE_KEY)).toBe("http://ollama.example.test:11434");
+    expect(loadOllamaUrl()).toBe("http://ollama.example.test:11434");
   });
 
   it("trims whitespace on save", () => {
@@ -55,10 +55,10 @@ describe("ollamaSettings", () => {
     expect(classifyOllamaEndpoint("http://127.0.0.1:11434")).toBe("local");
     expect(classifyOllamaEndpoint("http://localhost:11434")).toBe("local");
     expect(classifyOllamaEndpoint("http://[::1]:11434")).toBe("local");
-    expect(classifyOllamaEndpoint("http://192.168.1.10:11434")).toBe("remote");
+    expect(classifyOllamaEndpoint("http://ollama.example.test:11434")).toBe("remote");
     expect(classifyOllamaEndpoint("not a URL")).toBe("remote");
     expect(classifyOllamaEndpoint(" ")).toBe("unconfigured");
     expect(ollamaRawDataDisclosure("not a URL")).toContain("invalid");
-    expect(ollamaRawDataDisclosure("http://192.168.1.10:11434")).toContain("leave this device");
+    expect(ollamaRawDataDisclosure("http://ollama.example.test:11434")).toContain("leave this device");
   });
 });

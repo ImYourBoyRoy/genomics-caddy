@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
 Purpose: Exercise the desktop Tauri update path against a disposable fixture.
-How to run: `npm run audit:tauri-update`.
+How to run: `pnpm run audit:tauri-update`.
 Outputs: Aggregate phase, status, and report-readiness results only.
 Privacy: Uses a synthetic sample and the public liftover chain; never prints
 sample names, genotype calls, local paths, or report text.
@@ -16,6 +16,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const projectRoot = resolve(new URL("..", import.meta.url).pathname);
 const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
+const bridgeToken = process.env.GENOMICS_AGENT_UI_TOKEN?.trim();
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_UPDATE_TIMEOUT_MS, 120_000);
 const pollMs = 10;
 const execFileAsync = promisify(execFile);
@@ -38,6 +39,7 @@ async function request(path, options = {}) {
     headers: {
       Accept: "application/json",
       ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(bridgeToken ? { "X-Genomics-Agent-Ui-Token": bridgeToken } : {}),
       ...(options.headers || {}),
     },
   });
@@ -205,7 +207,7 @@ async function runDesktopUpdateFlow(simulateFailure) {
   let child;
   const phases = new Set();
   try {
-    child = spawn("npm", ["run", "tauri:dev"], {
+    child = spawn("pnpm", ["run", "tauri:dev"], {
       cwd: projectRoot,
       env: { ...process.env, GENOMICS_DATA_DIR: fixtureDir },
       stdio: ["ignore", "ignore", "ignore"],

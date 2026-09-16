@@ -96,7 +96,8 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('# Personal Simple Genomics Report');
     expect(output).toContain('- Sex: Female');
     expect(output).not.toContain('Female-like');
-    expect(output).toContain('This result relates to a biological pathway studied in research');
+    expect(output).toContain('What this might mean: A biological pathway signal is present.');
+    expect(output).toContain('- Direction: Context-dependent');
     expect(output).not.toContain('SYNTHETIC_CALL');
     expect(output).not.toContain('Technical impact text');
     expect(output).not.toContain('Clinical interpretation text');
@@ -108,7 +109,7 @@ describe('audience-specific report exports', () => {
       audience: 'clinician',
       report: report([marker(), marker({ link_id: 'test:marker-2', rsid: 'rs456' })]),
       sample,
-      includeRawGenotypes: true,
+      includeRawGenotypes: false,
     });
 
     expect(output).toContain('# Clinician Handoff');
@@ -118,21 +119,68 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('Interpretation class: Research context');
     expect(output).toContain('Inheritance model: Not established');
     expect(output).toContain('Clinical state: Not determined from this DNA result');
+    expect(output).toContain('Orientation: Orientation check not required');
     const referenceId = reportReferenceId(marker().sources[0]);
     expect(output.match(new RegExp(`### ${referenceId} —`, 'g'))).toHaveLength(1);
     expect(output.match(/### REF-[A-F0-9]{8} —/g)).toHaveLength(1);
   });
 
-  it('includes explicit anti-diagnosis instructions in AI Review exports', () => {
+  it('enumerates incomplete PGx components in technical handoffs', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'clinician',
+      report: report([marker({
+        rsid: 'rs4244285',
+        gene: 'CYP2C19',
+        variant_name: 'CYP2C19*2 component',
+      })]),
+      sample,
+    });
+
+    expect(output).toContain('## PGx component coverage');
+    expect(output).toContain('Coverage status: incomplete');
+    expect(output).toContain('Phenotype or dose from this export: not allowed');
+    expect(output).toContain('Complete CYP2C19 diplotype or phenotype');
+    expect(output).toContain('## PRS readiness');
+    expect(output).toContain('PRS entries remain unscored model specifications');
+  });
+
+  it('does not present a called but non-evaluated assertion as benign', () => {
+    const nonEvaluated = marker({
+      effect_count: null,
+      severity_class: 'not_evaluated',
+      assertion_status: 'NotEvaluated',
+      interpretation_allowed: false,
+    });
+    const personal = buildReportAudienceMarkdown({
+      audience: 'personal',
+      report: report([nonEvaluated]),
+      sample,
+    });
+    const clinician = buildReportAudienceMarkdown({
+      audience: 'clinician',
+      report: report([nonEvaluated]),
+      sample,
+    });
+
+    expect(personal).toContain('This assertion was not scored');
+    expect(personal).not.toContain('Normal / Benign');
+    expect(clinician).toContain('NotEvaluated');
+    expect(clinician).toContain('Callability: Not callable from this DNA representation');
+    expect(clinician).toContain('Assertion key: {');
+    expect(clinician).toContain('The raw call was not converted into a finding');
+  });
+
+  it('includes explicit evidence-boundary instructions in AI Review exports', () => {
     const output = buildReportAudienceMarkdown({
       audience: 'ai',
       report: report([marker()]),
       sample,
-      includeRawGenotypes: true,
+      includeRawGenotypes: false,
     });
 
     expect(output).toContain('# AI Review');
-    expect(output).toContain('Do not diagnose');
+    expect(output).toContain('Do not assign disease probabilities or convert marker counts into a diagnosis');
+    expect(output).toContain('a validated clinical result may establish a finding');
     expect(output).toContain('Raw genotype call: SYNTHETIC_CALL');
     expect(output).toContain(`Reference IDs: ${reportReferenceId(marker().sources[0])}`);
   });
@@ -155,6 +203,38 @@ describe('audience-specific report exports', () => {
     expect(output).not.toContain('Peanut: peanut, peanut butter, sauces');
     expect(output).not.toContain('Cold: cold air, water, or cold objects');
     expect(output).not.toContain('confirmed allergy');
+  });
+
+  it('includes named condition summaries with counts and clinical capability', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'personal',
+      report: report([marker({
+        rsid: 'rs2234693',
+        gene: 'ESR1',
+        link_id: 'test:pmdd',
+        effect_direction: 'risk',
+      })]),
+      sample,
+    });
+
+    expect(output).toContain('## Potential conditions & health patterns');
+    expect(output).toContain('PMDD-related steroid sensitivity');
+    expect(output).toContain('Indicators: 1 of 7 aligned; 1 callable');
+    expect(output).toContain('Relative signal: Limited relative signal');
+    expect(output).toContain('Clinical capability: Clinical evaluation is required');
+  });
+
+  it('keeps zero and partial condition coverage in technical handoffs', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'clinician',
+      report: report([marker({ rsid: 'rs2234693', gene: 'ESR1' })]),
+      sample,
+    });
+
+    expect(output).toContain('## Condition coverage');
+    expect(output).toContain('PMDD-related steroid sensitivity');
+    expect(output).toContain('Indicators: 1 available of 7; 1 callable; 1 aligned');
+    expect(output).toContain('absent from report: 6');
   });
 
   it('includes a concise grouped clinician request list for DNA-linked labs', () => {

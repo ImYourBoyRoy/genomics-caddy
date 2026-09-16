@@ -1,8 +1,10 @@
 // ./src/lib/utils/ollamaSettings.test.ts
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
+  classifyOllamaEndpoint,
   loadOllamaUrl,
   OLLAMA_URL_STORAGE_KEY,
+  ollamaRawDataDisclosure,
   saveOllamaUrl,
 } from "./ollamaSettings";
 
@@ -47,5 +49,16 @@ describe("ollamaSettings", () => {
     saveOllamaUrl("http://127.0.0.1:11434");
     saveOllamaUrl("  ");
     expect(localStorage.getItem(OLLAMA_URL_STORAGE_KEY)).toBeNull();
+  });
+
+  it("classifies local and remote endpoints for raw-data disclosure", () => {
+    expect(classifyOllamaEndpoint("http://127.0.0.1:11434")).toBe("local");
+    expect(classifyOllamaEndpoint("http://localhost:11434")).toBe("local");
+    expect(classifyOllamaEndpoint("http://[::1]:11434")).toBe("local");
+    expect(classifyOllamaEndpoint("http://192.168.1.10:11434")).toBe("remote");
+    expect(classifyOllamaEndpoint("not a URL")).toBe("remote");
+    expect(classifyOllamaEndpoint(" ")).toBe("unconfigured");
+    expect(ollamaRawDataDisclosure("not a URL")).toContain("invalid");
+    expect(ollamaRawDataDisclosure("http://192.168.1.10:11434")).toContain("leave this device");
   });
 });

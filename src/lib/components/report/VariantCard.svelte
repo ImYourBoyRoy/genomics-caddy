@@ -6,7 +6,7 @@
   import SourcesList from './SourcesList.svelte';
   import ConfirmWithList from './ConfirmWithList.svelte';
   import Tooltip from '../common/Tooltip.svelte';
-  import { getEffectCount, getEffectAllele } from '../../utils/genotype';
+  import { getEffectCount, getEffectAllele, isCallableGenotype } from '../../utils/genotype';
   import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
   import { getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle } from '../../utils/layperson';
   import {
@@ -15,6 +15,13 @@
     interpretationClassLabel,
     normalizeFindingSemantics,
   } from '../../utils/findingSemantics';
+  import {
+    callabilityExplanation,
+    callabilityStateForResult,
+    callabilityStateLabel,
+    orientationStateForResult,
+    orientationStateLabel,
+  } from '../../utils/callability';
   import type { VariantNavTarget } from '../../constants/traitCategories';
 
   interface Props {
@@ -24,6 +31,7 @@
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     relatedMarkerCount?: number;
+    showSharedInterpretationNote?: boolean;
   }
 
   let {
@@ -33,6 +41,7 @@
     highlightRsid = "",
     onNavigateToVariant,
     relatedMarkerCount = 1,
+    showSharedInterpretationNote = false,
   }: Props = $props();
 
   let effectCount = $derived(getEffectCount(marker));
@@ -42,6 +51,13 @@
   let simpleCopy = $derived(getSimpleFindingCopy(marker, laypersonTranslation));
   let simpleFindingTitle = $derived(simpleCopy.plain_title || getSimpleFindingTitle(laypersonTranslation.simpleImpact));
   let findingSemantics = $derived(normalizeFindingSemantics(marker));
+  let hasCallableGenotype = $derived(isCallableGenotype(marker.user_genotype));
+  let callabilityState = $derived(
+    marker.callability_state || callabilityStateForResult(marker.variant_type, marker.assertion_status),
+  );
+  let orientationState = $derived(
+    marker.orientation_state || orientationStateForResult(marker.assertion_status, marker.requires_orientation_verification),
+  );
 
   /** True when the variant was actually detected (not benign / no_data) */
   let isActiveFindings = $derived(
@@ -106,7 +122,7 @@
         {/if}
         <span class="rsid-sub">
           {marker.rsid}
-          {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+          {#if hasCallableGenotype}
             <span class="nav-links no-print">
               <button type="button" class="research-explore-link" aria-label="Open on genome map" onclick={() => onNavigateToVariant?.(marker.rsid, "map")}>🗺️</button>
               <button type="button" class="research-explore-link" aria-label="Open in raw browser" onclick={() => onNavigateToVariant?.(marker.rsid, "browser")}>🔍</button>
@@ -135,6 +151,7 @@
           <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
           {severity.plainLabel}
         </span>
+        <span class="simple-direction-label">{simpleCopy.direction_label}</span>
         {#if relatedMarkerCount > 1}
           <span class="related-finding-count">{relatedMarkerCount} related DNA findings</span>
         {/if}
@@ -253,6 +270,16 @@
         </div>
       {/if}
 
+      {#if viewMode === 'simple' && marker.population_rarity && marker.population_af != null}
+        <div class="enrichment-row simple-population-row">
+          <Tooltip label="gnomAD allele frequency" description="Population frequency context from the local gnomAD cache; this is not a personal disease probability.">
+            <span class="population-chip">
+              🌍 gnomAD: {marker.population_rarity} ({formatAf(marker.population_af)})
+            </span>
+          </Tooltip>
+        </div>
+      {/if}
+
       <!-- GWAS context (collapsed by default, expand on click) -->
       {#if viewMode !== 'simple' && marker.gwas_top_trait && marker.gwas_best_pvalue != null && marker.gwas_best_pvalue < 1e-5}
         <details class="gwas-detail">
@@ -283,6 +310,12 @@
             <span>{simpleCopy.review_action}</span>
           </div>
         </div>
+        {#if callabilityState !== 'callable'}
+          <div class="simple-callability-note" role="note">
+            <strong>Evaluation status</strong>
+            <span>{callabilityExplanation(callabilityState)}</span>
+          </div>
+        {/if}
 
         <!-- Secondary catalog context remains available in compact disclosures. -->
         <div class="simple-card-disclosures">
@@ -295,6 +328,8 @@
             <dl>
               <div><dt>Gene / marker</dt><dd>{marker.gene} · {marker.rsid}</dd></div>
               <div><dt>DNA call</dt><dd>{marker.user_genotype}</dd></div>
+              <div><dt>Callability</dt><dd>{callabilityStateLabel(callabilityState)}</dd></div>
+              <div><dt>Orientation</dt><dd>{orientationStateLabel(orientationState)}</dd></div>
               <div><dt>Evidence tier</dt><dd>{marker.evidence_tier}</dd></div>
               {#if findingSemantics.condition_label}
                 <div><dt>Condition / topic</dt><dd>{findingSemantics.condition_label}</dd></div>
@@ -323,11 +358,11 @@
                 </div>
               {/if}
             </dl>
-            {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+            {#if hasCallableGenotype}
               <ConfirmWithList confirmWith={marker.confirm_with} />
             {/if}
           </details>
-          {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+            {#if hasCallableGenotype}
             <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
           {/if}
         </div>
@@ -362,13 +397,17 @@
               </div>
               <div class="dual-row clinical-box">
                 <span class="dual-tag clinical-tag">🏥 Medical:</span>
-                <span class="clinical-text">{marker.interpretation}</span>
+                {#if showSharedInterpretationNote}
+                  <span class="clinical-text">Shared pathway context is shown once above.</span>
+                {:else}
+                  <span class="clinical-text">{marker.interpretation}</span>
+                {/if}
               </div>
             </div>
           {/if}
         </div>
 
-        {#if marker.user_genotype !== "--" && !marker.user_genotype.includes('-')}
+        {#if hasCallableGenotype}
           <ConfirmWithList confirmWith={marker.confirm_with} />
           <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
         {/if}
@@ -630,7 +669,8 @@
   }
 
   .simple-copy-label,
-  .simple-copy-evidence {
+  .simple-copy-evidence,
+  .simple-direction-label {
     color: var(--status-accent-text);
     font-size: 0.68rem;
     font-weight: 800;
@@ -647,6 +687,17 @@
     color: var(--text-muted);
     font-size: 0.64rem;
     letter-spacing: 0.04em;
+    text-transform: none;
+  }
+
+  .simple-direction-label {
+    align-self: start;
+    padding: 0.18rem 0.42rem;
+    border: 1px solid var(--status-accent-soft-border);
+    border-radius: 999px;
+    color: var(--status-accent-soft-text);
+    font-size: 0.66rem;
+    letter-spacing: 0.01em;
     text-transform: none;
   }
 
@@ -668,6 +719,28 @@
   }
 
   .simple-next-step span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .simple-callability-note {
+    display: flex;
+    min-width: 0;
+    grid-column: 1 / -1;
+    gap: 0.35rem;
+    padding: 0.48rem 0.6rem;
+    border-left: 2px solid var(--status-warning-border);
+    border-radius: 0.25rem;
+    background: var(--status-warning-bg);
+    color: var(--text-secondary);
+  }
+
+  .simple-callability-note strong {
+    flex: 0 0 auto;
+    color: var(--status-warning-text);
+  }
+
+  .simple-callability-note span {
     min-width: 0;
     overflow-wrap: anywhere;
   }
@@ -800,8 +873,11 @@
 
   .simple-card-disclosures summary {
     display: flex;
+    min-width: 0;
     min-height: 2rem;
     align-items: center;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   :global(.simple-card-disclosures > .marker-sources-details[open] summary) {

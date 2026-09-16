@@ -15,11 +15,13 @@ import allergySensitivityCatalog from '../marker-packs/allergy_sensitivity_catal
 import callabilityRules from '../marker-packs/callability_rules.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import consultationModes from '../marker-packs/consultation_modes.json';
+import conditionIntegrations from '../marker-packs/condition_integrations.json';
 import dietPatternProfiles from '../marker-packs/diet_pattern_profiles.json';
 import dietaryRequirements from '../marker-packs/dietary_requirements.json';
 import evidencePolicy from '../marker-packs/evidence_policy.json';
 import foodNutrientMatrix from '../marker-packs/food_nutrient_matrix.json';
 import foodRequirementPrompts from '../marker-packs/food_requirement_prompts.json';
+import inflammationSupportGuidance from '../marker-packs/inflammation_support_guidance.json';
 import labOverlays from '../marker-packs/lab_overlays.json';
 import mealPlanningRules from '../marker-packs/meal_planning_rules.json';
 import phenotypePrompts from '../marker-packs/phenotype_prompts.json';
@@ -65,6 +67,7 @@ export interface SupportResourceContext {
     do_not_do: typeof supplementSafety.do_not_do;
   };
   callability_rules: typeof callabilityRules.rules;
+  callability_registry: typeof callabilityRules.variant_type_registry;
   pgx_diplotype: {
     policy: typeof pgxDiplotypeGuidance.policy;
     genes: typeof pgxDiplotypeGuidance.genes;
@@ -74,12 +77,14 @@ export interface SupportResourceContext {
   };
   phenotype_prompts: typeof phenotypePrompts.domains;
   lab_overlays: Array<Record<string, unknown>>;
+  inflammation_support: typeof inflammationSupportGuidance;
   actionability_policy: {
     default_actionability?: string;
     confirm_with_cap?: number;
     safety_notes?: string[];
   };
   actionability_rules: Array<Record<string, unknown>>;
+  condition_integrations: typeof conditionIntegrations;
   food_safety: {
     priority_order: typeof dietaryRequirements.priority_order;
     profile_routes: typeof dietaryRequirements.profile_routes;
@@ -248,6 +253,7 @@ function supportSourceIds(
     ...activityGuardrails.sources,
     ...actionabilityGuidance.rules.flatMap((rule) => rule.sources || []),
     ...supplementSafety.rules.flatMap((rule) => rule.sources),
+    ...inflammationSupportGuidance.sources,
     ...relevantCycleDomains.flatMap((domain) => domain.sources || []),
     ...selectPhenotypeDomains(selectedPackIds).flatMap((domain) => domain.sources || []),
   ]);
@@ -378,6 +384,7 @@ export function buildSupportResourceContext({
       do_not_do: supplementSafety.do_not_do,
     },
     callability_rules: callabilityRules.rules,
+    callability_registry: callabilityRules.variant_type_registry,
     pgx_diplotype: {
       policy: pgxDiplotypeGuidance.policy,
       genes: pgxDiplotypeGuidance.genes,
@@ -387,6 +394,7 @@ export function buildSupportResourceContext({
     },
     phenotype_prompts: phenotype,
     lab_overlays: overlays,
+    inflammation_support: inflammationSupportGuidance,
     actionability_policy: {
       default_actionability: actionabilityGuidance.policy?.default_actionability,
       confirm_with_cap: actionabilityGuidance.policy?.confirm_with_cap,
@@ -408,6 +416,7 @@ export function buildSupportResourceContext({
       notes: rule.notes,
       sources: rule.sources,
     })),
+    condition_integrations: conditionIntegrations,
     food_safety: {
       priority_order: dietaryRequirements.priority_order,
       profile_routes: dietaryRequirements.profile_routes,

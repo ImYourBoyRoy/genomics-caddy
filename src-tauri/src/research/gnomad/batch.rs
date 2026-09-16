@@ -1,5 +1,5 @@
 // ./src-tauri/src/research/gnomad/batch.rs
-use super::config::load_gnomad_config;
+use super::config::load_effective_gnomad_config;
 use super::lookup::{VariantCoords, lookup_variant_coords, resolve_gnomad_context};
 use super::types::{
     GnomadBatchProgress, GnomadBatchRequest, GnomadLookupRequest, GnomadLookupStatus,
@@ -31,11 +31,7 @@ pub async fn prefetch_gnomad_batch(
         };
     }
 
-    let cfg = match crate::db::connect(db_path) {
-        Ok(conn) => load_gnomad_config(&conn).ok(),
-        Err(_) => None,
-    };
-    let Some(cfg) = cfg else {
+    let Ok(cfg) = load_effective_gnomad_config(db_path, data_dir).await else {
         return empty_progress(rsids.len());
     };
     if !cfg.enabled {
@@ -106,9 +102,8 @@ pub async fn batch_enrich_gnomad_context(
     let candidates = collect_candidates(db_path, &req, limit);
     let progress = prefetch_gnomad_batch(db_path, data_dir, req.sample_id, &candidates).await;
 
-    let cfg = crate::db::connect(db_path)
-        .ok()
-        .and_then(|conn| load_gnomad_config(&conn).ok())
+    let cfg = load_effective_gnomad_config(db_path, data_dir)
+        .await
         .unwrap_or_default();
 
     let mode = req

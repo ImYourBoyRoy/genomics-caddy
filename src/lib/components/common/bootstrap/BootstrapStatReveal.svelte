@@ -82,7 +82,6 @@
     border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 12px 8px;
-    animation: bootstrap-stat-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     position: relative;
     overflow: hidden;
   }

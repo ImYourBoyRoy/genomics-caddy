@@ -131,7 +131,7 @@ def main() -> None:
 
     # 0. Build the frontend locally first
     print("[LOCAL BUILD] Compiling Svelte frontend assets locally...")
-    run_local(["npm", "run", "build"])
+    run_local(["pnpm", "run", "build"])
 
     # 1. Create tarball of current workspace (excluding build caches, but including the compiled frontend build/ directory)
     print("[PACKAGING] Creating workspace tarball...")

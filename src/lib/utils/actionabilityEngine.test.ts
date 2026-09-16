@@ -82,6 +82,14 @@ describe('actionability engine safety policy', () => {
     expect(plan.topFindings).toHaveLength(9);
   });
 
+  it('recognizes Rust snake_case verified calls in priority selection', () => {
+    const plan = deriveActionablePlan(report([marker({
+      assertion_status: 'verified' as EvaluatedMarker['assertion_status'],
+    })]));
+
+    expect(plan.topFindings).toHaveLength(1);
+  });
+
   it('removes harmless cancer-language markers from the concern queue', () => {
     const plan = deriveActionablePlan(report([marker({
       rsid: 'rs-harmless-repair',
@@ -119,6 +127,36 @@ describe('actionability engine safety policy', () => {
 
     expect(plan.topFindings).toHaveLength(1);
     expect(plan.topFindings[0]?.priority_group).toBe('clinical-medication:CYP2C9');
+    expect(plan.topFindings[0]?.related_marker_count).toBe(2);
+  });
+
+  it('keeps mixed warfarin component directions visible in the grouped queue title', () => {
+    const plan = deriveActionablePlan(report([
+      marker({
+        rsid: 'rs9923231',
+        gene: 'VKORC1',
+        link_id: 'test:warfarin:vkorc1',
+        variant_name: 'VKORC1 -1639G>A warfarin sensitivity marker',
+        impact: 'Lower VKORC1 expression / lower warfarin dose requirement',
+        interpretation: 'A-carriers generally require lower doses.',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+      }),
+      marker({
+        rsid: 'rs2108622',
+        gene: 'CYP4F2',
+        link_id: 'test:warfarin:cyp4f2',
+        variant_name: 'CYP4F2 V433M warfarin dose marker',
+        impact: 'Reduced vitamin K oxidation / higher warfarin dose requirement tendency',
+        interpretation: 'The T allele can increase warfarin dose requirements modestly.',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+      }),
+    ]));
+
+    expect(plan.topFindings).toHaveLength(1);
+    expect(plan.topFindings[0]?.plain_title).toBe('Warfarin dosing — mixed lower-/higher-dose components');
+    expect(plan.topFindings[0]?.direction_label).toBe('Mixed lower-/higher-dose components');
     expect(plan.topFindings[0]?.related_marker_count).toBe(2);
   });
 
@@ -271,11 +309,10 @@ describe('actionability engine safety policy', () => {
     ]));
 
     expect(plan.topFindings[0]?.gene).toBe('CYP2C9');
-    expect(plan.topFindings[0]?.priority_reason).toBe('Check before exposure');
+    expect(plan.topFindings[0]?.priority_reason).toBe('Medication safety check');
     expect(plan.topFindings[0]?.priority_urgency).toBe('safety');
     expect(plan.topFindings[0]?.priority_tone).toBe('danger');
-    expect(plan.topFindings[1]?.priority_reason).toBe('Worth discussing');
-    expect(plan.topFindings[1]?.priority_tone).toBe('warning');
+    expect(plan.topFindings).toHaveLength(1);
   });
 
   it('labels lower-evidence context without turning it into a danger state', () => {
@@ -285,7 +322,7 @@ describe('actionability engine safety policy', () => {
       effect_direction: 'context_dependent',
     }));
 
-    expect(priority.reason).toBe('Research context');
+    expect(priority.reason).toBe('Research signal');
     expect(priority.urgency).toBe('research');
     expect(priority.tone).toBe('info');
   });
@@ -367,7 +404,11 @@ describe('actionability engine safety policy', () => {
       basis_rule_ids: ['apoe_lipid'],
       basis_topic_ids: ['apoe_lipid'],
       basis_marker_ids: ['rs429358'],
+      basis_marker_link_ids: ['test:marker'],
       basis_genes: ['APOE'],
+      basis_marker_count: 1,
+      basis_rule_count: 1,
+      dna_basis: 'APOE · 1 marker · Moderate evidence',
       evidence_level: 'Moderate evidence',
     });
     expect(fish?.why_it_appears).toContain('APOE');
@@ -377,6 +418,29 @@ describe('actionability engine safety policy', () => {
     expect(omega3?.basis_marker_ids).toContain('rs174547');
     expect(plan.diet.favor).toContain(fish?.name);
     expect(plan.supplements.map((item) => item.name)).toContain(omega3?.name);
+  });
+
+  it('routes canonical inflammatory markers to concise food, routine, activity, and lab context', () => {
+    const plan = deriveActionablePlan(report([marker({
+      rsid: 'rs1800795',
+      gene: 'IL6',
+      variant_name: 'IL6 inflammatory signaling context',
+      interpretation: 'IL6 inflammatory signaling context; not diagnostic.',
+      severity_class: 'context_dependent',
+      effect_direction: 'context_dependent',
+      evidence_tier: 'D_research_only',
+    })]));
+
+    expect(plan.diet.favor).toEqual(expect.arrayContaining([
+      'Vegetables, fruit, beans, and whole grains',
+      'Olive oil, nuts, and seeds',
+      'Fatty fish or another omega-3 food source',
+    ]));
+    expect(plan.diet.favor).not.toContain('Protect a regular sleep opportunity and use recovery days');
+    expect(plan.advancedGuidance.join(' ')).toContain('regular sleep opportunity');
+    expect(plan.activity.relevantDomains.map((domain) => domain.id)).toContain('inflammation_recovery');
+    expect(plan.activity.recommendationItems.some((item) => item.name.includes('regular sleep opportunity'))).toBe(true);
+    expect(plan.labTests.map((test) => test.canonical_id)).toEqual(expect.arrayContaining(['hs_crp', 'crp', 'esr']));
   });
 
   it('retains matched marker provenance for DNA-linked activity recommendations', () => {
@@ -407,6 +471,8 @@ describe('actionability engine safety policy', () => {
       basis_topic_ids: ['muscle_performance_recovery'],
       basis_marker_ids: ['test:actn3'],
       basis_genes: ['ACTN3'],
+      basis_marker_count: 1,
+      basis_rule_count: 1,
     });
   });
 
@@ -549,7 +615,7 @@ describe('actionability engine safety policy', () => {
     const medicationText = plan.medication.rules.join(' ');
 
     expect(plan.labTests.some((test) => test.name.includes('DXA/BMD'))).toBe(true);
-    expect(plan.labTests.some((test) => test.name.includes('fecal calprotectin'))).toBe(true);
+    expect(plan.labTests.some((test) => /fecal calprotectin/i.test(test.name))).toBe(true);
     expect(plan.labTests.some((test) => test.name.includes('tTG-IgA'))).toBe(true);
     expect(dietAvoidance).not.toContain('lifelong gluten avoidance');
     expect(plan.advancedGuidance.join(' ')).toContain('lifelong gluten avoidance');
@@ -848,6 +914,11 @@ describe('actionability engine safety policy', () => {
     expect(plan.pgxGuidance.relevantGenes.find((gene) => gene.id === 'CYP2C19')?.clinical_next_step)
       .toContain('clinical PGx interpretation');
     expect(plan.pgxGuidance.policy.display_rule).toContain('never assign');
+    const cyp2c19Coverage = plan.pgxGuidance.componentCoverage.find((pathway) => pathway.id === 'CYP2C19');
+    expect(cyp2c19Coverage?.status).toBe('incomplete');
+    expect(cyp2c19Coverage?.callable_marker_ids).toContain('rs4244285');
+    expect(cyp2c19Coverage?.missing_from_report_marker_ids.length).toBeGreaterThan(0);
+    expect(cyp2c19Coverage?.phenotype_or_dose_allowed).toBe(false);
   });
 
   it('surfaces named medication pathways without turning raw SNPs into prescriptions', () => {
@@ -870,12 +941,12 @@ describe('actionability engine safety policy', () => {
     expect(medicationText).not.toContain('Change warfarin dose');
 
     expect(plan.medicationPathways.map((pathway) => pathway.label)).toEqual(expect.arrayContaining([
-      'Clopidogrel',
-      'Warfarin',
-      'Statins',
-      'Codeine & tramadol',
-      'Tamoxifen',
-      'SSRIs & related antidepressants',
+      'Clopidogrel — reduced-function component',
+      'Warfarin — lower-dose requirement tendency',
+      'Statins — direction incomplete',
+      'Codeine & tramadol — reduced-function component',
+      'Tamoxifen — reduced-function component',
+      'SSRIs & related antidepressants — reduced-function component',
     ]));
     expect(plan.medicationPathways.every((pathway) => !pathway.detail.toLowerCase().includes('raw dna'))).toBe(true);
   });

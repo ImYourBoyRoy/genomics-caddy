@@ -13,16 +13,21 @@
   Key Outputs: Custom UI overlay.
   */
 
+  function dismissDialog(cancelled = false) {
+    if (dialogStore.state.busy) return;
+    dialogStore.close({ cancelled });
+  }
+
   function handleDialogKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      dialogStore.close();
+      dismissDialog(dialogStore.state.type === 'confirm');
     }
     event.stopPropagation();
   }
 </script>
 
 {#if dialogStore.state.show}
-  <div class="modal-backdrop dialog-backdrop" onclick={() => dialogStore.close()} role="presentation">
+  <div class="modal-backdrop dialog-backdrop" onclick={() => dismissDialog(dialogStore.state.type === 'confirm')} role="presentation">
     <div
       class="modal-content dialog-content"
       onclick={(e) => e.stopPropagation()}
@@ -39,7 +44,7 @@
           type="button"
           class="modal-close"
           aria-label="Close dialog"
-          onclick={() => dialogStore.close()}
+          onclick={() => dismissDialog(dialogStore.state.type === 'confirm')}
         >&times;</button>
       </div>
       <div class="modal-body dialog-body">
@@ -47,10 +52,12 @@
       </div>
       <div class="modal-footer dialog-footer">
         {#if dialogStore.state.type === "confirm"}
-          <button type="button" class="btn btn-secondary" onclick={() => dialogStore.close()}>Cancel</button>
-          <button type="button" class="btn btn-accent" onclick={() => dialogStore.handleConfirm()}>Confirm</button>
+          <button type="button" class="btn btn-secondary" disabled={dialogStore.state.busy} onclick={() => dismissDialog(true)}>Cancel</button>
+          <button type="button" class="btn btn-accent" disabled={dialogStore.state.busy} aria-busy={dialogStore.state.busy ? 'true' : undefined} onclick={() => dialogStore.handleConfirm()}>
+            {dialogStore.state.busy ? 'Working…' : 'Confirm'}
+          </button>
         {:else}
-          <button type="button" class="btn btn-accent" onclick={() => dialogStore.close()}>OK</button>
+          <button type="button" class="btn btn-accent" onclick={() => dismissDialog(false)}>OK</button>
         {/if}
       </div>
     </div>
@@ -65,7 +72,6 @@
     width: 100vw;
     height: 100vh;
     background: var(--modal-backdrop-bg);
-    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -149,8 +155,9 @@
 
   .dialog-backdrop {
     background: var(--modal-backdrop-bg);
-    backdrop-filter: blur(12px);
-    z-index: 1110;
+    /* Confirmation and error dialogs must remain actionable above the
+       full-screen startup/import waterfall (z-index: 100000). */
+    z-index: 100100;
   }
 
   .dialog-content {

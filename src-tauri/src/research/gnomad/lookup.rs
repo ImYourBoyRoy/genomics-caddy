@@ -1,6 +1,6 @@
 // ./src-tauri/src/research/gnomad/lookup.rs
 use super::cache::read_cache_for_variant;
-use super::config::load_gnomad_config;
+use super::config::load_effective_gnomad_config;
 use super::graphql::fetch_graphql_context;
 use super::manifest::{GnomadReleaseManifest, get_or_build_manifest};
 use super::types::{
@@ -93,11 +93,7 @@ pub async fn get_gnomad_context(
     req: GnomadLookupRequest,
 ) -> GnomadContext {
     let (cfg, release, source_mode, force) = {
-        let conn = match crate::db::connect(db_path) {
-            Ok(c) => c,
-            Err(_) => return GnomadContext::empty(GnomadLookupStatus::ParserError),
-        };
-        let cfg = match load_gnomad_config(&conn) {
+        let cfg = match load_effective_gnomad_config(db_path, data_dir).await {
             Ok(c) => c,
             Err(e) => {
                 let mut ctx = GnomadContext::empty(GnomadLookupStatus::ParserError);
@@ -436,15 +432,9 @@ pub async fn fetch_gnomad_for_enrichment(
         return (None, GnomadContext::empty(GnomadLookupStatus::NotQueried));
     }
 
-    let cfg = {
-        let conn = match crate::db::connect(db_path) {
-            Ok(c) => c,
-            Err(_) => return (None, GnomadContext::empty(GnomadLookupStatus::ParserError)),
-        };
-        match load_gnomad_config(&conn) {
-            Ok(c) => c,
-            Err(_) => return (None, GnomadContext::empty(GnomadLookupStatus::ParserError)),
-        }
+    let cfg = match load_effective_gnomad_config(db_path, data_dir).await {
+        Ok(c) => c,
+        Err(_) => return (None, GnomadContext::empty(GnomadLookupStatus::ParserError)),
     };
 
     if !cfg.enabled {

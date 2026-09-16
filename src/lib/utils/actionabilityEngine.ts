@@ -45,6 +45,11 @@ import {
   type CanonicalActionabilityLevel,
   type CanonicalCallState,
 } from './findingIdentity';
+import { buildConditionEvidenceSummaries, type ConditionEvidenceSummary } from './conditionEvidence';
+import { isCallableGenotype } from './genotype';
+import { getLaypersonTranslation, getSimpleFindingCopy } from './layperson';
+import { isVerifiedAssertionStatus } from './reportStatuses';
+import { derivePgxComponentCoverage, type PgxComponentCoverage } from './pgxCoverage';
 
 export interface TopFinding {
   /** Stable signal identity shared by all source rows for this finding. */
@@ -73,6 +78,10 @@ export interface TopFinding {
   applicability_scopes: string[];
   call_state: CanonicalCallState;
   reference_ids: string[];
+  /** The same direction-aware title shown by the Simple finding card. */
+  plain_title: string;
+  /** Concise direction label, such as lower-dose tendency or higher susceptibility. */
+  direction_label: string;
   /** Plain-language reason this finding appears in the first-screen queue. */
   priority_reason: string;
   /** Ordered urgency bucket used for ranking and visual tone. */
@@ -102,7 +111,15 @@ export interface RecommendationItem {
   basis_rule_ids: string[];
   basis_topic_ids: string[];
   basis_marker_ids: string[];
+  /** Stable report link IDs used to jump from a recommendation to its DNA rows. */
+  basis_marker_link_ids: string[];
   basis_genes: string[];
+  /** Distinct source markers supporting this recommendation after deduplication. */
+  basis_marker_count: number;
+  /** Number of authored rules that contributed to this recommendation. */
+  basis_rule_count: number;
+  /** Compact relationship label for simple users and exports. */
+  dna_basis: string;
   /** Short explanation of why this item appears for the loaded report. */
   why_it_appears: string;
   /** Highest evidence tier among the matched source markers. */
@@ -185,6 +202,7 @@ export interface MedicationSafetyGuidance {
 export interface MedicationPathway {
   id: string;
   label: string;
+  direction_label: string;
   genes: string[];
   detail: string;
   matchedMarkerCount: number;
@@ -202,6 +220,7 @@ export interface CycleSupportGuidance {
 export interface PgxInterpretationGuidance {
   policy: typeof pgxDiplotypeGuidance.policy;
   relevantGenes: typeof pgxDiplotypeGuidance.genes;
+  componentCoverage: PgxComponentCoverage[];
   doNotDo: typeof pgxDiplotypeGuidance.do_not_do;
 }
 
@@ -275,6 +294,8 @@ export interface PersonalContextGuidance {
 
 export interface ActionablePlan {
   topFindings: TopFinding[];
+  /** Named condition and health-pattern summaries derived from matched DNA signals. */
+  conditionEvidence: ConditionEvidenceSummary[];
   diet: DietaryGuidance;
   /** Fully qualified mixed-domain rule guidance for Clinical/AI consumers. */
   advancedGuidance: string[];
@@ -360,6 +381,7 @@ interface RecommendationAccumulator {
   basis_rule_ids: Set<string>;
   basis_topic_ids: Set<string>;
   basis_marker_ids: Set<string>;
+  basis_marker_link_ids: Set<string>;
   basis_genes: Set<string>;
   evidence_tiers: Set<string>;
   actionability_classes: Set<ActionabilityClass>;
@@ -381,6 +403,16 @@ function recommendationEvidenceLevel(evidenceTiers: Iterable<string>): string {
   if (strength === 2) return 'Limited evidence';
   if (strength === 1) return 'Research context';
   return 'Evidence not graded';
+}
+
+function recommendationBasisLabel(
+  genes: string[],
+  markerCount: number,
+  evidenceLevel: string,
+): string {
+  const pathway = genes.length > 0 ? genes.join(' · ') : 'curated pathway';
+  const markerLabel = `${markerCount} ${markerCount === 1 ? 'marker' : 'markers'}`;
+  return `${pathway} · ${markerLabel} · ${evidenceLevel}`;
 }
 
 function recommendationWhenRelevant(actionabilityClass: ActionabilityClass): string {
@@ -411,6 +443,7 @@ function addRecommendation(
     basis_rule_ids: new Set<string>(),
     basis_topic_ids: new Set<string>(),
     basis_marker_ids: new Set<string>(),
+    basis_marker_link_ids: new Set<string>(),
     basis_genes: new Set<string>(),
     evidence_tiers: new Set<string>(),
     actionability_classes: new Set<ActionabilityClass>(),
@@ -422,6 +455,7 @@ function addRecommendation(
   current.basis_topic_ids.add(ruleId);
   matchingMarkers.forEach(({ marker }) => {
     if (marker.rsid) current.basis_marker_ids.add(marker.rsid);
+    if (marker.link_id || marker.rsid) current.basis_marker_link_ids.add(marker.link_id || marker.rsid);
     normalizedGeneSymbols(marker.gene).forEach((gene) => current.basis_genes.add(gene));
     if (marker.evidence_tier) current.evidence_tiers.add(marker.evidence_tier);
   });
@@ -436,16 +470,16 @@ function recommendationItems(
   map: Map<string, RecommendationAccumulator>,
 ): RecommendationItem[] {
   return Array.from(map.values())
-    .sort((left, right) => left.name.localeCompare(right.name))
     .map((item) => {
       const genes = Array.from(item.basis_genes).sort();
       const ruleIds = Array.from(item.basis_rule_ids).sort();
-      const reason = Array.from(item.reasons)[0];
+      const reasons = Array.from(item.reasons).filter(Boolean).sort();
       const actionabilityClass = item.actionability_classes.has('clinical_confirmation')
         ? 'clinical_confirmation'
         : item.actionability_classes.has('symptom_or_lab_conditioned')
           ? 'symptom_or_lab_conditioned'
           : 'general_wellness';
+      const evidenceLevel = recommendationEvidenceLevel(item.evidence_tiers);
       return {
         recommendation_id: `${item.category}:${normalizedDietaryTerm(item.name).replace(/[^a-z0-9]+/g, '-')}`,
         name: item.name,
@@ -453,21 +487,36 @@ function recommendationItems(
         basis_rule_ids: ruleIds,
         basis_topic_ids: Array.from(item.basis_topic_ids).sort(),
         basis_marker_ids: Array.from(item.basis_marker_ids).sort(),
+        basis_marker_link_ids: Array.from(item.basis_marker_link_ids).sort(),
         basis_genes: genes,
-        why_it_appears: reason || `Included because your report matched the ${genes.join('/')} pathway.`,
-        evidence_level: recommendationEvidenceLevel(item.evidence_tiers),
+        basis_marker_count: item.basis_marker_ids.size,
+        basis_rule_count: item.basis_rule_ids.size,
+        dna_basis: recommendationBasisLabel(genes, item.basis_marker_ids.size, evidenceLevel),
+        why_it_appears: reasons.length > 0
+          ? reasons.join(' ')
+          : `Included because your report matched the ${genes.join('/')} pathway.`,
+        evidence_level: evidenceLevel,
         when_relevant: recommendationWhenRelevant(actionabilityClass),
         conflicts: [],
       };
+    })
+    .sort((left, right) => {
+      const evidenceRank = (value: string) => value === 'Higher evidence' ? 4
+        : value === 'Moderate evidence' ? 3
+          : value === 'Limited evidence' ? 2
+            : value === 'Research context' ? 1
+              : 0;
+      return evidenceRank(right.evidence_level) - evidenceRank(left.evidence_level)
+        || right.basis_marker_count - left.basis_marker_count
+        || right.basis_rule_count - left.basis_rule_count
+        || left.name.localeCompare(right.name);
     });
 }
 
 function activityMarkerIsKnown(marker: EvaluatedMarker): boolean {
-  return marker.assertion_status === 'Verified'
+  return isVerifiedAssertionStatus(marker.assertion_status)
     && marker.interpretation_allowed !== false
-    && Boolean(marker.user_genotype)
-    && marker.user_genotype !== '--'
-    && !marker.user_genotype.includes('-');
+    && isCallableGenotype(marker.user_genotype);
 }
 
 function activityDomainMatchesMarker(
@@ -509,6 +558,7 @@ function buildActivityRecommendations(
         basis_rule_ids: new Set<string>(),
         basis_topic_ids: new Set<string>(),
         basis_marker_ids: new Set<string>(),
+        basis_marker_link_ids: new Set<string>(),
         basis_genes: new Set<string>(),
         evidence_tiers: new Set<string>(),
         actionability_classes: new Set<ActionabilityClass>(['general_wellness']),
@@ -518,6 +568,7 @@ function buildActivityRecommendations(
       current.basis_topic_ids.add(domain.id);
       matched.forEach(({ marker }) => {
         current.basis_marker_ids.add(marker.link_id || marker.rsid);
+        current.basis_marker_link_ids.add(marker.link_id || marker.rsid);
         normalizedGeneSymbols(marker.gene).forEach((gene) => current.basis_genes.add(gene));
         current.evidence_tiers.add(marker.evidence_tier);
       });
@@ -531,23 +582,31 @@ function buildActivityRecommendations(
   });
 
   const recommendations = Array.from(itemMaps.values())
-    .sort((left, right) => left.kind.localeCompare(right.kind) || left.name.localeCompare(right.name))
     .map((item) => ({
       recommendation_id: `activity:${item.kind}:${normalizedDietaryTerm(item.name).replace(/[^a-z0-9]+/g, '-')}`,
       name: item.name,
       category: 'activity' as const,
       kind: item.kind,
       basis_rule_ids: Array.from(item.basis_rule_ids).sort(),
-      basis_topic_ids: Array.from(item.basis_topic_ids).sort(),
-      basis_marker_ids: Array.from(item.basis_marker_ids).sort(),
+        basis_topic_ids: Array.from(item.basis_topic_ids).sort(),
+        basis_marker_ids: Array.from(item.basis_marker_ids).sort(),
+        basis_marker_link_ids: Array.from(item.basis_marker_ids).sort(),
       basis_genes: Array.from(item.basis_genes).sort(),
-      why_it_appears: Array.from(item.reasons)[0] || 'Included because the report matched a related DNA pathway.',
+      basis_marker_count: item.basis_marker_ids.size,
+      basis_rule_count: item.basis_rule_ids.size,
+      dna_basis: recommendationBasisLabel(Array.from(item.basis_genes).sort(), item.basis_marker_ids.size, activityEvidenceLevel(allMarkers
+        .filter(({ marker }) => item.basis_marker_ids.has(marker.link_id || marker.rsid))
+        .map(({ marker }) => marker))),
+      why_it_appears: Array.from(item.reasons).sort().join(' ') || 'Included because the report matched a related DNA pathway.',
       evidence_level: activityEvidenceLevel(allMarkers
         .filter(({ marker }) => item.basis_marker_ids.has(marker.link_id || marker.rsid))
         .map(({ marker }) => marker)),
       when_relevant: 'Most relevant when this pathway matches your training goals, symptoms, or recovery history.',
       conflicts: [],
-    }));
+    }))
+    .sort((left, right) => left.kind.localeCompare(right.kind)
+      || right.basis_marker_count - left.basis_marker_count
+      || left.name.localeCompare(right.name));
   return { domains: enrichedDomains, recommendations };
 }
 
@@ -646,9 +705,46 @@ const MEDICATION_PATHWAY_LABELS: Record<string, string> = {
   apol1_kidney_risk_context: 'Kidney medicines',
 };
 
-function medicationPathwayLabel(rule: ActionableRule): string {
-  if (rule.id && MEDICATION_PATHWAY_LABELS[rule.id]) return MEDICATION_PATHWAY_LABELS[rule.id];
-  return `${rule.genes.join(' / ')} medication pathway`;
+function medicationMarkerText(marker: EvaluatedMarker): string {
+  const annotations = [
+    ...(marker.pharmgkb_annotations || []),
+    ...(marker.pharmgkb ? [marker.pharmgkb] : []),
+  ];
+  return [
+    marker.variant_name,
+    marker.impact,
+    marker.interpretation,
+    ...annotations.flatMap((annotation) => [annotation.drug, annotation.phenotype]),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function medicationDirectionLabel(markers: EvaluatedMarker[]): string {
+  const labels = markers.map((marker) => {
+    const copy = getSimpleFindingCopy(marker, getLaypersonTranslation(marker));
+    return copy.direction_label;
+  });
+  const unique = [...new Set(labels)];
+  if (unique.length === 1 && unique[0]) return unique[0];
+  if (unique.some((label) => label.includes('Lower-dose')) && unique.some((label) => label.includes('Higher-dose'))) {
+    return 'Mixed lower-/higher-dose components';
+  }
+  if (unique.some((label) => label.includes('Reduced-function')) && unique.some((label) => label.includes('Increased-function'))) {
+    return 'Mixed reduced-/increased-function components';
+  }
+  if (unique.some((label) => label.includes('Possible sensitivity'))) return 'Possible sensitivity signal';
+  return 'Direction incomplete from these markers';
+}
+
+function medicationPathwayLabel(rule: ActionableRule, markers: EvaluatedMarker[] = []): string {
+  const base = rule.id && MEDICATION_PATHWAY_LABELS[rule.id]
+    ? MEDICATION_PATHWAY_LABELS[rule.id]
+    : 'Medication processing';
+  const direction = medicationDirectionLabel(markers);
+  return `${base} — ${direction.charAt(0).toLowerCase()}${direction.slice(1)}`;
 }
 
 function compactMedicationPathwayDetail(text: string): string {
@@ -769,7 +865,7 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
 
   if (marker.clinical_confirmation_required && isMedicationSafetyMarker(marker)) {
     return {
-      reason: 'Check before exposure',
+      reason: 'Medication safety check',
       urgency: 'safety',
       tone: 'danger',
       band: 6,
@@ -778,7 +874,7 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
 
   if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
     return {
-      reason: 'Clinical follow-up',
+      reason: 'Clinical review needed',
       urgency: 'clinical',
       tone: 'danger',
       band: 5,
@@ -787,7 +883,7 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
 
   if (marker.confirm_with.length > 0 || marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk') {
     return {
-      reason: 'Worth discussing',
+      reason: 'Review this signal',
       urgency: 'discussion',
       tone: 'warning',
       band: evidenceStrengthScore(marker) > 0 ? 4 : 3,
@@ -796,7 +892,7 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
 
   if (marker.effect_direction === 'risk' || marker.severity_class === 'low_risk') {
     return {
-      reason: 'Research context',
+      reason: 'Research signal',
       urgency: 'research',
       tone: 'info',
       band: evidenceStrengthScore(marker) > 0 ? 2 : 1,
@@ -804,7 +900,7 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
   }
 
   return {
-    reason: 'Research context',
+    reason: 'Research signal',
     urgency: 'research',
     tone: 'info',
     band: 1,
@@ -812,10 +908,8 @@ export function priorityMetadataForMarker(marker: EvaluatedMarker): PriorityMeta
 }
 
 function hasKnownMarkerCall(marker: EvaluatedMarker): boolean {
-  return marker.assertion_status === 'Verified'
-    && Boolean(marker.user_genotype)
-    && marker.user_genotype !== '--'
-    && !marker.user_genotype.includes('-');
+  return isVerifiedAssertionStatus(marker.assertion_status)
+    && isCallableGenotype(marker.user_genotype);
 }
 
 /**
@@ -827,6 +921,19 @@ function isExcludedFromPriorityQueue(marker: EvaluatedMarker): boolean {
   if (!hasKnownMarkerCall(marker)) return true;
   if (marker.effect_count === 0) return true;
   if (marker.severity_class === 'benign' || marker.severity_class === 'protective' || marker.severity_class === 'no_data') {
+    return true;
+  }
+
+  // A high-looking label without a concrete follow-up is not useful as a
+  // first-screen concern. Keep the complete finding in its health-area
+  // section, but reserve the queue for evidence or an authored route.
+  const hasConcreteRoute = marker.confirm_with.some((item) =>
+    !/^(?:clinical|medical|doctor|clinician|healthcare|specialist)\s+(?:review|confirmation|testing|evaluation)$/i.test(item.trim()),
+  );
+  if ((marker.severity_class === 'high_risk' || marker.severity_class === 'moderate_risk')
+      && evidenceStrengthScore(marker) === 0
+      && !hasConcreteRoute
+      && actionabilityRankingBoost(marker) === 0) {
     return true;
   }
 
@@ -844,12 +951,21 @@ function isExcludedFromPriorityQueue(marker: EvaluatedMarker): boolean {
 function priorityGroupForMarker(marker: EvaluatedMarker): string | undefined {
   if (!marker.clinical_confirmation_required) return undefined;
 
-  const authoredText = [marker.variant_name, marker.impact, marker.interpretation]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
+  const authoredText = medicationMarkerText(marker).toLowerCase();
   const isMedicationMarker = /\b(?:clinical pgx|warfarin|medication|drug|dose|haplotype|allele|star)\b/.test(authoredText);
   if (!isMedicationMarker) return undefined;
+
+  const medicationTopics: Array<[string, RegExp]> = [
+    ['warfarin', /warfarin/],
+    ['clopidogrel', /clopidogrel/],
+    ['statin', /statin|SLCO1B1/],
+    ['thiopurine', /thiopurine|TPMT|NUDT15/],
+    ['fluoropyrimidine', /fluorouracil|capecitabine|fluoropyrimidine|DPYD/],
+    ['tacrolimus', /tacrolimus|CYP3A5/],
+    ['HLA-drug-safety', /hypersensitivity|severe skin|HLA[-*]|drug-specific/],
+  ];
+  const medicationTopic = medicationTopics.find(([, pattern]) => pattern.test(authoredText))?.[0];
+  if (medicationTopic) return `clinical-medication:${medicationTopic}`;
 
   const genes = normalizedGeneSymbols(marker.gene).sort().join('/');
   return genes ? `clinical-medication:${genes}` : undefined;
@@ -1172,11 +1288,13 @@ function pgxGeneMatchesMarker(
 }
 
 function derivePgxInterpretationGuidance(markers: EvaluatedMarker[]): PgxInterpretationGuidance {
+  const relevantGenes = pgxDiplotypeGuidance.genes.filter((gene) =>
+    markers.some((marker) => pgxGeneMatchesMarker(gene, marker)),
+  );
   return {
     policy: pgxDiplotypeGuidance.policy,
-    relevantGenes: pgxDiplotypeGuidance.genes.filter((gene) =>
-      markers.some((marker) => pgxGeneMatchesMarker(gene, marker))
-    ),
+    relevantGenes,
+    componentCoverage: derivePgxComponentCoverage(markers),
     doNotDo: pgxDiplotypeGuidance.do_not_do,
   };
 }
@@ -1488,6 +1606,16 @@ export function deriveActionablePlan(
   }
 
   const canonicalFindingGroups = buildCanonicalFindingGroups(report);
+  const conditionEvidence = buildConditionEvidenceSummaries(report);
+  const priorityGroupMembers = new Map<string, EvaluatedMarker[]>();
+  for (const { marker } of allMarkers) {
+    if (!marker.interpretation_allowed || isExcludedFromPriorityQueue(marker)) continue;
+    const group = priorityGroupForMarker(marker);
+    if (!group) continue;
+    const members = priorityGroupMembers.get(group) || [];
+    members.push(marker);
+    priorityGroupMembers.set(group, members);
+  }
   const scoredFindings = canonicalFindingGroups
     .map((group) => {
       const eligibleSources = group.sourceMarkers.filter(({ marker }) =>
@@ -1512,6 +1640,21 @@ export function deriveActionablePlan(
       })[0];
       const marker = primarySource.marker;
       const priority = priorityMetadataForMarker(marker);
+      const simpleCopy = getSimpleFindingCopy(marker, getLaypersonTranslation(marker));
+      const priorityGroup = priorityGroupForMarker(marker);
+      const groupedMarkers = priorityGroup
+        ? priorityGroupMembers.get(priorityGroup) || eligibleSources.map(({ marker: sourceMarker }) => sourceMarker)
+        : eligibleSources.map(({ marker: sourceMarker }) => sourceMarker);
+      const groupedMedicationDirection = priorityGroup && /warfarin/i.test(
+        groupedMarkers.map(medicationMarkerText).join(' '),
+      )
+        ? medicationDirectionLabel(groupedMarkers)
+        : simpleCopy.direction_label;
+      const plainTitle = priorityGroup && /warfarin/i.test(
+        groupedMarkers.map(medicationMarkerText).join(' '),
+      )
+        ? `Warfarin dosing — ${groupedMedicationDirection.charAt(0).toLowerCase()}${groupedMedicationDirection.slice(1)}`
+        : simpleCopy.plain_title;
       // Actionability determines the queue band. Severity, evidence, and
       // authored follow-up value only refine ties within that band.
       const score = priority.band * 100000
@@ -1520,7 +1663,7 @@ export function deriveActionablePlan(
 
       return {
         score,
-        priorityGroup: priorityGroupForMarker(marker),
+        priorityGroup,
         finding: {
           finding_id: group.findingId,
           source_marker_ids: [...group.sourceMarkerIds],
@@ -1546,6 +1689,8 @@ export function deriveActionablePlan(
           applicability_scopes: [...group.applicability.scopes],
           call_state: group.callState,
           reference_ids: [...group.referenceIds],
+          plain_title: plainTitle,
+          direction_label: groupedMedicationDirection,
           priority_reason: priority.reason,
           priority_urgency: priority.urgency,
           priority_tone: priority.tone,
@@ -1634,7 +1779,8 @@ export function deriveActionablePlan(
       const pathwayId = rule.id || rule.genes.join('_').toLowerCase();
       medicationPathwaysMap.set(pathwayId, {
         id: pathwayId,
-        label: medicationPathwayLabel(rule),
+        label: medicationPathwayLabel(rule, matchingMarkers.map(({ marker }) => marker)),
+        direction_label: medicationDirectionLabel(matchingMarkers.map(({ marker }) => marker)),
         genes: [...rule.genes],
         detail: compactMedicationPathwayDetail(rule.medication_context[0]),
         matchedMarkerCount: matchingMarkers.length,
@@ -1859,6 +2005,7 @@ export function deriveActionablePlan(
 
   return {
     topFindings,
+    conditionEvidence,
     diet: {
       favor: candidateDietFavor.filter((item) => !foodSafety.suppressedSuggestions.includes(item)),
       avoid: dietaryAvoidItems.map((item) => item.name),

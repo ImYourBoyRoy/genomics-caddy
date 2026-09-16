@@ -9,7 +9,8 @@ Key Outputs: JSON result from window.__GENOMICS_CADDY_UI__.
 Operational Notes:
 - Loopback-only bind.
 - Enabled in debug builds by default; release requires GENOMICS_AGENT_UI=1.
-- When GENOMICS_AGENT_UI_TOKEN is set, /ui paths require Bearer or X-Genomics-Agent-Ui-Token.
+- /ui paths require GENOMICS_AGENT_UI_TOKEN by default.
+- Debug-only unauthenticated access requires the explicit GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1 opt-in.
 */
 
 use serde_json::{Value, json};
@@ -63,6 +64,17 @@ fn configured_token() -> Option<String> {
         .filter(|t| !t.is_empty())
 }
 
+fn allow_unauthenticated() -> bool {
+    cfg!(debug_assertions)
+        && matches!(
+            std::env::var("GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED")
+                .ok()
+                .as_deref()
+                .map(str::trim),
+            Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
+        )
+}
+
 fn extract_request_token(req: &str) -> Option<String> {
     for line in req.lines() {
         let Some((name, value)) = line.split_once(':') else {
@@ -87,17 +99,20 @@ fn extract_request_token(req: &str) -> Option<String> {
 }
 
 fn authorize_ui(req: &str) -> Result<(), String> {
-    let Some(expected) = configured_token() else {
-        return Ok(());
-    };
-    match extract_request_token(req) {
-        Some(got) if got == expected => Ok(()),
-        Some(_) => Err("Invalid agent UI token".into()),
-        None => Err(
-            "Agent UI token required (Authorization: Bearer … or X-Genomics-Agent-Ui-Token)"
-                .into(),
-        ),
+    if let Some(expected) = configured_token() {
+        return match extract_request_token(req) {
+            Some(got) if got == expected => Ok(()),
+            Some(_) => Err("Invalid agent UI token".into()),
+            None => Err(
+                "Agent UI token required (Authorization: Bearer … or X-Genomics-Agent-Ui-Token)"
+                    .into(),
+            ),
+        };
     }
+    if allow_unauthenticated() {
+        return Ok(());
+    }
+    Err("Agent UI token is not configured; set GENOMICS_AGENT_UI_TOKEN".into())
 }
 
 fn ensure_response_listener(app: &AppHandle) {
@@ -189,7 +204,7 @@ pub async fn agent_ui_invoke(
 pub fn start_http_bridge(app: AppHandle) {
     if !agent_ui_enabled() {
         eprintln!(
-            "Agent UI HTTP bridge disabled (release build). Set GENOMICS_AGENT_UI=1 to enable; optional GENOMICS_AGENT_UI_TOKEN for auth."
+            "Agent UI HTTP bridge disabled (release build). Set GENOMICS_AGENT_UI=1 to enable."
         );
         return;
     }
@@ -205,8 +220,10 @@ pub fn start_http_bridge(app: AppHandle) {
         };
         let auth_note = if configured_token().is_some() {
             " (token required for /ui/*)"
+        } else if allow_unauthenticated() {
+            " (debug-only unauthenticated bypass enabled)"
         } else {
-            " (no token configured — any local process can drive the UI)"
+            " (token required for /ui/*; set GENOMICS_AGENT_UI_TOKEN)"
         };
         eprintln!("Agent UI HTTP bridge listening on http://{addr}{auth_note}");
 
@@ -224,7 +241,7 @@ pub fn start_http_bridge(app: AppHandle) {
                 let req = String::from_utf8_lossy(&buf[..n]);
                 let (status, body) = handle_http_request(&app, &req).await;
                 let response = format!(
-                    "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\nAccess-Control-Allow-Origin: *\r\n\r\n{body}",
+                    "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
                     body.len()
                 );
                 let _ = socket.write_all(response.as_bytes()).await;
@@ -251,7 +268,7 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "service": "genomics-caddy-agent-ui",
                 "port": AGENT_UI_PORT,
                 "windows": app.webview_windows().len(),
-                "auth_required": configured_token().is_some(),
+                "auth_required": !allow_unauthenticated(),
             })
             .to_string(),
         );

@@ -1262,7 +1262,7 @@
       "rsid": "rs1800795",
       "gene": "IL6",
       "variant_name": "-174G>C promoter",
-      "effect_allele": "C",
+      "effect_allele": "G",
       "impact": "IL-6 inflammatory expression modifier",
       "evidence_tier": "D_research_only",
       "interpretation": "IL6 rs1800795 is a promoter variant studied in inflammatory signaling and CRP/cytokine contexts. Because associations vary by ancestry and condition, treat as a weak inflammatory-tone context marker only.",

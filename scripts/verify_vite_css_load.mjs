@@ -2,7 +2,7 @@
 // ./scripts/verify_vite_css_load.mjs
 /**
  * Purpose: Fail if Vite emits "failed to load virtual css module" for our Svelte components.
- * How to run: `npm run verify:css` (starts a temporary Vite dev server on :1420 — must be free).
+ * How to run: `pnpm run verify:css` (starts a temporary Vite dev server on :1420 — must be free).
  * Inputs: none.
  * Outputs: exit 0 on clean load; exit 1 with matching log lines on failure.
  */
@@ -67,7 +67,7 @@ async function main() {
   ];
 
   const logStream = createWriteStream(logPath, { flags: "w" });
-  const child = spawn("npm", ["run", "dev"], {
+  const child = spawn("pnpm", ["run", "dev"], {
     cwd: root,
     env: { ...process.env, FORCE_COLOR: "0" },
     stdio: ["ignore", "pipe", "pipe"],

@@ -7,6 +7,11 @@ inside this repository unless a task identifies a concrete external dependency.
 Raw DNA fixtures and local app data are private; do not print genotype values,
 copy them into logs, or commit secrets.
 
+Generated release staging under repository-root `builds/` and `App/` is local
+output and must remain untracked. Ignore app databases and SQLite sidecars in
+any `App/Data/` tree. The curated runtime mirror at
+`src-tauri/App/Data/marker-packs/` is source-managed and must remain tracked.
+
 ## Resource workflow
 
 - `src/lib/marker-packs/` is the curated source of marker packs and support
@@ -37,19 +42,44 @@ dirty worktree changes.
 For resource changes, run at minimum:
 
 ```text
-npm run validate:packs
-npm run audit:resources
-npm run audit:dna-fixtures
-npm test
-npm run check
-npm run build
-npm run cargo:test
+pnpm run validate:packs
+pnpm run audit:markers
+pnpm run audit:resources
+pnpm run audit:dna-fixtures
+pnpm test
+pnpm run check
+pnpm run build
+pnpm run cargo:test
 git diff --check
 ```
 
-For report/sidebar or other desktop UI changes, also run `npm run audit:tauri-ui`
-while the Tauri development window is running. This is the application-level
-fixture check; the Svelte renderer URL and browser preview are supplemental only.
+The dependency workflow is intentionally lock-free for local build testing:
+direct package versions are recorded in `package.json`, but npm/pnpm and Cargo
+lockfiles are not retained, and Rust validation/release commands must not use
+`--locked`. Use `node ./scripts/pnpm_unlocked.mjs install` for frontend dependency resolution;
+pnpm 12's resolver lock is kept in a temporary directory outside the repository
+and removed on exit. Run `node ./scripts/audit_reproducibility.mjs` when changing
+manifests or release workflow; it verifies the lock-free state and unlocked
+Cargo metadata.
+
+AI and clinician technical handoffs always include the exact raw calls used by
+their findings; the deprecated profile export toggles must not be reintroduced
+as suppression controls. Connected AI Chat includes raw calls for the findings
+selected by its persisted context mode and must disclose the destination when
+the Ollama endpoint is remote. Session context mode is persisted with chat
+history so reopening a session cannot silently change its genotype scope.
+
+GRCh37 and explicit GRCh38 imports are supported under the parser's
+1-based-inclusive contract. GRCh37 sources map forward when the local chain is
+available; GRCh38 sources retain their source coordinates and use validated
+inverse mapping for GRCh37 when available, leaving unmapped values explicit.
+
+For report/sidebar or other desktop UI changes, also run `pnpm run audit:tauri-ui`
+while the Tauri development window is running with `GENOMICS_AGENT_UI_TOKEN` set;
+pass the same token to the audit command. This is the application-level fixture
+check; the Svelte renderer URL and browser preview are supplemental only. The
+debug bridge requires that token for `/ui/*`; use
+`GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` only for disposable debug QA.
 
 The fixture audit is read-only and must not emit or persist raw genotype values.
 Report source/runtime drift, unverified external behavior, warnings, and

@@ -30,8 +30,8 @@ _CLIPPY_BASE = "cargo clippy --manifest-path src-tauri/Cargo.toml"
 _CLIPPY_STRICT = _CLIPPY_BASE + " -- -D warnings"
 _CLIPPY_REPORT = _CLIPPY_BASE  # warnings visible, not fatal
 
-_SVELTE_CHECK = "npm run check 2>&1"
-_SVELTE_CHECK_STRICT = "npm run check -- --fail-on-warnings 2>&1"
+_SVELTE_CHECK = "pnpm run check 2>&1"
+_SVELTE_CHECK_STRICT = "pnpm run check -- --fail-on-warnings 2>&1"
 
 _MACOS_LINT_SCRIPT = """
 set -uo pipefail
@@ -50,16 +50,16 @@ echo ""
 echo "══════════════════════════════════════════"
 echo "  LINT: svelte-check"
 echo "══════════════════════════════════════════"
-if ! command -v npm >/dev/null 2>&1; then
-    echo "[AUTO-HEAL] npm missing on guest — sourcing Homebrew path…"
+if ! command -v pnpm >/dev/null 2>&1; then
+    echo "[AUTO-HEAL] pnpm missing on guest — sourcing Homebrew path…"
     export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
 fi
 
-if command -v npm >/dev/null 2>&1; then
+if command -v pnpm >/dev/null 2>&1; then
     {svelte_cmd}
     SVELTE_EXIT=$?
 else
-    echo "[LINT FAIL] npm required for svelte-check but missing after auto-healing!"
+    echo "[LINT FAIL] pnpm required for svelte-check but missing after auto-healing!"
     SVELTE_EXIT=1
 fi
 
@@ -94,16 +94,16 @@ echo ""
 echo "══════════════════════════════════════════"
 echo "  LINT: svelte-check"
 echo "══════════════════════════════════════════"
-if ! command -v npm >/dev/null 2>&1 && [ -d "$HOME/.local/share/fnm" ]; then
+if ! command -v pnpm >/dev/null 2>&1 && [ -d "$HOME/.local/share/fnm" ]; then
     export PATH="$HOME/.local/share/fnm:$PATH"
     eval "$(fnm env 2>/dev/null || true)"
 fi
 
-if command -v npm >/dev/null 2>&1; then
+if command -v pnpm >/dev/null 2>&1; then
     {svelte_cmd}
     SVELTE_EXIT=$?
 else
-    echo "[LINT FAIL] npm required for svelte-check but missing!"
+    echo "[LINT FAIL] pnpm required for svelte-check but missing!"
     SVELTE_EXIT=1
 fi
 
@@ -139,11 +139,11 @@ echo ""
 echo "══════════════════════════════════════════"
 echo "  LINT (Windows Target): svelte-check"
 echo "══════════════════════════════════════════"
-if command -v npm >/dev/null 2>&1; then
+if command -v pnpm >/dev/null 2>&1; then
     {svelte_cmd}
     SVELTE_EXIT=$?
 else
-    echo "[LINT FAIL] npm required for svelte-check but missing!"
+    echo "[LINT FAIL] pnpm required for svelte-check but missing!"
     SVELTE_EXIT=1
 fi
 

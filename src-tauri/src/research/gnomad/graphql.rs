@@ -11,6 +11,21 @@ static GRAPHQL_THROTTLE: Mutex<Option<Instant>> = Mutex::new(None);
 const MIN_INTERVAL: Duration = Duration::from_secs(6);
 const MAX_RETRIES: u32 = 4;
 
+fn graphql_dataset_for_release(release: &str) -> Option<&'static str> {
+    let major = release
+        .trim()
+        .trim_start_matches('v')
+        .split('.')
+        .next()?
+        .parse::<u32>()
+        .ok()?;
+    match major {
+        3 => Some("gnomad_r3"),
+        4 => Some("gnomad_r4"),
+        _ => None,
+    }
+}
+
 async fn throttle_graphql() {
     loop {
         let wait = {
@@ -49,10 +64,18 @@ async fn post_graphql(body: &serde_json::Value) -> Result<serde_json::Value, Gno
             Ok(resp) => {
                 let status = resp.status();
                 if status.is_success() {
-                    return resp
-                        .json()
+                    let payload = resp
+                        .json::<serde_json::Value>()
                         .await
-                        .map_err(|_| GnomadLookupStatus::ParserError);
+                        .map_err(|_| GnomadLookupStatus::ParserError)?;
+                    if payload
+                        .get("errors")
+                        .and_then(serde_json::Value::as_array)
+                        .is_some_and(|errors| !errors.is_empty())
+                    {
+                        return Err(GnomadLookupStatus::ParserError);
+                    }
+                    return Ok(payload);
                 }
                 if status.as_u16() == 403 || status.as_u16() == 429 || status.is_server_error() {
                     let backoff = Duration::from_secs(2u64.pow(attempt.min(4)));
@@ -83,8 +106,18 @@ pub async fn fetch_graphql_context(
     ref_allele: Option<&str>,
     alt_allele: Option<&str>,
 ) -> GnomadContext {
+    let Some(dataset) = graphql_dataset_for_release(release) else {
+        let mut ctx = GnomadContext::empty(GnomadLookupStatus::SourceUnavailable);
+        ctx.release = release.to_string();
+        ctx.warnings.push(format!(
+            "The gnomAD GraphQL API has no configured dataset mapping for release {release}."
+        ));
+        return ctx;
+    };
     let search_query = serde_json::json!({
-        "query": "query($query: String!) { variant_search(query: $query, dataset: gnomad_r4) { variant_id rsids } }",
+        // The search result type no longer exposes `rsids`; fetch that field
+        // from the full Variant object below instead.
+        "query": format!("query($query: String!) {{ variant_search(query: $query, dataset: {dataset}) {{ variant_id }} }}"),
         "variables": { "query": rsid }
     });
 
@@ -106,20 +139,12 @@ pub async fn fetch_graphql_context(
         let Some(var_id) = item["variant_id"].as_str() else {
             continue;
         };
-        let rsids: Vec<String> = item["rsids"]
-            .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            })
-            .unwrap_or_default();
-
         let freq_query = serde_json::json!({
-            "query": "query($varId: String!) { variant(variantId: $varId, dataset: gnomad_r4) {
-                genome { ac an af homozygoteCount hemizygoteCount filters flags popmax { af population } }
-                exome { ac an af homozygoteCount hemizygoteCount filters flags popmax { af population } }
-            } }",
+            "query": format!("query($varId: String!) {{ variant(variantId: $varId, dataset: {dataset}) {{
+                rsids
+                genome {{ ac an af homozygoteCount hemizygoteCount filters flags popmax {{ af population }} }}
+                exome {{ ac an af homozygoteCount hemizygoteCount filters flags popmax {{ af population }} }}
+            }} }}"),
             "variables": { "varId": var_id }
         });
 
@@ -131,6 +156,16 @@ pub async fn fetch_graphql_context(
             Some(v) if !val2["data"]["variant"].is_null() => v,
             _ => continue,
         };
+
+        let rsids: Vec<String> = variant
+            .get("rsids")
+            .and_then(serde_json::Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
+            .unwrap_or_else(|| vec![rsid.to_string()]);
 
         let genome = variant.get("genome");
         let exome = variant.get("exome");

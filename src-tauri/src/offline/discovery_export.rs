@@ -387,11 +387,8 @@ pub fn export_discovery_jsons(
     }
 
     let pack_path = exports_dir.join(format!("marker_pack_coverage_sample_{sample_id}.json"));
-    fs::write(
-        &pack_path,
-        serde_json::to_string_pretty(&pack_doc).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
+    let pack_json = serde_json::to_string_pretty(&pack_doc).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&pack_path, pack_json.as_bytes())?;
 
     // Sample DB already attaches public catalogs — run joins there.
     let sample_conn = db::connect_sample_from_registry_path(db_path, sample_id)
@@ -442,11 +439,8 @@ pub fn export_discovery_jsons(
     });
 
     let full_path = exports_dir.join(format!("genome_catalog_findings_sample_{sample_id}.json"));
-    fs::write(
-        &full_path,
-        serde_json::to_string_pretty(&full_doc).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
+    let full_json = serde_json::to_string_pretty(&full_doc).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&full_path, full_json.as_bytes())?;
 
     Ok(json!({
         "pack_coverage_path": pack_path.to_string_lossy(),

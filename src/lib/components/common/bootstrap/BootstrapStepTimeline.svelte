@@ -91,7 +91,6 @@
     align-items: center;
     gap: 12px;
     padding: 7px 0;
-    animation: bootstrap-fade-up 0.55s ease both;
   }
 
   .step-node {

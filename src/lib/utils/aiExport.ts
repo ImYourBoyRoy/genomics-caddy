@@ -11,6 +11,7 @@ import {
   interpretationClassLabel,
   normalizeFindingSemantics,
 } from "./findingSemantics";
+import aiPromptPolicy from "../marker-packs/ai_prompt_policy.json";
 
 /**
  * Builds a standard markdown transcript of the chat conversation.
@@ -48,6 +49,24 @@ export function buildStandardMarkdown(
   return md;
 }
 
+function renderRawGenotypeCalls(generatedReport: any): string {
+  const rows = (generatedReport?.sections || []).flatMap((section: any) =>
+    (section.markers || []).map((marker: any) => {
+      const rawCall = String(marker.user_genotype ?? '').trim() || '--';
+      const normalizedCall = String(marker.normalized_genotype ?? '').trim() || '--';
+      return `- ${section.name} | ${marker.rsid || 'marker without rsID'} | ${marker.gene || 'gene not recorded'} | raw call: ${rawCall} | normalized call: ${normalizedCall}`;
+    }),
+  );
+  return [
+    `## ${aiPromptPolicy.export_disclosures.raw_genotype_section_title}`,
+    '',
+    aiPromptPolicy.export_disclosures.raw_genotype_notice,
+    '',
+    rows.length > 0 ? rows.join('\n') : 'No evaluated genotype calls were available in this report.',
+    '',
+  ].join('\n');
+}
+
 /**
  * Builds a comprehensive clinical handoff summary containing the user health profile,
  * active variant summaries, frontier model RAG prompt payload, and conversation history.
@@ -69,6 +88,22 @@ export function buildClinicalHandoffMarkdown(
   md += `* **Date of Report:** ${new Date().toLocaleString()}\n`;
   md += `* **Inference Model:** ${selectedModel}\n\n`;
   md += `---\n\n`;
+  md += `${aiPromptPolicy.export_disclosures.privacy_warning}\n\n`;
+
+  const provenance = generatedReport?.import_provenance;
+  if (provenance) {
+    const diagnostics = provenance.diagnostics;
+    md += `## Import Provenance\n`;
+    md += `* **Import ID:** ${provenance.import_id}\n`;
+    md += `* **Source file:** ${provenance.source_file_name}\n`;
+    md += `* **Source SHA-256:** ${provenance.source_file_sha256}\n`;
+    md += `* **Format / vendor:** ${diagnostics.format} / ${diagnostics.vendor} (${diagnostics.delimiter})\n`;
+    md += `* **Source build:** ${diagnostics.source_build}\n`;
+    md += `* **Coordinate system:** ${diagnostics.coordinate_system}\n`;
+    md += `* **Allele orientation:** ${diagnostics.allele_orientation}\n`;
+    md += `* **Liftover:** ${provenance.liftover_mapped_rows} mapped; ${provenance.liftover_unmapped_rows} unmapped\n\n`;
+    md += `*${aiPromptPolicy.export_disclosures.import_provenance_notice}\n\n`;
+  }
 
   md += `## 👤 Biohacking & Health Profile (Self-Reported)\n`;
   md += `* **Goals:** ${userProfile.goals || "None declared"}\n`;
@@ -148,6 +183,7 @@ export function buildClinicalHandoffMarkdown(
   if (clinicalCount === 0) {
     md += `*No high-stakes or risk-associated active variants were detected in the evaluated packs.*\n\n`;
   }
+  md += `${renderRawGenotypeCalls(generatedReport)}\n`;
   md += `---\n\n`;
 
   md += `## 🤖 Frontier LLM Copy-Paste Context Bundle\n`;

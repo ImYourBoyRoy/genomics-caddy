@@ -59,13 +59,3 @@ export function persistAiAssistantPreferences(prefs: {
     localStorage.setItem(`genomics_${key}`, String(value));
   }
 }
-
-/** Persist the optional AI profile separately from UI preferences. */
-export function persistUserBiohackingProfile(profile: UserBiohackingProfile): void {
-  if (typeof localStorage === "undefined") return;
-  try {
-    localStorage.setItem("genomics_user_biohacking_profile", JSON.stringify(profile));
-  } catch {
-    // A blocked or full browser storage area must not interrupt consultation.
-  }
-}

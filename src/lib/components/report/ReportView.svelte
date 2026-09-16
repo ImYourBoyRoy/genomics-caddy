@@ -4,12 +4,12 @@
   import { saveReportBundle, saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
+  import ReportExportActions from './ReportExportActions.svelte';
   import ReferenceIndex from './ReferenceIndex.svelte';
   import SectionCard from './SectionCard.svelte';
   import DashboardSummaryPanel from './DashboardSummaryPanel.svelte';
   import DiscoveredFindingsBanner from './DiscoveredFindingsBanner.svelte';
   import VectorPromotedSection from './VectorPromotedSection.svelte';
-  import PanelLoadingState from '../common/loading/PanelLoadingState.svelte';
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getSeverityInfo } from '../../utils/evidence';
   import { tick, untrack } from 'svelte';
@@ -25,7 +25,7 @@
   import {
     type ReportExportAudience,
   } from '../../utils/reportAudienceExport';
-  import { buildReportBundleFiles, reportBundleFilename } from '../../utils/reportBundleExport';
+  import { buildAiReviewJson, buildReportBundleFiles, reportBundleFilename } from '../../utils/reportBundleExport';
   import { buildCanonicalFindingGroups } from '../../utils/findingIdentity';
 
   /*
@@ -86,6 +86,31 @@
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
   let clinicalProvenanceExpanded = $state(false);
+
+  const REPORT_LOADING_STAGES = [
+    { title: 'Reading your local profile', detail: 'Opening the stored genotype data on this device.' },
+    { title: 'Matching curated markers', detail: 'Checking the curated marker packs against this profile.' },
+    { title: 'Organizing evidence', detail: 'Grouping findings, evidence tiers, and follow-up guidance.' },
+    { title: 'Preparing your dashboard', detail: 'Finishing the report so it opens ready for review.' },
+  ] as const;
+  let reportLoadingElapsedSeconds = $state(0);
+
+  $effect(() => {
+    if (!browser || !isGeneratingReport) {
+      reportLoadingElapsedSeconds = 0;
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      reportLoadingElapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  });
+
+  let reportLoadingStageIndex = $derived(
+    Math.min(REPORT_LOADING_STAGES.length - 1, Math.floor(reportLoadingElapsedSeconds / 4)),
+  );
+  let reportLoadingStage = $derived(REPORT_LOADING_STAGES[reportLoadingStageIndex]);
 
   function presentationModeStorageKey(sampleId: number): string {
     return `genomics_presentation_mode_${sampleId}`;
@@ -160,6 +185,7 @@
     'trait',
     'context_dependent',
     'confirmation_required',
+    'not_evaluated',
     'benign',
     'no_data',
   ];
@@ -322,9 +348,10 @@
       case "protective": return 4;
       case "trait": return 5;
       case "context_dependent": return 6;
-      case "benign": return 7;
-      case "no_data": return 8;
-      default: return 9;
+      case "not_evaluated": return 7;
+      case "benign": return 8;
+      case "no_data": return 9;
+      default: return 10;
     }
   }
 
@@ -391,9 +418,10 @@
   let discoveryExportBusy = $state(false);
   let discoveryExportHint = $state('');
   let audienceExportBusy = $state<ReportExportAudience | ''>('');
+  let aiJsonBusy = $state(false);
   let audienceExportHint = $state('');
 
-  /** Curated pack report (same shape as roy_ancestrydna_report_v3/v4). */
+  /** Curated pack report (same shape as the legacy report v3/v4 fixtures). */
   async function exportCuratedJson() {
     const targetReport = rawReport || generatedReport;
     if (!targetReport) return;
@@ -445,24 +473,43 @@
     }
   }
 
+  function audienceBundleOptions(audience: ReportExportAudience) {
+    return {
+      audience,
+      report: generatedReport!,
+      sample: selectedSample,
+      includeRawGenotypes: audience !== 'personal',
+      reproductiveContext: profileContext?.selectedReproductiveContext,
+      personalSafetyContext: profileContext?.safety,
+      profileContext: profileContext || EMPTY_PROFILE_CONTEXT,
+    };
+  }
+
+  async function exportAiReviewJson() {
+    if (!generatedReport || aiJsonBusy) return;
+    aiJsonBusy = true;
+    audienceExportHint = '';
+    try {
+      const content = buildAiReviewJson(audienceBundleOptions('ai'));
+      const defaultFilename = `${selectedSample.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_ai_review.json`;
+      const saved = await saveReportJson(content, defaultFilename);
+      audienceExportHint = saved
+        ? 'AI-ready JSON saved locally. It includes DNA findings, references, entered context, and diary data.'
+        : 'Export canceled; no file was written.';
+    } catch (e: unknown) {
+      audienceExportHint = `Export failed: ${String(e)}`;
+      await dialogStore.alert('AI-ready JSON export failed: ' + String(e));
+    } finally {
+      aiJsonBusy = false;
+    }
+  }
+
   async function exportAudienceReport(audience: ReportExportAudience) {
     if (!generatedReport || audienceExportBusy) return;
     audienceExportBusy = audience;
     audienceExportHint = '';
     try {
-      const options = {
-        audience,
-        report: generatedReport,
-        sample: selectedSample,
-        includeRawGenotypes: audience === 'clinician'
-          ? profileContext?.exportPreferences.includeRawGenotypesInClinician ?? true
-          : audience === 'ai'
-            ? profileContext?.exportPreferences.includeRawGenotypesInAi ?? true
-            : false,
-        reproductiveContext: profileContext?.selectedReproductiveContext,
-        personalSafetyContext: profileContext?.safety,
-        profileContext: profileContext || EMPTY_PROFILE_CONTEXT,
-      };
+      const options = audienceBundleOptions(audience);
       const saved = await saveReportBundle(
         buildReportBundleFiles(options),
         reportBundleFilename(selectedSample.name, audience),
@@ -497,20 +544,41 @@
     role="status"
   >
     <div class="report-loading-content">
+      <div class="report-loading-heading">
+        <span class="report-loading-kicker">Preparing report</span>
+        <span class="report-loading-device">On-device · live</span>
+      </div>
       <div class="report-loading-mark" aria-hidden="true">🧬</div>
-      <span class="report-loading-kicker">Preparing report</span>
       <h3 id="report-loading-title">Mapping {selectedSample.name}'s DNA</h3>
       <p class="report-loading-lead">Reviewing curated markers and assembling the most useful findings for this profile.</p>
-      <PanelLoadingState
-        compact
-        message="Analyzing genetic markers across marker packs…"
-        submessage="Local analysis · your DNA stays on this computer."
-        accent="var(--status-warning-text)"
-      />
+      <div class="report-loading-activity" role="group" aria-label="Live report preparation status">
+        <div class="report-loading-activity-heading">
+          <div>
+            <span class="report-loading-activity-label">Working now</span>
+            <strong>{reportLoadingStage.title}</strong>
+          </div>
+          <span class="report-loading-elapsed">
+            {reportLoadingElapsedSeconds < 1 ? 'Starting…' : `${reportLoadingElapsedSeconds}s elapsed`}
+          </span>
+        </div>
+        <div class="report-loading-indeterminate" aria-hidden="true"><span></span></div>
+        <p>{reportLoadingStage.detail}</p>
+        <ol class="report-loading-steps" aria-label="Report preparation phases">
+          {#each REPORT_LOADING_STAGES as stage, index}
+            <li class:active={index === reportLoadingStageIndex}>
+              <span class="report-loading-step-node" aria-hidden="true">{index + 1}</span>
+              <span>
+                <strong>{stage.title}</strong>
+                <small>{index === reportLoadingStageIndex ? 'In progress' : 'Queued'}</small>
+              </span>
+            </li>
+          {/each}
+        </ol>
+      </div>
       <div class="report-loading-meta" aria-label="Report preparation details">
-        <span><span class="report-loading-dot" aria-hidden="true"></span> Curated marker packs</span>
+        <span><span class="report-loading-dot" aria-hidden="true"></span> Your DNA stays on this computer</span>
         <span>•</span>
-        <span>On-device analysis</span>
+        <span>The report will open automatically when ready</span>
       </div>
     </div>
   </section>
@@ -521,6 +589,20 @@
     {foundMarkersCount}
     {totalMarkersChecked}
     presentationMode={presentationMode}
+  />
+
+  <ReportExportActions
+    {audienceExportBusy}
+    {aiJsonBusy}
+    {discoveryExportBusy}
+    {isPreparingPrint}
+    {audienceExportHint}
+    {discoveryExportHint}
+    onExportAiJson={exportAiReviewJson}
+    onExportAudience={exportAudienceReport}
+    onExportCuratedJson={exportCuratedJson}
+    onExportFullCatalogJson={exportFullCatalogJson}
+    onPrintReport={printReport}
   />
 
   {#if generatedReport}
@@ -580,6 +662,23 @@
           <li>{warning}</li>
         {/each}
       </ul>
+    </details>
+  {/if}
+
+  {#if generatedReport.import_provenance && generatedReport.import_provenance.liftover_unmapped_rows > 0}
+    <details class="catalog-warnings-banner import-quality-banner" aria-label="Imported profile coordinate coverage">
+      <summary>
+        <span>Profile coordinate coverage</span>
+        <span class="catalog-warnings-count">
+          {generatedReport.import_provenance.liftover_unmapped_rows.toLocaleString()} records need build mapping
+        </span>
+      </summary>
+      <p>
+        {generatedReport.import_provenance.liftover_mapped_rows.toLocaleString()} of
+        {generatedReport.import_provenance.diagnostics.accepted_rows.toLocaleString()} accepted records have GRCh38 coordinates.
+        The remaining {generatedReport.import_provenance.liftover_unmapped_rows.toLocaleString()} records remain in the local profile,
+        but build-specific reference lookups may not include them until a compatible mapping is available.
+      </p>
     </details>
   {/if}
 
@@ -705,54 +804,6 @@
 
   <ReferenceIndex report={generatedReport} />
 
-  <details class="report-chrome-details no-print">
-    <summary>Export &amp; print</summary>
-    <div class="report-actions">
-      <span class="export-privacy-note">
-        🔒 Everything stays on your computer. No data is uploaded.
-      </span>
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        onclick={exportCuratedJson}
-      >
-        Export curated report JSON
-      </button>
-      <div class="export-audience-group" aria-label="Audience-specific ZIP bundles">
-        <span class="export-audience-label">Audience exports</span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('personal')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'personal' ? 'Saving…' : 'Personal Simple bundle'}
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('clinician')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'clinician' ? 'Saving…' : 'Clinician Handoff bundle'}
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => exportAudienceReport('ai')} disabled={Boolean(audienceExportBusy)}>
-          {audienceExportBusy === 'ai' ? 'Saving…' : 'AI Review bundle'}
-        </button>
-      </div>
-      <button
-        type="button"
-        class="btn btn-secondary btn-sm"
-        onclick={exportFullCatalogJson}
-        disabled={discoveryExportBusy}
-      >
-        {discoveryExportBusy ? 'Exporting…' : 'Export full catalog associations'}
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" onclick={printReport} disabled={isPreparingPrint}>
-        {isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'}
-      </button>
-    </div>
-    {#if discoveryExportHint}
-      <p class="export-hint">{discoveryExportHint}</p>
-    {/if}
-    {#if audienceExportHint}
-      <p class="export-hint" role="status">{audienceExportHint}</p>
-    {/if}
-    <p class="export-hint">
-      Prefer the <strong>Discovery</strong> tab to browse beyond-pack associations in-app.
-    </p>
-  </details>
-
   <!-- Secondary research surfaces stay below the core report and remain optional. -->
   <VectorPromotedSection {selectedSample} {presentationMode} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
   <DiscoveredFindingsBanner {selectedSample} {presentationMode} {onExploreResearch} onNavigate={onNavigateToVariant} />
@@ -831,14 +882,14 @@
     display: grid;
     place-items: center;
     width: 100%;
-    min-height: clamp(320px, 52vh, 500px);
-    padding: clamp(2rem, 6vw, 4rem);
+    min-height: clamp(420px, 64vh, 620px);
+    padding: clamp(1.5rem, 4vw, 3rem);
     overflow: hidden;
     border: 1px solid var(--border-color);
     border-radius: 1rem;
     background:
       radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 44%),
-      var(--surface-raised);
+      linear-gradient(145deg, color-mix(in srgb, var(--surface-raised) 92%, var(--accent)), var(--surface-raised));
     box-shadow: var(--shadow-card);
     box-sizing: border-box;
     text-align: center;
@@ -861,7 +912,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: min(100%, 680px);
+    width: min(100%, 720px);
+  }
+
+  .report-loading-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.55rem 0.75rem;
   }
 
   .report-loading-mark {
@@ -886,6 +945,20 @@
     text-transform: uppercase;
   }
 
+  .report-loading-device {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.35rem;
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--status-success-border);
+    border-radius: 999px;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+
   .report-loading-state h3 {
     margin: 0.3rem 0 0;
     color: var(--text-primary);
@@ -900,9 +973,135 @@
     line-height: 1.5;
   }
 
-  .report-loading-content :global(.panel-loading) {
-    width: min(100%, 560px);
-    margin-top: 1.35rem;
+  .report-loading-activity {
+    width: min(100%, 600px);
+    margin-top: 1.45rem;
+    padding: 1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--surface-control) 88%, transparent);
+    text-align: left;
+  }
+
+  .report-loading-activity-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .report-loading-activity-heading > div {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .report-loading-activity-label {
+    color: var(--accent);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .report-loading-activity-heading strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .report-loading-elapsed {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.64rem;
+  }
+
+  .report-loading-indeterminate {
+    position: relative;
+    height: 0.45rem;
+    margin-top: 0.85rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border-color) 75%, transparent);
+  }
+
+  .report-loading-indeterminate span {
+    position: absolute;
+    inset: 0 auto 0 -30%;
+    width: 42%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--success), transparent);
+    animation: report-loading-sweep 1.8s ease-in-out infinite;
+  }
+
+  .report-loading-activity > p {
+    margin: 0.65rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .report-loading-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .report-loading-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    min-width: 0;
+    color: var(--text-muted);
+  }
+
+  .report-loading-steps li.active {
+    color: var(--text-primary);
+  }
+
+  .report-loading-step-node {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6rem;
+  }
+
+  .report-loading-steps li.active .report-loading-step-node {
+    border-color: var(--accent);
+    background: var(--status-accent-bg);
+    color: var(--accent);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .report-loading-steps li > span:last-child {
+    display: grid;
+    gap: 0.08rem;
+    min-width: 0;
+  }
+
+  .report-loading-steps strong {
+    color: inherit;
+    font-size: 0.68rem;
+    line-height: 1.3;
+  }
+
+  .report-loading-steps small {
+    color: var(--text-muted);
+    font-size: 0.58rem;
+  }
+
+  .report-loading-steps li.active small {
+    color: var(--accent);
   }
 
   .report-loading-meta {
@@ -939,9 +1138,37 @@
     }
   }
 
+  @keyframes report-loading-sweep {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(310%);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .report-loading-mark {
+    .report-loading-mark,
+    .report-loading-indeterminate span {
       animation: none;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .report-loading-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .report-loading-activity-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .report-loading-steps {
+      grid-template-columns: 1fr;
     }
   }
 

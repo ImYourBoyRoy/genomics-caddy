@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./ClinicalFindingsTable.svelte', import.meta.url), 'utf8');
+const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 
 describe('ClinicalFindingsTable copy', () => {
   it('keeps repeated next-step guidance concise', () => {
@@ -12,9 +13,15 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain("return 'Interpret with history and current guidance.'");
     expect(source).toContain("return 'Confirmation needed';");
     expect(source).toContain("return 'Contextual result';");
-    expect(source).toContain("return 'Review blocked';");
+    expect(source).toContain('return callabilityExplanation(callabilityState);');
     expect(source).not.toContain('Discuss medical-grade confirmation before making health decisions.');
     expect(source).not.toContain("return 'Review the listed follow-up.'");
+  });
+
+  it('shows callability separately from the assertion status', () => {
+    expect(source).toContain('callabilityStateForResult');
+    expect(source).toContain('<div><dt>Callability</dt><dd>{callabilityStateLabel(markerCallabilityState(marker))}</dd></div>');
+    expect(source).toContain('orientationStateLabel(markerOrientationState(marker))');
   });
 
   it('keeps the table caption structural instead of repeating the global reminder', () => {
@@ -27,6 +34,13 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('@media (max-width: 1400px)');
     expect(source).toContain('.clinical-findings-table {\n      display: block;\n      width: 100%;\n      min-width: 0;');
     expect(source).toContain('.clinical-findings-table thead {');
+  });
+
+  it('ships the stacked table rules globally for native WebKit release rendering', () => {
+    expect(theme).toContain('@media screen and (max-width: 1400px) {\n  .main-content .clinical-table-wrap');
+    expect(theme).toContain('.main-content .clinical-findings-table {\n    display: block;\n    box-sizing: border-box;\n    width: 100%;\n    min-width: 0;');
+    expect(theme).toContain('.main-content .clinical-findings-table tbody td[data-label="Details"] {\n    display: block;');
+    expect(theme).toContain('.main-content .clinical-mobile-label {\n    display: block;');
   });
 
   it('lets expanded technical details fit inside narrow stacked rows', () => {
@@ -55,7 +69,7 @@ describe('ClinicalFindingsTable copy', () => {
     expect(source).toContain('Shared clinical context ({sharedInterpretations.length})');
     expect(source).toContain('These explanations apply to more than one finding in this section and are shown once');
     expect(source).toContain('Shared clinical context shown above.');
-    expect(source).toContain('sharedInterpretationKeys.has(normalizeSharedCopy(marker.interpretation))');
+    expect(source).toContain('sharedInterpretationKeys.has(normalizeSharedInterpretation(marker.interpretation))');
   });
 
   it('keeps the clinical table markup structurally balanced', () => {

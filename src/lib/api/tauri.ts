@@ -27,8 +27,10 @@ import type {
   GeneratedReport,
   NormalizedReport,
   ReportPayload,
+  GenomeImportPreview,
 } from "../types/genomics";
 import { denormalizeReport } from "../utils/viewModels";
+import { normalizeReportStatuses } from "../utils/reportStatuses";
 
 export async function selectFile(): Promise<string | null> {
   return invoke<string | null>("select_file");
@@ -63,8 +65,16 @@ export async function getDiscoveredFindingsSummary(
   return invoke<DiscoveredFindingSummary[]>("get_discovered_findings_summary", { sampleId });
 }
 
-export async function importGenome(filePath: string, sampleName: string): Promise<number> {
-  return invoke<number>("import_genome", { filePath, sampleName });
+export async function importGenome(
+  filePath: string,
+  sampleName: string,
+  replaceExistingSampleId?: number,
+): Promise<number> {
+  return invoke<number>("import_genome", { filePath, sampleName, replaceExistingSampleId });
+}
+
+export async function inspectGenome(filePath: string): Promise<GenomeImportPreview> {
+  return invoke<GenomeImportPreview>("inspect_genome", { filePath });
 }
 
 export async function getSamples(): Promise<GenomeSample[]> {
@@ -85,7 +95,8 @@ export async function queryRegion(
 }
 
 export async function generateReport(sampleId: number, templateJson: string): Promise<ReportPayload> {
-  const raw = await invoke<NormalizedReport>("generate_report", { sampleId, templateJson });
+  const wireReport = await invoke<NormalizedReport>("generate_report", { sampleId, templateJson });
+  const raw = normalizeReportStatuses(wireReport);
   const report = denormalizeReport(raw);
   return { report, raw };
 }
@@ -1124,6 +1135,13 @@ export async function getGnomadReadiness(): Promise<import("../types/research").
 
 export async function downloadGnomadIndexes(): Promise<import("../types/research").GnomadIndexSyncResult> {
   return invoke("download_gnomad_indexes_cmd");
+}
+
+export async function refreshGnomadFrequencyCache(
+  sampleId: number,
+  rsids: string[],
+): Promise<import("../types/research").GnomadBatchProgress> {
+  return invoke("refresh_gnomad_frequency_cache_cmd", { sampleId, rsids });
 }
 
 export async function selectGnomadLocalDir(): Promise<string | null> {

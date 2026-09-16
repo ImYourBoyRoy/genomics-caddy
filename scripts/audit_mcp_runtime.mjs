@@ -2,7 +2,7 @@
 /*
 Purpose: Exercise the compiled Genomics Caddy MCP process without exposing
 private report or genotype content.
-Usage: `npm run audit:mcp` after a local Tauri build, or set
+Usage: `pnpm run audit:mcp` after a local Tauri build, or set
 GENOMICS_MCP_EXECUTABLE to an alternate compiled binary.
 Privacy: Only protocol/tool counts and aggregate status fields are printed.
 */

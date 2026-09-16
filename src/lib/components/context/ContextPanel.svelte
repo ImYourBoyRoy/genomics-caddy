@@ -3,6 +3,7 @@
   import cycleSupport from '../../marker-packs/cycle_support_guidance.json';
   import ReproductiveContextEditor from '../ai/ReproductiveContextEditor.svelte';
   import {
+    clearUnassignedLegacyAiProfile,
     loadUnassignedLegacyAiProfile,
     profileContextHasContent,
     saveProfileContext,
@@ -158,6 +159,12 @@
       safety: mergedSafety,
     };
     persist();
+    clearUnassignedLegacyAiProfile();
+    legacyContext = null;
+  }
+
+  function dismissLegacyContext(): void {
+    clearUnassignedLegacyAiProfile();
     legacyContext = null;
   }
 </script>
@@ -209,7 +216,10 @@
         <strong id="legacy-context-title">Older AI profile found</strong>
         <p>This saved profile is not attached to a genome. Import it into {selectedSample.name} only if it belongs to this profile.</p>
       </div>
-      <button type="button" class="btn btn-secondary" onclick={importLegacyContext}>Import into this profile</button>
+      <div class="legacy-context-actions">
+        <button type="button" class="btn btn-secondary" onclick={importLegacyContext}>Import into this profile</button>
+        <button type="button" class="btn btn-ghost" onclick={dismissLegacyContext}>Dismiss and delete</button>
+      </div>
     </section>
   {/if}
 
@@ -284,30 +294,11 @@
     <div>
       <span class="context-section-kicker">Export readiness</span>
       <h3 id="context-export-title">{hasContent ? 'Context is ready to share' : 'No context added yet'}</h3>
-      <p>When you export or enable profile context for Connected Chat, these saved details travel with {selectedSample.name}'s DNA review as separate user-provided context.</p>
+      <p>When you export or enable profile context for Connected Chat, these saved details travel with {selectedSample.name}'s DNA review as separate user-provided context. AI and clinician handoffs always include the raw genotype calls needed to trace findings.</p>
     </div>
     <div class="context-export-controls">
-      <label><input type="checkbox" checked={profileContext.exportPreferences.includeRawGenotypesInClinician} onchange={(event) => {
-        profileContext = {
-          ...profileContext,
-          exportPreferences: {
-            ...profileContext.exportPreferences,
-            includeRawGenotypesInClinician: (event.currentTarget as HTMLInputElement).checked,
-          },
-        };
-        persist();
-      }} /> Include raw calls in clinician bundle</label>
-      <label><input type="checkbox" checked={profileContext.exportPreferences.includeRawGenotypesInAi} onchange={(event) => {
-        profileContext = {
-          ...profileContext,
-          exportPreferences: {
-            ...profileContext.exportPreferences,
-            includeRawGenotypesInAi: (event.currentTarget as HTMLInputElement).checked,
-          },
-        };
-        persist();
-      }} /> Include raw calls in AI bundle</label>
-      <span class="context-status" class:context-status-ready={hasContent}>{hasContent ? 'Saved locally' : 'Optional'}</span>
+      <span class="context-raw-policy" role="note">Raw genotype calls: always included for AI and clinician handoffs</span>
+      <span class="context-status" class:context-status-ready={hasContent}>{hasContent ? 'Saved locally' : 'Optional context'}</span>
     </div>
   </section>
 </div>
@@ -337,10 +328,9 @@
   .context-status { flex: 0 0 auto; color: var(--text-secondary); font-size: 0.74rem; }
   .context-status-ready { color: var(--status-success-text); font-weight: 700; }
   .context-export-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; color: var(--text-secondary); font-size: 0.72rem; }
-  .context-export-controls label { display: flex; align-items: center; gap: 0.4rem; }
-  .context-export-controls input { accent-color: var(--accent); }
   .legacy-context { border-color: var(--status-warning-border); background: var(--status-warning-bg); }
   .legacy-context strong { color: var(--text-primary); }
+  .legacy-context-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
   @media (max-width: 1100px) {
     .context-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .context-grid .context-card:first-child { grid-column: span 2; }
@@ -349,6 +339,7 @@
     .context-hero, .context-toolbar, .legacy-context, .context-export { align-items: flex-start; flex-direction: column; }
     .context-profile-badge { align-items: flex-start; }
     .context-export-controls { align-items: flex-start; }
+    .legacy-context-actions { justify-content: flex-start; }
     .context-toolbar-controls { width: 100%; min-width: 0; }
     .context-grid { grid-template-columns: 1fr; }
     .context-grid .context-card:first-child { grid-column: auto; }

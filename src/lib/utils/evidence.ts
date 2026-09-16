@@ -191,6 +191,10 @@ export function getSectionSummaryParts(summary: SectionSummary): string[] {
     parts.push(`${summary.no_data_count} not tested`);
   }
 
+  if ((summary.not_evaluated_count ?? 0) > 0) {
+    parts.push(`${summary.not_evaluated_count} not evaluated`);
+  }
+
   if (parts.length === 0) {
     parts.push("No notable findings");
   }
@@ -225,6 +229,7 @@ export function getSimpleSectionSummaryParts(summary: SectionSummary): string[] 
     simplePart = replaceCountLabel(simplePart, /^(\d+) require validation$/i, 'needs confirmation', 'need confirmation');
     simplePart = replaceCountLabel(simplePart, /^(\d+) need clinical confirmation$/i, 'needs confirmation', 'need confirmation');
     simplePart = replaceCountLabel(simplePart, /^(\d+) not tested$/i, 'not called', 'not called');
+    simplePart = replaceCountLabel(simplePart, /^(\d+) not evaluated$/i, 'not evaluated', 'not evaluated');
     return simplePart;
   });
 }

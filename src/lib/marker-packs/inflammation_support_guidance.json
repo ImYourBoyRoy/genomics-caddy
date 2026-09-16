@@ -1,0 +1,156 @@
+{
+  "name": "Inflammation Context & Support Guidance",
+  "version": "1.0.0",
+  "last_updated": "2026-09-10",
+  "type": "support_engine",
+  "purpose": "Connect inflammatory-pathway markers to plain-language context, a short set of foundational food and routine cues, and measured follow-up without treating DNA as a measure of current inflammation or a diagnosis.",
+  "domain_schema": {
+    "required_fields": [
+      "id",
+      "label",
+      "marker_ids",
+      "gene_symbols",
+      "context",
+      "foundational_lifestyle",
+      "lab_ids",
+      "do_not_claim",
+      "clinical_route"
+    ],
+    "lifestyle_fields": [
+      "food_pattern",
+      "routine",
+      "movement_recovery"
+    ],
+    "lifestyle_null_semantics": "A null lifestyle_recommendation explicitly means that this marker is useful as context but has no marker-specific lifestyle recommendation here."
+  },
+  "lab_ids": [
+    {
+      "id": "hs_crp",
+      "name": "High-sensitivity C-reactive protein (hs-CRP)",
+      "category": "Inflammation & immune",
+      "aliases": ["hs-CRP", "high sensitivity CRP", "high-sensitivity CRP", "hs-CRP (Inflammation marker)"],
+      "purpose": "Measured low-grade inflammatory context when a clinician considers it relevant."
+    },
+    {
+      "id": "crp",
+      "name": "C-reactive protein (CRP)",
+      "category": "Inflammation & immune",
+      "aliases": ["CRP", "C reactive protein", "C-reactive protein"],
+      "purpose": "Measured inflammation context used with symptoms, timing, and the clinical question."
+    },
+    {
+      "id": "esr",
+      "name": "Erythrocyte sedimentation rate (ESR)",
+      "category": "Inflammation & immune",
+      "aliases": ["ESR", "sedimentation rate", "erythrocyte sedimentation rate"],
+      "purpose": "A nonspecific measured inflammatory signal interpreted with symptoms and other findings."
+    },
+    {
+      "id": "fecal_calprotectin",
+      "name": "Fecal calprotectin",
+      "category": "Digestive & immune",
+      "aliases": ["fecal calprotectin", "stool calprotectin"],
+      "purpose": "Stool inflammatory context when persistent bowel symptoms make inflammatory bowel disease part of the clinical question."
+    },
+    {
+      "id": "cbc",
+      "name": "Complete blood count (CBC)",
+      "category": "Inflammation & immune",
+      "aliases": ["CBC", "complete blood count"],
+      "purpose": "Blood-count context that can help interpret systemic symptoms or suspected inflammation."
+    },
+    {
+      "id": "ferritin_transferrin_saturation",
+      "name": "Ferritin and transferrin saturation",
+      "category": "Iron studies",
+      "aliases": ["ferritin & transferrin saturation", "ferritin and transferrin saturation"],
+      "purpose": "Iron-storage and transport context when anemia, bleeding, malabsorption, or inflammation is being evaluated."
+    }
+  ],
+  "domains": [
+    {
+      "id": "systemic_inflammatory_signaling",
+      "label": "Systemic inflammatory-signaling context",
+      "relevant_pack_signals": ["core", "nutrients", "cardiovascular", "immune_autoimmune_general", "longevity_aging_resilience"],
+      "marker_ids": ["rs1800795", "rs1800629", "rs1205"],
+      "gene_symbols": ["IL6", "TNF", "CRP"],
+      "context": "Weak, context-dependent common-marker signals related to cytokine or measured-CRP research. These markers do not show whether inflammation is active now.",
+      "foundational_lifestyle": {
+        "food_pattern": ["Vegetables, fruit, beans, and whole grains", "Olive oil, nuts, and seeds", "Fatty fish or another omega-3 food source"],
+        "routine": ["Protect a regular sleep opportunity", "Use symptoms and recovery to set a tolerable movement routine"],
+        "movement_recovery": ["Progress gradually and allow recovery days; DNA is not exercise clearance"]
+      },
+      "lifestyle_recommendation": "marker_linked_foundational",
+      "lab_ids": ["hs_crp", "crp", "esr"],
+      "do_not_claim": ["active inflammation", "inflammatory disease diagnosis", "a need for an anti-inflammatory drug or supplement", "a required elimination diet"],
+      "clinical_route": "Use symptoms, recent illness, recovery, medications, and clinician-selected labs to decide whether the signal is useful."
+    },
+    {
+      "id": "immune_autoimmune_context",
+      "label": "Immune and autoimmune context",
+      "relevant_pack_signals": ["immune_autoimmune_general", "thyroid_autoimmune", "digestive_gut_microbiome", "allergy_atopy_mast_cell"],
+      "marker_ids": ["rs1143634", "rs1800896", "rs3024505", "rs2201841", "rs11209026", "rs2066844", "rs2066845", "rs2241880", "rs7574865", "rs2304256", "rs34536443", "rs6920220", "rs2230926", "rs16944", "rs907715", "rs1800872"],
+      "gene_symbols": ["IL1B", "IL10", "IL23R", "NOD2", "ATG16L1", "STAT4", "TYK2", "TNFAIP3", "IL21", "IL2"],
+      "context": "Immune signaling and autoimmune or bowel-disease research context that becomes more useful when symptoms, family history, examination, and measured findings point to a clinical question.",
+      "foundational_lifestyle": null,
+      "lifestyle_recommendation": null,
+      "no_lifestyle_reason": "No marker-specific lifestyle recommendation is assigned here; use the relevant symptom, organ-system, and clinical follow-up route.",
+      "lab_ids": ["cbc", "crp", "esr"],
+      "do_not_claim": ["autoimmune disease diagnosis", "inflammatory bowel disease diagnosis", "a medication or supplement decision from a common SNP"],
+      "clinical_route": "Route persistent or concerning symptoms to the relevant clinician; use blood, stool, imaging, or disease-specific testing when clinically indicated."
+    },
+    {
+      "id": "allergic_airway_context",
+      "label": "Allergic and airway inflammation context",
+      "relevant_pack_signals": ["allergy_atopy_mast_cell", "respiratory_airway", "skin_hair_dermatology"],
+      "marker_ids": ["rs61816761", "rs1801275", "rs20541", "rs2243250", "rs7216389", "rs1837253", "rs2251746", "rs3771166", "rs3939286", "rs2228145", "rs755622", "rs1051931", "rs730012", "rs1295686", "rs2070874"],
+      "gene_symbols": ["IL4", "IL13", "IL4R", "IL6R", "TSLP", "FCER1A", "IL1RL1", "IL33", "MIF", "ALOX5", "LTC4S"],
+      "context": "Allergic, airway, skin-barrier, and mediator-pathway research context that is useful only when symptoms and exposures fit.",
+      "foundational_lifestyle": null,
+      "lifestyle_recommendation": null,
+      "no_lifestyle_reason": "No DNA-directed food elimination or supplement recommendation is assigned to an allergy or airway marker.",
+      "lab_ids": ["cbc", "crp"],
+      "do_not_claim": ["food allergy diagnosis", "asthma diagnosis", "mast-cell disease diagnosis", "permanent food elimination from DNA"],
+      "clinical_route": "Use repeatable symptom and exposure patterns, appropriate allergy or airway testing, and clinician assessment."
+    },
+    {
+      "id": "digestive_inflammatory_context",
+      "label": "Digestive inflammatory context",
+      "relevant_pack_signals": ["digestive_gut_microbiome", "immune_autoimmune_general"],
+      "marker_ids": ["rs2066844", "rs2066845", "rs2066847", "rs2241880", "rs1801274", "rs2201841", "rs11209026"],
+      "gene_symbols": ["NOD2", "ATG16L1", "IL23R", "FCGR2A"],
+      "context": "Inflammatory bowel and gut-barrier research context; the useful signals are persistent symptoms, objective testing, and clinical assessment.",
+      "foundational_lifestyle": null,
+      "lifestyle_recommendation": null,
+      "no_lifestyle_reason": "No restrictive diet, probiotic, detox, or supplement plan is assigned from digestive inflammatory markers alone.",
+      "lab_ids": ["cbc", "crp", "fecal_calprotectin", "ferritin_transferrin_saturation"],
+      "do_not_claim": ["Crohn disease diagnosis", "ulcerative colitis diagnosis", "IBS diagnosis", "a restrictive diet or digestive supplement plan from DNA"],
+      "clinical_route": "If persistent diarrhea, bleeding, fever, weight change, nocturnal symptoms, anemia, or significant pain is present, use clinician-directed blood, stool, endoscopy, or imaging evaluation."
+    },
+    {
+      "id": "redox_and_tissue_context",
+      "label": "Redox, fatty-acid, and tissue context",
+      "relevant_pack_signals": ["core", "nutrients", "metabolic", "digestive_gut_microbiome", "muscle_performance_recovery", "connective_tissue", "dental_oral_health", "skin_hair_dermatology", "thyroid_autoimmune"],
+      "marker_ids": ["rs4880", "rs1050450", "rs1695", "rs1800566", "rs174547", "rs174575", "rs1535", "rs713041", "rs28665122", "rs1800587", "rs11225395", "rs1718119", "rs1800796", "rs361525", "rs4085613", "rs17728338", "rs610604", "rs3918242", "rs1800469"],
+      "gene_symbols": ["SOD2", "GPX1", "GSTP1", "NQO1", "FADS1", "FADS2", "GPX4", "SELENOS", "IL1A", "MMP8", "P2RX7", "IL6", "TNF", "IL23R", "TNIP1", "TNFAIP3", "MMP9", "TGFB1"],
+      "context": "Oxidative-stress, fatty-acid, oral, skin, tendon, joint, and tissue-remodeling research context that needs the relevant nutrient, examination, or symptom route.",
+      "foundational_lifestyle": null,
+      "lifestyle_recommendation": null,
+      "no_lifestyle_reason": "This layer does not add a second diet or supplement prescription; use the existing nutrient, fatty-acid, recovery, dental, skin, or musculoskeletal route.",
+      "lab_ids": ["hs_crp", "crp", "esr"],
+      "do_not_claim": ["oxidative stress measurement", "a required antioxidant, selenium, or omega-3 dose", "periodontal disease, arthritis, tendon, or skin disease diagnosis"],
+      "clinical_route": "Use the relevant body-system assessment and measured status when a symptom or clinical question is present."
+    }
+  ],
+  "coverage_policy": {
+    "detected_terms": ["inflamm", "cytokine", "CRP", "C-reactive", "oxidative", "leukotriene", "mast cell", "atop", "immune activation", "redox", "omega-3", "fatty acid"],
+    "fallback": {
+      "lifestyle_recommendation": null,
+      "label": "No marker-specific lifestyle recommendation",
+      "reason": "The marker remains available as research or condition context; use the pack's phenotype, exposure, symptom, or lab route rather than adding a DNA-directed diet or supplement plan."
+    },
+    "requires_route_or_fallback": true
+  },
+  "do_not_claim": ["current inflammation from raw DNA", "an inflammatory disease diagnosis from common SNPs", "an anti-inflammatory treatment, supplement, or restrictive diet from a marker alone", "that a normal measured marker excludes all inflammatory disease"],
+  "sources": ["gwas_catalog", "dietary_guidelines_2025_2030", "nih_ods_omega3", "phenotype_required", "lab_confirmation_required", "safety_guardrail"]
+}

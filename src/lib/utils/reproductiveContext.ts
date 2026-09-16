@@ -1,5 +1,7 @@
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import type { GeneratedReport } from '../types/genomics';
+import { isCallableGenotype } from './genotype';
+import { isVerifiedAssertionStatus, normalizeAssertionStatus } from './reportStatuses';
 import { formatGeneticSexLabel } from './uiLabels';
 
 export interface ReproductivePersonalContextLike {
@@ -265,14 +267,16 @@ export function reproductiveDnaCoverageForReport(
   for (const markerId of trackedIds) {
     const marker = reportMarkers.get(markerId);
     if (!marker) continue;
-    const isMissing = marker.assertion_status === 'NoData'
-      || marker.assertion_status === 'NotInRawFile'
-      || marker.assertion_status === 'NotEvaluated'
+    const assertionStatus = normalizeAssertionStatus(marker.assertion_status);
+    const isMissing = assertionStatus === 'NoData'
+      || assertionStatus === 'NotInRawFile'
+      || assertionStatus === 'NotEvaluated'
       || marker.user_genotype === '--'
+      || !isCallableGenotype(marker.user_genotype)
       || marker.user_genotype.trim() === '';
     if (isMissing) continue;
     present += 1;
-    if (marker.assertion_status === 'Verified' && marker.interpretation_allowed) callable += 1;
+    if (isVerifiedAssertionStatus(marker.assertion_status) && marker.interpretation_allowed) callable += 1;
   }
 
   return {

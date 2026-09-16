@@ -69,7 +69,7 @@
     },
     {
       "rsid": "rs1800795",
-      "gene": "IL-6",
+      "gene": "IL6",
       "variant_name": "-174G>C",
       "effect_allele": "G",
       "impact": "Elevated baseline Interleukin-6 expression",

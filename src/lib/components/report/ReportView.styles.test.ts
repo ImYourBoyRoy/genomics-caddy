@@ -12,9 +12,14 @@ describe('ReportView Help Guide surface', () => {
   it('gives report generation a focused, theme-aware loading surface', () => {
     expect(source).toContain('class="report-loading-state"');
     expect(source).toContain('Mapping {selectedSample.name}\'s DNA');
-    expect(source).toContain('Local analysis · your DNA stays on this computer.');
-    expect(source).toContain('min-height: clamp(320px, 52vh, 500px);');
-    expect(source).toContain('background: var(--surface-raised);');
+    expect(source).toContain('Your DNA stays on this computer');
+    expect(source).toContain('class="report-loading-activity"');
+    expect(source).toContain('The report will open automatically when ready');
+    expect(source).toContain('REPORT_LOADING_STAGES');
+    expect(source).toContain('reportLoadingElapsedSeconds');
+    expect(source).toContain('min-height: clamp(420px, 64vh, 620px);');
+    expect(source).toContain('var(--surface-raised)');
+    expect(source).toContain('report-loading-indeterminate');
     expect(source).toContain('prefers-reduced-motion: reduce');
   });
 
@@ -72,6 +77,19 @@ describe('ReportView Help Guide surface', () => {
     expect(source).toContain('setSectionCollapsed(sectionName, false);');
     expect(source).toContain('onJumpToSection={handleJumpToSection}');
   });
+
+  it('places the common export strip before the report reading flow', () => {
+    const headerIndex = source.indexOf('<ReportHeader');
+    const exportIndex = source.indexOf('<ReportExportActions');
+    const summaryIndex = source.indexOf('<DashboardSummaryPanel');
+
+    expect(exportIndex).toBeGreaterThan(headerIndex);
+    expect(exportIndex).toBeLessThan(summaryIndex);
+    expect(source).toContain("import ReportExportActions from './ReportExportActions.svelte';");
+    expect(source).toContain('onExportAiJson={exportAiReviewJson}');
+    expect(source).not.toContain('<summary>Report actions</summary>');
+    expect(source).not.toContain('Download location');
+  });
 });
 
 describe('ReportView print preparation', () => {
@@ -80,7 +98,7 @@ describe('ReportView print preparation', () => {
     expect(source).toContain('window.addEventListener(\'afterprint\', restore, { once: true });');
     expect(source).toContain('Object.fromEntries(filteredSections.map((section) => [section.name, false]))');
     expect(source).toContain('collapsedSections = previousCollapsedSections;');
-    expect(source).toContain('onclick={printReport}');
-    expect(source).toContain("isPreparingPrint ? 'Preparing PDF…' : 'Export PDF'");
+    expect(source).toContain('onPrintReport={printReport}');
+    expect(source).toContain('ReportExportActions');
   });
 });

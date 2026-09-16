@@ -6,6 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Genomics Caddy</title>
 
+    <!-- Keep the native first paint dark until the detailed Svelte bootstrap
+         screen has mounted. The bootstrap screen remains the only loading UI. -->
+    <style>
+      :root {
+        color-scheme: dark;
+        background: #080b14;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+        background: #080b14;
+        color: #eef2ff;
+      }
+
+    </style>
+
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

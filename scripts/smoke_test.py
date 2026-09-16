@@ -6,7 +6,7 @@ Purpose:
   Verify Qdrant (and optional NCBI / Ollama) connectivity using credentials from `.env`.
 How to run:
   python scripts/smoke_test.py
-  npm run smoke
+  pnpm run smoke
 Key inputs:
   `.env` beside project root (QDRANT_URL, QDRANT_API_KEY, QDRANT_COLLECTION, optional NCBI_API_KEY, OLLAMA_URL, OLLAMA_TOKEN)
 Key outputs:

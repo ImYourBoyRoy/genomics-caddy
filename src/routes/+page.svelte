@@ -29,6 +29,7 @@
   import AppShell from "$lib/components/layout/AppShell.svelte";
   import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
   import EmptyState from "$lib/components/common/EmptyState.svelte";
+  import ImportWorkspaceState from "$lib/components/common/ImportWorkspaceState.svelte";
   import BootstrapOverlay from "$lib/components/common/bootstrap/BootstrapOverlay.svelte";
   import {
     DB_TICKER_MESSAGES,
@@ -60,13 +61,19 @@
   import "$lib/styles/theme.css";
   import "$lib/styles/print.css";
 
-  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord } from "$lib/types/genomics";
+  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
   import {
     EMPTY_PROFILE_CONTEXT,
     loadProfileContext,
     type ProfileContext,
   } from "$lib/utils/profileContext";
+  import {
+    importPhaseForProgress,
+    importStepForPhase,
+    type ImportPhase,
+    type ImportStepId,
+  } from "$lib/utils/importProgress";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
@@ -88,9 +95,16 @@
   let bootstrapError = $state("");
   let bootstrapStatus = $state<AppBootstrapStatus | null>(null);
   let runtimeAvailable = $state(true);
-  let showBootstrapOverlay = $derived(
-    isBootstrapping || (bootstrapPhase === "error" && samples.length === 0)
-  );
+  let isResourceSyncing = $state(false);
+  let resourceSyncOverlayDismissed = $state(false);
+  let isImportPreparing = $state(false);
+  let importPhase = $state<ImportPhase>("idle");
+  let importPreview = $state<GenomeImportPreview | null>(null);
+  let importProfileName = $state("");
+  let importReplacingExisting = $state(false);
+  let pendingImportConfirmation = $state<(() => void | Promise<void>) | null>(null);
+  let importFailedStep = $state<ImportStepId | null>(null);
+  let importOverlayDismissed = $state(false);
   let isChainDownloaded = $state(false);
   let isDownloadingChain = $state(false);
   
@@ -99,6 +113,36 @@
   let progressStatus = $state("");
   let importError = $state("");
   let importSuccess = $state("");
+  const NATIVE_IMPORT_PHASES = new Set<ImportPhase>([
+    "reading",
+    "parsing",
+    "liftover",
+    "ingesting",
+    "indexing",
+  ]);
+
+  let showImportOverlay = $derived(
+    // Full-screen import overlay only for failures that need an explicit dismiss.
+    // Live import progress belongs in the sidebar card (right of the dock / left panel).
+    importPhase === "error" && !importOverlayDismissed,
+  );
+  let showBootstrapOverlay = $derived(
+    isBootstrapping ||
+      (isResourceSyncing && !resourceSyncOverlayDismissed) ||
+      (bootstrapPhase === "error" && samples.length === 0),
+  );
+
+  function bootstrapPhaseForImport(phase: ImportPhase): BootstrapPhase {
+    if (phase === "error") return "error";
+    if (phase === "ready") return "ready";
+    if (phase === "report") return "report";
+    if (phase === "profile") return "profile";
+    if (phase === "liftover" || phase === "ingesting" || phase === "indexing") return "profile";
+    return "stats";
+  }
+
+  let importOverlayPhase = $derived(bootstrapPhaseForImport(importPhase));
+  let importOverlayProgress = $derived({ percentage: progressPercent, status: progressStatus });
 
   let activeTab = $state("report"); // report | context | diary | map | discovery | legal | browser | mcp | agent | research | ai | connections
   const ADVANCED_TAB_KEY = "genomics_caddy_last_advanced_tab";
@@ -262,7 +306,7 @@
   let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
   let offlineStatusFreshForWelcome = $state(false);
   let sidebarApi = $state<{
-    syncAllMissing: () => void;
+    syncAllMissing: () => Promise<void>;
     expandDatabases: () => void;
   } | null>(null);
 
@@ -424,6 +468,10 @@
     listen<{ percentage: number; status: string }>("import-progress", (event) => {
       progressPercent = event.payload.percentage;
       progressStatus = event.payload.status;
+      if (isImporting && NATIVE_IMPORT_PHASES.has(importPhase)) {
+        importPhase = importPhaseForProgress(event.payload.status, event.payload.percentage);
+        importFailedStep = null;
+      }
     }).then(unlisten => {
       unlistenProgress = unlisten;
     });
@@ -507,22 +555,17 @@
   }
 
   async function refreshSamples() {
-    try {
-      samples = await fetchSamples();
-      if (samples.length > 0 && selectedSample === null) {
-        selectSample(samples[0]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    const loaded = await fetchSamples();
+    samples = loaded;
+    return loaded;
   }
 
-  function selectSample(sample: GenomeSample) {
+  async function selectSample(sample: GenomeSample): Promise<void> {
     selectedSample = sample;
     generatedReport = null;
-    void runTriggerReport({
-      selectedSample,
-      generatedReport,
+    await runTriggerReport({
+      selectedSample: sample,
+      generatedReport: null,
       warmReportFn: (id) => warmReport(id),
     });
   }
@@ -535,24 +578,70 @@
   }
 
   async function importGenome(e: Event) {
+    pendingImportConfirmation = null;
+    importReplacingExisting = false;
     await runImportGenome(e, {
       filePath,
       sampleNameInput,
+      existingSamples: samples,
+      selectedSampleId: selectedSample?.id ?? null,
+      onConfirmationRequired: (onConfirm, replacingExisting) => {
+        pendingImportConfirmation = onConfirm;
+        importReplacingExisting = replacingExisting;
+      },
       onState: (patch) => {
-        if (patch.isImporting !== undefined) isImporting = patch.isImporting;
+        if (patch.importPhase === "error") {
+          importFailedStep = importStepForPhase(importPhase) ?? "validate";
+          importOverlayDismissed = false;
+        } else if (patch.importPhase !== undefined) {
+          importFailedStep = null;
+          if (patch.importPhase !== "awaiting-confirmation") importOverlayDismissed = false;
+        }
+        if (patch.isImportPreparing !== undefined) isImportPreparing = patch.isImportPreparing;
+        if (patch.isImporting !== undefined) {
+          isImporting = patch.isImporting;
+          if (patch.isImporting) importOverlayDismissed = false;
+        }
         if (patch.importError !== undefined) importError = patch.importError;
         if (patch.importSuccess !== undefined) importSuccess = patch.importSuccess;
         if (patch.progressPercent !== undefined) progressPercent = patch.progressPercent;
         if (patch.progressStatus !== undefined) progressStatus = patch.progressStatus;
+        if (patch.importPhase !== undefined) importPhase = patch.importPhase;
+        if (patch.importPreview !== undefined) importPreview = patch.importPreview;
+        if (patch.importProfileName !== undefined) importProfileName = patch.importProfileName;
         if (patch.filePath !== undefined) filePath = patch.filePath;
         if (patch.sampleNameInput !== undefined) sampleNameInput = patch.sampleNameInput;
       },
       refreshSamples: async () => {
-        await refreshSamples();
-        return samples;
+        // Refresh without selecting the first row implicitly. The import
+        // waterfall selects and warms the exact returned profile next.
+        const loaded = await fetchSamples();
+        samples = loaded;
+        return loaded;
       },
       selectSample,
     });
+  }
+
+  function confirmImportReview() {
+    const confirm = pendingImportConfirmation;
+    pendingImportConfirmation = null;
+    importReplacingExisting = false;
+    if (confirm) void confirm();
+  }
+
+  function cancelImportReview() {
+    pendingImportConfirmation = null;
+    importReplacingExisting = false;
+    isImportPreparing = false;
+    isImporting = false;
+    importPhase = "idle";
+    importPreview = null;
+    importFailedStep = null;
+    importOverlayDismissed = true;
+    importError = "";
+    progressPercent = 0;
+    progressStatus = "";
   }
 
   async function warmReport(sampleId: number) {
@@ -588,6 +677,10 @@
         if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
       },
       refreshSamples,
+      selectSample,
+      removeSampleFromList: (sampleId) => {
+        samples = samples.filter((profile) => profile.id !== sampleId);
+      },
     });
   }
 
@@ -611,12 +704,35 @@
   let foundMarkersCount = $derived(reportMarkerCounts.foundMarkersCount);
 </script>
 
-{#if showBootstrapOverlay}
+{#if showImportOverlay}
+  <BootstrapOverlay
+    phase={importOverlayPhase}
+    message={progressStatus || "Preparing DNA import…"}
+    status={null}
+    error={importError}
+    mode="import"
+    importPhase={importPhase}
+    importProgress={importOverlayProgress}
+    importPreview={importPreview}
+    importProfileName={importProfileName}
+    importFailedStep={importFailedStep}
+    showWorkspaceAction={importPhase === "error"}
+    workspaceActionLabel="Return to workspace"
+    onContinue={() => {
+      importOverlayDismissed = true;
+    }}
+  />
+{:else if showBootstrapOverlay}
   <BootstrapOverlay
     phase={bootstrapPhase}
     message={bootstrapMessage}
     status={bootstrapStatus}
     error={bootstrapError}
+    mode={isResourceSyncing ? "resources" : "startup"}
+    showWorkspaceAction={isResourceSyncing}
+    onContinue={() => {
+      resourceSyncOverlayDismissed = true;
+    }}
   />
 {/if}
 
@@ -627,6 +743,7 @@
       {isDownloadingChain}
       bind:filePath
       bind:sampleNameInput
+      {isImportPreparing}
       {isImporting}
       {progressPercent}
       {progressStatus}
@@ -654,11 +771,32 @@
       onResourcesUpdated={async () => {
         await reloadReport();
       }}
+      onResourceSyncStateChange={({ active, message }) => {
+        isResourceSyncing = active;
+        if (active) {
+          resourceSyncOverlayDismissed = false;
+          bootstrapPhase = "stats";
+          bootstrapMessage = message;
+          bootstrapError = "";
+        }
+      }}
     />
   {/snippet}
   {#snippet children()}
     <main class="main-content">
-      {#if selectedSample === null}
+      {#if isImportPreparing || isImporting || importPhase === "awaiting-confirmation"}
+        <ImportWorkspaceState
+          phase={importPhase}
+          percentage={progressPercent}
+          status={progressStatus}
+          profileName={importProfileName || sampleNameInput}
+          preview={importPreview}
+          failedStep={importFailedStep}
+          replacingExisting={importReplacingExisting}
+          onConfirmImport={confirmImportReview}
+          onCancelImport={cancelImportReview}
+        />
+      {:else if selectedSample === null}
         <EmptyState
           {appPaths}
           offlineStatus={offlineStatusForWelcome}

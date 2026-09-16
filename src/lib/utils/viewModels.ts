@@ -13,6 +13,16 @@ Operational Notes: Tailored for Svelte 5 derived state integration.
 
 import type { GeneratedReport, NormalizedReport, DisplayMarker } from '../types/genomics';
 import { buildReferenceEntries } from './reportReferences';
+import {
+  normalizeAssertionStatus,
+  normalizeReportStatuses,
+} from './reportStatuses';
+import {
+  buildAssertionKey,
+  callabilityStateForResult,
+  normalizeCallabilityState,
+  orientationStateForResult,
+} from './callability';
 
 export function deriveDisplayMarkers(report: NormalizedReport | null | undefined, sectionId: string): DisplayMarker[] {
   if (!report || !report.sections || !report.variants || !report.user_calls || !report.category_links) {
@@ -93,6 +103,27 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       : buildReferenceEntries(link.sources || [], enrichment.db_enriched_sources || [])
         .map(reference => reference.id);
 
+    const assertion_status = normalizeAssertionStatus(link.assertion_status);
+    const callability_state = normalizeCallabilityState(link.callability_state)
+      ?? callabilityStateForResult(link.variant_type ?? variant.variant_type, assertion_status);
+    const orientation_state = link.orientation_state
+      ?? orientationStateForResult(assertion_status, link.requires_orientation_verification);
+    const assertion_key = link.assertion_key || buildAssertionKey({
+      rsid: link.rsid,
+      gene: link.gene || variant.gene,
+      variant_name: link.variant_name || variant.variant_name,
+      variant_type: link.variant_type ?? variant.variant_type,
+      source_build: link.source_build,
+      hgvs: link.hgvs,
+      expected_plus_alleles: link.expected_plus_alleles,
+      effect_allele: link.effect_allele,
+      category_id: link.category_id,
+      sex_scope: link.sex_scope,
+      clinical_semantics: link.clinical_semantics,
+      reference_ids: link.reference_ids,
+      sources: link.sources,
+    });
+
     // Determine position based on source build (GRCh38 preferred, fallback to 37)
     let position = variant.position_grch38 ?? variant.position_grch37 ?? null;
     if (enrichment.dbsnp) {
@@ -101,10 +132,15 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
 
     displayMarkers.push({
       link_id: linkId,
+      assertion_key,
       rsid: link.rsid,
-      gene: variant.gene || '',
-      variant_name: variant.variant_name || rsid,
-      variant_type: variant.variant_type ?? null,
+      gene: link.gene || variant.gene || '',
+      variant_name: link.variant_name || variant.variant_name || rsid,
+      variant_type: link.variant_type ?? variant.variant_type ?? null,
+      source_build: link.source_build ?? null,
+      hgvs: link.hgvs ?? null,
+      expected_plus_alleles: link.expected_plus_alleles ?? null,
+      category_id: link.category_id,
       chromosome: variant.chromosome || enrichment.dbsnp?.chromosome || '',
       position,
       user_genotype: call.user_genotype,
@@ -116,7 +152,10 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
       interpretation: link.interpretation,
       effect_direction: link.effect_direction,
       severity_class: link.severity_class as any,
-      assertion_status: link.assertion_status,
+      assertion_status,
+      callability_state,
+      orientation_state,
+      requires_orientation_verification: link.requires_orientation_verification,
       interpretation_allowed: link.interpretation_allowed,
       sources: link.sources || [],
       db_enriched_sources: enrichment.db_enriched_sources || [],
@@ -148,14 +187,15 @@ export function deriveDisplayMarkers(report: NormalizedReport | null | undefined
 }
 
 export function denormalizeReport(report: NormalizedReport): GeneratedReport {
+  const normalized = normalizeReportStatuses(report);
   return {
-    ...report,
-    sections: report.sections.map(sec => ({
+    ...normalized,
+    sections: normalized.sections.map(sec => ({
       name: sec.name,
       section_id: sec.section_id,
       section_signal_score: sec.section_signal_score,
       summary: sec.summary,
-      markers: deriveDisplayMarkers(report, sec.section_id)
+      markers: deriveDisplayMarkers(normalized, sec.section_id)
     }))
   };
 }

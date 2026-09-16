@@ -151,12 +151,35 @@ pub fn compute_personal_direction(
         flags.push("missing_effect_allele".into());
         return ("unknown".into(), None, flags);
     };
-    if genotype.is_empty() || genotype.contains("--") {
+    let normalized_genotype = genotype.trim().to_uppercase();
+    if normalized_genotype.is_empty() || normalized_genotype.contains("--") {
         flags.push("genotype_no_call".into());
         return ("unknown".into(), None, flags);
     }
     let parts: Vec<&str> = genotype.split('/').collect();
     if parts.len() != 2 {
+        return ("unknown".into(), None, flags);
+    }
+    let has_known_base = parts.iter().any(|part| {
+        part.trim()
+            .chars()
+            .any(|base| matches!(base.to_ascii_uppercase(), 'A' | 'C' | 'G' | 'T'))
+    });
+    let has_unknown_base = parts.iter().any(|part| {
+        let token = part.trim().to_uppercase();
+        token.is_empty()
+            || token.contains('-')
+            || token.contains('?')
+            || token.contains('0')
+            || token.contains('N')
+    });
+    if has_unknown_base {
+        flags.push(if has_known_base {
+            "genotype_ambiguous_call"
+        } else {
+            "genotype_no_call"
+        }
+        .into());
         return ("unknown".into(), None, flags);
     }
     let ea_upper = ea.to_uppercase();
@@ -289,5 +312,34 @@ pub fn ledger_from_gwas_assoc(
         quality_flags: flags,
         evidence_tier: "curated_gwas".into(),
         association_type: "gwas_top_association".into(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compute_personal_direction;
+
+    #[test]
+    fn unknown_bases_are_not_scored_as_personal_matches() {
+        let (direction, dosage, flags) =
+            compute_personal_direction("N/A", Some("A"), None, Some(0.4), None);
+        assert_eq!(direction, "unknown");
+        assert_eq!(dosage, None);
+        assert!(flags.iter().any(|flag| flag == "genotype_ambiguous_call"));
+
+        let (direction, dosage, flags) =
+            compute_personal_direction("N/N", Some("A"), None, Some(0.4), None);
+        assert_eq!(direction, "unknown");
+        assert_eq!(dosage, None);
+        assert!(flags.iter().any(|flag| flag == "genotype_no_call"));
+    }
+
+    #[test]
+    fn complete_calls_retain_personal_direction_scoring() {
+        let (direction, dosage, flags) =
+            compute_personal_direction("A/A", Some("A"), None, Some(0.4), None);
+        assert_eq!(direction, "increased_trait_value");
+        assert_eq!(dosage, Some(2));
+        assert!(flags.is_empty());
     }
 }

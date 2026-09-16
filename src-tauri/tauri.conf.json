@@ -15,7 +15,8 @@
         "title": "Genomics Caddy",
         "width": 800,
         "height": 600,
-        "maximized": true
+        "maximized": true,
+        "backgroundColor": "#080b14"
       }
     ],
     "enableGTKAppId": true,
@@ -33,6 +34,18 @@
       "icons/icon.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "desktop.template",
+        "postInstallScript": "linux/post_install.sh",
+        "postRemoveScript": "linux/post_remove.sh"
+      },
+      "rpm": {
+        "desktopTemplate": "desktop.template",
+        "postInstallScript": "linux/post_install.sh",
+        "postRemoveScript": "linux/post_remove.sh"
+      }
+    }
   }
 }

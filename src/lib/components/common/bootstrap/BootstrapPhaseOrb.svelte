@@ -30,11 +30,11 @@
 <style>
   .phase-orb {
     position: relative;
-    width: 112px;
-    height: 112px;
+    width: 96px;
+    height: 96px;
     display: grid;
     place-items: center;
-    margin-bottom: 0.75rem;
+    margin: 0.35rem auto 0.55rem;
   }
 
   .ring {
@@ -50,36 +50,34 @@
   }
 
   .ring-2 {
-    inset: -10px;
+    inset: -8px;
     opacity: 0.55;
     animation: bootstrap-orb-pulse 2.4s ease-in-out infinite 0.35s;
   }
 
   .ring-3 {
-    inset: -22px;
+    inset: -16px;
     opacity: 0.3;
     border-style: dashed;
     animation: bootstrap-orb-spin 14s linear infinite;
   }
 
   .logo-shell {
-    width: 72px;
-    height: 72px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: rgba(12, 18, 32, 0.96);
     border: 1px solid var(--border-color);
     display: grid;
     place-items: center;
-    backdrop-filter: blur(12px);
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    animation: bootstrap-fade-up 0.7s ease both;
   }
 
   .logo {
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     object-fit: contain;
   }
 

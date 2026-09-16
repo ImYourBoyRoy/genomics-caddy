@@ -597,7 +597,7 @@
       "rsid": "rs1800795",
       "gene": "IL6",
       "variant_name": "IL6 -174G>C promoter",
-      "effect_allele": "C",
+      "effect_allele": "G",
       "impact": "Inflammatory cytokine expression variation / tendon pain and cartilage remodeling modifier",
       "evidence_tier": "C_biohacker_hypothesis",
       "interpretation": "IL6 influences inflammation, pain signaling, cartilage metabolism and repair. rs1800795 may alter promoter activity, but musculoskeletal interpretation should remain inflammatory-context only.",

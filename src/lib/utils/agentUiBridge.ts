@@ -104,6 +104,14 @@ export interface AgentUiTooltipProbeMetrics {
   maxTopOverflow: number;
   maxRightOverflow: number;
   maxBottomOverflow: number;
+  maxBottomOverflowSample: {
+    triggerBottom: number;
+    panelTop: number;
+    panelBottom: number;
+    panelHeight: number;
+    panelMaxHeight: string;
+    placement: string;
+  } | null;
   triggerEdgeCounts: {
     top: number;
     right: number;
@@ -160,6 +168,23 @@ export interface AgentUiWarningMetrics {
   legalPrivacyPageCount: number;
 }
 
+export interface AgentUiRecommendationMetrics {
+  foodPanelExpanded: boolean | null;
+  supplementPanelExpanded: boolean | null;
+  foodTileCount: number;
+  supplementTileCount: number;
+  foodGridColumnCount: number | null;
+  supplementGridColumnCount: number | null;
+  foodSurfaceWidth: number | null;
+  supplementSurfaceWidth: number | null;
+  tileOverflowCount: number;
+  readingOrderValid: boolean;
+  geneTextQuieterThanInstruction: boolean;
+  geneToneWarmAmber: boolean | null;
+  actionCount: number;
+  themedActionCount: number;
+}
+
 export interface AgentUiSnapshot {
   title: string;
   activeTab: string;
@@ -181,6 +206,7 @@ export interface AgentUiSnapshot {
   accessibility: AgentUiAccessibilityMetrics;
   simpleCardContract: AgentUiSimpleCardContractMetrics;
   warningMetrics: AgentUiWarningMetrics;
+  recommendationMetrics: AgentUiRecommendationMetrics;
   layout: AgentUiLayoutMetrics;
   href: string;
   capturedAt: string;
@@ -517,6 +543,83 @@ function collectWarningMetrics(): AgentUiWarningMetrics {
   };
 }
 
+function collectRecommendationMetrics(): AgentUiRecommendationMetrics {
+  const expanded = (id: string): boolean | null => {
+    const toggle = document.querySelector<HTMLButtonElement>(`button[aria-controls="${id}"]`);
+    const value = toggle?.getAttribute('aria-expanded');
+    return value === 'true' ? true : value === 'false' ? false : null;
+  };
+  const foodRows = Array.from(document.querySelectorAll<HTMLElement>('#dietary-alignment-body .recommendation-row'))
+    .filter((row) => !isIgnoredLayoutElement(row));
+  const supplementRows = Array.from(document.querySelectorAll<HTMLElement>('#supplements-body .recommendation-row'))
+    .filter((row) => !isIgnoredLayoutElement(row));
+  const visibleRows = [...foodRows, ...supplementRows];
+  const rowOrderIsValid = (row: HTMLElement): boolean => {
+    const content = row.querySelector<HTMLElement>('.insight-tile-content');
+    const instruction = content?.querySelector<HTMLElement>('.insight-tile-text, .supp-name');
+    const reason = content?.querySelector<HTMLElement>('.supp-reason');
+    const basis = content?.querySelector<HTMLElement>('.recommendation-basis');
+    const genes = content?.querySelector<HTMLElement>('.recommendation-genes');
+    if (!content || !instruction || !basis) return false;
+    const children = Array.from(content.children);
+    const instructionIndex = children.indexOf(instruction);
+    const basisIndex = children.indexOf(basis);
+    const genesIndex = genes ? children.indexOf(genes) : Number.POSITIVE_INFINITY;
+    const reasonIndex = reason ? children.indexOf(reason) : instructionIndex;
+    return instructionIndex >= 0 && reasonIndex < basisIndex && basisIndex < genesIndex;
+  };
+  const visibleGenes = visibleRows.flatMap((row) => Array.from(row.querySelectorAll<HTMLElement>('.recommendation-genes')));
+  const geneToneWarmAmber = visibleGenes.length
+    ? visibleGenes.every((gene) => {
+        const channels = getComputedStyle(gene).color.match(/[\d.]+/g)?.map(Number) || [];
+        return channels.length >= 3 && channels[0] > channels[1] && channels[1] > channels[2];
+      })
+    : null;
+  const geneTextQuieterThanInstruction = visibleRows
+    .filter((row) => row.querySelector('.recommendation-genes'))
+    .every((row) => {
+      const instruction = row.querySelector<HTMLElement>('.insight-tile-text, .supp-name');
+      const gene = row.querySelector<HTMLElement>('.recommendation-genes');
+      if (!instruction || !gene) return false;
+      return Number.parseFloat(getComputedStyle(gene).fontSize) < Number.parseFloat(getComputedStyle(instruction).fontSize);
+    });
+  const tileOverflowCount = visibleRows.filter((row) => {
+    const rowRect = row.getBoundingClientRect();
+    const parentRect = row.parentElement?.getBoundingClientRect();
+    return row.scrollWidth > row.clientWidth + 1 || (!!parentRect && rowRect.right > parentRect.right + 1);
+  }).length;
+  const actions = Array.from(document.querySelectorAll<HTMLButtonElement>(
+    '#dietary-alignment-body .recommendation-link, #supplements-body .recommendation-link',
+  )).filter((button) => !isIgnoredLayoutElement(button));
+  const themedActionCount = actions.filter((button) => {
+    const style = getComputedStyle(button);
+    const borderWidth = Number.parseFloat(style.borderTopWidth);
+    const radius = Number.parseFloat(style.borderTopLeftRadius);
+    return style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.borderStyle !== 'none' && borderWidth > 0 && radius > 0;
+  }).length;
+  const foodGrid = document.querySelector<HTMLElement>('#dietary-alignment-body .dietary-items');
+  const supplementGrid = document.querySelector<HTMLElement>('#supplements-body .supplements-list');
+  const foodSurface = document.querySelector<HTMLElement>('#dietary-alignment-body .diet-section');
+  const supplementSurface = document.querySelector<HTMLElement>('#supplements-body .supplement-columns');
+
+  return {
+    foodPanelExpanded: expanded('dietary-alignment-body'),
+    supplementPanelExpanded: expanded('supplements-body'),
+    foodTileCount: foodRows.length,
+    supplementTileCount: supplementRows.length,
+    foodGridColumnCount: foodGrid ? getGridColumnCount(foodGrid) : null,
+    supplementGridColumnCount: supplementGrid ? getGridColumnCount(supplementGrid) : null,
+    foodSurfaceWidth: foodSurface ? Math.round(foodSurface.getBoundingClientRect().width) : null,
+    supplementSurfaceWidth: supplementSurface ? Math.round(supplementSurface.getBoundingClientRect().width) : null,
+    tileOverflowCount,
+    readingOrderValid: visibleRows.every(rowOrderIsValid),
+    geneTextQuieterThanInstruction,
+    geneToneWarmAmber,
+    actionCount: actions.length,
+    themedActionCount,
+  };
+}
+
 function collectTooltipMetrics(): AgentUiTooltipMetrics {
   const panels = Array.from(document.querySelectorAll<HTMLElement>('.tooltip-panel'));
   const rects = panels.map((panel) => panel.getBoundingClientRect());
@@ -576,6 +679,7 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
   let maxTopOverflow = 0;
   let maxRightOverflow = 0;
   let maxBottomOverflow = 0;
+  let maxBottomOverflowSample: AgentUiTooltipProbeMetrics['maxBottomOverflowSample'] = null;
 
   for (const trigger of triggers) {
     dismissOpenTooltipForQa();
@@ -596,6 +700,18 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
       maxRightOverflow = Math.max(maxRightOverflow, metrics.maxRightOverflow);
       maxBottomOverflow = Math.max(maxBottomOverflow, metrics.maxBottomOverflow);
       const rect = trigger.getBoundingClientRect();
+      if (metrics.maxBottomOverflow > 0) {
+        const panelRect = panel.getBoundingClientRect();
+        const panelStyle = getComputedStyle(panel);
+        maxBottomOverflowSample = {
+          triggerBottom: Math.round(rect.bottom),
+          panelTop: Math.round(panelRect.top),
+          panelBottom: Math.round(panelRect.bottom),
+          panelHeight: Math.round(panelRect.height),
+          panelMaxHeight: panelStyle.maxHeight,
+          placement: ['top', 'right', 'bottom', 'left'].find((side) => panel.classList.contains(`tooltip-${side}`)) || 'unknown',
+        };
+      }
       const edgeThreshold = 80;
       if (rect.top <= edgeThreshold) triggerEdgeCounts.top += 1;
       if (window.innerWidth - rect.right <= edgeThreshold) triggerEdgeCounts.right += 1;
@@ -617,6 +733,7 @@ async function probeVisibleTooltips(): Promise<AgentUiTooltipProbeMetrics> {
     maxTopOverflow,
     maxRightOverflow,
     maxBottomOverflow,
+    maxBottomOverflowSample,
     triggerEdgeCounts,
   };
 }
@@ -951,6 +1068,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         accessibility: collectAccessibilityMetrics(),
         simpleCardContract: collectSimpleCardContractMetrics(),
         warningMetrics: collectWarningMetrics(),
+        recommendationMetrics: collectRecommendationMetrics(),
         layout: collectLayoutMetrics(),
         href: location.href,
         capturedAt: new Date().toISOString(),

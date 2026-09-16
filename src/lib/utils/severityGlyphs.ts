@@ -24,6 +24,8 @@ export function severityGlyph(severityClass: string): string {
       return "~";
     case "low_risk":
       return "?";
+    case "not_evaluated":
+      return "~";
     default:
       return "·";
   }
@@ -49,6 +51,8 @@ export function severityShortLabel(severityClass: string): string {
       return "Preliminary signal";
     case "no_data":
       return "Not tested";
+    case "not_evaluated":
+      return "Not evaluated";
     default:
       return "Not detected";
   }

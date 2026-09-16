@@ -2,7 +2,7 @@
 <script lang="ts">
   import type { EvaluatedMarker } from '../../types/genomics';
   import type { VariantNavTarget } from '../../constants/traitCategories';
-  import { getEffectAllele, getEffectCount } from '../../utils/genotype';
+  import { getEffectAllele, getEffectCount, isCallableGenotype } from '../../utils/genotype';
   import { getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
   import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';
   import {
@@ -11,6 +11,17 @@
     interpretationClassLabel,
     normalizeFindingSemantics,
   } from '../../utils/findingSemantics';
+  import {
+    callabilityExplanation,
+    callabilityStateForResult,
+    callabilityStateLabel,
+    orientationStateForResult,
+    orientationStateLabel,
+  } from '../../utils/callability';
+  import {
+    getSharedInterpretations,
+    normalizeSharedInterpretation,
+  } from '../../utils/sharedInterpretations';
   import SourcesList from './SourcesList.svelte';
 
   interface Props {
@@ -37,6 +48,9 @@
   }
 
   function clinicalStatusNote(marker: EvaluatedMarker): string {
+    const callabilityState = marker.callability_state
+      || callabilityStateForResult(marker.variant_type, marker.assertion_status);
+    if (callabilityState !== 'callable') return callabilityExplanation(callabilityState);
     if (!marker.interpretation_allowed) return 'Review blocked';
     if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
       return 'Confirmation needed';
@@ -44,31 +58,24 @@
     return 'Contextual result';
   }
 
+  function markerOrientationState(marker: EvaluatedMarker) {
+    return marker.orientation_state
+      || orientationStateForResult(marker.assertion_status, marker.requires_orientation_verification);
+  }
+
+  function markerCallabilityState(marker: EvaluatedMarker) {
+    return marker.callability_state
+      || callabilityStateForResult(marker.variant_type, marker.assertion_status);
+  }
+
   function isHighlighted(marker: EvaluatedMarker): boolean {
     return highlightRsid !== '' && marker.rsid.toLowerCase() === highlightRsid.toLowerCase();
   }
 
-  function normalizeSharedCopy(value: string): string {
-    return value.trim().replace(/\s+/g, ' ').toLowerCase();
-  }
-
-  let sharedInterpretations = $derived.by(() => {
-    const groups = new Map<string, { text: string; count: number }>();
-    for (const marker of markers) {
-      const interpretation = marker.interpretation?.trim() || '';
-      const key = normalizeSharedCopy(interpretation);
-      if (!key) continue;
-      const existing = groups.get(key);
-      if (existing) existing.count += 1;
-      else groups.set(key, { text: interpretation, count: 1 });
-    }
-    return Array.from(groups.values())
-      .filter((item) => item.count > 1)
-      .sort((left, right) => right.count - left.count || left.text.localeCompare(right.text));
-  });
+  let sharedInterpretations = $derived(getSharedInterpretations(markers));
 
   let sharedInterpretationKeys = $derived.by(() =>
-    new Set(sharedInterpretations.map((item) => normalizeSharedCopy(item.text))),
+    new Set(sharedInterpretations.map((item) => item.key)),
   );
 </script>
 
@@ -115,7 +122,7 @@
             <strong>{marker.gene}</strong>
             <span class="clinical-finding-sub">{marker.variant_name || marker.rsid}</span>
             <div class="clinical-row-actions no-print">
-              {#if marker.user_genotype !== '--' && !marker.user_genotype.includes('-')}
+              {#if isCallableGenotype(marker.user_genotype)}
                 <button type="button" class="clinical-row-link" aria-label="Open {marker.rsid} on the genome map" onclick={() => onNavigateToVariant?.(marker.rsid, 'map')}>Map</button>
                 <button type="button" class="clinical-row-link" aria-label="Open {marker.rsid} in the raw browser" onclick={() => onNavigateToVariant?.(marker.rsid, 'browser')}>Browser</button>
                 <button type="button" class="clinical-row-link" aria-label="Search evidence for {marker.rsid}" onclick={() => onExploreResearch?.(marker.rsid)}>Evidence</button>
@@ -164,6 +171,8 @@
                 <div><dt>Variant</dt><dd>{marker.variant_name || 'Not recorded'}</dd></div>
                 <div><dt>Effect allele / count</dt><dd>{effectAllele} / {effectCount}</dd></div>
                 <div><dt>Assertion</dt><dd>{marker.assertion_status}</dd></div>
+                <div><dt>Callability</dt><dd>{callabilityStateLabel(markerCallabilityState(marker))}</dd></div>
+                <div><dt>Orientation</dt><dd>{orientationStateLabel(markerOrientationState(marker))}</dd></div>
                 <div><dt>Clinical confirmation</dt><dd>{marker.clinical_confirmation_required ? 'Discuss confirmation' : 'Not specifically required by this marker'}</dd></div>
                 {#if semantics.condition_label}
                   <div><dt>Condition / topic</dt><dd>{semantics.condition_label}</dd></div>
@@ -171,7 +180,7 @@
                 <div><dt>Interpretation class</dt><dd>{interpretationClassLabel(semantics.interpretation_class)}</dd></div>
                 <div><dt>Inheritance model</dt><dd>{inheritanceModelLabel(semantics.inheritance_model)}</dd></div>
                 <div><dt>Clinical state</dt><dd>{clinicalStateLabel(semantics.clinical_state)}</dd></div>
-                {#if sharedInterpretationKeys.has(normalizeSharedCopy(marker.interpretation))}
+                {#if sharedInterpretationKeys.has(normalizeSharedInterpretation(marker.interpretation))}
                   <div><dt>Interpretation</dt><dd>Shared clinical context shown above.</dd></div>
                 {:else}
                   <div><dt>Interpretation</dt><dd>{marker.interpretation}</dd></div>

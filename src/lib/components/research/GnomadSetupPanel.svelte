@@ -31,6 +31,7 @@
   let message = $state("");
 
   const gnomadReady = $derived(!!readiness && (!readiness.enabled || readiness.ready));
+  const frequencyCacheReady = $derived(!!readiness && (!readiness.enabled || readiness.frequency_cache_ready));
   const showMissing = $derived(
     !!readiness && readiness.enabled && readiness.missing_items.length > 0 && readiness.missing_items.length <= 8
   );
@@ -123,6 +124,8 @@
       openDownloads();
     } else if (action === "Test source URLs") {
       await handleCheck();
+    } else if (action === "Refresh gnomAD manifest") {
+      await loadAll();
     } else if (action === "Use Remote indexed VCF") {
       useRemoteMode();
     }
@@ -197,11 +200,13 @@
     {#if loading}
       <ActivityPulse message="Checking setup…" accent="#38bdf8" maxWidth="140px" />
     {:else if readiness}
-      <span class:status-pill={true} class:ok={gnomadReady} class:warn={!gnomadReady && readiness.enabled}>
+      <span class:status-pill={true} class:ok={gnomadReady && frequencyCacheReady} class:warn={!gnomadReady || (gnomadReady && !frequencyCacheReady)}>
         {#if !readiness.enabled}
           Off
-        {:else if gnomadReady}
+        {:else if gnomadReady && frequencyCacheReady}
           Ready
+        {:else if gnomadReady}
+          Indexes ready · cache warming
         {:else}
           Needs setup
         {/if}
@@ -214,6 +219,7 @@
     {#if readiness.enabled && readiness.indexes_expected > 0}
       <p class="meta">
         Indexes cached: {readiness.indexes_cached}/{readiness.indexes_expected}
+        · Frequency rows: {readiness.frequency_cache_rows.toLocaleString()}
         · Release {readiness.release} · {readiness.provider.toUpperCase()}
         · Manifest: {readiness.manifest_exome_contigs.length} exome + {readiness.manifest_genome_contigs.length} genome contigs
       </p>
@@ -228,16 +234,31 @@
     {/if}
   {/if}
 
-  <div class="controls">
-    <label class="toggle">
+    <div class="controls">
+      <label class="toggle">
       <input
         type="checkbox"
         checked={cfg.enabled}
         disabled={disabled}
         onchange={(e) => persistConfig({ enabled: (e.currentTarget as HTMLInputElement).checked })}
       />
-      Enable gnomAD during enrichment
-    </label>
+        Enable gnomAD during enrichment
+      </label>
+
+      <label class="toggle release-toggle">
+        <input
+          type="checkbox"
+          checked={cfg.auto_discover_release}
+          disabled={disabled}
+          onchange={(e) => persistConfig({ auto_discover_release: (e.currentTarget as HTMLInputElement).checked })}
+        />
+        Follow the latest compatible release
+      </label>
+      <p class="release-note">
+        Remote mode checks the official public release index daily and uses the newest release with working exome and genome indexes.
+        Turn this off only when you intentionally need a pinned release.
+      </p>
+      <p class="meta cache-status">{readiness?.frequency_cache_summary || 'Checking frequency cache…'}</p>
 
     <div class="grid-2">
       <label>
@@ -418,6 +439,16 @@
     gap: 8px;
     align-items: center;
     font-size: 0.72rem;
+  }
+  .release-toggle {
+    margin-top: 2px;
+    color: var(--text-primary);
+  }
+  .release-note {
+    margin: -2px 0 2px 24px;
+    color: var(--text-secondary);
+    font-size: 0.62rem;
+    line-height: 1.35;
   }
   .grid-2 {
     display: grid;

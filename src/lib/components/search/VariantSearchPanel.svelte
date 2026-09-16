@@ -215,7 +215,9 @@
                       <td class="font-mono">
                         {r.position_grch38 ? r.position_grch38.toLocaleString() : "Unmapped"}
                       </td>
-                      <td class="font-mono muted">{r.position_grch37.toLocaleString()}</td>
+                      <td class="font-mono muted">
+                        {r.position_grch37 ? r.position_grch37.toLocaleString() : "Unmapped"}
+                      </td>
                       <td><span class="vb-gt">{r.allele1}{r.allele2}</span></td>
                       <td class="vb-actions">
                         {#if onNavigateToVariant}

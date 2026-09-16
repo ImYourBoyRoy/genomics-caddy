@@ -40,6 +40,8 @@ describe('support resource context', () => {
     expect(context.cycle_support.source_registry.adenomyosis_2026_gwas).toBeDefined();
     expect(context.cycle_support.context_options.some((option) => option.id === 'menstrual_cycle')).toBe(true);
     expect(context.cycle_support.context_options.some((option) => option.id === 'androgen_reproductive')).toBe(true);
+    expect(context.condition_integrations.conditions.some((condition) => condition.id === 'pmdd_steroid_sensitivity')).toBe(true);
+    expect(context.condition_integrations.conditions.some((condition) => condition.id === 'eds_spectrum_connective_tissue')).toBe(true);
     expect(context.cycle_support.selected_context_id).toBe('menstrual_cycle');
     expect(context.cycle_support.intake_schema.fields.some((field) => field.id === 'active_ingredients')).toBe(true);
     expect(context.cycle_support.intake_schema.fields.some((field) => field.id === 'hormone_lab_timing_context')).toBe(true);
@@ -361,6 +363,9 @@ describe('support resource context', () => {
 
     expect(context.lab_overlays.some((overlay) => overlay.domain === 'pgx')).toBe(true);
     expect(context.callability_rules.some((rule) => rule.id === 'STAR_ALLELE_DIPLOTYPE_REQUIRED')).toBe(true);
+    expect(context.callability_registry.pharmacogenomic_snp.scoring_policy).toBe('snp_allele_count');
+    expect(context.callability_registry.star_allele?.scoring_policy).toBe('not_evaluated');
+    expect(context.callability_registry.hla_tag.scoring_policy).toBe('not_evaluated');
     expect(context.safety_guardrails.some((rule) => rule.id === 'PGX_NO_MED_CHANGE')).toBe(true);
     const hlaPhenytoinRule = context.actionability_rules.find((rule) => rule.id === 'hla_b1502_phenytoin_safety');
     expect(hlaPhenytoinRule?.marker_ids).toContain('HLA-B*15:02');
@@ -385,6 +390,21 @@ describe('support resource context', () => {
     expect(apoeRule?.pack_hints).toContain('cardiovascular');
     expect(context.activity_safety.relevant_domains.some((domain) => domain.id === 'cardiovascular')).toBe(true);
     expect(context.activity_safety.stop_and_escalate.some((item) => item.includes('Chest pain'))).toBe(true);
+  });
+
+  it('routes the inflammation domain schema and canonical lab IDs', () => {
+    const context = buildSupportResourceContext({ packIds: ['core'] });
+    const systemic = context.inflammation_support.domains.find((domain) => domain.id === 'systemic_inflammatory_signaling');
+    const actionability = context.actionability_rules.find((rule) => rule.id === 'inflammation_foundational_context');
+
+    expect(systemic?.marker_ids).toEqual(['rs1800795', 'rs1800629', 'rs1205']);
+    expect(systemic?.foundational_lifestyle?.food_pattern).toHaveLength(3);
+    expect(systemic?.lab_ids).toEqual(expect.arrayContaining(['hs_crp', 'crp', 'esr']));
+    expect(context.inflammation_support.domains.find((domain) => domain.id === 'immune_autoimmune_context')?.lifestyle_recommendation)
+      .toBeNull();
+    expect(context.inflammation_support.lab_ids.map((lab) => lab.id)).toEqual(expect.arrayContaining(['hs_crp', 'crp', 'esr', 'fecal_calprotectin']));
+    expect(actionability?.marker_ids).toEqual(expect.arrayContaining(['rs1800795', 'rs1800629', 'rs1205']));
+    expect(context.food_safety.source_registry.dietary_guidelines_2025_2030).toBeDefined();
   });
 
   it('routes metabolic consultation context to glucose, lipid, and activity resources', () => {

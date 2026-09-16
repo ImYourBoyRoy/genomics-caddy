@@ -101,6 +101,15 @@ pub(crate) fn get_custom_download_dir_from_db(db_path: &Path) -> Option<PathBuf>
     None
 }
 
+/// Resolve the canonical on-disk liftover path, including a configured custom
+/// download directory, so legacy commands and offline sync inspect the same asset.
+pub fn liftover_chain_path(data_dir: &Path, db_path: &Path) -> PathBuf {
+    let custom_dir = get_custom_download_dir_from_db(db_path);
+    let definition = asset_def(OfflineAssetId::LiftoverChain)
+        .expect("canonical liftover asset must exist in the offline manifest");
+    super::manifest::local_path(data_dir, custom_dir.as_deref(), definition)
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct OfflineIndexedSummary {
     pub gwas_rows: u64,

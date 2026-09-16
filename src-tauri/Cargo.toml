@@ -34,7 +34,7 @@ flate2 = ">=1"
 rfd = ">=0.17"
 zip = { version = ">=9.0.0-pre2", default-features = false, features = ["deflate"] }
 dotenvy = ">=0.15"
-keyring = "4.1.6"
+keyring = "4.2.0"
 url = ">=2"
 noodles-vcf = ">=0.88"
 noodles-bgzf = ">=0.47"

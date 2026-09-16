@@ -3,6 +3,212 @@
   "version": "1.0.0",
   "last_updated": "2026-07-01",
   "purpose": "Tell the local engine whether a raw DNA source can responsibly interpret a marker or panel.",
+  "variant_type_registry": {
+    "snp": {
+      "assertion_kind": "single_locus_snp",
+      "assay_requirement": "rsID call with compatible nucleotide alleles and verified orientation when required",
+      "scoring_policy": "snp_allele_count",
+      "display_policy": "evaluated_or_orientation_blocked"
+    },
+    "pharmacogenomic_snp": {
+      "assertion_kind": "pharmacogenomic_single_locus",
+      "assay_requirement": "validated SNP call; pathway may still require additional loci, phase, copy number, or clinical confirmation",
+      "scoring_policy": "snp_allele_count",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "star_allele": {
+      "assertion_kind": "pharmacogenomic_star_allele",
+      "assay_requirement": "validated multi-locus, phase-aware, and copy-number-aware pharmacogenomic assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "proxy_snp": {
+      "assertion_kind": "proxy_context",
+      "assay_requirement": "compatible SNP call does not establish the linked variant or haplotype",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "context_only"
+    },
+    "indel": {
+      "assertion_kind": "indel",
+      "assay_requirement": "indel-aware representation and platform support",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "indel_or_promoter_variant": {
+      "assertion_kind": "indel_or_promoter_variant",
+      "assay_requirement": "variant-specific representation and platform support",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "copy_number_variant": {
+      "assertion_kind": "copy_number_variant",
+      "assay_requirement": "CNV-aware assay; standard rsID raw data is insufficient",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "copy_number_variant_panel": {
+      "assertion_kind": "copy_number_variant_panel",
+      "assay_requirement": "validated CNV-capable panel",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "hla_tag": {
+      "assertion_kind": "hla_tag_snp",
+      "assay_requirement": "tag-SNP call may provide context but is not clinical HLA typing",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "context_only"
+    },
+    "hla_panel": {
+      "assertion_kind": "hla_panel",
+      "assay_requirement": "validated HLA typing",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "hla_allele": {
+      "assertion_kind": "hla_allele",
+      "assay_requirement": "validated HLA typing; a label is not a consumer-array genotype call",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "haplotype": {
+      "assertion_kind": "haplotype",
+      "assay_requirement": "phase-aware component calls or a validated haplotype assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "repeat": {
+      "assertion_kind": "repeat",
+      "assay_requirement": "repeat-aware assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "str_repeat": {
+      "assertion_kind": "short_tandem_repeat",
+      "assay_requirement": "repeat-aware assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "vntr": {
+      "assertion_kind": "variable_number_tandem_repeat",
+      "assay_requirement": "repeat-aware assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "microsatellite": {
+      "assertion_kind": "microsatellite",
+      "assay_requirement": "repeat-aware assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "gene_panel": {
+      "assertion_kind": "gene_panel",
+      "assay_requirement": "validated sequencing or panel assay with reportable variant interpretation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "syndrome_panel": {
+      "assertion_kind": "syndrome_panel",
+      "assay_requirement": "validated clinical panel and phenotype correlation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "variant_panel": {
+      "assertion_kind": "variant_panel",
+      "assay_requirement": "validated panel assay with explicit component coverage",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "pharmacogenomic_panel": {
+      "assertion_kind": "pharmacogenomic_panel",
+      "assay_requirement": "validated pharmacogenomic assay with required loci, phase, and copy-number coverage",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "pharmacogenomic_repeat": {
+      "assertion_kind": "pharmacogenomic_repeat",
+      "assay_requirement": "repeat-aware pharmacogenomic assay",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "polygenic_panel": {
+      "assertion_kind": "polygenic_score_model",
+      "assay_requirement": "validated weighted model with ancestry, platform, and calibration metadata",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_or_model_context"
+    },
+    "polygenic_trait": {
+      "assertion_kind": "polygenic_trait_model",
+      "assay_requirement": "validated weighted model with phenotype and calibration metadata",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_or_model_context"
+    },
+    "prs_module": {
+      "assertion_kind": "polygenic_score_module",
+      "assay_requirement": "validated weighted model with ancestry, platform, and calibration metadata",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_or_model_context"
+    },
+    "prs_panel": {
+      "assertion_kind": "polygenic_score_panel",
+      "assay_requirement": "validated weighted model with ancestry, platform, and calibration metadata",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_or_model_context"
+    },
+    "research_panel": {
+      "assertion_kind": "research_panel",
+      "assay_requirement": "explicit component model and source-specific research interpretation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_or_model_context"
+    },
+    "pathway_panel": {
+      "assertion_kind": "pathway_panel",
+      "assay_requirement": "explicit component model; pathway label alone is not a genotype call",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "context_only"
+    },
+    "rare_variant": {
+      "assertion_kind": "rare_variant",
+      "assay_requirement": "variant-specific sequencing and clinical confirmation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_confirmation_required"
+    },
+    "locus": {
+      "assertion_kind": "locus_or_linkage_context",
+      "assay_requirement": "locus-specific assay and source-defined allele or haplotype mapping",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "context_only"
+    },
+    "clinical_overlay": {
+      "assertion_kind": "clinical_overlay",
+      "assay_requirement": "clinical history, phenotype, laboratory, or imaging context",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "clinical_context_only"
+    },
+    "research_gap": {
+      "assertion_kind": "research_gap",
+      "assay_requirement": "no validated single-marker interpretation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "research_gap"
+    },
+    "guardrail": {
+      "assertion_kind": "safety_guardrail",
+      "assay_requirement": "none; guardrail text is not a genotype claim",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "guardrail_context"
+    },
+    "no_claim_guardrail": {
+      "assertion_kind": "no_claim_guardrail",
+      "assay_requirement": "none; guardrail text is not a genotype claim",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "guardrail_context"
+    },
+    "unspecified": {
+      "assertion_kind": "unclassified_assertion",
+      "assay_requirement": "variant type must be classified before interpretation",
+      "scoring_policy": "not_evaluated",
+      "display_policy": "not_evaluated"
+    }
+  },
   "rules": [
     {
       "id": "SNP_PRESENT",

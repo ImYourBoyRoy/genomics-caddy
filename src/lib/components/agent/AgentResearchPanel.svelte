@@ -6,6 +6,7 @@
   import type { GenomeSample, GeneratedReport } from "../../types/genomics";
   import { dialogStore } from "../../utils/dialogState.svelte";
   import { isReasoningModel, filterChatModels, autoSelectModel } from "../../utils/aiPrompt";
+  import { isCallableGenotype } from "../../utils/genotype";
   import { newOllamaStreamId, subscribeOllamaStream } from "../../utils/ollamaStream";
   import {
     type AgentStep, type LocalGenotypeResult, type NcbiData, type PubMedArticle,
@@ -63,7 +64,7 @@
     generatedReport?.sections
       ? generatedReport.sections
           .flatMap(s => s.markers || [])
-          .filter(m => m.user_genotype !== "--" && !m.user_genotype.includes("-"))
+          .filter(m => isCallableGenotype(m.user_genotype))
           .sort((a, b) => {
             const getRank = (sc: string) =>
               sc === "high_risk" ? 0 : sc === "moderate_risk" ? 1 : 2;

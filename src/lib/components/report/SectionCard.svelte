@@ -8,6 +8,10 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { slide } from 'svelte/transition';
   import { getSimpleSectionFollowUp } from '../../utils/layperson';
+  import {
+    getSharedInterpretations,
+    normalizeSharedInterpretation,
+  } from '../../utils/sharedInterpretations';
 
   /*
   Module Docstring:
@@ -83,7 +87,8 @@
   );
   let showActiveCount = $derived(activeCount > 0 && activeCount < section.markers.length);
   let noDataCount = $derived(section.summary.no_data_count ?? 0);
-  let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount));
+  let notEvaluatedCount = $derived(section.summary.not_evaluated_count ?? 0);
+  let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount - notEvaluatedCount));
   let coveragePercent = $derived(
     section.summary.total_markers > 0
       ? Math.round((callableCount / section.summary.total_markers) * 100)
@@ -91,6 +96,12 @@
   );
   let sectionFollowUp = $derived(
     viewMode === 'simple' ? getSimpleSectionFollowUp(section.markers) : null,
+  );
+  let sharedInterpretations = $derived(
+    viewMode === 'compare' ? getSharedInterpretations(section.markers) : [],
+  );
+  let sharedInterpretationKeys = $derived(
+    new Set(sharedInterpretations.map((item) => item.key)),
   );
 </script>
 
@@ -334,6 +345,40 @@
     font-weight: 800;
   }
 
+  .section-shared-context {
+    margin: 0 0 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-subtle);
+  }
+
+  .section-shared-context summary {
+    min-height: 2.35rem;
+    padding: 0.55rem 0.75rem;
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .section-shared-context-body {
+    padding: 0 0.75rem 0.65rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .section-shared-context-body p {
+    margin: 0 0 0.45rem;
+  }
+
+  .section-shared-context-body ul {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
   @media (max-width: 720px) {
     .section-header,
     .section-score-area {
@@ -372,6 +417,20 @@
           {/if}
         </div>
 
+        {#if viewMode === 'compare' && sharedInterpretations.length > 0}
+          <details class="section-shared-context">
+            <summary>Shared pathway context ({sharedInterpretations.length})</summary>
+            <div class="section-shared-context-body">
+              <p>Repeated family explanations are shown once; each card keeps its own result and direction.</p>
+              <ul>
+                {#each sharedInterpretations as item (item.key)}
+                  <li><strong>{item.count} findings:</strong> {item.text}</li>
+                {/each}
+              </ul>
+            </div>
+          </details>
+        {/if}
+
         {#if viewMode === 'clinical'}
           <ClinicalFindingsTable
             markers={section.markers}
@@ -389,6 +448,7 @@
                 {highlightRsid}
                 {onNavigateToVariant}
                 relatedMarkerCount={simpleRelatedMarkerCounts[marker.link_id]}
+                showSharedInterpretationNote={viewMode === 'compare' && sharedInterpretationKeys.has(normalizeSharedInterpretation(marker.interpretation))}
               />
             {/each}
           </div>

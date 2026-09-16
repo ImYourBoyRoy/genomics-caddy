@@ -1,7 +1,8 @@
 <!-- ./src/lib/components/common/bootstrap/BootstrapOverlay.svelte -->
 <script lang="ts">
-  import type { AppBootstrapStatus } from "../../../types/genomics";
+  import type { AppBootstrapStatus, GenomeImportPreview } from "../../../types/genomics";
   import type { BootstrapPhase } from "./bootstrapPhases";
+  import type { ImportPhase, ImportStepId } from "../../../utils/importProgress";
   import AppBootstrapScreen from "../AppBootstrapScreen.svelte";
 
   interface Props {
@@ -9,19 +10,63 @@
     message: string;
     status?: AppBootstrapStatus | null;
     error?: string;
+    mode?: "startup" | "resources" | "import";
+    importPhase?: ImportPhase;
+    importProgress?: { percentage: number; status: string } | null;
+    importPreview?: GenomeImportPreview | null;
+    importProfileName?: string;
+    importFailedStep?: ImportStepId | null;
+    showWorkspaceAction?: boolean;
+    workspaceActionLabel?: string;
+    onContinue?: () => void;
   }
 
-  let { phase, message, status = null, error = "" }: Props = $props();
+  let {
+    phase,
+    message,
+    status = null,
+    error = "",
+    mode = "startup",
+    importPhase = "idle",
+    importProgress = null,
+    importPreview = null,
+    importProfileName = "",
+    importFailedStep = null,
+    showWorkspaceAction = false,
+    workspaceActionLabel = "",
+    onContinue,
+  }: Props = $props();
 </script>
 
 <div
-  class="bootstrap-overlay bootstrap-motion"
+  class="bootstrap-overlay"
   role="dialog"
-  aria-modal="true"
+  aria-modal={showWorkspaceAction ? "false" : "true"}
   aria-busy={phase !== "ready" && phase !== "error"}
-  aria-label="Application startup"
+  aria-label={mode === "resources"
+    ? "Reference resource synchronization"
+    : mode === "import"
+      ? "DNA profile import"
+      : "Application startup"}
 >
-  <AppBootstrapScreen {phase} {message} {status} {error} />
+  <!-- Single left-status / right-helix screen. Do not stack a second overlay card
+       on top of AppBootstrapScreen — that pushed details off-view and left only
+       the DNA graphic visible when WebKit painted incompletely. -->
+  <AppBootstrapScreen
+    {phase}
+    {message}
+    {status}
+    {error}
+    {mode}
+    {importPhase}
+    {importProgress}
+    {importPreview}
+    {importProfileName}
+    {importFailedStep}
+    {showWorkspaceAction}
+    {workspaceActionLabel}
+    {onContinue}
+  />
 </div>
 
 <style>
@@ -29,9 +74,7 @@
     position: fixed;
     inset: 0;
     z-index: 100000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     overflow: auto;
     color-scheme: dark;
     --bg-primary: #080b14;
@@ -59,7 +102,7 @@
     --bootstrap-glow-error: rgba(251, 113, 133, 0.28);
     --bootstrap-shimmer: rgba(255, 255, 255, 0.06);
     background:
-      radial-gradient(circle at 50% 38%, rgba(30, 64, 175, 0.2), transparent 35%),
+      radial-gradient(circle at 78% 42%, rgba(30, 64, 175, 0.18), transparent 32%),
       radial-gradient(circle at 82% 78%, rgba(16, 185, 129, 0.08), transparent 42%),
       linear-gradient(135deg, #070a12 0%, #0d1424 54%, #0a1718 100%);
     pointer-events: all;

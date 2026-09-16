@@ -64,7 +64,7 @@ function hasActionableEvidence(marker: EvaluatedMarker): boolean {
 }
 
 function derivedInterpretationClass(marker: EvaluatedMarker): FindingInterpretationClass {
-  if (!marker.interpretation_allowed || marker.severity_class === 'no_data') return 'unknown';
+  if (!marker.interpretation_allowed || marker.severity_class === 'no_data' || marker.severity_class === 'not_evaluated') return 'unknown';
   if (marker.effect_direction === 'protective') return 'protective_context';
   if (marker.effect_direction === 'trait') return 'trait_context';
   if (confirmationRequired(marker) && hasActionableEvidence(marker)) return 'clinically_actionable_variant';

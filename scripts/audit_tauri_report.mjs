@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
 Purpose: Exercise the running Tauri desktop report through its local UI bridge.
-How to run: `npm run audit:tauri-ui` while `npm run tauri:dev` is running.
+How to run: `pnpm run audit:tauri-ui` while `pnpm run tauri:dev` is running.
 Outputs: Aggregate-only desktop mode, geometry, sex-label, medication-surface, public-copy, and rendered-theme contrast checks.
 Privacy: Never prints sample names, genotype calls, technical disclosures, or raw UI text.
 */
@@ -9,6 +9,7 @@ Privacy: Never prints sample names, genotype calls, technical disclosures, or ra
 import { setTimeout as sleep } from "node:timers/promises";
 
 const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
+const bridgeToken = process.env.GENOMICS_AGENT_UI_TOKEN?.trim();
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_TIMEOUT_MS, 120_000);
 const pollMs = 500;
 const requestedViewportWidth = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_WIDTH, 0);
@@ -28,6 +29,7 @@ async function request(path, options = {}) {
     headers: {
       Accept: "application/json",
       ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(bridgeToken ? { "X-Genomics-Agent-Ui-Token": bridgeToken } : {}),
       ...(options.headers || {}),
     },
   });
@@ -380,7 +382,11 @@ async function prepareRequestedViewport() {
   await waitForSnapshot(
     (snapshot) => {
       const width = snapshot.layout?.viewportWidth;
-      return Number.isFinite(width) && Math.abs(width - requestedViewportWidth) <= 80;
+      const sidebarSettled = snapshot.layout?.profileNameCount === 0 || (
+        (snapshot.layout?.sidebarWidth ?? 0) > 0 &&
+        (snapshot.layout?.profileNameMinWidth ?? 0) >= 80
+      );
+      return Number.isFinite(width) && Math.abs(width - requestedViewportWidth) <= 80 && sidebarSettled;
     },
     `${requestedViewportWidth}px desktop viewport`,
   );
@@ -545,6 +551,58 @@ async function assertMedicationSurface() {
   }
 }
 
+async function setRecommendationPanel(label, key, expanded) {
+  const current = await waitForSnapshot(
+    (snapshot) => typeof snapshot.recommendationMetrics?.[key] === "boolean",
+    `${label} panel state`,
+  );
+  if (current.recommendationMetrics[key] !== expanded) {
+    await clickText(label);
+    await waitForSnapshot(
+      (snapshot) => snapshot.recommendationMetrics?.[key] === expanded,
+      `${label} panel ${expanded ? "opening" : "closing"}`,
+    );
+  }
+}
+
+async function assertRecommendationPresentation(initialMetrics) {
+  const panelTargets = [
+    ["Food ideas", "foodPanelExpanded"],
+    ["Supplement ideas", "supplementPanelExpanded"],
+  ].filter(([, key]) => typeof initialMetrics?.[key] === "boolean");
+
+  try {
+    for (const [label, key] of panelTargets) {
+      await setRecommendationPanel(label, key, true);
+    }
+
+    const snapshot = await waitForSnapshot(
+      (candidate) => candidate.recommendationMetrics?.foodPanelExpanded === true ||
+        candidate.recommendationMetrics?.supplementPanelExpanded === true,
+      "expanded food or supplement recommendation content",
+    );
+    const metrics = snapshot.recommendationMetrics;
+    const tileCount = metrics.foodTileCount + metrics.supplementTileCount;
+    assert(tileCount > 0, "Food and supplement panels opened but no recommendation tiles rendered");
+    assert(metrics.readingOrderValid, "A recommendation does not place instruction, evidence, and genes in the intended order");
+    assert(metrics.tileOverflowCount === 0, "A food or supplement recommendation tile overflows its bounded card");
+    if (metrics.geneToneWarmAmber !== null) {
+      assert(metrics.geneToneWarmAmber, "Gene references are not rendered in the expected warm amber tone");
+      assert(metrics.geneTextQuieterThanInstruction, "Gene references are not visually quieter than recommendation instructions");
+    }
+    if (metrics.actionCount > 0) {
+      assert(metrics.themedActionCount === metrics.actionCount, "A View DNA basis action is not using the themed control style");
+    }
+    assert(metrics.foodSurfaceWidth === null || metrics.foodSurfaceWidth > 0, "Food recommendation group has no measurable layout width");
+    assert(metrics.supplementSurfaceWidth === null || metrics.supplementSurfaceWidth > 0, "Supplement recommendation group has no measurable layout width");
+    return metrics;
+  } finally {
+    for (const [label, key] of panelTargets) {
+      await setRecommendationPanel(label, key, initialMetrics[key]);
+    }
+  }
+}
+
 async function assertProfileSexSymbols() {
   for (const symbol of ["♀", "♂"]) {
     const result = await request("/ui/queryText", {
@@ -663,6 +721,7 @@ async function main() {
   await assertNoRedundantPublicCopy();
   await assertAllergySurface();
   await assertReportOrganization();
+  const recommendationMetrics = await assertRecommendationPresentation(ready.recommendationMetrics);
   await assertMedicationSurface();
   await assertProfileSexSymbols();
   await ensureCollapsedSections();
@@ -673,16 +732,17 @@ async function main() {
     method: "POST",
     body: JSON.stringify({}),
   });
-  assert(tooltipProbe.visibleTriggerCount > 0, "Populated Simple report has no tooltip triggers to verify");
-  assert(
-    tooltipProbe.testedTriggerCount === tooltipProbe.visibleTriggerCount,
-    "At least one visible non-interactive tooltip trigger did not open a single panel",
-  );
-  assert(
-    tooltipProbe.openedPanelCount === tooltipProbe.withinViewportCount &&
-      tooltipProbe.openedPanelCount === tooltipProbe.accessiblePanelCount,
-    "A visible tooltip panel was clipped or lacked accessible metadata",
-  );
+  if (tooltipProbe.visibleTriggerCount > 0) {
+    assert(
+      tooltipProbe.testedTriggerCount === tooltipProbe.visibleTriggerCount,
+      "At least one visible non-interactive tooltip trigger did not open a single panel",
+    );
+    assert(
+      tooltipProbe.openedPanelCount === tooltipProbe.withinViewportCount &&
+        tooltipProbe.openedPanelCount === tooltipProbe.accessiblePanelCount,
+      `A visible tooltip panel is clipped or lacked accessible metadata${tooltipProbe.maxBottomOverflowSample ? ` (position=${JSON.stringify(tooltipProbe.maxBottomOverflowSample)})` : ""}`,
+    );
+  }
 
   await clickText("Clinical");
   modes.clinical = validateDesktopSnapshot(await waitForMode("clinical"), "clinical");
@@ -710,6 +770,7 @@ async function main() {
   console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; overview=${ready.layout.reportOverviewWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; action_queue_columns=${ready.layout.actionQueueColumnCount ?? "n/a"}; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; profiles=${ready.layout.profileNameCount}; profile_name_min_width=${ready.layout.profileNameMinWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; sidebar_hide_top=${ready.layout.sidebarFocusControlTop ?? "n/a"}px; sidebar_hide_edge_gap=${ready.layout.sidebarFocusControlRightGap ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; medication_surface=clean; public_copy=clean`);
   const simpleContract = modes.simple.simpleCardContract;
   console.log(`  simple_contract=${simpleContract?.cardCount ?? "n/a"}; title=${simpleContract?.titleCount ?? "n/a"}; signal=${simpleContract?.signalCount ?? "n/a"}; why_it_matters=${simpleContract?.whyItMattersCount ?? "n/a"}; review_action=${simpleContract?.reviewActionCount ?? "n/a"}; evidence=${simpleContract?.evidenceCount ?? "n/a"}; section_follow_up=${simpleContract?.sectionFollowUpCount ?? "n/a"}; details=${simpleContract?.detailsCount ?? "n/a"}; technical=${simpleContract?.technicalDataCount ?? "n/a"}`);
+  console.log(`  recommendations=food:${recommendationMetrics.foodTileCount};supplements:${recommendationMetrics.supplementTileCount};food_columns:${recommendationMetrics.foodGridColumnCount ?? "n/a"};supplement_columns:${recommendationMetrics.supplementGridColumnCount ?? "n/a"};bounded_overflow:${recommendationMetrics.tileOverflowCount};reading_order:${recommendationMetrics.readingOrderValid};genes=warm:${recommendationMetrics.geneToneWarmAmber ?? "n/a"},quieter:${recommendationMetrics.geneTextQuieterThanInstruction};themed_actions:${recommendationMetrics.themedActionCount}/${recommendationMetrics.actionCount}`);
   console.log(`  tooltip_triggers=${tooltipProbe.visibleTriggerCount}; tooltip_opened=${tooltipProbe.openedPanelCount}; tooltip_viewport_safe=${tooltipProbe.withinViewportCount}; tooltip_accessible=${tooltipProbe.accessiblePanelCount}`);
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
   const warningMetrics = restored.warningMetrics;

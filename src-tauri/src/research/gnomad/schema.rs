@@ -82,14 +82,15 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
             id INTEGER PRIMARY KEY CHECK (id = 1),
             enabled INTEGER NOT NULL DEFAULT 1,
             source_mode TEXT NOT NULL DEFAULT 'remote_indexed_vcf_https',
-            release TEXT NOT NULL DEFAULT '4.1',
+            release TEXT NOT NULL DEFAULT '4.1.1',
             provider TEXT NOT NULL DEFAULT 'aws',
             local_vcf_dir TEXT,
             max_remote_concurrent_files INTEGER NOT NULL DEFAULT 2,
             max_queries_per_second REAL NOT NULL DEFAULT 4.0,
             graphql_enabled_for_sweep INTEGER NOT NULL DEFAULT 0,
             exome_template TEXT NOT NULL,
-            genome_template TEXT NOT NULL
+            genome_template TEXT NOT NULL,
+            auto_discover_release INTEGER NOT NULL DEFAULT 1
         );
         ",
     )?;
@@ -108,6 +109,16 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
         "dataset_policy",
         "TEXT NOT NULL DEFAULT 'auto'",
     )?;
+    // Existing rows default to pinned until load_gnomad_config can identify an
+    // untouched built-in remote configuration. This keeps custom releases from
+    // being silently moved to a newer public release.
+    ensure_column(
+        conn,
+        "reference",
+        "gnomad_config",
+        "auto_discover_release",
+        "INTEGER NOT NULL DEFAULT 0",
+    )?;
 
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM gnomad_config WHERE id = 1",
@@ -121,8 +132,8 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
                 id, enabled, source_mode, release, provider, local_vcf_dir,
                 max_remote_concurrent_files, max_queries_per_second,
                 graphql_enabled_for_sweep, graphql_fallback_enabled, dataset_policy,
-                exome_template, genome_template
-            ) VALUES (1, 1, ?, ?, ?, NULL, ?, ?, 0, 1, ?, ?, ?)",
+                exome_template, genome_template, auto_discover_release
+            ) VALUES (1, 1, ?, ?, ?, NULL, ?, ?, 0, 1, ?, ?, ?, 1)",
             rusqlite::params![
                 defaults.source_mode.as_str(),
                 defaults.release,

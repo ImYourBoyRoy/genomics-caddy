@@ -59,7 +59,7 @@ is_protected_path() {
       return 1 ;;
     node_modules|node_modules/*)
       return 0 ;;
-    .env|package.json|package-lock.json|readme.md|memory.md)
+    .env|package.json|readme.md|memory.md)
       return 0 ;;
   esac
 
@@ -111,7 +111,7 @@ printf 'PURGE: build/, .svelte-kit/, Cargo target/, frontend tool caches only\n'
 
 if [[ "$SKIP_PURGE" -eq 0 ]]; then
   step "Purging frontend build artifacts"
-  for rel in build .svelte-kit package node_modules/.vite node_modules/.cache node_modules/.vitest src-tauri/gen/schemas; do
+  for rel in build .svelte-kit package node_modules/.vite node_modules/.cache node_modules/.vitest src-tauri/gen/schemas package-lock.json pnpm-lock.yaml yarn.lock bun.lock npm-shrinkwrap.json src-tauri/Cargo.lock; do
     remove_build_artifact "$rel"
   done
 
@@ -130,7 +130,7 @@ if [[ "$PURGE_ONLY" -eq 1 ]]; then
   exit 0
 fi
 
-command -v npm >/dev/null 2>&1 || { echo "npm not found on PATH" >&2; exit 1; }
+command -v pnpm >/dev/null 2>&1 || { echo "pnpm not found on PATH" >&2; exit 1; }
 command -v cargo >/dev/null 2>&1 || { echo "cargo not found on PATH — install Rust: https://rustup.rs" >&2; exit 1; }
 
 if [[ "$(uname -s)" == "Linux" ]]; then
@@ -141,7 +141,7 @@ if [[ "$(uname -s)" == "Linux" ]]; then
 fi
 
 if [[ "$SKIP_CHECKS" -eq 0 ]]; then
-  run_cmd "Frontend type check" npm run check
+  run_cmd "Frontend type check" pnpm run check
   run_cmd "Rust library check" cargo check --manifest-path src-tauri/Cargo.toml --lib
 else
   skip "Pre-build checks skipped (--skip-checks)"
@@ -158,7 +158,7 @@ elif command -v sysctl >/dev/null 2>&1; then
 fi
 ok "CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-default}"
 
-run_cmd "Production Tauri build (no installer bundle)" npm run tauri build
+run_cmd "Production Tauri build (no installer bundle)" pnpm run tauri build
 
 step "Stage portable App/ folder"
 APP_DIR="$REPO_ROOT/App"

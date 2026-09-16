@@ -74,6 +74,9 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('withinViewportCount');
     expect(source).toContain('accessiblePanelCount');
     expect(source).toContain('maxRightOverflow');
+    expect(source).toContain('maxBottomOverflowSample');
+    expect(source).toContain('panelHeight: Math.round(panelRect.height)');
+    expect(source).not.toContain('panel.innerText');
     expect(source).toContain('function dismissOpenTooltipForQa()');
     expect(source).toContain('dismissOpenTooltipForQa();');
     expect(source).toContain('finally {');
@@ -137,6 +140,20 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("document.querySelectorAll('.app-reference-note').length");
     expect(source).toContain("document.querySelectorAll('.legal-page').length");
     expect(source).not.toContain('genericWarningPhraseCount: genericPhrases.join');
+  });
+
+  it('exposes only aggregate food and supplement presentation metrics', () => {
+    expect(source).toContain('export interface AgentUiRecommendationMetrics');
+    expect(source).toContain('recommendationMetrics: AgentUiRecommendationMetrics;');
+    expect(source).toContain('foodTileCount: foodRows.length');
+    expect(source).toContain('supplementTileCount: supplementRows.length');
+    expect(source).toContain('tileOverflowCount');
+    expect(source).toContain('readingOrderValid: visibleRows.every(rowOrderIsValid)');
+    expect(source).toContain('geneTextQuieterThanInstruction');
+    expect(source).toContain('geneToneWarmAmber');
+    expect(source).toContain('themedActionCount');
+    expect(source).not.toContain('recommendationMetrics.textContent');
+    expect(source).not.toContain('recommendationMetrics.innerText');
   });
 
   it('exposes aggregate focus geometry without exposing report content', () => {

@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 /build
+/builds/
 /.svelte-kit
 /package
 .env
@@ -16,21 +17,14 @@ screenshot.png
 *.log
 tmp_error.log
 
-# App distribution artifacts & private databases
-/App/*
-!/App/
-!/App/Data/
-!/App/.gitkeep
-!/App/Data/.gitkeep
-/App/Data/**
-!/App/Data/.gitkeep
-# Never commit nested mistaken App/App trees or staged binaries
-/App/App/
-/App/DNA-Tools
-/App/DNA-Tools.exe
-/App/Genomics*
-/App/Data/benchmarks/
-/App/Data/samples/
+# Portable release staging and persistent local app data are generated locally.
+/App/
+# Ignore runtime databases in any app-data root, including SQLite sidecars.
+**/App/Data/**/*.db
+**/App/Data/**/*.db-*
+**/App/Data/**/*.sqlite
+**/App/Data/**/*.sqlite-*
+**/App/Data/**/*.sqlite3
 
 # Personal genomic raw data files & report outputs
 *.txt
@@ -42,7 +36,6 @@ AncestryDNA.txt
 *.zip
 *.csv
 *report.json
-roy_report.json
 *_report*.json
 
 # Tooling / OS noise
@@ -52,3 +45,13 @@ __pycache__/
 .vscode/*.log
 .playwright-cli/
 output/playwright/
+/output/
+
+# Dependency lockfiles are intentionally not retained for local build testing.
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+npm-shrinkwrap.json
+src-tauri/Cargo.lock

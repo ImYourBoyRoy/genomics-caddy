@@ -14,8 +14,8 @@ Usage (from repo root):
 
 Flags:
   --clean            cargo clean before build (cold build, slower)
-  --skip-frontend    skip `npm run build` local frontend step
-  --skip-upgrade     skip rustup/cargo-tauri/npm upgrade step
+  --skip-frontend    skip `pnpm run build` local frontend step
+  --skip-upgrade     skip rustup/cargo-tauri/pnpm upgrade step
   --skip-lint        skip clippy + svelte-check
   --strict-lint      fail build on any lint warning (default: report-only)
   --no-purge-after   keep remote build caches after success (for debugging)
@@ -310,7 +310,7 @@ def main() -> None:
     )
     parser.add_argument("--clean", action="store_true", help="cargo clean before build (cold)")
     parser.add_argument("--create-bundle", action="store_true", help="Create full installers (.dmg, .msi, etc). Default is to build raw executable only.")
-    parser.add_argument("--skip-frontend", action="store_true", help="Skip npm run build locally")
+    parser.add_argument("--skip-frontend", action="store_true", help="Skip pnpm run build locally")
     parser.add_argument("--skip-upgrade", action="store_true", help="Skip toolchain upgrade step")
     parser.add_argument("--skip-lint", action="store_true", help="Skip clippy + svelte-check")
     parser.add_argument("--strict-lint", action="store_true", default=True, help="Treat lint warnings as errors (default: True)")

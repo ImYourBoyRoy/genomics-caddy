@@ -5,7 +5,7 @@
 
 import type { ChatMessage } from "../types/agent";
 import type { GenomeSample } from "../types/genomics";
-import type { ConsultationMode } from "./aiPrompt";
+import type { AiContextMode, ConsultationMode } from "./aiPrompt";
 import type { ConsultationSessionStore } from "./consultationSession.svelte";
 
 export interface ConsultationSessionSnapshot {
@@ -17,6 +17,7 @@ export interface ConsultationSessionSnapshot {
   maxTokens: number;
   extendedThinking: boolean;
   consultationMode: ConsultationMode;
+  contextMode: AiContextMode;
 }
 
 export function readConsultationSession(
@@ -39,6 +40,7 @@ export function readConsultationSession(
     maxTokens: session.maxTokens || 2048,
     extendedThinking: session.extendedThinking || false,
     consultationMode: (session.consultationMode || "general") as ConsultationMode,
+    contextMode: (session.contextMode || "active_findings") as AiContextMode,
   };
 }
 

@@ -70,7 +70,7 @@ $Ram = Get-RamGiB
 $Os = [System.Environment]::OSVersion.VersionString
 $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
 $NodeV = Get-ToolVersion "node" @("-v")
-$NpmV = Get-ToolVersion "npm" @("-v")
+$PnpmV = Get-ToolVersion "pnpm" @("-v")
 $RustcV = Get-ToolVersion "rustc" @("--version")
 $CargoV = Get-ToolVersion "cargo" @("--version")
 
@@ -79,7 +79,7 @@ $Phase = if ($PurgeOnly) { "purge_only" } else { "purge_and_rebuild" }
 Write-Host "Genomics Caddy — build benchmark ($Phase)" -ForegroundColor Cyan
 Write-Host "Host: $HostName  OS: $Os  Arch: $Arch"
 Write-Host "CPU: $Cpu ($Cores cores)  RAM: $Ram"
-Write-Host "Node: $NodeV  npm: $NpmV"
+Write-Host "Node: $NodeV  pnpm: $PnpmV"
 Write-Host "Rust: $RustcV / $CargoV"
 Write-Host "Report: $ReportTxt"
 Write-Host ""
@@ -126,7 +126,7 @@ $Lines = @(
     "cores=$Cores"
     "ram=$Ram"
     "node=$NodeV"
-    "npm=$NpmV"
+    "pnpm=$PnpmV"
     "rustc=$RustcV"
     "cargo=$CargoV"
     "skip_checks=$([bool]$SkipChecks)"
@@ -151,7 +151,7 @@ if ($Json) {
         cores            = $Cores
         ram              = $Ram
         node             = $NodeV
-        npm              = $NpmV
+        pnpm             = $PnpmV
         rustc            = $RustcV
         cargo            = $CargoV
         skip_checks      = [bool]$SkipChecks

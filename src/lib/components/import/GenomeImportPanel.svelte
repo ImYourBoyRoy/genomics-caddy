@@ -7,9 +7,10 @@
   Purpose: DNA ingestion panel for selecting and processing raw genomic data.
   Responsibilities:
   - Render file path browser and text input for sample nickname.
+  - Supports the validated TXT/CSV/TSV/ZIP import formats and pre-write preview.
   - Display progress bar and state notifications during file import.
   - Trigger callbacks for file browsing and genome importing.
-  Key Inputs: filePath, sampleNameInput, isImporting, progressPercent, progressStatus, importError, importSuccess.
+  Key Inputs: filePath, sampleNameInput, isImportPreparing, isImporting, progressPercent, progressStatus, importError, importSuccess.
   Key Outputs: Ingestion form and progress indicators.
   Operational Notes: Form action calls onImportGenome.
   */
@@ -17,6 +18,7 @@
   interface Props {
     filePath: string;
     sampleNameInput: string;
+    isImportPreparing?: boolean;
     isImporting: boolean;
     progressPercent: number;
     progressStatus: string;
@@ -30,6 +32,7 @@
   let {
     filePath = $bindable(),
     sampleNameInput = $bindable(),
+    isImportPreparing = false,
     isImporting,
     progressPercent,
     progressStatus,
@@ -42,10 +45,11 @@
 </script>
 
 <div class="import-card card">
-  <h3>Ingest DNA Export</h3>
+  <h3>Add DNA profile</h3>
+  <p class="import-card-hint">Import a local .txt, .csv, .tsv, or .zip DNA export. Existing profile names require replacement confirmation; use a new name to keep both profiles.</p>
   <form onsubmit={onImportGenome}>
     <div class="form-group">
-      <label for="file-path">File Path (.txt or .zip)</label>
+        <label for="file-path">DNA export</label>
       <div class="file-input-wrapper">
         <Tooltip
           label="Selected DNA file"
@@ -53,25 +57,28 @@
           interactiveChildren={true}
           interactiveClickBehavior="dismiss"
         >
-          <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled} aria-label={filePath || 'No genome file selected'} />
+          <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled || isImportPreparing || isImporting} aria-label={filePath || 'No genome file selected'} />
         </Tooltip>
-        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={disabled}>Browse...</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={disabled || isImportPreparing || isImporting}>Browse...</button>
       </div>
     </div>
     <div class="form-group">
-      <label for="sample-name">Sample Nickname</label>
-      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} disabled={disabled} />
+      <label for="sample-name">Profile name</label>
+      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} disabled={disabled || isImportPreparing || isImporting} />
     </div>
-    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting || disabled}>
-      {isImporting ? "Processing..." : "Import Genome"}
+    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting || isImportPreparing || disabled}>
+      {isImportPreparing ? "Checking file…" : isImporting ? "Processing…" : "Import Genome"}
     </button>
 
-    {#if isImporting}
-      <div class="progress-container">
+    {#if isImporting || isImportPreparing}
+      <div class="progress-container" role="status" aria-live="polite">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: {progressPercent}%"></div>
+          <div class="progress-fill" style="width: {Math.max(progressPercent, isImportPreparing ? 8 : 0)}%"></div>
         </div>
-        <div class="progress-status">{progressPercent}% - {progressStatus}</div>
+        <div class="progress-status">
+          <strong class="progress-phase">{isImportPreparing ? "Checking export" : "Importing DNA"}</strong>
+          <span>{isImportPreparing ? progressStatus || "Checking the DNA export…" : `${progressPercent}% — ${progressStatus}`}</span>
+        </div>
       </div>
     {/if}
 

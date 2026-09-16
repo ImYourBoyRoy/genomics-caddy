@@ -72,4 +72,24 @@ describe('clinical handoff export', () => {
     expect(markdown).toContain('* **Sex:** Male');
     expect(markdown).not.toContain('Male-like');
   });
+
+  it('always includes raw genotype calls in the legacy clinician handoff path', () => {
+    const markdown = buildClinicalHandoffMarkdown(
+      [],
+      { name: 'Example', genetic_sex: 'unknown' } as never,
+      'test-model',
+      {},
+      undefined,
+      'system prompt without a genotype section',
+      {
+        sections: [{
+          name: 'Technical findings',
+          markers: [{ rsid: 'rs-raw', gene: 'RAW1', user_genotype: 'AG', normalized_genotype: 'AG' }],
+        }],
+      },
+    );
+
+    expect(markdown).toContain('## Exact raw genotype calls');
+    expect(markdown).toContain('raw call: AG');
+  });
 });

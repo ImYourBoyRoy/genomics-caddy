@@ -150,6 +150,24 @@ const absoluteLanguageReview = [];
 const discoveryLanguageReview = [];
 const laypersonLanguageReview = [];
 const actionabilitySourceGaps = [];
+const sourceProvenanceReview = [];
+const highStakesSourceMetadataGaps = [];
+
+function isHighStakesMarker(marker) {
+  const evidenceTier = String(marker.evidence_tier || '').toLowerCase();
+  return marker.clinical_confirmation_required === true
+    || evidenceTier.includes('clinical')
+    || evidenceTier.includes('pharmacogenomic');
+}
+
+function isGenericSourceUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    return url.pathname === '/' || url.pathname === '/index.html';
+  } catch {
+    return true;
+  }
+}
 
 for (const pack of manifest?.packs || []) {
   const packId = pack?.id;
@@ -187,6 +205,29 @@ for (const pack of manifest?.packs || []) {
     if (Array.isArray(marker.sources) && marker.sources.length > 0) sourceBacked += 1;
     if (marker.clinical_semantics && typeof marker.clinical_semantics === 'object' && !Array.isArray(marker.clinical_semantics)) {
       explicitSemantics += 1;
+    }
+
+    for (const [sourceIndex, source] of (Array.isArray(marker.sources) ? marker.sources : []).entries()) {
+      if (isGenericSourceUrl(source?.url)) {
+        sourceProvenanceReview.push({
+          pack: packId,
+          rsid: marker.rsid || '(missing rsid)',
+          source_index: sourceIndex,
+          url: String(source?.url || ''),
+        });
+      }
+      if (isHighStakesMarker(marker)) {
+        const missing = ['name', 'url', 'accessed', 'evidence_type', 'notes']
+          .filter((field) => !String(source?.[field] || '').trim());
+        if (missing.length > 0) {
+          highStakesSourceMetadataGaps.push({
+            pack: packId,
+            rsid: marker.rsid || '(missing rsid)',
+            source_index: sourceIndex,
+            missing,
+          });
+        }
+      }
     }
 
     const missing = ['do_not_claim', 'confirm_with', 'raw_dna_limitation', 'evidence_tier', 'effect_direction']
@@ -528,6 +569,11 @@ const summary = {
   actionability_source_gaps: actionabilitySourceGaps,
   actionability_marker_reference_gaps: actionabilityMarkerReferenceGaps,
   clinical_allele_conflicts: clinicalAlleleConflicts,
+  source_provenance_review: {
+    generic_url_count: sourceProvenanceReview.length,
+    generic_urls: sourceProvenanceReview,
+    high_stakes_metadata_gaps: highStakesSourceMetadataGaps,
+  },
   uncovered_actionability_genes: uncoveredActionabilityGenes,
   pack_summaries: packSummaries,
   errors,
@@ -543,6 +589,7 @@ if (outputJson) {
   console.log(`Gates: probability=${summary.gates.probability.status} callability=${summary.gates.callability.status} actionability=${summary.gates.actionability.status}`);
   console.log(`Actionability coverage: ${summary.gates.actionability.marker_matches} marker matches across ${summary.gates.actionability.rules} rules.`);
   console.log(`Claim-boundary gaps: ${boundaryGaps.length}; actionability source gaps: ${actionabilitySourceGaps.length}; actionability marker-reference gaps: ${actionabilityMarkerReferenceGaps.length}; clinical allele conflicts: ${clinicalAlleleConflicts.length}; marker wording review queue: ${absoluteLanguageReview.length}; discovery wording review queue: ${discoveryLanguageReview.length}; plain-English wording review queue: ${laypersonLanguageReview.length}.`);
+  console.log(`Source provenance review: ${sourceProvenanceReview.length} generic URLs; ${highStakesSourceMetadataGaps.length} high-stakes metadata gaps.`);
   console.log(`Plain-English translation coverage: ${laypersonTranslationCoverage.translated}/${laypersonTranslationCoverage.total} curated standard rsIDs; fallback=${laypersonTranslationCoverage.fallback_available ? 'available' : 'missing'}.`);
   for (const pack of packSummaries) {
     console.log(`  ${pack.id}: markers=${pack.markers} sources=${pack.source_backed_percent}% clinical_confirmation=${pack.clinical_confirmation} guardrails=${pack.guardrails} sex_scoped=${pack.sex_scoped} explicit_semantics=${pack.explicit_semantics}`);

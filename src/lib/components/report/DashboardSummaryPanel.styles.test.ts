@@ -32,8 +32,8 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('keeps repeated guidance boundaries compact and keeps personal context out of the report', () => {
-    expect(source).toContain('DNA-linked food ideas');
-    expect(source).toContain('DNA-linked options to consider');
+    expect(source).toContain('Food choices linked to the pathways found in this profile.');
+    expect(source).toContain('Options linked to the pathways found in this profile.');
     expect(source).toContain('DNA-informed starting points for training, recovery, and self-tracking.');
     expect(source).toContain('DNA-linked medication and treatment topics found in this report.');
     expect(source).toContain('Medication pathways');
@@ -44,7 +44,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Planning prompts for training and recovery — not activity clearance.');
     expect(source).not.toContain('Compare this with current medications and past responses.');
     expect(source).not.toContain('Grouped by priority for clinician discussion.');
-    expect(source).toContain('DNA signals with the clearest reason to review them first.');
+    expect(source).toContain('The most actionable DNA-linked signals in this report.');
     expect(source).toContain('{Math.min(plan.topFindings.length, 9)} shown');
     expect(source).not.toContain('A genotype match is not a permanent food restriction;');
     expect(source).not.toContain('This selection is self-reported, stored per DNA profile, and is never inferred');
@@ -89,8 +89,17 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('<h4>👍 Consider</h4>');
     expect(source).toContain('<h4>👎 Avoid / confirm first</h4>');
     expect(source).toContain('class="dietary-items"');
-    expect(source).toContain('class="insight-tile insight-tile-favor dietary-item"');
-    expect(source).toContain('class="insight-tile insight-tile-avoid dietary-item"');
+    expect(source).toContain('class="insight-tile insight-tile-favor dietary-item recommendation-row"');
+    expect(source).toContain('class="insight-tile insight-tile-avoid dietary-item recommendation-row"');
+    expect(source).toContain('class="recommendation-basis"');
+    expect(source).toContain('recommendationBasis(item)');
+    expect(source).toContain('linked ${markerCount === 1 ? \'marker\' : \'markers\'}');
+    expect(source).toContain('recommendationGenes(item)');
+    expect(source).toContain('class="recommendation-genes"');
+    expect(source).toContain('recommendationGenes(s)');
+    expect(source).toContain('Evidence details');
+    expect(source).not.toContain('DNA-linked · {item.basis_genes.join');
+    expect(source).not.toContain('Why this appears');
     expect(source).toContain('class="insight-tile-text dietary-item-text"');
     expect(source).toContain('<summary>Food safety checks ({plan.foodSafety.relevantRules.length})</summary>');
   });
@@ -140,13 +149,13 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('<strong class="action-queue-next-label">Next</strong>');
     expect(source).not.toContain('<strong>Next helpful step:</strong>');
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
-    expect(source).toContain('getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).why_it_matters');
+    expect(source).toContain('copy.signal, copy.why_it_matters');
     expect(source).toContain('data-priority={item.rank}');
   });
 
   it('keeps collapsible guidance titles as real headings outside button descendants', () => {
     expect(source).toContain('<h3 class="card-header-heading">');
-    expect(source).toContain('<span class="card-header-title">🥗 Dietary Alignment</span>');
+    expect(source).toContain('<span class="card-header-title">🥗 Food ideas</span>');
     expect(source).not.toContain('class="card-header-title" role="heading" aria-level="3"');
     expect(styleBlock).toContain('.card-header-heading {');
   });
@@ -175,13 +184,25 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(index).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
-  it('scopes collapsed dashboard preferences per profile and starts each profile closed', () => {
+  it('scopes collapsed dashboard preferences per profile and keeps review/labs open', () => {
     expect(source).toContain('sampleId: number;');
     expect(source).toContain('let loadedCollapseProfileId = $state<number | null>(null);');
-    expect(source).toContain('genomics_dashboard_collapsed_v2_${profileId}');
+    expect(source).toContain('genomics_dashboard_collapsed_v3_${profileId}');
+    expect(source).toContain('labTests: false');
+    expect(source).toContain('topFindings: false');
     expect(source).toContain('const defaults = {');
     expect(source).toContain('loadedCollapseProfileId === sampleId');
     expect(source).not.toContain("localStorage.getItem('genomics_dashboard_collapsed')");
+  });
+
+  it('visually segregates marker association references from narrative copy', () => {
+    expect(source).toContain('action-queue-marker-ref');
+    expect(styleBlock).toContain('.action-queue-marker-ref');
+    expect(styleBlock).toContain('var(--report-marker-ref-text)');
+    expect(styleBlock).toContain('var(--report-marker-ref-bg)');
+    expect(theme).toContain('--report-marker-ref-text: #e7c27d;');
+    expect(source).toContain('lab-spotlight');
+    expect(source).toContain('Suggested lab');
   });
 
   it('keeps personal-context controls out of the report surface', () => {
@@ -213,11 +234,33 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(styleBlock).toContain('scroll-margin-top:');
   });
 
+  it('uses two priority-board columns at laptop widths to protect card readability', () => {
+    expect(theme).toContain('@media screen and (min-width: 1201px) and (max-width: 1400px)');
+    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-list {\n    grid-template-columns: repeat(2, minmax(0, 1fr));');
+  });
+
+  it('uses a single priority-board column and wrapping guidance links on narrow desktop', () => {
+    expect(theme).toContain('@media screen and (min-width: 721px) and (max-width: 1100px)');
+    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-list {\n    grid-template-columns: 1fr;');
+    expect(theme).toContain('overflow-wrap: anywhere;');
+  });
+
   it('uses the wide desktop surface for clinical follow-up without forcing a single long stack', () => {
     expect(source).toContain('class="grid-layout clinical-guidance-grid"');
     expect(styleBlock).toContain('.clinical-guidance-grid {');
     expect(styleBlock).toContain('grid-template-columns: minmax(20rem, 0.85fr) minmax(0, 1.15fr);');
     expect(styleBlock).toContain('.clinical-guidance-grid {\n      grid-template-columns: 1fr;');
+  });
+
+  it('sends lab links to the lab list and keeps medication gene references below their titles', () => {
+    expect(source).toContain('href="#lab-followups-card"');
+    expect(source).toContain('id="lab-followups-card"');
+    expect(source).toContain('class="medication-pathway-genes"');
+    expect(source).not.toContain('href="#clinical-guidance-group">Full lab list');
+    expect(theme).toContain('.main-content .dashboard-v2 .medication-pathway-heading {\n  display: grid;');
+    expect(theme).toContain('.main-content .dashboard-v2 .lab-chip-grid {\n  display: grid;');
+    expect(source).toContain('Genetic counselor advised');
+    expect(source).not.toContain('🧑‍⚕️');
   });
 
   it('keeps medication guidance focused on matched pathways without a warning block', () => {
@@ -245,8 +288,10 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(dietaryProfile).toContain('word-break: break-word;');
     expect(styleBlock).toContain('.dietary-items {');
     expect(styleBlock).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
-    expect(styleBlock).toContain('.dietary-item {');
     expect(styleBlock).toContain('border-left: 2px solid var(--status-success-border);');
+    expect(styleBlock).toContain('.recommendation-row {');
+    expect(styleBlock).toContain('grid-template-columns: auto minmax(0, 1fr);');
+    expect(styleBlock).toContain('.recommendation-basis {');
     expect(styleBlock).toContain('word-break: break-word;');
     expect(insightTile).toContain('box-sizing: border-box;');
     expect(supplementReason).toContain('display: block;');
@@ -286,6 +331,18 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('action-queue-priority');
   });
 
+  it('shows condition-level DNA evidence as a compact, count-based review surface', () => {
+    const conditionGrid = styleBlock.match(/\.condition-evidence-grid \{[\s\S]*?\n  \}/)?.[0] ?? '';
+
+    expect(source).toContain('Potential health patterns');
+    expect(source).toContain('conditionCountLabel(summary)');
+    expect(source).toContain('Counts show how many curated indicators matched in this report.');
+    expect(source).toContain('conditionDiagnosticCapabilityLabel');
+    expect(conditionGrid).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+    expect(source).toContain('.condition-evidence-grid {\n      grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(source).toContain('.condition-evidence-grid {\n      grid-template-columns: 1fr;');
+  });
+
   it('uses the available desktop report pane without exceeding the shared surface cap', () => {
     const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
@@ -294,12 +351,30 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('uses the shared desktop dashboard width token for secondary surfaces', () => {
-    expect(theme).toContain('--report-dashboard-surface-width: 92rem;');
+    expect(theme).toContain('--report-dashboard-surface-width: 80rem;');
     const healthAreaIndex = styleBlock.match(/\.health-area-index \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
     expect(healthAreaIndex).toContain('width: min(100%, var(--report-dashboard-surface-width));');
     expect(healthAreaIndex).toContain('margin-inline: auto;');
     expect(healthAreaIndex).toContain('box-sizing: border-box;');
+  });
+
+  it('keeps the native fallback composition bounded and visibly grouped', () => {
+    expect(theme).toContain('.main-content .report-header');
+    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-item');
+    expect(theme).toContain('.main-content .dashboard-v2 .condition-evidence-item');
+    expect(theme).toContain('.main-content .sections-container .marker-card');
+    expect(theme).toContain('width: min(100%, var(--report-dashboard-surface-width));');
+    expect(theme).toContain('@media screen and (max-width: 720px)');
+  });
+
+  it('gives food recommendations room and themes their native-renderer controls', () => {
+    expect(source).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(theme).toContain('.main-content .dashboard-v2 .nutrition-action-row');
+    expect(theme).toContain('.main-content .dashboard-v2 .recommendation-row');
+    expect(theme).toContain('.main-content .dashboard-v2 .recommendation-link');
+    expect(theme).toContain('-webkit-appearance: none;');
+    expect(theme).toContain('background: var(--status-info-soft-bg);');
   });
 
   it('leaves context labels and stable context IDs to the Context workspace', () => {

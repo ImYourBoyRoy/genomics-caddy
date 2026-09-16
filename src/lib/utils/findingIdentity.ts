@@ -22,6 +22,8 @@ import type {
   SeverityClass,
 } from '../types/genomics';
 import { normalizeFindingSemantics } from './findingSemantics';
+import { isCallableGenotype } from './genotype';
+import { isVerifiedAssertionStatus } from './reportStatuses';
 
 export type CanonicalCallState = 'called' | 'unknown' | 'mixed';
 export type CanonicalActionabilityLevel =
@@ -101,19 +103,10 @@ const SEVERITY_ORDER: SeverityClass[] = [
   'protective',
   'trait',
   'context_dependent',
+  'not_evaluated',
   'benign',
   'no_data',
 ];
-
-const UNKNOWN_ASSERTIONS = new Set([
-  'NoData',
-  'NotInRawFile',
-  'BlockedRawCall',
-  'UnverifiedOrientation',
-  'OrientationMismatch',
-  'AmbiguousAlleles',
-  'NotEvaluated',
-]);
 
 function normalize(value: unknown): string {
   return String(value || '')
@@ -174,14 +167,39 @@ function topicForSectionName(sectionName: string): TopicDescriptor {
   return { id: stablePart(sectionName), label: sectionName.trim() || 'Uncategorized' };
 }
 
-function signalKey(marker: EvaluatedMarker): string {
+function baseSignalKey(marker: EvaluatedMarker): string {
   const markerId = String(marker.rsid || '').trim();
   if (markerId) return `rsid:${normalize(markerId)}`;
 
   const gene = normalize(marker.gene);
   const variant = normalize(marker.variant_name);
   if (gene || variant) return `locus:${gene}:${variant}`;
+
   return `link:${normalize(marker.link_id)}`;
+}
+
+/**
+ * Return only source-authored biomedical fields that can distinguish two
+ * assertions at the same locus. Derived callability/clinical defaults are
+ * intentionally excluded so a known row and its no-data mirror still form a
+ * mixed group instead of being split apart.
+ */
+function semanticPartitionKey(marker: EvaluatedMarker): string {
+  const authored = marker.clinical_semantics || {};
+  const parts = [
+    normalize(marker.gene),
+    normalize(marker.variant_type),
+    normalize(marker.source_build),
+    normalize(marker.hgvs),
+    normalize(marker.effect_allele),
+    [...(marker.expected_plus_alleles || [])].map(normalize).sort().join(','),
+    normalize(marker.effect_direction),
+    normalize(authored.condition_label),
+    normalize(authored.interpretation_class),
+    normalize(authored.inheritance_model),
+    normalize(authored.clinical_state),
+  ];
+  return parts.join(':');
 }
 
 function findingIdForKey(key: string): string {
@@ -194,11 +212,8 @@ function severityRank(marker: EvaluatedMarker): number {
 }
 
 function isKnownCall(marker: EvaluatedMarker): boolean {
-  return !UNKNOWN_ASSERTIONS.has(marker.assertion_status)
-    && marker.assertion_status === 'Verified'
-    && Boolean(marker.user_genotype)
-    && marker.user_genotype !== '--'
-    && !marker.user_genotype.includes('-');
+  return isVerifiedAssertionStatus(marker.assertion_status)
+    && isCallableGenotype(marker.user_genotype);
 }
 
 function sourcePriority(source: CanonicalFindingSource): [number, number, number, number] {
@@ -301,7 +316,7 @@ function finalizeGroup(
 export function buildCanonicalFindingGroups(
   report: Pick<GeneratedReport, 'sections'> | { sections: readonly ReportSectionLike[] },
 ): CanonicalFindingGroup[] {
-  const groups = new Map<string, CanonicalFindingSource[]>();
+  const baseGroups = new Map<string, CanonicalFindingSource[]>();
   let sourceIndex = 0;
 
   for (const section of report.sections || []) {
@@ -314,17 +329,37 @@ export function buildCanonicalFindingGroups(
         sourceIndex,
       };
       sourceIndex += 1;
-      const key = signalKey(marker);
-      const sources = groups.get(key) || [];
+      const key = baseSignalKey(marker);
+      const sources = baseGroups.get(key) || [];
       sources.push(source);
-      groups.set(key, sources);
+      baseGroups.set(key, sources);
     }
   }
 
-  return Array.from(groups.entries()).map(([key, sources]) => finalizeGroup(key, sources));
+  const groups: Array<[string, CanonicalFindingSource[]]> = [];
+  for (const [baseKey, sources] of baseGroups.entries()) {
+    const partitions = new Map<string, CanonicalFindingSource[]>();
+    for (const source of sources) {
+      const partition = semanticPartitionKey(source.marker);
+      const partitionSources = partitions.get(partition) || [];
+      partitionSources.push(source);
+      partitions.set(partition, partitionSources);
+    }
+
+    if (partitions.size === 1) {
+      groups.push([baseKey, sources]);
+      continue;
+    }
+
+    for (const [partition, partitionSources] of partitions.entries()) {
+      groups.push([`${baseKey}:assertion:${partition}`, partitionSources]);
+    }
+  }
+
+  return groups.map(([key, sources]) => finalizeGroup(key, sources));
 }
 
 /** Return the canonical identity key for diagnostics and future report views. */
 export function canonicalFindingKey(marker: EvaluatedMarker): string {
-  return signalKey(marker);
+  return baseSignalKey(marker);
 }

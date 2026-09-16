@@ -210,6 +210,29 @@ describe('plain-English claim framing', () => {
     expect(getSimpleFindingTitle('A biological pathway studied in genetic research.')).toBe('A biological pathway studied in genetic research.');
   });
 
+  it('puts the direction before a concise topic instead of repeating research-context boilerplate', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        gene: 'TCF7L2',
+        variant_name: 'TCF7L2 glucose association marker',
+        impact: 'Higher glucose susceptibility research signal',
+        evidence_tier: 'B_replicated_common_marker',
+        effect_direction: 'risk',
+        clinical_confirmation_required: false,
+        severity_class: 'moderate_risk',
+        confirm_with: [],
+      },
+      {
+        simpleImpact: 'Blood sugar and metabolism research context',
+        simpleMeaning: 'This marker has been studied in glucose and insulin-related traits.',
+        plainTitle: 'Blood sugar and metabolism research context',
+      },
+    );
+
+    expect(copy.plain_title).toBe('Higher susceptibility — Blood sugar and metabolism');
+    expect(copy.direction_label).toBe('Higher susceptibility');
+  });
+
   it('keeps the technical word marker out of Simple titles', () => {
     const titles = Object.values(LAYPERSON_MAP).map((translation) => getSimpleFindingTitle(translation.simpleImpact));
     expect(titles.some((title) => /\bmarker\b/i.test(title))).toBe(false);
@@ -248,6 +271,7 @@ describe('plain-English claim framing', () => {
 
     expect(copy).toEqual({
       plain_title: 'Blood sugar pathway',
+      direction_label: 'Higher susceptibility',
       signal: 'This marker is associated with insulin signaling.',
       why_it_matters: 'Pair it with measured glucose and HbA1c.',
       review_action: 'Review HbA1c.',
@@ -278,12 +302,155 @@ describe('plain-English claim framing', () => {
 
     expect(copy).toMatchObject({
       plain_title: 'Medication safety signal',
-      signal: 'A medication-related safety signal is present.',
+      signal: 'This marker is associated with a possible medication-sensitivity signal.',
       why_it_matters: 'It may affect how a specific medicine is reviewed.',
       review_action: 'Check the matching medication before use.',
       evidence_label: 'Clinical safety route',
     });
     expect(getSimpleEvidenceLabel('Tier E — exploratory')).toBe('Early or limited research');
+  });
+
+  it('makes named warfarin direction visible instead of using a generic response title', () => {
+    const lower = getSimpleFindingCopy(
+      {
+        gene: 'VKORC1',
+        variant_name: 'VKORC1 -1639G>A warfarin sensitivity marker',
+        impact: 'Lower VKORC1 expression / lower warfarin dose requirement',
+        interpretation: 'A-carriers generally require lower initial doses.',
+        evidence_tier: 'A_pharmacogenomic_actionable',
+        effect_direction: 'risk',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+        confirm_with: ['INR', 'clinical dosing algorithm'],
+      },
+      {
+        simpleImpact: 'Warfarin response context',
+        simpleMeaning: 'This DNA finding is one part of how warfarin response can vary.',
+        plainTitle: 'Warfarin response context',
+        signal: 'This DNA finding is one part of how warfarin response can vary.',
+      },
+    );
+
+    expect(lower.plain_title).toBe('Warfarin dosing — lower-dose requirement signal');
+    expect(lower.direction_label).toBe('Lower-dose requirement tendency');
+    expect(lower.signal).toContain('lower warfarin dose requirement');
+    expect(lower.why_it_matters).toContain('CYP2C9, VKORC1, and CYP4F2');
+  });
+
+  it('shows a higher-dose warfarin direction when the authored marker supports it', () => {
+    const higher = getSimpleFindingCopy(
+      {
+        gene: 'CYP4F2',
+        variant_name: 'CYP4F2 V433M warfarin dose marker',
+        impact: 'Reduced vitamin K oxidation / higher warfarin dose requirement tendency',
+        interpretation: 'The T allele can increase warfarin dose requirements modestly.',
+        evidence_tier: 'A_pharmacogenomic_actionable',
+        effect_direction: 'risk',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+        confirm_with: ['INR'],
+      },
+      {
+        simpleImpact: 'Warfarin response context',
+        simpleMeaning: 'This DNA finding is one part of how warfarin response can vary.',
+      },
+    );
+
+    expect(higher.plain_title).toBe('Warfarin dosing — higher-dose requirement signal');
+    expect(higher.direction_label).toBe('Higher-dose requirement tendency');
+  });
+
+  it('does not call an undirected medication component a susceptibility finding', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        gene: 'CYP2C9',
+        variant_name: 'Clinical PGx allele component',
+        impact: 'Medication dose component',
+        interpretation: 'A complete clinical result is needed.',
+        evidence_tier: 'A_pharmacogenomic_actionable',
+        effect_direction: 'risk',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+        confirm_with: ['clinical PGx panel'],
+      },
+      {
+        simpleImpact: 'Medication processing context',
+        simpleMeaning: 'This DNA finding may influence how some medicines are processed.',
+      },
+    );
+
+    expect(copy.plain_title).toBe('Medication processing — direction incomplete from this result');
+    expect(copy.direction_label).toBe('Direction incomplete');
+  });
+
+  it('keeps the ten audited PGx translations specific in Simple mode', () => {
+    const cases = [
+      ['rs35742686', 'CYP2D6', 'CYP2D6*3'],
+      ['rs5030655', 'CYP2D6', 'CYP2D6*6'],
+      ['rs56337013', 'CYP2C19', 'CYP2C19*5'],
+      ['rs72558186', 'CYP2C19', 'CYP2C19*6'],
+      ['rs72552267', 'CYP2C19', 'CYP2C19*7'],
+      ['rs41291556', 'CYP2C19', 'CYP2C19*8'],
+      ['rs11045819', 'SLCO1B1', 'SLCO1B1'],
+      ['rs186364861', 'NUDT15', 'NUDT15'],
+      ['rs1801280', 'NAT2', 'NAT2'],
+      ['rs1799930', 'NAT2', 'NAT2'],
+    ] as const;
+
+    for (const [rsid, gene, pathway] of cases) {
+      const translation = LAYPERSON_MAP[rsid];
+      const copy = getSimpleFindingCopy({
+        gene,
+        variant_name: `${pathway} allele component`,
+        impact: `${gene} reduced-function component`,
+        evidence_tier: 'A_clinical_guideline',
+        effect_direction: 'risk',
+        clinical_confirmation_required: true,
+        severity_class: 'confirmation_required',
+        confirm_with: ['clinical PGx panel'],
+        variant_type: 'pharmacogenomic_snp',
+      }, translation);
+
+      expect(copy.plain_title, rsid).toContain(gene);
+      expect(copy.plain_title, rsid).not.toMatch(/medication processing context|medication safety context/i);
+      expect(copy.signal, rsid).toContain(gene);
+      expect(copy.review_action, rsid).toMatch(/PGx|testing/i);
+    }
+  });
+
+  it('keeps high-visibility medication and neurobiology findings specific', () => {
+    const marker = (gene: string, variant_name: string, impact: string, effect_direction: 'risk' | 'context_dependent') => ({
+      gene,
+      variant_name,
+      impact,
+      evidence_tier: 'A_clinical_guideline',
+      effect_direction,
+      clinical_confirmation_required: gene === 'CYP2C9',
+      severity_class: 'confirmation_required' as const,
+      confirm_with: ['clinical review'],
+      variant_type: gene === 'CYP2C9' ? 'pharmacogenomic_snp' : 'snp',
+    });
+
+    const cyp2c9 = getSimpleFindingCopy(
+      marker('CYP2C9', 'CYP2C9*3 reduced-function warfarin marker', 'Reduced CYP2C9 enzyme clearance', 'risk'),
+      LAYPERSON_MAP.rs1057910,
+    );
+    expect(cyp2c9.plain_title).toBe('CYP2C9*3 — reduced medicine clearance');
+    expect(cyp2c9.signal).toContain('reduced-function CYP2C9*3');
+
+    const maoa = getSimpleFindingCopy(
+      marker('MAOA', 'MAOA coding variant', 'Lower monoamine oxidase A enzyme activity', 'context_dependent'),
+      LAYPERSON_MAP.rs6323,
+    );
+    expect(maoa.plain_title).toBe('MAOA lower-activity stress-response signal');
+    expect(maoa.signal).toContain('lower-activity MAOA');
+
+    const drd3 = getSimpleFindingCopy(
+      marker('DRD3', 'Ser9Gly', 'Dopamine D3 receptor binding/limbic reward candidate', 'context_dependent'),
+      LAYPERSON_MAP.rs6280,
+    );
+    expect(drd3.plain_title).toBe('DRD3 dopamine-reward and movement-sensitivity signal');
+    expect(drd3.signal).toContain('reward sensitivity and movement-side-effect');
   });
 
   it('surfaces a bounded summary of the authored follow-up items', () => {

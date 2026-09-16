@@ -46,14 +46,22 @@ describe('Sidebar update-state ordering', () => {
 
   it('shows a concise collapsed-row status after the authoritative probe settles', () => {
     expect(sidebarSource).toContain("if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';");
-    expect(sidebarSource).toContain("if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Check incomplete';");
+    expect(sidebarSource).toContain("if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Remote check incomplete';");
     expect(sidebarSource).toContain("if (updatePhase === 'error') return 'Update issue';");
     expect(sidebarSource).toContain("if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';");
     expect(sidebarSource).toContain('class="resource-status-pill"');
     expect(sidebarSource).toContain('class:resource-status-current={collapsedStatusLabel === \'Current\'}');
-    expect(sidebarSource).toContain('class:resource-status-incomplete={collapsedStatusLabel === \'Check incomplete\'}');
+    expect(sidebarSource).toContain('class:resource-status-incomplete={collapsedStatusLabel === \'Remote check incomplete\'}');
     expect(sidebarSource).toContain('class:resource-status-error={collapsedStatusLabel === \'Update issue\'}');
     expect(sidebarSource).toContain("'attention',\n          offlineStatusFailureMessage(status)");
+  });
+
+  it('distinguishes local catalog availability from remote freshness', () => {
+    expect(sidebarSource).toContain('let localPrimarySummary = $derived.by(() => {');
+    expect(sidebarSource).toContain('<strong>Local catalogs:</strong>');
+    expect(sidebarSource).toContain('Imported DNA profiles and remote freshness are checked separately.');
+    expect(sidebarSource).not.toContain('asset.local_bytes < 64 * 1024');
+    expect(sidebarSource).toContain('Downloaded · not indexed yet (${sizeStr})');
   });
 
   it('keeps an explicit retry path for update failures without adding persistent warning copy', () => {

@@ -16,12 +16,12 @@ describe('ReportHeader summary', () => {
   it('keeps Simple mode as a wide, non-sticky mini stats banner', () => {
     expect(source).toContain('<div class="simple-report-overview" aria-label="Report overview">');
     expect(source).toContain('<span class="quality-kicker">Report overview</span>');
-    expect(source).toContain('on review board');
+    expect(source).toContain('highlighted');
     expect(source).toContain('class="report-stat-grid" aria-label="Report overview statistics"');
-    expect(source).toContain('Review queue');
-    expect(source).toContain('Higher concern');
-    expect(source).toContain('Context findings');
-    expect(source).toContain('Protective context');
+    expect(source).toContain('Review first');
+    expect(source).toContain('Higher-priority');
+    expect(source).toContain('Context signals');
+    expect(source).toContain('Potentially favorable');
     expect(source).toContain('<span>DNA coverage</span>');
     expect(source).toContain('role="progressbar"');
     expect(source).toContain('class="overview-coverage-meter"');

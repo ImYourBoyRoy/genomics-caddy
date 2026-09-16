@@ -3151,7 +3151,7 @@
       "rsid": "rs1800795",
       "gene": "IL6",
       "variant_name": "IL6 -174G>C inflammatory marker",
-      "effect_allele": "C",
+      "effect_allele": "G",
       "impact": "Inflammatory signaling tendency / CRP and vascular inflammation hypothesis",
       "evidence_tier": "D_research_only",
       "interpretation": "IL6 rs1800795 has been associated with inflammatory markers and cardiovascular traits in some candidate-gene studies, but clinical utility is weak. Use only as a low-confidence inflammation annotation.",

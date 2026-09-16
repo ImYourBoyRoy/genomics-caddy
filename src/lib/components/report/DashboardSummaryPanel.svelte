@@ -3,6 +3,7 @@
 import type { GeneratedReport } from '../../types/genomics';
 import allergySensitivityCatalog from '../../marker-packs/allergy_sensitivity_catalog.json';
 import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
+import { conditionDiagnosticCapabilityLabel, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
 import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
 import type { PresentationMode } from '../../utils/presentationPreferences';
 
@@ -26,15 +27,16 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report));
 
-  // Fresh profile defaults are collapsed. Deliberate expansion is retained per profile.
+  // Fresh profile defaults keep Review-first + lab follow-ups open; other
+  // guidance panels stay collapsed until the user expands them.
   let collapsed = $state({
-    topFindings: true,
+    topFindings: false,
     allergy: true,
     diet: true,
     supplements: true,
     activity: true,
     medication: true,
-    labTests: true,
+    labTests: false,
   });
   let loadedCollapseProfileId = $state<number | null>(null);
 
@@ -42,20 +44,21 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   let labRequestCopied = $state(false);
 
   function dashboardCollapseStorageKey(profileId: number): string {
-    // Version the key so the old global preference cannot reopen a dense dashboard.
-    return `genomics_dashboard_collapsed_v2_${profileId}`;
+    // v3: labs + review queue open by default; prior keys forced everything closed.
+    return `genomics_dashboard_collapsed_v3_${profileId}`;
   }
 
   $effect(() => {
     if (!sampleId || loadedCollapseProfileId === sampleId) return;
     const defaults = {
-      topFindings: true,
+      topFindings: false,
       allergy: true,
       diet: true,
       supplements: true,
       activity: true,
       medication: true,
-      labTests: true,
+      // Keep the lab/test follow-up list visible by default — users look for it first.
+      labTests: false,
     };
     let next = defaults;
     try {
@@ -93,16 +96,25 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   function findingMeaning(finding: ActionablePlan['topFindings'][number]): string {
     const marker = markerForFinding(finding);
-    return marker
-      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).why_it_matters
-      : 'A research finding is available to review in the right personal context.';
+    if (!marker) return 'A DNA-linked finding is available to review in the right personal context.';
+    const copy = getSimpleFindingCopy(marker, getLaypersonTranslation(marker));
+    return [copy.signal, copy.why_it_matters].filter(Boolean).join(' ');
   }
 
   function findingTitle(finding: ActionablePlan['topFindings'][number]): string {
+    if (finding.plain_title) return finding.plain_title;
     const marker = markerForFinding(finding);
     return marker
       ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).plain_title
       : 'Research finding';
+  }
+
+  function findingDirection(finding: ActionablePlan['topFindings'][number]): string {
+    if (finding.direction_label) return finding.direction_label;
+    const marker = markerForFinding(finding);
+    return marker
+      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).direction_label
+      : 'Direction incomplete';
   }
 
   function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
@@ -118,8 +130,46 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     return 'low';
   }
 
+  function conditionTone(summary: ConditionEvidenceSummary): 'high' | 'moderate' | 'low' {
+    if (summary.relative_signal === 'higher') return 'high';
+    if (summary.relative_signal === 'moderate') return 'moderate';
+    return 'low';
+  }
+
+  function conditionCountLabel(summary: ConditionEvidenceSummary): string {
+    const matched = summary.matched_indicator_count;
+    const coded = summary.coded_indicator_count;
+    return `${matched} of ${coded} panel indicators matched`;
+  }
+
+  function viewConditionMarkers(summary: ConditionEvidenceSummary): void {
+    if (summary.matched_marker_link_ids.length === 0) return;
+    onJumpToMarkers?.(summary.matched_marker_link_ids);
+    if (!onJumpToMarkers) onJumpToMarker?.(summary.matched_marker_link_ids[0]);
+  }
+
   function activityDomainLabel(domain: { id: string; label?: string }): string {
     return domain.label || domain.id.replaceAll('_', ' ');
+  }
+
+  function recommendationBasis(item: { evidence_level: string; basis_marker_count?: number }): string {
+    const markerCount = item.basis_marker_count || 0;
+    const markerLabel = markerCount
+      ? `${markerCount} linked ${markerCount === 1 ? 'marker' : 'markers'}`
+      : 'Curated pathway';
+    const evidence = item.evidence_level.trim() || 'Evidence not graded';
+    return `${markerLabel} · ${evidence}`;
+  }
+
+  function recommendationGenes(item: { basis_genes: string[] }): string {
+    return [...new Set(item.basis_genes.filter(Boolean))].join(' · ');
+  }
+
+  function viewRecommendationMarkers(item: { basis_marker_link_ids?: string[] }): void {
+    const markerIds = (item.basis_marker_link_ids || []).filter(Boolean);
+    if (markerIds.length === 0) return;
+    onJumpToMarkers?.(markerIds);
+    if (!onJumpToMarkers) onJumpToMarker?.(markerIds[0]);
   }
 
   type ActivityDomain = ActionablePlan['activity']['relevantDomains'][number];
@@ -226,8 +276,8 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     <div class="action-queue-header">
       <div>
         <span class="section-kicker">Start here</span>
-        <h3 id="action-queue-title">Priority findings</h3>
-        <p>DNA signals with the clearest reason to review them first.</p>
+        <h3 id="action-queue-title">Review first</h3>
+        <p>The most actionable DNA-linked signals in this report.</p>
       </div>
       <span class="action-queue-count">{Math.min(plan.topFindings.length, 9)} shown</span>
     </div>
@@ -252,8 +302,12 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                   </div>
                   <div class="action-queue-signal-row">
                     <span class="action-queue-signal">DNA-linked</span>
+                    <span class="action-queue-direction">{findingDirection(item.finding)}</span>
                     {#if item.finding.related_marker_count && item.finding.related_marker_count > 1}
-                      <span>{item.finding.related_marker_count} related markers</span>
+                      <span class="action-queue-marker-ref">{item.finding.related_marker_count} related markers</span>
+                    {/if}
+                    {#if item.finding.rsid}
+                      <span class="action-queue-marker-ref" title="Marker association reference">{item.finding.rsid}{item.finding.gene ? ` · ${item.finding.gene}` : ''}</span>
                     {/if}
                   </div>
                   <p>{findingMeaning(item.finding)}</p>
@@ -276,6 +330,90 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       </div>
     {/if}
   </section>
+
+  {#if plan.labTests.length > 0}
+    <section class="lab-spotlight summary-card card" aria-labelledby="lab-spotlight-title">
+      <div class="lab-spotlight-header">
+        <div>
+          <span class="section-kicker lab-kicker">Tests to discuss</span>
+          <h3 id="lab-spotlight-title">Suggested lab &amp; screening follow-ups</h3>
+          <p>DNA-linked tests grouped for clinician discussion — not automatic orders.</p>
+        </div>
+        <a class="lab-spotlight-jump" href="#lab-followups-card">Full lab list →</a>
+      </div>
+      <div class="lab-spotlight-chips">
+        {#each plan.labTests.slice(0, 8) as lt (labKey(lt))}
+          <span class="lab-spotlight-chip">
+            <span class="lab-spotlight-name">{lt.name}</span>
+            <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
+          </span>
+        {/each}
+        {#if plan.labTests.length > 8}
+          <span class="lab-spotlight-more">+{plan.labTests.length - 8} more below</span>
+        {/if}
+      </div>
+    </section>
+  {/if}
+
+  {#if plan.conditionEvidence.length > 0}
+    <section class="condition-evidence summary-card card" aria-labelledby="condition-evidence-title">
+      <div class="condition-evidence-header">
+        <div>
+          <span class="section-kicker">DNA signals</span>
+          <h3 id="condition-evidence-title">Potential health patterns</h3>
+          <p>DNA indicators grouped around health questions worth investigating.</p>
+        </div>
+        <span class="condition-evidence-count">{plan.conditionEvidence.length} shown</span>
+      </div>
+      <div class="condition-evidence-grid">
+        {#each plan.conditionEvidence as summary (summary.id)}
+          <article class="condition-evidence-item" data-signal={conditionTone(summary)}>
+            <div class="condition-evidence-item-top">
+              <h4>{summary.label}</h4>
+              <span class="condition-evidence-signal">
+                <span class="concern-dot" aria-hidden="true"></span>
+                {summary.relative_signal_label}
+              </span>
+            </div>
+            <div class="condition-evidence-counts">
+              <strong>{conditionCountLabel(summary)}</strong>
+              <span>{summary.callable_indicator_count} callable</span>
+            </div>
+            <p class="condition-evidence-meaning">{summary.plain_meaning}</p>
+            <p class="condition-evidence-route"><strong>Look into:</strong> {summary.clinical_route}</p>
+            <div class="condition-evidence-meta">
+              <span>{summary.evidence_label}</span>
+              <span>{summary.direction_summary}</span>
+            </div>
+            {#if summary.diagnostic_capability === 'clinical_variant_can_establish_when_confirmed'}
+              <p class="condition-evidence-capability">{conditionDiagnosticCapabilityLabel(summary.diagnostic_capability)}.</p>
+            {/if}
+            {#if presentationMode !== 'simple'}
+              <details class="condition-evidence-details">
+                <summary>Technical details</summary>
+                <div>
+                  <span>Genes: {summary.genes.join(' · ') || 'Not recorded'}</span>
+                  <span>Markers: {summary.rsids.join(' · ') || 'Not recorded'}</span>
+                  {#if summary.interpretation_classes?.length}
+                    <span>Interpretation: {summary.interpretation_classes.join(' · ')}</span>
+                  {/if}
+                  {#if summary.inheritance_models?.length}
+                    <span>Inheritance: {summary.inheritance_models.join(' · ')}</span>
+                  {/if}
+                </div>
+              </details>
+            {/if}
+            {#if (onJumpToMarkers || onJumpToMarker) && summary.matched_marker_link_ids.length > 0}
+              <button class="btn btn-xs btn-link condition-evidence-link" type="button" onclick={() => viewConditionMarkers(summary)}>
+                View matched DNA →
+              </button>
+            {/if}
+          </article>
+        {/each}
+      </div>
+      <p class="condition-evidence-footer">Counts show how many curated indicators matched in this report.</p>
+    </section>
+  {/if}
 
   {#if presentationMode !== 'simple' && plan.safetyNotes.length > 0}
     <details class="actionability-safety">
@@ -438,13 +576,13 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       </div>
 
   <div class="grid-layout">
-    <div class="action-row">
+    <div class="action-row nutrition-action-row">
       <!-- Panel 2: Dietary Guidance -->
       {#if plan.diet.favor.length > 0 || plan.diet.avoid.length > 0 || plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0 || plan.foodSafety.relevantRules.length > 0 || plan.foodSafety.suppressedSuggestions.length > 0}
         <div class="summary-card card" class:collapsed={collapsed.diet}>
           <h3 class="card-header-heading">
             <button type="button" class="card-header" onclick={() => toggle('diet')} aria-expanded={!collapsed.diet} aria-controls="dietary-alignment-body">
-              <span class="card-header-title">🥗 Dietary Alignment</span>
+              <span class="card-header-title">🥗 Food ideas</span>
               <span class="chevron">{collapsed.diet ? '▶' : '▼'}</span>
             </button>
           </h3>
@@ -452,7 +590,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
             <div id="dietary-alignment-body" hidden aria-hidden="true"></div>
           {:else}
             <div class="card-body" id="dietary-alignment-body">
-              <p class="section-hint">DNA-linked food ideas</p>
+              <p class="section-hint">Food choices linked to the pathways found in this profile.</p>
               {#if plan.foodSafety.explicitExclusions.length > 0 || plan.foodSafety.confirmedAllergies.length > 0 || plan.foodSafety.suspectedAllergies.length > 0}
                 <div class="dietary-profile-safety" role="note">
                   <strong>🛡️ Explicit food context</strong>
@@ -475,9 +613,11 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                       <span>{plan.foodSafety.suspectedAllergies.join(' · ')}</span>
                     </div>
                   {/if}
-                  <ul class="guardrail-list">
-                    {#each plan.foodSafety.notes as note (note)}<li>{note}</li>{/each}
-                  </ul>
+                  {#if presentationMode !== 'simple'}
+                    <ul class="guardrail-list">
+                      {#each plan.foodSafety.notes as note (note)}<li>{note}</li>{/each}
+                    </ul>
+                  {/if}
                 </div>
               {/if}
               {#if plan.foodSafety.relevantRules.length > 0}
@@ -524,15 +664,31 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                     </div>
                     <div class="dietary-items">
                       {#each plan.diet.favorItems as item (item.recommendation_id)}
-                        <article class="insight-tile insight-tile-favor dietary-item">
+                        <article class="insight-tile insight-tile-favor dietary-item recommendation-row">
                           <span class="insight-tile-indicator" aria-hidden="true">＋</span>
                           <span class="insight-tile-content">
                             <span class="insight-tile-text dietary-item-text">{getCompactGuidanceText(item.name)}</span>
-                            <span class="insight-tile-meta">DNA-linked · {item.basis_genes.join(' / ')} · {item.evidence_level}</span>
-                            <details class="recommendation-provenance">
-                              <summary>Why this appears</summary>
-                              <span>{item.why_it_appears} · Topic: {item.basis_topic_ids.join(' / ')}</span>
-                            </details>
+                            <span class="recommendation-basis" aria-label={`DNA basis: ${recommendationBasis(item)}`}>
+                              <span class="recommendation-basis-label">DNA basis</span>
+                              <span>{recommendationBasis(item)}</span>
+                            </span>
+                            {#if recommendationGenes(item)}
+                              <span class="recommendation-genes" aria-label={`Genes: ${recommendationGenes(item)}`}>
+                                <span class="recommendation-genes-label">Genes</span>
+                                <span>{recommendationGenes(item)}</span>
+                              </span>
+                            {/if}
+                            {#if presentationMode !== 'simple'}
+                              <details class="recommendation-provenance">
+                                <summary>Evidence details</summary>
+                                <span>{item.why_it_appears} · Topics: {item.basis_topic_ids.join(' / ')}</span>
+                              </details>
+                            {/if}
+                            {#if (onJumpToMarkers || onJumpToMarker) && item.basis_marker_link_ids.length > 0}
+                              <button class="btn btn-xs btn-link recommendation-link" type="button" onclick={() => viewRecommendationMarkers(item)}>
+                                View DNA basis →
+                              </button>
+                            {/if}
                           </span>
                         </article>
                       {/each}
@@ -548,15 +704,31 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                     </div>
                     <div class="dietary-items">
                       {#each plan.diet.avoidItems as item (item.recommendation_id)}
-                        <article class="insight-tile insight-tile-avoid dietary-item">
+                        <article class="insight-tile insight-tile-avoid dietary-item recommendation-row">
                           <span class="insight-tile-indicator" aria-hidden="true">!</span>
                           <span class="insight-tile-content">
                             <span class="insight-tile-text dietary-item-text">{getCompactGuidanceText(item.name)}</span>
-                            <span class="insight-tile-meta">DNA-linked · {item.basis_genes.join(' / ')} · {item.evidence_level}</span>
-                            <details class="recommendation-provenance">
-                              <summary>Why this appears</summary>
-                              <span>{item.why_it_appears} · Topic: {item.basis_topic_ids.join(' / ')}</span>
-                            </details>
+                            <span class="recommendation-basis" aria-label={`DNA basis: ${recommendationBasis(item)}`}>
+                              <span class="recommendation-basis-label">DNA basis</span>
+                              <span>{recommendationBasis(item)}</span>
+                            </span>
+                            {#if recommendationGenes(item)}
+                              <span class="recommendation-genes" aria-label={`Genes: ${recommendationGenes(item)}`}>
+                                <span class="recommendation-genes-label">Genes</span>
+                                <span>{recommendationGenes(item)}</span>
+                              </span>
+                            {/if}
+                            {#if presentationMode !== 'simple'}
+                              <details class="recommendation-provenance">
+                                <summary>Evidence details</summary>
+                                <span>{item.why_it_appears} · Topics: {item.basis_topic_ids.join(' / ')}</span>
+                              </details>
+                            {/if}
+                            {#if (onJumpToMarkers || onJumpToMarker) && item.basis_marker_link_ids.length > 0}
+                              <button class="btn btn-xs btn-link recommendation-link" type="button" onclick={() => viewRecommendationMarkers(item)}>
+                                View DNA basis →
+                              </button>
+                            {/if}
                           </span>
                         </article>
                       {/each}
@@ -574,7 +746,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
         <div class="summary-card card" class:collapsed={collapsed.supplements}>
           <h3 class="card-header-heading">
             <button type="button" class="card-header" onclick={() => toggle('supplements')} aria-expanded={!collapsed.supplements} aria-controls="supplements-body">
-              <span class="card-header-title">💊 Supplements</span>
+              <span class="card-header-title">💊 Supplement ideas</span>
               <span class="chevron">{collapsed.supplements ? '▶' : '▼'}</span>
             </button>
           </h3>
@@ -582,23 +754,39 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
             <div id="supplements-body" hidden aria-hidden="true"></div>
           {:else}
             <div class="card-body" id="supplements-body">
-              <p class="section-hint">DNA-linked options to consider</p>
+              <p class="section-hint">Options linked to the pathways found in this profile.</p>
               <div class="supplement-columns">
                 {#if plan.supplements.length > 0}
                   <div class="supplement-column">
                     <h4>👍 Consider</h4>
                     <div class="supplements-list">
                       {#each plan.supplements as s (`${s.name}:${s.reason}`)}
-                        <article class="insight-tile insight-tile-consider supplement-item">
+                        <article class="insight-tile insight-tile-consider supplement-item recommendation-row">
                           <span class="insight-tile-indicator" aria-hidden="true">＋</span>
                           <span class="insight-tile-content">
                             <span class="supp-name">{getCompactSupplementName(s.name)}</span>
                             <span class="supp-reason">{getCompactSupplementReason(s.reason)}</span>
-                            <span class="insight-tile-meta">DNA-linked · {s.basis_genes.join(' / ')} · {s.evidence_level}</span>
-                            <details class="recommendation-provenance">
-                              <summary>Why this appears</summary>
-                              <span>{s.why_it_appears} · Topic: {s.basis_topic_ids.join(' / ')}</span>
-                            </details>
+                            <span class="recommendation-basis" aria-label={`DNA basis: ${recommendationBasis(s)}`}>
+                              <span class="recommendation-basis-label">DNA basis</span>
+                              <span>{recommendationBasis(s)}</span>
+                            </span>
+                            {#if recommendationGenes(s)}
+                              <span class="recommendation-genes" aria-label={`Genes: ${recommendationGenes(s)}`}>
+                                <span class="recommendation-genes-label">Genes</span>
+                                <span>{recommendationGenes(s)}</span>
+                              </span>
+                            {/if}
+                            {#if presentationMode !== 'simple'}
+                              <details class="recommendation-provenance">
+                                <summary>Evidence details</summary>
+                                <span>{s.why_it_appears} · Topics: {s.basis_topic_ids.join(' / ')}</span>
+                              </details>
+                            {/if}
+                            {#if (onJumpToMarkers || onJumpToMarker) && s.basis_marker_link_ids.length > 0}
+                              <button class="btn btn-xs btn-link recommendation-link" type="button" onclick={() => viewRecommendationMarkers(s)}>
+                                View DNA basis →
+                              </button>
+                            {/if}
                           </span>
                         </article>
                       {/each}
@@ -610,16 +798,32 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                     <h4>👎 Avoid / confirm first</h4>
                     <div class="supplements-list">
                       {#each plan.supplementAvoid as s (s.name)}
-                        <article class="insight-tile insight-tile-avoid supplement-item">
+                        <article class="insight-tile insight-tile-avoid supplement-item recommendation-row">
                           <span class="insight-tile-indicator" aria-hidden="true">!</span>
                           <span class="insight-tile-content">
                             <span class="supp-name">{s.name}</span>
                             {#if s.reason}<span class="supp-reason">{s.reason}</span>{/if}
-                            <span class="insight-tile-meta">DNA-linked · {s.basis_genes.join(' / ')} · {s.evidence_level}</span>
-                            <details class="recommendation-provenance">
-                              <summary>Why this appears</summary>
-                              <span>{s.why_it_appears} · Topic: {s.basis_topic_ids.join(' / ')}</span>
-                            </details>
+                            <span class="recommendation-basis" aria-label={`DNA basis: ${recommendationBasis(s)}`}>
+                              <span class="recommendation-basis-label">DNA basis</span>
+                              <span>{recommendationBasis(s)}</span>
+                            </span>
+                            {#if recommendationGenes(s)}
+                              <span class="recommendation-genes" aria-label={`Genes: ${recommendationGenes(s)}`}>
+                                <span class="recommendation-genes-label">Genes</span>
+                                <span>{recommendationGenes(s)}</span>
+                              </span>
+                            {/if}
+                            {#if presentationMode !== 'simple'}
+                              <details class="recommendation-provenance">
+                                <summary>Evidence details</summary>
+                                <span>{s.why_it_appears} · Topics: {s.basis_topic_ids.join(' / ')}</span>
+                              </details>
+                            {/if}
+                            {#if (onJumpToMarkers || onJumpToMarker) && s.basis_marker_link_ids.length > 0}
+                              <button class="btn btn-xs btn-link recommendation-link" type="button" onclick={() => viewRecommendationMarkers(s)}>
+                                View DNA basis →
+                              </button>
+                            {/if}
                           </span>
                         </article>
                       {/each}
@@ -798,7 +1002,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                   <article class="medication-pathway" data-warning-kind="clinical_review">
                     <div class="medication-pathway-heading">
                       <strong>{pathway.label}</strong>
-                      <span>{pathway.genes.join(' · ')} · {pathway.matchedMarkerCount} DNA {pathway.matchedMarkerCount === 1 ? 'marker' : 'markers'}</span>
+                      <span class="medication-pathway-genes">{pathway.genes.join(' · ')}</span>
                     </div>
                     <p>{pathway.detail}</p>
                     <div class="medication-pathway-footer">
@@ -820,9 +1024,9 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       </div>
     {/if}
 
-    <!-- Labs: full-width, grouped & compact (collapsed by default) -->
+    <!-- Labs: full-width, grouped & compact (open by default) -->
     {#if plan.labTests.length > 0}
-      <div class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
+      <div id="lab-followups-card" class="summary-card card card-lab-followups" class:collapsed={collapsed.labTests}>
         <h3 class="card-header-heading">
           <button type="button" class="card-header" onclick={() => toggle('labTests')} aria-expanded={!collapsed.labTests} aria-controls="lab-followups-body">
             <span class="card-header-title">🔬 Lab &amp; screening follow-ups ({plan.labTests.length})</span>
@@ -847,7 +1051,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                       <div class="lab-category-label">{category}</div>
                       <div class="lab-chip-grid">
                         {#each tests as lt (labKey(lt))}
-                          <div class="lab-chip" class:lab-chip-counselor={lt.tier === 'counselor'}>
+                          <div class="lab-chip" class:lab-chip-requires-counselor={lt.requires_counselor}>
                             <button
                               type="button"
                               class="lab-chip-main"
@@ -856,10 +1060,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
                             >
                               <span class="lab-chip-name">{lt.name}</span>
                               <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
-                              {#if lt.requires_counselor}
-                                <span class="lab-chip-counselor" aria-label="Genetic counselor advised">🧑‍⚕️</span>
-                              {/if}
                             </button>
+                            {#if lt.requires_counselor && lt.tier !== 'counselor'}
+                              <span class="lab-chip-counselor-note">Genetic counselor advised</span>
+                            {/if}
                             {#if expandedLabReasons[labKey(lt)]}
                               <p class="lab-chip-purpose">{lt.purpose}</p>
                               <p class="lab-chip-reason">{lt.reason}</p>
@@ -1220,12 +1424,53 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     font-size: 0.7rem;
   }
 
+  .action-queue-direction {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--status-accent-soft-border);
+    border-radius: 999px;
+    color: var(--status-accent-soft-text);
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .action-queue-signal-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.55rem;
+    margin-top: 0.15rem;
+  }
+
+  .action-queue-signal {
+    color: var(--report-dna-signal-text);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .action-queue-marker-ref {
+    color: var(--report-marker-ref-text);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    padding: 0.12rem 0.4rem;
+    border-radius: 0.35rem;
+    background: var(--report-marker-ref-bg);
+  }
+
   .action-queue-item-content > p {
     max-width: none;
     margin: 0.35rem 0 0;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 0.76rem;
-    line-height: 1.4;
+    line-height: 1.45;
   }
 
   .action-queue-next {
@@ -1264,6 +1509,265 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   .action-queue-empty strong {
     color: var(--text-primary);
+  }
+
+  .lab-spotlight {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin: 0.85rem auto 0;
+    padding: 0.85rem 1rem;
+    border-color: color-mix(in srgb, var(--report-marker-ref-text) 35%, var(--border-color));
+    background: linear-gradient(180deg, var(--report-marker-ref-bg), var(--surface-raised));
+    box-sizing: border-box;
+  }
+
+  .lab-spotlight-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .lab-kicker {
+    color: var(--report-marker-ref-text);
+  }
+
+  .lab-spotlight-header h3 {
+    margin: 0.2rem 0 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .lab-spotlight-header p {
+    margin: 0.3rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .lab-spotlight-jump {
+    flex: 0 0 auto;
+    color: var(--report-marker-ref-text);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  #lab-followups-card {
+    scroll-margin-top: 7.5rem;
+  }
+
+  .lab-spotlight-jump:hover {
+    text-decoration: underline;
+  }
+
+  .lab-spotlight-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+  }
+
+  .lab-spotlight-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 100%;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--surface-subtle);
+  }
+
+  .lab-spotlight-name {
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .lab-spotlight-more {
+    align-self: center;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+
+  .condition-evidence {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    border-color: color-mix(in srgb, var(--status-info-border) 45%, var(--border-color));
+    background: var(--surface-raised);
+  }
+
+  .condition-evidence-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .condition-evidence-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.15rem;
+  }
+
+  .condition-evidence-header p {
+    max-width: 50rem;
+    margin: 0.3rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .condition-evidence-count,
+  .condition-evidence-counts,
+  .condition-evidence-meta {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+  }
+
+  .condition-evidence-count {
+    flex: 0 0 auto;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .condition-evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+    padding-top: 0.75rem;
+  }
+
+  .condition-evidence-item {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.8rem 0.85rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--status-info-border);
+    border-radius: 0.65rem;
+    background: var(--surface-subtle);
+  }
+
+  .condition-evidence-item[data-signal="high"] { border-left-color: var(--status-danger-border); }
+  .condition-evidence-item[data-signal="moderate"] { border-left-color: var(--status-warning-border); }
+  .condition-evidence-item[data-signal="low"] { border-left-color: var(--status-caution-border); }
+
+  .condition-evidence-item-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .condition-evidence-item h4 {
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 8rem;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .condition-evidence-signal {
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .condition-evidence-item[data-signal="high"] .condition-evidence-signal { color: var(--status-danger-strong-text); }
+  .condition-evidence-item[data-signal="moderate"] .condition-evidence-signal { color: var(--status-warning-text); }
+  .condition-evidence-item[data-signal="low"] .condition-evidence-signal { color: var(--status-caution-text); }
+
+  .condition-evidence-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: baseline;
+  }
+
+  .condition-evidence-counts strong { color: var(--text-primary); }
+
+  .condition-evidence-meaning,
+  .condition-evidence-route,
+  .condition-evidence-capability {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .condition-evidence-route {
+    padding: 0.45rem 0.55rem;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 0.4rem 0.4rem 0;
+    background: var(--surface-card);
+  }
+
+  .condition-evidence-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .condition-evidence-meta span {
+    padding: 0.15rem 0.35rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+  }
+
+  .condition-evidence-capability {
+    color: var(--status-info-text);
+    font-weight: 700;
+  }
+
+  .condition-evidence-details {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+  }
+
+  .condition-evidence-details summary {
+    cursor: pointer;
+    color: var(--status-info-text);
+    font-weight: 700;
+  }
+
+  .condition-evidence-details div {
+    display: grid;
+    gap: 0.2rem;
+    padding-top: 0.35rem;
+    overflow-wrap: anywhere;
+  }
+
+  .condition-evidence-link {
+    align-self: flex-start;
+    padding-inline: 0;
+  }
+
+  .condition-evidence-footer {
+    margin: 0.75rem 0 0;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.4;
   }
 
   .health-area-index {
@@ -1671,6 +2175,11 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     align-items: start;
   }
 
+  .nutrition-action-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
   .card-lab-followups {
     width: 100%;
     max-width: 100%;
@@ -1737,54 +2246,68 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .lab-chip-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 0.5rem;
   }
 
   .lab-chip {
     min-width: 0;
-    max-width: 100%;
+    min-height: 3.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    background: var(--surface-card);
+    box-sizing: border-box;
   }
 
   .lab-chip-main {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.3rem;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.55rem;
     width: 100%;
+    min-width: 0;
     text-align: left;
-    padding: 0.28rem 0.45rem;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    background: var(--surface-card);
+    padding: 0.15rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: inherit;
     cursor: pointer;
     font: inherit;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .lab-chip-main:hover {
-    border-color: var(--border-strong);
-    background: var(--surface-subtle);
+    color: var(--accent);
   }
 
-  .lab-chip-counselor .lab-chip-main {
-    border-color: var(--status-accent-soft-border);
-    background: var(--status-accent-soft-bg);
+  .lab-chip-main:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 0.2rem;
   }
 
   .lab-chip-name {
-    font-size: 0.68rem;
+    min-width: 0;
+    font-size: 0.73rem;
     font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.25;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
   .lab-chip-badge {
-    font-size: 0.55rem;
+    flex: 0 0 auto;
+    font-size: 0.58rem;
     font-weight: 800;
-    padding: 0.04rem 0.28rem;
-    border-radius: 3px;
+    padding: 0.18rem 0.4rem;
+    border-radius: 999px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     white-space: nowrap;
@@ -1805,9 +2328,15 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     color: var(--status-info-text);
   }
 
-  .lab-chip-counselor {
-    font-size: 0.7rem;
-    line-height: 1;
+  .lab-chip-requires-counselor {
+    border-color: var(--status-accent-soft-border);
+  }
+
+  .lab-chip-counselor-note {
+    margin-top: 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.62rem;
+    line-height: 1.3;
   }
 
   .lab-chip-reason {
@@ -2030,8 +2559,8 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   .diet-section {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1.45fr) minmax(13rem, 0.75fr);
+    gap: 0.9rem;
     align-items: start;
   }
 
@@ -2156,7 +2685,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   .dietary-items {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.45rem;
+    gap: 0.4rem;
     min-width: 0;
   }
 
@@ -2164,9 +2693,76 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     grid-template-columns: 1fr;
   }
 
-  .dietary-item {
-    align-items: flex-start;
-    flex-direction: row;
+  .recommendation-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.48rem 0.55rem;
+    border: 1px solid var(--border-color);
+    border-left: 2px solid var(--status-success-border);
+    border-radius: 0.42rem;
+    background: var(--surface-subtle);
+    box-sizing: border-box;
+  }
+
+  .recommendation-row.insight-tile-avoid {
+    border-left-color: var(--status-danger-border);
+  }
+
+  .recommendation-row .insight-tile-indicator {
+    width: 0.92rem;
+    height: 0.92rem;
+    margin-top: 0.08rem;
+    font-size: 0.62rem;
+  }
+
+  .recommendation-basis {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .recommendation-basis-label {
+    color: var(--status-info-text);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .recommendation-genes {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    color: var(--report-marker-ref-text);
+    font-size: 0.64rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .recommendation-genes-label {
+    color: var(--text-muted);
+    font-size: 0.56rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .recommendation-link {
+    align-self: flex-start;
+    margin-top: 0.1rem;
+    padding: 0;
+    color: var(--status-info-text);
+    font-size: 0.62rem;
   }
   .guidance-details {
     margin-top: 0.55rem;
@@ -2194,16 +2790,16 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     min-width: 0;
   }
   .supplements-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
     min-width: 0;
     max-width: 100%;
   }
   .supplement-columns {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 0.75rem;
     min-width: 0;
   }
   .supplement-column {
@@ -2217,11 +2813,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   .supplement-column.avoid h4 {
     color: var(--status-danger-strong-text);
   }
-  .supplement-item {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
   .supp-name {
     color: var(--status-accent-soft-text);
     font-size: 0.75rem;
@@ -2369,10 +2960,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     background: var(--surface-subtle);
   }
   .medication-pathway-heading {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.55rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    min-width: 0;
   }
   .medication-pathway-heading strong {
     min-width: 0;
@@ -2381,8 +2972,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     overflow-wrap: anywhere;
   }
   .medication-pathway-heading span {
-    color: var(--text-muted);
+    color: var(--report-marker-ref-text);
     font-size: 0.62rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
   .medication-pathway p,
   .medication-empty {
@@ -2483,7 +3076,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     }
 
     .action-queue-list {
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .action-row {
@@ -2513,6 +3106,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       grid-template-columns: 1fr;
       gap: 0.25rem;
     }
+
+    .condition-evidence-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (min-width: 1101px) and (max-width: 1400px) {
@@ -2526,11 +3123,21 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   @media (max-width: 760px) {
+    .nutrition-action-row,
+    .diet-section,
+    .supplement-columns {
+      grid-template-columns: 1fr;
+    }
+
     .guidance-index-links {
       grid-template-columns: 1fr;
     }
 
     .dietary-items {
+      grid-template-columns: 1fr;
+    }
+
+    .condition-evidence-grid {
       grid-template-columns: 1fr;
     }
   }

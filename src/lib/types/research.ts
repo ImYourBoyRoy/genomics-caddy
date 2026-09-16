@@ -748,6 +748,7 @@ export interface GnomadConfig {
   enabled: boolean;
   source_mode: GnomadSourceMode;
   release: string;
+  auto_discover_release: boolean;
   provider: GnomadHttpsProvider;
   local_vcf_dir?: string | null;
   max_remote_concurrent_files: number;
@@ -816,6 +817,19 @@ export interface GnomadMissingItem {
   fix_action: string;
 }
 
+export interface GnomadBatchProgress {
+  total_candidates: number;
+  cache_hits: number;
+  remote_queries: number;
+  local_queries: number;
+  allele_matches: number;
+  allele_mismatches: number;
+  missing_coordinates: number;
+  errors: number;
+  current_chromosome?: string | null;
+  estimated_remaining?: number | null;
+}
+
 export interface GnomadReadinessStatus {
   ready: boolean;
   enabled: boolean;
@@ -825,6 +839,14 @@ export interface GnomadReadinessStatus {
   remote_urls_ok: boolean;
   indexes_expected: number;
   indexes_cached: number;
+  /** Usable gnomAD frequency rows for the selected release. */
+  frequency_cache_rows: number;
+  /** Older-release rows retained locally and excluded from reports. */
+  stale_frequency_cache_rows: number;
+  /** True only when at least one usable row exists for the selected release. */
+  frequency_cache_ready: boolean;
+  /** Human-readable cache state, separate from index readiness. */
+  frequency_cache_summary: string;
   cache_dir: string;
   local_dir?: string | null;
   missing_items: GnomadMissingItem[];
@@ -847,7 +869,8 @@ export interface GnomadIndexSyncResult {
 export const DEFAULT_GNOMAD_CONFIG: GnomadConfig = {
   enabled: true,
   source_mode: "remote_indexed_vcf_https",
-  release: "4.1",
+  release: "4.1.1",
+  auto_discover_release: true,
   provider: "aws",
   local_vcf_dir: null,
   max_remote_concurrent_files: 2,
@@ -855,6 +878,6 @@ export const DEFAULT_GNOMAD_CONFIG: GnomadConfig = {
   graphql_enabled_for_sweep: false,
   graphql_fallback_enabled: true,
   dataset_policy: "auto",
-  exome_template: "release/4.1/vcf/exomes/gnomad.exomes.v4.1.sites.chr{chrom}.vcf.bgz",
-  genome_template: "release/4.1/vcf/genomes/gnomad.genomes.v4.1.sites.chr{chrom}.vcf.bgz",
+  exome_template: "release/4.1.1/vcf/exomes/gnomad.exomes.v4.1.1.sites.chr{chrom}.vcf.bgz",
+  genome_template: "release/4.1.1/vcf/genomes/gnomad.genomes.v4.1.1.sites.chr{chrom}.vcf.bgz",
 };

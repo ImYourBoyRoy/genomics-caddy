@@ -12,7 +12,9 @@ export interface DialogState {
   type: "alert" | "confirm";
   title: string;
   message: string;
-  onConfirm?: () => void;
+  busy?: boolean;
+  onConfirm?: () => void | Promise<void>;
+  onCancel?: () => void;
 }
 
 class DialogStore {
@@ -28,18 +30,46 @@ class DialogStore {
     this.state = { show: true, type: "alert", title, message };
   }
 
-  confirm(message: string, onConfirm: () => void, title = "Confirm Action") {
-    this.state = { show: true, type: "confirm", title, message, onConfirm };
+  confirm(
+    message: string,
+    onConfirm: () => void | Promise<void>,
+    title = "Confirm Action",
+    onCancel?: () => void,
+  ) {
+    this.state = { show: true, type: "confirm", title, message, onConfirm, onCancel };
   }
 
-  close() {
-    this.state.show = false;
+  close(options: { cancelled?: boolean } = {}) {
+    if (this.state.busy) return;
+    const cancel = this.state.onCancel;
+    this.state = {
+      show: false,
+      type: this.state.type,
+      title: "",
+      message: "",
+    };
+    if (options.cancelled && cancel) cancel();
   }
 
-  handleConfirm() {
+  async handleConfirm(): Promise<void> {
     const cb = this.state.onConfirm;
-    this.close();
-    if (cb) cb();
+    if (!cb || this.state.busy) return;
+
+    this.state = { ...this.state, busy: true };
+    try {
+      await cb();
+    } catch (error) {
+      if (this.state.onConfirm === cb) {
+        this.alert(`Action failed: ${String(error)}`, 'Genomics Caddy');
+      }
+    } finally {
+      // An async action may replace the confirmation with its own error dialog.
+      // Only close the original dialog when it is still the active one.
+      if (this.state.onConfirm === cb) {
+        this.state = { ...this.state, busy: false };
+        this.close();
+      }
+    }
   }
 }
 

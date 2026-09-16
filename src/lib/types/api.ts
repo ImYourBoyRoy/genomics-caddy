@@ -4,6 +4,7 @@
  */
 
 import type { ChatMessage } from "./agent";
+import type { AiContextMode } from "../utils/aiPrompt";
 
 export interface OllamaModelDetails {
   modelfile?: string;
@@ -72,4 +73,5 @@ export interface DbChatSession {
   maxTokens?: number;
   extendedThinking?: boolean;
   consultationMode?: string;
+  contextMode?: AiContextMode;
 }

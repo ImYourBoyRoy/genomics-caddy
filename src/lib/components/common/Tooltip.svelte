@@ -35,6 +35,7 @@
   let hostElement: HTMLSpanElement;
   let triggerElement = $state<HTMLElement | undefined>(undefined);
   let panelElement = $state<HTMLSpanElement | undefined>(undefined);
+  let panelResizeObserver: ResizeObserver | undefined;
   let panelStyle = $state('');
   let tooltipId = $state('');
   let hoverCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -139,6 +140,15 @@
     panelStyle = `left: ${position.left}px; top: ${position.top}px; width: ${position.width}px;`;
   }
 
+  function observePanelSize() {
+    panelResizeObserver?.disconnect();
+    if (!panelElement) return;
+    panelResizeObserver = new ResizeObserver(() => {
+      if (isOpen) requestAnimationFrame(updatePosition);
+    });
+    panelResizeObserver.observe(panelElement);
+  }
+
   function handleHostFocusOut(event: FocusEvent) {
     const nextTarget = event.relatedTarget;
     if (nextTarget instanceof Node && hostElement?.contains(nextTarget)) return;
@@ -147,12 +157,16 @@
   }
 
   $effect(() => {
-    if (isOpen) requestAnimationFrame(updatePosition);
-    if (interactiveChildren && tooltipId) {
+    if (isOpen) {
       void tick().then(() => {
-        syncInteractiveTrigger();
-        if (isOpen) requestAnimationFrame(updatePosition);
+        if (!isOpen) return;
+        if (interactiveChildren && tooltipId) syncInteractiveTrigger();
+        observePanelSize();
+        requestAnimationFrame(updatePosition);
       });
+    } else {
+      panelResizeObserver?.disconnect();
+      panelResizeObserver = undefined;
     }
   });
 
@@ -168,6 +182,7 @@
       document.removeEventListener('keydown', handleKeydown, true);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
+      panelResizeObserver?.disconnect();
       clearHoverCloseTimer();
     };
   });

@@ -36,6 +36,9 @@
     <div class="context-pill mt-2">
       📊 Sending <strong>{contextStats.included}</strong> of <strong>{contextStats.total}</strong> found variants to AI
     </div>
+    <p class="raw-data-note" role="note">
+      🔒 Raw genotype calls are always included for the findings sent to AI. Review the endpoint disclosure in Connection &amp; Model before connecting to a remote host.
+    </p>
   </div>
 </details>
 
@@ -101,5 +104,12 @@
     font-size: 0.72rem;
     color: var(--text-muted);
     margin-bottom: 6px;
+  }
+
+  .raw-data-note {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.4;
   }
 </style>

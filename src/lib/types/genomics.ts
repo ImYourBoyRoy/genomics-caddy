@@ -11,6 +11,8 @@ Key Outputs: Declared interfaces.
 Operational Notes: Matches the Rust backend structs in report.rs and db.rs.
 */
 
+import callabilityRules from '../marker-packs/callability_rules.json';
+
 export type EffectDirection = "risk" | "protective" | "context_dependent" | "trait" | "unknown" | "not_applicable" | "no_claim";
 
 /** Explicit interpretation semantics; these labels never turn an association into a diagnosis. */
@@ -45,7 +47,8 @@ export interface ClinicalSemantics {
   clinical_state?: FindingClinicalState | null;
 }
 
-export type VariantType = "snp" | "indel" | "repeat" | "cnv" | "hla" | "haplotype" | "star_allele" | "gene_panel";
+/** Registry-derived authored variant types; report boundaries still accept strings for forward compatibility. */
+export type VariantType = keyof typeof callabilityRules.variant_type_registry;
 
 /**
  * Optional applicability hint for explicitly sex-linked or reproductive markers.
@@ -72,6 +75,7 @@ export type SeverityClass =
   | "trait"
   | "context_dependent"
   | "confirmation_required"
+  | "not_evaluated"
   | "no_data"
   | "benign";
 
@@ -150,7 +154,7 @@ export interface CanonicalVariant {
   variant_type?: string | null;
 }
 
-export type CallStatus = "Found" | "NoData" | "NotInRawFile";
+export type CallStatus = "Found" | "NoData" | "NotInRawFile" | "AmbiguousRawCall";
 
 export interface UserCall {
   user_genotype: string;
@@ -169,9 +173,32 @@ export type AssertionStatus =
   | "AmbiguousAlleles"
   | "NotEvaluated";
 
+/** Orthogonal explanation of whether this assertion is evaluable by the current engine. */
+export type CallabilityState =
+  | "callable"
+  | "not_callable"
+  | "not_present"
+  | "blocked"
+  | "unknown";
+
+export type OrientationState =
+  | "verified"
+  | "not_required"
+  | "unverified"
+  | "mismatch"
+  | "unknown";
+
 export interface VariantCategoryLink {
   link_id: string;
+  /** Stable biomedical assertion identity; distinct from presentation grouping. */
+  assertion_key?: string;
   rsid: string;
+  gene?: string | null;
+  variant_name?: string | null;
+  variant_type?: VariantType | string | null;
+  source_build?: string | null;
+  hgvs?: string | null;
+  orientation_source?: string | null;
   category_id: string;
   category_label: string;
   impact: string;
@@ -183,6 +210,8 @@ export interface VariantCategoryLink {
   severity_class: string;
   effect_count?: number | null;
   assertion_status: AssertionStatus;
+  callability_state?: CallabilityState;
+  orientation_state?: OrientationState;
   requires_orientation_verification: boolean;
   interpretation_allowed: boolean;
   do_not_claim: string[];
@@ -301,6 +330,7 @@ export interface SectionSummary {
   trait_count: number;
   context_dependent_count: number;
   no_data_count: number;
+  not_evaluated_count?: number;
   confirmation_required_count: number;
   total_markers: number;
   show_percent_score: boolean;
@@ -336,16 +366,22 @@ export interface NormalizedReport {
   sections: NormalizedSection[];
   /** Deduplicated source metadata from the Rust report generator. */
   references?: ReportReferenceRecord[];
+  import_provenance?: ImportProvenance | null;
 }
 
 /** Flattened display-ready model computed once per report/category tab change. */
 export interface DisplayMarker {
   link_id: string;
+  assertion_key?: string;
   rsid: string;
   gene: string;
   variant_name: string;
   /** Resource-defined marker class used for category-aware plain-language copy. */
   variant_type?: string | null;
+  source_build?: string | null;
+  hgvs?: string | null;
+  expected_plus_alleles?: string[] | null;
+  category_id?: string;
   chromosome: string;
   position: number | null;
   user_genotype: string;
@@ -358,6 +394,9 @@ export interface DisplayMarker {
   effect_direction: EffectDirection;
   severity_class: SeverityClass;
   assertion_status: AssertionStatus;
+  callability_state?: CallabilityState;
+  orientation_state?: OrientationState;
+  requires_orientation_verification?: boolean;
   interpretation_allowed: boolean;
   sources: MarkerSource[];
   db_enriched_sources: EnrichedSource[];
@@ -410,6 +449,7 @@ export interface GeneratedReport {
   references?: ReportReferenceRecord[];
   /** Explicit when ClinVar/dbSNP catalogs are missing or empty (never silent). */
   catalog_warnings?: string[];
+  import_provenance?: ImportProvenance | null;
 }
 
 export interface ReportPayload {
@@ -426,6 +466,35 @@ export interface GenomeSample {
   call_rate?: number | null;
   titv_ratio?: number | null;
   heterozygosity_rate?: number | null;
+}
+
+export interface GenomeImportDiagnostics {
+  format: string;
+  vendor: string;
+  delimiter: string;
+  source_build: string;
+  coordinate_system: string;
+  allele_orientation: string;
+  total_rows: number;
+  accepted_rows: number;
+  malformed_rows: number;
+  duplicate_rows: number;
+  warnings: string[];
+}
+
+export interface GenomeImportPreview {
+  source_file_name: string;
+  diagnostics: GenomeImportDiagnostics;
+  liftover_available: boolean;
+}
+
+export interface ImportProvenance {
+  import_id: string;
+  source_file_name: string;
+  source_file_sha256: string;
+  diagnostics: GenomeImportDiagnostics;
+  liftover_mapped_rows: number;
+  liftover_unmapped_rows: number;
 }
 
 export type DataDirMode =
@@ -484,7 +553,7 @@ export interface DbSnpRecord {
   sample_id: number;
   rsid: string;
   chromosome: string;
-  position_grch37: number;
+  position_grch37: number | null;
   position_grch38: number | null;
   allele1: string;
   allele2: string;

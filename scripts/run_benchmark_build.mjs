@@ -1,7 +1,7 @@
 // ./scripts/run_benchmark_build.mjs
 // Cross-platform entry for build purge/rebuild timing benchmarks.
 // Windows -> benchmark_build.ps1; Linux/macOS -> benchmark_build.sh
-// Accepts --flag and -Flag forms (npm passes leading dashes).
+// Accepts --flag and -Flag forms (pnpm passes leading dashes).
 
 import { spawnSync } from "node:child_process";
 import path from "node:path";

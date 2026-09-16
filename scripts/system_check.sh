@@ -19,7 +19,7 @@ df -h "$REPO_ROOT" | tail -1 | awk '{printf "    Disk: %s free on %s\n", $4, $1}
 free -h | awk '/^Mem:/ {printf "    RAM: %s total, %s available\n", $2, $7}'
 
 step "Toolchain"
-for tool in git node npm python3 cargo rustc pkg-config; do
+for tool in git node pnpm python3 cargo rustc pkg-config; do
   if command -v "$tool" >/dev/null 2>&1; then
     ver=$("$tool" --version 2>/dev/null | head -1)
     ok "$tool — $ver"
@@ -55,12 +55,12 @@ else
 fi
 
 step "Project dependencies"
-if [[ -d "$REPO_ROOT/node_modules" ]]; then ok "node_modules present"; else warn "run: npm install"; fi
+if [[ -d "$REPO_ROOT/node_modules" ]]; then ok "node_modules present"; else warn "run: pnpm install"; fi
 
 step "Summary"
 if [[ "$FAIL" -eq 0 ]]; then
   ok "System ready for Genomics Caddy build."
   exit 0
 fi
-bad "Fix failures above before running: npm run build:release"
+bad "Fix failures above before running: pnpm run build:release"
 exit 1

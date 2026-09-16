@@ -52,6 +52,8 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('.samples-card .sample-name-text');
     expect(source).toContain('.samples-card .sample-sex-symbol');
     expect(source).toContain('.samples-card .btn-delete:focus-visible');
+    expect(source).toContain('.samples-card .btn-delete svg');
+    expect(source).toContain('.samples-card .samples-actions-note');
     expect(source).toContain('.reset-dir-btn:focus-visible');
     expect(source).toContain('min-width: 2.25rem;');
     expect(source).toContain('min-height: 2.25rem;');
@@ -70,6 +72,10 @@ describe('sidebar status theme tokens', () => {
     }
     expect(sampleList).toContain('class="sample-name-text"');
     expect(sampleList).toContain('class="sample-sex-symbol"');
+    expect(sampleList).toContain('aria-label={`Delete profile ${s.name}`}');
+    expect(sampleList).toContain('title={disabled ? disabledReason');
+    expect(sampleList).toContain('<svg viewBox="0 0 20 20"');
+    expect(sampleList).not.toContain('🗑️');
     expect(sampleList).toContain("label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•'");
     expect(sampleList).not.toContain('Tooltip');
     expect(sampleList).not.toContain('sample-scope-help');
@@ -83,7 +89,7 @@ describe('sidebar status theme tokens', () => {
 
   it('gives profile names a stable readable track beside the sex symbol and actions', () => {
     expect(source).toContain('grid-template-columns: minmax(0, 1fr) auto;');
-    expect(source).toContain('grid-template-columns: 1.4rem minmax(5rem, 1fr);');
+    expect(source).toContain('grid-template-columns: 1.4rem minmax(0, 1fr);');
     expect(source).toContain('display: block;');
     expect(source).toContain('min-width: 0;');
   });
@@ -107,6 +113,27 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('.connections-launch-actions');
     expect(sidebarComponent).toContain('class="connections-launch-card card"');
     expect(sidebarComponent).toContain('Open Connections');
+  });
+
+  it('gives the desktop sidebar enough width for its action groups', () => {
+    expect(theme).toContain('--sidebar-width: 320px;');
+    expect(theme).toContain('--sidebar-width: 280px;');
+    expect(source).toContain('.connections-launch-actions');
+    expect(sidebarComponent).toContain('catalogs are processed in order while SQLite is occupied');
+    expect(sidebarComponent).not.toContain('downloads can still run in parallel');
+  });
+
+  it('keeps profile work ahead of technical administration', () => {
+    const profileWorkspace = sidebarComponent.indexOf('class="sidebar-profile-workspace"');
+    const profileList = sidebarComponent.indexOf('<SampleList');
+    const importPanel = sidebarComponent.indexOf('<GenomeImportPanel');
+    const toolsBoundary = sidebarComponent.indexOf('>App tools</span>');
+
+    expect(profileWorkspace).toBeGreaterThan(-1);
+    expect(profileList).toBeGreaterThan(profileWorkspace);
+    expect(importPanel).toBeGreaterThan(profileList);
+    expect(toolsBoundary).toBeGreaterThan(importPanel);
+    expect(sidebarComponent).not.toContain('exportDiscoveryFindings');
   });
 
   it('keeps a healthy Liftover status compact while preserving attention actions', () => {

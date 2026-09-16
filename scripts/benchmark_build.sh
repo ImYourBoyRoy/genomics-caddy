@@ -7,7 +7,7 @@
 #   bash ./scripts/benchmark_build.sh                 # purge + full rebuild (default)
 #   bash ./scripts/benchmark_build.sh --purge-only     # time purge only
 #   bash ./scripts/benchmark_build.sh --rebuild        # same as default
-#   bash ./scripts/benchmark_build.sh --skip-checks    # faster rebuild (skip npm/cargo check)
+#   bash ./scripts/benchmark_build.sh --skip-checks    # faster rebuild (skip pnpm/cargo check)
 #   bash ./scripts/benchmark_build.sh --json           # also write JSON beside the text report
 
 set -euo pipefail
@@ -110,14 +110,14 @@ CPU="$(cpu_model)"
 CORES="$(cpu_cores)"
 MEM="$(mem_total)"
 NODE_V="$(node -v 2>/dev/null || echo missing)"
-NPM_V="$(npm -v 2>/dev/null || echo missing)"
+PNPM_V="$(pnpm -v 2>/dev/null || echo missing)"
 RUSTC_V="$(rustc --version 2>/dev/null || echo missing)"
 CARGO_V="$(cargo --version 2>/dev/null || echo missing)"
 
 echo "Genomics Caddy — build benchmark ($MODE)"
 echo "Host: $HOST  OS: $OS_NAME/$ARCH  Kernel: $KERNEL"
 echo "CPU: $CPU ($CORES cores)  RAM: $MEM"
-echo "Node: $NODE_V  npm: $NPM_V"
+echo "Node: $NODE_V  pnpm: $PNPM_V"
 echo "Rust: $RUSTC_V / $CARGO_V"
 echo "Report: $REPORT_TXT"
 echo
@@ -166,7 +166,7 @@ fi
   echo "cores=$CORES"
   echo "ram=$MEM"
   echo "node=$NODE_V"
-  echo "npm=$NPM_V"
+  echo "pnpm=$PNPM_V"
   echo "rustc=$RUSTC_V"
   echo "cargo=$CARGO_V"
   echo "skip_checks=$SKIP_CHECKS"
@@ -193,7 +193,7 @@ path.write_text(json.dumps({
   "cores": "$CORES",
   "ram": "$MEM",
   "node": "$NODE_V",
-  "npm": "$NPM_V",
+  "pnpm": "$PNPM_V",
   "rustc": "$RUSTC_V",
   "cargo": "$CARGO_V",
   "skip_checks": bool($SKIP_CHECKS),

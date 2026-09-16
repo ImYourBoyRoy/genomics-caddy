@@ -66,11 +66,9 @@ fn load_pack(data_dir: &Path) -> Result<Value, String> {
 
 fn write_pack(data_dir: &Path, pack: &Value) -> Result<(), String> {
     let path = pack_path(data_dir);
-    fs::write(
-        &path,
-        serde_json::to_string_pretty(pack).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| format!("Failed to write research_found pack: {e}"))?;
+    let pack_json = serde_json::to_string_pretty(pack).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&path, pack_json.as_bytes())
+        .map_err(|e| format!("Failed to write research_found pack: {e}"))?;
     db::clear_marker_packs_registry();
     db::sync_marker_packs_registry(Some(data_dir));
     Ok(())
@@ -454,11 +452,8 @@ pub fn set_research_found_enabled(data_dir: &Path, enabled: bool) -> Result<bool
             "requires_clinical_confirmation": true
         }));
     }
-    fs::write(
-        &path,
-        serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
+    let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&path, manifest_json.as_bytes())?;
     db::clear_marker_packs_registry();
     db::sync_marker_packs_registry(Some(data_dir));
     Ok(enabled)

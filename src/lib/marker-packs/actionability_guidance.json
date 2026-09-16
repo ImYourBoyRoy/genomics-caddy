@@ -203,6 +203,34 @@
       "category": "Heart & lipids",
       "aliases": ["blood pressure", "blood-pressure measurement"],
       "purpose": "Measured blood-pressure context."
+    },
+    {
+      "id": "hs_crp",
+      "name": "High-sensitivity C-reactive protein (hs-CRP)",
+      "category": "Inflammation & immune",
+      "aliases": ["hs-CRP", "high sensitivity CRP", "high-sensitivity CRP", "hs-CRP (Inflammation marker)"],
+      "purpose": "Measured low-grade inflammatory context when a clinician considers it relevant."
+    },
+    {
+      "id": "crp",
+      "name": "C-reactive protein (CRP)",
+      "category": "Inflammation & immune",
+      "aliases": ["CRP", "C reactive protein", "C-reactive protein"],
+      "purpose": "Measured inflammation context used with symptoms, timing, and the clinical question."
+    },
+    {
+      "id": "esr",
+      "name": "Erythrocyte sedimentation rate (ESR)",
+      "category": "Inflammation & immune",
+      "aliases": ["ESR", "sedimentation rate", "erythrocyte sedimentation rate"],
+      "purpose": "A nonspecific measured inflammatory signal interpreted with symptoms and other findings."
+    },
+    {
+      "id": "fecal_calprotectin",
+      "name": "Fecal calprotectin",
+      "category": "Digestive & immune",
+      "aliases": ["fecal calprotectin", "stool calprotectin"],
+      "purpose": "Stool inflammatory context when persistent bowel symptoms make inflammatory bowel disease part of the clinical question."
     }
   ],
   "lab_tiers": [
@@ -450,6 +478,64 @@
       ],
       "sources": [
         "nih_ods_omega3"
+      ]
+    },
+    {
+      "id": "inflammation_foundational_context",
+      "genes": [
+        "IL6",
+        "TNF",
+        "CRP"
+      ],
+      "marker_ids": [
+        "rs1800795",
+        "rs1800629",
+        "rs1205"
+      ],
+      "actionability_class": "symptom_or_lab_conditioned",
+      "pack_hints": [
+        "core",
+        "nutrients",
+        "cardiovascular",
+        "immune_autoimmune_general",
+        "longevity_aging_resilience"
+      ],
+      "favor": [
+        "Protect a regular sleep opportunity and use recovery days",
+        "Use gradual, tolerable movement and let symptoms and recovery guide load",
+        "Review recent illness, sleep, symptoms, and measured labs before interpreting an inflammation signal"
+      ],
+      "avoid": [
+        "Treating a common inflammatory marker as proof of active inflammation or a diagnosis",
+        "Starting an anti-inflammatory drug, supplement, or restrictive diet from DNA alone"
+      ],
+      "dietary_favor": [
+        "Vegetables, fruit, beans, and whole grains",
+        "Olive oil, nuts, and seeds",
+        "Fatty fish or another omega-3 food source"
+      ],
+      "lab_tests": [
+        {
+          "name": "High-sensitivity C-reactive protein (hs-CRP)",
+          "urgency": "consider"
+        },
+        {
+          "name": "C-reactive protein (CRP)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Erythrocyte sedimentation rate (ESR)",
+          "urgency": "consider"
+        }
+      ],
+      "notes": "This is a compact marker-linked context route. It does not measure current inflammation or establish that any food, supplement, or treatment is needed.",
+      "sources": [
+        "gwas_catalog",
+        "dietary_guidelines_2025_2030",
+        "nih_ods_omega3",
+        "phenotype_required",
+        "lab_confirmation_required",
+        "safety_guardrail"
       ]
     },
     {
@@ -2356,7 +2442,11 @@
           "urgency": "consider"
         },
         {
-          "name": "C-reactive protein (CRP) and fecal calprotectin when inflammatory bowel disease is clinically suspected",
+          "name": "C-reactive protein (CRP)",
+          "urgency": "consider"
+        },
+        {
+          "name": "Fecal calprotectin",
           "urgency": "consider"
         },
         {

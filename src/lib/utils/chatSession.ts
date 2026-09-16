@@ -4,6 +4,7 @@
  */
 
 import type { ChatMessage } from "../types/agent";
+import type { AiContextMode } from "./aiPrompt";
 
 export interface ChatSession {
   id: string;
@@ -18,6 +19,7 @@ export interface ChatSession {
   maxTokens?: number;
   extendedThinking?: boolean;
   consultationMode?: string;
+  contextMode?: AiContextMode;
 }
 
 
@@ -53,5 +55,6 @@ export function createNewSession(params: {
     maxTokens: 2048,
     extendedThinking: false,
     consultationMode: "general",
+    contextMode: "active_findings",
   };
 }

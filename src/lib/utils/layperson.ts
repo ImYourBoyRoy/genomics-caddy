@@ -38,6 +38,19 @@ interface IdentifierMarkerContext {
   variant_type?: string | null;
 }
 
+/**
+ * The small amount of marker context needed to turn a generic resource title
+ * into a useful Simple-mode title. Optional fields keep this helper compatible
+ * with legacy translation tests and fallback-only markers.
+ */
+type SimpleFindingMarkerContext = Pick<
+  EvaluatedMarker,
+  'evidence_tier' | 'effect_direction' | 'clinical_confirmation_required' | 'severity_class' | 'confirm_with'
+> & Partial<Pick<
+  EvaluatedMarker,
+  'gene' | 'variant_name' | 'variant_type' | 'impact' | 'interpretation' | 'clinical_semantics' | 'pharmgkb' | 'pharmgkb_annotations'
+>>;
+
 interface LaypersonTranslationGroup {
   id: string;
   rsids: string[];
@@ -140,6 +153,224 @@ function titleNeedsSimplification(title: string): boolean {
   return /\b(?:allele|haplotype)\s+component\b|clinical\s+PGx|\bHLA[-*]|\brs\d+\b|\b(?:CYP|DPYD|TPMT|NUDT|SLCO|UGT|NAT|RYR|BCHE|G6PD)\d+/i.test(title);
 }
 
+function findingText(
+  marker: Partial<SimpleFindingMarkerContext>,
+  translation?: LaypersonTranslation,
+): string {
+  const annotations = [
+    ...(marker.pharmgkb_annotations || []),
+    ...(marker.pharmgkb ? [marker.pharmgkb] : []),
+  ];
+  return [
+    marker.variant_name,
+    marker.impact,
+    marker.interpretation,
+    translation?.simpleImpact,
+    translation?.plainTitle,
+    translation?.signal,
+    marker.clinical_semantics?.condition_label,
+    ...annotations.flatMap((annotation) => [annotation.drug, annotation.phenotype]),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function drugLabelForFinding(text: string): string | null {
+  const knownDrugs: Array<[RegExp, string]> = [
+    [/carbamazepine\s*(?:\/|and)\s*oxcarbazepine/i, 'Carbamazepine / oxcarbazepine'],
+    [/fluorouracil\s*(?:\/|and)\s*capecitabine/i, 'Fluorouracil / capecitabine'],
+    [/fluoropyrimidine|5-FU|tegafur/i, 'Fluoropyrimidines'],
+    [/codeine\s*(?:&|and)\s*tramadol/i, 'Codeine / tramadol'],
+    [/succinylcholine\s*(?:&|and)\s*mivacurium/i, 'Succinylcholine / mivacurium'],
+    [/warfarin/i, 'Warfarin'],
+    [/abacavir/i, 'Abacavir'],
+    [/allopurinol/i, 'Allopurinol'],
+    [/phenytoin/i, 'Phenytoin'],
+    [/tacrolimus/i, 'Tacrolimus'],
+    [/clopidogrel/i, 'Clopidogrel'],
+    [/tamoxifen/i, 'Tamoxifen'],
+    [/statin/i, 'Statins'],
+    [/thiopurine|mercaptopurine|thioguanine/i, 'Thiopurines'],
+    [/irinotecan/i, 'Irinotecan'],
+    [/hydralazine/i, 'Hydralazine'],
+    [/efavirenz/i, 'Efavirenz'],
+    [/NSAID/i, 'NSAIDs'],
+  ];
+  return knownDrugs.find(([pattern]) => pattern.test(text))?.[1] || null;
+}
+
+type FindingDirection = 'lower' | 'higher' | 'reduced' | 'increased' | 'sensitivity' | 'risk' | 'protective' | 'context' | 'trait' | 'unknown';
+
+function findingDirection(marker: Partial<SimpleFindingMarkerContext>, translation?: LaypersonTranslation): FindingDirection {
+  const text = findingText(marker, translation);
+  const lowerWarfarin = /(?:lower|reduced|decreased|slower|less)\s+(?:warfarin\s+)?(?:dose|requirement|metabolism)|lower\s+VKORC1\s+expression/i.test(text);
+  const higherWarfarin = /(?:higher|increased|greater)\s+(?:warfarin\s+)?(?:dose|requirement)|reduced\s+vitamin\s+K\s+oxidation/i.test(text);
+  if (/warfarin/i.test(text)) {
+    if (lowerWarfarin) return 'lower';
+    if (higherWarfarin) return 'higher';
+    return 'unknown';
+  }
+
+  if (/(?:reduced|decreased|impaired|no[- ]function|loss[- ]of[- ]function|slower|poor)\s+(?:[a-z0-9-]+\s+){0,3}(?:function|processing|metabolism|activation|uptake|transport|clearance|activity)|reduced[- ]function|no[- ]function|slow[- ]acetylator/i.test(text)) {
+    return 'reduced';
+  }
+  if (/(?:increased|enhanced|gain[- ]of[- ]function|faster)\s+(?:[a-z0-9-]+\s+){0,3}(?:function|processing|metabolism|activation|uptake|transport|clearance|activity)|increased[- ]function|gain[- ]function/i.test(text)) {
+    return 'increased';
+  }
+
+  if (/(?:myopathy|muscle symptom|toxicity|hypersensitivity|severe skin|bleeding-context|safety marker|medication safety|medication sensitivity)/i.test(text)) {
+    return 'sensitivity';
+  }
+
+  // Medication markers without an authored functional direction must not be
+  // mislabeled as a general disease-susceptibility signal simply because the
+  // resource uses effect_direction="risk" for clinical safety routing.
+  if (isMedicationFinding(marker, text)) return 'unknown';
+
+  switch (marker.effect_direction) {
+    case 'risk': return 'risk';
+    case 'protective': return 'protective';
+    case 'context_dependent': return 'context';
+    case 'trait': return 'trait';
+    default: return 'unknown';
+  }
+}
+
+function simpleTopicTitle(marker: Partial<SimpleFindingMarkerContext>, translation: LaypersonTranslation): string {
+  const candidate = marker.clinical_semantics?.condition_label?.trim()
+    || translation.plainTitle?.trim()
+    || marker.impact?.trim()
+    || marker.variant_name?.trim()
+    || translation.simpleImpact.trim();
+  const simplified = titleNeedsSimplification(candidate) ? getSimpleFindingTitle(candidate) : humanizeSimpleTitle(candidate);
+  const topic = simplified
+    .replace(/\s+(?:research|association|pathway|response|medication|health)?\s*context(?:\s+signal)?$/i, '')
+    .replace(/\s+(?:research(?:-only)?|association)\s+(?:finding|signal)$/i, '')
+    .replace(/\s+research(?:-only)?\s*$/i, '')
+    .trim();
+  const generic = /^(?:genetic research signal|research pathway context|medication processing context|medication safety context|warfarin response context|statin medication context|clopidogrel response context|antidepressant response context)$/i;
+  if (!topic || generic.test(simplified)) return 'this health pathway';
+  return topic.length > 86 ? `${topic.slice(0, 83).replace(/\s+\S*$/, '').trim()}…` : topic;
+}
+
+function isMedicationFinding(marker: Partial<SimpleFindingMarkerContext>, text: string): boolean {
+  return marker.variant_type === 'pharmacogenomic_snp'
+    || Boolean(marker.pharmgkb)
+    || (marker.pharmgkb_annotations?.length || 0) > 0
+    || /\b(?:clinical\s+PGx|medication|drug|dose|haplotype|star[- ]allele|HLA[-*]|hypersensitivity|warfarin|statin|clopidogrel|thiopurine|tacrolimus)\b/i.test(text);
+}
+
+export function getSimpleDirectionLabel(
+  marker: Partial<SimpleFindingMarkerContext>,
+  translation?: LaypersonTranslation,
+): string {
+  const text = findingText(marker, translation);
+  const drug = drugLabelForFinding(text);
+  const direction = findingDirection(marker, translation);
+  if (drug && direction === 'sensitivity') {
+    return 'Possible sensitivity signal';
+  }
+  switch (direction) {
+    case 'lower': return 'Lower-dose requirement tendency';
+    case 'higher': return 'Higher-dose requirement tendency';
+    case 'reduced': return 'Reduced-function component';
+    case 'increased': return 'Increased-function component';
+    case 'sensitivity': return 'Possible sensitivity signal';
+    case 'risk': return 'Higher susceptibility';
+    case 'protective': return 'Protective-leaning';
+    case 'context': return 'Context-dependent';
+    case 'trait': return 'Trait-associated';
+    default: return isMedicationFinding(marker, text) ? 'Direction incomplete' : 'Direction not established';
+  }
+}
+
+/**
+ * Build the first-screen title from the marker's actual authored direction.
+ * This prevents named medication pathways from becoming opaque labels such
+ * as “Warfarin response context” while avoiding phenotype claims from one SNP.
+ */
+export function getTransparentSimpleFindingTitle(
+  marker: SimpleFindingMarkerContext,
+  translation: LaypersonTranslation,
+): string {
+  const text = findingText(marker, translation);
+  const drug = drugLabelForFinding(text);
+  const direction = findingDirection(marker, translation);
+  const hasIdentity = Boolean(marker.gene || marker.variant_name || marker.impact || marker.pharmgkb || marker.pharmgkb_annotations?.length);
+  const authoredTitle = translation.plainTitle?.trim();
+  const genericAuthoredTitle = /^(?:medication processing context|medication safety context|clinical review route|warfarin response context|warfarin dosing signal|statin medication context|clopidogrel response context|antidepressant response context|thiopurine medication context|chemotherapy medication context)$/i;
+  const authoredTitleNamesPathway = Boolean(
+    authoredTitle
+      && !genericAuthoredTitle.test(authoredTitle)
+      && ((marker.gene && authoredTitle.toLowerCase().includes(marker.gene.trim().toLowerCase()))
+        || (drug && authoredTitle.toLowerCase().includes(drug.toLowerCase().split(' / ')[0]))),
+  );
+  if (translation.isFallback) {
+    return getSimpleFindingTitle(translation.simpleImpact);
+  }
+  if (!hasIdentity) {
+    const authoredTitle = translation.plainTitle?.trim();
+    return authoredTitle && !titleNeedsSimplification(authoredTitle)
+      ? authoredTitle
+      : getSimpleFindingTitle(translation.simpleImpact);
+  }
+
+  if (authoredTitle && authoredTitleNamesPathway) return authoredTitle;
+
+  if (drug && /warfarin/i.test(drug)) {
+    if (direction === 'lower') return 'Warfarin dosing — lower-dose requirement signal';
+    if (direction === 'higher') return 'Warfarin dosing — higher-dose requirement signal';
+    return 'Warfarin dosing — direction incomplete from this result';
+  }
+
+  if (drug && direction === 'sensitivity') {
+    return `${drug} — possible sensitivity signal`;
+  }
+
+  if (drug && /clopidogrel/i.test(drug)) {
+    if (direction === 'reduced') return 'Clopidogrel — reduced activation tendency';
+    if (direction === 'increased') return 'Clopidogrel — increased activation tendency';
+    return 'Clopidogrel — response direction incomplete';
+  }
+
+  if (drug && /statin/i.test(drug)) {
+    if (direction === 'sensitivity') return 'Statins — higher muscle-symptom susceptibility';
+    if (direction === 'reduced') return 'Statins — reduced transport / higher exposure tendency';
+    return 'Statins — response direction incomplete';
+  }
+
+  if (drug && /thiopurine/i.test(drug)) {
+    if (direction === 'reduced') return 'Thiopurines — reduced-function toxicity signal';
+    return 'Thiopurines — response direction incomplete';
+  }
+
+  if (drug && /fluoropyrimidine/i.test(drug)) {
+    if (direction === 'reduced') return 'Fluoropyrimidines — reduced DPD-function toxicity signal';
+    return 'Fluoropyrimidines — response direction incomplete';
+  }
+
+  if (!drug && direction === 'sensitivity' && isMedicationFinding(marker, text)) {
+    return `${marker.gene?.trim() || 'Medication safety'} — possible sensitivity signal`;
+  }
+
+  if (isMedicationFinding(marker, text)) {
+    if (direction === 'reduced') return `${drug || 'Medicine processing'} — reduced-function component`;
+    if (direction === 'increased') return `${drug || 'Medicine processing'} — increased-function component`;
+    return 'Medication processing — direction incomplete from this result';
+  }
+
+  const topic = simpleTopicTitle(marker, translation);
+  switch (direction) {
+    case 'risk': return `Higher susceptibility — ${topic}`;
+    case 'protective': return `Protective-leaning — ${topic}`;
+    case 'context': return `Context-dependent — ${topic}`;
+    case 'trait': return `Trait-associated — ${topic}`;
+    default: return topic;
+  }
+}
+
 /**
  * Keep gene symbols and locus identifiers in Technical data for Simple mode.
  * The authored wording remains unchanged in the resource and technical
@@ -158,7 +389,7 @@ export function getSimpleFindingTitle(simpleImpact: string): string {
   // focused on the medication question while the exact allele remains in
   // Technical data.
   if (/(?:allele|haplotype)\s+component|clinical\s+pgx|\bHLA[-*]|oxidative-medication-safety/i.test(withoutGeneSuffix)) {
-    if (/warfarin/i.test(withoutGeneSuffix)) return 'Warfarin response context';
+    if (/warfarin/i.test(withoutGeneSuffix)) return 'Warfarin dosing signal';
     if (/statin|SLCO1B1/i.test(withoutGeneSuffix)) return 'Statin medication context';
     if (/clopidogrel/i.test(withoutGeneSuffix)) return 'Clopidogrel response context';
     if (/thiopurine|TPMT|NUDT15/i.test(withoutGeneSuffix)) return 'Thiopurine medication context';
@@ -192,8 +423,24 @@ function compactSimpleText(text: string, fallback: string): string {
   return compact || fallback;
 }
 
+function authoredMedicationSignal(
+  marker: SimpleFindingMarkerContext,
+  translation: LaypersonTranslation,
+  text: string,
+): string | null {
+  const signal = translation.signal?.trim();
+  if (!signal) return null;
+  const gene = marker.gene?.trim().toLowerCase();
+  const drug = drugLabelForFinding(text)?.toLowerCase().split(' / ')[0];
+  const signalText = signal.toLowerCase();
+  if (gene && signalText.includes(gene)) return signal;
+  if (drug && signalText.includes(drug)) return signal;
+  return null;
+}
+
 export interface SimpleFindingCopy {
   plain_title: string;
+  direction_label: string;
   signal: string;
   why_it_matters: string;
   review_action: string;
@@ -226,21 +473,35 @@ export function getSimpleEvidenceLabel(evidenceTier: string): string {
  * the useful signal when a resource has not migrated yet.
  */
 export function getSimpleFindingCopy(
-  marker: Pick<
-    EvaluatedMarker,
-    'evidence_tier' | 'effect_direction' | 'clinical_confirmation_required' | 'severity_class' | 'confirm_with'
-  >,
+  marker: SimpleFindingMarkerContext,
   translation: LaypersonTranslation,
 ): SimpleFindingCopy {
   const compactMeaning = getCompactSimpleMeaning(translation);
   const sentence = firstMeaningSentence(compactMeaning);
   const remainder = meaningAfterFirstSentence(compactMeaning);
-  const authoredTitle = translation.plainTitle?.trim() || '';
-  const plainTitle = authoredTitle && !titleNeedsSimplification(authoredTitle)
-    ? authoredTitle
-    : getSimpleFindingTitle(translation.simpleImpact);
-  const signal = translation.signal?.trim() || sentence || plainTitle;
-  const whyItMatters = translation.whyItMatters?.trim()
+  const direction_label = getSimpleDirectionLabel(marker, translation);
+  const plainTitle = getTransparentSimpleFindingTitle(marker, translation);
+  const text = findingText(marker, translation);
+  const direction = findingDirection(marker, translation);
+  const warfarinMeaning = /warfarin/i.test(text) && direction === 'lower'
+    ? 'This marker is associated with a lower warfarin dose requirement; the complete gene set, clinical factors, and INR determine the dose.'
+    : /warfarin/i.test(text) && direction === 'higher'
+      ? 'This marker is associated with a higher warfarin dose requirement; the complete gene set, clinical factors, and INR determine the dose.'
+      : null;
+  const medicationMeaning = !warfarinMeaning && isMedicationFinding(marker, text)
+    ? authoredMedicationSignal(marker, translation, text) || medicationSignal(marker, text, direction, drugLabelForFinding(text))
+    : null;
+  const authoredSignal = translation.signal?.trim() || sentence || plainTitle;
+  const signal = warfarinMeaning
+    ? warfarinMeaning
+    : medicationMeaning || (direction_label !== 'Direction incomplete' && /response context|medication processing|medication safety|one part of how/i.test(authoredSignal)
+      ? `${direction_label}.`
+      : authoredSignal);
+  const whyItMatters = warfarinMeaning
+    ? 'The complete CYP2C9, VKORC1, and CYP4F2 context plus INR monitoring are needed for clinical dosing.'
+    : medicationMeaning && translation.whyItMatters?.trim()
+    ? compactSimpleText(translation.whyItMatters, medicationMeaning)
+    : translation.whyItMatters?.trim()
     ? compactSimpleText(translation.whyItMatters, signal)
     : remainder
     || (signal === plainTitle
@@ -250,12 +511,44 @@ export function getSimpleFindingCopy(
 
   return {
     plain_title: plainTitle,
+    direction_label,
     signal,
     why_it_matters: whyItMatters,
     review_action: reviewAction,
     evidence_label: translation.evidenceLabel?.trim() || getSimpleEvidenceLabel(marker.evidence_tier),
     is_fallback: translation.isFallback === true,
   };
+}
+
+function medicationSignal(
+  marker: Partial<SimpleFindingMarkerContext>,
+  text: string,
+  direction: FindingDirection,
+  drug: string | null,
+): string | null {
+  const gene = marker.gene?.trim();
+  if (drug && /clopidogrel/i.test(drug) && direction === 'reduced') {
+    return 'This marker is associated with reduced clopidogrel activation.';
+  }
+  if (drug && /clopidogrel/i.test(drug) && direction === 'increased') {
+    return 'This marker may contribute to faster clopidogrel activation.';
+  }
+  if (drug && /statin/i.test(drug) && direction === 'sensitivity') {
+    return 'This marker is associated with higher statin-related muscle-symptom susceptibility.';
+  }
+  if (drug && /statin/i.test(drug) && direction === 'reduced') {
+    return 'This marker is associated with reduced statin transport and higher exposure tendency.';
+  }
+  if (drug && /thiopurine/i.test(drug) && direction === 'reduced') {
+    return 'This marker is associated with reduced thiopurine-processing function and higher toxicity susceptibility.';
+  }
+  if (drug && /fluoropyrimidine/i.test(drug) && direction === 'reduced') {
+    return 'This marker is associated with reduced DPD function and higher fluoropyrimidine-toxicity susceptibility.';
+  }
+  if (direction === 'reduced' && gene) return `This marker is associated with reduced ${gene} function.`;
+  if (direction === 'increased' && gene) return `This marker is associated with increased ${gene} function.`;
+  if (direction === 'sensitivity') return 'This marker is associated with a possible medication-sensitivity signal.';
+  return null;
 }
 
 const GENERIC_GUARDRAIL_PATTERNS = [

@@ -645,10 +645,10 @@ pub fn validate_import_path(path: &str) -> Result<(), String> {
     validate_import_file_size(&canonical)?;
     let ext_ok = canonical.extension().is_some_and(|e| {
         let e = e.to_string_lossy().to_lowercase();
-        e == "txt" || e == "zip"
+        e == "txt" || e == "csv" || e == "tsv" || e == "zip"
     });
     if !ext_ok {
-        return Err("Import file must be .txt or .zip".into());
+        return Err("Import file must be .txt, .csv, .tsv, or .zip".into());
     }
     let path_str = canonical.to_string_lossy().to_string();
     let guard = ALLOWED_IMPORT_PATHS
@@ -732,16 +732,34 @@ fn normalize_export_path(path: &str) -> Result<String, String> {
 
 /// Export paths must be chosen through a save dialog in this session.
 pub fn validate_export_path(path: &str) -> Result<(), String> {
+    validate_registered_export_path(path, "json")
+}
+
+/// Validate a save-dialog-selected path for a specific export extension.
+pub fn validate_registered_export_path(path: &str, required_extension: &str) -> Result<(), String> {
     let normalized = normalize_export_path(path)?;
+    let required_extension = required_extension
+        .trim()
+        .trim_start_matches('.')
+        .to_ascii_lowercase();
+    if required_extension.is_empty()
+        || !required_extension
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric())
+    {
+        return Err("Invalid export extension".into());
+    }
     let ext_ok = std::path::Path::new(&normalized)
         .extension()
         .map(|e| {
             let e = e.to_string_lossy().to_lowercase();
-            e == "json"
+            e == required_extension
         })
         .unwrap_or(false);
     if !ext_ok {
-        return Err("Export file must use a .json extension".into());
+        return Err(format!(
+            "Export file must use a .{required_extension} extension"
+        ));
     }
     let guard = ALLOWED_EXPORT_PATHS
         .lock()
@@ -930,6 +948,23 @@ mod tests {
     }
 
     #[test]
+    fn export_path_extension_is_a_contract() {
+        let dir = std::env::temp_dir().join(format!(
+            "dna_tools_export_extension_test_{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).expect("temp dir");
+        let export_file = dir.join("findings.zip");
+        let export_str = export_file.to_string_lossy().to_string();
+
+        register_export_path(&export_str);
+        assert!(validate_registered_export_path(&export_str, "zip").is_ok());
+        assert!(validate_export_path(&export_str).is_err());
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn validate_import_file_size_accepts_small_file() {
         let dir =
             std::env::temp_dir().join(format!("dna_tools_import_size_test_{}", std::process::id()));
@@ -963,6 +998,20 @@ mod tests {
         register_import_path(&import_str);
         assert!(validate_import_path(&import_str).is_ok());
 
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn registered_csv_and_tsv_import_paths_are_accepted() {
+        let dir = std::env::temp_dir().join(format!("dna_tools_import_delimited_test_{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        for extension in ["csv", "tsv"] {
+            let import_file = dir.join(format!("sample.{extension}"));
+            fs::write(&import_file, "rsid,chromosome,position,genotype\n").expect("write");
+            let import_str = import_file.to_string_lossy().to_string();
+            register_import_path(&import_str);
+            assert!(validate_import_path(&import_str).is_ok());
+        }
         let _ = fs::remove_dir_all(&dir);
     }
 

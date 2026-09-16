@@ -50,6 +50,7 @@
     "food_requirement_prompts.json",
     "layperson_translations.json",
     "supplement_safety.json",
+    "inflammation_support_guidance.json",
     "cycle_support_guidance.json",
     "pgx_diplotype_guidance.json",
     "user_diet_profile_schema.json",
@@ -127,6 +128,15 @@
     ],
     "categories_count": 21,
     "discovery_categories_count": 23,
-    "note": "Discovery keyword routing is shared by the Svelte UI and Rust enrichment path; taxonomy matches are navigation hints and do not upgrade evidence or imply a diagnosis."
+      "note": "Discovery keyword routing is shared by the Svelte UI and Rust enrichment path; taxonomy matches are navigation hints and do not upgrade evidence or imply a diagnosis."
+  },
+  "inflammation_support_layer": {
+    "added": true,
+    "new_support_files": [
+      "inflammation_support_guidance.json"
+    ],
+    "domains_count": 5,
+    "lab_ids_count": 6,
+    "note": "Inflammatory markers receive one concise marker-linked foundational route for IL6/TNF/CRP and explicit no-lifestyle routes or fallback coverage for other immune, allergic, digestive, redox, tissue, and research contexts. DNA remains context, not a measure of current inflammation or a diagnosis."
   }
 }

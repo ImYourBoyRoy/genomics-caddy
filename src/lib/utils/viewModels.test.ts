@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { NormalizedReport } from '../types/genomics';
 import { getLaypersonTranslation } from './layperson';
-import { deriveDisplayMarkers } from './viewModels';
+import { normalizeReportStatuses } from './reportStatuses';
+import { denormalizeReport, deriveDisplayMarkers } from './viewModels';
 
 describe('report display view models', () => {
   it('preserves the canonical variant type for identifier-aware Simple copy', () => {
@@ -85,7 +86,34 @@ describe('report display view models', () => {
 
     const marker = deriveDisplayMarkers(report, 'panel')[0];
     expect(marker?.variant_type).toBe('gene_panel');
+    expect(marker?.callability_state).toBe('not_callable');
+    expect(marker?.assertion_key).toContain('"version":1');
+    expect(marker?.assertion_key).not.toContain('NotInRawFile');
     expect(marker ? getLaypersonTranslation(marker).isFallback : undefined).not.toBe(true);
     expect(marker ? getLaypersonTranslation(marker).signal : '').toContain('Example clinical panel');
+  });
+
+  it('normalizes Rust snake_case statuses before report selectors consume them', () => {
+    const wireReport = {
+      user_calls: {
+        rs1: {
+          user_genotype: 'AA',
+          normalized_genotype: 'AA',
+          call_status: 'found',
+          source_build: 'GRCh38',
+        },
+      },
+      category_links: {
+        'test:rs1': {
+          assertion_status: 'verified',
+        },
+      },
+      sections: [],
+    } as unknown as NormalizedReport;
+
+    const normalized = normalizeReportStatuses(wireReport);
+    expect(normalized.user_calls.rs1.call_status).toBe('Found');
+    expect(normalized.category_links['test:rs1'].assertion_status).toBe('Verified');
+    expect(denormalizeReport(wireReport).sections).toEqual([]);
   });
 });

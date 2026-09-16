@@ -131,6 +131,51 @@ describe('canonical finding identity', () => {
     expect(groups.find((group) => group.rsids.includes('rs400'))?.severityClasses).toEqual(['no_data']);
   });
 
+  it('keeps same-rsid assertions separate when their biomedical semantics conflict', () => {
+    const groups = buildCanonicalFindingGroups(report([
+      {
+        name: 'Cardiovascular',
+        markers: [marker({
+          link_id: 'test:rs100-risk',
+          effect_allele: 'A',
+          effect_direction: 'risk',
+          variant_name: 'Lipid context',
+          clinical_semantics: {
+            condition_label: 'Atherogenic lipid context',
+            interpretation_class: 'susceptibility_context',
+            inheritance_model: 'unknown',
+            clinical_state: 'unknown',
+          },
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+      {
+        name: 'Nutrients',
+        markers: [marker({
+          link_id: 'test:rs100-trait',
+          effect_allele: 'G',
+          effect_direction: 'trait',
+          variant_name: 'Nutrient transport context',
+          clinical_semantics: {
+            condition_label: 'Nutrient transport context',
+            interpretation_class: 'trait_context',
+            inheritance_model: 'unknown',
+            clinical_state: 'not_applicable',
+          },
+        })],
+        section_signal_score: 0,
+        summary: {} as GeneratedReport['sections'][number]['summary'],
+      },
+    ]));
+
+    expect(groups).toHaveLength(2);
+    expect(groups.map((group) => group.sourceMarkerIds)).toEqual([
+      ['test:rs100-risk'],
+      ['test:rs100-trait'],
+    ]);
+  });
+
   it('retains explicit disease and inheritance semantics across grouped source rows', () => {
     const groups = buildCanonicalFindingGroups(report([{
       name: 'Inherited conditions',

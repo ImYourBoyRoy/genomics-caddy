@@ -3,14 +3,14 @@
 # Install FreeDesktop .desktop entry + hicolor icons so Genomics Caddy shows
 # the DNA logo in the GNOME/Ubuntu dock (Wayland) instead of a generic gear.
 #
-# Tauri enableGTKAppId → Wayland app_id = com.dna.explorer.
-# GNOME matches desktop *filename* == app_id, so the launcher MUST be
-# named com.dna.explorer.desktop (not genomics-caddy.desktop).
+# Tauri enableGTKAppId → Wayland app_id = com.dna.explorer, so the launcher
+# filename must be com.dna.explorer.desktop. X11 exposes WM_CLASS=DNA-Tools;
+# StartupWMClass must match that value for X11 dock association.
 #
 # Usage (from repo root):
 #   bash ./scripts/install_linux_desktop.sh
 #   bash ./scripts/install_linux_desktop.sh --exe /path/to/DNA-Tools
-#   npm run desktop:linux
+#   pnpm run desktop:linux
 
 set -euo pipefail
 
@@ -18,6 +18,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ICON_SRC="${ROOT}/src-tauri/icons"
 APP_ID="com.dna.explorer"
 ICON_NAME="DNA-Tools"
+WM_CLASS="DNA-Tools"
 DESKTOP_NAME="${APP_ID}.desktop"
 
 EXE=""
@@ -39,12 +40,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 pick_default_exe() {
-  if [[ -x "${ROOT}/src-tauri/target/debug/DNA-Tools" ]]; then
+  if [[ -x "${ROOT}/builds/linux/DNA-Tools" ]]; then
+    echo "${ROOT}/builds/linux/DNA-Tools"
+  elif [[ -x "${ROOT}/src-tauri/target/release/DNA-Tools" ]]; then
+    echo "${ROOT}/src-tauri/target/release/DNA-Tools"
+  elif [[ -x "${ROOT}/src-tauri/target/debug/DNA-Tools" ]]; then
     echo "${ROOT}/src-tauri/target/debug/DNA-Tools"
   elif [[ -x "${ROOT}/App/DNA-Tools" ]]; then
     echo "${ROOT}/App/DNA-Tools"
-  elif [[ -x "${ROOT}/src-tauri/target/release/DNA-Tools" ]]; then
-    echo "${ROOT}/src-tauri/target/release/DNA-Tools"
   else
     echo ""
   fi
@@ -53,7 +56,7 @@ pick_default_exe() {
 if [[ -z "${EXE}" ]]; then
   EXE="$(pick_default_exe)"
   if [[ -z "${EXE}" ]]; then
-    echo "ERROR: No DNA-Tools binary found. Build first (npm run tauri:dev / build:release-fast) or pass --exe." >&2
+    echo "ERROR: No DNA-Tools binary found. Build first (pnpm run tauri:dev / build:release-fast) or pass --exe." >&2
     exit 1
   fi
 fi
@@ -139,8 +142,8 @@ Comment=Local genomics analysis desktop app
 Exec=${EXE}
 Icon=${ICON_FILE_128}
 Terminal=false
-Categories=Science;Education;
-StartupWMClass=${APP_ID}
+Categories=Science;Biology;
+StartupWMClass=${WM_CLASS}
 StartupNotify=true
 DBusActivatable=false
 EOF
@@ -161,7 +164,7 @@ fi
 
 echo "Installed desktop entry: ${APPS_DIR}/${DESKTOP_NAME}"
 echo "Executable: ${EXE}"
-echo "app_id / StartupWMClass: ${APP_ID}"
+echo "Wayland app_id / X11 StartupWMClass: ${APP_ID} / ${WM_CLASS}"
 echo "Icon (absolute): ${ICON_FILE_128}"
 echo "Cleared WebKit cache under ~/.local/share/${APP_ID}/"
 echo "Fully quit Genomics Caddy and relaunch if the dock still shows a generic icon."

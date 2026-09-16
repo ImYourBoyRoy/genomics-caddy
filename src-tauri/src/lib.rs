@@ -71,6 +71,7 @@ pub mod config;
 pub mod db;
 pub mod db_crypto;
 mod db_runtime;
+pub mod file_utils;
 pub mod inference_host;
 pub mod liftover;
 pub mod mcp;
@@ -84,8 +85,10 @@ mod stream_control;
 
 use db::{DbSnpRecord, SampleInfo};
 use report::GeneratedReport;
-use std::io::Write;
-use std::path::PathBuf;
+use sha2::{Digest, Sha256};
+use std::collections::HashSet;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
@@ -104,13 +107,44 @@ pub(crate) fn get_db_path(app: &AppHandle) -> PathBuf {
 }
 
 fn get_chain_path(app: &AppHandle) -> PathBuf {
-    paths::chain_path(&get_data_dir(app))
+    offline::liftover_chain_path(&get_data_dir(app), &get_db_path(app))
+}
+
+#[derive(Debug, serde::Serialize, Clone)]
+struct GenomeImportPreview {
+    source_file_name: String,
+    diagnostics: parser::ParseDiagnostics,
+    liftover_available: bool,
+}
+
+fn sha256_file(path: &Path) -> Result<String, String> {
+    let mut file = std::fs::File::open(path).map_err(|e| format!("Failed to hash import file: {e}"))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 1024 * 1024];
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .map_err(|e| format!("Failed to hash import file: {e}"))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+fn source_file_name(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.is_empty())
+        .unwrap_or("unknown source file")
+        .to_string()
 }
 
 #[tauri::command]
 async fn select_file() -> Result<Option<String>, String> {
     let file = rfd::FileDialog::new()
-        .add_filter("Genomic Data", &["txt", "zip"])
+        .add_filter("Genomic Data", &["txt", "csv", "tsv", "zip"])
         .pick_file();
     Ok(file.map(|p| {
         let path_str = p.to_string_lossy().to_string();
@@ -126,6 +160,23 @@ async fn select_directory() -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
+async fn inspect_genome(app: AppHandle, file_path: String) -> Result<GenomeImportPreview, String> {
+    config::validate_import_path(&file_path)?;
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let parsed = parser::parse_dna_file_with_metadata(&file_path, |_| {})?;
+        Ok(GenomeImportPreview {
+            source_file_name: source_file_name(Path::new(&file_path)),
+            diagnostics: parsed.diagnostics,
+            liftover_available: offline::liftover_chain_path(&data_dir, &db_path).is_file(),
+        })
+    })
+    .await
+    .map_err(|e| format!("Genome preview worker failed: {e}"))?
+}
+
+#[tauri::command]
 async fn save_report_json(content: String, default_filename: String) -> Result<bool, String> {
     let file = rfd::FileDialog::new()
         .set_file_name(&default_filename)
@@ -135,7 +186,8 @@ async fn save_report_json(content: String, default_filename: String) -> Result<b
     if let Some(path) = file {
         let path_str = path.to_string_lossy().to_string();
         config::register_export_path(&path_str);
-        std::fs::write(&path, content).map_err(|e| format!("Failed to write file: {}", e))?;
+        config::validate_export_path(&path_str)?;
+        file_utils::atomic_write(&path, content.as_bytes())?;
         Ok(true)
     } else {
         Ok(false)
@@ -166,6 +218,10 @@ async fn save_report_bundle(
         return Ok(false);
     };
 
+    let path_str = path.to_string_lossy().to_string();
+    config::register_export_path(&path_str);
+    config::validate_registered_export_path(&path_str, "zip")?;
+
     let temp_name = format!(
         ".{}.{}.tmp",
         path.file_name().and_then(|name| name.to_str()).unwrap_or("genomics_bundle"),
@@ -174,12 +230,24 @@ async fn save_report_bundle(
     let temp_path = path.with_file_name(temp_name);
 
     let write_result = (|| -> Result<(), String> {
-        let file = std::fs::File::create(&temp_path)
+        let file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp_path)
             .map_err(|e| format!("Failed to create bundle: {e}"))?;
         let mut archive = ZipWriter::new(file);
+        let mut names = HashSet::new();
         for entry in files {
             let name = entry.filename.trim();
-            if name.is_empty() || name.contains('/') || name.contains('\\') || name == "." || name == ".." {
+            if name.is_empty()
+                || name.len() > 128
+                || name.contains('/')
+                || name.contains('\\')
+                || name == "."
+                || name == ".."
+                || name.chars().any(char::is_control)
+                || !names.insert(name.to_string())
+            {
                 return Err("Bundle contains an invalid file name".into());
             }
             archive
@@ -189,9 +257,11 @@ async fn save_report_bundle(
                 .write_all(entry.content.as_bytes())
                 .map_err(|e| format!("Failed to write bundle entry: {e}"))?;
         }
-        archive
+        let file = archive
             .finish()
             .map_err(|e| format!("Failed to finalize bundle: {e}"))?;
+        file.sync_all()
+            .map_err(|e| format!("Failed to sync bundle: {e}"))?;
         std::fs::rename(&temp_path, &path)
             .map_err(|e| format!("Failed to finalize bundle path: {e}"))?;
         Ok(())
@@ -199,8 +269,6 @@ async fn save_report_bundle(
 
     if write_result.is_err() {
         let _ = std::fs::remove_file(&temp_path);
-    } else {
-        config::register_export_path(&path.to_string_lossy());
     }
     write_result.map(|()| true)
 }
@@ -224,7 +292,7 @@ fn get_app_paths(_app: AppHandle) -> Result<serde_json::Value, String> {
     let project_root = paths::resolve_project_root(None);
     let data_dir = info.path;
     let db_path = paths::db_path(&data_dir);
-    let chain_path = paths::chain_path(&data_dir);
+    let chain_path = offline::liftover_chain_path(&data_dir, &db_path);
     let env_path = config::recommended_env_path();
     Ok(serde_json::json!({
         "project_root": project_root.to_string_lossy().to_string(),
@@ -689,10 +757,13 @@ async fn import_genome(
     app: AppHandle,
     file_path: String,
     sample_name: String,
+    replace_existing_sample_id: Option<i64>,
 ) -> Result<i64, String> {
     config::validate_import_path(&file_path)?;
     let app_handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
+        let source_path = Path::new(&file_path);
+        let source_file_sha256 = sha256_file(source_path)?;
         app_handle
             .emit(
                 "import-progress",
@@ -704,7 +775,7 @@ async fn import_genome(
             .ok();
 
         let app_clone = app_handle.clone();
-        let records = parser::parse_dna_file(&file_path, move |status| {
+        let parsed = parser::parse_dna_file_with_metadata(&file_path, move |status| {
             app_clone
                 .emit(
                     "import-progress",
@@ -715,6 +786,25 @@ async fn import_genome(
                 )
                 .ok();
         })?;
+
+        let post_parse_sha256 = sha256_file(source_path)?;
+        if source_file_sha256 != post_parse_sha256 {
+            return Err("The DNA export changed while it was being read; import was cancelled.".to_string());
+        }
+        let import_id = format!(
+            "import-{}-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_err(|e| format!("Failed to create import ID: {e}"))?
+                .as_millis(),
+            &source_file_sha256[..16]
+        );
+        let provenance = parser::ImportProvenance::new(
+            import_id,
+            source_file_name(source_path),
+            source_file_sha256,
+            parsed.diagnostics.clone(),
+        );
 
         app_handle
             .emit(
@@ -727,7 +817,8 @@ async fn import_genome(
             .ok();
 
         let data_dir = get_data_dir(&app_handle);
-        let chain_path = paths::chain_path(&data_dir);
+        let db_path = paths::db_path(&data_dir);
+        let chain_path = offline::liftover_chain_path(&data_dir, &db_path);
         let liftover_engine = if chain_path.exists() {
             match liftover::LiftoverEngine::new(&chain_path) {
                 Ok(engine) => Some(engine),
@@ -744,16 +835,17 @@ async fn import_genome(
             None
         };
 
-        let db_path = paths::db_path(&data_dir);
         let mut conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
 
         let app_clone = app_handle.clone();
-        let sample_id = db::import_raw_genome(
+        let sample_id = db::import_raw_genome_with_provenance(
             &mut conn,
             &data_dir,
             &sample_name,
-            &records,
+            &parsed.records,
             liftover_engine.as_ref(),
+            replace_existing_sample_id,
+            Some(provenance),
             move |pct, status| {
                 app_clone
                     .emit(
@@ -771,21 +863,41 @@ async fn import_genome(
             .emit(
                 "import-progress",
                 ProgressPayload {
-                    percentage: 95,
+                    percentage: 96,
                     status: "Building variant placement index...".to_string(),
                 },
             )
             .ok();
 
         let sample_conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
-        if let Err(e) =
-            crate::offline::tier2::build_variant_locus_for_sample(&sample_conn, sample_id)
-        {
-            eprintln!(
-                "Warning: failed to build variant locus index for sample {}: {}",
-                sample_id, e
-            );
-        }
+        let index_status = match crate::offline::tier2::build_variant_locus_for_sample(&sample_conn, sample_id) {
+            Ok(placements) => format!("Variant placement index ready ({placements} placements)."),
+            Err(e) => {
+                eprintln!(
+                    "Warning: failed to build variant locus index for sample {}: {}",
+                    sample_id, e
+                );
+                "Variant placement index unavailable; keeping the imported genotype data.".to_string()
+            }
+        };
+        app_handle
+            .emit(
+                "import-progress",
+                ProgressPayload {
+                    percentage: 98,
+                    status: index_status,
+                },
+            )
+            .ok();
+        app_handle
+            .emit(
+                "import-progress",
+                ProgressPayload {
+                    percentage: 100,
+                    status: "DNA profile import complete.".to_string(),
+                },
+            )
+            .ok();
 
         Ok(sample_id)
     })
@@ -869,6 +981,12 @@ async fn generate_report(
         return Err(e.clone());
     }
     let data_dir = get_data_dir(&app);
+    // Resolve an auto-managed gnomAD release before the synchronous report
+    // worker reads its cache, so report metadata cannot lag behind the
+    // release selected by the runtime lookup paths. Failure is best-effort:
+    // the local report remains available when the public listing is offline.
+    let db_path = get_db_path(&app);
+    let _ = research::gnomad::load_effective_gnomad_config(&db_path, &data_dir).await;
     let result = tauri::async_runtime::spawn_blocking(move || {
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         let template: report::ReportTemplate = serde_json::from_str(&template_json)
@@ -888,7 +1006,7 @@ async fn generate_report(
 async fn delete_sample(app: AppHandle, sample_id: i64) -> Result<(), String> {
     let db_path = get_db_path(&app);
     let data_dir = get_data_dir(&app);
-    db_runtime::with_connection(db_path, move |conn| {
+    db_runtime::with_connection_mut(db_path, move |conn| {
         db::delete_sample(conn, &data_dir, sample_id).map_err(|e| e.to_string())
     })
     .await
@@ -916,22 +1034,22 @@ async fn check_chain_status(app: AppHandle) -> Result<bool, String> {
 
 #[tauri::command]
 async fn download_chain_file(app: AppHandle) -> Result<(), String> {
-    let chain_path = get_chain_path(&app);
-    let url = "https://ftp.ensembl.org/pub/assembly_mapping/homo_sapiens/GRCh37_to_GRCh38.chain.gz";
-
-    let response = reqwest::get(url)
-        .await
-        .map_err(|e| format!("Failed to download chain file: {}", e))?;
-    let mut file =
-        std::fs::File::create(&chain_path).map_err(|e| format!("Failed to create file: {}", e))?;
-
-    let content = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Failed to read download content: {}", e))?;
-    std::io::copy(&mut &*content, &mut file)
-        .map_err(|e| format!("Failed to write to file: {}", e))?;
-    Ok(())
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    let result = offline::sync_single_asset(
+        &data_dir,
+        &db_path,
+        "liftover_chain",
+        true,
+        None,
+        Some(&app),
+    )
+    .await?;
+    if result.errors.is_empty() {
+        Ok(())
+    } else {
+        Err(result.errors.join("; "))
+    }
 }
 
 // ── Evidence Library & RAG Commands ───────────────────────────────────
@@ -2031,6 +2149,7 @@ pub fn run() {
             reload_marker_packs,
             query_local_reference_db,
             import_genome,
+            inspect_genome,
             get_samples,
             query_rsids,
             query_region,
@@ -2144,6 +2263,7 @@ pub fn run() {
             research::gnomad::commands::test_gnomad_source_urls_cmd,
             research::gnomad::commands::get_gnomad_readiness_cmd,
             research::gnomad::commands::download_gnomad_indexes_cmd,
+            research::gnomad::commands::refresh_gnomad_frequency_cache_cmd,
             research::gnomad::commands::select_gnomad_local_dir_cmd,
             research::gnomad::commands::clear_gnomad_cache_cmd,
             agent_commands::get_variant_evidence,

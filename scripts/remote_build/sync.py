@@ -3,7 +3,7 @@
 Source packaging and upload helpers.
 
 Responsibilities:
-  - Build the Svelte frontend locally (npm run build).
+  - Build the Svelte frontend locally (pnpm run build).
   - Create a filtered workspace tarball (no .git, target, node_modules, etc.).
   - Strip beforeBuildCommand from tauri.conf.json during packaging (remote
     builds must not re-trigger a frontend build inside the VM/host).
@@ -43,10 +43,10 @@ _SKIP_REPORT_PATTERNS = ("report", "ancestry", "Roy", "Taye", "Clara", "Jen")
 
 
 def build_frontend(project_root: Path) -> None:
-    """Run `npm run build` in the project root."""
+    """Run `pnpm run build` in the project root."""
     print("[SYNC] Building Svelte frontend locally…")
     res = subprocess.run(
-        ["npm", "run", "build"],
+        ["pnpm", "run", "build"],
         cwd=str(project_root),
         capture_output=True,
         text=True,
@@ -55,7 +55,7 @@ def build_frontend(project_root: Path) -> None:
         print(res.stdout.rstrip())
     if res.returncode != 0:
         print(res.stderr, file=sys.stderr)
-        raise SystemExit(f"[FAIL] npm run build exited {res.returncode}")
+        raise SystemExit(f"[FAIL] pnpm run build exited {res.returncode}")
     print("[SYNC] Frontend build OK.")
 
 
@@ -67,7 +67,6 @@ def _tar_filter(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     # Skip large data files that are never needed for compilation
     if tarinfo.name.endswith((".zip", ".txt", ".json")) and tarinfo.name not in (
         "package.json",
-        "package-lock.json",
     ) and not tarinfo.name.endswith("tauri.conf.json"):
         if any(p in tarinfo.name for p in _SKIP_REPORT_PATTERNS):
             return None

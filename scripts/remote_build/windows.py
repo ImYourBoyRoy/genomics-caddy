@@ -6,7 +6,7 @@ Runs on the Ubuntu builder host (not a VM), cross-compiling to Windows
 using mingw-w64 and cargo-xwin or standard x86_64-pc-windows-gnu.
 
 Build sequence:
-  1. npm install
+  1. node ./scripts/pnpm_unlocked.mjs install
   2. cargo tauri build --target x86_64-pc-windows-gnu
      Produces: .exe and .msi/.nsis under target/x86_64-pc-windows-gnu/release/
 
@@ -34,9 +34,9 @@ cd "$REMOTE_DIR"
 
 echo ""
 echo "══════════════════════════════════════════"
-echo "  WIN (Cross): npm install"
+echo "  WIN (Cross): pnpm install"
 echo "══════════════════════════════════════════"
-npm install --prefer-offline 2>&1 | tail -20
+node ./scripts/pnpm_unlocked.mjs install 2>&1 | tail -20
 
 {clean_step}
 

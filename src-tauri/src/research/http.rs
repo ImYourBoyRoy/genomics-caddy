@@ -187,7 +187,7 @@ mod tests {
             validate_research_outbound_url("https://rest.ensembl.org/vep/human/id/rs123").is_ok()
         );
         assert!(validate_research_outbound_url(
-            "https://gnomad-public-us-east-1.s3.amazonaws.com/release/4.1/vcf/exomes/gnomad.exomes.v4.1.sites.chr22.vcf.bgz"
+            "https://gnomad-public-us-east-1.s3.amazonaws.com/release/4.1.1/vcf/exomes/gnomad.exomes.v4.1.1.sites.chr22.vcf.bgz"
         )
         .is_ok());
         assert!(validate_research_outbound_url("https://gnomad.broadinstitute.org/api").is_ok());

@@ -64,6 +64,7 @@ describe('AI marker payload claim boundaries', () => {
 
   it('keeps confirmation, limitations, callability, and source context beside the interpretation', () => {
     const marker = {
+      link_id: 'test:example',
       rsid: 'rs-example',
       gene: 'EXAMPLE',
       variant_name: 'example marker',
@@ -94,6 +95,12 @@ describe('AI marker payload claim boundaries', () => {
     });
     expect(payload.assertion_status).toBe('Verified');
     expect(payload.interpretation_allowed).toBe(true);
+    expect(payload.link_id).toBe('test:example');
+    expect(JSON.parse(payload.assertion_key).version).toBe(1);
+    expect(payload.reference_ids).toEqual([]);
+    expect(payload.callability_state).toBe('callable');
+    expect(payload.orientation_state).toBe('not_required');
+    expect(payload.callability_policy.scoring_policy).toBe('snp_allele_count');
     expect(payload.clinical_semantics).toEqual({
       condition_label: null,
       interpretation_class: 'research_context',
@@ -105,10 +112,47 @@ describe('AI marker payload claim boundaries', () => {
     });
     expect(payload.source_names).toEqual(['Example source']);
     expect(payload.layperson_summary?.simple_impact).toBe('Genetic research signal');
-    expect(payload.layperson_summary?.simple_meaning).toContain('biological pathway studied in research');
+    expect(payload.layperson_summary?.simple_meaning).toContain('biological pathway signal');
+    expect(payload.layperson_summary?.direction).toBe('Context-dependent');
+    expect(payload.layperson_summary?.review_action).toBe('Review the related clinical test route.');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('does not predict whether you have a condition');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('This is an association context.');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('A consumer SNP is incomplete.');
+
+    const hlaPayload = buildMarkerPayload({
+      ...marker,
+      variant_type: 'hla_tag',
+      effect_allele: 'A',
+    } as unknown as EvaluatedMarker, {});
+    expect(hlaPayload.callability_policy.scoring_policy).toBe('not_evaluated');
+    expect(hlaPayload.callability_policy.display_policy).toBe('context_only');
+    expect(hlaPayload.callability_state).toBe('not_callable');
+  });
+
+  it('always exposes exact raw calls in the AI payload for included findings', () => {
+    const marker = {
+      rsid: 'rs-ai-raw',
+      gene: 'AI_RAW',
+      variant_name: 'AI raw contract marker',
+      user_genotype: 'AG',
+      normalized_genotype: 'AG',
+      effect_allele: 'A',
+      effect_count: 1,
+      effect_direction: 'risk',
+      evidence_tier: 'B_replicated_common_marker',
+      severity_class: 'moderate_risk',
+      assertion_status: 'Verified',
+      interpretation_allowed: true,
+      sources: [],
+      do_not_claim: [],
+      confirm_with: [],
+    } as unknown as EvaluatedMarker;
+
+    expect(buildMarkerPayload(marker, {})).toMatchObject({
+      user_genotype: 'AG',
+      normalized_genotype: 'AG',
+      genotype: 'AG',
+    });
   });
 
   it('injects explicitly supplied per-profile safety context without treating it as genotype evidence', () => {
@@ -166,6 +210,55 @@ describe('AI marker payload claim boundaries', () => {
     expect(prompt).toContain('cycle_symptom_diary');
     expect(prompt).toContain('needs quiet');
     expect(prompt).toContain('self-reported context for this DNA profile, not genotype evidence');
+  });
+
+  it('injects named condition evidence with coverage counts into the AI context', () => {
+    const prompt = buildSystemPrompt({
+      selectedSample: { id: 7, name: 'Example', genetic_sex: 'unknown' } as unknown as GenomeSample,
+      generatedReport: {
+        sections: [{
+          name: 'Hormones',
+          markers: [{
+            rsid: 'rs2234693',
+            gene: 'ESR1',
+            link_id: 'test:pmdd',
+            user_genotype: 'SYNTHETIC_CALL',
+            normalized_genotype: 'SYNTHETIC_CALL',
+            effect_allele: 'A',
+            effect_count: 1,
+            evidence_tier: 'B_replicated_common_marker',
+            effect_direction: 'risk',
+            severity_class: 'moderate_risk',
+            assertion_status: 'Verified',
+            interpretation_allowed: true,
+            sources: [],
+            db_enriched_sources: [],
+            confirm_with: [],
+            do_not_claim: [],
+          } as unknown as EvaluatedMarker],
+        }],
+      } as unknown as GeneratedReport,
+      selectedPacks: {},
+      onlyActiveFindings: true,
+      contextMode: 'active_findings',
+      consultationMode: 'general',
+      userProfile: {
+        goals: '', challenges: '', relevantBodySystems: '', reproductiveHormoneContext: '', diet: '',
+        supplements: '', medications: '', bloodwork: '', diagnoses: '', supportiveTests: '', injectProfile: false,
+      },
+      systemInstructions: 'Test instructions',
+      laypersonMap: {},
+    });
+
+    expect(prompt).toContain('condition_evidence');
+    expect(prompt).toContain('condition_coverage');
+    expect(prompt).toContain('PMDD-related steroid sensitivity');
+    expect(prompt).toContain('coded_indicator_count');
+    expect(prompt).toContain('matched_indicator_count');
+    expect(prompt).toContain('not probabilities');
+    const payload = JSON.parse(prompt.slice(prompt.indexOf('[JSON CONTEXT]') + '[JSON CONTEXT]'.length));
+    expect(payload.sample_context.raw_genotypes_included).toBe(true);
+    expect(payload.sample_context.sections[0].findings[0]).toHaveProperty('user_genotype');
   });
 
   it('does not route or include canonical profile context when Chat context is disabled', () => {

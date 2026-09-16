@@ -852,6 +852,13 @@ async fn execute_tool(
         ));
     }
 
+    if let Some(sample_id) = args.get("sample_id").and_then(Value::as_i64)
+        && !crate::db::sample_is_registered(db_path, sample_id)
+            .map_err(|e| format!("Could not validate sample: {e}"))?
+    {
+        return Err(format!("Sample {sample_id} is not registered"));
+    }
+
     match name {
         "search_evidence" => return mcp_search_evidence(db_path, args, allow_write).await,
         "get_offline_update_status" | "sync_offline_asset" | "sync_offline_data" => {
@@ -1718,6 +1725,9 @@ async fn mcp_ollama_tool(name: &str, args: Value) -> Result<Value, String> {
 mod tests {
     use super::*;
 
+    static INVALID_SAMPLE_TEST_COUNTER: std::sync::atomic::AtomicUsize =
+        std::sync::atomic::AtomicUsize::new(0);
+
     #[test]
     fn write_tools_include_build_vector_atlas() {
         assert!(mcp_tool_requires_write("build_vector_atlas"));
@@ -1758,6 +1768,44 @@ mod tests {
         let token = Some("secret-token".to_string());
         let params = json!({ "_meta": { "authToken": "secret-token" } });
         assert!(verify_mcp_auth(&params, &token).is_ok());
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn invalid_sample_queries_do_not_create_private_sample_database() {
+        let data_dir = std::env::temp_dir().join(format!(
+            "dna_tools_mcp_invalid_sample_{}_{}",
+            std::process::id(),
+            INVALID_SAMPLE_TEST_COUNTER.fetch_add(
+                1,
+                std::sync::atomic::Ordering::Relaxed,
+            )
+        ));
+        std::fs::create_dir_all(&data_dir).expect("create MCP fixture directory");
+        let db_path = data_dir.join("user_genome.db");
+        let conn = rusqlite::Connection::open(&db_path).expect("create registry database");
+        conn.execute(
+            "CREATE TABLE samples (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                genetic_sex TEXT DEFAULT 'Unknown',
+                imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .expect("create registry samples table");
+        drop(conn);
+
+        let result = execute_tool(
+            "get_variants_by_rsid",
+            json!({"sample_id": 404, "rsids": ["rs-test"]}),
+            &db_path,
+            false,
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(!crate::paths::sample_dir(&data_dir, 404).exists());
+        let _ = std::fs::remove_dir_all(data_dir);
     }
 
     #[test]

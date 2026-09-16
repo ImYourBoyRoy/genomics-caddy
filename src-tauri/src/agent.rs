@@ -413,7 +413,8 @@ pub async fn get_variant_evidence_core(
         || user_genotype.as_ref().unwrap() == "--"
         || user_genotype.as_ref().unwrap().contains('-')
         || user_genotype.as_ref().unwrap().contains('?')
-        || user_genotype.as_ref().unwrap().contains('0');
+        || user_genotype.as_ref().unwrap().contains('0')
+        || user_genotype.as_ref().unwrap().contains('N');
 
     if let Ok(Some(index_evidence)) = try_index_backed_evidence(
         db_path,
@@ -802,11 +803,7 @@ pub fn append_discovered_findings_to_path(
     let serialized = serde_json::to_string_pretty(&list)
         .map_err(|e| format!("Failed to serialize findings: {}", e))?;
 
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).ok();
-    }
-    std::fs::write(path, serialized)
-        .map_err(|e| format!("Failed to write findings to path: {}", e))?;
+    crate::file_utils::atomic_write(path, serialized.as_bytes())?;
 
     Ok(())
 }

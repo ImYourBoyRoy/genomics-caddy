@@ -6,7 +6,7 @@ Runs on the Ubuntu builder host (not a VM). The builder IS a Linux x86_64
 machine, so no cross-compilation is needed — we build natively.
 
 Build sequence:
-  1. npm install (ensure deps in case node_modules was excluded from tarball)
+  1. node ./scripts/pnpm_unlocked.mjs install (ensure deps in case node_modules was excluded from tarball)
   2. cargo tauri build --target x86_64-unknown-linux-gnu
      Produces: .deb, .rpm, .AppImage under target/x86_64-unknown-linux-gnu/release/bundle/
 
@@ -38,9 +38,9 @@ cd "$GUEST_DIR"
 
 echo ""
 echo "══════════════════════════════════════════"
-echo "  LINUX: npm install"
+echo "  LINUX: pnpm install"
 echo "══════════════════════════════════════════"
-npm install --prefer-offline 2>&1 | tail -20
+node ./scripts/pnpm_unlocked.mjs install 2>&1 | tail -20
 
 {clean_step}
 

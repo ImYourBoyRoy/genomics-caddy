@@ -5,7 +5,7 @@ Purpose: Run svelte-kit sync + svelte-check against a TypeScript 7 project.
 Responsibilities:
   - Preload the TS6 API shim for Svelte embedders.
   - Forward all CLI args to svelte-check.
-How to run: npm run check  (wired in package.json)
+How to run: pnpm run check  (wired in package.json)
 */
 
 import { spawnSync } from "node:child_process";

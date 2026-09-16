@@ -1,11 +1,25 @@
 import type { GeneratedReport, GenomeSample } from '../types/genomics';
 import { buildLabRequestListText, deriveActionablePlan, deriveAllergySensitivityGuidance } from './actionabilityEngine';
 import { CYCLE_DIARY_SCHEMA } from './cycleDiary';
-import { buildReportAudienceMarkdown, type ReportExportAudience, type ReportExportOptions } from './reportAudienceExport';
+import {
+  audienceRequiresRawGenotypes,
+  buildReportAudienceMarkdown,
+  type ReportExportAudience,
+  type ReportExportOptions,
+} from './reportAudienceExport';
 import { buildReportReferenceRegistry } from './reportReferences';
 import type { ProfileContext } from './profileContext';
 import { formatGeneticSexLabel } from './uiLabels';
 import { normalizeFindingSemantics } from './findingSemantics';
+import { buildConditionCoverageSummaries, getConditionCoverageGaps } from './conditionEvidence';
+import { derivePrsReadiness } from './prsReadiness';
+import {
+  buildAssertionKey,
+  callabilityPolicyForVariantType,
+  callabilityStateForResult,
+  orientationStateForResult,
+} from './callability';
+import aiPromptPolicy from '../marker-packs/ai_prompt_policy.json';
 
 export interface ReportBundleFile {
   filename: string;
@@ -16,7 +30,7 @@ export interface ReportBundleOptions extends ReportExportOptions {
   profileContext: ProfileContext;
 }
 
-const PRIVACY_TEXT = `This ZIP was generated locally by Genomics Caddy. It contains sensitive health and genetic information. Share it only with the intended recipient.\n`;
+const PRIVACY_TEXT = `${aiPromptPolicy.export_disclosures.bundle_privacy_notice}\n`;
 
 function safeName(value: string): string {
   return String(value || 'genome')
@@ -54,9 +68,24 @@ function contextJson(sample: GenomeSample, profileContext: ProfileContext): stri
   }, null, 2) + '\n';
 }
 
+function diaryPayload(profileContext: ProfileContext): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    fields: CYCLE_DIARY_SCHEMA.fields.map((field) => ({
+      id: field.id,
+      label: field.label,
+      input_type: field.input_type,
+    })),
+    entries: (profileContext.safety.cycleDiary || []).map((entry) => ({
+      id: entry.id,
+      values: entry.values,
+    })),
+  };
+}
+
 function dnaAnalysisJson(options: ReportBundleOptions): string {
   const registry = buildReportReferenceRegistry(options.report);
-  const includeRawGenotypes = options.includeRawGenotypes === true;
+  const includeRawGenotypes = audienceRequiresRawGenotypes(options.audience);
   const allergy = deriveAllergySensitivityGuidance(options.report);
   const actionable = deriveActionablePlan(options.report);
   const sections = options.report.sections.map((section) => ({
@@ -67,9 +96,14 @@ function dnaAnalysisJson(options: ReportBundleOptions): string {
         const semantics = normalizeFindingSemantics(marker);
         const result: Record<string, unknown> = {
           link_id: marker.link_id,
+          assertion_key: marker.assertion_key || buildAssertionKey(marker),
           rsid: marker.rsid,
           gene: marker.gene,
           variant_name: marker.variant_name,
+          variant_type: marker.variant_type,
+          callability_policy: callabilityPolicyForVariantType(marker.variant_type),
+          callability_state: marker.callability_state || callabilityStateForResult(marker.variant_type, marker.assertion_status),
+          orientation_state: marker.orientation_state || orientationStateForResult(marker.assertion_status, marker.requires_orientation_verification),
           effect_allele: marker.effect_allele,
           effect_count: marker.effect_count,
           effect_direction: marker.effect_direction,
@@ -100,10 +134,23 @@ function dnaAnalysisJson(options: ReportBundleOptions): string {
     audience: options.audience,
     generated_at: options.report.generated_at,
     raw_genotypes_included: includeRawGenotypes,
+    import_provenance: includeRawGenotypes ? options.report.import_provenance ?? null : null,
     allergy_sensitivity: {
       matched_marker_count: allergy.matchedMarkerCount,
       dna_contexts: allergy.dnaContexts,
       medication_safety: allergy.medicationSafety,
+    },
+    condition_evidence: actionable.conditionEvidence,
+    condition_coverage: buildConditionCoverageSummaries(options.report),
+    condition_coverage_gaps: getConditionCoverageGaps(),
+    pgx: {
+      policy: actionable.pgxGuidance.policy,
+      component_coverage: actionable.pgxGuidance.componentCoverage,
+      do_not_do: actionable.pgxGuidance.doNotDo,
+    },
+    prs: {
+      principle: 'PRS modules are registries, not scored markers.',
+      modules: derivePrsReadiness(),
     },
     recommendations: {
       food: {
@@ -120,6 +167,33 @@ function dnaAnalysisJson(options: ReportBundleOptions): string {
     },
     sections,
     references: registry.references,
+  }, null, 2) + '\n';
+}
+
+/**
+ * Single-file AI handoff. It keeps the report, entered context, and diary
+ * together so a user can attach one JSON file to a model without reconstructing
+ * the six-file bundle. Raw calls follow the same explicit audience policy as
+ * the AI ZIP bundle.
+ */
+export function buildAiReviewJson(options: ReportBundleOptions): string {
+  const dnaAnalysis = JSON.parse(dnaAnalysisJson({ ...options, audience: 'ai' })) as Record<string, unknown>;
+  return JSON.stringify({
+    schema_version: 1,
+    export_kind: 'ai_review_json',
+    audience: 'ai',
+    generated_at: options.report.generated_at,
+    profile: {
+      sample_id: options.sample.id,
+      sample_name: options.sample.name,
+      chromosome_call_context: formatGeneticSexLabel(options.sample.genetic_sex),
+    },
+    raw_genotypes_included: audienceRequiresRawGenotypes('ai'),
+    privacy: aiPromptPolicy.export_disclosures.bundle_privacy_notice,
+    review_instructions: [aiPromptPolicy.export_disclosures.ai_review_instructions],
+    dna_analysis: dnaAnalysis,
+    context: JSON.parse(contextJson(options.sample, options.profileContext)),
+    diary: diaryPayload(options.profileContext),
   }, null, 2) + '\n';
 }
 
@@ -141,7 +215,8 @@ export function buildReportBundleFiles(options: ReportBundleOptions): ReportBund
         chromosome_call_context: formatGeneticSexLabel(options.sample.genetic_sex),
         audience: options.audience,
         generated_at: generatedAt,
-        raw_genotypes_included: options.includeRawGenotypes === true,
+        raw_genotypes_included: audienceRequiresRawGenotypes(options.audience),
+        import_provenance: audienceRequiresRawGenotypes(options.audience) ? options.report.import_provenance ?? null : null,
         context_included: true,
         files: fileNames,
       }, null, 2) + '\n',

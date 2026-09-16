@@ -85,6 +85,8 @@ if (!manifest || !Array.isArray(manifest.packs)) {
 let markerCount = 0;
 let packCount = 0;
 const curatedStandardRsids = new Set();
+const nonMatchableSnpRows = [];
+const observedVariantTypes = new Set();
 for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith('.json')).sort()) {
   if (fileName === 'discovery_catalog.json') continue;
   const file = path.join(sourceDir, fileName);
@@ -109,6 +111,14 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
       }
       if (typeof marker.evidence_tier !== 'string' || !/^[A-E]_/.test(marker.evidence_tier)) {
         errors.push(`${location} ${marker.rsid || '(unknown)'}: evidence_tier must begin with A_, B_, C_, D_, or E_`);
+      }
+      const variantType = String(marker.variant_type || '').trim().toLowerCase();
+      observedVariantTypes.add(variantType || 'unspecified');
+      const effectAllele = String(marker.effect_allele || '').trim().toUpperCase();
+      if (/^rs\d+$/i.test(String(marker.rsid || '').trim())
+        && ['snp', 'pharmacogenomic_snp'].includes(variantType)
+        && !/^[ACGT]$/.test(effectAllele)) {
+        nonMatchableSnpRows.push({ fileName, index: index + 1, rsid: marker.rsid, variantType });
       }
       for (const field of ['do_not_claim', 'confirm_with']) {
         if (!isStringArray(marker[field])) {
@@ -217,7 +227,8 @@ const supportContracts = {
   ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'], objects: ['safety_review_prompt'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   allergy_sensitivity_catalog: { arrays: ['dna_contexts', 'clinical_safety_routes', 'exposure_checklists', 'source_ids'], objects: ['display'] },
-  callability_rules: { arrays: ['rules'] },
+  callability_rules: { arrays: ['rules'], objects: ['variant_type_registry'] },
+  condition_integrations: { arrays: ['conditions'], objects: ['policy'] },
   consultation_modes: { arrays: ['modes'] },
   cycle_support_guidance: { arrays: ['context_keywords', 'context_options', 'principles', 'domains', 'do_not_do', 'evidence_layers'], objects: ['marker_contexts', 'intake_schema', 'diary_schema', 'review_schema'] },
   diet_pattern_profiles: { arrays: ['profiles'] },
@@ -225,6 +236,7 @@ const supportContracts = {
   evidence_policy: { objects: ['tiers', 'claim_policy', 'display'] },
   food_nutrient_matrix: { arrays: ['food_groups', 'sources'] },
   food_requirement_prompts: { arrays: ['global_first_run_questions'], objects: ['conditional_prompts', 'conditional_prompt_signals'] },
+  inflammation_support_guidance: { arrays: ['domains', 'lab_ids', 'sources'], objects: ['domain_schema', 'coverage_policy'] },
   lab_overlays: { arrays: ['overlays'] },
   layperson_translations: { arrays: ['translations', 'translation_groups', 'identifier_templates'], objects: ['fallback'] },
   meal_planning_rules: { arrays: ['decision_pipeline', 'do_not_do'], objects: ['priority_weights'] },
@@ -259,6 +271,54 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     for (const field of fields) {
       if (!Array.isArray(resource[parent]?.[field])) {
         errors.push(`${resourceId}.json: ${parent}.${field} must be an array`);
+      }
+    }
+  }
+  if (resourceId === 'callability_rules') {
+    const registry = resource.variant_type_registry || {};
+    const allowedAssertionKinds = new Set([
+      'single_locus_snp', 'pharmacogenomic_single_locus', 'proxy_context',
+      'pharmacogenomic_star_allele',
+      'indel', 'indel_or_promoter_variant', 'copy_number_variant', 'copy_number_variant_panel',
+      'hla_tag_snp', 'hla_panel', 'hla_allele', 'haplotype', 'repeat', 'short_tandem_repeat',
+      'variable_number_tandem_repeat', 'microsatellite', 'gene_panel', 'syndrome_panel',
+      'variant_panel', 'pharmacogenomic_panel', 'pharmacogenomic_repeat',
+      'polygenic_score_model', 'polygenic_trait_model', 'polygenic_score_module',
+      'polygenic_score_panel', 'research_panel', 'pathway_panel', 'rare_variant',
+      'locus_or_linkage_context', 'clinical_overlay', 'research_gap', 'safety_guardrail',
+      'no_claim_guardrail', 'unclassified_assertion',
+    ]);
+    const allowedScoringPolicies = new Set(['snp_allele_count', 'not_evaluated']);
+    const allowedDisplayPolicies = new Set([
+      'evaluated_or_orientation_blocked', 'clinical_confirmation_required', 'context_only',
+      'research_or_model_context', 'clinical_context_only', 'research_gap', 'guardrail_context',
+      'not_evaluated',
+    ]);
+    for (const [variantType, policy] of Object.entries(registry)) {
+      const location = `callability_rules.json variant_type_registry.${variantType}`;
+      for (const field of ['assertion_kind', 'assay_requirement', 'scoring_policy', 'display_policy']) {
+        if (typeof policy?.[field] !== 'string' || policy[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (!allowedAssertionKinds.has(policy?.assertion_kind)) {
+        errors.push(`${location}: invalid assertion_kind ${policy?.assertion_kind}`);
+      }
+      if (!allowedScoringPolicies.has(policy?.scoring_policy)) {
+        errors.push(`${location}: invalid scoring_policy ${policy?.scoring_policy}`);
+      }
+      if (!allowedDisplayPolicies.has(policy?.display_policy)) {
+        errors.push(`${location}: invalid display_policy ${policy?.display_policy}`);
+      }
+    }
+    for (const variantType of observedVariantTypes) {
+      if (!registry[variantType]) {
+        errors.push(`callability_rules.json: observed variant type ${variantType} has no registry policy`);
+      }
+    }
+    for (const [variantType, policy] of Object.entries(registry)) {
+      if (policy?.scoring_policy === 'snp_allele_count' && !['snp', 'pharmacogenomic_snp'].includes(variantType)) {
+        errors.push(`callability_rules.json: only direct SNP types may use snp_allele_count (${variantType})`);
       }
     }
   }
@@ -374,6 +434,72 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       if (discoveryIds.has(category.id)) errors.push(`${location}: duplicate id ${category.id}`);
       discoveryIds.add(category.id);
+    }
+  }
+  if (resourceId === 'inflammation_support_guidance') {
+    const registeredSourceIds = new Set(Object.keys(sourceRegistry?.sources || {}));
+    const labIds = new Set();
+    for (const [index, lab] of (resource.lab_ids || []).entries()) {
+      const location = 'inflammation_support_guidance.json lab ' + (index + 1);
+      for (const field of ['id', 'name', 'category', 'purpose']) {
+        if (typeof lab?.[field] !== 'string' || lab[field].trim() === '') {
+          errors.push(location + ': ' + field + ' must be a non-empty string');
+        }
+      }
+      if (!isStringArray(lab?.aliases)) errors.push(location + ': aliases must be a string array');
+      if (labIds.has(lab?.id)) errors.push(location + ': duplicate id ' + lab?.id);
+      labIds.add(lab?.id);
+    }
+    const domainIds = new Set();
+    for (const [index, domain] of (resource.domains || []).entries()) {
+      const location = 'inflammation_support_guidance.json domain ' + (index + 1);
+      for (const field of ['id', 'label', 'context', 'clinical_route']) {
+        if (typeof domain?.[field] !== 'string' || domain[field].trim() === '') {
+          errors.push(location + ': ' + field + ' must be a non-empty string');
+        }
+      }
+      for (const field of ['relevant_pack_signals', 'marker_ids', 'gene_symbols', 'lab_ids', 'do_not_claim']) {
+        if (!isStringArray(domain?.[field]) || domain[field].length === 0) {
+          errors.push(location + ': ' + field + ' must be a non-empty string array');
+        }
+      }
+      if (domainIds.has(domain?.id)) errors.push(location + ': duplicate id ' + domain?.id);
+      domainIds.add(domain?.id);
+      for (const packId of domain.relevant_pack_signals || []) {
+        if (!manifestIds.has(packId)) errors.push(location + ': unknown marker pack ' + packId);
+      }
+      for (const labId of domain.lab_ids || []) {
+        if (!labIds.has(labId)) errors.push(location + ': references unknown lab id ' + labId);
+      }
+      if (domain.lifestyle_recommendation !== null
+        && (typeof domain.lifestyle_recommendation !== 'string' || domain.lifestyle_recommendation.trim() === '')) {
+        errors.push(location + ': lifestyle_recommendation must be a non-empty string or null');
+      }
+      if (domain.foundational_lifestyle !== null
+        && (!domain.foundational_lifestyle || typeof domain.foundational_lifestyle !== 'object' || Array.isArray(domain.foundational_lifestyle))) {
+        errors.push(location + ': foundational_lifestyle must be an object or null');
+      }
+      if (domain.foundational_lifestyle) {
+        for (const field of ['food_pattern', 'routine', 'movement_recovery']) {
+          if (!isStringArray(domain.foundational_lifestyle[field]) || domain.foundational_lifestyle[field].length === 0) {
+            errors.push(location + ': foundational_lifestyle.' + field + ' must be a non-empty string array');
+          }
+        }
+      } else if (typeof domain.no_lifestyle_reason !== 'string' || domain.no_lifestyle_reason.trim() === '') {
+        errors.push(location + ': null foundational_lifestyle requires no_lifestyle_reason');
+      }
+    }
+    for (const sourceId of resource.sources || []) {
+      if (!registeredSourceIds.has(sourceId)) errors.push('inflammation_support_guidance.json: unknown source ' + sourceId);
+    }
+    const fallback = resource.coverage_policy?.fallback;
+    if (!fallback || fallback.lifestyle_recommendation !== null
+      || typeof fallback.label !== 'string' || !fallback.label.trim()
+      || typeof fallback.reason !== 'string' || !fallback.reason.trim()) {
+      errors.push('inflammation_support_guidance.json: coverage_policy.fallback must explicitly define null lifestyle_recommendation, label, and reason');
+    }
+    if (resource.coverage_policy?.requires_route_or_fallback !== true) {
+      errors.push('inflammation_support_guidance.json: coverage_policy.requires_route_or_fallback must be true');
     }
   }
   if (resourceId === 'actionability_guidance') {
@@ -595,6 +721,63 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       if (!modeIds.has(requiredId)) errors.push(`consultation_modes.json: missing required mode ${requiredId}`);
     }
   }
+  if (resourceId === 'condition_integrations') {
+    const markerIds = new Set();
+    for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith('.json'))) {
+      const document = readJson(path.join(sourceDir, fileName));
+      for (const marker of document?.markers || []) {
+        if (typeof marker.rsid === 'string') markerIds.add(marker.rsid.toLowerCase());
+      }
+    }
+    const conditionIds = new Set();
+    const allowedSignalTypes = new Set(['susceptibility_context', 'research_context', 'carrier_possibility', 'clinically_actionable_variant']);
+    const allowedCapabilities = new Set(['clinical_evaluation_required', 'clinical_variant_can_establish_when_confirmed', 'not_diagnostic']);
+    const allowedRelativeSignals = new Set(['higher', 'moderate', 'limited']);
+    const sourceIds = new Set(Object.keys(sourceRegistry?.sources || {}));
+    const coverageGaps = resource.policy?.coverage_gaps;
+    if (coverageGaps !== undefined) {
+      if (!Array.isArray(coverageGaps)) {
+        errors.push('condition_integrations.json policy.coverage_gaps must be an array when present');
+      } else {
+        const coverageGapIds = new Set();
+        for (const [index, gap] of coverageGaps.entries()) {
+          const location = `condition_integrations.json policy.coverage_gaps entry ${index + 1}`;
+          for (const field of ['id', 'label', 'status', 'display']) {
+            if (typeof gap[field] !== 'string' || gap[field].trim() === '') {
+              errors.push(`${location}: ${field} must be a non-empty string`);
+            }
+          }
+          if (coverageGapIds.has(gap.id)) errors.push(`${location}: duplicate id ${gap.id}`);
+          coverageGapIds.add(gap.id);
+        }
+      }
+    }
+    for (const [index, condition] of (resource.conditions || []).entries()) {
+      const location = `condition_integrations.json condition ${index + 1}`;
+      for (const field of ['id', 'label', 'category', 'signal_type', 'diagnostic_capability', 'plain_meaning', 'clinical_route']) {
+        if (typeof condition[field] !== 'string' || condition[field].trim() === '') {
+          errors.push(`${location}: ${field} must be a non-empty string`);
+        }
+      }
+      if (conditionIds.has(condition.id)) errors.push(`${location}: duplicate id ${condition.id}`);
+      conditionIds.add(condition.id);
+      if (!allowedSignalTypes.has(condition.signal_type)) errors.push(`${location}: invalid signal_type ${condition.signal_type}`);
+      if (!allowedCapabilities.has(condition.diagnostic_capability)) errors.push(`${location}: invalid diagnostic_capability ${condition.diagnostic_capability}`);
+      if (!allowedRelativeSignals.has(condition.max_relative_signal)) errors.push(`${location}: invalid max_relative_signal ${condition.max_relative_signal}`);
+      if (!isStringArray(condition.marker_ids) || condition.marker_ids.length === 0) {
+        errors.push(`${location}: marker_ids must be a non-empty string array`);
+      }
+      for (const markerId of condition.marker_ids || []) {
+        if (!markerIds.has(markerId.toLowerCase())) errors.push(`${location}: marker_ids references unknown marker ${markerId}`);
+      }
+      if (!isStringArray(condition.sources) || condition.sources.length === 0) {
+        errors.push(`${location}: sources must be a non-empty string array`);
+      }
+      for (const sourceId of condition.sources || []) {
+        if (!sourceIds.has(sourceId)) errors.push(`${location}: sources references unknown source ${sourceId}`);
+      }
+    }
+  }
   if (resourceId === 'ai_prompt_helpers') {
     const helperIds = new Set();
     let fallbackCount = 0;
@@ -641,6 +824,24 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     }
     if (typeof resource.date_warning !== 'string' || resource.date_warning.trim() === '') {
       errors.push('ai_prompt_policy.json: date_warning must be a non-empty string');
+    }
+    for (const field of ['raw_genotype_policy', 'condition_evidence_instructions']) {
+      if (typeof resource[field] !== 'string' || resource[field].trim() === '') {
+        errors.push(`ai_prompt_policy.json: ${field} must be a non-empty string`);
+      }
+    }
+    for (const field of [
+      'privacy_warning',
+      'raw_genotype_section_title',
+      'raw_genotype_notice',
+      'import_provenance_notice',
+      'ai_review_instructions',
+      'clinician_handoff_boundary',
+      'bundle_privacy_notice',
+    ]) {
+      if (typeof resource.export_disclosures?.[field] !== 'string' || resource.export_disclosures[field].trim() === '') {
+        errors.push(`ai_prompt_policy.json: export_disclosures.${field} must be a non-empty string`);
+      }
     }
     const safetyReview = resource.safety_review_prompt;
     if (!isStringArray(safetyReview?.required_placeholders) || safetyReview.required_placeholders.length === 0) {
@@ -1139,6 +1340,7 @@ if (fs.existsSync(path.join(sourceDir, 'manifest.json')) && fs.existsSync(path.j
 console.log(`Validated ${packCount} marker packs and ${markerCount} curated markers.`);
 console.log(`Validated ${manifestIds.size} manifest runtime mirrors.`);
 console.log(`Validated ${supportResourceCount} source support resources.`);
+console.log(`Detected ${nonMatchableSnpRows.length} non-matchable SNP-like assertions (reported, not auto-corrected).`);
 for (const warning of warnings) console.log(`WARN: ${warning}`);
 for (const error of errors) console.error(`ERROR: ${error}`);
 if (errors.length > 0) process.exit(1);

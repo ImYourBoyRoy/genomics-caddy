@@ -65,6 +65,63 @@
   line-height: 1.4;
 }
 
+.sidebar-profile-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sidebar-group-label,
+.sidebar-tools-heading {
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sidebar-tools-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.sidebar-tools-heading::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--border-color);
+}
+
+.sidebar-profile-workspace > .samples-card,
+.sidebar-profile-workspace > .import-card {
+  margin: 0;
+}
+
+.samples-card-hint,
+.import-card-hint {
+  margin: -0.4rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.samples-card .samples-actions-note {
+  margin: -0.2rem 0 0.65rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--status-warning-border);
+  border-radius: 0.45rem;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.import-card-hint {
+  margin-top: -0.65rem;
+}
+
 .connections-launch-card.card {
   display: flex;
   align-items: center;
@@ -174,8 +231,8 @@
 
 .samples-card .sample-name {
   display: grid;
-  grid-template-columns: 1.4rem minmax(5rem, 1fr);
-  align-items: center;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  align-items: start;
   gap: 0.5rem;
   width: 100%;
   min-width: 0;
@@ -200,11 +257,13 @@
 }
 
 .samples-card .sample-name-text {
-  display: block;
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.25;
 }
 
 .samples-card .sample-sex-symbol {
@@ -575,11 +634,26 @@
 .samples-card .btn-delete {
   min-width: 2.25rem;
   min-height: 2.25rem;
+  display: inline-grid;
+  place-items: center;
   padding: 0.25rem;
   border: 1px solid transparent;
   border-radius: 0.4rem;
   color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
   line-height: 1;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.samples-card .btn-delete svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .samples-card .btn-delete:hover:not(:disabled),
@@ -593,6 +667,11 @@
 .samples-card .btn-delete:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+.samples-card .btn-delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 @keyframes indeterminate {
@@ -761,6 +840,21 @@
 .resource-update-state-message,
 .resource-update-state-time {
   color: var(--text-secondary);
+}
+
+.resource-local-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+}
+
+.resource-local-summary strong {
+  color: var(--text-primary);
 }
 
 .resource-update-state-time {

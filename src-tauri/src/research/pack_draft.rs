@@ -128,7 +128,10 @@ fn infer_effect_allele_hint(genotype: Option<&str>) -> String {
         .filter(|c| c.is_ascii_alphabetic())
         .map(|c| c.to_ascii_uppercase())
         .collect();
-    if cleaned.len() >= 2 && cleaned.as_bytes()[0] == cleaned.as_bytes()[1] {
+    if cleaned.len() >= 2
+        && cleaned.chars().all(|base| matches!(base, 'A' | 'C' | 'G' | 'T'))
+        && cleaned.as_bytes()[0] == cleaned.as_bytes()[1]
+    {
         cleaned.chars().next().unwrap_or('?').to_string()
     } else {
         String::new()
@@ -341,7 +344,8 @@ pub fn export_pack_draft(
         }
     });
 
-    fs::write(&path, serde_json::to_string_pretty(&body).map_err(|e| e.to_string())?)
+    let draft_json = serde_json::to_string_pretty(&body).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&path, draft_json.as_bytes())
         .map_err(|e| format!("Failed to write draft pack: {e}"))?;
 
     let candidate_count = markers.len() as u32;
@@ -564,12 +568,10 @@ pub fn ensure_research_found_pack(data_dir: &Path) -> Result<(), String> {
     fs::create_dir_all(&packs_dir).map_err(|e| e.to_string())?;
     let pack_path = packs_dir.join(format!("{RESEARCH_FOUND_PACK_ID}.json"));
     if !pack_path.is_file() {
-        fs::write(
-            &pack_path,
-            serde_json::to_string_pretty(&empty_research_found_pack())
-                .map_err(|e| e.to_string())?,
-        )
-        .map_err(|e| e.to_string())?;
+        let pack_json = serde_json::to_string_pretty(&empty_research_found_pack())
+            .map_err(|e| e.to_string())?;
+        crate::file_utils::atomic_write(&pack_path, pack_json.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
     ensure_manifest_entry(
         data_dir,
@@ -706,11 +708,9 @@ pub fn merge_draft_into_pack_with_db(
         None
     };
 
-    fs::write(
-        &pack_path,
-        serde_json::to_string_pretty(&pack).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| format!("Failed to write pack: {e}"))?;
+    let pack_json = serde_json::to_string_pretty(&pack).map_err(|e| e.to_string())?;
+    crate::file_utils::atomic_write(&pack_path, pack_json.as_bytes())
+        .map_err(|e| format!("Failed to write pack: {e}"))?;
 
     ensure_manifest_entry(
         data_dir,
@@ -758,11 +758,9 @@ fn ensure_manifest_entry(data_dir: &Path, pack_id: &str, name: Option<&str>) -> 
             "default_enabled": false,
             "requires_clinical_confirmation": true
         }));
-        fs::write(
-            &manifest_path,
-            serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?,
-        )
-        .map_err(|e| e.to_string())?;
+        let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
+        crate::file_utils::atomic_write(&manifest_path, manifest_json.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
     Ok(())
 }

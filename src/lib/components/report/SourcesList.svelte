@@ -28,7 +28,7 @@
 
 {#if references.length > 0}
   <details class="marker-sources-details">
-    <summary>📚 References ({references.length})</summary>
+    <summary aria-label="References ({references.length})"><span class="marker-sources-summary-label">📚 Sources</span></summary>
     <div class="marker-sources">
       <ul class="sources-list">
         {#each references as reference (reference.id)}
@@ -55,6 +55,8 @@
 
 <style>
   .marker-sources-details {
+    min-width: 0;
+    max-width: 100%;
     margin-top: 0.5rem;
     border-top: 1px solid var(--border-color);
     padding-top: 0.5rem;
@@ -63,9 +65,42 @@
   }
 
   .marker-sources-details summary {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
     cursor: pointer;
     color: var(--text-secondary);
     font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .marker-sources-details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .marker-sources-details summary::before {
+    content: "▸";
+    flex: 0 0 auto;
+    margin-right: 0.3rem;
+    color: var(--text-secondary);
+  }
+
+  .marker-sources-details[open] summary::before {
+    content: "▾";
+  }
+
+  .marker-sources-summary-label {
+    display: block;
+    flex: 1 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .marker-sources-details[open] summary {

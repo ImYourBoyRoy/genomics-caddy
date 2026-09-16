@@ -83,7 +83,6 @@ function Test-ProtectedPath {
     $protectedNames = @(
         ".env",
         "package.json",
-        "package-lock.json",
         "readme.md",
         "memory.md"
     )
@@ -179,7 +178,13 @@ if (-not $SkipPurge) {
         "node_modules\.vite",
         "node_modules\.cache",
         "node_modules\.vitest",
-        "src-tauri\gen\schemas"
+        "src-tauri\gen\schemas",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "bun.lock",
+        "npm-shrinkwrap.json",
+        "src-tauri\Cargo.lock"
     )
 
     foreach ($relative in $frontendArtifacts) {
@@ -205,15 +210,15 @@ if ($PurgeOnly) {
     exit 0
 }
 
-if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
-    throw "npm not found on PATH"
+if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+    throw "pnpm not found on PATH"
 }
 if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
     throw "cargo not found on PATH"
 }
 
 if (-not $SkipChecks) {
-    Invoke-External -Label "Frontend type check" -FilePath "npm" -Arguments @("run", "check")
+    Invoke-External -Label "Frontend type check" -FilePath "pnpm" -Arguments @("run", "check")
     Invoke-External -Label "Rust library check" -FilePath "cargo" -Arguments @(
         "check",
         "--manifest-path", "src-tauri/Cargo.toml",
@@ -227,7 +232,7 @@ if (-not $SkipChecks) {
 $env:CARGO_BUILD_JOBS = [string][Environment]::ProcessorCount
 Write-Ok "CARGO_BUILD_JOBS=$($env:CARGO_BUILD_JOBS)"
 
-Invoke-External -Label "Production Tauri build (no installer bundle)" -FilePath "npm" -Arguments @(
+Invoke-External -Label "Production Tauri build (no installer bundle)" -FilePath "pnpm" -Arguments @(
     "run", "tauri", "build"
 )
 

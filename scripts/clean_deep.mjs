@@ -2,15 +2,15 @@
 /*
 Purpose: Remove project-local, rebuildable frontend and Tauri artifacts.
 Responsibilities:
-  - Purge frontend installs, lockfile, caches, and generated build output.
+  - Purge frontend installs, lockfiles, caches, and generated build output.
   - Purge every project-local Rust/Tauri target.
-  - Optionally remove Cargo.lock for an explicitly requested fresh dependency rebuild.
+  - Remove Cargo.lock and common JavaScript lockfiles for an unlocked rebuild.
   - Remove staged portable binaries/resources produced by the release build.
   - Keep private app data, downloaded references, profiles, exports, and marker packs intact.
 How to run:
-  npm run clean:deep
-  npm run clean:deep:fresh
-  npm run clean:deep:dry
+  node ./scripts/clean_deep.mjs
+  node ./scripts/clean_deep.mjs --fresh-dependencies
+  node ./scripts/clean_deep.mjs --dry-run
 */
 
 import { lstat, rm } from 'node:fs/promises';
@@ -23,8 +23,15 @@ const repoRoot = path.resolve(scriptDir, '..');
 const artifacts = [
   ['frontend dependencies', 'node_modules'],
   ['frontend lockfile', 'package-lock.json'],
+  ['frontend lockfile', 'pnpm-lock.yaml'],
+  ['frontend lockfile', 'yarn.lock'],
+  ['frontend lockfile', 'bun.lock'],
+  ['frontend lockfile', 'bun.lockb'],
+  ['frontend shrinkwrap', 'npm-shrinkwrap.json'],
   ['SvelteKit build cache', '.svelte-kit'],
   ['frontend build output', 'build'],
+  ['staged release outputs', 'builds'],
+  ['QA output', 'output'],
   ['legacy frontend output', 'dist'],
   ['generated package output', 'package'],
   ['Vite cache', '.vite'],
@@ -32,6 +39,7 @@ const artifacts = [
   ['Tauri generated schemas', 'src-tauri/gen/schemas'],
   ['Rust/Tauri build target', 'target'],
   ['Rust/Tauri build target', 'src-tauri/target'],
+  ['Rust dependency lockfile', 'src-tauri/Cargo.lock'],
   ['staged Linux portable binary', 'App/DNA-Tools'],
   ['staged Windows portable binary', 'App/DNA-Tools.exe'],
   ['staged macOS portable binary', 'App/Genomics Caddy'],
@@ -41,10 +49,10 @@ const artifacts = [
 
 const args = new Set(process.argv.slice(2).map((arg) => arg.trim()).filter(Boolean));
 if (args.has('--help') || args.has('-h')) {
-  console.log('Usage: npm run clean:deep [-- --dry-run]');
-  console.log('Usage: npm run clean:deep:fresh [-- --dry-run]');
+  console.log('Usage: node ./scripts/clean_deep.mjs [--dry-run]');
+  console.log('Usage: node ./scripts/clean_deep.mjs --fresh-dependencies [--dry-run]');
   console.log('Removes project-local rebuildable frontend/Tauri artifacts only.');
-  console.log('Cargo.lock is preserved unless --fresh-dependencies is explicitly supplied.');
+  console.log('Removes JavaScript and Cargo lockfiles for unlocked dependency resolution.');
   process.exit(0);
 }
 
@@ -55,9 +63,6 @@ if (unknownArgs.length > 0) {
 }
 
 const dryRun = args.has('--dry-run');
-if (freshDependencies) {
-  artifacts.push(['Rust dependency lockfile (fresh dependency rebuild)', 'src-tauri/Cargo.lock']);
-}
 const protectedPaths = [
   path.resolve(repoRoot, 'App/Data'),
   path.resolve(repoRoot, 'src/lib/marker-packs'),
@@ -94,7 +99,7 @@ console.log(`Genomics Caddy — deep project cleanup${dryRun ? ' (dry run)' : ''
 console.log(`Repository: ${repoRoot}`);
 console.log('Preserved: App/Data, private profiles/genomes/exports, downloaded references, and protected marker packs.');
 console.log('Not touched: global npm/Cargo caches, Rust toolchains, or files outside this repository.');
-console.log(`Cargo.lock: ${freshDependencies ? 'included by explicit fresh-dependencies request' : 'preserved'}.`);
+console.log(`Dependency locks: removed${freshDependencies ? ' (fresh-dependencies alias accepted)' : ''}.`);
 
 let removed = 0;
 for (const [label, relativePath] of artifacts) {
@@ -116,5 +121,5 @@ if (dryRun) {
   console.log('Dry run complete. No files were changed.');
 } else {
   console.log(`Deep cleanup complete. Removed ${removed} project-local artifact(s).`);
-  console.log('Run npm install, npm run update:all, and the Tauri build to rehydrate the project.');
+  console.log('Run node ./scripts/pnpm_unlocked.mjs install, node ./scripts/update_all.mjs, and the Tauri build to rehydrate the project.');
 }

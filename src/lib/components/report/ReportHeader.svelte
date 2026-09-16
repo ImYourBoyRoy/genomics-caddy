@@ -76,29 +76,29 @@
           <span class="quality-kicker">Report overview</span>
           <span class="overview-queue-badge">
             <span class="overview-queue-dot" aria-hidden="true"></span>
-            {reviewQueueCount} on review board
+            {reviewQueueCount} highlighted
           </span>
         </div>
         <h3>Your DNA overview</h3>
-        <p>Unique DNA signals grouped by review value.</p>
+        <p>The most useful DNA signals found in this profile.</p>
       </div>
       <div class="report-stat-grid" aria-label="Report overview statistics">
         <div class="report-stat report-stat-priority">
           <strong>{reviewQueueCount.toLocaleString()}</strong>
-          <span>Review queue</span>
-          <small>of {reportStats.priority.toLocaleString()} priority findings</small>
+          <span>Review first</span>
+          <small>top {reviewQueueCount.toLocaleString()} of {reportStats.priority.toLocaleString()} reviewable signals</small>
         </div>
         <div class="report-stat report-stat-high">
           <strong>{reportStats.higherConcern.toLocaleString()}</strong>
-          <span>Higher concern</span>
+          <span>Higher-priority</span>
         </div>
         <div class="report-stat report-stat-context">
           <strong>{reportStats.context.toLocaleString()}</strong>
-          <span>Context findings</span>
+          <span>Context signals</span>
         </div>
         <div class="report-stat report-stat-protective">
           <strong>{reportStats.protective.toLocaleString()}</strong>
-          <span>Protective context</span>
+          <span>Potentially favorable</span>
         </div>
       </div>
       <details class="technical-score-details simple-overview-coverage">

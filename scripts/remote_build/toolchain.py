@@ -4,9 +4,9 @@ Build environment upgrade & auto-healing runner — runs before every compile pa
 
 Ensures each remote target auto-heals any missing requirements:
   - Rust & targets (rustup update stable, rustup target add …)
-  - Tauri CLI (cargo install --locked tauri-cli)
-  - Node.js, npm, and npx (auto-installed via Homebrew on macOS or fnm/pkg-manager on Linux)
-  - Project frontend dependencies (npm install + npm update)
+  - Tauri CLI (cargo install tauri-cli)
+  - Node.js and pnpm (auto-installed via Homebrew on macOS or fnm/pkg-manager on Linux)
+  - Project frontend dependencies (temporary-lock pnpm install + update, no retained lockfile)
 
 Platform-specific upgrade scripts are delivered via stdin (bash -s) so no
 secrets or env values appear in process arguments or SSH command strings.
@@ -49,15 +49,15 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 # 2. Auto-heal cargo-tauri / tauri-cli
 if ! command -v cargo-tauri >/dev/null 2>&1 && ! command -v tauri >/dev/null 2>&1; then
     echo "[AUTO-HEAL] tauri-cli missing — installing via cargo install…"
-    cargo install --locked tauri-cli
+    cargo install tauri-cli
 else
     echo "[TOOLCHAIN] tauri-cli (latest check)…"
-    cargo install --locked tauri-cli 2>&1 | tail -5
+    cargo install tauri-cli 2>&1 | tail -5
 fi
 
-# 3. Auto-heal Node.js / npm / npx
-if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1 || ! command -v npx >/dev/null 2>&1; then
-    echo "[AUTO-HEAL] Node.js/npm/npx missing on macOS guest — auto-installing via Homebrew…"
+# 3. Auto-heal Node.js / npm / pnpm
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    echo "[AUTO-HEAL] Node.js/npm missing on macOS guest — auto-installing via Homebrew…"
     if command -v brew >/dev/null 2>&1; then
         brew install node
     elif [ -x /usr/local/bin/brew ]; then
@@ -77,13 +77,14 @@ echo "  rustc: $(rustc --version 2>/dev/null || echo missing)"
 echo "  tauri: $(tauri --version 2>/dev/null || cargo tauri --version 2>/dev/null || echo missing)"
 echo "  node:  $(node -v 2>/dev/null || echo missing)"
 echo "  npm:   $(npm -v 2>/dev/null || echo missing)"
-echo "  npx:   $(npx -v 2>/dev/null || echo missing)"
+if command -v npm >/dev/null 2>&1; then npm install --global pnpm@latest >/dev/null 2>&1 || true; fi
+echo "  pnpm:  $(pnpm -v 2>/dev/null || echo missing)"
 
 if [ -d '{guest_dir}' ]; then
-    echo "[TOOLCHAIN] npm update…"
+    echo "[TOOLCHAIN] pnpm update (temporary lock, not retained)…"
     cd '{guest_dir}'
-    npm install --prefer-offline 2>&1 | tail -10
-    npm update 2>&1 | tail -10
+    node ./scripts/pnpm_unlocked.mjs install 2>&1 | tail -10
+    node ./scripts/pnpm_unlocked.mjs update --latest 2>&1 | tail -10
 fi
 
 echo "[TOOLCHAIN] UPGRADE_DONE"
@@ -111,13 +112,13 @@ rustup target add x86_64-unknown-linux-gnu
 # 2. Auto-heal cargo-tauri / tauri-cli
 if ! command -v cargo-tauri >/dev/null 2>&1 && ! command -v tauri >/dev/null 2>&1; then
     echo "[AUTO-HEAL] tauri-cli missing — installing via cargo install…"
-    cargo install --locked tauri-cli
+    cargo install tauri-cli
 else
     echo "[TOOLCHAIN] tauri-cli (latest check)…"
-    cargo install --locked tauri-cli 2>&1 | tail -5
+    cargo install tauri-cli 2>&1 | tail -5
 fi
 
-# 3. Auto-heal Node.js / npm / npx to latest Node 26+
+# 3. Auto-heal Node.js / npm / pnpm to latest Node 26+
 if [ -d "$HOME/.local/share/fnm" ] || [ -f "$HOME/.local/bin/fnm" ]; then
     export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$PATH"
     eval "$(fnm env 2>/dev/null || true)"
@@ -141,7 +142,8 @@ echo "  rustc: $(rustc --version 2>/dev/null || echo missing)"
 echo "  tauri: $(tauri --version 2>/dev/null || cargo tauri --version 2>/dev/null || echo missing)"
 echo "  node:  $(node -v 2>/dev/null || echo missing)"
 echo "  npm:   $(npm -v 2>/dev/null || echo missing)"
-echo "  npx:   $(npx -v 2>/dev/null || echo missing)"
+if command -v npm >/dev/null 2>&1; then npm install --global pnpm@latest >/dev/null 2>&1 || true; fi
+echo "  pnpm:  $(pnpm -v 2>/dev/null || echo missing)"
 
 # 4. Auto-heal system dev packages (pkg-config, libdbus-1-dev, GTK, WebKit, SSL)
 echo "[TOOLCHAIN] Checking Linux system dev packages…"
@@ -167,10 +169,10 @@ if [ "$MISSING_PKGS" -eq 1 ]; then
 fi
 
 if [ -d '{guest_dir}' ]; then
-    echo "[TOOLCHAIN] npm update…"
+    echo "[TOOLCHAIN] pnpm update (temporary lock, not retained)…"
     cd '{guest_dir}'
-    npm install --prefer-offline 2>&1 | tail -10
-    npm update 2>&1 | tail -10
+    node ./scripts/pnpm_unlocked.mjs install 2>&1 | tail -10
+    node ./scripts/pnpm_unlocked.mjs update --latest 2>&1 | tail -10
 fi
 
 echo "[TOOLCHAIN] UPGRADE_DONE"
@@ -197,13 +199,14 @@ Write-Host '[TOOLCHAIN] Registering Windows target…'
 rustup target add x86_64-pc-windows-msvc
 
 Write-Host '[TOOLCHAIN] tauri-cli (latest)…'
-cargo install --locked tauri-cli
+cargo install tauri-cli
 
 if ([System.IO.Directory]::Exists('{guest_dir}')) {
-    Write-Host '[TOOLCHAIN] npm update…'
+    Write-Host '[TOOLCHAIN] pnpm update (temporary lock, not retained)…'
     Set-Location '{guest_dir}'
-    npm install --prefer-offline
-    npm update
+    npm install --global pnpm@latest
+    node ./scripts/pnpm_unlocked.mjs install
+    node ./scripts/pnpm_unlocked.mjs update --latest
 }
 
 Write-Host '[TOOLCHAIN] UPGRADE_DONE'

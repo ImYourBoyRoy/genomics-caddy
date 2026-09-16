@@ -2,7 +2,7 @@
 // Cross-platform entry for production Tauri release builds.
 // Windows -> purge_and_build.ps1; Linux/macOS -> purge_and_build.sh
 //
-// npm scripts pass kebab flags (e.g. --skip-purge). Accept those plus
+// pnpm scripts pass kebab flags (e.g. --skip-purge). Accept those plus
 // PowerShell-style -SkipPurge so build:release-fast actually skips cargo clean.
 
 import { spawnSync } from "node:child_process";

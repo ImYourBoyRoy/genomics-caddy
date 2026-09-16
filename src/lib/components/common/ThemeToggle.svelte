@@ -131,8 +131,10 @@
     background: var(--control-group-bg);
   }
 
-  .theme-toggle-options button {
+  :global(.theme-toggle-options button) {
     display: inline-flex;
+    appearance: none;
+    -webkit-appearance: none;
     min-width: 0;
     min-height: 44px;
     align-items: center;
@@ -141,7 +143,7 @@
     padding: 0.3rem 0.2rem;
     border: 1px solid transparent;
     border-radius: 0.45rem;
-    background: transparent;
+    background: var(--surface-raised);
     color: var(--text-secondary);
     font: inherit;
     font-size: 0.72rem;
@@ -149,16 +151,16 @@
     cursor: pointer;
   }
 
-  .theme-toggle-options button:hover,
-  .theme-toggle-options button:focus-visible,
-  .theme-toggle-options button.active {
+  :global(.theme-toggle-options button:hover),
+  :global(.theme-toggle-options button:focus-visible),
+  :global(.theme-toggle-options button.active) {
     border-color: var(--accent);
     background: var(--accent-soft);
     color: var(--text-primary);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .theme-toggle-options button {
+    :global(.theme-toggle-options button) {
       transition: none;
     }
   }

@@ -1,0 +1,5 @@
+# Synthetic AncestryDNA-style fixture; no real genotype data.
+# build 37; forward strand
+rsid	chromosome	position	allele1	allele2
+rsSyntheticTsv1	2	301	C	T
+rsSyntheticTsv2	MT	450	A	G

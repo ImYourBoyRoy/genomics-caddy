@@ -320,6 +320,54 @@
       ]
     },
     {
+      "id": "inflammation_recovery",
+      "label": "Inflammation-aware recovery",
+      "relevant_pack_signals": [
+        "core",
+        "nutrients",
+        "cardiovascular",
+        "immune_autoimmune_general",
+        "allergy_atopy_mast_cell",
+        "digestive_gut_microbiome",
+        "connective_tissue",
+        "muscle_performance_recovery",
+        "sleep",
+        "dental_oral_health",
+        "skin_hair_dermatology",
+        "respiratory_airway",
+        "longevity_aging_resilience"
+      ],
+      "section_keywords": ["inflamm", "cytokine", "crp", "oxidative", "redox", "immune activation"],
+      "context_ids": [],
+      "personal_context_keywords": ["inflammation", "elevated crp", "high crp", "flare", "joint swelling", "autoimmune"],
+      "context": "Cytokine, CRP, immune, oxidative, and recovery context",
+      "simple_favor": [
+        "Protect a regular sleep opportunity and use recovery days",
+        "Favor regular, tolerable movement; adjust load to symptoms and recovery",
+        "Track the symptoms and measured markers that matter before changing several variables"
+      ],
+      "simple_watch": [
+        "Do not use a DNA signal as proof of active inflammation or a reason to push through a flare",
+        "Avoid sudden training-load changes when concerning symptoms are present"
+      ],
+      "simple_verify": [
+        "Review relevant measured labs, such as hs-CRP, CRP, or ESR, with a clinician when indicated",
+        "Use focused evaluation for persistent symptoms rather than adding supplements from DNA alone"
+      ],
+      "favor": [
+        "steady sleep opportunity and recovery days",
+        "gradual, tolerable movement guided by symptoms and recovery"
+      ],
+      "avoid": [
+        "using DNA as proof of active inflammation or exercise clearance",
+        "pushing through a flare or other concerning symptoms"
+      ],
+      "confirm_with": [
+        "symptoms, recent illness, sleep, and recovery context",
+        "clinician-selected hs-CRP, CRP, or ESR when indicated"
+      ]
+    },
+    {
       "id": "hormones_reproductive",
       "label": "Cycle-aware training & recovery",
       "section_keywords": ["menstrual", "hormone", "reproductive", "pmdd", "ovarian"],

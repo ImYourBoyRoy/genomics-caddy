@@ -13,8 +13,8 @@ Operational Notes: Uses prepared statements and explicit transaction blocks for 
 */
 
 use crate::liftover::LiftoverEngine;
-use crate::parser::SnpRecord;
-use rusqlite::{Connection, Result, params};
+use crate::parser::{ImportProvenance, ParseDiagnostics, SnpRecord};
+use rusqlite::{Connection, OptionalExtension, Result, params};
 use std::path::Path;
 use std::time::Duration;
 
@@ -58,7 +58,7 @@ pub struct DbSnpRecord {
     pub sample_id: i64,
     pub rsid: String,
     pub chromosome: String,
-    pub position_grch37: u64,
+    pub position_grch37: Option<u64>,
     pub position_grch38: Option<u64>,
     pub allele1: String,
     pub allele2: String,
@@ -158,8 +158,33 @@ pub fn connect_sample_from_registry_path(
     registry_path: &Path,
     sample_id: i64,
 ) -> Result<Connection> {
+    if !sample_is_registered(registry_path, sample_id)? {
+        return Err(rusqlite::Error::QueryReturnedNoRows);
+    }
     let data_dir = registry_path.parent().unwrap_or_else(|| Path::new("."));
     connect_sample(data_dir, sample_id)
+}
+
+/// Check sample existence without opening or creating the private sample DB.
+///
+/// This guard is intentionally read-only: MCP/query callers must not create an
+/// empty sample directory merely because a caller supplied an invalid ID.
+pub fn sample_is_registered(registry_path: &Path, sample_id: i64) -> Result<bool> {
+    if !registry_path.is_file() {
+        return Ok(false);
+    }
+    let conn = Connection::open_with_flags(
+        registry_path,
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )?;
+    Ok(conn
+        .query_row(
+            "SELECT 1 FROM samples WHERE id = ?",
+            params![sample_id],
+            |_| Ok(true),
+        )
+        .optional()?
+        .unwrap_or(false))
 }
 
 /// Attach a sidecar DB only when the file already exists.
@@ -1017,13 +1042,69 @@ fn ensure_schema(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+fn migrate_genotype_coordinate_schema(conn: &Connection) -> Result<()> {
+    let position_grch37_not_null = {
+        let mut stmt = conn.prepare("PRAGMA table_info(genotypes)")?;
+        let mut rows = stmt.query([])?;
+        let mut not_null = false;
+        while let Some(row) = rows.next()? {
+            let name: String = row.get(1)?;
+            if name == "position_grch37" {
+                not_null = row.get::<_, i64>(3)? != 0;
+                break;
+            }
+        }
+        not_null
+    };
+
+    if !position_grch37_not_null {
+        return Ok(());
+    }
+
+    // Older sample databases required every call to have a GRCh37 position.
+    // Direct GRCh38 imports can retain their source coordinate even when the
+    // inverse chain has no mapping, so migrate that column to nullable while
+    // preserving all existing genotype rows and indexes.
+    conn.execute_batch("BEGIN IMMEDIATE")?;
+    let migration = (|| -> Result<()> {
+        conn.execute_batch(
+            "DROP INDEX IF EXISTS idx_genotypes_rsid;
+             DROP INDEX IF EXISTS idx_genotypes_coords;
+             ALTER TABLE genotypes RENAME TO genotypes_legacy;
+             CREATE TABLE genotypes (
+                 sample_id INTEGER NOT NULL,
+                 rsid TEXT NOT NULL,
+                 chromosome TEXT NOT NULL,
+                 position_grch37 INTEGER,
+                 position_grch38 INTEGER,
+                 allele1 TEXT NOT NULL,
+                 allele2 TEXT NOT NULL,
+                 PRIMARY KEY (sample_id, rsid)
+             );
+             INSERT INTO genotypes
+                 (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             SELECT sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2
+             FROM genotypes_legacy;
+             DROP TABLE genotypes_legacy;
+             CREATE INDEX idx_genotypes_rsid ON genotypes(rsid);
+             CREATE INDEX idx_genotypes_coords ON genotypes(chromosome, position_grch38);",
+        )?;
+        conn.execute_batch("COMMIT")?;
+        Ok(())
+    })();
+    if migration.is_err() {
+        let _ = conn.execute_batch("ROLLBACK");
+    }
+    migration
+}
+
 fn ensure_sample_schema(conn: &Connection) -> Result<()> {
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS genotypes (
             sample_id INTEGER NOT NULL,
             rsid TEXT NOT NULL,
             chromosome TEXT NOT NULL,
-            position_grch37 INTEGER NOT NULL,
+            position_grch37 INTEGER,
             position_grch38 INTEGER,
             allele1 TEXT NOT NULL,
             allele2 TEXT NOT NULL,
@@ -1055,7 +1136,8 @@ fn ensure_sample_schema(conn: &Connection) -> Result<()> {
             selected_model TEXT NOT NULL,
             max_tokens INTEGER,
             extended_thinking INTEGER,
-            consultation_mode TEXT
+            consultation_mode TEXT,
+            context_mode TEXT
         );
         CREATE TABLE IF NOT EXISTS chat_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1067,6 +1149,24 @@ fn ensure_sample_schema(conn: &Connection) -> Result<()> {
             FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
+        CREATE TABLE IF NOT EXISTS import_provenance (
+            import_id TEXT PRIMARY KEY,
+            source_file_name TEXT NOT NULL,
+            source_file_sha256 TEXT NOT NULL,
+            source_format TEXT NOT NULL,
+            source_vendor TEXT NOT NULL,
+            delimiter TEXT NOT NULL,
+            source_build TEXT NOT NULL,
+            coordinate_system TEXT NOT NULL,
+            allele_orientation TEXT NOT NULL,
+            total_rows INTEGER NOT NULL DEFAULT 0,
+            accepted_rows INTEGER NOT NULL DEFAULT 0,
+            malformed_rows INTEGER NOT NULL DEFAULT 0,
+            duplicate_rows INTEGER NOT NULL DEFAULT 0,
+            liftover_mapped_rows INTEGER NOT NULL DEFAULT 0,
+            liftover_unmapped_rows INTEGER NOT NULL DEFAULT 0,
+            imported_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
         CREATE TABLE IF NOT EXISTS research_jobs (
             job_id TEXT PRIMARY KEY,
             sample_id INTEGER NOT NULL,
@@ -1111,6 +1211,20 @@ fn ensure_sample_schema(conn: &Connection) -> Result<()> {
         );
         CREATE INDEX IF NOT EXISTS idx_vector_promoted_sample ON vector_promoted_findings(sample_id);",
     )?;
+    migrate_genotype_coordinate_schema(conn)?;
+    // Import provenance was introduced after the first isolated sample DBs.
+    // Keep a tolerant migration for databases created by an intermediate build.
+    let _ = conn.execute(
+        "ALTER TABLE import_provenance ADD COLUMN delimiter TEXT NOT NULL DEFAULT 'Unknown'",
+        [],
+    );
+    // Context mode was added after the initial chat-session schema. Existing
+    // sessions keep their history and receive the legacy active-findings
+    // default when the nullable column is absent.
+    let _ = conn.execute(
+        "ALTER TABLE chat_sessions ADD COLUMN context_mode TEXT",
+        [],
+    );
     Ok(())
 }
 
@@ -1151,11 +1265,39 @@ fn migrate_legacy_sample_tables(conn: &Connection, data_dir: &Path) -> Result<()
                 }
             }
             if table_exists_in_main(conn, "chat_sessions") {
-                conn.execute(
+                // The registry may have been created by a build from before
+                // context_mode existed. Use explicit columns so that legacy
+                // chat history still migrates and the new field safely falls
+                // back to the active-findings default in the renderer.
+                let main_has_context_mode = conn
+                    .query_row(
+                        "SELECT 1 FROM main.sqlite_master
+                         WHERE type = 'table' AND name = 'chat_sessions'
+                           AND lower(sql) LIKE '%context_mode%'",
+                        [],
+                        |_| Ok(true),
+                    )
+                    .unwrap_or(false);
+                let copy_sql = if main_has_context_mode {
                     "INSERT OR REPLACE INTO sample_migration.chat_sessions
-                     SELECT * FROM main.chat_sessions WHERE sample_id = ?",
-                    params![sample_id],
-                )?;
+                     (id, sample_id, title, timestamp, selected_packs,
+                      only_active_findings, temperature, selected_model, max_tokens,
+                      extended_thinking, consultation_mode, context_mode)
+                     SELECT id, sample_id, title, timestamp, selected_packs,
+                            only_active_findings, temperature, selected_model, max_tokens,
+                            extended_thinking, consultation_mode, context_mode
+                     FROM main.chat_sessions WHERE sample_id = ?"
+                } else {
+                    "INSERT OR REPLACE INTO sample_migration.chat_sessions
+                     (id, sample_id, title, timestamp, selected_packs,
+                      only_active_findings, temperature, selected_model, max_tokens,
+                      extended_thinking, consultation_mode)
+                     SELECT id, sample_id, title, timestamp, selected_packs,
+                            only_active_findings, temperature, selected_model, max_tokens,
+                            extended_thinking, consultation_mode
+                     FROM main.chat_sessions WHERE sample_id = ?"
+                };
+                conn.execute(copy_sql, params![sample_id])?;
                 if table_exists_in_main(conn, "chat_messages") {
                     conn.execute(
                         "INSERT OR REPLACE INTO sample_migration.chat_messages
@@ -1330,48 +1472,172 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
     sample_name: &str,
     records: &[SnpRecord],
     liftover_engine: Option<&LiftoverEngine>,
+    replace_existing_sample_id: Option<i64>,
     progress_callback: F,
 ) -> Result<i64, String> {
-    // 1. Create/Retrieve sample ID
-    conn.execute(
-        "INSERT OR IGNORE INTO samples (name) VALUES (?)",
-        params![sample_name],
+    import_raw_genome_with_provenance(
+        conn,
+        data_dir,
+        sample_name,
+        records,
+        liftover_engine,
+        replace_existing_sample_id,
+        None,
+        progress_callback,
     )
-    .map_err(|e| format!("Failed to create sample: {}", e))?;
+}
 
-    let sample_id: i64 = conn
+#[allow(clippy::too_many_arguments)]
+pub fn import_raw_genome_with_provenance<F: Fn(u32, &str)>(
+    conn: &mut Connection,
+    data_dir: &Path,
+    sample_name: &str,
+    records: &[SnpRecord],
+    liftover_engine: Option<&LiftoverEngine>,
+    replace_existing_sample_id: Option<i64>,
+    provenance: Option<ImportProvenance>,
+    progress_callback: F,
+) -> Result<i64, String> {
+    let sample_name = sample_name.trim();
+    if sample_name.is_empty() {
+        return Err("Profile name cannot be empty.".to_string());
+    }
+    if records.is_empty() {
+        return Err("The selected DNA file did not contain any genotype records.".to_string());
+    }
+
+    let mut provenance = provenance.unwrap_or_else(|| {
+        ImportProvenance::new(
+            format!("legacy-import-{}", records.len()),
+            "unknown source".to_string(),
+            String::new(),
+            ParseDiagnostics {
+                format: "Unknown".to_string(),
+                vendor: "Unknown".to_string(),
+                delimiter: "Unknown".to_string(),
+                source_build: "Unknown".to_string(),
+                coordinate_system: "1-based inclusive input; GRCh37 database coordinates".to_string(),
+                allele_orientation: "Unknown".to_string(),
+                total_rows: records.len(),
+                accepted_rows: records.len(),
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        )
+    });
+    if provenance.import_id.trim().is_empty() {
+        return Err("Import provenance is missing an import ID.".to_string());
+    }
+    // Resolve the duplicate before opening a write transaction. A same-name
+    // import must explicitly identify the profile it is replacing; otherwise
+    // it cannot silently merge two genomes.
+    let existing_sample_id: Option<i64> = conn
         .query_row(
-            "SELECT id FROM samples WHERE name = ?",
+            "SELECT id FROM samples WHERE lower(name) = lower(?)",
             params![sample_name],
             |row| row.get(0),
         )
-        .map_err(|e| format!("Failed to retrieve sample ID: {}", e))?;
+        .optional()
+        .map_err(|e| format!("Failed to check for an existing profile: {e}"))?;
 
-    // Determine a conservative sex label from X/Y call coverage.
+    let (sample_id, replacing) = match (existing_sample_id, replace_existing_sample_id) {
+        (Some(existing), Some(requested)) if existing == requested => (existing, true),
+        (Some(_), None) => {
+            return Err(format!(
+                "A profile named {sample_name:?} already exists. Choose a different name or confirm replacement."
+            ));
+        }
+        (Some(existing), Some(requested)) => {
+            return Err(format!(
+                "Replacement target {requested} does not match the existing profile ID {existing}."
+            ));
+        }
+        (None, Some(requested)) => {
+            return Err(format!(
+                "Replacement target {requested} no longer exists; choose a new profile name."
+            ));
+        }
+        (None, None) => (0, false),
+    };
+
     let genetic_sex = infer_genetic_sex(records);
-
-    conn.execute(
-        "UPDATE samples SET genetic_sex = ? WHERE id = ?",
-        params![genetic_sex, sample_id],
-    )
-    .map_err(|e| format!("Failed to update genetic sex: {}", e))?;
-
-    // 2. Perform bulk insertion in the isolated sample database.
-    let mut sample_conn = connect_sample(data_dir, sample_id)
-        .map_err(|e| format!("Failed to initialize sample database: {e}"))?;
-    let tx = sample_conn
+    let registry_tx = conn
         .transaction()
-        .map_err(|e| format!("Failed to start transaction: {}", e))?;
+        .map_err(|e| format!("Failed to start profile transaction: {e}"))?;
+    let sample_id = if replacing {
+        registry_tx
+            .execute(
+                "UPDATE samples SET name = ?, genetic_sex = ?, imported_at = CURRENT_TIMESTAMP WHERE id = ?",
+                params![sample_name, genetic_sex, sample_id],
+            )
+            .map_err(|e| format!("Failed to prepare profile replacement: {e}"))?;
+        sample_id
+    } else {
+        registry_tx
+            .execute(
+                "INSERT INTO samples (name, genetic_sex) VALUES (?, ?)",
+                params![sample_name, genetic_sex],
+            )
+            .map_err(|e| format!("Failed to create profile: {e}"))?;
+        registry_tx.last_insert_rowid()
+    };
 
-    {
+    let sample_dir = crate::paths::sample_dir(data_dir, sample_id);
+    let replacement_backup_dir = if replacing && sample_dir.exists() {
+        clear_cached_conn();
+        let backup_dir = data_dir.join(format!(
+            ".genomics-caddy-sample-{sample_id}-replacement-backup"
+        ));
+        if backup_dir.exists() {
+            return Err(format!(
+                "A previous replacement backup exists for profile {sample_id}; refusing to overwrite it."
+            ));
+        }
+        std::fs::rename(&sample_dir, &backup_dir).map_err(|e| {
+            format!("Failed to stage the existing profile for replacement: {e}")
+        })?;
+        Some(backup_dir)
+    } else {
+        None
+    };
+
+    let sample_result = (|| -> Result<(), String> {
+        let mut sample_conn = connect_sample(data_dir, sample_id)
+            .map_err(|e| format!("Failed to initialize sample database: {e}"))?;
+        let tx = sample_conn
+            .transaction()
+            .map_err(|e| format!("Failed to start genotype transaction: {e}"))?;
+
+        if replacing {
+            // Derived findings, research jobs, chat sessions, and placement
+            // indexes describe the old genome and must not survive a replace.
+            tx.execute(
+                "DELETE FROM chat_messages WHERE session_id IN (SELECT id FROM chat_sessions WHERE sample_id = ?)",
+                params![sample_id],
+            )
+            .map_err(|e| format!("Failed to clear old chat messages: {e}"))?;
+            for table in [
+                "chat_sessions",
+                "research_jobs",
+                "discovered_findings",
+                "vector_promoted_findings",
+                "variant_locus",
+                "genotypes",
+            ] {
+                tx.execute(&format!("DELETE FROM {table} WHERE sample_id = ?"), params![sample_id])
+                    .map_err(|e| format!("Failed to clear old {table}: {e}"))?;
+            }
+        }
+
         let total = records.len();
         let mut stmt = tx
             .prepare(
-                "INSERT OR REPLACE INTO genotypes 
-                (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2) 
+                "INSERT INTO genotypes
+                (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
                 VALUES (?, ?, ?, ?, ?, ?, ?)",
             )
-            .map_err(|e| format!("Failed to prepare statement: {}", e))?;
+            .map_err(|e| format!("Failed to prepare statement: {e}"))?;
 
         for (i, record) in records.iter().enumerate() {
             if i % 50_000 == 0 && i > 0 {
@@ -1382,28 +1648,124 @@ pub fn import_raw_genome<F: Fn(u32, &str)>(
                 );
             }
 
-            let pos_grch38 = liftover_engine
-                .and_then(|engine| engine.liftover(&record.chromosome, record.position));
+            let source_build = provenance.diagnostics.source_build.to_ascii_uppercase();
+            let (pos_grch37, pos_grch38, mapped) = if source_build.contains("GRCH38") {
+                let inverse = liftover_engine
+                    .and_then(|engine| engine.liftover_inverse_1_based(&record.chromosome, record.position));
+                (inverse, Some(record.position), inverse.is_some())
+            } else if source_build.contains("GRCH37") {
+                let forward = liftover_engine
+                    .and_then(|engine| engine.liftover_1_based(&record.chromosome, record.position));
+                (Some(record.position), forward, forward.is_some())
+            } else {
+                (Some(record.position), None, false)
+            };
+            if mapped {
+                provenance.liftover_mapped_rows += 1;
+            } else {
+                provenance.liftover_unmapped_rows += 1;
+            }
 
             stmt.execute(params![
                 sample_id,
                 record.rsid.to_lowercase(),
                 record.chromosome,
-                record.position as i64,
+                pos_grch37.map(|p| p as i64),
                 pos_grch38.map(|p| p as i64),
                 record.allele1,
                 record.allele2,
             ])
-            .map_err(|e| format!("Failed to insert record {}: {}", record.rsid, e))?;
+            .map_err(|e| format!("Failed to insert record {}: {e}", record.rsid))?;
         }
+        drop(stmt);
+        tx.execute("DELETE FROM import_provenance", [])
+            .map_err(|e| format!("Failed to replace import provenance: {e}"))?;
+        tx.execute(
+            "INSERT INTO import_provenance
+             (import_id, source_file_name, source_file_sha256, source_format,
+              source_vendor, delimiter, source_build, coordinate_system, allele_orientation,
+              total_rows, accepted_rows, malformed_rows, duplicate_rows,
+              liftover_mapped_rows, liftover_unmapped_rows)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params![
+                provenance.import_id,
+                provenance.source_file_name,
+                provenance.source_file_sha256,
+                provenance.diagnostics.format,
+                provenance.diagnostics.vendor,
+                provenance.diagnostics.delimiter,
+                provenance.diagnostics.source_build,
+                provenance.diagnostics.coordinate_system,
+                provenance.diagnostics.allele_orientation,
+                provenance.diagnostics.total_rows as i64,
+                provenance.diagnostics.accepted_rows as i64,
+                provenance.diagnostics.malformed_rows as i64,
+                provenance.diagnostics.duplicate_rows as i64,
+                provenance.liftover_mapped_rows as i64,
+                provenance.liftover_unmapped_rows as i64,
+            ],
+        )
+        .map_err(|e| format!("Failed to save import provenance: {e}"))?;
+        progress_callback(95, "Committing genotype transaction...");
+        tx.commit()
+            .map_err(|e| format!("Failed to commit genotype transaction: {e}"))?;
+        Ok(())
+    })();
+
+    if let Err(error) = sample_result {
+        let _ = registry_tx.rollback();
+        let cleanup_result = if let Some(backup_dir) = replacement_backup_dir.as_ref() {
+            restore_replaced_sample_dir(data_dir, sample_id, backup_dir)
+        } else {
+            std::fs::remove_dir_all(&sample_dir).map_err(|e| {
+                format!("Failed to remove the incomplete replacement database: {e}")
+            })
+        };
+        if let Err(cleanup_error) = cleanup_result {
+            return Err(format!("{error}; rollback cleanup also failed: {cleanup_error}"));
+        }
+        return Err(error);
     }
 
-    progress_callback(95, "Committing database transaction...");
-    tx.commit()
-        .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+    if let Err(error) = registry_tx.commit() {
+        let cleanup_result = if let Some(backup_dir) = replacement_backup_dir.as_ref() {
+            restore_replaced_sample_dir(data_dir, sample_id, backup_dir)
+        } else {
+            std::fs::remove_dir_all(&sample_dir).map_err(|e| {
+                format!("Failed to remove the unregistered sample database: {e}")
+            })
+        };
+        if let Err(cleanup_error) = cleanup_result {
+            return Err(format!("Failed to commit profile transaction: {error}; rollback cleanup also failed: {cleanup_error}"));
+        }
+        return Err(format!("Failed to commit profile transaction: {error}"));
+    }
 
-    progress_callback(100, "Genotypes successfully imported.");
+    if let Some(backup_dir) = replacement_backup_dir {
+        std::fs::remove_dir_all(backup_dir)
+            .map_err(|e| format!("Profile replaced, but old-data cleanup failed: {e}"))?;
+    }
+
+    // The outer import command still builds the variant-placement index after
+    // this transaction commits. Reserve 100% for that final command-level
+    // completion so the progress stream never jumps to complete and then
+    // regresses while post-import indexing is still running.
+    progress_callback(95, "Genotype records committed; preparing variant index...");
     Ok(sample_id)
+}
+
+fn restore_replaced_sample_dir(
+    data_dir: &Path,
+    sample_id: i64,
+    backup_dir: &Path,
+) -> Result<(), String> {
+    let sample_dir = crate::paths::sample_dir(data_dir, sample_id);
+    if sample_dir.exists() {
+        std::fs::remove_dir_all(&sample_dir)
+            .map_err(|e| format!("Failed to remove the staged replacement database: {e}"))?;
+    }
+    std::fs::rename(backup_dir, &sample_dir)
+        .map_err(|e| format!("Failed to restore the previous profile database: {e}"))
 }
 
 /// Retrieves list of all imported samples from the registry database.
@@ -1462,7 +1824,7 @@ pub fn query_by_rsids(
                 sample_id: row.get(0)?,
                 rsid: row.get(1)?,
                 chromosome: row.get(2)?,
-                position_grch37: row.get::<_, i64>(3)? as u64,
+                position_grch37: row.get::<_, Option<i64>>(3)?.map(|p| p as u64),
                 position_grch38: row.get::<_, Option<i64>>(4)?.map(|p| p as u64),
                 allele1: row.get(5)?,
                 allele2: row.get(6)?,
@@ -1519,7 +1881,7 @@ pub fn query_region(
                 sample_id: row.get(0)?,
                 rsid: row.get(1)?,
                 chromosome: row.get(2)?,
-                position_grch37: row.get::<_, i64>(3)? as u64,
+                position_grch37: row.get::<_, Option<i64>>(3)?.map(|p| p as u64),
                 position_grch38: row.get::<_, Option<i64>>(4)?.map(|p| p as u64),
                 allele1: row.get(5)?,
                 allele2: row.get(6)?,
@@ -1556,14 +1918,49 @@ pub fn get_chromosome_counts(
 }
 
 /// Deletes the registry row and the complete private database directory for a sample.
-pub fn delete_sample(conn: &Connection, data_dir: &Path, sample_id: i64) -> Result<()> {
+pub fn delete_sample(conn: &mut Connection, data_dir: &Path, sample_id: i64) -> Result<()> {
+    let exists: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM samples WHERE id = ?)",
+        params![sample_id],
+        |row| row.get(0),
+    )?;
+    if !exists {
+        return Err(rusqlite::Error::QueryReturnedNoRows);
+    }
+
     clear_cached_conn();
     let sample_dir = crate::paths::sample_dir(data_dir, sample_id);
-    if sample_dir.exists() {
-        std::fs::remove_dir_all(&sample_dir)
-            .map_err(|_| rusqlite::Error::InvalidPath(sample_dir))?;
+    let tx = conn.transaction()?;
+    let pending_dir = data_dir.join(format!(
+        ".genomics-caddy-sample-{sample_id}-delete-pending"
+    ));
+    let pending_dir = if sample_dir.exists() {
+        if pending_dir.exists() {
+            return Err(rusqlite::Error::InvalidPath(pending_dir));
+        }
+        std::fs::rename(&sample_dir, &pending_dir)
+            .map_err(|_| rusqlite::Error::InvalidPath(sample_dir.clone()))?;
+        Some(pending_dir)
+    } else {
+        None
+    };
+
+    if let Err(error) = tx.execute("DELETE FROM samples WHERE id = ?", params![sample_id]) {
+        if let Some(pending_dir) = pending_dir.as_ref() {
+            let _ = std::fs::rename(pending_dir, &sample_dir);
+        }
+        return Err(error);
     }
-    conn.execute("DELETE FROM samples WHERE id = ?", params![sample_id])?;
+    if let Err(error) = tx.commit() {
+        if let Some(pending_dir) = pending_dir.as_ref() {
+            let _ = std::fs::rename(pending_dir, &sample_dir);
+        }
+        return Err(error);
+    }
+    if let Some(pending_dir) = pending_dir {
+        std::fs::remove_dir_all(&pending_dir)
+            .map_err(|_| rusqlite::Error::InvalidPath(pending_dir))?;
+    }
     Ok(())
 }
 
@@ -1906,6 +2303,9 @@ pub fn get_support_resource_str(resource_id: &str) -> Option<String> {
         "research_taxonomy" => {
             Some(include_str!("../../src/lib/marker-packs/research_taxonomy.json").to_string())
         }
+        "inflammation_support_guidance" => Some(
+            include_str!("../../src/lib/marker-packs/inflammation_support_guidance.json").to_string(),
+        ),
         _ => None,
     }
 }
@@ -2168,6 +2568,8 @@ pub struct DbChatSession {
     pub extended_thinking: Option<bool>,
     #[serde(rename = "consultationMode")]
     pub consultation_mode: Option<String>,
+    #[serde(rename = "contextMode")]
+    pub context_mode: Option<String>,
 }
 
 fn load_chat_messages(conn: &Connection, session_id: &str) -> Result<Vec<ChatMessage>> {
@@ -2212,6 +2614,7 @@ fn map_chat_session_row(
     Option<i32>,
     Option<bool>,
     Option<String>,
+    Option<String>,
 )> {
     let id: String = row.get(0)?;
     let sample_id: Option<i64> = row.get(1)?;
@@ -2224,6 +2627,7 @@ fn map_chat_session_row(
     let max_tokens: Option<i32> = row.get(8)?;
     let extended_thinking_int: Option<i32> = row.get(9)?;
     let consultation_mode: Option<String> = row.get(10)?;
+    let context_mode: Option<String> = row.get(11)?;
 
     let selected_packs =
         serde_json::from_str(&selected_packs_str).unwrap_or(serde_json::Value::Null);
@@ -2242,6 +2646,7 @@ fn map_chat_session_row(
         max_tokens,
         extended_thinking,
         consultation_mode,
+        context_mode,
     ))
 }
 
@@ -2251,7 +2656,8 @@ pub fn get_chat_session_by_id(
 ) -> Result<Option<DbChatSession>> {
     let mut stmt = conn.prepare(
         "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
-                temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+                temperature, selected_model, max_tokens, extended_thinking, consultation_mode,
+                context_mode
          FROM chat_sessions WHERE id = ?",
     )?;
     let mut rows = stmt.query_map(params![session_id], map_chat_session_row)?;
@@ -2270,6 +2676,7 @@ pub fn get_chat_session_by_id(
         max_tokens,
         extended_thinking,
         consultation_mode,
+        context_mode,
     ) = row?;
     let messages = load_chat_messages(conn, &id)?;
     Ok(Some(DbChatSession {
@@ -2285,6 +2692,7 @@ pub fn get_chat_session_by_id(
         max_tokens,
         extended_thinking,
         consultation_mode,
+        context_mode,
     }))
 }
 
@@ -2295,13 +2703,15 @@ pub fn get_chat_sessions(
     let mut stmt = if sample_id_filter.is_some() {
         conn.prepare(
             "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
-                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode,
+                    context_mode
              FROM chat_sessions WHERE sample_id = ? ORDER BY timestamp DESC",
         )?
     } else {
         conn.prepare(
             "SELECT id, sample_id, title, timestamp, selected_packs, only_active_findings, 
-                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode 
+                    temperature, selected_model, max_tokens, extended_thinking, consultation_mode,
+                    context_mode
              FROM chat_sessions ORDER BY timestamp DESC",
         )?
     };
@@ -2328,6 +2738,7 @@ pub fn get_chat_sessions(
             max_tokens,
             extended_thinking,
             consultation_mode,
+            context_mode,
         ) = r?;
 
         let messages = load_chat_messages(conn, &id)?;
@@ -2345,6 +2756,7 @@ pub fn get_chat_sessions(
             max_tokens,
             extended_thinking,
             consultation_mode,
+            context_mode,
         });
     }
 
@@ -2362,8 +2774,9 @@ pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Resu
     tx.execute(
         "INSERT OR REPLACE INTO chat_sessions (id, sample_id, title, timestamp, selected_packs, 
                                                only_active_findings, temperature, selected_model, 
-                                               max_tokens, extended_thinking, consultation_mode) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                               max_tokens, extended_thinking, consultation_mode,
+                                               context_mode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params![
             session.id,
             session.sample_id,
@@ -2376,6 +2789,7 @@ pub fn save_chat_session(conn: &mut Connection, session: &DbChatSession) -> Resu
             session.max_tokens,
             extended_thinking_int,
             session.consultation_mode,
+            session.context_mode,
         ],
     )?;
 
@@ -2443,7 +2857,8 @@ pub fn get_bootstrap_status(
     };
 
     let samples = get_samples(conn).map_err(|e| e.to_string())?;
-    let chain_path = crate::paths::chain_path(data_dir);
+    let db_path = crate::paths::db_path(data_dir);
+    let chain_path = crate::offline::liftover_chain_path(data_dir, &db_path);
     let sample_table_count = |table: &str| {
         samples
             .iter()
@@ -2460,9 +2875,7 @@ pub fn get_bootstrap_status(
 
     Ok(AppBootstrapStatus {
         data_dir: data_dir.to_string_lossy().to_string(),
-        db_path: crate::paths::db_path(data_dir)
-            .to_string_lossy()
-            .to_string(),
+        db_path: db_path.to_string_lossy().to_string(),
         chain_path: chain_path.to_string_lossy().to_string(),
         chain_present: chain_path.exists(),
         env_path: crate::config::recommended_env_path()
@@ -2683,5 +3096,434 @@ mod sex_context_tests {
             infer_genetic_sex(&records),
             "Unknown (Y chromosome not observed)"
         );
+    }
+}
+
+#[cfg(test)]
+mod import_lifecycle_tests {
+    use super::{
+        connect_sample, connect_sample_from_registry_path, delete_sample, import_raw_genome,
+        import_raw_genome_with_provenance, ensure_sample_schema, sample_is_registered,
+    };
+    use crate::parser::{ImportProvenance, ParseDiagnostics, SnpRecord};
+    use rusqlite::{Connection, params};
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static TEST_DIR_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+    fn test_data_dir() -> PathBuf {
+        let path = std::env::temp_dir().join(format!(
+            "genomics_caddy_import_lifecycle_{}_{}",
+            std::process::id(),
+            TEST_DIR_COUNTER.fetch_add(1, Ordering::Relaxed),
+        ));
+        fs::create_dir_all(&path).expect("create test data directory");
+        path
+    }
+
+    fn record(rsid: &str, position: u64) -> SnpRecord {
+        SnpRecord {
+            rsid: rsid.to_string(),
+            chromosome: "1".to_string(),
+            position,
+            allele1: "A".to_string(),
+            allele2: "G".to_string(),
+        }
+    }
+
+    fn provenance(import_id: &str) -> ImportProvenance {
+        ImportProvenance::new(
+            import_id.to_string(),
+            "fixture.csv".to_string(),
+            "sha256-fixture".to_string(),
+            ParseDiagnostics {
+                format: "23andMe".to_string(),
+                vendor: "23andMe".to_string(),
+                delimiter: "CSV".to_string(),
+                source_build: "GRCh37".to_string(),
+                coordinate_system: "1-based inclusive input; GRCh37 database coordinates".to_string(),
+                allele_orientation: "Unknown (vendor strand not stated)".to_string(),
+                total_rows: 2,
+                accepted_rows: 2,
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        )
+    }
+
+    fn registry() -> Connection {
+        let conn = Connection::open_in_memory().expect("open registry");
+        conn.execute(
+            "CREATE TABLE samples (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                genetic_sex TEXT DEFAULT 'Unknown',
+                imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .expect("create registry schema");
+        conn
+    }
+
+    fn genotype_count(data_dir: &Path, sample_id: i64) -> i64 {
+        let conn = connect_sample(data_dir, sample_id).expect("open sample");
+        conn.query_row(
+            "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
+            params![sample_id],
+            |row| row.get(0),
+        )
+        .expect("count genotypes")
+    }
+
+    #[test]
+    fn duplicate_import_requires_replacement_and_preserves_original_data() {
+        let data_dir = test_data_dir();
+        let mut conn = registry();
+        let first = vec![record("rs-first", 101), record("rs-second", 202)];
+        let sample_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &first,
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("initial import");
+
+        let duplicate = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            " fixture ",
+            &[record("rs-rejected", 303)],
+            None,
+            None,
+            |_, _| {},
+        );
+
+        assert!(duplicate.expect_err("duplicate should be rejected").contains("already exists"));
+        assert_eq!(genotype_count(&data_dir, sample_id), 2);
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM samples", [], |row| row.get::<_, i64>(0))
+                .expect("count samples"),
+            1
+        );
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn replacement_rebuilds_the_same_profile_and_rolls_back_failed_ingest() {
+        let data_dir = test_data_dir();
+        let mut conn = registry();
+        let sample_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-original", 101), record("rs-keep", 202)],
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("initial import");
+
+        let replaced_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-replacement", 303)],
+            None,
+            Some(sample_id),
+            |_, _| {},
+        )
+        .expect("replacement import");
+        assert_eq!(replaced_id, sample_id);
+        assert_eq!(genotype_count(&data_dir, sample_id), 1);
+
+        let failed = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-failure", 404), record("rs-failure", 405)],
+            None,
+            Some(sample_id),
+            |_, _| {},
+        );
+        assert!(failed.is_err());
+        assert_eq!(genotype_count(&data_dir, sample_id), 1);
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM samples", [], |row| row.get::<_, i64>(0))
+                .expect("count samples"),
+            1
+        );
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn delete_requires_a_real_profile_before_removing_its_directory() {
+        let data_dir = test_data_dir();
+        let mut conn = registry();
+        let sample_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-delete", 101)],
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("initial import");
+
+        delete_sample(&mut conn, &data_dir, sample_id).expect("delete profile");
+        assert!(!crate::paths::sample_dir(&data_dir, sample_id).exists());
+        assert!(delete_sample(&mut conn, &data_dir, sample_id).is_err());
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn nonexistent_registry_sample_is_rejected_without_creating_private_db() {
+        let data_dir = test_data_dir();
+        let registry_path = data_dir.join("user_genome.db");
+        let conn = Connection::open(&registry_path).expect("create registry database");
+        conn.execute(
+            "CREATE TABLE samples (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                genetic_sex TEXT DEFAULT 'Unknown',
+                imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .expect("create registry samples table");
+        drop(conn);
+
+        assert!(!sample_is_registered(&registry_path, 404).expect("check sample registry"));
+        assert!(connect_sample_from_registry_path(&registry_path, 404).is_err());
+        assert!(!crate::paths::sample_dir(&data_dir, 404).exists());
+
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn replacement_persists_source_provenance_and_replaces_it() {
+        let data_dir = test_data_dir();
+        let mut conn = registry();
+        let sample_id = super::import_raw_genome_with_provenance(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-provenance", 101)],
+            None,
+            None,
+            Some(provenance("import-one")),
+            |_, _| {},
+        )
+        .expect("initial import");
+        let first = connect_sample(&data_dir, sample_id).expect("open sample");
+        let first_hash: String = first
+            .query_row("SELECT source_file_sha256 FROM import_provenance", [], |row| row.get(0))
+            .expect("read provenance");
+        assert_eq!(first_hash, "sha256-fixture");
+
+        let mut replacement = provenance("import-two");
+        replacement.source_file_sha256 = "sha256-replacement".to_string();
+        super::import_raw_genome_with_provenance(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-provenance-new", 202)],
+            None,
+            Some(sample_id),
+            Some(replacement),
+            |_, _| {},
+        )
+        .expect("replacement import");
+        let second = connect_sample(&data_dir, sample_id).expect("open replaced sample");
+        let (import_id, hash): (String, String) = second
+            .query_row("SELECT import_id, source_file_sha256 FROM import_provenance", [], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("read replacement provenance");
+        assert_eq!(import_id, "import-two");
+        assert_eq!(hash, "sha256-replacement");
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn direct_grch38_import_preserves_source_coordinate_and_inverse_mapping() {
+        let data_dir = test_data_dir();
+        let chain_path = data_dir.join("fixture.chain");
+        fs::write(
+            &chain_path,
+            "chain 1 chr1 1000 + 100 110 chr1 1000 - 700 710 9\n10\n",
+        )
+        .expect("write inverse liftover fixture");
+        let engine = crate::liftover::LiftoverEngine::new(&chain_path)
+            .expect("load inverse liftover fixture");
+        let mut direct = provenance("import-grch38");
+        direct.diagnostics.source_build = "GRCh38".to_string();
+        direct.diagnostics.coordinate_system =
+            "1-based inclusive GRCh38 source coordinates; GRCh37 is retained when inverse liftover maps".to_string();
+
+        let mut conn = registry();
+        let sample_id = import_raw_genome_with_provenance(
+            &mut conn,
+            &data_dir,
+            "GRCh38 fixture",
+            &[record("rs-direct", 710), record("rs-direct-unmapped", 500)],
+            Some(&engine),
+            None,
+            Some(direct),
+            |_, _| {},
+        )
+        .expect("direct GRCh38 import");
+        let sample = connect_sample(&data_dir, sample_id).expect("open direct sample");
+        let (position_grch37, position_grch38): (Option<i64>, Option<i64>) = sample
+            .query_row(
+                "SELECT position_grch37, position_grch38 FROM genotypes WHERE rsid = 'rs-direct'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("read direct coordinates");
+        assert_eq!(position_grch37, Some(101));
+        assert_eq!(position_grch38, Some(710));
+        let unmapped_grch37: Option<i64> = sample
+            .query_row(
+                "SELECT position_grch37 FROM genotypes WHERE rsid = 'rs-direct-unmapped'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read unmapped inverse coordinate");
+        assert_eq!(unmapped_grch37, None);
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn existing_sample_schema_migrates_grch37_coordinate_to_nullable() {
+        let conn = Connection::open_in_memory().expect("open schema fixture");
+        conn.execute_batch(
+            "CREATE TABLE genotypes (
+                sample_id INTEGER NOT NULL,
+                rsid TEXT NOT NULL,
+                chromosome TEXT NOT NULL,
+                position_grch37 INTEGER NOT NULL,
+                position_grch38 INTEGER,
+                allele1 TEXT NOT NULL,
+                allele2 TEXT NOT NULL,
+                PRIMARY KEY (sample_id, rsid)
+            );
+            CREATE INDEX idx_genotypes_rsid ON genotypes(rsid);
+            CREATE INDEX idx_genotypes_coords ON genotypes(chromosome, position_grch38);
+            INSERT INTO genotypes VALUES (1, 'rs-old', '1', 101, 201, 'A', 'G');",
+        )
+        .expect("create legacy schema");
+
+        ensure_sample_schema(&conn).expect("migrate legacy schema");
+        let not_null: i64 = conn
+            .query_row(
+                "SELECT \"notnull\" FROM pragma_table_info('genotypes') WHERE name = 'position_grch37'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read migrated column metadata");
+        assert_eq!(not_null, 0);
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (1, 'rs-new', '1', NULL, 710, 'A', 'G')",
+            [],
+        )
+        .expect("insert unmapped inverse coordinate");
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM genotypes", [], |row| row.get(0))
+            .expect("count migrated rows");
+        assert_eq!(count, 2);
+    }
+}
+
+#[cfg(test)]
+mod chat_session_tests {
+    use super::{
+        ChatMessage, DbChatSession, ensure_sample_schema, get_chat_session_by_id,
+        get_chat_sessions, save_chat_session,
+    };
+    use rusqlite::Connection;
+
+    fn session(context_mode: Option<&str>) -> DbChatSession {
+        DbChatSession {
+            id: "session-context-round-trip".to_string(),
+            title: "Context round trip".to_string(),
+            messages: vec![ChatMessage {
+                role: "user".to_string(),
+                content: "Keep the raw-call scope stable.".to_string(),
+                images: None,
+                safety_review: None,
+            }],
+            timestamp: 1,
+            sample_id: Some(7),
+            selected_packs: serde_json::json!({"metabolic": true}),
+            only_active_findings: false,
+            temperature: 0.0,
+            selected_model: "fixture-model".to_string(),
+            max_tokens: Some(2048),
+            extended_thinking: Some(false),
+            consultation_mode: Some("general".to_string()),
+            context_mode: context_mode.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn chat_session_round_trip_preserves_raw_context_mode() {
+        let mut conn = Connection::open_in_memory().expect("open chat session database");
+        ensure_sample_schema(&conn).expect("create chat session schema");
+        save_chat_session(&mut conn, &session(Some("developer_raw_json")))
+            .expect("save chat session");
+
+        let loaded = get_chat_session_by_id(&conn, "session-context-round-trip")
+            .expect("load chat session")
+            .expect("session exists");
+        assert_eq!(loaded.context_mode.as_deref(), Some("developer_raw_json"));
+        assert_eq!(loaded.messages.len(), 1);
+
+        let sessions = get_chat_sessions(&conn, Some(7)).expect("list chat sessions");
+        assert_eq!(sessions.len(), 1);
+        assert_eq!(sessions[0].context_mode.as_deref(), Some("developer_raw_json"));
+    }
+
+    #[test]
+    fn legacy_chat_session_without_context_mode_defaults_to_none() {
+        let conn = Connection::open_in_memory().expect("open legacy chat session database");
+        conn.execute_batch(
+            "CREATE TABLE chat_sessions (
+                id TEXT PRIMARY KEY,
+                sample_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                selected_packs TEXT NOT NULL,
+                only_active_findings INTEGER NOT NULL,
+                temperature REAL NOT NULL,
+                selected_model TEXT NOT NULL,
+                max_tokens INTEGER,
+                extended_thinking INTEGER,
+                consultation_mode TEXT
+            );
+            CREATE TABLE chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                images TEXT,
+                safety_review TEXT
+            );
+            INSERT INTO chat_sessions VALUES
+                ('legacy-session', 7, 'Legacy', 1, '{}', 1, 0.0, 'fixture', 2048, 0, 'general');",
+        )
+        .expect("create legacy chat session schema");
+        ensure_sample_schema(&conn).expect("migrate legacy chat session schema");
+
+        let loaded = get_chat_session_by_id(&conn, "legacy-session")
+            .expect("load legacy chat session")
+            .expect("legacy session exists");
+        assert_eq!(loaded.context_mode, None);
     }
 }

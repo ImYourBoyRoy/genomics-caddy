@@ -1,0 +1,220 @@
+{
+  "name": "condition_integrations",
+  "version": "1.0.0",
+  "last_updated": "2026-08-31",
+  "purpose": "Condition-level evidence groupings for displaying matched DNA indicators as potential health patterns without converting marker counts into probabilities or diagnoses.",
+  "policy": {
+    "counting": "Count unique curated marker IDs with a verified call and a non-zero reported effect. Cross-pack copies of one rsID count once within a condition.",
+    "denominator": "The denominator is the number of indicator IDs curated for the condition, not a disease probability denominator.",
+    "prs": "Polygenic risk scores remain context-only unless a calibrated score and validation metadata are present; these groupings do not calculate PRS values.",
+    "diagnostic_language": "A clinical-variant route may be shown when a marker is explicitly authored as clinically actionable, but a consumer-array call remains unconfirmed until an appropriate clinical test verifies it.",
+    "coverage_gaps": [
+      {
+        "id": "pots",
+        "label": "POTS",
+        "status": "emerging_research",
+        "display": "No validated consumer-array POTS model is scored here. Orthostatic vitals, symptom history, medication review, and clinical evaluation are the useful next inputs."
+      },
+      {
+        "id": "hypermobile_eds",
+        "label": "Hypermobile Ehlers-Danlos syndrome",
+        "status": "clinical",
+        "display": "No single validated consumer-array marker panel establishes hypermobile EDS. Use hypermobility, tissue, skin, injury, and family-history assessment."
+      }
+    ]
+  },
+  "conditions": [
+    {
+      "id": "pmdd_steroid_sensitivity",
+      "label": "PMDD-related steroid sensitivity",
+      "category": "reproductive_and_hormone",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs2234693", "rs9340799", "rs4986938", "rs1256049", "rs1042838", "rs10895068", "rs8079626"],
+      "plain_meaning": "This group reflects research on how the brain and body respond to normal ovarian-steroid changes; it does not indicate high estrogen or progesterone levels.",
+      "clinical_route": "Compare daily symptoms across at least two cycles with a clinician's PMDD evaluation.",
+      "sources": ["pmdd_review", "acog_premenstrual_disorders", "womenshealth_pmdd"]
+    },
+    {
+      "id": "eds_spectrum_connective_tissue",
+      "label": "EDS-spectrum connective-tissue pattern",
+      "category": "connective_tissue",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs1800012", "rs12722", "rs1800255", "rs143383", "rs3025058", "rs970547", "rs13946", "rs2104772"],
+      "plain_meaning": "Several common collagen, tendon, and connective-tissue markers align with a hypermobility or tissue-laxity discussion; common markers do not identify hEDS or an EDS subtype.",
+      "clinical_route": "If symptoms fit, review Beighton score, instability, skin features, injury history, and family history with a clinician.",
+      "sources": ["genereviews", "clingen", "hpo"]
+    },
+    {
+      "id": "type_2_diabetes_common_variant_context",
+      "label": "Type 2 diabetes susceptibility context",
+      "category": "metabolic",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs7903146", "rs13266634", "rs5219", "rs2237897", "rs7754840", "rs4402960", "rs1111875", "rs864745", "rs11708067", "rs340874"],
+      "plain_meaning": "Multiple common glucose and insulin markers align with research on type 2 diabetes susceptibility; fasting glucose and HbA1c show what is happening now.",
+      "clinical_route": "Review HbA1c, fasting glucose, blood pressure, waist or weight trend, and family history.",
+      "sources": ["gwas_catalog", "niddk_prediabetes_tests"]
+    },
+    {
+      "id": "obesity_appetite_energy_context",
+      "label": "Appetite and weight-regulation context",
+      "category": "metabolic",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs9939609", "rs17782313", "rs8050136", "rs1137101", "rs7498665", "rs10913469"],
+      "plain_meaning": "This pattern points to research on appetite, satiety, and energy regulation; it can help tailor experiments around meals, sleep, and activity without defining body size or behavior.",
+      "clinical_route": "Use current appetite, sleep, weight trend, medications, and eating-pattern context to choose practical experiments.",
+      "sources": ["gwas_catalog"]
+    },
+    {
+      "id": "atopy_allergic_inflammation_context",
+      "label": "Atopy and allergic-inflammation context",
+      "category": "allergy_and_immune",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs61816761", "rs1801275", "rs20541", "rs2243250", "rs7216389", "rs1837253", "rs2251746", "rs3771166", "rs3939286"],
+      "plain_meaning": "These immune and airway markers can raise the plausibility of allergic rhinitis, eczema, asthma, or IgE-related sensitivity when the symptoms and exposures fit.",
+      "clinical_route": "Match the pattern to repeatable symptoms and exposures; allergy or asthma testing can clarify a real-world trigger.",
+      "sources": ["gwas_catalog", "aaaai_food_allergy_diagnosis"]
+    },
+    {
+      "id": "inflammatory_bowel_disease_context",
+      "label": "Inflammatory bowel disease susceptibility context",
+      "category": "digestive_and_immune",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs2066844", "rs2066845", "rs2066847", "rs2241880"],
+      "plain_meaning": "These immune and barrier markers are associated with Crohn disease or ulcerative-colitis research; they matter most when persistent bowel symptoms or inflammation are present.",
+      "clinical_route": "If symptoms fit, discuss CBC, CRP, fecal calprotectin, and gastroenterology evaluation.",
+      "sources": ["gwas_catalog", "niddk_crohns_diagnosis", "niddk_ulcerative_colitis_diagnosis"]
+    },
+    {
+      "id": "migraine_sensory_context",
+      "label": "Migraine and sensory-sensitivity context",
+      "category": "pain_and_neurology",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs10166942", "rs11172113", "rs2651899", "rs9349379", "rs6790925", "rs4379368", "rs13208321"],
+      "plain_meaning": "This pattern points to migraine and sensory-processing research, especially around trigger sensitivity; it does not predict when a migraine will occur.",
+      "clinical_route": "Track headache timing, sleep, meals, hydration, cycle timing, sensory triggers, and medication response.",
+      "sources": ["gwas_catalog", "nice_menstrual_related_migraine"]
+    },
+    {
+      "id": "autoimmune_thyroid_context",
+      "label": "Autoimmune-thyroid susceptibility context",
+      "category": "thyroid_and_immune",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["rs2476601", "rs1990760", "rs965513"],
+      "plain_meaning": "These immune and thyroid-region markers can support a family-history or symptom-based discussion of autoimmune thyroid disease; they do not show current thyroid function.",
+      "clinical_route": "Review TSH, free T4, and thyroid antibodies when symptoms or family history make it relevant.",
+      "sources": ["gwas_catalog", "niddk_thyroid_tests"]
+    },
+    {
+      "id": "depression_vulnerability_research_context",
+      "label": "Depression vulnerability research context",
+      "category": "mood_and_stress",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["PRS_DEPRESSION_RISK_CONTEXT"],
+      "plain_meaning": "This is an uncalibrated polygenic research module related to depression vulnerability. It is not a personal risk score and cannot explain symptoms by itself.",
+      "clinical_route": "If relevant, review symptoms, duration, sleep, medications, family history, and a standard mental-health assessment.",
+      "sources": ["gwas_catalog", "hpo"]
+    },
+    {
+      "id": "anxiety_stress_reactivity_research_context",
+      "label": "Anxiety and stress-reactivity research context",
+      "category": "mood_and_stress",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["PRS_ANXIETY_STRESS_REACTIVITY_CONTEXT"],
+      "plain_meaning": "This is an early polygenic research module related to anxiety and stress reactivity. It is not a personal risk score or an explanation for a current symptom.",
+      "clinical_route": "If relevant, compare symptoms with sleep, stressors, medications, substance use, family history, and clinical assessment.",
+      "sources": ["gwas_catalog", "hpo"]
+    },
+    {
+      "id": "bipolar_spectrum_research_context",
+      "label": "Bipolar-spectrum research context",
+      "category": "mood_and_stress",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["rs1006737", "rs10994336"],
+      "plain_meaning": "These common GWAS loci have been studied in bipolar-spectrum research, but they are weak, non-specific signals and do not identify bipolar disorder.",
+      "clinical_route": "Use symptoms over time, sleep and energy changes, medication history, family history, and a clinician's assessment.",
+      "sources": ["gwas_catalog", "hpo"]
+    },
+    {
+      "id": "hereditary_breast_ovarian_cancer_clinical_route",
+      "label": "Hereditary breast/ovarian cancer clinical route",
+      "category": "cancer",
+      "signal_type": "clinically_actionable_variant",
+      "diagnostic_capability": "clinical_variant_can_establish_when_confirmed",
+      "max_relative_signal": "higher",
+      "marker_ids": ["PANEL_BRCA1_PATHOGENIC_VARIANTS", "PANEL_BRCA2_PATHOGENIC_VARIANTS", "PANEL_PALB2_PATHOGENIC_VARIANTS", "rs386833395", "rs80357906", "rs80359550", "rs28897696"],
+      "plain_meaning": "This route covers clinically important BRCA1, BRCA2, and PALB2 findings. A confirmed pathogenic or likely pathogenic clinical result can establish an inherited cancer-predisposition finding; a consumer-array observation cannot confirm it.",
+      "clinical_route": "Discuss validated clinical genetic testing and genetic counseling, especially with a personal or family history of breast, ovarian, pancreatic, or prostate cancer.",
+      "sources": ["clinvar", "clingen", "genereviews"]
+    },
+    {
+      "id": "lynch_colorectal_endometrial_cancer_clinical_route",
+      "label": "Lynch-spectrum colorectal/endometrial cancer clinical route",
+      "category": "cancer",
+      "signal_type": "clinically_actionable_variant",
+      "diagnostic_capability": "clinical_variant_can_establish_when_confirmed",
+      "max_relative_signal": "higher",
+      "marker_ids": ["PANEL_MLH1_PATHOGENIC_VARIANTS", "PANEL_MSH2_PATHOGENIC_VARIANTS", "PANEL_MSH6_PATHOGENIC_VARIANTS", "PANEL_PMS2_PATHOGENIC_VARIANTS"],
+      "plain_meaning": "This route covers the main Lynch-syndrome mismatch-repair genes. A confirmed pathogenic or likely pathogenic clinical result can establish the inherited syndrome; a consumer-array observation cannot confirm it.",
+      "clinical_route": "Discuss validated clinical genetic testing and genetic counseling when personal or family history suggests colorectal, endometrial, ovarian, urinary-tract, or related cancers.",
+      "sources": ["clinvar", "clingen", "genereviews"]
+    },
+    {
+      "id": "breast_cancer_common_variant_context",
+      "label": "Breast-cancer susceptibility research context",
+      "category": "cancer",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["PRS_BREAST_CANCER_313_VARIANT", "rs2981582", "rs3803662", "rs889312"],
+      "plain_meaning": "These common variants are part of breast-cancer association research, but this is not a complete or calibrated risk score and does not replace routine screening or family-history assessment.",
+      "clinical_route": "Review age, family history, ancestry, prior biopsies, and the screening plan with a clinician; use a validated risk model when appropriate.",
+      "sources": ["gwas_catalog", "genereviews"]
+    },
+    {
+      "id": "prostate_cancer_susceptibility_context",
+      "label": "Prostate-cancer susceptibility context",
+      "category": "cancer",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "moderate",
+      "marker_ids": ["PRS_PROSTATE_CANCER_MULTI_VARIANT", "rs138213197", "rs10993994"],
+      "plain_meaning": "These markers are associated with prostate-cancer susceptibility research. They do not diagnose cancer or determine whether screening or treatment is needed on their own.",
+      "clinical_route": "Review age, family history, ancestry, urinary symptoms, and the appropriate screening discussion with a clinician.",
+      "sources": ["gwas_catalog", "genereviews"]
+    },
+    {
+      "id": "colorectal_cancer_common_variant_context",
+      "label": "Colorectal-cancer susceptibility research context",
+      "category": "cancer",
+      "signal_type": "susceptibility_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["PRS_COLORECTAL_CANCER_MULTI_VARIANT", "rs6983267"],
+      "plain_meaning": "These common variants are part of colorectal-cancer association research. The small set shown here is not a complete or calibrated risk score and does not replace screening.",
+      "clinical_route": "Review age, family history, bowel symptoms, prior polyps, and the screening plan with a clinician.",
+      "sources": ["gwas_catalog", "genereviews"]
+    }
+  ]
+}

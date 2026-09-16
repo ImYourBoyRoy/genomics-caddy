@@ -7,6 +7,47 @@ use rusqlite::{Connection, Row, params};
 use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
 
+const USABLE_CACHE_STATUSES: &str = "'found', 'remote_vcf_hit', 'local_vcf_hit', 'graphql_hit', 'cache_hit'";
+
+#[derive(Debug, Clone, Default)]
+pub struct FrequencyCacheStatus {
+    pub current_rows: u64,
+    pub stale_rows: u64,
+}
+
+/// Report cache freshness without exposing any genotype or allele values.
+pub fn frequency_cache_status(db_path: &std::path::Path, release: &str) -> FrequencyCacheStatus {
+    let Ok(conn) = crate::db::connect(db_path) else {
+        return FrequencyCacheStatus::default();
+    };
+    let current_rows = conn
+        .query_row(
+            &format!(
+                "SELECT COUNT(*) FROM reference.gnomad_variant_cache
+                 WHERE release = ? AND lookup_status IN ({USABLE_CACHE_STATUSES})"
+            ),
+            params![release],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0)
+        .max(0) as u64;
+    let stale_rows = conn
+        .query_row(
+            &format!(
+                "SELECT COUNT(*) FROM reference.gnomad_variant_cache
+                 WHERE (release != ? OR lookup_status = 'stale_release')"
+            ),
+            params![release],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0)
+        .max(0) as u64;
+    FrequencyCacheStatus {
+        current_rows,
+        stale_rows,
+    }
+}
+
 const CACHE_ROW_SQL: &str =
     "SELECT release, dataset, chrom, pos, ref, alt, variant_id, rsids_json, ac, an, af,
                 ac_exomes, an_exomes, af_exomes, ac_genomes, an_genomes, af_genomes,

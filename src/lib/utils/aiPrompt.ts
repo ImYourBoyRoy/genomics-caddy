@@ -22,8 +22,20 @@ import consultationModes from "../marker-packs/consultation_modes.json";
 import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
 import { buildSupportResourceContext } from "./supportResourceContext";
-import { getLaypersonTranslation, getSimpleFindingTitle, type LaypersonTranslation } from "./layperson";
+import {
+  buildConditionCoverageSummaries,
+  buildConditionEvidenceSummaries,
+  getConditionCoverageGaps,
+} from './conditionEvidence';
+import { getLaypersonTranslation, getSimpleFindingCopy, type LaypersonTranslation } from "./layperson";
 import { normalizeFindingSemantics } from './findingSemantics';
+import { isCallableGenotype } from './genotype';
+import {
+  buildAssertionKey,
+  callabilityPolicyForVariantType,
+  callabilityStateForResult,
+  orientationStateForResult,
+} from './callability';
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 
 // ---------------------------------------------------------------------------
@@ -116,10 +128,21 @@ export function buildMarkerPayload(
   laypersonMap: Record<string, LaypersonTranslation>
 ) {
   const layperson = getLaypersonTranslation(m, laypersonMap);
+  const simpleCopy = getSimpleFindingCopy(m, layperson);
   return {
+    link_id: m.link_id,
+    assertion_key: m.assertion_key || buildAssertionKey(m),
     rsid: m.rsid,
     gene: m.gene,
     variant_name: m.variant_name || undefined,
+    variant_type: m.variant_type || undefined,
+    callability_policy: callabilityPolicyForVariantType(m.variant_type),
+    callability_state: m.callability_state || callabilityStateForResult(m.variant_type, m.assertion_status),
+    orientation_state: m.orientation_state || orientationStateForResult(m.assertion_status, m.requires_orientation_verification),
+    // These are the exact calls from the active profile's local genotype
+    // database. Keep the legacy `genotype` alias for prompt compatibility.
+    user_genotype: m.user_genotype,
+    normalized_genotype: m.normalized_genotype,
     genotype: m.user_genotype,
     effect_allele: m.effect_allele,
     effect_count: m.effect_count,
@@ -130,6 +153,7 @@ export function buildMarkerPayload(
     clinical_semantics: normalizeFindingSemantics(m),
     assertion_status: m.assertion_status,
     interpretation_allowed: m.interpretation_allowed,
+    reference_ids: m.reference_ids || [],
     claim_boundaries: {
       do_not_claim: m.do_not_claim,
       confirm_with: m.confirm_with,
@@ -138,7 +162,13 @@ export function buildMarkerPayload(
     },
     source_names: (m.sources || []).map((source) => source.name),
     layperson_summary: layperson
-      ? { simple_impact: getSimpleFindingTitle(layperson.simpleImpact), simple_meaning: layperson.simpleMeaning }
+      ? {
+          simple_impact: simpleCopy.plain_title,
+          direction: simpleCopy.direction_label,
+          simple_meaning: simpleCopy.signal,
+          why_it_matters: simpleCopy.why_it_matters,
+          review_action: simpleCopy.review_action,
+        }
       : undefined,
     impact: m.impact,
     interpretation: m.interpretation,
@@ -182,7 +212,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         }
 
         const filteredMarkers = sec.markers.filter((m) => {
-          const isMissing = m.severity_class === "no_data" || m.user_genotype === "--" || m.user_genotype.includes("-");
+          const isMissing = m.severity_class === "no_data" || !isCallableGenotype(m.user_genotype);
           if (isMissing) return false;
 
           switch (contextMode) {
@@ -235,6 +265,9 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         ].join(' ')
       : undefined,
   });
+  const conditionEvidence = buildConditionEvidenceSummaries(generatedReport);
+  const conditionCoverage = buildConditionCoverageSummaries(generatedReport);
+  const conditionCoverageGaps = getConditionCoverageGaps();
 
   // --- Construct Payload JSON ---
   let payloadContext: any = {};
@@ -250,8 +283,14 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       sample_context: {
         sample_name: selectedSample.name,
         chromosome_call_context: selectedSample.genetic_sex,
+        raw_genotypes_included: true,
+        raw_genotype_policy: aiPromptPolicy.raw_genotype_policy,
+        import_provenance: generatedReport.import_provenance ?? null,
         profile: userProfile.injectProfile ? userProfile : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
+        condition_evidence: conditionEvidence,
+        condition_coverage: conditionCoverage,
+        condition_coverage_gaps: conditionCoverageGaps,
         raw_report: generatedReport,
         support_resources: supportResources
       }
@@ -276,6 +315,9 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       sample_context: {
         sample_name: selectedSample.name,
         chromosome_call_context: selectedSample.genetic_sex,
+        raw_genotypes_included: true,
+        raw_genotype_policy: aiPromptPolicy.raw_genotype_policy,
+        import_provenance: generatedReport.import_provenance ?? null,
         profile: userProfile.injectProfile ? {
           goals: userProfile.goals.trim() || undefined,
           challenges: userProfile.challenges.trim() || undefined,
@@ -289,6 +331,9 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
           supportiveTests: userProfile.supportiveTests.trim() || undefined
         } : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
+        condition_evidence: conditionEvidence,
+        condition_coverage: conditionCoverage,
+        condition_coverage_gaps: conditionCoverageGaps,
         sections: sectionsData
       },
       support_resources: supportResources,
@@ -306,12 +351,16 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   const modeInfo = CONSULTATION_MODES[consultationMode] || CONSULTATION_MODES.general;
   const specialtyInstructions = `[SPECIALTY CONSULTATION MODE: ${modeInfo.label}]
 ${modeInfo.instructions}`;
+  const conditionInstructions = `[CONDITION EVIDENCE]
+${aiPromptPolicy.condition_evidence_instructions}`;
 
   return `[SYSTEM INSTRUCTIONS]
 - Today's Date: ${todayStr} (${aiPromptPolicy.date_warning})
 ${instructions}
 
 ${specialtyInstructions}
+
+${conditionInstructions}
 
 [JSON CONTEXT]
 ${JSON.stringify(payloadContext, null, 2)}`;
@@ -339,7 +388,7 @@ export function calculateContextStats(
     if (contextMode !== "active_findings" && !isPackSelected) continue;
 
     for (const m of sec.markers) {
-      const isFound = m.user_genotype !== "--" && !m.user_genotype.includes("-");
+      const isFound = isCallableGenotype(m.user_genotype);
       if (isFound) {
         total++;
         switch (contextMode) {
@@ -398,8 +447,7 @@ export function getActiveCategories(
     for (const m of sec.markers) {
       const isActive =
         (m.effect_count ?? 0) > 0 &&
-        m.user_genotype !== "--" &&
-        !m.user_genotype.includes("-");
+        isCallableGenotype(m.user_genotype);
       if (!isActive) continue;
       activeFindings.push({ packId: pack.id, marker: m });
     }

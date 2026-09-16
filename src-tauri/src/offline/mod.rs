@@ -28,5 +28,6 @@ pub use sync::{
     OfflineIndexedSummary, OfflineRemoteCheckStatus, OfflineRuntimeArtifactStatus,
     OfflineSyncResult, OfflineUpdateCheck,
     build_tier2_for_sample, cancel_offline_import, check_offline_updates,
-    reset_offline_import_cancel, sync_all_missing, sync_offline_tier, sync_single_asset,
+    liftover_chain_path, reset_offline_import_cancel, sync_all_missing, sync_offline_tier,
+    sync_single_asset,
 };

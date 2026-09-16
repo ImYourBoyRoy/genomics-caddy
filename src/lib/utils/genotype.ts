@@ -28,17 +28,17 @@ export function getSeverityClass(marker: EvaluatedMarker): SeverityClass {
   return marker.severity_class || "benign";
 }
 
+export function isCallableGenotype(genotype: unknown): boolean {
+  const normalized = String(genotype ?? "").trim().toUpperCase();
+  const nucleotideCall = /^[ACGTN?0\-/|]+$/.test(normalized);
+  return normalized.length > 0
+    && normalized !== "--"
+    && (!nucleotideCall || !/[?N0-]/.test(normalized));
+}
+
 export function normalizeGenotype(genotype: string): string {
-  if (
-    !genotype ||
-    genotype === "--" ||
-    genotype.includes("-") ||
-    genotype.includes("0") ||
-    genotype.includes("?")
-  ) {
-    return "--";
-  }
-  return genotype.toUpperCase().trim();
+  const normalized = String(genotype ?? "").trim().toUpperCase();
+  return isCallableGenotype(normalized) ? normalized : "--";
 }
 
 export function isNoCall(genotype: string): boolean {
@@ -46,6 +46,7 @@ export function isNoCall(genotype: string): boolean {
 }
 
 export function isVariantDetected(marker: EvaluatedMarker): boolean {
+  if (marker.assertion_status !== 'Verified' || !marker.interpretation_allowed) return false;
   const genotype = normalizeGenotype(marker.user_genotype);
   if (genotype === "--") return false;
   const effectAllele = getEffectAllele(marker);

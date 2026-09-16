@@ -1,5 +1,5 @@
 // ./src-tauri/src/research/gnomad/readiness.rs
-use super::cache::hash_record;
+use super::cache::{frequency_cache_status, hash_record};
 use super::config::{index_urls, vcf_url};
 use super::lookup::gnomad_cache_dir;
 use super::manifest::{GnomadReleaseManifest, get_or_build_manifest};
@@ -29,8 +29,12 @@ fn base_status(
     cfg: &GnomadConfig,
     data_dir: &Path,
     manifest: &GnomadReleaseManifest,
+    db_path: Option<&Path>,
 ) -> GnomadReadinessStatus {
     let (exome, genome, unsupported) = manifest_fields(manifest);
+    let cache = db_path
+        .map(|path| frequency_cache_status(path, &cfg.release))
+        .unwrap_or_default();
     GnomadReadinessStatus {
         ready: true,
         enabled: cfg.enabled,
@@ -40,6 +44,10 @@ fn base_status(
         remote_urls_ok: true,
         indexes_expected: 0,
         indexes_cached: 0,
+        frequency_cache_rows: cache.current_rows,
+        stale_frequency_cache_rows: cache.stale_rows,
+        frequency_cache_ready: cache.current_rows > 0,
+        frequency_cache_summary: frequency_cache_summary(&cache, &cfg.release),
         cache_dir: gnomad_cache_dir(data_dir).to_string_lossy().to_string(),
         local_dir: cfg.local_vcf_dir.clone(),
         missing_items: Vec::new(),
@@ -52,11 +60,15 @@ fn base_status(
     }
 }
 
-pub async fn get_gnomad_readiness(cfg: &GnomadConfig, data_dir: &Path) -> GnomadReadinessStatus {
+pub async fn get_gnomad_readiness(
+    cfg: &GnomadConfig,
+    data_dir: &Path,
+    db_path: &Path,
+) -> GnomadReadinessStatus {
     let manifest = get_or_build_manifest(cfg, data_dir, false).await;
 
     if !cfg.enabled {
-        let mut s = base_status(cfg, data_dir, &manifest);
+        let mut s = base_status(cfg, data_dir, &manifest, Some(db_path));
         s.ready = true;
         s.enabled = false;
         s.summary = "gnomAD enrichment is disabled.".into();
@@ -71,13 +83,13 @@ pub async fn get_gnomad_readiness(cfg: &GnomadConfig, data_dir: &Path) -> Gnomad
 
     match effective_mode {
         GnomadSourceMode::GraphQlInteractive => {
-            let mut s = base_status(cfg, data_dir, &manifest);
+            let mut s = base_status(cfg, data_dir, &manifest, Some(db_path));
             s.summary = "GraphQL mode — no index downloads. Best for single variants; sweeps should use Remote VCF.".into();
             s
         }
-        GnomadSourceMode::LocalIndexedVcf => local_readiness(cfg, &manifest).await,
-        GnomadSourceMode::RemoteIndexedVcfHttps => remote_readiness(cfg, data_dir, &manifest).await,
-        GnomadSourceMode::PythonToolboxSidecar => remote_readiness(cfg, data_dir, &manifest).await,
+        GnomadSourceMode::LocalIndexedVcf => local_readiness(cfg, &manifest, db_path).await,
+        GnomadSourceMode::RemoteIndexedVcfHttps => remote_readiness(cfg, data_dir, &manifest, Some(db_path)).await,
+        GnomadSourceMode::PythonToolboxSidecar => remote_readiness(cfg, data_dir, &manifest, Some(db_path)).await,
     }
 }
 
@@ -85,6 +97,7 @@ async fn remote_readiness(
     cfg: &GnomadConfig,
     data_dir: &Path,
     manifest: &GnomadReleaseManifest,
+    db_path: Option<&Path>,
 ) -> GnomadReadinessStatus {
     let cache_dir = gnomad_cache_dir(data_dir);
     let smoke = super::validate::test_gnomad_source_urls(cfg).await;
@@ -115,6 +128,18 @@ async fn remote_readiness(
 
     let expected = manifest.expected_index_count();
     let mut cached = 0u32;
+
+    if expected == 0 {
+        missing.push(GnomadMissingItem {
+            id: "manifest_empty".into(),
+            kind: "manifest_unavailable".into(),
+            chrom: None,
+            dataset: None,
+            label: "No usable gnomAD contigs were discovered for this release/provider.".into(),
+            url: Some(GNOMAD_DOWNLOADS_URL.into()),
+            fix_action: "refresh_manifest".into(),
+        });
+    }
 
     for chrom in &manifest.exome_contigs {
         let vcf = vcf_url(cfg, &cfg.exome_template, chrom);
@@ -155,7 +180,7 @@ async fn remote_readiness(
     }
 
     let index_missing = cached < expected;
-    let ready = smoke.smoke_test_ok && !index_missing;
+    let ready = smoke.smoke_test_ok && expected > 0 && !index_missing;
     let missing_count = expected.saturating_sub(cached);
     let unsupported_note = if manifest.unsupported_contigs.is_empty() {
         String::new()
@@ -166,14 +191,22 @@ async fn remote_readiness(
         )
     };
 
+    let cache = db_path
+        .map(|path| frequency_cache_status(path, &cfg.release))
+        .unwrap_or_default();
+    let cache_summary = frequency_cache_summary(&cache, &cfg.release);
     let summary = if !smoke.smoke_test_ok {
         "Fix URL/provider settings before enrichment.".into()
+    } else if expected == 0 {
+        "No usable gnomAD contigs were discovered. Refresh the release manifest before enrichment.".into()
     } else if index_missing {
         format!(
             "{cached}/{expected} tabix indexes cached (manifest-driven). Download {missing_count} small index files.{unsupported_note}"
         )
     } else {
-        format!("Ready — {cached} tabix indexes match release manifest.{unsupported_note}")
+        format!(
+            "Ready — {cached} tabix indexes match release manifest. {cache_summary}{unsupported_note}"
+        )
     };
 
     let (exome, genome, unsupported) = manifest_fields(manifest);
@@ -187,11 +220,17 @@ async fn remote_readiness(
         remote_urls_ok: smoke.smoke_test_ok,
         indexes_expected: expected,
         indexes_cached: cached,
+        frequency_cache_rows: cache.current_rows,
+        stale_frequency_cache_rows: cache.stale_rows,
+        frequency_cache_ready: cache.current_rows > 0,
+        frequency_cache_summary: cache_summary,
         cache_dir: cache_dir.to_string_lossy().to_string(),
         local_dir: cfg.local_vcf_dir.clone(),
         missing_items: missing,
         summary,
-        primary_action: if index_missing && smoke.smoke_test_ok {
+        primary_action: if expected == 0 && smoke.smoke_test_ok {
+            Some("Refresh gnomAD manifest".into())
+        } else if index_missing && smoke.smoke_test_ok {
             Some(format!("Download {missing_count} tabix indexes"))
         } else if !smoke.smoke_test_ok {
             Some("Test source URLs".into())
@@ -208,9 +247,11 @@ async fn remote_readiness(
 async fn local_readiness(
     cfg: &GnomadConfig,
     manifest: &GnomadReleaseManifest,
+    db_path: &Path,
 ) -> GnomadReadinessStatus {
     let Some(dir) = cfg.local_vcf_dir.as_ref().filter(|d| !d.trim().is_empty()) else {
         let (exome, genome, unsupported) = manifest_fields(manifest);
+        let cache = frequency_cache_status(db_path, &cfg.release);
         return GnomadReadinessStatus {
             ready: false,
             enabled: true,
@@ -220,6 +261,10 @@ async fn local_readiness(
             remote_urls_ok: true,
             indexes_expected: 0,
             indexes_cached: 0,
+            frequency_cache_rows: cache.current_rows,
+            stale_frequency_cache_rows: cache.stale_rows,
+            frequency_cache_ready: cache.current_rows > 0,
+            frequency_cache_summary: frequency_cache_summary(&cache, &cfg.release),
             cache_dir: String::new(),
             local_dir: None,
             missing_items: vec![GnomadMissingItem {
@@ -285,8 +330,10 @@ async fn local_readiness(
 
     let ready = missing.is_empty();
     let (exome, genome, unsupported) = manifest_fields(manifest);
+    let cache = frequency_cache_status(db_path, &cfg.release);
+    let cache_summary = frequency_cache_summary(&cache, &cfg.release);
     let summary = if ready {
-        format!("Ready — {present} local files match release manifest.")
+        format!("Ready — {present} local files match release manifest. {cache_summary}")
     } else {
         format!("{present}/{expected} local files present per manifest.")
     };
@@ -300,6 +347,10 @@ async fn local_readiness(
         remote_urls_ok: true,
         indexes_expected: expected,
         indexes_cached: present,
+        frequency_cache_rows: cache.current_rows,
+        stale_frequency_cache_rows: cache.stale_rows,
+        frequency_cache_ready: cache.current_rows > 0,
+        frequency_cache_summary: cache_summary,
         cache_dir: String::new(),
         local_dir: Some(dir.clone()),
         missing_items: missing,
@@ -336,7 +387,7 @@ pub async fn download_missing_gnomad_indexes(
     let cache_dir = gnomad_cache_dir(data_dir);
     std::fs::create_dir_all(&cache_dir).ok();
 
-    let readiness = remote_readiness(cfg, data_dir, &manifest).await;
+    let readiness = remote_readiness(cfg, data_dir, &manifest, None).await;
     if !readiness.remote_urls_ok {
         return GnomadIndexSyncResult {
             downloaded: 0,
@@ -461,5 +512,29 @@ fn provider_label(provider: GnomadHttpsProvider) -> String {
     match provider {
         GnomadHttpsProvider::Aws => "aws".into(),
         GnomadHttpsProvider::Google => "google".into(),
+    }
+}
+
+fn frequency_cache_summary(
+    cache: &super::cache::FrequencyCacheStatus,
+    release: &str,
+) -> String {
+    if cache.current_rows > 0 && cache.stale_rows > 0 {
+        format!(
+            "Frequency cache current for {release}: {} rows; {} older rows retained.",
+            cache.current_rows, cache.stale_rows
+        )
+    } else if cache.current_rows > 0 {
+        format!(
+            "Frequency cache current for {release}: {} rows.",
+            cache.current_rows
+        )
+    } else if cache.stale_rows > 0 {
+        format!(
+            "Frequency cache needs refresh for {release}; {} older rows retained and excluded.",
+            cache.stale_rows
+        )
+    } else {
+        format!("Frequency cache not warmed for {release} yet.")
     }
 }

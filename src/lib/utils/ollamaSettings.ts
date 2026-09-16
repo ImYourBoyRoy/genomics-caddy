@@ -11,6 +11,38 @@ export const OLLAMA_URL_STORAGE_KEY = "genomics_ollama_url";
 /** Example-only placeholder for empty inputs — never used as a live default. */
 export const OLLAMA_URL_PLACEHOLDER = "e.g. http://127.0.0.1:11434 or http://your-host:11434";
 
+export type OllamaEndpointScope = 'unconfigured' | 'local' | 'remote';
+
+export function classifyOllamaEndpoint(url: string): OllamaEndpointScope {
+  const value = url.trim();
+  if (!value) return 'unconfigured';
+  try {
+    const hostname = new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    return ['localhost', '127.0.0.1', '::1'].includes(hostname) ? 'local' : 'remote';
+  } catch {
+    return 'remote';
+  }
+}
+
+export function ollamaRawDataDisclosure(url: string): string {
+  const value = url.trim();
+  if (value) {
+    try {
+      new URL(value);
+    } catch {
+      return 'The configured Ollama URL is invalid. Correct it before sending raw genotype calls.';
+    }
+  }
+  const scope = classifyOllamaEndpoint(value);
+  if (scope === 'local') {
+    return 'Raw genotype calls are always sent to this local Ollama endpoint for AI review.';
+  }
+  if (scope === 'remote') {
+    return 'Raw genotype calls are always sent to this remote Ollama endpoint and leave this device.';
+  }
+  return 'Raw genotype calls will be sent to the Ollama endpoint configured for AI review.';
+}
+
 export function loadOllamaUrl(fallback: string = ""): string {
   if (typeof localStorage === "undefined") return fallback;
   return localStorage.getItem(OLLAMA_URL_STORAGE_KEY) || fallback;

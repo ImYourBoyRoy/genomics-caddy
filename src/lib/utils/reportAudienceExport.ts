@@ -12,7 +12,12 @@ import {
   deriveAllergySensitivityGuidance,
   type RecommendationItem,
 } from './actionabilityEngine';
-import { getLaypersonTranslation, getSimpleFindingTitle } from './layperson';
+import {
+  buildConditionCoverageSummaries,
+  conditionDiagnosticCapabilityLabel,
+  type ConditionEvidenceSummary,
+} from './conditionEvidence';
+import { getLaypersonTranslation, getSimpleFindingCopy } from './layperson';
 import { formatGeneticSexLabel } from './uiLabels';
 import {
   clinicalStateLabel,
@@ -29,6 +34,15 @@ import {
   type ReportReference,
 } from './reportReferences';
 import { dedupeWarnings, classifyWarnings } from './warningTaxonomy';
+import aiPromptPolicy from '../marker-packs/ai_prompt_policy.json';
+import {
+  buildAssertionKey,
+  callabilityStateForResult,
+  callabilityStateLabel,
+  orientationStateForResult,
+  orientationStateLabel,
+} from './callability';
+import { derivePrsReadiness } from './prsReadiness';
 
 export type ReportExportAudience = 'personal' | 'clinician' | 'ai';
 
@@ -36,7 +50,10 @@ export interface ReportExportOptions {
   audience: ReportExportAudience;
   report: GeneratedReport;
   sample: GenomeSample;
-  /** Raw calls are opt-in for every audience; personal exports default to false. */
+  /**
+   * Deprecated compatibility field. AI and clinician audiences always include
+   * raw calls; Personal remains summary-oriented regardless of this value.
+   */
   includeRawGenotypes?: boolean;
   /** Explicit user context; never inferred from the DNA report. */
   reproductiveContext?: string;
@@ -50,7 +67,9 @@ interface ExportFinding {
   referenceIds: string[];
   section: string;
   title: string;
+  direction?: string;
   plainMeaning: string;
+  whyItMatters?: string;
   nextStep: string;
   evidence: string;
   uncertainty: string;
@@ -71,17 +90,18 @@ interface ExportFinding {
   clinicalState?: string;
   technicalInterpretation?: string;
   claimBoundary?: string;
+  callabilityState?: string;
+  orientationState?: string;
+  assertionKey?: string;
 }
 
-const PRIVACY_WARNING =
-  '> Privacy: This file was generated locally. Treat it as sensitive health and genetic information; share it only with the intended recipient. DNA calls are not a diagnosis.';
+const PRIVACY_WARNING = aiPromptPolicy.export_disclosures.privacy_warning;
+const AI_REVIEW_INSTRUCTIONS = aiPromptPolicy.export_disclosures.ai_review_instructions;
 
-const AI_REVIEW_INSTRUCTIONS = [
-  'Do not diagnose, assign disease probability, infer missing facts, or treat association markers as proof of a condition.',
-  'Separate raw genotype calls, self-reported context, measured clinical data, and research interpretations.',
-  'Do not infer current hormone levels, anatomy, pregnancy status, medication composition, or treatment response from DNA alone.',
-  'Treat medication, supplement, pregnancy, and symptom guidance as clinician-discussion prompts only.',
-].join(' ');
+/** Technical handoffs always retain the calls that produced their findings. */
+export function audienceRequiresRawGenotypes(audience: ReportExportAudience): boolean {
+  return audience === 'clinician' || audience === 'ai';
+}
 
 function clean(value: unknown, fallback = 'Not recorded'): string {
   const text = String(value ?? '').trim();
@@ -97,6 +117,9 @@ function safeFilePart(value: string): string {
 }
 
 function nextStepFor(marker: EvaluatedMarker): string {
+  if (marker.assertion_status === 'NotEvaluated' || marker.severity_class === 'not_evaluated') {
+    return 'This assertion was not scored because its allele or assay rule is not represented by the current evaluator; review the technical coverage before drawing a conclusion.';
+  }
   if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
     return 'Discuss whether confirmatory clinical testing is appropriate before making health decisions.';
   }
@@ -110,6 +133,9 @@ function nextStepFor(marker: EvaluatedMarker): string {
 }
 
 function uncertaintyFor(marker: EvaluatedMarker): string {
+  if (marker.assertion_status === 'NotEvaluated' || marker.severity_class === 'not_evaluated') {
+    return 'The raw call was not converted into a finding because this assertion lacks a matchable allele or assay-specific scoring rule.';
+  }
   if (!marker.interpretation_allowed) {
     return 'The interpretation is blocked until the call or allele orientation is verified.';
   }
@@ -127,13 +153,23 @@ function findingFor(
   includeRawGenotypes: boolean,
 ): ExportFinding {
   const simple = getLaypersonTranslation(marker);
+  const simpleCopy = getSimpleFindingCopy(marker, simple);
   const tier = getTierInfo(marker.evidence_tier);
+  const notEvaluated = marker.assertion_status === 'NotEvaluated' || marker.severity_class === 'not_evaluated';
   const finding: ExportFinding = {
     referenceIds,
     section,
-    title: audience === 'personal' ? getSimpleFindingTitle(simple.simpleImpact) : `${marker.gene} ${clean(marker.variant_name, marker.rsid)}`,
-    plainMeaning: simple.simpleMeaning,
-    nextStep: nextStepFor(marker),
+    title: audience === 'personal' ? simpleCopy.plain_title : `${marker.gene} ${clean(marker.variant_name, marker.rsid)}`,
+    direction: notEvaluated ? 'Not evaluated' : simpleCopy.direction_label,
+    plainMeaning: notEvaluated
+      ? 'This assertion was not scored because the current evaluator does not have a matchable allele or assay-specific rule for it.'
+      : simpleCopy.signal,
+    whyItMatters: notEvaluated
+      ? 'The row remains available for technical review and must not be treated as benign or negative.'
+      : simpleCopy.why_it_matters,
+    nextStep: notEvaluated
+      ? nextStepFor(marker)
+      : audience === 'personal' ? simpleCopy.review_action : nextStepFor(marker),
     evidence: `${tier.label} — ${tier.confidenceLabel}`,
     uncertainty: uncertaintyFor(marker),
   };
@@ -145,6 +181,13 @@ function findingFor(
     finding.variant = marker.variant_name;
     finding.severity = marker.severity_class;
     finding.assertionStatus = marker.assertion_status;
+    finding.assertionKey = marker.assertion_key || buildAssertionKey(marker);
+    finding.callabilityState = callabilityStateLabel(
+      marker.callability_state || callabilityStateForResult(marker.variant_type, marker.assertion_status),
+    );
+    finding.orientationState = orientationStateLabel(
+      marker.orientation_state || orientationStateForResult(marker.assertion_status, marker.requires_orientation_verification),
+    );
     finding.applicability = marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise';
     finding.clinicalConfirmation = marker.clinical_confirmation_required ? 'Discuss confirmation' : 'Not specifically required by this marker';
     finding.conditionLabel = semantics.condition_label || undefined;
@@ -214,14 +257,85 @@ function renderPersonalContext(options: ReportExportOptions): string {
   ].join('\n');
 }
 
+function renderConditionSummary(summary: ConditionEvidenceSummary, audience: ReportExportAudience): string {
+  const lines = [
+    `### ${summary.label}`,
+    `- Relative signal: ${summary.relative_signal_label}`,
+    `- Indicators: ${summary.matched_indicator_count} of ${summary.coded_indicator_count} aligned; ${summary.callable_indicator_count} callable`,
+    `- What this points toward: ${summary.plain_meaning}`,
+    `- Look into: ${summary.clinical_route}`,
+    `- Evidence: ${summary.evidence_label}; ${summary.direction_summary}`,
+    `- Clinical capability: ${conditionDiagnosticCapabilityLabel(summary.diagnostic_capability)}`,
+  ];
+  if (audience !== 'personal') {
+    lines.push(
+      `- Genes: ${summary.genes.join(', ') || 'Not recorded'}`,
+      `- Matched markers: ${summary.rsids.join(', ') || 'Not recorded'}`,
+      ...(summary.interpretation_classes?.length
+        ? [`- Interpretation classes: ${summary.interpretation_classes.join(', ')}`]
+        : []),
+      ...(summary.inheritance_models?.length
+        ? [`- Inheritance models: ${summary.inheritance_models.join(', ')}`]
+        : []),
+      ...(summary.clinical_states?.length
+        ? [`- Clinical states: ${summary.clinical_states.join(', ')}`]
+        : []),
+      `- Reference IDs: ${summary.reference_ids.join(', ') || 'None recorded'}`,
+    );
+  }
+  return lines.join('\n');
+}
+
+function renderConditionEvidence(report: GeneratedReport, audience: ReportExportAudience): string {
+  const summaries = deriveActionablePlan(report).conditionEvidence;
+  if (summaries.length === 0) {
+    return '## Potential conditions & health patterns\n\nNo named condition-level DNA signal was matched in this report.';
+  }
+  return [
+    '## Potential conditions & health patterns',
+    '',
+    'Named DNA signal groups to help prioritize personal or clinical review. Indicator counts describe coverage within this toolkit; they are not probabilities.',
+    '',
+    summaries.map((summary) => renderConditionSummary(summary, audience)).join('\n\n'),
+  ].join('\n');
+}
+
+function renderConditionCoverage(report: GeneratedReport): string {
+  const summaries = buildConditionCoverageSummaries(report)
+    .filter((summary) => summary.status !== 'not_observed');
+  const lines = [
+    '## Condition coverage',
+    '',
+    'These counts describe registered condition routes with at least one represented component. They are coverage metadata, not disease probabilities or negative results. The complete zero-coverage registry remains in the JSON handoff.',
+    '',
+  ];
+  if (summaries.length === 0) {
+    lines.push('No registered condition route had a represented component in this report.');
+    return lines.join('\n').trim();
+  }
+  for (const summary of summaries) {
+    lines.push(
+      `### ${summary.label}`,
+      `- Status: ${summary.status}`,
+      `- Indicators: ${summary.available_indicator_count} available of ${summary.coded_indicator_count}; ${summary.callable_indicator_count} callable; ${summary.matched_indicator_count} aligned`,
+      `- Not aligned: ${summary.non_aligned_indicator_count}; not present: ${summary.not_present_indicator_count}; unknown: ${summary.unknown_indicator_count}; blocked: ${summary.blocked_indicator_count}; unsupported: ${summary.not_callable_indicator_count}; absent from report: ${summary.missing_indicator_count}`,
+      `- Clinical capability: ${conditionDiagnosticCapabilityLabel(summary.diagnostic_capability)}`,
+      `- Route: ${summary.clinical_route}`,
+      '',
+    );
+  }
+  return lines.join('\n').trim();
+}
+
 function renderPersonalFinding(finding: ExportFinding, index: number): string {
   return [
     `### ${index}. ${finding.title}`,
     `- Area: ${finding.section}`,
+    ...(finding.direction ? [`- Direction: ${finding.direction}`] : []),
     `- What this might mean: ${finding.plainMeaning}`,
+    ...(finding.whyItMatters ? [`- Why it may matter: ${finding.whyItMatters}`] : []),
     `- Evidence context: ${finding.evidence}`,
     `- Next helpful step: ${finding.nextStep}`,
-    `- Uncertainty: ${finding.uncertainty}`,
     `- References: ${finding.referenceIds.join(', ') || 'None recorded'}`,
   ].join('\n');
 }
@@ -238,12 +352,17 @@ function renderTechnicalFinding(finding: ExportFinding, index: number): string {
     `- Applicability: ${finding.applicability}`,
     `- Severity class: ${finding.severity}`,
     `- Assertion status: ${finding.assertionStatus}`,
+    `- Assertion key: ${finding.assertionKey}`,
+    `- Callability: ${finding.callabilityState}`,
+    `- Orientation: ${finding.orientationState}`,
     `- Evidence: ${finding.evidence}`,
+    ...(finding.direction ? [`- Plain-language direction: ${finding.direction}`] : []),
     `- Effect allele / count: ${finding.effectAllele} / ${finding.effectCount ?? 'Not recorded'}`,
     `- Clinical confirmation: ${finding.clinicalConfirmation}`,
     ...(finding.genotype ? [`- Raw genotype call: ${finding.genotype}`] : []),
     ...(finding.normalizedGenotype ? [`- Normalized genotype: ${finding.normalizedGenotype}`] : []),
     `- Plain-language meaning: ${finding.plainMeaning}`,
+    ...(finding.whyItMatters ? [`- Why it may matter: ${finding.whyItMatters}`] : []),
     `- Technical interpretation: ${finding.technicalInterpretation}`,
     `- Claim boundary: ${finding.claimBoundary}`,
     `- Next helpful step: ${finding.nextStep}`,
@@ -315,6 +434,49 @@ function renderActionabilityRecommendations(report: GeneratedReport, audience: R
   return sections.length > 3 ? sections.join('\n') : '## DNA-linked recommendations\n\nNo DNA-linked food, supplement, or activity recommendations were generated for this report.';
 }
 
+function renderPgxCoverage(report: GeneratedReport): string {
+  const coverage = deriveActionablePlan(report).pgxGuidance.componentCoverage;
+  if (coverage.length === 0) {
+    return '## PGx component coverage\n\nNo curated PGx pathway components were present in this report.';
+  }
+
+  const lines = [
+    '## PGx component coverage',
+    '',
+    'These are component-coverage records only. They do not assign a star allele, diplotype, metabolizer phenotype, medication choice, or dose.',
+    '',
+  ];
+  for (const pathway of coverage) {
+    lines.push(
+      `### ${pathway.label}`,
+      `- Coverage status: ${pathway.status}`,
+      `- Callable components: ${pathway.callable_marker_ids.join(', ') || 'None recorded'}`,
+      `- Components without a usable call: ${pathway.not_present_marker_ids.join(', ') || 'None recorded'}`,
+      `- Blocked or unsupported components: ${[...pathway.blocked_marker_ids, ...pathway.not_callable_marker_ids].join(', ') || 'None recorded'}`,
+      `- Required components absent from this report: ${pathway.missing_from_report_marker_ids.join(', ') || 'None recorded'}`,
+      `- Required clinical inputs: ${pathway.required_inputs.join('; ')}`,
+      `- Next step: ${pathway.clinical_next_step}`,
+      '- Phenotype or dose from this export: not allowed',
+      '',
+    );
+  }
+  return lines.join('\n').trim();
+}
+
+function renderPrsReadiness(): string {
+  const modules = derivePrsReadiness();
+  return [
+    '## PRS readiness',
+    '',
+    'PRS entries remain unscored model specifications. No numeric score was produced.',
+    '',
+    ...modules.map((module) => [
+      `- **${module.trait}** — ${module.status}; policy: ${module.output_policy}`,
+      `  - Required and currently missing inputs: ${module.missing_inputs.join('; ')}`,
+    ].join('\n')),
+  ].join('\n');
+}
+
 function renderAllergyGuidance(report: GeneratedReport): string {
   const guidance = deriveAllergySensitivityGuidance(report);
   const lines = [
@@ -379,8 +541,31 @@ function renderAllergyGuidance(report: GeneratedReport): string {
   return lines.join('\n');
 }
 
+function renderImportProvenance(report: GeneratedReport): string[] {
+  const provenance = report.import_provenance;
+  if (!provenance) {
+    return ['## Import provenance', '', 'No import provenance was recorded for this profile.'];
+  }
+  const diagnostics = provenance.diagnostics;
+  return [
+    '## Import provenance',
+    '',
+    aiPromptPolicy.export_disclosures.import_provenance_notice,
+    '',
+    `- Import ID: ${clean(provenance.import_id)}`,
+    `- Source file: ${clean(provenance.source_file_name)}`,
+    `- Source SHA-256: ${clean(provenance.source_file_sha256)}`,
+    `- Format/vendor: ${clean(diagnostics.format)} / ${clean(diagnostics.vendor)} (${clean(diagnostics.delimiter)})`,
+    `- Source build: ${clean(diagnostics.source_build)}`,
+    `- Coordinate system: ${clean(diagnostics.coordinate_system)}`,
+    `- Allele orientation: ${clean(diagnostics.allele_orientation)}`,
+    `- Rows: ${diagnostics.accepted_rows} accepted; ${diagnostics.malformed_rows} malformed; ${diagnostics.duplicate_rows} duplicate`,
+    `- Liftover: ${provenance.liftover_mapped_rows} mapped; ${provenance.liftover_unmapped_rows} unmapped`,
+  ];
+}
+
 export function buildReportAudienceMarkdown(options: ReportExportOptions): string {
-  const includeRawGenotypes = options.includeRawGenotypes === true;
+  const includeRawGenotypes = audienceRequiresRawGenotypes(options.audience);
   const registry = buildReportReferenceRegistry(options.report);
   const findings = options.report.sections.flatMap((section) =>
     section.markers
@@ -416,6 +601,8 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       '',
       renderPersonalContext(options),
       '',
+      renderConditionEvidence(options.report, options.audience),
+      '',
       renderAllergyGuidance(options.report),
       '',
       renderActionabilityRecommendations(options.report, options.audience),
@@ -433,16 +620,26 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
     : 'No evaluated findings were available.';
   const audienceBoundary = options.audience === 'ai'
     ? ['## AI review instructions', '', AI_REVIEW_INSTRUCTIONS]
-    : ['## Clinician handoff boundary', '', 'Please verify clinically important findings with history, examination, validated laboratory testing, and current authoritative guidance. Do not use consumer-array calls alone for diagnosis or treatment decisions.'];
+    : ['## Clinician handoff boundary', '', aiPromptPolicy.export_disclosures.clinician_handoff_boundary];
 
   return [
     ...header,
     '',
     ...audienceBoundary,
     '',
+    ...renderImportProvenance(options.report),
+    '',
     renderPersonalContext(options),
     '',
+    renderConditionEvidence(options.report, options.audience),
+    '',
+    renderConditionCoverage(options.report),
+    '',
     renderAllergyGuidance(options.report),
+    '',
+    renderPgxCoverage(options.report),
+    '',
+    renderPrsReadiness(),
     '',
     renderActionabilityRecommendations(options.report, options.audience),
     '',

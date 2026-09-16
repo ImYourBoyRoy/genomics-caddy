@@ -8,7 +8,7 @@
     type OllamaModelInsight,
   } from "../../../api/tauri";
   import { isReasoningModel, isModelVisionCapable } from "../../../utils/aiPrompt";
-  import { OLLAMA_URL_PLACEHOLDER } from "../../../utils/ollamaSettings";
+  import { OLLAMA_URL_PLACEHOLDER, ollamaRawDataDisclosure } from "../../../utils/ollamaSettings";
 
   interface Props {
     ollamaUrl: string;
@@ -120,6 +120,7 @@
       <label for="ollama-token">Auth Token / Bearer (Optional)</label>
       <input id="ollama-token" type="password" bind:value={ollamaToken} placeholder="Bearer ..." />
     </div>
+    <p class="raw-data-disclosure" role="note">🔒 {ollamaRawDataDisclosure(ollamaUrl)} {#if ollamaUrl.trim()}<span>Endpoint: <code>{ollamaUrl.trim()}</code></span>{/if}</p>
     <button class="btn btn-secondary w-full" onclick={scanModels} disabled={isScanning || !ollamaUrl.trim()}>
       {isScanning ? "Scanning..." : "🔌 Connect & Poll Models"}
     </button>
@@ -251,6 +252,24 @@
 </details>
 
 <style>
+  .raw-data-disclosure {
+    margin: 0.45rem 0 0.65rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .raw-data-disclosure span {
+    display: block;
+    margin-top: 0.2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .raw-data-disclosure code {
+    color: var(--text-primary);
+    font-size: 0.68rem;
+  }
+
   .input-row {
     display: flex;
     flex-direction: column;

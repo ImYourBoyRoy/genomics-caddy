@@ -43,6 +43,11 @@ describe('evidence tier display', () => {
       legendLabel: 'Needs Confirmation',
       cssClass: 'signal-confirm',
     }));
+    expect(getSeverityInfo('not_evaluated')).toEqual(expect.objectContaining({
+      label: 'Not evaluated',
+      plainLabel: 'Needs an assay-specific rule',
+      legendLabel: 'Not Evaluated',
+    }));
     expect(getScopeLabel('menstrual_cycle_context')).toBe('Menstrual-cycle context');
     expect(getScopeLabel('new_resource_scope')).toBe('new resource scope');
   });
@@ -77,5 +82,31 @@ describe('evidence tier display', () => {
       '1 needs review',
       '2 need confirmation',
     ]);
+  });
+
+  it('keeps not-evaluated assertions distinct from absent DNA calls', () => {
+    const summary = {
+      risk_effect_count: 0,
+      risk_possible: 0,
+      protective_effect_count: 0,
+      protective_possible: 0,
+      trait_count: 0,
+      context_dependent_count: 0,
+      no_data_count: 0,
+      not_evaluated_count: 2,
+      confirmation_required_count: 0,
+      total_markers: 2,
+      show_percent_score: false,
+      all_require_confirmation: false,
+      active_marker_count: 0,
+      active_risk_marker_count: 0,
+      active_protective_marker_count: 0,
+      active_trait_marker_count: 0,
+      active_context_marker_count: 0,
+      blocked_unverified_count: 0,
+      benign_modifier_count: 0,
+    };
+
+    expect(getSimpleSectionSummaryParts(summary)).toEqual(['2 not evaluated']);
   });
 });

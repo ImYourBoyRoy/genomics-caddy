@@ -3,19 +3,19 @@
 /*
 Purpose: One-shot “Update All” for Genomics Caddy toolchains and project dependencies.
 Responsibilities:
-  - Refresh package managers / compilers when possible (npm, rustup/stable Rust).
-  - Bump npm package.json deps to latest stable and reinstall (lockfile), including TypeScript majors.
+  - Refresh package managers / compilers when possible (pnpm, rustup/stable Rust).
+  - Bump package.json deps to latest stable and reinstall without a lockfile, including TypeScript majors.
   - Svelte check remains usable on TS 7 via scripts/run_svelte_check.mjs (TS6 API shim until Svelte supports TS7 natively).
-  - Refresh Cargo.lock and incompatible crate bumps in src-tauri.
+  - Refresh Cargo dependencies and incompatible crate bumps in src-tauri.
   - Optionally refresh Node via fnm/nvm/n when --update-node is set.
-  - Run light verification (npm check + cargo check) unless skipped.
+  - Run light verification (frontend check + cargo check) unless skipped.
 How to run:
-  npm run update:all
-  npm run update:all -- --dry-run
-  npm run update:all -- --skip-toolchains
-  npm run update:all -- --update-node
+  pnpm run update:all
+  pnpm run update:all -- --dry-run
+  pnpm run update:all -- --skip-toolchains
+  pnpm run update:all -- --update-node
 Key inputs: CLI flags (see --help).
-Key outputs: Updated package.json / package-lock.json / Cargo.toml / Cargo.lock; console report.
+Key outputs: Updated package.json / Cargo.toml; console report. Dependency lockfiles are removed.
 Assumptions: Network access; rustup for Rust updates; write access for global npm when updating npm itself.
 */
 
@@ -27,7 +27,6 @@ import { fileURLToPath } from "node:url";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(scriptDir, "..");
 const cargoToml = path.join(repoRoot, "src-tauri", "Cargo.toml");
-const cargoLock = path.join(repoRoot, "src-tauri", "Cargo.lock");
 
 const args = process.argv.slice(2).map((a) => a.trim()).filter(Boolean);
 
@@ -47,9 +46,9 @@ if (hasFlag("help", "h")) {
   (default)         Apply toolchain + dependency updates, then verify
   --dry-run         Print the plan; do not mutate
   --skip-toolchains Skip npm self-update and rustup
-  --skip-npm        Skip npm-check-updates + npm install
+  --skip-npm        Skip npm-check-updates + pnpm install
   --skip-cargo      Skip cargo update / upgrade
-  --skip-verify     Skip npm run check + cargo check
+  --skip-verify     Skip pnpm run check + cargo check
   --update-node     Also try fnm/nvm/n to install latest Node (opt-in)
   --help            Show this help
 `);
@@ -183,7 +182,7 @@ function ensureCargoUpgrade() {
   const help = runCapture("cargo", ["upgrade", "--help"]);
   if (help.status === 0) return true;
   log("  cargo-upgrade missing — installing cargo-edit (provides `cargo upgrade`)…");
-  run("cargo", ["install", "cargo-edit", "--locked"], { allowFail: false });
+  run("cargo", ["install", "cargo-edit"], { allowFail: false });
   return true;
 }
 
@@ -225,19 +224,19 @@ async function main() {
   }
 
   if (!skipToolchains) {
-    step("1) Toolchains — npm + Rust (and optional Node)");
+    step("1) Toolchains — pnpm + Rust (and optional Node)");
     if (updateNode) {
       tryUpdateNodeRuntime();
     } else {
       log("  Node runtime left unchanged (pass --update-node to use fnm/nvm/n).");
     }
 
-    // Refresh npm itself (the package manager), not only project packages.
+    // Refresh the package managers, not only project packages.
     if (which("npm")) {
       try {
-        run("npm", ["install", "-g", "npm@latest"], { allowFail: true });
+        run("npm", ["install", "-g", "npm@latest", "pnpm@latest"], { allowFail: true });
       } catch {
-        log("  WARN: global npm update failed (permissions?). Continuing with project deps.");
+        log("  WARN: global package-manager update failed (permissions?). Continuing with project deps.");
       }
     }
 
@@ -271,21 +270,23 @@ async function main() {
   }
 
   if (!skipNpm) {
-    step("2) npm packages — bump package.json to latest + reinstall");
+    step("2) frontend packages — bump package.json to latest + lock-free reinstall");
     // Update everything to latest, including TypeScript majors. Fix breaks after.
     // Uses --legacy-peer-deps (also in .npmrc): Kit's peerOptional still says TS≤6.
-    run("npx", ["--yes", "npm-check-updates@latest", "-u", "--target", "latest"], {
+    run("pnpm", ["dlx", "npm-check-updates@latest", "-u", "--target", "latest"], {
       allowFail: false,
     });
     ensureTypescript6CompatDep();
-    run("npm", ["install", "--legacy-peer-deps"], { allowFail: false });
-    run("npm", ["rebuild"], { allowFail: true });
+    run(process.execPath, [path.join(scriptDir, "pnpm_unlocked.mjs"), "install"], { allowFail: false });
+    // A fresh install runs dependency lifecycle scripts. pnpm 12's standalone
+    // rebuild command requires a retained project lockfile, which this
+    // workspace intentionally does not keep.
   } else {
-    step("2) npm packages — skipped");
+    step("2) frontend packages — skipped");
   }
 
   if (!skipCargo) {
-    step("3) Cargo / Rust crates — lockfile + incompatible upgrades");
+    step("3) Cargo / Rust crates — unlocked incompatible upgrades");
     if (!fs.existsSync(cargoToml)) {
       throw new Error(`Missing ${cargoToml}`);
     }
@@ -297,16 +298,13 @@ async function main() {
       { allowFail: true }
     );
     run("cargo", ["update", "--manifest-path", cargoToml], { allowFail: false });
-    if (fs.existsSync(cargoLock)) {
-      log(`  Cargo.lock present (${path.relative(repoRoot, cargoLock)})`);
-    }
   } else {
     step("3) Cargo — skipped");
   }
 
   if (!skipVerify) {
     step("4) Verify — frontend check + cargo check");
-    run("npm", ["run", "check"], { allowFail: false });
+    run("pnpm", ["run", "check"], { allowFail: false });
     run("cargo", ["check", "--manifest-path", cargoToml], { allowFail: false });
   } else {
     step("4) Verify — skipped");
@@ -335,7 +333,7 @@ async function main() {
   log(
     dryRun
       ? "\nDry-run complete. Re-run without --dry-run to apply."
-      : "\nUpdate All complete. Review git diff (package.json, lockfiles, Cargo.toml) before committing."
+      : "\nUpdate All complete. Review git diff (package.json and Cargo.toml) before committing; lockfiles are intentionally absent."
   );
 
   if (failed.length && !dryRun) process.exit(1);

@@ -290,6 +290,7 @@
     maxTokens = snapshot.maxTokens;
     extendedThinking = snapshot.extendedThinking;
     consultationMode = snapshot.consultationMode;
+    contextMode = snapshot.contextMode;
     sessionPromptTokens = 0;
     sessionResponseTokens = 0;
     setTimeout(() => { isLoadingSession = false; }, 0);
@@ -329,8 +330,8 @@
     const s = sessionStore.sessions.find(x => x.id === sessionStore.currentSessionId);
     if (!s) return;
     const packsStr = JSON.stringify(selectedPacks);
-    if (s.messages !== messages || JSON.stringify(s.selectedPacks) !== packsStr || s.onlyActiveFindings !== onlyActiveFindings || s.temperature !== temperature || s.selectedModel !== selectedModel || s.maxTokens !== maxTokens || s.extendedThinking !== extendedThinking || s.consultationMode !== consultationMode) {
-      Object.assign(s, { messages, selectedPacks: { ...selectedPacks }, onlyActiveFindings, temperature, selectedModel, maxTokens, extendedThinking, consultationMode, timestamp: Date.now() });
+    if (s.messages !== messages || JSON.stringify(s.selectedPacks) !== packsStr || s.onlyActiveFindings !== onlyActiveFindings || s.temperature !== temperature || s.selectedModel !== selectedModel || s.maxTokens !== maxTokens || s.extendedThinking !== extendedThinking || s.consultationMode !== consultationMode || s.contextMode !== contextMode) {
+      Object.assign(s, { messages, selectedPacks: { ...selectedPacks }, onlyActiveFindings, temperature, selectedModel, maxTokens, extendedThinking, consultationMode, contextMode, timestamp: Date.now() });
       sessionStore.sessions.sort((a, b) => b.timestamp - a.timestamp);
       sessionStore.saveTitle();
     }

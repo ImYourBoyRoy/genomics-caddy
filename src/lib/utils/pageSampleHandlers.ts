@@ -11,54 +11,140 @@ import {
   deleteSample as apiDeleteSample,
   queryRsids,
   queryRegion,
+  inspectGenome,
 } from "../api/tauri";
-import type { GenomeSample, GeneratedReport, NormalizedReport, DbSnpRecord } from "../types/genomics";
+import type { GenomeSample, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview } from "../types/genomics";
 import { mergedReportTemplateJson } from "./reportTemplate";
+import { clearProfileScopedSessionState, clearProfileScopedStorage } from "./profileContext";
+import { isCallableGenotype } from "./genotype";
+import type { ImportPhase } from "./importProgress";
 
 export interface ImportGenomeParams {
   filePath: string;
   sampleNameInput: string;
+  existingSamples: GenomeSample[];
+  selectedSampleId?: number | null;
+  onConfirmationRequired: (onConfirm: () => void | Promise<void>, replacingExisting: boolean) => void;
   onState: (patch: {
+    isImportPreparing?: boolean;
     isImporting?: boolean;
     importError?: string;
     importSuccess?: string;
     progressPercent?: number;
     progressStatus?: string;
+    importPhase?: ImportPhase;
+    importPreview?: GenomeImportPreview | null;
+    importProfileName?: string;
     filePath?: string;
     sampleNameInput?: string;
   }) => void;
   refreshSamples: () => Promise<GenomeSample[]>;
-  selectSample: (sample: GenomeSample) => void;
+  selectSample: (sample: GenomeSample) => void | Promise<void>;
 }
 
 export async function runImportGenome(
   e: Event,
-  { filePath, sampleNameInput, onState, refreshSamples, selectSample }: ImportGenomeParams,
+  { filePath, sampleNameInput, existingSamples, selectedSampleId, onConfirmationRequired, onState, refreshSamples, selectSample }: ImportGenomeParams,
 ): Promise<void> {
   e.preventDefault();
-  if (!filePath || !sampleNameInput) {
+  const normalizedName = sampleNameInput.trim();
+  if (!filePath || !normalizedName) {
     onState({ importError: "Please specify both file path and sample name." });
     return;
   }
+  const existing = existingSamples.find((sample) => sample.name.trim().toLowerCase() === normalizedName.toLowerCase());
+
   onState({
-    isImporting: true,
+    isImportPreparing: true,
     importError: "",
     importSuccess: "",
+    importPhase: "preview",
+    importPreview: null,
+    importProfileName: normalizedName,
     progressPercent: 0,
-    progressStatus: "Initializing ingestion...",
+    progressStatus: "Checking the DNA export before writing…",
   });
 
+  let preview: GenomeImportPreview;
   try {
-    const sampleId = await apiImportGenome(filePath, sampleNameInput);
-    onState({ importSuccess: `Successfully imported sample as ID: ${sampleId}!`, filePath: "", sampleNameInput: "" });
-    const samples = await refreshSamples();
-    const newSample = samples.find((s) => s.id === sampleId);
-    if (newSample) selectSample(newSample);
+    preview = await inspectGenome(filePath);
   } catch (err: unknown) {
-    onState({ importError: String(err) });
-  } finally {
-    onState({ isImporting: false });
+    onState({
+      isImportPreparing: false,
+      importPhase: "error",
+      progressStatus: "Import preview failed — no data was written.",
+      importError: `Could not preview the DNA export. No data was written: ${String(err)}`,
+    });
+    return;
   }
+  onState({
+    isImportPreparing: false,
+    importPhase: "awaiting-confirmation",
+    importPreview: preview,
+    progressPercent: 0,
+    progressStatus: "Preview ready. No profile data has been written.",
+  });
+  const startImport = async (replaceExistingSampleId?: number): Promise<void> => {
+    onState({
+      isImportPreparing: false,
+      isImporting: true,
+      importError: "",
+      importSuccess: "",
+      importPhase: "reading",
+      progressPercent: 0,
+      progressStatus: replaceExistingSampleId == null
+        ? "Starting local DNA import…"
+        : "Preparing profile replacement…",
+    });
+
+    try {
+      const sampleId = await apiImportGenome(filePath, normalizedName, replaceExistingSampleId);
+      onState({
+        importPhase: "profile",
+        progressPercent: 100,
+        progressStatus: "DNA records committed — loading the imported profile…",
+      });
+      if (replaceExistingSampleId != null) {
+        clearProfileScopedSessionState(replaceExistingSampleId, selectedSampleId === replaceExistingSampleId);
+      }
+      const samples = await refreshSamples();
+      const newSample = samples.find((s) => s.id === sampleId);
+      if (!newSample) {
+        throw new Error("The import completed, but the new profile was not returned when the profile list refreshed.");
+      }
+
+      onState({
+        importPhase: "report",
+        progressPercent: 100,
+        progressStatus: "Profile loaded — preparing the trait report…",
+      });
+      await selectSample(newSample);
+
+      const action = replaceExistingSampleId == null ? "Successfully imported" : "Successfully replaced";
+      onState({
+        importPhase: "ready",
+        progressPercent: 100,
+        progressStatus: "Profile and report ready.",
+        importSuccess: `${action} profile as ID: ${sampleId}.`,
+        filePath: "",
+        sampleNameInput: "",
+      });
+      // Leave the completed state visible long enough for the final checkpoint
+      // to paint before the workspace returns.
+      await new Promise<void>((resolve) => setTimeout(resolve, 700));
+    } catch (err: unknown) {
+      onState({
+        importPhase: "error",
+        progressStatus: "Import stopped safely — review the error and retry.",
+        importError: String(err),
+      });
+    } finally {
+      onState({ isImporting: false });
+    }
+  };
+
+  onState({ progressStatus: "Preview ready. Review the results, then choose an action below." });
+  onConfirmationRequired(() => startImport(existing?.id), existing !== undefined);
 }
 
 export interface WarmReportParams {
@@ -123,7 +209,9 @@ export interface DeleteSampleParams {
     selectedSample?: GenomeSample | null;
     generatedReport?: GeneratedReport | null;
   }) => void;
-  refreshSamples: () => Promise<void>;
+  refreshSamples: () => Promise<GenomeSample[]>;
+  selectSample: (sample: GenomeSample) => void | Promise<void>;
+  removeSampleFromList: (sampleId: number) => void;
 }
 
 export async function deleteSampleWithConfirm({
@@ -133,18 +221,68 @@ export async function deleteSampleWithConfirm({
   alert,
   onState,
   refreshSamples,
+  selectSample,
+  removeSampleFromList,
 }: DeleteSampleParams): Promise<void> {
   confirm(
-    "Are you sure you want to delete this sample and all its genotypes?",
+    "Are you sure you want to delete this profile, its genotype database, derived findings, chat history, and all profile-scoped Context/Diary data from this device?",
     async () => {
+      let deleteError: unknown = null;
       try {
         await apiDeleteSample(id);
-        if (selectedSample && selectedSample.id === id) {
-          onState({ selectedSample: null, generatedReport: null });
-        }
-        await refreshSamples();
       } catch (err: unknown) {
-        alert("Delete failed: " + String(err));
+        deleteError = err;
+      }
+
+      let refreshedProfiles: GenomeSample[] | null = null;
+      let refreshError: unknown = null;
+      try {
+        refreshedProfiles = await refreshSamples();
+      } catch (err: unknown) {
+        refreshError = err;
+      }
+
+      const profileStillListed = refreshedProfiles?.some((profile) => profile.id === id) ?? false;
+      const profileWasRemoved = deleteError === null || (refreshedProfiles !== null && !profileStillListed);
+      if (!profileWasRemoved) {
+        const reason = deleteError === null
+          ? 'The profile is still present in the active profile list.'
+          : String(deleteError);
+        alert(`Delete failed: ${reason}${refreshError ? ` Profile list refresh also failed: ${String(refreshError)}` : ''}`);
+        return;
+      }
+
+      const warnings: string[] = [];
+      removeSampleFromList(id);
+      if (deleteError === null && profileStillListed) {
+        warnings.push('The delete operation completed, but the refreshed list still contained this profile; it was removed from the current view.');
+      }
+      if (deleteError !== null) {
+        warnings.push(`The profile is no longer active, but cleanup reported: ${String(deleteError)}`);
+      }
+      try {
+        clearProfileScopedStorage(id, selectedSample?.id === id);
+      } catch (err: unknown) {
+        warnings.push(`Profile-specific local settings could not all be cleared: ${String(err)}`);
+      }
+
+      if (selectedSample?.id === id) {
+        onState({ selectedSample: null, generatedReport: null });
+        const nextProfile = refreshedProfiles?.find((profile) => profile.id !== id);
+        if (nextProfile) {
+          try {
+            await selectSample(nextProfile);
+          } catch (err: unknown) {
+            warnings.push(`The next profile could not be opened automatically: ${String(err)}`);
+          }
+        }
+      }
+
+      if (refreshError !== null) {
+        warnings.push(`The profile was deleted, but the profile list could not be refreshed: ${String(refreshError)}`);
+      }
+      if (warnings.length > 0) {
+        alert(warnings.join('\n'));
       }
     },
     "Delete Sample",
@@ -214,7 +352,7 @@ export function computeReportMarkerCounts(generatedReport: GeneratedReport | nul
     if (!sec.markers) continue;
     totalMarkersChecked += sec.markers.length;
     foundMarkersCount += sec.markers.filter(
-      (m) => m.user_genotype !== "--" && !m.user_genotype.includes("-"),
+      (m) => isCallableGenotype(m.user_genotype),
     ).length;
   }
   return { totalMarkersChecked, foundMarkersCount };

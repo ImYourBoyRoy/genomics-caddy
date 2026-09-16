@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./Tooltip.svelte', import.meta.url), 'utf8');
+const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 
 describe('Tooltip accessibility structure', () => {
   it('keeps the accessible name on the native trigger instead of a redundant wrapper group', () => {
@@ -19,6 +20,16 @@ describe('Tooltip accessibility structure', () => {
   it('keeps interactive tooltip content out of tooltip role semantics', () => {
     expect(source).toContain("role={learnMoreHref ? 'dialog' : 'tooltip'}");
     expect(source).toContain("aria-haspopup={learnMoreHref ? 'dialog' : undefined}");
+  });
+
+  it('ships a static tooltip fallback for native WebKit first-render reliability', () => {
+    const fallback = theme.match(/\.tooltip-panel \{[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fallback).toContain('position: fixed;');
+    expect(fallback).toContain('display: flex;');
+    expect(fallback).toContain('padding: 0.75rem 0.85rem;');
+    expect(fallback).toContain('max-height: 24rem;');
+    expect(fallback).toContain('max-height: min(24rem, calc(100vh - 1rem));');
+    expect(fallback).toContain('background: var(--tooltip-bg);');
   });
 
   it('lets a second trigger activation dismiss hover- or focus-open content', () => {
@@ -48,7 +59,9 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('hostElement.querySelector<HTMLElement>');
     expect(source).toContain('let triggerElement = $state<HTMLElement | undefined>(undefined);');
     expect(source).toContain('triggerElement = nextTrigger;');
-    expect(source).toContain('if (isOpen) requestAnimationFrame(updatePosition);');
+    expect(source).toContain('function observePanelSize()');
+    expect(source).toContain('panelResizeObserver = new ResizeObserver(() => {');
+    expect(source).toContain('requestAnimationFrame(updatePosition);');
     expect(source).toContain("nextTrigger.setAttribute('aria-describedby', panelDescriptionId);");
     expect(source).toContain('{#if interactiveChildren}');
   });

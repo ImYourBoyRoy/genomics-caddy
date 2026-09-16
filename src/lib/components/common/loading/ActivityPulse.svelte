@@ -31,7 +31,7 @@
       <span class="error-mark">!</span>
     {/if}
     {#key message}
-      <span class="pulse-message bootstrap-motion">{message}</span>
+      <span class="pulse-message">{message}</span>
     {/key}
   </div>
 </div>
@@ -70,20 +70,10 @@
     gap: 10px;
     padding: 11px 14px;
     border-radius: 9px;
-    background:
-      linear-gradient(
-        110deg,
-        rgba(255, 255, 255, 0.02) 0%,
-        var(--bootstrap-shimmer) 45%,
-        rgba(255, 255, 255, 0.02) 90%
-      ),
-      var(--surface-control);
-    background-size: 220% 100%;
-    animation: bootstrap-shimmer-slide 3.2s linear infinite;
+    background: var(--surface-control);
     border: 1px solid color-mix(in srgb, var(--phase-accent) 22%, var(--border-color));
     font-size: 0.78rem;
     color: var(--text-primary);
-    backdrop-filter: blur(14px);
   }
 
   .pulse-dot {
@@ -97,8 +87,10 @@
   }
 
   .pulse-message {
-    animation: bootstrap-message-in 0.45s ease both;
     line-height: 1.35;
+    color: var(--text-primary);
+    opacity: 1;
+    animation: none;
   }
 
   .activity-pulse.error .pulse-border {

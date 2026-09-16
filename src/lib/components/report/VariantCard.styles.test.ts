@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const source = readFileSync(resolve(process.cwd(), 'src/lib/components/report/VariantCard.svelte'), 'utf8');
+const theme = readFileSync(resolve(process.cwd(), 'src/lib/styles/theme.css'), 'utf8');
 const enrichmentStyles = source.slice(source.indexOf('/* Reference enrichment chips */'), source.indexOf('/* Simple mode evidence summary */'));
 
 describe('VariantCard enrichment surface', () => {
@@ -18,6 +19,14 @@ describe('VariantCard enrichment surface', () => {
 
   it('does not reintroduce raw color literals in the enrichment block', () => {
     expect(enrichmentStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  });
+
+  it('bounds enrichment tooltips and chips in the static native report theme', () => {
+    expect(theme).toContain('.main-content .sections-container .enrichment-row .tooltip-host {');
+    expect(theme).toContain('max-width: 100%;\n  flex: 0 1 auto;');
+    expect(theme).toContain('.main-content .sections-container .enrichment-row .tooltip-trigger {');
+    expect(theme).toContain('overflow-wrap: anywhere;\n  text-align: left;\n  white-space: normal;');
+    expect(theme).toContain('.main-content .sections-container .enrichment-row .pharmgkb-chip');
   });
 
   it('keeps the complete Simple copy contract visible on individual cards', () => {
@@ -80,6 +89,12 @@ describe('VariantCard enrichment surface', () => {
   it('keeps the Simple card from repeating its direction label', () => {
     expect(source).toContain('{#if marker.effect_direction && viewMode !== \'simple\'}');
     expect(source).toContain('<EffectDirectionBadge direction={marker.effect_direction} />');
+  });
+
+  it('explains non-callable results on the Simple surface without exposing raw DNA', () => {
+    expect(source).toContain('class="simple-callability-note"');
+    expect(source).toContain('callabilityExplanation(callabilityState)');
+    expect(source).toContain('role="note"');
   });
 
   it('provides a compact plain-language Details disclosure before technical data', () => {

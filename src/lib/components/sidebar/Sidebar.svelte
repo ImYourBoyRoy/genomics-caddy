@@ -16,9 +16,9 @@ import { onMount, onDestroy } from 'svelte';
     syncAllOfflineMissing,
     getOfflineReferenceStatus,
     cancelOfflineImport,
-    exportDiscoveryFindings,
     getGnomadReadiness,
     downloadGnomadIndexes,
+    refreshGnomadFrequencyCache,
   } from '../../api/tauri';
   import type { ReferenceStatusDetails } from '../../api/tauri';
   import type { GnomadReadinessStatus } from '../../types/research';
@@ -50,6 +50,7 @@ import { onMount, onDestroy } from 'svelte';
     isDownloadingChain: boolean;
     filePath: string;
     sampleNameInput: string;
+    isImportPreparing?: boolean;
     isImporting: boolean;
     progressPercent: number;
     progressStatus: string;
@@ -62,7 +63,7 @@ import { onMount, onDestroy } from 'svelte';
     /** Expand the Reference Databases panel (e.g. from main CTA). */
     expandDatabases?: boolean;
     onReady?: (api: {
-      syncAllMissing: () => void;
+      syncAllMissing: () => Promise<void>;
       expandDatabases: () => void;
     }) => void;
     onOfflineStatusChange?: (status: OfflineUpdateCheck | null, fresh: boolean) => void;
@@ -73,6 +74,8 @@ import { onMount, onDestroy } from 'svelte';
     onDeleteSample: (id: number) => void;
     onOpenConnections?: () => void;
     onResourcesUpdated?: () => void | Promise<void>;
+    /** Report welcome-screen catalog sync progress to the detailed loader. */
+    onResourceSyncStateChange?: (state: { active: boolean; message: string }) => void;
     runtimeAvailable?: boolean;
   }
 
@@ -81,6 +84,7 @@ import { onMount, onDestroy } from 'svelte';
     isDownloadingChain,
     filePath = $bindable(),
     sampleNameInput = $bindable(),
+    isImportPreparing = false,
     isImporting,
     progressPercent,
     progressStatus,
@@ -100,6 +104,7 @@ import { onMount, onDestroy } from 'svelte';
     onDeleteSample,
     onOpenConnections,
     onResourcesUpdated,
+    onResourceSyncStateChange,
     runtimeAvailable = true,
   }: Props = $props();
 
@@ -152,6 +157,7 @@ import { onMount, onDestroy } from 'svelte';
   let updateMessage = $state('');
   let updateRetry = $state<UpdateRetryTarget | null>(null);
   let lastSuccessfulUpdateAt = $state<number | null>(null);
+  let resourceSyncOverlayActive = false;
   // Do not present the previous probe's update flags while a new authoritative
   // status check is running or has failed.
   let offlineStatusFresh = $state(false);
@@ -235,6 +241,23 @@ import { onMount, onDestroy } from 'svelte';
       gnomadReadiness = await getGnomadReadiness();
     } catch (e: unknown) {
       gnomadHint = String(e);
+    } finally {
+      gnomadBusy = false;
+    }
+  }
+
+  async function handleRefreshGnomadFrequencyCache() {
+    if (gnomadBusy || !selectedSample || reportRsids.length === 0) return;
+    gnomadBusy = true;
+    gnomadHint = 'Refreshing current-release gnomAD frequencies for this report…';
+    try {
+      const progress = await refreshGnomadFrequencyCache(selectedSample.id, reportRsids);
+      gnomadHint = `Frequency refresh complete: ${progress.remote_queries + progress.local_queries + progress.cache_hits} resolved, ${progress.missing_coordinates} without a usable GRCh38 position, ${progress.errors} errors.`;
+      gnomadReadiness = await getGnomadReadiness();
+      await onResourcesUpdated?.();
+      gnomadReadiness = await getGnomadReadiness();
+    } catch (e: unknown) {
+      gnomadHint = `Frequency refresh failed: ${String(e)}`;
     } finally {
       gnomadBusy = false;
     }
@@ -352,11 +375,16 @@ import { onMount, onDestroy } from 'svelte';
     offlineStatus = clearOfflineUpdate(offlineStatus, assetId) ?? offlineStatus;
   }
 
-  async function handleSyncAllMissing() {
+  async function runSyncAllMissing(options: { showOverlay?: boolean } = {}): Promise<void> {
     if (syncingAll || Object.values(syncingAsset).some(Boolean)) return;
+    const showOverlay = options.showOverlay === true;
     let failureMessage: string | null = null;
     let failureRetry: UpdateRetryTarget | null = null;
     syncingAll = true;
+    resourceSyncOverlayActive = showOverlay;
+    if (showOverlay) {
+      onResourceSyncStateChange?.({ active: true, message: 'Syncing missing reference resources…' });
+    }
     setUpdateState('downloading', 'Syncing missing resources…');
     bulkSyncMessage = 'Sync All Missing · starting…';
     bulkActiveAssetId = null;
@@ -408,6 +436,10 @@ import { onMount, onDestroy } from 'svelte';
       setUpdateState('error', failureMessage, failureRetry);
     } finally {
       syncingAll = false;
+      if (resourceSyncOverlayActive) {
+        resourceSyncOverlayActive = false;
+        onResourceSyncStateChange?.({ active: false, message: '' });
+      }
       bulkSyncMessage = '';
       bulkActiveAssetId = null;
       importProgress = {};
@@ -418,10 +450,14 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
+  function handleSyncAllMissing(): void {
+    void runSyncAllMissing();
+  }
+
   /** Public entry for main-dashboard CTA. */
-  function startSyncAllMissing() {
+  function startSyncAllMissing(): Promise<void> {
     isPanelCollapsed = false;
-    void handleSyncAllMissing();
+    return runSyncAllMissing({ showOverlay: true });
   }
 
   onMount(async () => {
@@ -443,7 +479,7 @@ import { onMount, onDestroy } from 'svelte';
       bytes_downloaded: number;
       total_bytes: number;
     }>('offline:download_progress', (event) => {
-      const { asset_id, bytes_downloaded, total_bytes } = event.payload;
+      const { asset_id, label, bytes_downloaded, total_bytes } = event.payload;
       const prev = downloadProgress[asset_id];
       const now = Date.now();
       const startedAt = prev?.startedAt ?? now;
@@ -464,6 +500,9 @@ import { onMount, onDestroy } from 'svelte';
       if (syncingAll || updatingAllOutdated) {
         bulkActiveAssetId = asset_id;
         bulkSyncMessage = `Downloading ${asset_id}…`;
+        if (resourceSyncOverlayActive) {
+          onResourceSyncStateChange?.({ active: true, message: `Downloading ${label}…` });
+        }
       }
     });
 
@@ -482,7 +521,12 @@ import { onMount, onDestroy } from 'svelte';
         }
         if (syncingAll || updatingAllOutdated) {
           bulkActiveAssetId = asset_id;
-          if (payload.message) bulkSyncMessage = payload.message;
+          if (payload.message) {
+            bulkSyncMessage = payload.message;
+            if (resourceSyncOverlayActive) {
+              onResourceSyncStateChange?.({ active: true, message: payload.message });
+            }
+          }
         }
       }
     );
@@ -501,6 +545,9 @@ import { onMount, onDestroy } from 'svelte';
       };
       if (syncingAll || updatingAllOutdated) {
         bulkSyncMessage = message;
+        if (resourceSyncOverlayActive) {
+          onResourceSyncStateChange?.({ active: true, message });
+        }
         if (asset_id !== '__bulk__' && phase !== 'skip') {
           bulkActiveAssetId = asset_id;
         }
@@ -687,9 +734,6 @@ import { onMount, onDestroy } from 'svelte';
       if (asset.row_count > 0) {
         return `${asset.row_count.toLocaleString()} rows (${sizeStr})`;
       }
-      if (asset.local_bytes > 0 && asset.local_bytes < 64 * 1024 && asset.row_count === 0) {
-        return 'Not downloaded';
-      }
       if (asset.row_count === 0 && asset.local_bytes > 0) {
         return `Downloaded · not indexed yet (${sizeStr})`;
       }
@@ -831,6 +875,23 @@ import { onMount, onDestroy } from 'svelte';
     return out;
   });
 
+  let localPrimarySummary = $derived.by(() => {
+    const byId = new Map<string, OfflineAssetStatus>();
+    for (const tier of offlineStatus?.tiers ?? []) {
+      for (const asset of tier.assets) byId.set(asset.asset_id, asset);
+    }
+
+    let present = 0;
+    let indexed = 0;
+    for (const id of PRIMARY_CATALOG_IDS) {
+      const asset = byId.get(id);
+      if (!asset?.local_present) continue;
+      present += 1;
+      if (asset.row_count > 0) indexed += 1;
+    }
+    return { present, indexed, total: PRIMARY_CATALOG_IDS.length };
+  });
+
   /** Local file present but SQLite has 0 indexed rows. */
   let notIndexedPrimary = $derived.by(() => {
     if (!offlineStatus) return [] as string[];
@@ -856,8 +917,6 @@ import { onMount, onDestroy } from 'svelte';
   let missingPrimaryCount = $derived(notDownloadedPrimary.length + notIndexedPrimary.length);
 
   let importingAny = $derived(Object.values(syncingAsset).some(Boolean) || syncingAll);
-  let exportBusy = $state(false);
-  let exportMessage = $state('');
 
   async function handleCancelImport() {
     try {
@@ -867,25 +926,11 @@ import { onMount, onDestroy } from 'svelte';
     }
   }
 
-  async function handleExportDiscovery() {
-    if (!selectedSample?.id || exportBusy) return;
-    exportBusy = true;
-    exportMessage = '';
-    try {
-      const result = await exportDiscoveryFindings(selectedSample.id);
-      exportMessage = `Exported ${result.findings_beyond_packs.toLocaleString()} beyond-pack hits · ${result.findings_in_packs.toLocaleString()} in packs → App/Data/exports/`;
-    } catch (err) {
-      exportMessage = String(err);
-    } finally {
-      exportBusy = false;
-    }
-  }
-
   let needsAttention = $derived(updatesAvailable > 0 || missingPrimaryCount > 0);
 
   let collapsedStatusLabel = $derived.by(() => {
     if (isCheckingStatus || updatePhase === 'checking') return 'Checking…';
-    if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Check incomplete';
+    if (updatePhase === 'attention' && updateRetry?.kind === 'status') return 'Remote check incomplete';
     if (updatePhase === 'error') return 'Update issue';
     if (offlineStatusFresh && updatesAvailable === 0 && missingPrimaryCount === 0) return 'Current';
     return '';
@@ -906,6 +951,39 @@ import { onMount, onDestroy } from 'svelte';
       Desktop runtime required for local DNA import, catalogs, and saved profiles. The browser preview is read-only.
     </div>
   {/if}
+
+  <div class="sidebar-profile-workspace" aria-label="Genome profiles">
+    <span class="sidebar-group-label">Profiles</span>
+
+    <SampleList
+      {samples}
+      {selectedSample}
+      disabled={sweepRunning || !runtimeAvailable}
+      disabledReason={sweepRunning
+        ? 'Profile actions pause while a research sweep is running.'
+        : 'The desktop runtime is unavailable.'}
+      {onSelectSample}
+      {onDeleteSample}
+    />
+
+    <GenomeImportPanel
+      bind:filePath
+      bind:sampleNameInput
+      {isImportPreparing}
+      {isImporting}
+      {progressPercent}
+      {progressStatus}
+      {importError}
+      {importSuccess}
+      disabled={sweepRunning || !runtimeAvailable}
+      {onBrowseFile}
+      {onImportGenome}
+    />
+  </div>
+
+  <div class="sidebar-tools-heading" aria-hidden="true">
+    <span>App tools</span>
+  </div>
 
   {#if onOpenConnections}
     <div class="connections-launch-card card">
@@ -986,7 +1064,7 @@ import { onMount, onDestroy } from 'svelte';
           <span
             class="resource-status-pill"
             class:resource-status-current={collapsedStatusLabel === 'Current'}
-            class:resource-status-incomplete={collapsedStatusLabel === 'Check incomplete'}
+            class:resource-status-incomplete={collapsedStatusLabel === 'Remote check incomplete'}
             class:resource-status-error={collapsedStatusLabel === 'Update issue'}
             aria-label={`Reference data status: ${collapsedStatusLabel}`}
             aria-live="polite"
@@ -1023,10 +1101,16 @@ import { onMount, onDestroy } from 'svelte';
           <div class="resource-update-state" class:resource-update-state-attention={updatePhase === 'attention'} class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
             <div class="resource-update-state-heading">
               <span class="resource-update-state-dot" aria-hidden="true"></span>
-              <strong>{updatePhase === 'attention' && updateRetry?.kind === 'status' ? 'Check incomplete' : updatePhaseLabel(updatePhase)}</strong>
+              <strong>{updatePhase === 'attention' && updateRetry?.kind === 'status' ? 'Remote check incomplete' : updatePhaseLabel(updatePhase)}</strong>
             </div>
             {#if updateMessage}
               <div class="resource-update-state-message">{updateMessage}</div>
+            {/if}
+            {#if offlineStatus}
+              <div class="resource-local-summary">
+                <div><strong>Local catalogs:</strong> {localPrimarySummary.present}/{localPrimarySummary.total} available · {localPrimarySummary.indexed}/{localPrimarySummary.total} indexed.</div>
+                <div>Imported DNA profiles and remote freshness are checked separately.</div>
+              </div>
             {/if}
             {#if (updatePhase === 'attention' || updatePhase === 'error') && updateRetry}
               <button
@@ -1047,7 +1131,7 @@ import { onMount, onDestroy } from 'svelte';
         {#if needsAttention || importingAny}
           <div class="db-attention-banner">
             {#if importingAny}
-              <div>Import in progress — other catalogs may wait for a SQLite slot (downloads can still run in parallel).</div>
+              <div>Import in progress — catalogs are processed in order while SQLite is occupied.</div>
             {/if}
             {#if notDownloadedPrimary.length > 0}
               <div><strong>Not downloaded:</strong> {notDownloadedPrimary.join(', ')}.</div>
@@ -1192,18 +1276,6 @@ import { onMount, onDestroy } from 'svelte';
           >
             ⏹ Cancel import
           </button>
-        {/if}
-
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm full-width-sidebar-button"
-          onclick={handleExportDiscovery}
-          disabled={!selectedSample || exportBusy || sweepRunning || !runtimeAvailable}
-        >
-          {exportBusy ? 'Exporting…' : '📤 Export pack vs genome findings'}
-        </button>
-        {#if exportMessage}
-          <div class="sidebar-message">{exportMessage}</div>
         {/if}
 
         {#if syncErrors.__all__}
@@ -1431,9 +1503,11 @@ import { onMount, onDestroy } from 'svelte';
               <div class="status-group-title">gnomAD allele frequencies</div>
               <div class="status-group-grid">
                 <span>Status:</span>
-                <strong class:status-ready={gnomadReadiness?.ready === true} class:status-pending={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) > 0} class:status-missing={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) === 0}>
-                  {#if gnomadReadiness?.ready}
-                    Ready · {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes
+                <strong class:status-ready={gnomadReadiness?.ready === true && gnomadReadiness.frequency_cache_ready} class:status-pending={gnomadReadiness?.ready === true && !gnomadReadiness.frequency_cache_ready} class:status-missing={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) === 0}>
+                  {#if gnomadReadiness?.ready && gnomadReadiness.frequency_cache_ready}
+                    Ready · gnomAD {gnomadReadiness.release} · {gnomadReadiness.frequency_cache_rows.toLocaleString()} frequency rows
+                  {:else if gnomadReadiness?.ready}
+                    Indexes ready · gnomAD {gnomadReadiness.release} · frequency cache needs refresh
                   {:else if gnomadReadiness}
                     {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes · {gnomadReadiness.summary}
                   {:else}
@@ -1441,7 +1515,17 @@ import { onMount, onDestroy } from 'svelte';
                   {/if}
                 </strong>
               </div>
-              <div class="status-note">Step 3 for AF chips on the report — separate from dbSNP rsID history. Manage Ollama/Qdrant under Advanced → Connections.</div>
+              <div class="status-note">Indexes and allele-frequency rows are reported separately. {gnomadReadiness?.frequency_cache_summary || ''} Remote gnomAD follows the newest compatible public release when available; local/pinned sources stay unchanged.</div>
+              {#if gnomadReadiness?.ready && selectedSample && reportRsids.length > 0}
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm download-gnomad-button"
+                  disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
+                  onclick={handleRefreshGnomadFrequencyCache}
+                >
+                  {gnomadBusy ? 'Refreshing frequencies…' : 'Refresh report frequencies'}
+                </button>
+              {/if}
               {#if gnomadReadiness && !gnomadReadiness.ready}
                 <button
                   type="button"
@@ -1463,26 +1547,4 @@ import { onMount, onDestroy } from 'svelte';
     {/if}
   </div>
 
-  <!-- Import DNA Form -->
-  <GenomeImportPanel
-    bind:filePath
-    bind:sampleNameInput
-    {isImporting}
-    {progressPercent}
-    {progressStatus}
-    {importError}
-    {importSuccess}
-    disabled={sweepRunning || !runtimeAvailable}
-    {onBrowseFile}
-    {onImportGenome}
-  />
-
-  <!-- Active Profiles -->
-  <SampleList
-    {samples}
-    {selectedSample}
-    disabled={sweepRunning || !runtimeAvailable}
-    {onSelectSample}
-    {onDeleteSample}
-  />
 </aside>

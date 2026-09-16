@@ -20,8 +20,74 @@ Operational Notes: Designed for consumer-grade raw DNA, not clinical diagnostics
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use crate::offline::schema::schema_attached;
+
+#[derive(Debug, Deserialize)]
+struct ExportDisclosures {
+    privacy_warning: String,
+    raw_genotype_section_title: String,
+    raw_genotype_notice: String,
+    import_provenance_notice: String,
+}
+
+static EXPORT_DISCLOSURES: LazyLock<ExportDisclosures> = LazyLock::new(|| {
+    let policy = include_str!("../../src/lib/marker-packs/ai_prompt_policy.json");
+    serde_json::from_str::<serde_json::Value>(policy)
+        .ok()
+        .and_then(|value| value.get("export_disclosures").cloned())
+        .and_then(|value| serde_json::from_value(value).ok())
+        .expect("ai_prompt_policy.json must contain valid export disclosures")
+});
+
+/// The source callability resource is the canonical variant-type policy for
+/// both the TypeScript context and the Rust evaluator. Keeping the scoring
+/// decision in that resource prevents a non-SNP assertion with a one-letter
+/// label from entering the SNP allele counter.
+static CALLABILITY_SCORING_POLICIES: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let resource = include_str!("../../src/lib/marker-packs/callability_rules.json");
+    let value: serde_json::Value = serde_json::from_str(resource)
+        .expect("callability_rules.json must contain valid JSON");
+    value
+        .get("variant_type_registry")
+        .and_then(serde_json::Value::as_object)
+        .map(|registry| {
+            registry
+                .iter()
+                .filter_map(|(variant_type, policy)| {
+                    policy
+                        .get("scoring_policy")
+                        .and_then(serde_json::Value::as_str)
+                        .map(|scoring_policy| (variant_type.to_ascii_lowercase(), scoring_policy.to_string()))
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+});
+
+static CALLABILITY_ASSAY_REQUIREMENTS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let resource = include_str!("../../src/lib/marker-packs/callability_rules.json");
+    let value: serde_json::Value = serde_json::from_str(resource)
+        .expect("callability_rules.json must contain valid JSON");
+    value
+        .get("variant_type_registry")
+        .and_then(serde_json::Value::as_object)
+        .map(|registry| {
+            registry
+                .iter()
+                .filter_map(|(variant_type, policy)| {
+                    policy
+                        .get("assay_requirement")
+                        .and_then(serde_json::Value::as_str)
+                        .map(|requirement| {
+                            (variant_type.to_ascii_lowercase(), requirement.to_string())
+                        })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+});
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -327,6 +393,34 @@ pub enum AssertionStatus {
     NotEvaluated,
 }
 
+/// Explains whether the current report can evaluate the assertion without
+/// overloading `AssertionStatus`, which also carries raw-data and orientation
+/// outcomes. This is intentionally orthogonal: a SNP can be callable but not
+/// present in the imported file, while an HLA/panel assertion can be present
+/// as a row but not callable by this evaluator.
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CallabilityState {
+    Callable,
+    NotCallable,
+    NotPresent,
+    Blocked,
+    Unknown,
+}
+
+/// Explicit strand/orientation outcome, separate from assertion status and
+/// callability so consumers can explain why normalization was or was not
+/// applied without interpreting a missing call as a mismatch.
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum OrientationState {
+    Verified,
+    NotRequired,
+    Unverified,
+    Mismatch,
+    Unknown,
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct CanonicalVariant {
     pub rsid: String,
@@ -356,7 +450,15 @@ pub struct UserCall {
 #[derive(Debug, Serialize, Clone)]
 pub struct VariantCategoryLink {
     pub link_id: String, // format: "{pack_id}:{category_id}:{rsid}:{stable_assertion_hash}"
+    /// Explicit assertion identity, separate from Simple-mode presentation grouping.
+    pub assertion_key: String,
     pub rsid: String,
+    pub gene: String,
+    pub variant_name: Option<String>,
+    pub variant_type: Option<String>,
+    pub source_build: Option<String>,
+    pub hgvs: Option<String>,
+    pub orientation_source: Option<String>,
     pub category_id: String,
     pub category_label: String,
     pub impact: String,
@@ -370,6 +472,8 @@ pub struct VariantCategoryLink {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effect_count: Option<u8>,
     pub assertion_status: AssertionStatus,
+    pub callability_state: CallabilityState,
+    pub orientation_state: OrientationState,
     pub requires_orientation_verification: bool,
     pub interpretation_allowed: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -557,6 +661,7 @@ pub struct SectionSummary {
     pub trait_count: u16,
     pub context_dependent_count: u16,
     pub no_data_count: u16,
+    pub not_evaluated_count: u16,
     pub confirmation_required_count: u16,
     pub total_markers: u16,
     pub show_percent_score: bool,
@@ -598,6 +703,10 @@ pub struct GeneratedReport {
     /// Explicit catalog readiness notes (never silent when ClinVar/dbSNP expected but missing).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub catalog_warnings: Vec<String>,
+    /// Source-file and coordinate provenance for the genotype database used
+    /// to produce this report. This contains metadata, not raw genotype rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub import_provenance: Option<crate::parser::ImportProvenance>,
 }
 
 // ---------------------------------------------------------------------------
@@ -649,6 +758,125 @@ fn compute_severity_class(
                 (1, _, true) => "low_risk".to_string(),           // Tier D/E single copy
                 (1, _, _) => "moderate_risk".to_string(),         // Tier A/B/C, single copy
                 _ => "benign".to_string(),
+            }
+        }
+    }
+}
+
+/// Return whether the curated assertion currently defines an allele that the
+/// consumer-array report evaluator can compare to the stored raw call.
+///
+/// This deliberately accepts only a single canonical nucleotide. Prose such
+/// as `study_reported_allele`, `N/A`, panel classifications, and multi-locus
+/// score labels must not fall through to `count_effect_alleles`, where a zero
+/// count would otherwise look like a benign result. Indels, haplotypes, CNVs,
+/// HLA alleles, diplotypes, and PRS models require their own callability
+/// policy and remain outside this SNP counter until one exists.
+fn is_matchable_effect_allele(effect_allele: &str) -> bool {
+    let allele = effect_allele.trim().to_ascii_uppercase();
+    allele.chars().count() == 1
+        && allele
+            .chars()
+            .next()
+            .is_some_and(|base| matches!(base, 'A' | 'C' | 'G' | 'T'))
+}
+
+fn is_matchable_snp_assertion(variant_type: Option<&str>, effect_allele: &str) -> bool {
+    // Existing programmatic report templates may omit variant_type. Preserve
+    // that API by treating an omitted type as the legacy SNP path; curated
+    // marker packs are required to classify every row as a concrete type.
+    let policy_type = variant_type
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("snp")
+        .to_ascii_lowercase();
+    CALLABILITY_SCORING_POLICIES
+        .get(&policy_type)
+        .is_some_and(|policy| policy == "snp_allele_count")
+        && is_matchable_effect_allele(effect_allele)
+}
+
+fn callability_state_for_result(
+    variant_type: Option<&str>,
+    assertion_status: AssertionStatus,
+    is_missing: bool,
+) -> CallabilityState {
+    let policy_type = variant_type
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("snp")
+        .to_ascii_lowercase();
+    let evaluator_can_score = CALLABILITY_SCORING_POLICIES
+        .get(&policy_type)
+        .is_some_and(|policy| policy == "snp_allele_count");
+
+    if !evaluator_can_score || assertion_status == AssertionStatus::NotEvaluated {
+        return CallabilityState::NotCallable;
+    }
+    if is_missing {
+        return CallabilityState::NotPresent;
+    }
+    if matches!(
+        assertion_status,
+        AssertionStatus::BlockedRawCall
+            | AssertionStatus::UnverifiedOrientation
+            | AssertionStatus::OrientationMismatch
+            | AssertionStatus::AmbiguousAlleles
+    ) {
+        return CallabilityState::Blocked;
+    }
+    if assertion_status == AssertionStatus::Verified {
+        return CallabilityState::Callable;
+    }
+    CallabilityState::Unknown
+}
+
+fn callability_assay_requirement(variant_type: Option<&str>) -> String {
+    let policy_type = variant_type
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("snp")
+        .to_ascii_lowercase();
+    CALLABILITY_ASSAY_REQUIREMENTS
+        .get(&policy_type)
+        .or_else(|| CALLABILITY_ASSAY_REQUIREMENTS.get("unspecified"))
+        .cloned()
+        .unwrap_or_else(|| "variant type must be classified before interpretation".to_string())
+}
+
+fn orientation_state_for_result(
+    assertion_status: AssertionStatus,
+    requires_orientation_verification: bool,
+    marker_orientation_evidence: bool,
+    orientation_mismatch_detected: bool,
+    is_missing: bool,
+) -> OrientationState {
+    if orientation_mismatch_detected {
+        return OrientationState::Mismatch;
+    }
+    match assertion_status {
+        AssertionStatus::OrientationMismatch => OrientationState::Mismatch,
+        AssertionStatus::UnverifiedOrientation => OrientationState::Unverified,
+        AssertionStatus::Verified => {
+            if requires_orientation_verification || marker_orientation_evidence {
+                OrientationState::Verified
+            } else {
+                OrientationState::NotRequired
+            }
+        }
+        AssertionStatus::NoData
+        | AssertionStatus::NotInRawFile
+        | AssertionStatus::BlockedRawCall
+        | AssertionStatus::AmbiguousAlleles
+        | AssertionStatus::NotEvaluated => {
+            if requires_orientation_verification {
+                if is_missing {
+                    OrientationState::Unknown
+                } else {
+                    OrientationState::Unverified
+                }
+            } else {
+                OrientationState::NotRequired
             }
         }
     }
@@ -1110,6 +1338,7 @@ struct RawDbsnpGnomad {
 fn fetch_gnomad_dbsnp_metadata(
     conn: &Connection,
     rsids: &[String],
+    current_release: Option<&str>,
 ) -> HashMap<String, RawDbsnpGnomad> {
     if rsids.is_empty() {
         return HashMap::new();
@@ -1119,9 +1348,10 @@ fn fetch_gnomad_dbsnp_metadata(
     let sql = "SELECT chrom, pos, ref, alt, af, release, source_mode, dataset,
                       popmax, popmax_population, faf95_popmax, homozygote_count, rsids_json
                FROM reference.gnomad_variant_cache 
-               WHERE lookup_status IN ('found', 'remote_vcf_hit')";
+               WHERE (?1 IS NULL OR release = ?1)
+                 AND lookup_status IN ('found', 'remote_vcf_hit', 'local_vcf_hit', 'graphql_hit', 'cache_hit')";
     if let Ok(mut stmt) = conn.prepare(sql) {
-        if let Ok(rows) = stmt.query_map([], |row| {
+        if let Ok(rows) = stmt.query_map(rusqlite::params![current_release], |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, i64>(1)?,
@@ -1453,6 +1683,41 @@ pub fn generate_report(
     sample_id: i64,
     template: &ReportTemplate,
 ) -> Result<GeneratedReport, String> {
+    let import_provenance = conn
+        .query_row(
+            "SELECT import_id, source_file_name, source_file_sha256, source_format,
+                    source_vendor, delimiter, source_build, coordinate_system, allele_orientation,
+                    total_rows, accepted_rows, malformed_rows, duplicate_rows,
+                    liftover_mapped_rows, liftover_unmapped_rows
+             FROM import_provenance ORDER BY imported_at DESC LIMIT 1",
+            [],
+            |row| {
+                Ok(crate::parser::ImportProvenance {
+                    import_id: row.get(0)?,
+                    source_file_name: row.get(1)?,
+                    source_file_sha256: row.get(2)?,
+                    diagnostics: crate::parser::ParseDiagnostics {
+                        format: row.get(3)?,
+                        vendor: row.get(4)?,
+                        delimiter: row.get(5)?,
+                        source_build: row.get(6)?,
+                        coordinate_system: row.get(7)?,
+                        allele_orientation: row.get(8)?,
+                        total_rows: row.get::<_, i64>(9)?.max(0) as usize,
+                        accepted_rows: row.get::<_, i64>(10)?.max(0) as usize,
+                        malformed_rows: row.get::<_, i64>(11)?.max(0) as usize,
+                        duplicate_rows: row.get::<_, i64>(12)?.max(0) as usize,
+                        warnings: Vec::new(),
+                    },
+                    liftover_mapped_rows: row.get::<_, i64>(13)?.max(0) as usize,
+                    liftover_unmapped_rows: row.get::<_, i64>(14)?.max(0) as usize,
+                })
+            },
+        )
+        .ok();
+    let import_source_build = import_provenance
+        .as_ref()
+        .map(|provenance| provenance.diagnostics.source_build.clone());
     let mut catalog_warnings = Vec::new();
     let clinvar_attached = schema_attached(conn, "clinvar");
     let dbsnp_attached = schema_attached(conn, "dbsnp");
@@ -1620,7 +1885,14 @@ pub fn generate_report(
 
     // 3. Batch-fetch local reference enrichment and dbSNP metadata
     let enrichment_map = fetch_local_enrichment(conn, &rsids);
-    let dbsnp_data = fetch_gnomad_dbsnp_metadata(conn, &rsids);
+    let current_gnomad_release = conn
+        .query_row(
+            "SELECT release FROM reference.gnomad_config WHERE id = 1",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .ok();
+    let dbsnp_data = fetch_gnomad_dbsnp_metadata(conn, &rsids, current_gnomad_release.as_deref());
     let pharmgkb_map = fetch_pharmgkb_enrichment(conn, &rsids);
     let clingen_map = fetch_clingen_enrichment(conn, &genes);
     let mane_map = fetch_mane_enrichment(conn, &genes);
@@ -1652,6 +1924,7 @@ pub fn generate_report(
         let mut trait_count: u16 = 0;
         let mut context_dependent_count: u16 = 0;
         let mut no_data_count: u16 = 0;
+        let mut not_evaluated_count: u16 = 0;
         let mut confirmation_required_count: u16 = 0;
         let mut all_require_confirmation = true;
 
@@ -1699,9 +1972,17 @@ pub fn generate_report(
             let is_missing = raw_call == "--"
                 || raw_call.contains('-')
                 || raw_call.contains('0')
-                || raw_call.contains('?');
+                || raw_call.contains('?')
+                || raw_call.contains('N');
+            let has_known_base = raw_call
+                .chars()
+                .any(|base| matches!(base, 'A' | 'C' | 'G' | 'T'));
+            let has_ambiguous_base = raw_call.contains('?')
+                || (raw_call.contains('N') && has_known_base);
             let call_status = if is_missing {
-                if genotype_map.contains_key(&m.rsid) {
+                if has_ambiguous_base {
+                    CallStatus::AmbiguousRawCall
+                } else if genotype_map.contains_key(&m.rsid) {
                     CallStatus::NoData
                 } else {
                     CallStatus::NotInRawFile
@@ -1716,7 +1997,7 @@ pub fn generate_report(
                     user_genotype: raw_call.clone(),
                     normalized_genotype: None,
                     call_status,
-                    source_build: m.source_build.clone(),
+                    source_build: import_source_build.clone().or_else(|| m.source_build.clone()),
                 });
 
             // Evaluate Assertion details
@@ -1740,23 +2021,48 @@ pub fn generate_report(
                 .expected_plus_alleles
                 .clone()
                 .or_else(|| dbsnp_rec.map(|db| vec![db.ref_allele.clone(), db.alt_allele.clone()]));
+            let marker_orientation_evidence = m.allele_orientation_verified == Some(true)
+                && m.orientation_source.as_deref().is_some_and(|source| !source.trim().is_empty());
+            let imported_file_orientation_evidence = import_provenance
+                .as_ref()
+                .map(|provenance| !provenance.diagnostics.allele_orientation.starts_with("Unknown"))
+                .unwrap_or(false);
+            // A dbSNP/gnomAD row describes the reference allele set; it does
+            // not prove that this consumer file used the same strand. For a
+            // current import, both the marker resource and source-file
+            // orientation evidence are required before complementing a call.
+            let orientation_can_be_normalized = marker_orientation_evidence
+                && (imported_file_orientation_evidence
+                    || (import_provenance.is_none() && dbsnp_data.contains_key(&m.rsid)));
 
             let assertion_status;
             let mut interpretation_allowed = true;
             let mut effect_count: Option<u8> = None;
             let mut interpretation = m.interpretation.clone();
             let mut impact = m.impact.clone();
+            let mut orientation_mismatch_detected = false;
             let severity_class;
 
             if is_missing {
                 assertion_status = if call_status == CallStatus::NotInRawFile {
                     AssertionStatus::NotInRawFile
+                } else if call_status == CallStatus::AmbiguousRawCall {
+                    AssertionStatus::BlockedRawCall
                 } else {
                     AssertionStatus::NoData
                 };
                 interpretation_allowed = false;
                 severity_class = "no_data".to_string();
+                if call_status == CallStatus::AmbiguousRawCall {
+                    interpretation = "⚠️ Interpretation blocked: the raw export contains an ambiguous call at this marker. Confirm the source file or use a validated clinical assay.".to_string();
+                }
                 no_data_count += 1;
+            } else if !is_matchable_snp_assertion(m.variant_type.as_deref(), &m.effect_allele) {
+                assertion_status = AssertionStatus::NotEvaluated;
+                interpretation_allowed = false;
+                severity_class = "not_evaluated".to_string();
+                interpretation = "Interpretation not evaluated: this assertion does not define a matchable raw-DNA allele. No genotype-based conclusion was produced.".to_string();
+                not_evaluated_count += 1;
             } else {
                 active_marker_count += 1;
                 let mut current_genotype = raw_call.clone();
@@ -1781,8 +2087,7 @@ pub fn generate_report(
                         }
 
                         if !comp_mismatch {
-                            let orientation_confirmed = dbsnp_data.contains_key(&m.rsid);
-                            if orientation_confirmed {
+                            if orientation_can_be_normalized {
                                 current_genotype = comp_genotype;
                                 if let Some(uc) = user_calls_map.get_mut(&m.rsid) {
                                     uc.normalized_genotype = Some(current_genotype.clone());
@@ -1797,9 +2102,14 @@ pub fn generate_report(
                 }
 
                 // Check orientation validation
-                let has_metadata =
-                    expected_plus_alleles.is_some() || dbsnp_data.contains_key(&m.rsid);
+                let direct_expected_match = expected_plus_alleles.as_ref().is_some_and(|expected| {
+                    current_genotype
+                        .chars()
+                        .all(|allele| expected.contains(&allele.to_string()))
+                });
+                let has_metadata = direct_expected_match || orientation_can_be_normalized;
                 let is_unverified = !has_metadata || orientation_warning;
+                orientation_mismatch_detected = orientation_warning;
 
                 if requires_orientation_verification && is_unverified {
                     assertion_status = AssertionStatus::UnverifiedOrientation;
@@ -1871,7 +2181,7 @@ pub fn generate_report(
             // Track confirmation requirements
             let requires_confirmation = m.clinical_confirmation_required == Some(true);
             if requires_confirmation {
-                if !is_missing {
+                if !is_missing && assertion_status != AssertionStatus::NotEvaluated {
                     confirmation_required_count += 1;
                 }
             } else {
@@ -2055,8 +2365,82 @@ pub fn generate_report(
                 );
             }
 
-            // Construct link object
-            let assertion_text = format!("{}{}", impact, interpretation);
+            let enrichment_reference_ids = enrichment_map_out
+                .get(&m.rsid)
+                .map(|enrichment| enrichment.reference_ids.as_slice())
+                .unwrap_or_default();
+            let mut reference_ids = marker_reference_ids.clone();
+            for reference_id in enrichment_reference_ids {
+                if !reference_ids.contains(reference_id) {
+                    reference_ids.push(reference_id.clone());
+                }
+            }
+
+            // Construct an explicit assertion identity. rsID remains the lookup
+            // key for one raw call, while this additive key separates the
+            // biomedical assertion from Simple-mode presentation grouping.
+            let assertion_key = serde_json::json!({
+                "version": 1,
+                "locus": {
+                    "rsid": m.rsid,
+                    "gene": m.gene,
+                    "source_build": m.source_build,
+                    "hgvs": m.hgvs,
+                },
+                "allele_definition": {
+                    "variant_type": m.variant_type.as_deref().unwrap_or("snp"),
+                    "effect_allele": m.effect_allele,
+                    "expected_plus_alleles": expected_plus_alleles.clone(),
+                },
+                "condition_or_trait": {
+                    "category_id": category_id,
+                    "label": m
+                        .clinical_semantics
+                        .as_ref()
+                        .and_then(|semantics| semantics.condition_label.clone())
+                        .or_else(|| m.variant_name.clone()),
+                    "interpretation_class": m
+                        .clinical_semantics
+                        .as_ref()
+                        .and_then(|semantics| semantics.interpretation_class.clone()),
+                    "inheritance_model": m
+                        .clinical_semantics
+                        .as_ref()
+                        .and_then(|semantics| semantics.inheritance_model.clone()),
+                    "clinical_state": m
+                        .clinical_semantics
+                        .as_ref()
+                        .and_then(|semantics| semantics.clinical_state.clone()),
+                },
+                "population_context": {
+                    "sex_scope": m.sex_scope,
+                },
+                "assay_requirement": callability_assay_requirement(m.variant_type.as_deref()),
+                "source_assertion": reference_ids.clone(),
+            })
+            .to_string();
+
+            // Construct a semantic link identity. rsID remains the lookup
+            // key for one raw call, while the link identity distinguishes
+            // gene, allele, direction, variant type, build, clinical
+            // semantics, and source references when a marker is reused.
+            let assertion_text = serde_json::json!({
+                "rsid": m.rsid,
+                "gene": m.gene,
+                "variant_name": m.variant_name,
+                "variant_type": m.variant_type,
+                "effect_allele": m.effect_allele,
+                "effect_direction": m.effect_direction,
+                "impact": impact,
+                "interpretation": interpretation,
+                "evidence_tier": m.evidence_tier,
+                "source_build": m.source_build,
+                "hgvs": m.hgvs,
+                "expected_plus_alleles": expected_plus_alleles,
+                "clinical_semantics": m.clinical_semantics,
+                "reference_ids": reference_ids,
+            })
+            .to_string();
             let link_id = format!(
                 "{}:{}:{}:{}",
                 pack_id,
@@ -2065,20 +2449,16 @@ pub fn generate_report(
                 stable_hash(&assertion_text)
             );
 
-            let enrichment_reference_ids = enrichment_map_out
-                .get(&m.rsid)
-                .map(|enrichment| enrichment.reference_ids.as_slice())
-                .unwrap_or_default();
-            let mut reference_ids = marker_reference_ids;
-            for reference_id in enrichment_reference_ids {
-                if !reference_ids.contains(reference_id) {
-                    reference_ids.push(reference_id.clone());
-                }
-            }
-
             let link = VariantCategoryLink {
                 link_id: link_id.clone(),
+                assertion_key,
                 rsid: m.rsid.clone(),
+                gene: m.gene.clone(),
+                variant_name: m.variant_name.clone(),
+                variant_type: m.variant_type.clone(),
+                source_build: m.source_build.clone(),
+                hgvs: m.hgvs.clone(),
+                orientation_source: m.orientation_source.clone(),
                 category_id: category_id.clone(),
                 category_label: sec.name.clone(),
                 impact,
@@ -2090,6 +2470,18 @@ pub fn generate_report(
                 severity_class,
                 effect_count,
                 assertion_status,
+                callability_state: callability_state_for_result(
+                    m.variant_type.as_deref(),
+                    assertion_status,
+                    is_missing,
+                ),
+                orientation_state: orientation_state_for_result(
+                    assertion_status,
+                    requires_orientation_verification,
+                    marker_orientation_evidence,
+                    orientation_mismatch_detected,
+                    is_missing,
+                ),
                 requires_orientation_verification,
                 interpretation_allowed,
                 do_not_claim: m.do_not_claim.clone(),
@@ -2122,6 +2514,7 @@ pub fn generate_report(
             trait_count,
             context_dependent_count,
             no_data_count,
+            not_evaluated_count,
             confirmation_required_count,
             total_markers: sec.markers.len() as u16,
             show_percent_score,
@@ -2164,6 +2557,7 @@ pub fn generate_report(
         sections: evaluated_sections,
         references: reference_registry.references,
         catalog_warnings,
+        import_provenance,
     })
 }
 
@@ -2176,6 +2570,33 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
     let mut md = String::new();
     md.push_str(&format!("# {}\n\n", report.title));
     md.push_str(&format!(">{}\n\n", report.description));
+    md.push_str(&format!("{}\n\n", EXPORT_DISCLOSURES.privacy_warning));
+    md.push_str(&format!(
+        "## {}\n\n{}\n\n",
+        EXPORT_DISCLOSURES.raw_genotype_section_title,
+        EXPORT_DISCLOSURES.raw_genotype_notice
+    ));
+    if let Some(provenance) = &report.import_provenance {
+        md.push_str("## Import provenance\n\n");
+        md.push_str(&format!("{}\n\n", EXPORT_DISCLOSURES.import_provenance_notice));
+        md.push_str(&format!(
+            "- Import ID: `{}`\n- Source file: `{}`\n- Source SHA-256: `{}`\n- Format/vendor: `{}` / `{}` ({})\n- Source build: `{}`\n- Coordinate system: `{}`\n- Allele orientation: `{}`\n- Rows: {} accepted; {} malformed; {} duplicate\n- Liftover: {} mapped; {} unmapped\n\n",
+            provenance.import_id,
+            provenance.source_file_name,
+            provenance.source_file_sha256,
+            provenance.diagnostics.format,
+            provenance.diagnostics.vendor,
+            provenance.diagnostics.delimiter,
+            provenance.diagnostics.source_build,
+            provenance.diagnostics.coordinate_system,
+            provenance.diagnostics.allele_orientation,
+            provenance.diagnostics.accepted_rows,
+            provenance.diagnostics.malformed_rows,
+            provenance.diagnostics.duplicate_rows,
+            provenance.liftover_mapped_rows,
+            provenance.liftover_unmapped_rows,
+        ));
+    }
     md.push_str(&format!(
         "**Matched allele load**: {:.1}%\n\n",
         report.overall_signal_score
@@ -2197,27 +2618,26 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
 
         let s = &sec.summary;
         md.push_str(&format!(
-            "Summary: {} markers | {} association alleles/{} possible | {} protective | {} trait | {} context-dependent | {} no-data | {} confirmation-required\n\n",
+            "Summary: {} markers | {} association alleles/{} possible | {} protective | {} trait | {} context-dependent | {} no-data | {} not-evaluated | {} confirmation-required\n\n",
             s.total_markers, s.risk_effect_count, s.risk_possible,
             s.protective_effect_count, s.trait_count,
-            s.context_dependent_count, s.no_data_count, s.confirmation_required_count
+            s.context_dependent_count, s.no_data_count, s.not_evaluated_count,
+            s.confirmation_required_count
         ));
 
-        md.push_str("| Marker | Gene | Genotype | Effect Allele | Severity | Direction | Tier | Interpretation |\n");
-        md.push_str("|---|---|---|---|---|---|---|---|\n");
+        md.push_str("| Marker | Gene | Raw genotype | Normalized genotype | Effect Allele | Severity | Direction | Tier | Interpretation |\n");
+        md.push_str("|---|---|---|---|---|---|---|---|---|\n");
 
         for link_id in &sec.link_ids {
             if let Some(link) = report.category_links.get(link_id) {
-                let user_genotype = report
+                let (raw_genotype, normalized_genotype) = report
                     .user_calls
                     .get(&link.rsid)
-                    .map(|uc| {
-                        uc.normalized_genotype
-                            .as_ref()
-                            .unwrap_or(&uc.user_genotype)
-                            .as_str()
-                    })
-                    .unwrap_or("--");
+                    .map(|uc| (
+                        uc.user_genotype.as_str(),
+                        uc.normalized_genotype.as_deref().unwrap_or("--"),
+                    ))
+                    .unwrap_or(("--", "--"));
 
                 let dir_str = match link.effect_direction {
                     EffectDirection::Risk => "Risk",
@@ -2236,10 +2656,11 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
                     .unwrap_or("");
 
                 md.push_str(&format!(
-                    "| **{}** | **{}** | `{}` | `{}` | {} | {} | `{}` | *{}* |\n",
+                    "| **{}** | **{}** | `{}` | `{}` | `{}` | {} | {} | `{}` | *{}* |\n",
                     link.rsid,
                     gene,
-                    user_genotype,
+                    raw_genotype,
+                    normalized_genotype,
                     link.effect_allele,
                     link.severity_class,
                     dir_str,
@@ -2465,7 +2886,6 @@ mod tests {
             ],
         )
         .unwrap();
-
         let marker = MarkerDefinition {
             rsid: "rs55886062".to_string(),
             gene: "DPYD".to_string(),
@@ -2489,7 +2909,12 @@ mod tests {
             allele_orientation_verified: Some(true),
             orientation_source: Some("dbSNP".to_string()),
             interpretation_blocked_if_unverified: Some(true),
-            clinical_semantics: None,
+            clinical_semantics: Some(ClinicalSemantics {
+                condition_label: Some("DPYD fluoropyrimidine toxicity context".to_string()),
+                interpretation_class: Some(FindingInterpretationClass::ClinicallyActionableVariant),
+                inheritance_model: Some(FindingInheritanceModel::AutosomalRecessive),
+                clinical_state: Some(FindingClinicalState::Unknown),
+            }),
         };
 
         let template = ReportTemplate {
@@ -2510,6 +2935,23 @@ mod tests {
         assert_eq!(call.user_genotype, "AA");
         assert_eq!(evaluated.effect_count, Some(0));
         assert_eq!(evaluated.severity_class, "benign");
+        assert_eq!(evaluated.orientation_state, OrientationState::Verified);
+        let assertion_key = evaluated.assertion_key.clone();
+        let assertion_identity: serde_json::Value =
+            serde_json::from_str(&assertion_key).expect("assertion key JSON");
+        assert_eq!(assertion_identity["version"], 1);
+        assert_eq!(assertion_identity["locus"]["rsid"], "rs55886062");
+        assert_eq!(assertion_identity["allele_definition"]["effect_allele"], "C");
+        assert_eq!(
+            assertion_identity["condition_or_trait"]["interpretation_class"],
+            "clinically_actionable_variant"
+        );
+        assert_eq!(
+            assertion_identity["condition_or_trait"]["inheritance_model"],
+            "autosomal_recessive"
+        );
+        assert!(assertion_key.contains("assay_requirement"));
+        assert!(!assertion_key.contains("AA"));
 
         // Now test genotype GG (G is not in expected alleles [A, C])
         conn.execute("DELETE FROM genotypes", []).unwrap();
@@ -2536,7 +2978,212 @@ mod tests {
         // Genotype GG triggers orientation warning and safety gate block
         assert_eq!(call2.user_genotype, "GG");
         assert_eq!(evaluated2.severity_class, "confirmation_required");
+        assert_eq!(evaluated2.orientation_state, OrientationState::Mismatch);
         assert!(evaluated2.interpretation.contains("blocked"));
+        assert_eq!(evaluated2.assertion_key, assertion_key);
+
+        // Adding an unrelated source-backed assertion must not migrate the
+        // existing assertion identity. This protects downstream chat/export
+        // consumers from row-order or source-table churn.
+        let mut expanded_template = template.clone();
+        let mut unrelated_marker = marker.clone();
+        unrelated_marker.rsid = "rs-unrelated-test".to_string();
+        unrelated_marker.gene = "UNRELATED".to_string();
+        unrelated_marker.variant_name = Some("Unrelated test assertion".to_string());
+        unrelated_marker.sources = Some(vec![MarkerSource {
+            name: "Unrelated test source".to_string(),
+            url: Some("https://example.test/unrelated".to_string()),
+            accessed: None,
+            evidence_type: Some("test".to_string()),
+            conflict_of_interest: None,
+            notes: None,
+        }]);
+        expanded_template.sections[0].markers.push(unrelated_marker);
+
+        let report3 = generate_report(&conn, sample_id, &expanded_template).unwrap();
+        let expanded_link_id = report3.sections[0]
+            .link_ids
+            .iter()
+            .find(|candidate| {
+                report3
+                    .category_links
+                    .get(*candidate)
+                    .map(|link| link.rsid == "rs55886062")
+                    .unwrap_or(false)
+            })
+            .expect("original assertion retained after unrelated row addition");
+        let expanded_evaluated = report3
+            .category_links
+            .get(expanded_link_id)
+            .expect("expanded original assertion link");
+        assert_eq!(expanded_link_id, link_id2);
+        assert_eq!(expanded_evaluated.assertion_key, assertion_key);
+    }
+
+    #[test]
+    fn test_non_matchable_effect_allele_is_not_evaluated() {
+        let conn = setup_test_db();
+        let sample_id = 1;
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                &sample_id.to_string(),
+                "rs-study-label",
+                "1",
+                "100",
+                "100",
+                "A",
+                "A",
+            ],
+        )
+        .unwrap();
+
+        let template = ReportTemplate {
+            title: "Non-matchable assertion test".to_string(),
+            description: "Test".to_string(),
+            sections: vec![SectionDefinition {
+                name: "Research".to_string(),
+                markers: vec![MarkerDefinition {
+                    rsid: "rs-study-label".to_string(),
+                    gene: "GENE1".to_string(),
+                    variant_name: Some("Study-defined label".to_string()),
+                    effect_allele: "study_reported_allele".to_string(),
+                    impact: "Research context".to_string(),
+                    evidence_tier: "C_candidate_OR_mechanistic".to_string(),
+                    interpretation: "Context only".to_string(),
+                    do_not_claim: vec![],
+                    confirm_with: vec![],
+                    effect_direction: EffectDirection::Risk,
+                    raw_dna_limitation: None,
+                    clinical_confirmation_required: None,
+                    sex_scope: None,
+                    sources: None,
+                    variant_type: Some("snp".to_string()),
+                    expected_plus_alleles: Some(vec!["A".to_string(), "G".to_string()]),
+                    strand: None,
+                    source_build: Some("GRCh38".to_string()),
+                    hgvs: None,
+                    allele_orientation_verified: Some(true),
+                    orientation_source: Some("test".to_string()),
+                    interpretation_blocked_if_unverified: Some(false),
+                    clinical_semantics: None,
+                }],
+            }],
+        };
+
+        let report = generate_report(&conn, sample_id, &template).unwrap();
+        let link = report
+            .category_links
+            .get(&report.sections[0].link_ids[0])
+            .unwrap();
+
+        assert_eq!(link.assertion_status, AssertionStatus::NotEvaluated);
+        assert_eq!(link.callability_state, CallabilityState::NotCallable);
+        assert_eq!(link.effect_count, None);
+        assert_eq!(link.severity_class, "not_evaluated");
+        assert!(!link.interpretation_allowed);
+        assert_eq!(report.sections[0].summary.not_evaluated_count, 1);
+        assert_eq!(report.sections[0].summary.risk_effect_count, 0);
+    }
+
+    #[test]
+    fn test_non_snp_variant_type_cannot_enter_snp_counter() {
+        let conn = setup_test_db();
+        let sample_id = 1;
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                &sample_id.to_string(),
+                "rare-variant-label",
+                "1",
+                "100",
+                "100",
+                "A",
+                "A",
+            ],
+        )
+        .unwrap();
+
+        let report = generate_report(
+            &conn,
+            sample_id,
+            &ReportTemplate {
+                title: "Variant-type registry test".to_string(),
+                description: "Test".to_string(),
+                sections: vec![SectionDefinition {
+                    name: "Rare variant".to_string(),
+                    markers: vec![MarkerDefinition {
+                        rsid: "rare-variant-label".to_string(),
+                        gene: "GENE1".to_string(),
+                        variant_name: Some("Rare variant label".to_string()),
+                        effect_allele: "A".to_string(),
+                        impact: "Confirmation required".to_string(),
+                        evidence_tier: "A_rare_high_effect_when_confirmed".to_string(),
+                        interpretation: "Requires a variant-specific assay".to_string(),
+                        do_not_claim: vec!["A consumer SNP call is not sufficient".to_string()],
+                        confirm_with: vec!["Clinical sequencing".to_string()],
+                        effect_direction: EffectDirection::Risk,
+                        raw_dna_limitation: None,
+                        clinical_confirmation_required: Some(true),
+                        sex_scope: None,
+                        sources: None,
+                        variant_type: Some("rare_variant".to_string()),
+                        expected_plus_alleles: Some(vec!["A".to_string(), "G".to_string()]),
+                        strand: None,
+                        source_build: Some("GRCh38".to_string()),
+                        hgvs: None,
+                        allele_orientation_verified: Some(true),
+                        orientation_source: Some("test".to_string()),
+                        interpretation_blocked_if_unverified: Some(false),
+                        clinical_semantics: None,
+                    }],
+                }],
+            },
+        )
+        .unwrap();
+        let link = report
+            .category_links
+            .get(&report.sections[0].link_ids[0])
+            .unwrap();
+
+        assert_eq!(link.assertion_status, AssertionStatus::NotEvaluated);
+        assert_eq!(link.callability_state, CallabilityState::NotCallable);
+        assert_eq!(link.effect_count, None);
+        assert_eq!(link.severity_class, "not_evaluated");
+        assert!(!link.interpretation_allowed);
+        assert_eq!(report.sections[0].summary.risk_effect_count, 0);
+    }
+
+    #[test]
+    fn test_effect_allele_matchability_is_conservative() {
+        assert!(is_matchable_effect_allele("A"));
+        assert!(is_matchable_effect_allele(" t "));
+        assert!(!is_matchable_effect_allele("study_reported_allele"));
+        assert!(!is_matchable_effect_allele("N/A"));
+        assert!(!is_matchable_effect_allele("TA"));
+        assert!(!is_matchable_effect_allele("I"));
+        assert!(is_matchable_snp_assertion(Some("snp"), "A"));
+        assert!(is_matchable_snp_assertion(Some("pharmacogenomic_snp"), "C"));
+        assert!(!is_matchable_snp_assertion(Some("rare_variant"), "A"));
+        assert!(!is_matchable_snp_assertion(Some("hla_tag"), "A"));
+        assert_eq!(
+            callability_state_for_result(Some("snp"), AssertionStatus::Verified, false),
+            CallabilityState::Callable
+        );
+        assert_eq!(
+            callability_state_for_result(Some("snp"), AssertionStatus::NotInRawFile, true),
+            CallabilityState::NotPresent
+        );
+        assert_eq!(
+            callability_state_for_result(Some("snp"), AssertionStatus::OrientationMismatch, false),
+            CallabilityState::Blocked
+        );
+        assert_eq!(
+            callability_state_for_result(Some("hla_tag"), AssertionStatus::NotInRawFile, true),
+            CallabilityState::NotCallable
+        );
     }
 
     #[test]
@@ -2556,6 +3203,21 @@ mod tests {
                 "1000",
                 "C",
                 "C",
+            ],
+        )
+        .unwrap();
+
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                &sample_id.to_string(),
+                "rs67890",
+                "1",
+                "2000",
+                "2000",
+                "?",
+                "A",
             ],
         )
         .unwrap();
@@ -2661,12 +3323,20 @@ mod tests {
             ],
         };
 
-        let report = generate_report(&conn, sample_id, &template).unwrap();
+        let mut report = generate_report(&conn, sample_id, &template).unwrap();
 
         // 1. Deduplication checks
         assert_eq!(report.variants.len(), 2);
         assert!(report.variants.contains_key("rs12345"));
         assert!(report.variants.contains_key("rs67890"));
+
+        let ambiguous_call = report.user_calls.get("rs67890").unwrap();
+        assert_eq!(ambiguous_call.call_status, CallStatus::AmbiguousRawCall);
+        let ambiguous_link = report
+            .category_links
+            .get(&report.sections[1].link_ids[1])
+            .unwrap();
+        assert_eq!(ambiguous_link.assertion_status, AssertionStatus::BlockedRawCall);
 
         assert_eq!(report.user_calls.len(), 2);
         assert!(report.user_calls.contains_key("rs12345"));
@@ -2698,6 +3368,17 @@ mod tests {
         assert_eq!(link1.reference_ids[0], report.references[0].id);
         assert!(link2.reference_ids.is_empty());
 
+        // Technical Markdown must preserve the source call even when a
+        // strand-normalized call is also available for interpretation.
+        report
+            .user_calls
+            .get_mut("rs12345")
+            .unwrap()
+            .normalized_genotype = Some("GG".to_string());
+        let markdown = render_markdown(&report);
+        assert!(markdown.contains("Exact raw genotype calls"));
+        assert!(markdown.contains("`CC` | `GG`"));
+
         // 3. Omission check: effect_count is Some(2) for rs12345, but None for rs67890
         assert_eq!(link1.effect_count, Some(2));
         assert_eq!(link_missing.effect_count, None);
@@ -2711,6 +3392,30 @@ mod tests {
                 .as_object()
                 .unwrap()
                 .contains_key("effect_count")
+        );
+
+        // Unknown bases must not be treated as verified calls. A mixed call is
+        // ambiguous, while an all-unknown call is simply no data.
+        conn.execute(
+            "UPDATE genotypes SET allele1 = 'N', allele2 = 'A' WHERE sample_id = ? AND rsid = ?",
+            [&sample_id.to_string(), "rs67890"],
+        )
+        .unwrap();
+        let mixed_unknown_report = generate_report(&conn, sample_id, &template).unwrap();
+        assert_eq!(
+            mixed_unknown_report.user_calls.get("rs67890").unwrap().call_status,
+            CallStatus::AmbiguousRawCall
+        );
+
+        conn.execute(
+            "UPDATE genotypes SET allele1 = 'N', allele2 = 'N' WHERE sample_id = ? AND rsid = ?",
+            [&sample_id.to_string(), "rs67890"],
+        )
+        .unwrap();
+        let all_unknown_report = generate_report(&conn, sample_id, &template).unwrap();
+        assert_eq!(
+            all_unknown_report.user_calls.get("rs67890").unwrap().call_status,
+            CallStatus::NoData
         );
     }
 }

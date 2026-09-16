@@ -4,18 +4,21 @@
  * This record is deliberately separate from the generated DNA report. It is
  * supplied by the profile owner and is only used by Connected Chat and the
  * export pipeline. The legacy per-profile keys remain readable and writable
- * for compatibility; no stored context is deleted during migration.
+ * for compatibility. The old global AI profile is never attached implicitly
+ * and is removed only after the user explicitly imports or dismisses it.
  */
 
 import {
   EMPTY_PERSONAL_SAFETY_CONTEXT,
   loadPersonalSafetyContext,
   normalizePersonalSafetyContext,
+  personalSafetyContextStorageKey,
   savePersonalSafetyContext,
   type PersonalSafetyContext,
 } from './personalSafetyContext';
 import {
   loadReproductiveContext,
+  reproductiveContextStorageKey,
   saveReproductiveContext,
 } from './reproductiveContext';
 
@@ -32,7 +35,9 @@ export interface ProfileContextNotes {
 }
 
 export interface ProfileExportPreferences {
+  /** @deprecated AI and clinician handoffs always include raw calls. */
   includeRawGenotypesInClinician: boolean;
+  /** @deprecated AI and clinician handoffs always include raw calls. */
   includeRawGenotypesInAi: boolean;
 }
 
@@ -93,9 +98,6 @@ export function normalizeProfileContext(value: unknown): ProfileContext {
   const source = value && typeof value === 'object'
     ? value as Partial<ProfileContext>
     : {};
-  const rawExportPreferences = source.exportPreferences && typeof source.exportPreferences === 'object'
-    ? source.exportPreferences as Partial<ProfileExportPreferences>
-    : {};
   return {
     version: PROFILE_CONTEXT_VERSION,
     selectedReproductiveContext: clean(source.selectedReproductiveContext, 120),
@@ -104,14 +106,94 @@ export function normalizeProfileContext(value: unknown): ProfileContext {
       ? normalizePersonalSafetyContext(source.safety)
       : { ...EMPTY_PERSONAL_SAFETY_CONTEXT },
     exportPreferences: {
-      includeRawGenotypesInClinician: rawExportPreferences.includeRawGenotypesInClinician !== false,
-      includeRawGenotypesInAi: rawExportPreferences.includeRawGenotypesInAi !== false,
+      // Keep the old persisted shape readable, but no longer allow it to
+      // suppress the raw calls required for technical handoffs.
+      includeRawGenotypesInClinician: true,
+      includeRawGenotypesInAi: true,
     },
   };
 }
 
 function storageKey(sampleId?: number | null): string | null {
   return sampleId == null ? null : `${STORAGE_PREFIX}${sampleId}`;
+}
+
+/**
+ * Remove browser state that belongs exclusively to a deleted profile.
+ *
+ * The native sample database is the source of truth for genotype and report
+ * data, but these keys can otherwise resurrect stale context, chat selection,
+ * or presentation state if a profile ID is reused. The global active-session
+ * key is cleared only when the deleted profile was selected.
+ */
+export function clearProfileScopedStorage(
+  sampleId: number,
+  clearGlobalActiveSession = false,
+): number {
+  if (typeof localStorage === 'undefined') return 0;
+
+  const exactKeys = new Set([
+    storageKey(sampleId),
+    reproductiveContextStorageKey(sampleId),
+    personalSafetyContextStorageKey(sampleId),
+    `genomics_active_session_id_${sampleId}`,
+    `genomics_presentation_mode_${sampleId}`,
+    `genomics_dashboard_collapsed_v2_${sampleId}`,
+  ].filter((key): key is string => Boolean(key)));
+  const prefixes = [`section-collapsed-v2-${sampleId}-`];
+  const keysToRemove: string[] = [];
+
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key && (exactKeys.has(key) || prefixes.some((prefix) => key.startsWith(prefix)))) {
+        keysToRemove.push(key);
+      }
+    }
+    if (clearGlobalActiveSession && localStorage.getItem('genomics_active_session_id') !== null) {
+      keysToRemove.push('genomics_active_session_id');
+    }
+  } catch {
+    return 0;
+  }
+
+  let removed = 0;
+  for (const key of new Set(keysToRemove)) {
+    try {
+      if (localStorage.getItem(key) !== null) {
+        localStorage.removeItem(key);
+        removed += 1;
+      }
+    } catch {
+      // Storage can be unavailable or quota-restricted; native deletion has
+      // already completed, so keep the cleanup best-effort and non-blocking.
+    }
+  }
+  return removed;
+}
+
+/** Clear only browser pointers to chat sessions after a native profile replace.
+ * Entered Context/Diary is intentionally preserved by replacement semantics.
+ */
+export function clearProfileScopedSessionState(
+  sampleId: number,
+  clearGlobalActiveSession = false,
+): number {
+  if (typeof localStorage === 'undefined') return 0;
+  const keys = [`genomics_active_session_id_${sampleId}`];
+  if (clearGlobalActiveSession) keys.push('genomics_active_session_id');
+  let removed = 0;
+  for (const key of keys) {
+    try {
+      if (localStorage.getItem(key) !== null) {
+        localStorage.removeItem(key);
+        removed += 1;
+      }
+    } catch {
+      // Native replacement remains authoritative if browser storage is unavailable.
+    }
+  }
+  return removed;
 }
 
 /** Load the new record and fall back to the existing profile-scoped stores. */
@@ -174,6 +256,18 @@ export function loadUnassignedLegacyAiProfile(): LegacyAiProfileImport | null {
       : null;
   } catch {
     return null;
+  }
+}
+
+/** Remove the old unassigned global AI profile after an explicit user choice. */
+export function clearUnassignedLegacyAiProfile(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  try {
+    const present = localStorage.getItem(LEGACY_AI_PROFILE_KEY) !== null;
+    localStorage.removeItem(LEGACY_AI_PROFILE_KEY);
+    return present;
+  } catch {
+    return false;
   }
 }
 

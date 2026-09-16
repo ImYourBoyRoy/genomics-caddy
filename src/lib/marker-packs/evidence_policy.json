@@ -226,6 +226,16 @@
         "legend_description": "Your DNA file did not include data for this position.",
         "description": "Your DNA test did not include or could not read this position."
       },
+      "not_evaluated": {
+        "css_class": "signal-nodata",
+        "emoji": "🛈",
+        "glyph": "~",
+        "label": "Not evaluated",
+        "plain_label": "Needs an assay-specific rule",
+        "legend_label": "Not Evaluated",
+        "legend_description": "The raw call may be present, but this assertion does not define a matchable rule for this report.",
+        "description": "This assertion was not scored because its allele or assay requirement is not represented by the current evaluator."
+      },
       "benign": {
         "css_class": "signal-benign",
         "emoji": "○",

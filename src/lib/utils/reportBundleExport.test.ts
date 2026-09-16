@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { EvaluatedMarker, GeneratedReport, GenomeSample } from '../types/genomics';
 import { CYCLE_DIARY_SCHEMA } from './cycleDiary';
 import { EMPTY_PROFILE_CONTEXT, type ProfileContext } from './profileContext';
-import { buildReportBundleFiles } from './reportBundleExport';
+import { buildAiReviewJson, buildReportBundleFiles } from './reportBundleExport';
 
 function marker(overrides: Partial<EvaluatedMarker> = {}): EvaluatedMarker {
   return {
@@ -118,7 +118,7 @@ describe('report bundle export', () => {
       report: report(),
       sample,
       profileContext,
-      includeRawGenotypes: true,
+      includeRawGenotypes: false,
     });
 
     const personalMarker = JSON.parse(personalFiles.find((file) => file.filename === 'dna_analysis.json')!.content).sections[0].markers[0];
@@ -136,6 +136,74 @@ describe('report bundle export', () => {
       clinical_confirmation_required: false,
       applicability_scopes: [],
     });
+    expect(personalMarker.callability_policy.scoring_policy).toBe('snp_allele_count');
+    expect(personalMarker.callability_state).toBe('callable');
+    expect(personalMarker.orientation_state).toBe('not_required');
+    expect(JSON.parse(personalMarker.assertion_key).version).toBe(1);
+    expect(personalMarker.assertion_key).not.toContain('CALL_VALUE');
+    expect(JSON.parse(personalFiles.find((file) => file.filename === 'dna_analysis.json')!.content).condition_evidence).toEqual([]);
+    expect(JSON.parse(personalFiles.find((file) => file.filename === 'dna_analysis.json')!.content).condition_coverage)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'pmdd_steroid_sensitivity', status: 'not_observed' }),
+      ]));
+  });
+
+  it('exports the resolved callability policy beside non-SNP technical context', () => {
+    const files = buildReportBundleFiles({
+      audience: 'ai',
+      report: {
+        ...report(),
+        sections: [{
+          ...report().sections[0],
+          markers: [marker({ variant_type: 'hla_tag', effect_allele: 'A' })],
+        }],
+      },
+      sample,
+      profileContext,
+    });
+    const dna = JSON.parse(files.find((file) => file.filename === 'dna_analysis.json')!.content);
+    expect(dna.sections[0].markers[0]).toMatchObject({
+      variant_type: 'hla_tag',
+      callability_policy: {
+        scoring_policy: 'not_evaluated',
+        display_policy: 'context_only',
+      },
+      callability_state: 'not_callable',
+    });
+  });
+
+  it('exports PGx component coverage without creating a phenotype or dose', () => {
+    const base = report();
+    const files = buildReportBundleFiles({
+      audience: 'ai',
+      report: {
+        ...base,
+        sections: [{
+          ...base.sections[0],
+          name: 'Pharmacogenomics (PGx)',
+          markers: [marker({
+            rsid: 'rs4244285',
+            gene: 'CYP2C19',
+            variant_name: 'CYP2C19*2 component',
+          })],
+        }],
+      },
+      sample,
+      profileContext,
+    });
+    const dna = JSON.parse(files.find((file) => file.filename === 'dna_analysis.json')!.content);
+    const pathway = dna.pgx.component_coverage.find((item: { id: string }) => item.id === 'CYP2C19');
+    expect(pathway).toMatchObject({
+      status: 'incomplete',
+      phenotype_or_dose_allowed: false,
+      required_inputs: expect.arrayContaining(['Complete CYP2C19 diplotype or phenotype']),
+    });
+    expect(dna.prs.modules[0]).toMatchObject({
+      status: 'unscored',
+      score: null,
+      missing_inputs: expect.any(Array),
+    });
+    expect(JSON.stringify(pathway)).not.toContain('CALL_VALUE');
   });
 
   it('carries typed food, supplement, and activity provenance into DNA JSON', () => {
@@ -226,5 +294,33 @@ describe('report bundle export', () => {
 
     expect(header.split(',')).toEqual(CYCLE_DIARY_SCHEMA.fields.map((field) => field.id));
     expect(row.split(',')[0]).toBe('2026-08-01');
+  });
+
+  it('creates a single AI-ready JSON handoff with DNA, context, diary, and instructions', () => {
+    const aiJson = JSON.parse(buildAiReviewJson({
+      audience: 'ai',
+      report: report(),
+      sample,
+      profileContext,
+      includeRawGenotypes: false,
+    }));
+
+    expect(aiJson).toMatchObject({
+      schema_version: 1,
+      export_kind: 'ai_review_json',
+      audience: 'ai',
+      raw_genotypes_included: true,
+      profile: {
+        sample_id: 42,
+        sample_name: 'Bundle Test Profile',
+        chromosome_call_context: 'Male',
+      },
+    });
+    expect(aiJson.review_instructions).toEqual(expect.any(Array));
+    expect(aiJson.dna_analysis).toHaveProperty('sections');
+    expect(aiJson.context.notes.goals).toBe('Recovery planning');
+    expect(aiJson.diary.fields).toEqual(expect.any(Array));
+    expect(aiJson.diary.entries).toHaveLength(1);
+    expect(aiJson.dna_analysis.sections[0].markers[0]).toHaveProperty('user_genotype');
   });
 });

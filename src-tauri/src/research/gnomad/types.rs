@@ -2,7 +2,19 @@
 use serde::{Deserialize, Serialize};
 
 pub const PARSER_VERSION: &str = "gnomad_vcf_1";
-pub const DEFAULT_RELEASE: &str = "4.1";
+pub const DEFAULT_RELEASE: &str = "4.1.1";
+pub const DEFAULT_EXOME_TEMPLATE: &str =
+    "release/4.1.1/vcf/exomes/gnomad.exomes.v4.1.1.sites.chr{chrom}.vcf.bgz";
+pub const DEFAULT_GENOME_TEMPLATE: &str =
+    "release/4.1.1/vcf/genomes/gnomad.genomes.v4.1.1.sites.chr{chrom}.vcf.bgz";
+
+// These are retained only to migrate databases created before the gnomAD
+// release bump. A user-specified source or local VCF directory is not changed.
+pub const LEGACY_RELEASE: &str = "4.1";
+pub const LEGACY_EXOME_TEMPLATE: &str =
+    "release/4.1/vcf/exomes/gnomad.exomes.v4.1.sites.chr{chrom}.vcf.bgz";
+pub const LEGACY_GENOME_TEMPLATE: &str =
+    "release/4.1/vcf/genomes/gnomad.genomes.v4.1.sites.chr{chrom}.vcf.bgz";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -183,6 +195,10 @@ pub struct GnomadConfig {
     pub enabled: bool,
     pub source_mode: GnomadSourceMode,
     pub release: String,
+    /// Follow the newest compatible release discovered from the public
+    /// gnomAD release index when using remote mode.
+    #[serde(default = "default_auto_discover_release")]
+    pub auto_discover_release: bool,
     pub provider: GnomadHttpsProvider,
     pub local_vcf_dir: Option<String>,
     pub max_remote_concurrent_files: usize,
@@ -201,6 +217,7 @@ impl Default for GnomadConfig {
             enabled: true,
             source_mode: GnomadSourceMode::RemoteIndexedVcfHttps,
             release: DEFAULT_RELEASE.to_string(),
+            auto_discover_release: true,
             provider: GnomadHttpsProvider::Aws,
             local_vcf_dir: None,
             max_remote_concurrent_files: 2,
@@ -208,12 +225,14 @@ impl Default for GnomadConfig {
             graphql_enabled_for_sweep: false,
             graphql_fallback_enabled: true,
             dataset_policy: GnomadDatasetPolicy::Auto,
-            exome_template: "release/4.1/vcf/exomes/gnomad.exomes.v4.1.sites.chr{chrom}.vcf.bgz"
-                .to_string(),
-            genome_template: "release/4.1/vcf/genomes/gnomad.genomes.v4.1.sites.chr{chrom}.vcf.bgz"
-                .to_string(),
+            exome_template: DEFAULT_EXOME_TEMPLATE.to_string(),
+            genome_template: DEFAULT_GENOME_TEMPLATE.to_string(),
         }
     }
+}
+
+fn default_auto_discover_release() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -363,6 +382,7 @@ pub struct GnomadMissingItem {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GnomadReadinessStatus {
+    /// Indexes are the prerequisite for remote/local VCF enrichment.
     pub ready: bool,
     pub enabled: bool,
     pub source_mode: String,
@@ -371,6 +391,14 @@ pub struct GnomadReadinessStatus {
     pub remote_urls_ok: bool,
     pub indexes_expected: u32,
     pub indexes_cached: u32,
+    /// Number of usable frequency rows for the selected release.
+    pub frequency_cache_rows: u64,
+    /// Older-release rows retained locally and intentionally excluded from reports.
+    pub stale_frequency_cache_rows: u64,
+    /// True only when at least one usable row exists for the selected release.
+    pub frequency_cache_ready: bool,
+    /// Human-readable cache state kept separate from index readiness.
+    pub frequency_cache_summary: String,
     pub cache_dir: String,
     pub local_dir: Option<String>,
     pub missing_items: Vec<GnomadMissingItem>,

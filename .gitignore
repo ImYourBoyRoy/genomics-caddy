@@ -47,6 +47,11 @@ __pycache__/
 output/playwright/
 /output/
 
+# Local memory and dated planning notes may contain user-specific context.
+/MEMORY.local.md
+/*_tasklist.md
+/*_strategy.md
+
 # Dependency lockfiles are intentionally not retained for local build testing.
 package-lock.json
 pnpm-lock.yaml

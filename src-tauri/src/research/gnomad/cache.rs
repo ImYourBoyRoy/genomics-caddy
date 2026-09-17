@@ -33,10 +33,8 @@ pub fn frequency_cache_status(db_path: &std::path::Path, release: &str) -> Frequ
         .max(0) as u64;
     let stale_rows = conn
         .query_row(
-            &format!(
-                "SELECT COUNT(*) FROM reference.gnomad_variant_cache
-                 WHERE (release != ? OR lookup_status = 'stale_release')"
-            ),
+            "SELECT COUNT(*) FROM reference.gnomad_variant_cache
+                 WHERE (release != ? OR lookup_status = 'stale_release')",
             params![release],
             |row| row.get::<_, i64>(0),
         )

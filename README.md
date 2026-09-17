@@ -1,740 +1,85 @@
 # Genomics Caddy
 
-A privacy-first, high-performance local personal genomic exploration application. Parse raw DNA genotype exports (AncestryDNA and 23andMe), standardize coordinates to the modern GRCh38 assembly, run local clinical and wellness trait reports, and connect securely to AI assistants using the built-in Model Context Protocol (MCP) server.
+Local-first desktop app for exploring your own consumer DNA export. It runs on
+your machine: parse AncestryDNA or 23andMe files, normalize GRCh37/GRCh38
+coordinates, score curated marker packs, and optionally talk to a local AI
+through chat or MCP.
 
 Created by **Roy Dawson IV**.
 
----
+## Warning
 
-## 🚀 Use Case Synopsis
+This is a research and education tool, not a diagnostic or treatment product.
+A consumer array call is an observation. It does not establish a disease,
+current hormone level, medication response, or care plan. High-stakes findings
+need validated clinical testing. AI chat and clinician/AI exports include the
+raw genotype calls behind the selected findings; share those files only with
+the person or system you intend.
 
-Many public genomic analysis platforms sell user data or require uploading sensitive files to cloud servers. **Genomics Caddy** runs completely local on your machine. It standardizes raw genotype files, normalizes GRCh37/GRCh38 positions using local UCSC chain alignments when available, evaluates markers for mood (PMDD), neurodiversity (ADHD/dopamine), and inflammatory profiles, and acts as an MCP server so you can query your genome using local AI agents (like Claude Desktop, Cursor, Cline, or Claude Code).
+Do not commit raw DNA, reports, `.env`, or `App/` data. The repo gitignores
+them. The only committed genotype-shaped files are synthetic fixtures in
+`src-tauri/testdata/`.
 
----
+## What it does
 
-## Raw-DNA handoff policy
+- Import `.txt`, `.csv`, `.tsv`, or ZIP exports and review them before any
+  profile is written
+- Build a Simple-first report with Clinical and Compare views
+- Keep food, supplement, and medication prompts conditional on context you
+  enter, not DNA alone
+- Optional local Ollama chat and a stdin/stdout MCP server for agents
 
-Genomics Caddy intentionally preserves raw genotype calls for technical review. AI and doctor/clinician workflows must receive the same underlying calls that produced the displayed findings so a reviewer can trace an interpretation back to the exact input data.
+## Quick start
 
-The following workflows are raw-data-bearing by design:
+Needs **Node 26+**, a current **Rust** toolchain (see `src-tauri/Cargo.toml`),
+and **pnpm**.
 
-* **Connected AI Chat:** raw genotype calls are always included for every finding/context item sent to the model. Pack selection and active-finding filters control which findings are sent and keep prompts within model context limits; they do not replace or summarize away the underlying genotype evidence for those items. The selected context scope is saved with each consultation session and restored when reopened.
-* **AI-ready JSON and AI Review exports:** raw genotype calls are included alongside stable marker identifiers, callability/status fields, interpretations, claim boundaries, and references.
-* **Clinician Handoff exports:** raw genotype calls are included so a doctor or genetic counselor can compare the handoff with the reported finding and determine what requires validated clinical confirmation.
+Linux one-time WebKit/GTK headers:
 
-These exports contain sensitive genetic information and should be shared only with the intended AI system or healthcare professional. Raw consumer-array data remains an observation and does not establish a diagnosis, current physiology, medication response, or treatment plan. When a strand-normalized call exists, technical Markdown labels both the original raw call and the normalized interpretation call. Personal Simple and PDF formats are human-readable presentation formats; use the AI-ready or Clinician Handoff formats when exact genotype traceability is required.
+```bash
+pnpm run setup:linux
+```
 
-Profile lifecycle is explicit: importing into an existing profile name opens a Replace Existing Profile confirmation; entering a different name imports a separate profile; canceling leaves the existing profile untouched. Replacement clears stale genotype-derived report, research, and chat state before rebuilding the same profile ID, while the confirmation explicitly tells the user that entered Context/Diary will be preserved. The staged database is restored when row ingestion fails. Deleting a profile removes its native genotype database and registry row, then clears profile-scoped Context, Diary, chat-selection, and report-presentation browser state. The confirmation stays visibly busy until deletion settles; the active list is refreshed/reconciled and partial cleanup or refresh failures are surfaced. An older global AI profile is never attached automatically; Context offers an explicit import into the selected profile or a Dismiss and delete action.
+Install and open the desktop window:
 
----
-
-## 💎 Core Features & Elements
-
-### 1. Genomic Position Liftover (GRCh37 ➔ GRCh38)
-* Standardizes coordinates of raw uploads from AncestryDNA or 23andMe.
-* Alignments are executed locally using UCSC chain mapping files (`GRCh37_to_GRCh38.chain.gz`). Vendor positions are treated as 1-based inclusive; the liftover engine converts to UCSC's 0-based half-open contract and stores mapped output back as 1-based coordinates. Known forward, reverse, and boundary cases are regression-tested.
-* Import accepts validated `.txt`, `.csv`, `.tsv`, and ZIP exports. Before any profile write, an in-workspace review shows the detected vendor/format, accepted and skipped row counts (including malformed and duplicate rows), source build, allele-orientation evidence, coordinate contract, liftover availability, and parser warnings. The user explicitly chooses **Import profile**, **Replace profile**, or **Cancel** on that review; parsing alone never creates or replaces a profile. Empty imports and conflicting duplicate marker rows are rejected; nucleotide-shaped `NN` calls remain no-data and mixed `N` calls are blocked as ambiguous rather than scored.
-* Each successful import stores reproducibility metadata: import ID, source filename, SHA-256, vendor/format, delimiter, source build, orientation evidence, row diagnostics, and liftover mapped/unmapped counts. GRCh37 sources are mapped forward; explicit GRCh38 sources retain their source coordinates and use the inverse chain when a GRCh37 coordinate is available. Unmapped assembly coordinates remain explicit rather than being mislabeled.
-
-### 2. Direction-Aware Scoring & Severity Engine
-* Matches user genotypes against candidate alleles to separate findings into **Risk, Protective, Trait, and Context-Dependent** categories.
-* **Risk-Only Scoring:** Overall and section signal scores only reflect risk-direction alleles. Protective or neutral alleles do not inflate scores.
-* **Clinical Suppression:** High-stakes sections where all markers require clinical confirmation (e.g., Cancer predisposition or Pharmacogenomics) suppress numerical percentages, showing descriptive safety summaries instead.
-* **Color Legend:** Standardized card styling maps results to 8 severity classes (`no_data`, `benign`, `confirmation_required`, `protective`, `trait`, `context_dependent`, `moderate_risk`, `high_risk`).
-* **Probabilistic evidence bands:** Marker tiers A–E are interpreted by evidence prefix, including custom subtiers. Tier E is an evidence-gap/guardrail, not a positive finding. Evidence-tier, direction, severity, claim-frame, simple-mode, and biological-scope display wording is authored in `evidence_policy.json` so the UI and AI can share one vocabulary. Common SNP coverage expands the questions the tool can ask; it does not establish a diagnosis, current hormone level, medication response, or personal disease probability by itself.
-* **Structured clinical semantics:** Evidence-backed variant records can carry an explicit condition label, inheritance model, interpretation class, and clinical-state field into Clinical, AI, and export views. Consumer-array observations remain clinically undetermined unless a separate validated result establishes otherwise; unsupported carrier, active-disease, and inheritance claims stay unknown.
-* **Condition-level potential map:** Named condition and health-pattern routes aggregate the curated indicators actually available for a profile and show coded, callable, matched, and non-aligned counts with a capped higher/moderate/limited relative signal. These counts describe coverage within the curated panel, not disease probability. Susceptibility routes remain research or clinical-follow-up context; explicitly authored clinical-variant routes explain when validated testing may establish a finding. POTS and hypermobile EDS remain visible as coverage gaps rather than invented consumer-array scores.
-* **Claim framing:** Each active marker displays a separate claim-status frame for clinical confirmation, replicated context, preliminary research, research-only, or evidence-gap status. AI payloads carry the marker's claim boundaries, callability state, and source names beside the interpretation.
-* **Explicit non-evaluation:** An assertion with a study label, panel requirement, PRS label, guardrail-only allele, or other non-matchable effect definition is reported as `NotEvaluated` with no effect count. It cannot silently become a benign or negative result; the technical and sharing exports preserve that state for follow-up review.
-* **Stable assertion identity:** Technical report links and AI/JSON/Clinician exports include a versioned `assertion_key` built from the locus, allele definition, condition or trait, scope, assay requirement, and source assertion IDs. It excludes genotype values and rendered wording, so downstream models can distinguish separate claims without rebuilding toolkit semantics.
-* **Technical coverage states:** Technical report details and handoffs expose an orthogonal orientation state (`verified`, `not_required`, `unverified`, `mismatch`, or `unknown`) while preserving the existing assertion-status wire values. PGx exports enumerate callable, missing, blocked, and unsupported components without assigning a phenotype or dose; PRS entries remain explicitly unscored and list their missing model inputs.
-* **Human-readable evaluation status:** Simple cards explain when an assertion was not scored because it needs a different assay/model, has no usable imported call, or is blocked pending orientation/call review. Clinical and technical views retain the same state beside the existing assertion status.
-* **Plain-English coverage:** Marker translations are authored in `layperson_translations.json` rather than embedded in TypeScript. Marker-specific explanations are used where available, and authored pack-scoped explanations cover the remaining curated standard rsIDs, for 581/581 covered markers. Explicit marker copy always takes precedence; the conservative generic fallback remains available for future or unsupported markers without changing evidence, claim boundaries, or actionability.
-* **Concise sex display:** The report, profile list, and advanced profile summary show `Male` or `Female` when normalized X/Y call coverage supports that chromosome pattern, and retain `Unknown` or `Uncertain` when the data is insufficient or conflicting. Legacy verbose labels are shortened on primary surfaces; Ancestry’s numeric chromosome aliases (`23/24/25`) and `0` no-call placeholders are normalized during import, refresh, and fixture auditing. Active profile rows use direct selection controls with no delayed explanatory popover.
-* **Desktop report preparation:** Profile changes use a contained, theme-aware report-loading surface with a clear preparation message and local-analysis status instead of leaving the report pane as a mostly empty background. The startup splash remains intentionally dark and independent of the saved report theme, keeps one live progress message beside the database checkpoint/timer sequence, and ends with an explicit import-ready message even when no DNA profile exists. Welcome-screen reference-catalog syncs reuse the same detailed loader, show the active download/import message, and can be dismissed back to the workspace for long-running catalogs while the sidebar continues to show progress.
-* **Integrated DNA import waterfall:** TXT, CSV, TSV, and ZIP imports first show a local pre-write validation checkpoint. The review keeps the explicit Import/Replace/Cancel actions beside accepted/skipped counts and preview details, so users can see that no work is running and no profile is written while they decide. After confirmation, the main workspace shows local reading/parsing, GRCh37/GRCh38 coordinate normalization, genotype ingestion, variant-index construction, profile loading, and report preparation; the sidebar also shows compact live progress. The imported profile is selected and its report is prepared before the loading state clears. Failed imports expose a safe return-to-workspace action without leaving an incomplete profile.
-* **Menstrual and reproductive context:** The hormone pack includes 59 curated records, including 44 callable numeric SNPs, explicit cycle-phase physiology, measured-hormone timing prompts, PMDD symptom-timing and steroid-sensitivity guardrails, cyclic mood/avoidance/need-for-space phenotype boundaries, exact-contraceptive-ingredient prompts, cycle-linked pelvic-pain/headache/migraine tracking, migraine-aura and medication-overuse safety prompts, adenomyosis workup limits, androgen/prostate/testicular boundaries, exogenous hormone-therapy monitoring prompts, pregnancy/postpartum/lactation safety prompts, preconception/fertility-care routing, and clearly labeled research-only loci. It includes seven endometriosis/adenomyosis research loci, including the recently reported HRH1 rs184700 signal, as research context only; these are not adenomyosis tests. An optional per-profile context selector controls whether menstrual, cyclic mood/need-for-space, cycle-linked pain/headache, uterine/pelvic, suspected-adenomyosis workup, ovarian, androgen, menopause, exogenous hormone-therapy, pregnancy/postpartum/lactation, or preconception/fertility guidance is shown; it is never inferred from genotype, chromosome calls, gender, anatomy, fertility, pregnancy, or hormone status. When a context is selected, the report and AI settings editor use the same resource-mapped context while keeping every reproductive marker visible and exportable; section eligibility and marker-context routing come from the shared cycle resource rather than a duplicated UI keyword list. The intake can carry the exact lab report/timing, product label, symptoms, and communication or support needs as self-reported context; these are never merged into genotype evidence. The report must not infer current estrogen/progesterone levels, hormone-therapy regimen, contraceptive composition, migraine type, pregnancy/lactation status, fertility, PMDD, dysmenorrhea, endometriosis, or adenomyosis from raw DNA. Confirmed Factor V Leiden/prothrombin context can add a clinical contraception/VTE review prompt; it never recommends a medication change.
-* **Conditional actionability:** Food, supplement, activity, and medication context is qualified by symptoms, labs, allergies, pregnancy/lactation status, kidney/liver conditions, and clinician/pharmacist review. Raw DNA alone never triggers medication changes, high-dose supplements, or permanent restrictive diets.
-* **Supplement safety layer:** Selenium, magnesium, omega-3, iron, vitamin D, vitamin B12, folate, creatine, vitamin A, iodine, zinc, potassium, calcium, vitamin K, and vitamin B6 prompts are food-first and medication-aware. They ask for labels, labs, life-stage, kidney/liver, thyroid, anticoagulant, neurologic-symptom, medication, or other clinical context where appropriate; vitamin-D pathway, FUT2/TCN2/CUBN B12, and TMPRSS6/TF iron-status markers can now route to measured-status questions without implying deficiency, excess, or a dose. Explicit reproductive context can surface relevant nutrient-safety questions before a marker or product is entered. They do not infer supplement need, dose, safety, or efficacy from a common SNP.
-* **Cycle-support layer:** When the person selects a relevant context, reports expose structured timing logs, PMDD-like symptom tracking, exact contraceptive ingredient prompts, cycle-linked pain/headache/migraine and aura questions, medication-use/overuse awareness, food/supplement/sleep/activity experiments with avoidances and label review, exogenous hormone product/route/dose/monitoring questions, pregnancy/postpartum/lactation medication and feeding-exposure review, preconception and fertility-care questions for different bodies and family-building paths, symptom-day support, heavy-bleeding/pelvic-pain escalation, adenomyosis workup boundaries, or androgen/prostate/testicular follow-up. The selected route also shows six resource-authored evidence layers: current hormone measurement, natural-cycle direction, what the reproductive marker pack can add, exact product-label review, inherited-clotting/contraception context, and structural adenomyosis workup. Selected hormone contexts can also route the existing cardiovascular Factor V Leiden/prothrombin markers into a contraception/VTE review without duplicating or reclassifying those markers; this remains a clinical-confirmation and exact-label workflow. The local diary now produces an observation-only review of recorded dates, self-rated impact counts, bleeding co-occurrence, and user-entered cycle-day labels; repeated entered cycle days receive a descriptive comparison only among recorded entries, never a population probability. It does not fill missing days, identify hormone phases, or diagnose a condition. It includes route-level DNA callability counts without exposing genotypes or turning coverage into a risk score. If the selector is blank, non-empty fields from the resource-defined reproductive intake or diary can activate only the corresponding support domains; when AI profile injection is enabled, explicitly supplied goals/body-system text can also activate the matching resource-authored route (for example, prostate/testosterone or menstrual/cyclic-mood context). A neutral product entry does not imply a body, treatment, or life-stage context. The layer does not infer current estrogen/progesterone, hormone regimen, pregnancy/lactation status, fertility, PMDD, migraine type, dysmenorrhea, adenomyosis, or medication response from DNA.
-* **Runtime support-resource layer:** AI consultations receive pack-aware evidence policy, 22 resource-authored phenotype question domains covering every user-facing manifest pack, lab overlays, callability rules, food-decision constraints, medication safety notes, PRS limits, activity stop-sign guardrails, cycle-support guidance, and resource-authored safety/research prompt templates. Each selected phenotype domain carries its registered evidence sources into the consultation payload. Personal-context priority notes, medication rule routing, reproductive-intake field routing, user-supplied goal/body-system taxonomy routing, and the bounded `confirm_with` lab-prompt policy are also resource-authored and validated before use. Self-reported body-system and reproductive/hormone context is kept separate from conservative chromosome-call context. Default AI instructions, JSON-context rules, forbidden actions, consultation safety-review wording, and agent critique/synthesis/validation prompts are authored in JSON resources; user-facing specialty-mode labels, safety instructions, optional mode-to-pack routing, active-finding quick helpers, and phenotype prompts are authored in JSON resources, so adding a new body-system or goal does not require parallel UI and TypeScript routing edits.
-* **Actionability dashboard:** Report summaries now expose relevant activity/recovery and cycle/reproductive guardrails plus conditional food, supplement, lab, and named DNA-linked medication pathways. Medication cards give the matched treatment topic visual priority, with gene references as quieter metadata below the title and the finding count in the footer. Lab spotlight links land on the lab list rather than the medication panel; lab recommendations are grouped into bounded, theme-aware cards. A compact Health areas index links directly to each report section without hiding findings; full PGx and safety structures remain available to Clinical, AI, and export consumers.
-* **Specific findings and nutrition board:** High-visibility Simple findings use source-grounded pathway and direction labels for neurobiology and medication-processing examples instead of generic topic titles. Food, food-to-limit, supplement, and supplement-avoid guidance remains complete but is presented as a compact, uniform DNA-basis board; Clinical and Compare modes retain expandable evidence details without repeating the full provenance on every row.
-* **Nutrition recommendation hierarchy:** Food and supplement guidance uses bounded, theme-aware group cards and responsive item grids. Each recommendation leads with the practical instruction, followed by a compact linked-marker/evidence line and smaller warm-amber gene references; DNA-basis actions use the report’s themed control treatment. The authenticated desktop audit checks card overflow, hierarchy, gene emphasis, and action styling while restoring the panels’ original expanded state.
-* **Structured personal safety context:** The AI settings include per-DNA-profile, one-item-per-line fields for current medications, supplements/OTC products, allergies or intolerances, symptoms and timing, and recent labs or clinician findings. A resource-authored cycle and hormone editor additionally captures bleeding/cycle timing, mood or need-for-space patterns, pain/bleeding/headache symptoms, exact product and active ingredients, route/dose/schedule, treatment goal, benefits, adverse effects, uncertainty, and clinical questions such as suspected adenomyosis. The same editor includes explicit food requirements for hard exclusions, confirmed or suspected reactions, religious/cultural and ethical profiles, clinician-confirmed/discussed medical diets, and nutrition goals; these fields are routed through `dietary_requirements.json` into safety-first dashboard checks and AI context without treating them as DNA findings. When a hard exclusion or reaction conflicts with a genotype-derived food suggestion, the dashboard withholds that suggestion and explains the resource-authored conflict rather than displaying contradictory advice. When a report context is explicitly selected, the editor adapts its fields for cycle-related, androgen/prostate/testicular, fertility, or hormone-therapy concerns; common product and clinical-review fields remain available across routes. Selected cycle contexts also expose a bounded local daily diary for bleeding, symptom impact, functioning, sleep/stress, food/activity, and medication timing across cycles. The dashboard uses these entries to prioritize interaction and follow-up guardrails, while the AI receives them only as explicitly supplied context; they never become genotype evidence or cross-profile defaults.
-* **Metabolic and lipid follow-up:** Existing FTO, PPARG, TCF7L2, SLC30A8, KCNJ11, GCKR, KCNQ1, CDKAL1, IGF2BP2, MTNR1B, APOA5, LPL, ANGPTL4, PNPLA3, TM6SF2, MBOAT7, LPA, LDLR, APOB, CETP, APOC3, and PCSK9 coverage can now surface conditional glucose, triglyceride/liver, and atherogenic-lipid follow-up. The resource layer points users toward measured HbA1c, fasting glucose, lipid panel, ApoB, Lp(a), blood-pressure, and liver evaluation when clinically appropriate; it never diagnoses diabetes/fatty liver or prescribes therapy from DNA.
-* **Bone and digestive follow-up:** LRP5, WNT16, SOST, TNFRSF11B, COL1A1, VDR-pathway, ESR1, and related bone markers can surface measured DXA/BMD, mineral-lab, fracture-history, medication, activity, and diet questions without diagnosing osteoporosis or choosing calcium, vitamin D, hormone, or bone therapy. Existing exact clinical-panel targets for osteogenesis imperfecta, hypophosphatasia, and hereditary fructose intolerance now route to phenotype review and validated clinical sequencing rather than treating an Ancestry-style file as a diagnosis; suspected hypophosphatasia also routes to contextual alkaline-phosphatase/PLP review, while suspected hereditary fructose intolerance explicitly does not suggest a fructose challenge. NOD2, ATG16L1, IL23R, FCGR2A, IL10, and the celiac HLA panel can surface symptom, blood, stool, serology, endoscopy/imaging, gluten-testing, and medication-safety context without diagnosing IBD or celiac disease. These routes are dynamic across bodies and life stages; age, symptoms, history, labs, imaging, and clinician assessment outrank common-SNP associations.
-* **High-impact clinical-confirmation routes:** Existing TTR p.Val142Ile, arrhythmogenic-cardiomyopathy, CHEK2, MUTYH, APC I1307K, and HOXB13 resources now route callable labels to validated clinical testing, family-history/phenotype review, and specialist care when relevant. A called consumer-array target is not the same as a positive diagnosis: variant classification, zygosity/phase, ancestry, penetrance, symptoms, imaging, and clinical history can change interpretation. These routes never clear exercise, set cancer screening, select cardiac or cancer treatment, or change medication from raw DNA.
-* **Rare-panel follow-up:** Existing mast-cell mediator, hereditary angioedema, alpha-1 antitrypsin, APOL1 kidney, renal-tubulopathy, MODY, non-HFE iron-overload, Wilson-disease, rare nutrient-transporter, monogenic-migraine, and pain-channelopathy panels now produce phenotype-conditioned lab and specialist prompts. They also surface the relevant avoidances—such as no self-directed megadose vitamins, iron, copper, electrolyte, restrictive-diet, or medication changes—without presenting rare-panel placeholders as diagnoses. Urgent symptoms remain urgent independently of DNA, and missing consumer-array coverage remains unknown.
-* **Broader conditional follow-up:** Core, nutrient, metabolic, cardiovascular, thyroid, sleep, PGx, neuropsych, connective-tissue, cancer-confirmation, dental, longevity, and allergy/food-reaction markers can now surface structured symptom, timing, exposure, medication, family-history, and confirmatory-care prompts. Examples include A1C/fasting glucose, lipid/Lp(a)/ApoB, TSH/free T4, sleep studies when indicated, clinical PGx review, oral-health evaluation, or allergist-directed testing. These rules remain phenotype- and lab-conditioned; common SNPs do not diagnose disease, assign personality or intent, infer current hormone levels, estimate lifespan, or determine medication response.
-* **Allergy and sensitivity map:** The report now shows DNA-linked atopy, skin-barrier, food-reaction, airway, mediator, angioedema, and drug-specific sensitivity pathways only when the curated markers match. The optional support catalog still supplies exposure categories for context or AI workflows, but generic food, plant, venom, cold, sun/UV, and treatment checklists are not presented as DNA findings or included in the DNA report export.
-* **Medication safety follow-up:** PGx findings can now surface named, compact drug-specific pathways for CYP2C19/clopidogrel or proton-pump inhibitors, CYP2C9/VKORC1/CYP4F2/warfarin, CYP2C9/NSAID exposure context (including menstrual-pain use), CYP2C9/HLA-B*15:02/phenytoin, SLCO1B1/ABCG2/CYP2C9/statins, CYP2D6/codeine or tramadol, CYP2D6/tamoxifen, CYP2D6/CYP2C19/CYP2B6 antidepressant questions, CYP2B6/efavirenz in HIV care, CYP3A5/tacrolimus in transplant care, BCHE/succinylcholine anesthesia, UGT1A1/irinotecan, NAT2/hydralazine, and drug-specific HLA-B*57:01/abacavir, HLA-B*15:02/HLA-A*31:01/carbamazepine-oxcarbazepine, and HLA-B*58:01/allopurinol safety review, alongside DPYD/fluoropyrimidines, TPMT/NUDT15/thiopurines, G6PD/oxidative medications, and RYR1/CACNA1S anesthesia risk. Composite gene labels are matched by their component symbols; exact allele-specific rules use exact curated marker IDs; clinical PGx duplicates carry explicit GRCh38 positive-strand metadata and the resource audit rejects incompatible allele conventions. The dashboard presents these as review pathways, while the structured clinical/AI surfaces retain the detailed evidence and safety data.
-* **Direction-aware medication copy:** Simple cards, the priority board, Personal exports, and AI review payloads use named treatment signals with their authored direction when available—for example, warfarin lower- or higher-dose requirement tendency, reduced clopidogrel activation, reduced medication-processing function, or possible medication sensitivity. Incomplete component coverage remains explicitly direction-incomplete rather than being turned into a phenotype claim.
-* **Shared family context:** Exact repeated marker-family interpretations are grouped once per section in Clinical and Compare presentation, with row-level pointers back to the shared explanation. Source interpretations, marker-specific distinctions, technical details, and export values remain intact; Simple mode uses the structured plain-language translation layer instead of repeating the raw family text.
-* **Exact hormone-medication context:** When a person records an exact active ingredient such as norethindrone, drospirenone, levonorgestrel, estradiol, or testosterone, the tool can surface a hormone-product/label review prompt. It does not infer that an ingredient is contraceptive, identify the product or dose from DNA, or recommend a treatment change; the package label and clinician/pharmacist remain authoritative.
-* **Cross-domain activity safety:** Activity guidance is authored by related pack signals plus explicitly selected reproductive context and resource-mapped personal symptoms, medications, and labs. Bone findings can surface connective-tissue guardrails, airway/allergy findings can surface sleep-recovery context, and kidney, pain/migraine, and sleep packs can expose individualized activity, hydration, or recovery follow-up even when a matching SNP is absent. Symptoms, history, measured labs, and clinical clearance remain higher priority than genotype.
-* **Inflammation context layer:** Canonical IL6/TNF/CRP marker copies route to one compact, marker-linked baseline of food ideas, sleep/movement/recovery cues, and clinician-selected hs-CRP/CRP/ESR follow-up. Immune, allergic, digestive, redox, tissue, and research markers remain visible as context with explicit no-lifestyle routes when DNA alone is not a useful basis for a recommendation.
-* **DNA callability visibility:** Each report section shows how many curated markers have usable DNA calls and explicitly labels missing/uncalled markers as unknown rather than negative evidence. AI context uses `chromosome_call_context` for the conservative Y-call hint.
-* **Dynamic discovery catalog:** The Curated Catalog scan derives its filters from every category present in `discovery_catalog.json`, supports resource-authored multi-category records, displays per-category entry counts, and provides Select all/Clear all controls. Shared discovery routing is authored in `research_taxonomy.json`, consumed by both the Svelte UI and Rust enrichment path, and includes reproductive/menstrual, androgen/prostate/testicular, allergy, kidney, pain, skin, respiratory, dental, muscle, and longevity domains. The default selection stays bounded to the established high-value domains; newly added research categories remain reachable without being silently scanned. Taxonomy matches are navigation hints only and do not upgrade evidence or imply a diagnosis.
-
-### 3. Plain-English Layperson Translation System
-* Includes a layperson dictionary for curated candidate rsIDs, translating terms such as "homozygous" to "two copies of the variant" and "metabolizes" to "breaks down/clears".
-* **View Modes:** Toggle dynamically between:
-  * **Simple Mode 🌱:** Hides all complex terminology and evidence lists for average users.
-  * **Clinical Mode 🏥:** Exposes CPIC guidelines, PubMed citations, and exact biological mechanisms.
-  * **Compare Mode 👥:** Opt-in side-by-side comparison of the Simple and Clinical explanations.
-  * **Simple is the first-run default:** The selected presentation mode is saved per profile; legacy `Dual` preferences are read as Compare.
-  * **Compact secondary details:** Simple finding cards keep Details, Technical data, and References in one compact disclosure rail so the plain-language meaning and next step remain the focus.
-  * **Desktop shell controls:** A small chevron at the sidebar’s upper-right edge hides the data sidebar without consuming report space. The sidebar footer contains the compact Auto/Light/Dark control, and Focus mode exposes a small restore chevron in the report pane.
-* **Compact guidance surfaces:** Simple Dietary Alignment renders the complete resource-authored menu of concrete food and beverage ideas as compact, color-coded item tiles in organized `Food ideas` and `Foods to limit` columns, matching the Supplements visual language without removing food guidance. Supplements have complete DNA-linked `Consider` and `Avoid / confirm first` lists, Medication & clinical follow-up presents matched medication pathways, and Allergy & sensitivity presents matched DNA pathways with a signal label, plain-language relevance cue, matched genes, links back to the finding, and one concise section-level follow-up. Generic exposure checklists, mixed-domain prose, and the former Notes block stay out of the main DNA report; Clinical/AI consumers retain structured guidance through `advancedGuidance` and safety surfaces.
-* **Recommendation provenance:** DNA-linked food and supplement outputs retain stable recommendation IDs, the matched actionability/topic rules, supporting marker IDs and genes, evidence tier, relevance context, and a concise reason for inclusion. The report keeps compatibility string lists while Simple mode renders the typed records, so deduplication and export/clinical consumers can preserve why an item appeared.
-  * **Focused priority queue:** Simple mode uses plain-language medication and finding translations, groups related clinical medication components into one DNA-linked topic, and omits benign, no-effect, protective, or harmless cancer-language items from the concern queue while preserving them in the full report and exports.
-  * **Unified DNA-linked insight tiles:** Allergy, food, supplement, and medication guidance share one semantic tile treatment with consistent positive/limit/review accents, readable wrapping, compact counts, and links back to the underlying finding.
-
-### 4. Local RAG Evidence Library & Search Engine
-* **Local SQLite Vector Store:** Stores guideline citations and references mapped directly from trait JSONs.
-* **On-the-fly Cosine Similarity:** Computes vector cosine similarity locally in memory (Rust) to keep the app portable.
-* **Dynamic Embedding Fetching:** Fetches embeddings dynamically from the configured remote Ollama instance using the user-provided `ollamaUrl` and `ollamaToken` (no hardcoded IP addresses).
-* **Evidence Library Panel:** Provides keyword and semantic searching directly within Svelte to reference CPIC and PubMed guidelines.
-
-### 5. 10 Specialty Consultation Modes
-* **Specialized System Prompts:** Tailors AI behavior to 10 specific health contexts:
-  * **🧬 General:** Broad genomic overview and prioritization guide.
-  * **💊 Pharmacogenomics (PGx):** Strict focus on drug metabolism (CYP450, DPYD) and safety warnings.
-  * **🍎 Nutrients & Methylation:** One-carbon cycle dynamics (MTHFR, COMT, PEMT) and dietary recommendations.
-  * **🏃 Metabolic Health & T2D:** Blood sugar, insulin sensitivity (APOE, FTO), and lifestyle variables.
-  * **🌙 Sleep & Circadian:** Sleep duration and timing optimization based on CLOCK/PER2 predispositions.
-  * **🧠 Brain & Mood:** Dopamine/serotonin synthesis and stress responses (COMT, DRD2).
-  * **🦴 Joints & Connective Tissue:** Collagen structure and recovery protocols (COL1A1, COL5A1).
-  * **🛡️ Thyroid & Autoimmune:** Thyroid hormone conversion (DIO1, DIO2) and immune cofactor links.
-  * **❤️ Cardiovascular Health:** Vascular integrity, blood pressure regulation, and cardiovascular habit guides.
-  * **🌸 Hormone & Reproductive Context:** Menstrual-cycle physiology, PMDD/PMS timing, progestin-versus-combined contraception context, androgen/prostate/testicular context, menopause and hormone-therapy routing, preconception/fertility-care routing, and adenomyosis/endometriosis workup boundaries across different bodies and goals.
-
-### 6. Dual-Model Safety Review Pipeline
-* **Secondary Model cross-checking:** Primary model drafts can be automatically cross-checked by a secondary safety review model (e.g., MedGemma).
-* **Clinical Correction warnings:** Highlight clinical overclaiming, dosing advice, or diagnosing assertions in an amber safety warning card.
-* **Verification transparency:** Keeps the safety review log fully transparent and embeds review logs directly into clinical handoff exports.
-
-### 7. Allele-Orientation Validation & DPYD Gate
-* **DPYD rs55886062 Correction:** Corrected the `effect_allele` for `rs55886062` to genomic plus-strand `C`.
-* **Orientation Validation Gate:** Implemented Rust backend verification to check strand orientation. If orientation is unverified or mismatch, it replaces the interpretation with a block warning and restricts severity, completely preventing false clinical claims.
-
-### 8. Private AI Consultation & Multimodal Assistance
-* Connects directly to local/remote Ollama servers with optional token/reverse-proxy authentication.
-* **Three-Panel Layout Overhaul:** Splits the interface into a left Chat History Sidebar (backed by local storage, supporting rename/delete), a center Chat Area, and a right sliding Settings Drawer. Toggling the settings drawer closed maximizes the chat viewport width.
-* **Sliding Sidebar Transition:** Integrated reactive state binding and CSS transitions (`width: 0`, `flex: 0 0 0px`, `overflow: hidden`) on the history sidebar, allowing it to slide open and closed smoothly.
-* **Strict Profile Isolation (Round 2):** Chat history is strictly isolated per DNA profile (`sampleId`). Switching dashboard profiles automatically saves/restores the active session for the chosen profile and filters the sidebar to display only that profile's session history.
-* **Interactive Thinking Controls & Details Collapse Fix (Round 2):** Adds toggles to hide/show thoughts or auto-collapse completed thoughts in the settings drawer. Resolved details tag force-open issues during streaming by replacing index-based logic with unique message-key mapping.
-* **Pruning & Branching (Round 2):** Allows individual message deletion (`🗑`) and prompt editing (`✏️`). Editing a previous prompt copies it to the input field and truncates the conversation history from that point forward, allowing you to branch chats.
-* **Dynamic Curated Prompt Filtering (Round 2):** Renders curated helpers bar dynamically, displaying shortcut questions only when their respective genomic categories contain active findings (`effect > 0`).
-* **AI Scope Pushback Rules (Round 2):** Injects strict scope pushback commands into the system prompt configuration. The model is trained to decline to speculate or answer questions from general knowledge about genes, variants, or conditions that are not explicitly present in the loaded JSON genomic context.
-* **Extended Thinking Mode:** Slider allows adjusting output tokens (`num_predict` from `512` to `8,192` tokens). A checkbox **"Extended Thinking"** forces the predicted limit to `8,192` tokens, preventing deep reasoning models (like DeepSeek R1) from truncating mid-thought. Reasoning models are automatically detected by name to pre-enable this mode.
-* **Precise Model Capabilities Detection:** Automatically queries `/api/show` to extract model families (`clip`/`mllama`/`vision`/`vl`) and layers (`model_info`). This guarantees that only models with active vision projector layers enable image attachments, avoiding false positives on text-only quantizations (like a stripped `medgemma:latest` GGUF).
-* **Multimodal Vision Integration:** Allows dragging, pasting, or uploading images directly into the chat. Images are normalized using HTML5 Canvas to a max size of 1024px in a standard JPEG format to fit comfortably in local vision models.
-* **Session Token Tracker:** Live statistics bar in the sidebar tracking accumulated prompt, response, and total tokens. Includes a visual context gauge reflecting how much of the context window has been consumed.
-* **Prompt Context Inspector:** Collapse/expand modal that lets you audit the exact system prompt and JSON context payload currently being sent to the AI.
-* **Copy & Export Options:** Instantly copy assistant responses to the clipboard (stripping raw thinking tags) or export entire conversations as Markdown files saved locally.
-* **Global Dialog State Store:** Extracted custom alert and confirmation dialog states into a global, reactive Svelte 5 store ([`src/lib/utils/dialogState.svelte.ts`](src/lib/utils/dialogState.svelte.ts)), replacing browser popups and component prop boilerplate.
-* **Session Management Serialization:** Offloaded session loading, saving, and template factory creation to [`src/lib/utils/chatSession.ts`](src/lib/utils/chatSession.ts) to keep components modular and under 500 lines.
-* **Privacy Controls:** Choose which trait packs to feed into the model, and toggle the `Only active findings (effect > 0)` option to restrict context strictly to positive variants, saving tokens and preserving privacy.
-* **Anti-Hallucination Formatting:** Uses bullet-point structures and clear bracketed markers rather than numbered lists to prevent low-parameter models (like `gemma4:e4b` or `tinyllama`) from mimicking the prompt rules.
-* **Strict Parameters:** Enforces `temperature: 0.0` in Ollama options by default to completely eliminate genomic hallucinations.
-
-### 9. Dynamic MCP Integration Hub
-* Implements a stdin/stdout Model Context Protocol (MCP) server directly.
-* **Vite Environment Sync:** Automatically toggles commands between Development mode (using `pnpm run mcp`) and Production mode (using the compiled app binary).
-* **Tauri Executable Auto-Detection:** Dynamically queries the exact path of the running executable on the user's filesystem.
-* **Active Tool Catalog:** Exposes a list of all active MCP tools and parameters in Svelte using live schemas queried from the Rust backend.
-* **Deterministic UI actions:** The local agent bridge normalizes emoji/punctuation presentation and prefers exact visible or accessible control labels, so commands such as `Clinical` select the reading-mode control instead of a similarly named finding.
-* The privacy-safe desktop bridge exposes aggregate expanded report-section labels so QA can target the sections actually open in the Tauri window without reading report text or genotype-bearing details.
-
-### 10. Live Chromosome Density & Variant Map
-* **SQLite Live Density Query:** Computes and renders SNP density across 24 chromosomes (1-22, X, Y) based on actual records stored in the local SQLite genotypes database.
-* **Risk Coordinate Mapping:** Maps all evaluated risk/moderate/needs-confirmation variants at their exact physical base-pair positions on the chromosome capsules.
-* **Interactive Tooltips:** Hovering over mapped variant indicators displays full gene details, rsID, and severity class.
-
-### 11. Advanced Report Filters & Severity Sorting
-* **Multiple Filtering Criteria:** Toggle between showing undetected benign markers, filtering strictly to active risk findings, and selecting specific evidence tiers (Tier A/B only).
-* **Severity Ranking Sort:** Reorders markers dynamically within each section to bubble up High Risk and Needs Confirmation markers to the top.
-* **Wrapped Exports:** JSON exports wrap raw reports in metadata envelopes containing version numbers, timestamps, and sample chromosome-call context.
-* **Audience-specific exports:** The report can save Personal Simple, Clinician Handoff, and AI Review Markdown exports. Each keeps personal context separate from genetic evidence, includes a local-only privacy warning, and ends with a deduplicated source index. AI and clinician/doctor handoffs always include raw genotype calls for exact finding traceability; Personal Simple and PDF remain presentation formats. The on-screen report also provides a collapsed, lazy-rendered, searchable reference index; cards and exports use deterministic reference IDs so repeated sources remain linked without a wall of links.
-* **Conservative chromosome context:** Missing Y calls remain unknown rather than being treated as proof of XX. Chromosome-call context is a biological hint only; it is not gender identity, anatomy, fertility, pregnancy status, or hormone status. Marker packs can declare biological applicability such as `xx_reproductive`, `xy_reproductive`, `x_linked`, or `y_linked`.
-
-### 12. Presentation, theme, and resource-update controls
-* The report uses a Simple-first hierarchy with a wide, scroll-away mini-stats overview and a prioritized queue of up to nine findings. Overview totals are computed from unique canonical DNA signals, with higher-concern signals shown as a subset of priority signals; benign and unassessed rows are not inflated into active context counts. On wide desktop, the queue fills the available dashboard surface in three vertical columns (1–3, 4–6, and 7–9); Clinical and Compare remain available for advanced review.
-* Simple finding cards keep the plain-language meaning visible and place an additional plain-language explanation behind a compact `Details` disclosure before technical data.
-* Simple cards keep detailed ClinVar context in Technical data and References while showing a compact gnomAD population-frequency chip when that local cache result is available.
-* gnomAD remote indexed VCF mode follows the newest compatible release discovered from the official public release index, verifies working exome/genome tabix indexes, and caches that discovery for 24 hours. Index readiness is reported separately from the allele-frequency cache: stale rows from an older release are retained for diagnostics but excluded from reports, and **Refresh report frequencies** warms the selected profile against the current release. The bundled 4.1.1 configuration is an offline fallback only; custom releases and local VCF directories remain pinned unless release-following is explicitly enabled.
-* Simple next-step text uses the authored lab, symptom, or clinical follow-up labels when available instead of repeating a generic follow-up sentence; longer authored lists are bounded with a compact remainder count and stay available in Details.
-* Simple finding titles hide leading gene symbols and replace technical `marker` wording with plain research-context language; exact gene and rsID details remain under Technical data.
-* The report header keeps the aggregate association count as quiet secondary context; the technical association-match metric remains inside its collapsed technical disclosure rather than acting as a health score.
-* Expanded Simple and Compare finding grids use the available desktop report width up to a centered 92rem maximum measure, with two-column cards that use the wide application window without stretching individual content beyond its grid track. The privacy-safe desktop UI audit also verifies aggregate card widths against their grid columns.
-* Finding cards give the plain-language title its own row above a compact metadata rail, so evidence, applicability, and severity remain available without competing with the card's primary meaning and next step.
-* The sidebar footer provides direct Auto, Light, and Dark color controls without storing profile or genotype data. Deliberate theme changes use a consistent 2.5-second crossfade in either direction, while startup and print remain instant and reduced-motion users receive no animation.
-* Report emphasis, including the concise sex result, uses the active semantic accent token across themes rather than a fixed color.
-* Finding headers and Clinical result rows wrap long gene, variant, applicability, and status labels instead of forcing horizontal overflow.
-* Clinical findings remain a structured table on wide desktop and switch to stacked labelled rows at 1100px and below, so sidebar-constrained tablet layouts do not require a cramped 900px table.
-* The report header’s Sex and DNA-coverage summary also wraps as needed on narrow screens while keeping the concise `Male`/`Female` value visible.
-* Report IPC status normalization accepts Rust `snake_case` and legacy frontend status values at one boundary, so priority selection, condition evidence, context coverage, and exports interpret verified and unknown calls consistently.
-* **Profile Context and Diary:** The primary `Context` and optional `Diary` workspaces store user-entered goals, symptoms, medications, supplements, allergies, diet, labs, reproductive/hormone details, and diary observations per DNA profile. These details are available to Connected Chat and exports but never reorder or alter DNA findings; genetic sex only organizes suggested context choices.
-* **Explicit profile lifecycle:** Duplicate profile names cannot silently merge files. Replace requires confirmation and rebuilds the existing profile; a renamed import creates a separate profile. Delete removes the native profile database plus profile-scoped browser context so a reused ID cannot inherit stale user-entered data. Replacement also clears stale chat-session pointers while preserving entered Context/Diary.
-* **Import provenance and semantic joins:** Technical reports and AI/clinician bundles carry the current import provenance beside raw calls. Report links use a semantic identity that includes the marker, gene, allele, direction, variant type, build, clinical semantics, and source references, so reused rsIDs do not silently collapse distinct assertions.
-* **Audience ZIP bundles:** Personal Simple, Clinician Handoff, and AI Review exports each contain `report.md`, `dna_analysis.json`, `context.json`, `diary.csv`, `manifest.json`, and `PRIVACY.txt`. Clinician and AI bundles always include raw genotype fields; Personal bundles are the summary-oriented exception and omit them.
-* **Report/admin separation:** The desktop sidebar keeps profile selection and local DNA import together above a visually separated App tools area. Connections, Liftover, and Data & updates stay available without competing with the report’s reading flow; Data & updates starts collapsed and reports remote uncertainty honestly.
-* **Report exports:** A compact `Share this report` strip appears immediately below the report header. `AI-ready JSON` is the primary one-file handoff and includes DNA findings, references, entered context, diary data, and concise model instructions; Personal, Clinician handoff, PDF, and the six-file AI review bundle are directly available beside it. Curated and full-catalog technical exports are available behind `More` instead of competing with primary reading content.
-* Dashboard guidance uses compact visible prompts across dietary, supplement, reproductive, activity, medication, and lab panels; detailed context boundaries remain available through the existing safety disclosure or accessible help tooltip. Marker references are visually subordinate to the instruction they support.
-* Desktop dashboard guidance cards and the primary action queue use the centered 80rem maximum measure. The queue uses three vertical columns at wide desktop, two columns in a constrained desktop pane, and one column when the pane is narrow.
-* Missing reference catalogs appear as one compact status row with expandable details, keeping infrastructure issues visible without interrupting the report’s main reading flow.
-* Repeated report next-step guidance stays compact: Simple action-queue/cards use short distinct actions, Clinical rows surface up to three authored follow-up labels with a compact remainder count, and the general reference reminder remains in the application footer.
-* Simple dashboard hierarchy: the landing report uses a wide `Your DNA overview` mini-stats banner, a numbered queue of up to nine highest-concern findings with red/orange/yellow concern indicators, and compact desktop columns ordered 1–3, 4–6, and 7–9. Technical coverage stays behind `Data coverage` in Simple mode; Clinical/Compare retain the technical summary.
-* Guided desktop report flow: after the priority board, a compact `Use your results` index routes users through Allergy & exposure, Food & supplements, Training & recovery, and Medication & clinical follow-up before a clear `Explore all health areas` deep-dive boundary. Empty guidance groups are omitted, and wide desktop uses balanced two-column support surfaces where the content benefits from it.
-* Food and supplement recommendations use full-width, theme-aware group cards with compact marker-count/evidence summaries; gene-level provenance stays behind `Evidence details`, while DNA-basis actions use consistent themed controls.
-* **Desktop report order:** The health-area directory is the single deep-dive boundary; reading mode and optional filters come before collapsed technical sections, references come before the lower export drawer, and fresh profile views do not reopen dense report sections. Active Profiles uses concise `♀`/`♂` symbols with accessible sex labels, direct row controls, and a dedicated readable name track so profile names remain identifiable in the sidebar.
-* Training & Recovery guidance: Simple mode uses a compact Train / Recover / Track framework and a two-column DNA-linked playbook with named domains, `Build around`, `Watch for`, and `Verify when relevant` cues. Clinical/AI consumers retain the complete resource-authored domain arrays and acute-symptom escalation list.
-* Simple overview signal strip: the banner pairs the visible review-board count with higher-concern, context, protective-context, and percentage coverage signals, while keeping the exact called/uncalled explanation inside the coverage disclosure.
-* Desktop context menu: right-clicking inside the Tauri app opens a native Genomics Caddy menu with report, research, AI-consultation, import, and standard text-editing actions; the web preview keeps the browser menu for development.
-* Sidebar clarity: selected file paths remain available through accessible hover/focus tooltips, while profile rows use immediate direct controls without a delayed sex-estimate or selection popover. An incomplete remote reference check appears as `Remote check incomplete`; the panel separately reports local catalog file/index availability, and a confirmed download/import failure remains `Update issue`, so remote uncertainty is not presented as a missing local download or a completed update.
-* Clinical rows and Compare cards keep the longer claim boundary behind details; the visible status stays compact (`Confirmation needed`, `Contextual result`, or `Review blocked`).
-* Compare-mode warning details are grouped under one collapsed `Limits & confirmation` disclosure per finding; the short `Clinical review` badge remains visible when applicable.
-* Finding highlights and report/discovery loading states use the active semantic info/warning tokens instead of fixed colors.
-* Marker-card hover and sidebar-control shadows use theme-aware tokens, keeping light mode visually lighter than dark mode.
-* Focus Report and sidebar synchronization states use semantic shadow/accent tokens so Light, Dark, and System themes remain visually consistent. The icon-only hide-sidebar chevron is anchored inside the sidebar’s upper-right corner, clear of the visible brand content; Focus mode exposes a small restore chevron without adding a report banner. The profile header and primary/advanced navigation remain sticky within the report scroll surface so the original tabs stay discoverable while reviewing long reports.
-* Sidebar download/import progress uses one reusable, labelled progress surface with clamped determinate values and an explicit indeterminate state for streaming or preparation phases.
-* Shared tooltip panels cap their height to the viewport and scroll locally when explanations are long, so edge-positioned help remains reachable instead of being clipped.
-* Narrow report cards and context selectors keep long guidance inside their available width; Simple evidence badges use concise labels while their full explanations remain available through the shared tooltip.
-* Reference drawers wrap long citation titles, catalog labels, and source notes inside the finding card instead of widening the report.
-* Clinical technical-detail disclosures remove desktop width minimums on stacked narrow rows, keeping expanded clinician fields inside the available card.
-* Clinical mode presents its DNA-array, confirmation, personal-context, and clinician-entered-data provenance once at the report level instead of repeating the same disclosure before every health-area table.
-* Simple section headers keep DNA call coverage in one labeled control instead of repeating the same called-marker count in the status area.
-* The first-screen action queue uses a plain-language “shown” count, and report-header titles and summary badges wrap safely inside their flex layout.
-* The additional-marker filter is labeled “Show benign & uncalled” so its behavior matches the markers it reveals.
-* Section headers report the number of visible markers as “shown” and count only visible active findings, so filtered views cannot display contradictory totals.
-* Active-finding status is omitted when it duplicates the visible-marker count and retained when benign or uncalled markers make the subset useful.
-* Report filter-select borders use the active semantic theme token, keeping Light, Dark, and System-light controls visibly bounded.
-* Sidebar update, progress, warning, error, and success surfaces use semantic theme tokens; dynamic progress widths remain data-driven.
-* The advanced Connections entry is a compact sidebar launch row; its longer setup explanation remains available through an accessible tooltip and Advanced → Connections.
-* Healthy Liftover status is a compact sidebar row; missing or newer-chain states keep their download/update actions and concise explanatory context.
-* Offline update badges derive from the named locally-installed update list and require a fresh authoritative status probe before they can appear. While that probe is running or incomplete, the sidebar hides stale update claims and shows a concise `Checking…` or `Remote check incomplete` state; the local catalog summary and per-asset rows remain authoritative for files and indexed rows. After a sync it clears the asset until the post-sync probe confirms a newer remote version, so downloaded/current resources are not conflated. A settled inventory with no missing or newer resources shows `Current`. The GWAS sync path also honors a proven newer remote identity before deciding that an installed catalog is current.
-* The no-profile welcome summary uses the same complete-probe gate, so persisted update flags cannot reappear as “updates available” while a fresh check is running or could not verify remote identities.
-* Shared error cards use the semantic danger tokens, so their borders, background, heading, and detail text remain readable across Light, Dark, and System themes.
-* Export PDF temporarily expands the currently filtered sections and restores the user’s collapse state after printing; Clinical print output also includes the single compact data-provenance disclosure.
-* Report section collapse preferences are owned by the active report and stored per DNA profile, so section layout choices do not leak between profiles.
-* Print/PDF output uses a neutral paper palette, hides desktop chrome and interactive controls, keeps links readable, and lays out findings in one column while avoiding card splits across pages.
-* Shared report/sidebar and Chromosome Map tooltips support keyboard focus, hover, click/tap pinning for informational triggers, Escape, click-away dismissal, reduced motion, and viewport-aware placement; the Vector Atlas details panel follows both pointer and keyboard focus, and wrapped action controls dismiss their explanatory tooltip after activation so it cannot cover the resulting UI state.
-* Tooltip shadows use a theme token, keeping the shared popover surface consistent in Light, Dark, and System themes.
-* Report-section expansion honors `prefers-reduced-motion` while preserving the normal animated transition for users who have not requested reduced motion.
-* Reference Database updates expose checking, availability, download, validation, installation, report-reload, ready, and error states. A completed sync requests a fresh report for the selected profile; MCP status and sync operations use the same Rust offline-resource backend.
-* Update completion is reconciled through one authoritative final probe after bulk work; stale status responses cannot restore an older update badge, and attached catalog row counts are read from their actual sidecar schemas. A remote `Last-Modified` change alone is not enough to show an update when the server provides no stable filename, ETag, or comparable payload size, which prevents unstable mirrors from repeatedly labeling downloaded resources as outdated.
-* Single-resource updates await that final status refresh before the flow completes. Download metadata writes are checked instead of ignored, and ETag changes still count as updates even when a remote export keeps the same filename.
-* If a completed single-resource update cannot be confirmed by its final status probe, the flow remains visibly retryable instead of reporting success without verification.
-* Update failures retain their terminal error after the final reconciliation probe and expose a small Retry action for status checks, single-asset updates, and bulk sync/update flows. The retry control appears only when an operation fails.
-* Catalog replacement is transactional for ClinGen, PharmGKB, and MANE imports: malformed or truncated text leaves the last known-good catalog available, and a later valid retry can replace it cleanly.
-* **ClinPGx endpoint migration:** PharmGKB clinical-variant and gene archives, plus live PGx enrichment, use the current `api.clinpgx.org` host. The retired `api.pharmgkb.org` hostname is not used for outbound requests.
-* **Reference-record completeness:** ClinPGx imports normalize current plural `chemicals` and `phenotypes` fields, reject semantically empty replacements transactionally, and make the update state request a local refresh when an older catalog has rows but no drug/phenotype content. ClinVar, ClinPGx, ClinGen, MANE, and gnomAD enrichment preserve one-to-many annotations, provenance, and stable source links through report, discovery, and export surfaces.
-* **Cache maintenance is scoped:** Advanced → Clear Local Cache removes rebuildable HTTP response caches, reports the cleared row count, and compacts only the app-owned cache sidecar. Profiles, reference catalogs, marker packs, exports, and source provenance remain intact.
-* MCP `sync_offline_asset` responses preserve the existing sync fields and add a machine-readable `final_status` snapshot from the same authoritative post-sync probe, so an AI client can confirm whether the local resource inventory is current without a second status call. The payload contains resource metadata and indexed row counts only; it does not contain genotype values.
-* After a successful reference sync, the sidebar awaits a dedicated report regeneration path; MCP also exposes read-only `reload_report` with `status: "ready"`, and all-tier sync responses include `{results, final_status}` for explicit completion checks.
-* The advanced Offline reference data panel uses the same final-refresh boundary: it preserves the last known inventory during a failed check, labels that view as stale, hides unverified update actions, and offers concise retry controls for tier, asset, bulk, and index rebuild failures.
-* Offline status now includes a machine-readable `remote_check` result. An incomplete or timed-out remote probe cannot be presented as `Current` or as an actionable update; probe tasks are cancelled with the check so late network responses cannot reintroduce stale update flags. Sources that explicitly reject `HEAD` with 405/501 are checked with a bounded one-byte ranged request; servers that ignore the range remain unverified. The MCP audit reports only aggregate checked/failed/HEAD-fallback/timeout counts, and the desktop UI uses one concise retry message.
-* **Desktop loading and update trust:** The report and non-default panels are loaded on demand, keeping the initial client graph below the production chunk warning threshold while preserving direct tab access. An incomplete public-resource verification is shown as `Remote check incomplete` with retry; only a confirmed operation failure uses the red `Update issue` state, and neither state creates a false update-available claim.
-
----
-
-## 🛠️ Integration Guide
-
-### 1. Standalone Desktop GUI
-To run the Svelte dev server and the Tauri desktop window:
 ```bash
 node ./scripts/pnpm_unlocked.mjs install
-pnpm run tauri dev
+pnpm run tauri:dev
 ```
 
-To build the static production bundle (frontend only):
-```bash
-pnpm run build
-```
+Then in the app:
 
-Tagged releases run the same core validation gates in GitHub Actions before
-the cross-platform Tauri publish job: marker-pack and resource audits, privacy-
-safe DNA-fixture audit, frontend tests/check/build, CSS verification, Rust
-tests, and strict Clippy. A release artifact is not published when that
-validation job fails.
+1. Import your AncestryDNA or 23andMe export.
+2. Confirm the pre-write review (vendor, row counts, build, warnings).
+3. Read **Simple** mode first. Use **Clinical** or **Compare** when you want
+   sources and technical detail.
+4. Add Context/Diary yourself if you want food, cycle, or medication prompts
+   tailored to real life. The app does not infer those from DNA.
 
-To **purge build caches** (pnpm + Cargo only — never touches `data/`, downloads, or SQLite) and compile a **production desktop release** (Windows, macOS, or Linux):
+Optional production build (portable binary lands in `App/`):
+
 ```bash
 pnpm run build:release
 ```
 
-Or platform-native scripts:
-```powershell
-# Windows
-pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\purge_and_build.ps1
-```
-```bash
-# Linux / macOS
-bash ./scripts/purge_and_build.sh
-```
-
-**Linux one-time prerequisites** (Tauri WebKitGTK 4.1 + GTK headers):
-```bash
-pnpm run setup:linux
-# or: bash ./scripts/setup_linux_deps.sh && pnpm run system:check
-```
-
-**Linux desktop logo / launcher** (DNA icon instead of a generic gear in the dock):
-```bash
-pnpm run desktop:linux
-# remove the launcher + clear WebKit UI cache (does not delete App/Data profiles):
-pnpm run desktop:linux:uninstall
-# or regenerate icons from static/logo.png then reinstall:
-pnpm run icons:regen && pnpm run desktop:linux
-```
-
-Opening the portable binary (`./builds/linux/DNA-Tools` or `./App/DNA-Tools`) does
-**not** install a desktop launcher. Use `desktop:linux` only when you want a dock
-entry. After a rebuild, fully quit the app and run
-`pnpm run desktop:linux:refresh`; it ensures the launcher exists, updates it to
-the current binary, preserves the DNA icon, and clears WebKit UI caches. This
-refresh recreates the launcher if it was removed. Use
-`pnpm run desktop:linux:uninstall` only when you intentionally want to remove the
-dock entry and its user-installed icons. Agent handoff:
-`.cursor/skills/linux-portable-ui-refresh/SKILL.md`.
-
-Production desktop builds set the native window background to the application
-dark surface, so the detailed bootstrap screen can appear without a white
-native-window flash. Debian
-and RPM bundles also emit the `com.dna.explorer` launcher alias. Its filename
-matches the Wayland GTK application ID; `StartupWMClass=DNA-Tools` matches the
-X11 window class. Together these let GNOME associate the DNA icon with the
-running window. `pnpm run desktop:linux` registers the current
-`builds/linux/DNA-Tools` artifact when it is present.
-
-Options (via `pnpm run build:release -- …` or the shell/PowerShell scripts):
-- `--purge-only` / `-PurgeOnly` — clear caches without building (`pnpm run purge:build`)
-- `--skip-purge` / `-SkipPurge` — build without clearing caches first
-- `--skip-checks` / `-SkipChecks` — skip `pnpm run check` and `cargo check` before the release build
-- `--dry-run` / `-DryRun` — show what would be removed
-
-Release output lands in **`App/`** (portable binary + sidecars) with persistence in **`App/Data/`**. Build caches stay in `src-tauri/target/` and are safe to wipe. On Linux the staged binary is `App/DNA-Tools`; on Windows it is `App/DNA-Tools.exe`.
-
-### Remote Cross-Compilation (Ubuntu Builder)
-
-If you have configured the `Remote_Build` infrastructure, you can orchestrate builds across macOS, Linux, and Windows from a single machine without needing native toolchains locally:
-
-```bash
-# Build for all platforms (produces raw executables by default for fast testing)
-pnpm run build:remote:all
-
-# Or explicitly create the full packaged installers (.dmg, .msi, .nsis, .deb)
-python scripts/build.py --target all --create-bundle
-
-# Or target a specific OS
-pnpm run build:remote:windows
-```
-
-*Note: The Windows build is natively cross-compiled on the Ubuntu host using `mingw-w64`.*
-
-### Build timing benchmarks (laptop A vs B)
-
-Timed purge / full purge+rebuild (writes reports under `App/Data/benchmarks/`):
-
-```bash
-# Purge caches only (timed)
-pnpm run bench:purge
-
-# Full purge + production rebuild (timed) — best apples-to-apples comparison
-pnpm run bench:rebuild
-
-# Same rebuild, skip pre-checks (faster iteration)
-pnpm run bench:rebuild:fast
-```
-
-Windows-native:
-
-```powershell
-pwsh -File .\scripts\benchmark_build.ps1 -Json
-pwsh -File .\scripts\benchmark_build.ps1 -PurgeOnly -Json
-```
-
-Linux/macOS-native:
-
-```bash
-bash ./scripts/benchmark_build.sh --json
-bash ./scripts/benchmark_build.sh --purge-only --json
-```
-
-One-time migration from legacy `data/`:
-```powershell
-pwsh -File .\scripts\migrate_data_to_app.ps1
-```
-
----
-
-### 2. Headless sweep worker (Docker / server)
-
-For high-core servers (e.g. 80 CPUs), run the enrichment sweep without the desktop UI. Pipeline tuning is **dynamic** — it auto-detects logical cores, uses **all but one** for sweep work (4-core laptop → 3 workers, 80-core server → 79), and scales batch/concurrency from measured Ollama/Qdrant latency.
-
-```bash
-docker compose -f docker/docker-compose.yml build genomics-worker
-GENOMICS_CPU_LIMIT=80 GENOMICS_SAMPLE_ID=1 docker compose -f docker/docker-compose.yml up genomics-worker
-```
-
-Mount your data at `/data` (same layout as `App/Data/`). Progress streams as NDJSON on stdout (`GENOMICS_PROGRESS`, `GENOMICS_FINDING`). See **`docker/README.md`** for resume, updates, and optional static UI.
-
-Local CLI (same binary as the desktop app):
-
-```powershell
-$env:GENOMICS_DATA_DIR = "C:\path\to\App\Data"
-$env:GENOMICS_CPU_LIMIT = "80"
-.\App\DNA-Tools.exe --headless-sweep --sample-id=1
-```
-
----
-
-### 3. Headless MCP Server Integration
-Genomics Caddy embeds a Model Context Protocol (MCP) server. Start the server in headless MCP mode:
-
-* **In Development:**
-  ```bash
-  pnpm run mcp
-  ```
-* **In Production:**
-  Launch the compiled executable with the `--mcp` flag:
-  ```bash
-  "C:/path/to/installed/tauri-app.exe" --mcp
-  ```
-
-#### Claude Desktop Configuration
-Add the server configuration to your global `claude_desktop_config.json` (`%APPDATA%\Claude\claude_desktop_config.json`):
-
-* **For Dev Mode (pnpm):**
-  ```json
-  {
-    "mcpServers": {
-      "genomics-caddy-dev": {
-        "command": "pnpm",
-        "args": ["run", "mcp"],
-        "options": {
-          "cwd": "C:/path/to/DNA_Tools"
-        }
-      }
-    }
-  }
-  ```
-* **For Production Mode (Executable):**
-  ```json
-  {
-    "mcpServers": {
-      "genomics-caddy": {
-        "command": "C:/path/to/installed/tauri-app.exe",
-        "args": ["--mcp"]
-      }
-    }
-  }
-  ```
-
-#### Cursor Configuration
-1. Open Cursor and navigate to **Settings > Features > MCP**.
-2. Click **+ Add New MCP Server**.
-3. Add a **Command** type server:
-   * **Dev Command:** `pnpm run mcp`
-   * **Prod Command:** `"C:/path/to/installed/tauri-app.exe" --mcp`
-
-#### Cline / Roo Code Configuration
-Add the configuration to `cline_mcp_settings.json` (`%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json`):
-```json
-{
-  "mcpServers": {
-    "genomics-caddy": {
-      "command": "C:/path/to/installed/tauri-app.exe",
-      "args": ["--mcp"],
-      "disabled": false
-    }
-  }
-}
-```
-
-#### Claude Code (CLI) Configuration
-Add the server globally to Claude Code by executing:
-* **Dev Mode:** `claude mcp add genomics-caddy-dev pnpm -- run mcp`
-* **Prod Mode:** `claude mcp add genomics-caddy "C:/path/to/installed/tauri-app.exe" -- --mcp`
-
----
-
-## Evidence Workbench (vector + SQLite associations)
-
-The **Evidence Workbench** tab in the AI Evidence Library provides inspectable, source-grounded association cards:
-
-- **Hybrid search** — Qdrant semantic discovery + SQLite `association_facts` with filters (data quality, direction, evidence tier).
-- **Quality dashboard** — stale vector counts, schema mismatch, source coverage bars, cache health; **Backfill payloads** normalizes existing Qdrant points without re-embedding when text is unchanged.
-- **Dynamic candidates** — surfaced during enrichment; promote to `curated_lite` only when GWAS/association evidence exists; rejected rsIDs are suppressed from search.
-- **Evidence packets** — export JSON (facts + source records + similar hits + prohibited claims) via save dialog.
-
-MCP tools: `search_vector_associations`, `get_variant_evidence_card`, `explain_vector_match`, `export_evidence_packet`, `backfill_evidence_payloads`, `get_quality_dashboard`, `list_candidate_markers`.
-
-Data layers: `association_facts` (per-sample truth) → `api_cache_entries` (cross-sample HTTP cache) → live APIs; raw responses stored in `source_records`.
-
----
-
-## 🐚 Commands & Arguments
-
-### PNPM Build and Execution Scripts
-* **`pnpm run dev`**: Spawns Vite development web server.
-* **`pnpm run tauri:dev`**: Starts Vite server and mounts the Tauri desktop window.
-* **`pnpm run build`**: Compiles static production web assets into `/build`.
-* **`pnpm run check`**: Runs Svelte compiler and TypeScript diagnostics.
-* **`node ./scripts/clean_deep.mjs`** (or `pnpm run clean:deep` while dependencies are installed): Destructive project-local rebuild purge. Removes `node_modules`, JavaScript/Cargo lockfiles, frontend build/cache output, Tauri-generated schemas, both project-local Rust target locations, and staged portable release binaries/resources. It preserves `App/Data`, profiles, raw genomes, exports, downloaded references, global toolchains/caches, and both protected marker-pack trees. Run `node ./scripts/clean_deep.mjs --dry-run` first to preview the exact paths.
-* **`node ./scripts/clean_deep.mjs --fresh-dependencies`** (or `pnpm run clean:deep:fresh` while dependencies are installed): Compatibility alias for the lock-free deep cleanup.
-* **`node ./scripts/pnpm_unlocked.mjs install`**: Resolves and installs frontend dependencies with pnpm's transient lockfile stored outside the repository and removed on exit. Invoke this direct Node entry point when `node_modules` is absent; pnpm 12 may auto-install before `pnpm run` and retain a project lockfile.
-* **Rebuild after a deep clean**: Run `node ./scripts/pnpm_unlocked.mjs install && node ./scripts/update_all.mjs && pnpm run build && pnpm run tauri:dev` to reinstall dependencies, refresh stable project dependencies/toolchains through the existing update workflow, rebuild the frontend, and launch the desktop application for visual audit.
-* **`pnpm run validate:packs`**: Validates curated marker-pack schemas, evidence tiers, actionability policy, source-only support-resource contracts (including prompt policy, consultation-mode IDs, helper relevance signals, and manifest pack links), and runtime mirror manifests without removing any pack.
-* **`pnpm run audit:inflammation`**: Verifies IL6/TNF/CRP canonicalization, inflammation lab-ID parity, source/runtime marker-pack parity, compiled Rust support-resource wiring, and marker-linked versus explicit no-lifestyle coverage.
-* **`pnpm run audit:markers`**: Runs the aggregate marker-semantics audit, including non-matchable effect-allele rows, duplicate assertion conflicts, observed variant-type coverage, and the shared callability registry without reading genotype databases or printing calls. Add `-- --json` for a machine-readable, no-genotype `marker_snapshot` suitable for migration review.
-* **`pnpm run audit:resources`**: Audits every curated pack, discovery catalog, and support resource for probability/callability/actionability gates, claim-boundary fields, source-registry coverage, source/runtime parity, actionability-rule source coverage, actionability coverage, incompatible high-stakes duplicate alleles, and deterministic wording that needs human review.
-* **`pnpm run audit:content`**: Runs a privacy-safe aggregate content-quality audit without loading DNA fixtures. Reports duplicate marker rows, classified copy reuse (shared boundaries/follow-ups, marker impact, repeated interpretations by marker-family/section/cross-section class, and generic fallback coverage), Simple-mode meaning/action coverage, identifier-aware templates for non-rsid resource entries, recommendation provenance, source-ID validity, topic repetition, and multi-marker link/count integrity without printing genotype or allele values. The Simple copy runtime preserves each resource's marker class so panels, HLA/CNV/repeat routes, guardrails, and research modules receive category-appropriate wording instead of a generic medical fallback.
-* **`pnpm run audit:dna-fixtures`**: Read-only coverage audit for root DNA `.txt`/`.zip` fixtures. Reports row counts, curated rsID presence versus callable coverage, chromosome-call counts, Y-call counts, and dynamic actionability coverage for both standard rsIDs and non-rsID clinical-panel targets; never prints or imports genotype values.
-* **`node ./scripts/audit_reproducibility.mjs`**: Verifies direct package versions are exact in `package.json`, all JavaScript/Cargo lockfiles are absent, and Cargo metadata resolves without `--locked`. Use the direct Node entry point when `node_modules` is absent so pnpm cannot auto-install a lockfile. Dependency changes should be made through the explicit update workflow and validated before release.
-* **`pnpm run audit:tauri-ui`**: Privacy-safe desktop QA against the running Tauri window through the loopback UI bridge. Exercises Simple, Clinical, Compare, and Focus Report states; checks concise sex labeling, desktop overflow, two-column finding layout, wide overview geometry, nine-item priority-board geometry, sequential visible queue ranks and supported concern tones when the queue is populated, Clinical table/card stacking, reference-chip wrapping, bounded food/supplement tiles, instruction→evidence→gene reading order, warm low-emphasis marker text, themed recommendation controls, sidebar collapse/restore, compact resource-status state, redundant public copy, sidebar-footer theme placement with direct Auto/Light/Dark choices, every visible non-interactive tooltip trigger, and rendered Light/Dark/System contrast pairs. Set `GENOMICS_TAURI_AUDIT_WIDTH` to exercise the native desktop layout at a requested width; the validated matrix is 1,920px, 1,366px, and 1,024px. Run with `pnpm run tauri:dev` and a random `GENOMICS_AGENT_UI_TOKEN`, or enable the same token-protected loopback bridge in a release binary with `GENOMICS_AGENT_UI=1`; pass the same token to the audit command. The bridge is loopback-only and `/ui/*` is token-protected by default; `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` is a debug-only disposable-QA bypass. Never prints genotype data.
-* **Audience ZIP bundles**: Use the `Context` tab to review profile-scoped entered context, then use `Report actions` in Trait Report. AI Review and Clinician Handoff bundles always carry raw genotype fields for exact finding traceability, include the resolved variant-type/callability policy beside each JSON marker record, and include import provenance in their technical JSON/manifest. The typed local save command writes the six-file bundle atomically through the desktop save dialog; no bundle content is logged.
-* **`pnpm run audit:tauri-update`**: Starts disposable Tauri fixtures with a synthetic sample and a stale liftover identity, then verifies the successful desktop download path plus a deterministic download failure, visible Retry control, recovery, authoritative post-sync status, update-copy clearing, and report readiness. It removes only the temporary fixtures and never touches configured app data or prints genotype data.
-* **`pnpm run audit:mcp`**: Privacy-safe aggregate QA against the compiled MCP binary. Verifies the MCP tool catalog, offline status response, imported-sample report reload, and terminal `status: ready` response without printing sample names, report payloads, or genotype data. Set `GENOMICS_MCP_EXECUTABLE` to audit a different compiled binary and `GENOMICS_MCP_TOKEN` when the MCP process requires authentication.
-* **`pnpm run audit:mcp:write`**: Opt-in disposable child-process QA for the write-gated MCP path. Creates a synthetic empty sample under a temporary directory, starts MCP with `--mcp-write`, verifies Tier 2 sync, a small liftover download/final status, report reload, and removes only that fixture. It never targets configured app data or reads genotype data.
-* **`pnpm run cargo:test` / `pnpm run cargo:clippy`**: Runs the Rust backend suite and strict warning-free Clippy gate. The recovery tests use local synthetic catalog metadata only, so they do not require remote catalogs or genotype fixtures.
-* **`pnpm run smoke`**: Runs local integration smoke tests (Qdrant/NCBI/Ollama) using `.env` beside the project root.
-* **`pnpm run mcp`**: Spawns the Tauri dev process in headless MCP server mode.
-* **`node ./scripts/update_all.mjs`** (or `pnpm run update:all` after dependencies are installed): Full refresh — Node/pnpm package managers, rustup stable (+ sync `rust-version`), bump **all** frontend deps to latest (including TypeScript majors), Cargo upgrade/update, then verify. TypeScript **7** is primary (`tsc` via `scripts/run_tsc.mjs`). `pnpm run check` shims the TS6 API for Svelte tooling (`@typescript/typescript6` + preload). `.npmrc` keeps the existing peer-dependency compatibility setting. Flags: `--dry-run`, `--skip-toolchains`, `--skip-npm`, `--skip-cargo`, `--skip-verify`, `--update-node`. Dependency resolution is intentionally lock-free; no npm/pnpm/Cargo lockfiles are retained and no `--locked` flags are used.
-* **`pnpm run update:all:dry`**: Same plan as Update All without writing anything.
-* **`pnpm run update:deps`**: Packages only (pnpm + Cargo); skip toolchain self-updates.
-* **`pnpm run update:toolchains`**: Toolchains only (pnpm global + rustup); skip project deps and verify.
-
-### Local `.env` and smoke tests
-
-Connection hosts are configured in-app under **Advanced → Connections** (also **Open Connections** in the left sidebar). **SQLite (UI-saved) overrides `.env`**; `.env` only fills empty fields as bootstrap.
-
-1. Copy the template: `copy .env.example .env` (Windows) or `cp .env.example .env`.
-2. Optionally set secrets / bootstrap URLs in `.env` (never commit this file):
-
-```env
-QDRANT_URL=http://your-host:6333
-QDRANT_API_KEY=your-key
-QDRANT_COLLECTION=your_collection
-NCBI_API_KEY=
-OLLAMA_URL=http://your-ollama-host:11434
-OLLAMA_TOKEN=
-```
-
-3. Or leave `.env` blank and enter URLs in **Advanced → Connections**, then **Save & Verify**. Choose a vector provider (**Qdrant**, **Pinecone**, **Chroma**, or **Weaviate**) — dense research sweeps work on all four; named vectors remain Qdrant-only. Use **Reset to localhost** for `127.0.0.1` (warns if Ollama/Qdrant are missing locally). Same tab: **Install / Update / Update all / Remove** Ollama models, **Browse library** / **Search models** links to ollama.com, and **Check for updates** (Ollama + Qdrant when applicable).
-
-4. Run smoke tests:
-
-```bash
-pnpm run smoke
-```
-
-Checks performed:
-- Vector store reachability for the configured provider (Qdrant collection / Pinecone index / Chroma collection / Weaviate class)
-- NCBI esearch (when `NCBI_API_KEY` is set)
-- Ollama model list (when `OLLAMA_URL` is set)
-
-### Purging sensitive files from git history
-
-If personal genotype files were ever committed, run (rewrites local history):
-
-```powershell
-pwsh -File scripts/purge_git_secrets.ps1
-```
-
-If the repo was pushed to a remote, follow with `git push --force --all` and rotate any exposed API keys.
-
-### Application Executable Flags
-* **`--mcp`**: Launches the stdin/stdout JSON-RPC 2.0 Model Context Protocol loop (read-only tools by default).
-* **`--mcp-write`**: Enables mutating MCP tools (`delete_chat_session`, `backfill_evidence_payloads`, `update_candidate_marker_status`, `enable_named_vectors_collection`). Combine with `--mcp` when an agent must perform writes.
-* **`--mcp-auth-token=<secret>`** (optional): When set (or when `GENOMICS_MCP_TOKEN` is in the environment), every MCP `tools/call` must include `params._meta.authToken` matching that value. `ping` is exempt. Omit the flag for local-only, unauthenticated MCP (default).
-
-### Database storage (plaintext, per-sample)
-User genomes are stored as **plaintext SQLite** under `App/Data/`:
-- `user_genome.db` — sample registry + app settings only
-- `samples/<id>/genome.db` — that profile’s genotypes, chat, research jobs, and findings
-
-Deleting a sample in the UI removes the registry row and the entire `samples/<id>/` folder. Shared public databases (`clinvar.db`, `dbsnp.db`, `api_cache.db`, `genomics_reference.db`) are unchanged.
-
-App-level AES sealing of `user_genome.db` was removed: genotype source files are already plaintext, and OS keyring sealing broke cross-OS copies. Prefer full-disk encryption (BitLocker / FileVault / LUKS) for at-rest protection.
-
-Large offline raw downloads (uncompressed text/JSON over ~64 MiB) are gzip-compacted after a successful import; readers open `.gz` / `.bz2` transparently.
-
----
-
-## 🤖 Available MCP Tools
-
-1. **`list_samples`**
-   * **Description:** Lists all imported DNA samples in the local SQLite database.
-   * **Arguments:** None.
-
-2. **`get_variants_by_rsid`**
-   * **Description:** Queries specific genotypes for a list of rsIDs in a given sample.
-   * **Arguments:**
-     * `sample_id` (integer, required): The target sample ID.
-     * `rsids` (array of strings, required): List of rsIDs to query, e.g., `["rs4680", "rs1801132"]`.
-
-3. **`get_variants_in_region`**
-   * **Description:** Queries all standard variants in a given chromosome region (GRCh38 coordinates).
-   * **Arguments:**
-     * `sample_id` (integer, required): The target sample ID.
-     * `chromosome` (string, required): Chromosome number or label, e.g., `"1"`, `"X"`.
-     * `start` (integer, required): Start base-pair position.
-     * `end` (integer, required): End base-pair position.
-
-4. **`generate_report`**
-   * **Description:** Generates a full direction-aware trait report for a sample using a provided template. Returns evaluated markers with severity classes, section summaries, risk-direction-only signal scores, stable per-finding `reference_ids`, and a deduplicated report-level `references` registry for desktop, export, and MCP consumers.
-   * **Arguments:**
-     * `sample_id` (integer, required): The target sample ID.
-     * `template_json` (string, required): JSON string of the report template containing sections and markers.
-
-5. **`list_packs`**
-   * **Description:** Lists all available predefined genomic marker packs/bundles (like Core, PGx, Metabolic, etc.) and their descriptions.
-   * **Arguments:** None.
-
-6. **`get_report_for_packs`**
-   * **Description:** Generates an evaluated genomic report for specific pack IDs (or all if omitted). Can optionally filter to only return active variant findings (effect alleles detected).
-   * **Arguments:**
-     * `sample_id` (integer, required): The target sample ID.
-     * `pack_ids` (array of strings, optional): Predefined pack IDs to evaluate, e.g., `["core", "pgx"]`. If omitted/empty, evaluates all packs.
-     * `only_active_findings` (boolean, optional): If true, filters out any evaluated markers where `effect_count == 0` or data is missing, returning only positive variant findings. Defaults to false.
-
-7. **`list_evidence_sources`**
-   * **Description:** Lists all unique source citations in the local RAG evidence library.
-   * **Arguments:** None.
-
-8. **`get_evidence_for_marker`**
-   * **Description:** Queries the local evidence library for references and interpretation notes associated with a specific rsID.
-   * **Arguments:**
-     * `rsid` (string, required): The target rsID, e.g., `"rs4680"`.
-
-9. **`search_evidence`**
-   * **Description:** Performs keyword and semantic vector search in the local evidence library.
-   * **Arguments:**
-     * `query` (string, required): The search term or query.
-     * `ollama_url` (string, optional): Ollama server URL for semantic search embeddings.
-     * `ollama_token` (string, optional): Authentication token for remote Ollama server.
-
-10. **`get_chat_sessions`**
-    * **Description:** Lists saved consultation chat sessions from the local SQLite database.
-    * **Arguments:**
-      * `sample_id` (integer, optional): Filter sessions by sample ID.
-
-11. **`delete_chat_session`**
-    * **Description:** Deletes a specific consultation chat session.
-    * **Arguments:**
-      * `session_id` (string, required): The session ID to delete.
-
-12. **`export_chat_history`**
-    * **Description:** Exports a saved chat session history in a clean, human-readable Markdown format.
-    * **Arguments:**
-      * `session_id` (string, required): The session ID to export.
-
-13. **`get_app_paths`**
-    * **Description:** Retrieves the local application directory paths (database and marker packs folders).
-    * **Arguments:** None.
-
-14. **`check_chain_status`**
-    * **Description:** Checks if the GRCh37-to-GRCh38 liftover chain alignment file is locally present.
-    * **Arguments:** None.
-
-15. **`get_current_exe`**
-    * **Description:** Returns the absolute path of the running Genomics Caddy executable.
-    * **Arguments:** None.
-
-16. **`scan_ollama_models`**
-    * **Description:** Queries a local or remote Ollama server to list all available LLM models.
-    * **Arguments:**
-      * `url` (string, required): Ollama server URL.
-      * `token` (string, optional): Authentication token.
-
-17. **`show_ollama_model`**
-    * **Description:** Retrieves detailed configuration and parameters for a specific Ollama model.
-    * **Arguments:**
-      * `url` (string, required): Ollama server URL.
-      * `token` (string, optional): Authentication token.
-      * `name` (string, required): The model tag name.
-
-18. **`get_active_ollama_models`**
-    * **Description:** Queries a local or remote Ollama server to list currently loaded models and VRAM usage.
-    * **Arguments:**
-      * `url` (string, required): Ollama server URL.
-      * `token` (string, optional): Authentication token.
-
----
-
-## 🔧 Troubleshooting Remote Ollama Servers
-
-If you are connecting to a remote Ollama server (for example, `http://ollama.example.net:11434`) and your chat consultation responses are failing, review these issues:
-
-### 1. Connection Refused
-* **Problem:** Ollama is only listening on `localhost:11434` on the remote machine.
-* **Fix:** On the remote machine, set `OLLAMA_HOST=0.0.0.0:11434` as an environment variable before launching the Ollama daemon.
-  * *On Ubuntu (Systemd):*
-    Add `Environment="OLLAMA_HOST=0.0.0.0"` or `EnvironmentFile=/etc/ollama/ollama.env` to `/etc/systemd/system/ollama.service.d/override.conf` and run `sudo systemctl restart ollama`.
-
-### 2. HTTP 500 / Server Crash during Inference
-* **Problem:** llama-server panics with `"llama_init_from_model: V cache quantization requires flash_attn"`.
-* **Why:** The remote Ollama has KV cache quantization enabled (`OLLAMA_KV_CACHE_TYPE` is set to `q8_0` or `q4_0`), which requires **Flash Attention**. However, your remote GPU (such as a **Tesla P40** / Pascal architecture) does not support Flash Attention.
-* **Fix:** Disable KV cache quantization by unsetting or removing `OLLAMA_KV_CACHE_TYPE` (or explicitly setting it to `f16`) on the remote server:
-  * *On Ubuntu (Systemd):*
-    Open your override configuration with `sudo systemctl edit ollama` and add/edit:
-    ```ini
-    [Service]
-    Environment="OLLAMA_KV_CACHE_TYPE=f16"
-    ```
-    Reload and restart the service:
-    ```bash
-    sudo systemctl daemon-reload
-    sudo systemctl restart ollama
-    ```
-
----
-
-## Repository privacy
-
-Raw user DNA, generated reports, `.env`, portable `App/` data, and `builds/` are local-only and gitignored. Import your own AncestryDNA or 23andMe export in the app; do not commit it. The only committed genotype-shaped files are synthetic parser fixtures under `src-tauri/testdata/`.
-
----
-
-## 📂 Project Layout
-
-```
-/DNA_Tools
-│── README.md                # Public-facing usage and integration guide
-│── MEMORY.md                # Living session memory for AI developers
-│── package.json             # NPM frontend scripts, shortcuts, and configuration
-│── /src-tauri/testdata/     # Synthetic import fixtures only (no user DNA)
-│── /src                     # Svelte 5 frontend app
-│    ├── routes/
-│    │    ├── +layout.ts     # Configures SPA routing
-│    │    ├── +page.svelte   # Glassmorphic page orchestrator (under 500 lines)
-│    ├── lib/
-│    │    ├── api/           # Tauri RPC async wrapper layer
-│    │    ├── components/    # Modular Svelte 5 views (each under 500 lines)
-│    │    ├── marker-packs/  # Curated packs plus evidence, lab, food, activity, and safety resources
-│    │    ├── styles/        # theme.css and print.css external stylesheets
-│    │    ├── types/         # TypeScript interface definitions
-│    │    ├── utils/         # Evidence, genotype, actionability, and profile-context logic
-│── /src-tauri               # Rust backend modules
-│    ├── Cargo.toml          # Rust dependencies (rusqlite, flate2, rayon, reqwest)
-│    ├── src/
-│    │    ├── main.rs        # CLI handler (runs MCP server or GUI)
-│    │    ├── lib.rs         # Tauri command handlers
-│    │    ├── parser.rs      # Raw DNA file parser
-│    │    ├── liftover.rs    # UCSC chain coordinate mapping (GRCh37 -> GRCh38)
-│    │    ├── db.rs          # SQLite transactions and query logic
-│    │    ├── mcp.rs         # Stdin/stdout MCP server loop
-│    │    ├── report.rs      # Marker evaluation and markdown renderer
-```
-
----
-
-## 👤 Author & Links
-
-* **Created by**: Roy Dawson IV
-* **Email**: <Roy.Dawson.IV@gmail.com>
-* **GitHub**: [https://github.com/imyourboyroy](https://github.com/imyourboyroy)
-* **PyPi**: [https://pypi.org/user/ImYourBoyRoy/](https://pypi.org/user/ImYourBoyRoy/)
+Frontend-only web preview (`pnpm run dev`) cannot import DNA. Use the Tauri
+window for a real workflow.
+
+## Docs
+
+| Doc | Use it when |
+| --- | --- |
+| [docs/README.md](docs/README.md) | You need the full map (humans and agents) |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | File-by-file map: size, lines, and role |
+| [docs/usage/README.md](docs/usage/README.md) | Import, reports, exports, privacy |
+| [docs/mcp/README.md](docs/mcp/README.md) | MCP server, client configs, tools |
+| [docs/ai-chat/README.md](docs/ai-chat/README.md) | Ollama, connections, evidence workbench |
+| [docs/build/README.md](docs/build/README.md) | Release builds, Linux launcher, Docker |
+| [docs/development/README.md](docs/development/README.md) | Tests, audits, repo layout, `.env` |
+
+## Author
+
+- Roy Dawson IV
+- Email: <Roy.Dawson.IV@gmail.com>
+- GitHub: [https://github.com/imyourboyroy](https://github.com/imyourboyroy)
+- PyPI: [https://pypi.org/user/ImYourBoyRoy/](https://pypi.org/user/ImYourBoyRoy/)

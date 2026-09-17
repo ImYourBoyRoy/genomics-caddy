@@ -86,6 +86,7 @@ output/playwright/
 /output/
 
 # Local memory and dated planning notes may contain user-specific context.
+/MEMORY.md
 /MEMORY.local.md
 /*_tasklist.md
 /*_strategy.md

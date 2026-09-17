@@ -4,6 +4,10 @@
 
 This repository contains the local Tauri/Rust + Svelte DNA analysis tool. Stay
 inside this repository unless a task identifies a concrete external dependency.
+Human and agent operator docs: root `README.md` (quick start), `docs/`, and
+`ARCHITECTURE.md` (file map). Local session notes live in `MEMORY.md` and must
+stay untracked.
+
 Raw DNA fixtures and local app data are private; do not print genotype values,
 copy them into logs, or commit secrets.
 
@@ -36,8 +40,9 @@ any `App/Data/` tree. The curated runtime mirror at
 ## Required verification
 
 Before broad exploration, inspect Git status, this file, `README.md`, and
-`MEMORY.md`, then read only the files relevant to the task. Preserve unrelated
-dirty worktree changes.
+`ARCHITECTURE.md`. Read local `MEMORY.md` when it exists; do not commit it.
+Then read only the files relevant to the task. Preserve unrelated dirty
+worktree changes.
 
 For resource changes, run at minimum:
 
@@ -84,4 +89,5 @@ debug bridge requires that token for `/ui/*`; use
 The fixture audit is read-only and must not emit or persist raw genotype values.
 Report source/runtime drift, unverified external behavior, warnings, and
 remaining coverage limits explicitly. Update `README.md` for externally
-visible behavior and `MEMORY.md` with a concise handoff after meaningful work.
+visible behavior. After file-layout changes, regenerate `ARCHITECTURE.md`.
+Write a concise handoff to local `MEMORY.md` after meaningful work.

@@ -72,6 +72,7 @@ mustContain(".github/workflows/release.yml", "updaterJsonPreferNsis: true");
 if (read(".github/workflows/release.yml").includes("tauri-apps/tauri-action@v2")) {
   problems.push(".github/workflows/release.yml must not use tauri-action@v2; that tag does not exist");
 }
+mustContain("scripts/run_tsc.mjs", "svelte-kit sync");
 mustContain("src/lib/utils/updater.ts", "checkForAppUpdate");
 mustContain("src/lib/components/layout/AppShell.svelte", "AppUpdateHost");
 

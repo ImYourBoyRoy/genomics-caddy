@@ -8,7 +8,8 @@ pnpm 12 does not support the historical lockfile=false setting. It does
 support --lockfile-dir, so keep the resolver's transient lockfile in a
 temporary directory outside the repository while keeping the virtual store
 in the normal project node_modules directory. Remove the transient directory
-when the command exits so project symlinks remain valid.
+when the command exits so project symlinks remain valid. On Windows, spawn
+pnpm.cmd through a shell; Node cannot exec .cmd shims with shell:false.
 */
 
 import { spawnSync } from "node:child_process";
@@ -27,7 +28,8 @@ if (forwarded.length === 0) {
 }
 
 const lockDir = await mkdtemp(path.join(os.tmpdir(), "genomics-caddy-pnpm-lock-"));
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const isWindows = process.platform === "win32";
+const pnpm = isWindows ? "pnpm.cmd" : "pnpm";
 const virtualStoreDir = path.join(repoRoot, "node_modules", ".pnpm");
 let status = 1;
 
@@ -45,11 +47,17 @@ try {
     {
       cwd: repoRoot,
       env: process.env,
-      shell: false,
+      // .cmd shims are not PE binaries; Windows spawn without a shell returns ENOENT.
+      shell: isWindows,
       stdio: "inherit",
     },
   );
-  status = result.status ?? 1;
+  if (result.error) {
+    console.error(`Failed to run ${pnpm}: ${result.error.message}`);
+    status = 1;
+  } else {
+    status = result.status ?? 1;
+  }
 } finally {
   await rm(lockDir, { recursive: true, force: true });
 }

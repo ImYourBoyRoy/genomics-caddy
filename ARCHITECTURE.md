@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **641**
-- Total size: **23.0 MB** (24,112,757 bytes)
-- Text lines (non-binary): **272,444**
+- Files: **642**
+- Total size: **23.0 MB** (24,114,366 bytes)
+- Text lines (non-binary): **272,499**
 - Directories: **68**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,17 +14,17 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 15 files, 107.5 KB
+- [`(repository root)`](#repository-root) — 15 files, 107.7 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.0 KB
 - [`.cursor/skills/vector-research-sweep-qa`](#.cursor-skills-vector-research-sweep-qa) — 1 files, 5.3 KB
-- [`.github/workflows`](#.github-workflows) — 1 files, 4.0 KB
+- [`.github/workflows`](#.github-workflows) — 2 files, 4.4 KB
 - [`.vscode`](#.vscode) — 2 files, 168 B
 - [`docker`](#docker) — 4 files, 5.9 KB
 - [`docs`](#docs) — 1 files, 1.2 KB
 - [`docs/ai-chat`](#docs-ai-chat) — 1 files, 2.5 KB
-- [`docs/build`](#docs-build) — 1 files, 1.8 KB
-- [`docs/development`](#docs-development) — 1 files, 3.4 KB
+- [`docs/build`](#docs-build) — 1 files, 2.1 KB
+- [`docs/development`](#docs-development) — 1 files, 4.0 KB
 - [`docs/mcp`](#docs-mcp) — 1 files, 5.1 KB
 - [`docs/usage`](#docs-usage) — 1 files, 3.5 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
@@ -90,8 +90,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.env.example` | 1.9 KB | 78 | Documented env keys; copy to local `.env`, never commit secrets. |
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
-| `AGENTS.md` | 4.7 KB | 93 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 73.8 KB | 1,065 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `AGENTS.md` | 4.8 KB | 95 | Repo-local agent rules: packs, privacy, and validation gates. |
+| `ARCHITECTURE.md` | 73.9 KB | 1,066 | Non-gitignored file map with sizes, line counts, and one-line roles. |
 | `package.json` | 4.4 KB | 94 | Frontend package manifest and npm/pnpm scripts. |
 | `paths.md` | 9.7 KB | 168 | Internal research-agent pathway map. |
 | `plan.md` | 1.2 KB | 19 | Legacy enhancement checklist kept in the tree. |
@@ -126,7 +126,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `release.yml` | 4.0 KB | 148 | GitHub Actions release workflow for desktop builds. |
+| `ci.yml` | 2.1 KB | 90 | GitHub Actions workflow. |
+| `release.yml` | 2.3 KB | 85 | GitHub Actions release workflow for desktop builds. |
 
 ## `.vscode`
 
@@ -160,13 +161,13 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 1.8 KB | 84 | Release builds, Linux launcher, remote compile, Docker. |
+| `README.md` | 2.1 KB | 91 | Release builds, Linux launcher, remote compile, Docker. |
 
 ## `docs/development`
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 3.4 KB | 100 | Tests, audits, layout, and lock-free install. |
+| `README.md` | 4.0 KB | 118 | Tests, audits, layout, and lock-free install. |
 
 ## `docs/mcp`
 

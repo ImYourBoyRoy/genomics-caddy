@@ -15,6 +15,24 @@ changing the repo.
   `node ./scripts/pnpm_unlocked.mjs install`, not a committed `pnpm-lock.yaml`.
 - Full agent workflow: [AGENTS.md](../../AGENTS.md).
 
+## GitHub gates
+
+Pull requests and pushes to `master` run `.github/workflows/ci.yml`
+(packs, resource/marker audits, tests, `check`, frontend build, Clippy).
+That same job is required before a tagged desktop publish.
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+`.github/workflows/release.yml` waits for Validate, then builds Windows,
+Linux, and macOS Universal installers as a **draft** GitHub Release.
+
+There is no Tauri self-updater yet. Connections can check GitHub for
+*Ollama* (and similar service) updates; the desktop binary itself is not
+pulled from `ImYourBoyRoy/genomics-caddy` releases.
+
 ## Install
 
 ```bash

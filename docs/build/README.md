@@ -28,6 +28,13 @@ Output is a portable tree under **`App/`** with persistence in **`App/Data/`**.
 Linux binary: `App/DNA-Tools`. Windows: `App/DNA-Tools.exe`. Cargo artifacts
 stay in `src-tauri/target/` and are safe to wipe. `App/Data` is not.
 
+## GitHub tagged release
+
+Push a `v*` tag after `master` CI is green. Actions runs the same Validate
+job as pull requests, then `tauri-action` drafts installers on Windows,
+Ubuntu, and macOS Universal. Publish the draft from the GitHub Releases UI
+after you inspect artifacts. Signing / in-app auto-update is not wired.
+
 Faster iteration (skip cache purge): `pnpm run build:release-fast`.
 
 ## Linux desktop

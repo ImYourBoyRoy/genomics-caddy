@@ -1,32 +1,61 @@
-name: "Publish Release"
+# ./.github/workflows/release.yml
+# Tag-only desktop publish. Quality gate is the reusable CI workflow; this job
+# only builds installers after Validate passes. Push a v* tag (e.g. v0.2.0).
+# Draft GitHub Releases are created; publish them after smoke-checking artifacts.
+
+name: Publish Release
 
 on:
   push:
     tags:
-      - "v*" # Triggers build on tag pushes (e.g. v1.0.0)
+      - "v*"
 
 jobs:
   validate:
     name: Validate release candidate
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/ci.yml
+
+  publish-tauri:
+    needs: validate
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ""
+          - platform: ubuntu-latest
+            args: ""
+          - platform: macos-latest
+            args: "--target universal-apple-darwin"
+
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 90
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v2
         with:
-          node-version: 26
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 12.3.4
+          version: "12"
+          runtime: node@26
+          install: false
+          cache: false
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin,aarch64-apple-darwin' || '' }}
 
-      - name: Install Linux validation dependencies
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -40,109 +69,17 @@ jobs:
       - name: Install frontend dependencies
         run: node ./scripts/pnpm_unlocked.mjs install
 
-      - name: Audit dependency reproducibility
-        run: pnpm run audit:reproducibility
-
-      - name: Validate marker packs
-        run: pnpm run validate:packs
-
-      - name: Audit resources
-        run: pnpm run audit:resources
-
-      - name: Audit DNA fixtures
-        run: pnpm run audit:dna-fixtures
-
-      - name: Run frontend tests
-        run: pnpm test -- --run
-
-      - name: Run Svelte check
-        run: pnpm run check
-
-      - name: Build frontend
-        run: pnpm run build
-
-      - name: Verify CSS loading
-        run: pnpm run verify:css
-
-      - name: Run Rust tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
-
-      - name: Run Rust check
-        run: cargo check --manifest-path src-tauri/Cargo.toml
-
-      - name: Run strict Rust Clippy
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-
-  publish-tauri:
-    needs: validate
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Windows target
-          - platform: "windows-latest"
-            args: ""
-          # Linux target
-          - platform: "ubuntu-latest"
-            args: ""
-          # macOS Universal target (compiles for both Intel & Apple Silicon)
-          - platform: "macos-latest"
-            args: "--target universal-apple-darwin"
-
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 26 # Matches your package.json node engine requirement
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 12.3.4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin,aarch64-apple-darwin' || '' }}
-
-      - name: Rust Cache
-        uses: swatinem/rust-cache@v2
-        with:
-          work-dir: "./src-tauri"
-
-      # Install Linux dependencies
-      - name: Install Linux build dependencies
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            webkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libdbus-1-dev # Required for the keyring crate
-
-      - name: Install frontend dependencies
-        run: node ./scripts/pnpm_unlocked.mjs install
-
       - name: Build Svelte frontend
         run: pnpm run build
 
-      - name: Build and Publish Tauri App
+      - name: Build and publish Tauri app
         uses: tauri-apps/tauri-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "Genomics Caddy ${{ github.ref_name }}"
-          releaseBody: "Automated cross-compiled release of version ${{ github.ref_name }}."
+          releaseName: Genomics Caddy ${{ github.ref_name }}
+          releaseBody: Automated cross-compiled release of ${{ github.ref_name }}.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}

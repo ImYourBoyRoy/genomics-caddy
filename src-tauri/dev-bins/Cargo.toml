@@ -1,0 +1,23 @@
+# ./src-tauri/dev-bins/Cargo.toml
+# Local-only CLI helpers. They are a workspace member so they can use the app
+# library, but they are not Tauri package binaries and must not ship in
+# GitHub installers. How to build: cargo build -p genomics-caddy-dev-bins --bin seed_mcp_fixture
+
+[package]
+name = "genomics-caddy-dev-bins"
+version = "0.2.0"
+description = "Local-only CLI helpers; not part of the desktop installer."
+edition = "2024"
+rust-version = "1.98.0"
+publish = false
+
+[[bin]]
+name = "seed_mcp_fixture"
+path = "src/seed_mcp_fixture.rs"
+
+[[bin]]
+name = "inspect_db"
+path = "src/inspect_db.rs"
+
+[dependencies]
+tauri_app_lib = { package = "DNA-Tools", path = ".." }

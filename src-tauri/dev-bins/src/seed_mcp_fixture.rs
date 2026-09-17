@@ -1,3 +1,4 @@
+// ./src-tauri/dev-bins/src/seed_mcp_fixture.rs
 //! Create a disposable, empty-sample database for MCP runtime QA.
 //!
 //! This helper is intentionally limited to synthetic metadata. It never reads

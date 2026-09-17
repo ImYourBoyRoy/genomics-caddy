@@ -6,6 +6,8 @@
 # Signing secrets: TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD.
 # Matrix jobs run one at a time so tauri-action can merge latest.json safely.
 # Use tauri-apps/tauri-action@v1 (latest 1.0.0). There is no @v2 action tag.
+# Helper CLIs live in src-tauri/dev-bins so macOS universal bundling does not
+# look for seed_mcp_fixture beside the app binary.
 
 name: Publish Release
 

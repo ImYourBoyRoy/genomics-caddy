@@ -1,4 +1,4 @@
-// ./src-tauri/src/bin/inspect_db.rs
+// ./src-tauri/dev-bins/src/inspect_db.rs
 use std::path::PathBuf;
 
 fn main() {

@@ -104,6 +104,8 @@ async function prepareFixture() {
           "--quiet",
           "--manifest-path",
           resolve(projectRoot, "src-tauri/Cargo.toml"),
+          "-p",
+          "genomics-caddy-dev-bins",
           "--bin",
           "seed_mcp_fixture",
         ],

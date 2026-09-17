@@ -7,6 +7,10 @@ edition = "2024"
 rust-version = "1.98.0"
 default-run = "DNA-Tools"
 
+[workspace]
+members = ["dev-bins"]
+resolver = "3"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]

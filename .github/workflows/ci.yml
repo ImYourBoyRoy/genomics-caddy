@@ -2,6 +2,7 @@
 # Pull/push quality gate and reusable release-candidate validation.
 # Triggers on pull_request, push to master, workflow_dispatch, and workflow_call
 # from Publish Release. Uses the lock-free installer; do not add --frozen-lockfile.
+# Call lock-free audits with `node ./scripts/...` — `pnpm run` writes pnpm-lock.yaml.
 
 name: CI
 
@@ -54,10 +55,10 @@ jobs:
         run: node ./scripts/pnpm_unlocked.mjs install
 
       - name: Audit dependency reproducibility
-        run: pnpm run audit:reproducibility
+        run: node ./scripts/audit_reproducibility.mjs
 
       - name: Audit updater config
-        run: pnpm run audit:updater-config
+        run: node ./scripts/audit_updater_config.mjs
 
       - name: Validate marker packs
         run: pnpm run validate:packs

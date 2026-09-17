@@ -29,20 +29,19 @@
 - Keep generated `builds/`, portable `App/` output, local databases, profile
   exports, dated tasklists, strategy notes, and detailed local memory out of
   tracked history.
-- A follow-up privacy audit found one tracked personal DNA report, a user-specific
-  planning document, private build-network defaults, and identity strings in
-  earlier commits. These are being removed from publishable `master` history;
-  do not push until the full reachable-history scan passes.
+- `.gitignore` also covers VCF/BAM/FASTQ/PDF exports, root SQLite files, and
+  runtime dirs under `src-tauri/App/Data/` except the tracked marker-pack mirror.
+  Synthetic parser fixtures in `src-tauri/testdata/` are explicitly un-ignored.
 - Preserve local report and planning files on disk; ignore them rather than
   deleting user data. Internal Codex checkpoint refs are local recovery state;
-  do not mirror-push them.
+  never `git push --mirror` or push `refs/codex/*`.
+- Author identity in README and Cargo.toml is intentional and public.
 
 ## Latest checkpoint
 
-- Local checkpoint commits: `Checkpoint import, reporting, and privacy improvements`
-  and `Checkpoint public history privacy scrub`; a further privacy checkpoint
-  is pending after source and history remediation.
+- Source privacy pass: completed `.gitignore` coverage, removed local machine
+  paths from tracked docs/UI, and replaced the README layout DNA-file entry
+  with synthetic testdata.
+- History rewrite is required before the first GitHub push so old `builds/`
+  binaries, `user_genome.db`, and personal report JSON cannot be cloned.
 - No remote is configured; no push was performed.
-- Recent validation passed: resource audits, 587 frontend tests, Svelte check,
-  frontend build, 121 Rust tests, reproducibility audit, and Git whitespace
-  checks. The native Tauri UI audit was not run because its UI token was absent.

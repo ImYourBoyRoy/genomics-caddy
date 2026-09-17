@@ -1,0 +1,5 @@
+# Synthetic 23andMe-format fixture; no user data.
+# This export uses genome build 38.
+# rsid	chromosome	position	genotype
+rs-synthetic-23-1	1	710	AG
+rs-synthetic-23-2	X	1200	--

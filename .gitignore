@@ -26,17 +26,55 @@ tmp_error.log
 **/App/Data/**/*.sqlite-*
 **/App/Data/**/*.sqlite3
 
-# Personal genomic raw data files & report outputs
+# Runtime downloads, imported samples, and chain/reference caches beside the
+# tracked marker-pack mirror. Keep src-tauri/App/Data/marker-packs/ tracked.
+/src-tauri/App/Data/raw_downloads/
+/src-tauri/App/Data/samples/
+/src-tauri/App/Data/references/
+
+# Personal genomic raw data, sequencing files, and generated reports.
+# Synthetic parser fixtures under src-tauri/testdata/ are the exception.
 *.txt
 !*README*.txt
 !*COPY*.txt
+!LICENSE*.txt
+!/src-tauri/testdata/
+!/src-tauri/testdata/*.txt
 *DNA*.txt
 AncestryDNA.txt
 23andMe*.txt
 *.zip
 *.csv
+!/src-tauri/testdata/*.csv
+*.tsv
+!/src-tauri/testdata/*.tsv
+*.vcf
+*.vcf.gz
+*.vcf.bgz
+*.bcf
+*.bed
+*.bim
+*.fam
+*.ped
+*.map
+*.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
+*.bam
+*.cram
+*.sam
+*.pdf
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
 *report.json
 *_report*.json
+*_report.md
+*_handoff.json
+*_handoff.md
 
 # Tooling / OS noise
 __pycache__/

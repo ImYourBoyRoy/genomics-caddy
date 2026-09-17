@@ -1,0 +1,5 @@
+# Synthetic AncestryDNA-format fixture; no user data.
+# build 37; forward strand
+rsid,chromosome,position,allele1,allele2
+rs-synthetic-anc-1,chr1,101,A,G
+rs-synthetic-anc-2,23,200,C,T

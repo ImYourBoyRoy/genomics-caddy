@@ -1,0 +1,5 @@
+# Synthetic 23andMe-style fixture; no real genotype data.
+# genome build 38; forward strand
+rsid,chromosome,position,genotype
+rsSyntheticCsv1,chr1,710,AG
+rsSyntheticCsv2,X,1200,CC

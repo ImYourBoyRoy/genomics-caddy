@@ -693,11 +693,17 @@ If you are connecting to a remote Ollama server (for example, `http://ollama.exa
 
 ---
 
+## Repository privacy
+
+Raw user DNA, generated reports, `.env`, portable `App/` data, and `builds/` are local-only and gitignored. Import your own AncestryDNA or 23andMe export in the app; do not commit it. The only committed genotype-shaped files are synthetic parser fixtures under `src-tauri/testdata/`.
+
+---
+
 ## 📂 Project Layout
 
 ```
 /DNA_Tools
-│── README.md                # Public-facing usage and integration guide (ROY-STANDARD)
+│── README.md                # Public-facing usage and integration guide
 │── MEMORY.md                # Living session memory for AI developers
 │── package.json             # NPM frontend scripts, shortcuts, and configuration
 │── /src-tauri/testdata/     # Synthetic import fixtures only (no user DNA)

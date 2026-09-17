@@ -66,8 +66,12 @@ mustContain("src-tauri/src/lib.rs", "tauri_plugin_updater::Builder");
 mustContain("src-tauri/src/lib.rs", "tauri_plugin_process::init");
 mustContain(".github/workflows/release.yml", "TAURI_SIGNING_PRIVATE_KEY");
 mustContain(".github/workflows/release.yml", "TAURI_SIGNING_PRIVATE_KEY_PASSWORD");
+mustContain(".github/workflows/release.yml", "tauri-apps/tauri-action@v1");
 mustContain(".github/workflows/release.yml", "uploadUpdaterJson: true");
 mustContain(".github/workflows/release.yml", "updaterJsonPreferNsis: true");
+if (read(".github/workflows/release.yml").includes("tauri-apps/tauri-action@v2")) {
+  problems.push(".github/workflows/release.yml must not use tauri-action@v2; that tag does not exist");
+}
 mustContain("src/lib/utils/updater.ts", "checkForAppUpdate");
 mustContain("src/lib/components/layout/AppShell.svelte", "AppUpdateHost");
 

@@ -5,6 +5,7 @@
 # latest.json for in-app updates. Publish the draft after smoke-checking artifacts.
 # Signing secrets: TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD.
 # Matrix jobs run one at a time so tauri-action can merge latest.json safely.
+# Use tauri-apps/tauri-action@v1 (latest 1.0.0). There is no @v2 action tag.
 
 name: Publish Release
 
@@ -87,7 +88,7 @@ jobs:
           fi
 
       - name: Build and publish Tauri app
-        uses: tauri-apps/tauri-action@v2
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

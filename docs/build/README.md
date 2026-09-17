@@ -32,9 +32,11 @@ stay in `src-tauri/target/` and are safe to wipe. `App/Data` is not.
 
 Push a `v*` tag after `master` CI is green. The tag must match
 `package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.0`).
-Actions runs the same Validate job as pull requests, then `tauri-action`
-drafts **signed** installers on Windows (NSIS preferred for `latest.json`),
-Ubuntu, and macOS Universal, and uploads `latest.json` for in-app updates.
+Actions runs the same Validate job as pull requests, then
+`tauri-apps/tauri-action@v1` drafts **signed** installers on Windows
+(NSIS preferred for `latest.json`), Ubuntu, and macOS Universal, and
+uploads `latest.json` for in-app updates. The action major is v1 even
+though this app is Tauri 2; `@v2` is not a published action tag.
 Publish the draft from the GitHub Releases UI after you inspect artifacts.
 
 The desktop app checks that endpoint quietly on launch. A dismissible banner

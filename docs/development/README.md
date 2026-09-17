@@ -26,9 +26,10 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-`.github/workflows/release.yml` waits for Validate, then builds signed
-Windows, Linux, and macOS Universal installers as a **draft** GitHub
-Release and publishes `latest.json` for the in-app updater.
+`.github/workflows/release.yml` waits for Validate, then uses
+`tauri-apps/tauri-action@v1` to build signed Windows, Linux, and macOS
+Universal installers as a **draft** GitHub Release and upload
+`latest.json` for the in-app updater.
 
 Desktop builds check GitHub quietly on launch and show a banner when a
 newer signed release exists. Confirm before download; the updater does not

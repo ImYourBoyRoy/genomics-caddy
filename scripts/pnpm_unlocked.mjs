@@ -5,18 +5,19 @@ Purpose: Resolve pnpm dependencies without retaining a project lockfile.
 How to run: node ./scripts/pnpm_unlocked.mjs install
 
 pnpm 12 does not support the historical lockfile=false setting. It does
-support --lockfile-dir, so keep the resolver's transient lockfile in a
-temporary directory outside the repository while keeping the virtual store
-in the normal project node_modules directory. Remove the transient directory
-when the command exits so project symlinks remain valid. Resolve the pnpm
-binary from PNPM_HOME or node_modules/.bin instead of assuming `pnpm.cmd`
-is on PATH. GitHub's Windows cmd.exe child shells do not see that shim.
+support --lockfile-dir, so keep the resolver's transient lockfile under
+node_modules (gitignored) while keeping the virtual store in the normal
+project node_modules directory. Do not use os.tmpdir(): on macOS pnpm
+computes importer paths relative to the lockfile dir, and /var/folders
+walks produce Permission denied. Remove the transient directory when the
+command exits so project symlinks remain valid. Resolve the pnpm binary
+from PNPM_HOME or node_modules/.bin instead of assuming `pnpm.cmd` is on
+PATH. GitHub's Windows cmd.exe child shells do not see that shim.
 */
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -50,7 +51,9 @@ function envWithPnpmHome() {
   return env;
 }
 
-const lockDir = await mkdtemp(path.join(os.tmpdir(), "genomics-caddy-pnpm-lock-"));
+const lockParent = path.join(repoRoot, "node_modules");
+await mkdir(lockParent, { recursive: true });
+const lockDir = await mkdtemp(path.join(lockParent, ".pnpm-lock-"));
 const pnpm = resolvePnpmExecutable();
 const virtualStoreDir = path.join(repoRoot, "node_modules", ".pnpm");
 let status = 1;

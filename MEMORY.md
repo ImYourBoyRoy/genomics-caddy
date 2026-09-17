@@ -40,8 +40,13 @@
 ## Latest checkpoint
 
 - Source privacy pass: completed `.gitignore` coverage, removed local machine
-  paths from tracked docs/UI, and replaced the README layout DNA-file entry
-  with synthetic testdata.
-- History rewrite is required before the first GitHub push so old `builds/`
-  binaries, `user_genome.db`, and personal report JSON cannot be cloned.
+  paths from tracked docs/UI, tracked synthetic testdata, and replaced the
+  README layout DNA-file entry with synthetic fixtures.
+- `master` history was rewritten with git-filter-repo: `builds/`, personal
+  report JSON, planning notes, and local usernames/paths are gone from
+  reachable `master` objects. A full identifier scan of 453 `master` commits
+  found no `v1x0r`, `Users/Roy`, or personal DNA filenames.
+- Local Codex refs (`refs/codex/*`) still point at pre-rewrite recovery
+  commits and must not be pushed. Push only `master` (`git push -u origin master`).
+- Author identity in README and Cargo.toml is intentional and public.
 - No remote is configured; no push was performed.

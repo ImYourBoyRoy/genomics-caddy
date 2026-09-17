@@ -30,10 +30,30 @@ stay in `src-tauri/target/` and are safe to wipe. `App/Data` is not.
 
 ## GitHub tagged release
 
-Push a `v*` tag after `master` CI is green. Actions runs the same Validate
-job as pull requests, then `tauri-action` drafts installers on Windows,
-Ubuntu, and macOS Universal. Publish the draft from the GitHub Releases UI
-after you inspect artifacts. Signing / in-app auto-update is not wired.
+Push a `v*` tag after `master` CI is green. The tag must match
+`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.0`).
+Actions runs the same Validate job as pull requests, then `tauri-action`
+drafts **signed** installers on Windows (NSIS preferred for `latest.json`),
+Ubuntu, and macOS Universal, and uploads `latest.json` for in-app updates.
+Publish the draft from the GitHub Releases UI after you inspect artifacts.
+
+The desktop app checks that endpoint quietly on launch. A dismissible banner
+offers the new version; Install asks for confirmation, then downloads the
+signed artifact and relaunches. It does not upload DNA or reports.
+
+In-app updates apply to GitHub-published installers. A local portable `App/`
+copy and `tauri dev` may check GitHub but are not the supported install path
+for applying those artifacts. The first signed release is the baseline;
+older unsigned copies will not self-update until someone installs a signed
+build once.
+
+Signing uses repo secrets `TAURI_SIGNING_PRIVATE_KEY` and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. The public key lives in
+`src-tauri/tauri.conf.json`. Never commit the private key. If either secret
+is missing, the publish job fails instead of shipping unsigned updater
+artifacts. Platform jobs run one at a time so `latest.json` can merge.
+
+`pnpm run audit:updater-config` checks this wiring without secrets.
 
 Faster iteration (skip cache purge): `pnpm run build:release-fast`.
 

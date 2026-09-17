@@ -28,6 +28,7 @@
     "audit:markers": "node ./scripts/audit_marker_semantics.mjs",
     "audit:inflammation": "node ./scripts/audit_inflammation.mjs",
     "audit:reproducibility": "node ./scripts/audit_reproducibility.mjs",
+    "audit:updater-config": "node ./scripts/audit_updater_config.mjs",
     "audit:dna-fixtures": "python3 ./scripts/audit_dna_fixtures.py",
     "audit:tauri-ui": "node ./scripts/audit_tauri_report.mjs",
     "audit:tauri-update": "node ./scripts/audit_tauri_update_flow.mjs",
@@ -69,6 +70,8 @@
   "dependencies": {
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-opener": "2.5.5",
+    "@tauri-apps/plugin-process": "2.3.1",
+    "@tauri-apps/plugin-updater": "2.11.0",
     "isomorphic-dompurify": "4.2.0"
   },
   "devDependencies": {

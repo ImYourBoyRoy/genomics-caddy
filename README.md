@@ -56,6 +56,10 @@ Then in the app:
 4. Add Context/Diary yourself if you want food, cycle, or medication prompts
    tailored to real life. The app does not infer those from DNA.
 
+GitHub installers notify you when a newer signed release is published.
+Confirm in the app to download and restart. Local `App/` copies are the
+portable build path, not the in-app updater path.
+
 Optional production build (portable binary lands in `App/`):
 
 ```bash

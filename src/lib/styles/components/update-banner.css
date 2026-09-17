@@ -1,0 +1,64 @@
+/* ./src/lib/styles/components/update-banner.css */
+/*
+Purpose: Full-width signed-update notification strip and shell stack layout.
+*/
+
+.app-shell-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.app-shell-stack > .app-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  width: 100%;
+}
+
+.app-update-banner {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--status-info-border);
+  background: var(--status-info-soft-bg);
+  color: var(--status-info-soft-text);
+}
+
+.app-update-banner-copy {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 16rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.app-update-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.app-update-banner-actions .btn {
+  min-height: 44px;
+}
+
+.app-update-banner-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-update-banner-actions .btn {
+    transition: none;
+  }
+}

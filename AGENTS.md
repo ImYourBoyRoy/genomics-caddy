@@ -92,4 +92,7 @@ remaining coverage limits explicitly. Update `README.md` for externally
 visible behavior. After file-layout changes, regenerate `ARCHITECTURE.md`.
 Write a concise handoff to local `MEMORY.md` after meaningful work.
 GitHub pull requests and `master` pushes must pass `.github/workflows/ci.yml`.
-Tagged `v*` publishes reuse that gate, then draft desktop installers.
+Tagged `v*` publishes reuse that gate, then draft signed desktop installers
+and `latest.json` for in-app updates. Never commit the updater private key;
+GitHub secrets `TAURI_SIGNING_PRIVATE_KEY` and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` sign release artifacts.

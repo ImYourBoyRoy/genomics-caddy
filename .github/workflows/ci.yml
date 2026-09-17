@@ -56,6 +56,9 @@ jobs:
       - name: Audit dependency reproducibility
         run: pnpm run audit:reproducibility
 
+      - name: Audit updater config
+        run: pnpm run audit:updater-config
+
       - name: Validate marker packs
         run: pnpm run validate:packs
 

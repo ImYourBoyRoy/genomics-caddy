@@ -33,6 +33,8 @@ describe('responsive data-sidebar access', () => {
   });
 
   it('keeps the hide control at the sidebar edge and appearance controls in the footer', () => {
+    expect(appShell).toContain('<div class="app-shell-stack">');
+    expect(appShell).toContain('<AppUpdateHost />');
     expect(appShell).toContain('<div class="main-slot">');
     expect(appShell).toContain('<div class="sidebar-region">');
     expect(appShell).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Sidebar appearance controls">');

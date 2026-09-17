@@ -2,8 +2,10 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
+  import AppUpdateHost from '../common/AppUpdateHost.svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
   import Tooltip from '../common/Tooltip.svelte';
+  import '$lib/styles/components/update-banner.css';
   let focusMode = $state(false);
   let mobileSidebarOpen = $state(false);
   let isNarrowViewport = $state(false);
@@ -15,6 +17,7 @@
   Purpose: Main layout grid wrapper for the Genomics Caddy application.
   Responsibilities:
   - Establish the outer grid container conforming to the .app-layout stylesheet rules.
+  - Host the signed-update banner above the layout on desktop launches.
   - Render a sidebar slot and a main content slot via Svelte 5 snippets.
   Key Inputs: sidebar snippet, children snippet.
   Key Outputs: Structured layout markup.
@@ -100,7 +103,9 @@
   });
 </script>
 
-<div class="app-layout" class:focus-mode={focusMode} class:mobile-sidebar-open={mobileSidebarOpen}>
+<div class="app-shell-stack">
+  <AppUpdateHost />
+  <div class="app-layout" class:focus-mode={focusMode} class:mobile-sidebar-open={mobileSidebarOpen}>
   <div class="sidebar-region">
     {#if !isNarrowViewport}
       <Tooltip
@@ -175,4 +180,5 @@
       {mobileSidebarOpen ? '× Close data' : '☰ Data controls'}
     </button>
   {/if}
+  </div>
 </div>

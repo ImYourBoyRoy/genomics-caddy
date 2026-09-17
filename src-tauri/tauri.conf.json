@@ -24,8 +24,17 @@
       "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost; font-src 'self' data:"
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ3Q0M4MUU1OUE3Mjc5ODEKUldTQmVYS2E1WUhNUjhGbmRPQkJKNHdTVWZ1dno5ekk0NHZXSWNzVEtNUGRadjhnNS9XUDMyR3QK",
+      "endpoints": [
+        "https://github.com/ImYourBoyRoy/genomics-caddy/releases/latest/download/latest.json"
+      ]
+    }
+  },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",

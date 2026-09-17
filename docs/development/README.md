@@ -26,12 +26,17 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-`.github/workflows/release.yml` waits for Validate, then builds Windows,
-Linux, and macOS Universal installers as a **draft** GitHub Release.
+`.github/workflows/release.yml` waits for Validate, then builds signed
+Windows, Linux, and macOS Universal installers as a **draft** GitHub
+Release and publishes `latest.json` for the in-app updater.
 
-There is no Tauri self-updater yet. Connections can check GitHub for
-*Ollama* (and similar service) updates; the desktop binary itself is not
-pulled from `ImYourBoyRoy/genomics-caddy` releases.
+Desktop builds check GitHub quietly on launch and show a banner when a
+newer signed release exists. Confirm before download; the updater does not
+upload DNA. Connections still have a separate GitHub check for *Ollama*
+and similar services.
+
+`pnpm run audit:updater-config` is part of CI. Do not commit updater
+private keys.
 
 ## Install
 
@@ -60,6 +65,7 @@ and leave a lockfile.
 | `pnpm run audit:content` | Copy quality; no DNA fixtures |
 | `pnpm run audit:dna-fixtures` | Local ignored DNA files; counts only |
 | `node ./scripts/audit_reproducibility.mjs` | Lock-free install contract |
+| `pnpm run audit:updater-config` | Signed updater pubkey, endpoints, and release wiring |
 | `pnpm run smoke` | Optional Ollama/Qdrant/NCBI reachability |
 
 Resource or marker-pack edits should run the pack/resource/DNA-fixture audits

@@ -23,6 +23,13 @@
     display: none !important;
   }
 
+  .app-shell-stack {
+    display: block !important;
+    height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
   .app-layout {
     display: block !important;
     background: white !important;

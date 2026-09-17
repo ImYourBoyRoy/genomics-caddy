@@ -81,11 +81,11 @@ jobs:
       - name: Run Svelte check
         run: pnpm run check
 
-      - name: Build frontend
-        run: pnpm run build
-
       - name: Verify CSS loading
         run: pnpm run verify:css
+
+      - name: Build frontend
+        run: pnpm run build
 
       - name: Run Rust tests
         run: pnpm run cargo:test

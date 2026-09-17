@@ -29,7 +29,7 @@ async function listSvelteFiles(dir) {
   return out;
 }
 
-async function waitForServer(timeoutMs = 25000) {
+async function waitForServer(timeoutMs = 60000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -40,7 +40,7 @@ async function waitForServer(timeoutMs = 25000) {
     }
     await sleep(250);
   }
-  throw new Error(`Vite did not become ready on :${port}`);
+  throw new Error(`Vite did not become ready on 127.0.0.1:${port}`);
 }
 
 async function main() {
@@ -69,7 +69,12 @@ async function main() {
   const logStream = createWriteStream(logPath, { flags: "w" });
   const child = spawn("pnpm", ["run", "dev"], {
     cwd: root,
-    env: { ...process.env, FORCE_COLOR: "0" },
+    env: {
+      ...process.env,
+      FORCE_COLOR: "0",
+      // vite.config uses TAURI_DEV_HOST; bind IPv4 so CI fetch(127.0.0.1) works.
+      TAURI_DEV_HOST: "127.0.0.1",
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   child.stdout.pipe(logStream);
@@ -121,7 +126,17 @@ async function main() {
   process.exit(failed ? 1 : 0);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error(err);
+  try {
+    const log = await readFile(logPath, "utf8");
+    const tail = log.trim().split("\n").slice(-80).join("\n");
+    if (tail) {
+      console.error("Vite log tail:");
+      console.error(tail);
+    }
+  } catch {
+    // The log file is optional diagnostic output.
+  }
   process.exit(1);
 });

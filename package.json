@@ -21,7 +21,7 @@
     "clean:deep:dry": "node ./scripts/clean_deep.mjs --dry-run",
     "clean:fresh": "node ./scripts/clean_deep.mjs --fresh-dependencies && node ./scripts/pnpm_unlocked.mjs install",
     "install:unlocked": "node ./scripts/pnpm_unlocked.mjs install",
-    "test": "vitest run",
+    "test": "npx svelte-kit sync && vitest run",
     "validate:packs": "node ./scripts/validate_marker_packs.mjs",
     "audit:resources": "node ./scripts/audit_resource_quality.mjs",
     "audit:content": "node ./scripts/audit_content_quality.mjs",

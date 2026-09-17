@@ -72,6 +72,9 @@ jobs:
       - name: Audit DNA fixtures
         run: pnpm run audit:dna-fixtures
 
+      - name: Sync SvelteKit generated tsconfig
+        run: npx svelte-kit sync
+
       - name: Run frontend tests
         run: pnpm test
 

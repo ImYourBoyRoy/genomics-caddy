@@ -8,11 +8,13 @@ pnpm 12 does not support the historical lockfile=false setting. It does
 support --lockfile-dir, so keep the resolver's transient lockfile in a
 temporary directory outside the repository while keeping the virtual store
 in the normal project node_modules directory. Remove the transient directory
-when the command exits so project symlinks remain valid. On Windows, spawn
-pnpm.cmd through a shell; Node cannot exec .cmd shims with shell:false.
+when the command exits so project symlinks remain valid. Resolve the pnpm
+binary from PNPM_HOME or node_modules/.bin instead of assuming `pnpm.cmd`
+is on PATH. GitHub's Windows cmd.exe child shells do not see that shim.
 */
 
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -27,11 +29,32 @@ if (forwarded.length === 0) {
   process.exit(2);
 }
 
+function resolvePnpmExecutable() {
+  const names = process.platform === "win32" ? ["pnpm.exe", "pnpm.cmd", "pnpm"] : ["pnpm"];
+  const searchDirs = [process.env.PNPM_HOME, path.join(repoRoot, "node_modules", ".bin")].filter(Boolean);
+  for (const dir of searchDirs) {
+    for (const name of names) {
+      const candidate = path.join(dir, name);
+      if (existsSync(candidate)) return candidate;
+    }
+  }
+  return names[0];
+}
+
+function envWithPnpmHome() {
+  const env = { ...process.env };
+  if (!env.PNPM_HOME) return env;
+  for (const key of ["PATH", "Path"]) {
+    if (env[key]) env[key] = `${env.PNPM_HOME}${path.delimiter}${env[key]}`;
+  }
+  return env;
+}
+
 const lockDir = await mkdtemp(path.join(os.tmpdir(), "genomics-caddy-pnpm-lock-"));
-const isWindows = process.platform === "win32";
-const pnpm = isWindows ? "pnpm.cmd" : "pnpm";
+const pnpm = resolvePnpmExecutable();
 const virtualStoreDir = path.join(repoRoot, "node_modules", ".pnpm");
 let status = 1;
+console.log(`Using pnpm executable: ${pnpm}`);
 
 try {
   const result = spawnSync(
@@ -46,9 +69,8 @@ try {
     ],
     {
       cwd: repoRoot,
-      env: process.env,
-      // .cmd shims are not PE binaries; Windows spawn without a shell returns ENOENT.
-      shell: isWindows,
+      env: envWithPnpmHome(),
+      shell: process.platform === "win32" && pnpm.toLowerCase().endsWith(".cmd"),
       stdio: "inherit",
     },
   );

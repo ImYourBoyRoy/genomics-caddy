@@ -37,11 +37,12 @@ describe('responsive data-sidebar access', () => {
     expect(appShell).toContain('<AppUpdateHost />');
     expect(appShell).toContain('<div class="main-slot">');
     expect(appShell).toContain('<div class="sidebar-region">');
-    expect(appShell).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Sidebar appearance controls">');
+    expect(sidebar).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Library and appearance">');
     expect(appShell).toContain('class="sidebar-focus-toggle"');
     expect(appShell).toContain('aria-label="Hide data sidebar"');
     expect(appShell).toContain('class="focus-restore-toggle no-print"');
-    expect(appShell).toContain('<ThemeToggle />');
+    expect(sidebar).toContain('<ThemeToggle />');
+    expect(sidebar).toContain('<LibraryPanel />');
     expect(appShell).not.toContain('class="focus-toolbar');
     expect(theme).toContain('.sidebar-region {');
     expect(theme).toContain('.sidebar-footer {');

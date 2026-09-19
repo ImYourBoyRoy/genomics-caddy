@@ -275,7 +275,7 @@
           </div>
           <span class="help-text mt-1">
             Copy <code>.env.example</code> to <code>App/.env</code> (or project root) for QDRANT_URL, QDRANT_API_KEY, NCBI_API_KEY, and OLLAMA_TOKEN.
-            Persistent genome data lives in <code>App/Data/</code>. Legacy <code>data/</code> is still read when App/Data is empty.
+            Everyday library controls, including Erase, are on the left Library row. This list is the full technical view.
             Secrets are stored in the OS keychain when saved from settings — never in git.
           </span>
         {/if}

@@ -195,6 +195,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('expandedSectionNames: string[];');
     expect(source).toContain('clinicalProvenanceCount: number;');
     expect(source).toContain('themeControlInSidebarFooter: boolean;');
+    expect(source).toContain('libraryControlInSidebarFooter: boolean;');
     expect(source).toContain('themeModeOptionCount: number;');
     expect(source).toContain('topToolbarPresent: boolean;');
     expect(source).toContain('themeMenuOpen: boolean;');
@@ -209,6 +210,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain(".report-header[data-presentation-mode=\"simple\"]");
     expect(source).toContain("document.querySelector<HTMLElement>('.grid-layout')");
     expect(source).toContain("document.querySelector('.sidebar-footer .theme-toggle') !== null");
+    expect(source).toContain("document.querySelector('.sidebar-footer .library-panel') !== null");
     expect(source).toContain("document.querySelectorAll('.sidebar-footer [data-theme-mode]').length");
     expect(source).toContain("document.querySelector('.focus-toolbar') !== null");
     expect(source).toContain("document.querySelector('.theme-options') !== null");

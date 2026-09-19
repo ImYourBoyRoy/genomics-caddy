@@ -56,4 +56,45 @@ describe('dialogStore async confirmation', () => {
     finishAction();
     await pending;
   });
+
+  it('treats choice Cancel as abort instead of picking an action', async () => {
+    const onChoice = vi.fn();
+    dialogStore.choice(
+      'Use this folder?',
+      [
+        { id: 'move', label: 'Move library' },
+        { id: 'use', label: 'Use empty folder' },
+      ],
+      onChoice,
+      'Change library folder',
+    );
+
+    dialogStore.close({ cancelled: true });
+    expect(onChoice).not.toHaveBeenCalled();
+    expect(dialogStore.state.show).toBe(false);
+  });
+
+  it('runs the selected choice and ignores a second click while busy', async () => {
+    let finishAction!: () => void;
+    const action = new Promise<void>((resolve) => {
+      finishAction = resolve;
+    });
+    const onChoice = vi.fn(() => action);
+    dialogStore.choice(
+      'Use this folder?',
+      [
+        { id: 'move', label: 'Move library' },
+        { id: 'use', label: 'Use empty folder' },
+      ],
+      onChoice,
+    );
+
+    const pending = dialogStore.handleChoice('move');
+    await dialogStore.handleChoice('use');
+    expect(onChoice).toHaveBeenCalledOnce();
+    expect(onChoice).toHaveBeenCalledWith('move');
+    finishAction();
+    await pending;
+    expect(dialogStore.state.show).toBe(false);
+  });
 });

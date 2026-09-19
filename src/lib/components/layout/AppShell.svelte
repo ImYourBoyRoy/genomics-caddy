@@ -3,7 +3,6 @@
   import { onMount, tick } from 'svelte';
   import type { Snippet } from 'svelte';
   import AppUpdateHost from '../common/AppUpdateHost.svelte';
-  import ThemeToggle from '../common/ThemeToggle.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import '$lib/styles/components/update-banner.css';
   let focusMode = $state(false);
@@ -136,11 +135,6 @@
     >
       {@render sidebar()}
     </div>
-    {#if !isNarrowViewport}
-      <div class="sidebar-footer no-print" role="toolbar" aria-label="Sidebar appearance controls">
-        <ThemeToggle />
-      </div>
-    {/if}
   </div>
   <div class="main-slot">
     {#if focusMode}

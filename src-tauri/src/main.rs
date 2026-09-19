@@ -73,6 +73,12 @@ fn main() {
         tauri_app_lib::research::print_headless_usage();
         std::process::exit(2);
     } else {
+        #[cfg(all(not(feature = "custom-protocol"), not(debug_assertions)))]
+        {
+            eprintln!(
+                "This Genomics Caddy binary was compiled in Tauri dev-URL mode. The window will try http://127.0.0.1:1420 and stay blank if Vite is not running. Rebuild with `pnpm run build:release-fast`."
+            );
+        }
         tauri_app_lib::run();
     }
 }

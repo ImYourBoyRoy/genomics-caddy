@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./GlobalDialogs.svelte', import.meta.url), 'utf8');
-const styleBlock = source.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
+const styleBlock = readFileSync(
+  new URL('../../styles/components/global-dialogs.css', import.meta.url),
+  'utf8',
+);
 
 describe('GlobalDialogs interaction and theme contract', () => {
   it('exposes labelled alert-dialog semantics and typed controls', () => {
@@ -16,7 +19,8 @@ describe('GlobalDialogs interaction and theme contract', () => {
     expect(source).toContain('id="global-dialog-title"');
     expect(source).toContain('id="global-dialog-message"');
     expect(source).toContain('aria-label="Close dialog"');
-    expect(source.match(/type="button"/g)?.length).toBe(4);
+    expect(source).toContain('dialogStore.handleChoice');
+    expect(source.match(/type="button"/g)?.length).toBe(5);
     expect(styleBlock).toContain('min-width: 44px');
     expect(styleBlock).toContain('min-height: 44px');
   });

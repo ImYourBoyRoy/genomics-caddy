@@ -1,6 +1,6 @@
 {
   "name": "genomics-caddy",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "type": "module",
   "engines": {
@@ -31,6 +31,7 @@
     "audit:updater-config": "node ./scripts/audit_updater_config.mjs",
     "audit:dna-fixtures": "python3 ./scripts/audit_dna_fixtures.py",
     "audit:tauri-ui": "node ./scripts/audit_tauri_report.mjs",
+    "agent-ui:url": "node ./scripts/print_agent_ui_endpoint.mjs",
     "audit:tauri-update": "node ./scripts/audit_tauri_update_flow.mjs",
     "audit:mcp": "node ./scripts/audit_mcp_runtime.mjs",
     "audit:mcp:write": "node ./scripts/audit_mcp_runtime.mjs --write-fixture",
@@ -66,7 +67,7 @@
     "build:remote:linux:clean": "python scripts/build.py --target linux --clean",
     "build:remote:lint": "python scripts/build.py --target mac linux --lint-only"
   },
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "dependencies": {
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-opener": "2.5.5",
@@ -79,13 +80,13 @@
     "@sveltejs/kit": "2.70.3",
     "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tauri-apps/cli": "2.11.4",
-    "@types/node": "26.4.0",
+    "@types/node": "26.6.1",
     "@typescript/typescript6": "6.0.2",
     "svelte": "5.57.0",
     "svelte-check": "4.7.6",
     "typescript": "7.0.2",
     "vite": "8.3.0",
-    "vitest": "5.0.0"
+    "vitest": "5.0.1"
   },
   "overrides": {
     "cookie": "1.1.1"

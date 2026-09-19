@@ -28,15 +28,27 @@ Output is a portable tree under **`App/`** with persistence in **`App/Data/`**.
 Linux binary: `App/DNA-Tools`. Windows: `App/DNA-Tools.exe`. Cargo artifacts
 stay in `src-tauri/target/` and are safe to wipe. `App/Data` is not.
 
+Do not ship a binary from plain `cargo build --release` unless the
+`custom-protocol` feature is enabled (it is the crate default). Without it
+the window loads `http://127.0.0.1:1420` and shows Connection refused.
+Prefer `pnpm run build:release-fast` or `pnpm run tauri build`.
+
+NSIS **everyone** stores that account's library under
+`%LOCALAPPDATA%\Genomics Caddy\Data`. The left-rail **Library** row can
+point at another folder. Uninstall asks before deleting this account's
+genomes; other Windows accounts are left alone.
+
 ## GitHub tagged release
 
 Push a `v*` tag after `master` CI is green. The tag must match
-`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.0`).
+`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.1`).
 Actions runs the same Validate job as pull requests, then
-`tauri-apps/tauri-action@v1` drafts **signed** installers on Windows
-(NSIS preferred for `latest.json`), Ubuntu, and macOS Universal, and
-uploads `latest.json` for in-app updates. The action major is v1 even
-though this app is Tauri 2; `@v2` is not a published action tag.
+`tauri-apps/tauri-action@v1` drafts **signed** installers: Windows NSIS
+(`Install for me only` or `Install for everyone`), Ubuntu AppImage, and
+macOS Universal DMG, plus `latest.json` for in-app updates. GitHub does not
+ship MSI, RPM, or `.deb`. A Windows portable zip is attached after the NSIS
+build. The macOS job rebuilds the DMG as a folder containing the `.app` and
+an empty `Data/` directory. Other formats: [compile_instructions.md](../../compile_instructions.md).
 Publish the draft from the GitHub Releases UI after you inspect artifacts.
 
 The desktop app checks that endpoint quietly on launch. A dismissible banner
@@ -75,7 +87,8 @@ pnpm run desktop:linux:refresh   # after a rebuild; quit the app first
 pnpm run desktop:linux:uninstall # launcher + WebKit UI cache; keeps App/Data
 ```
 
-`desktop:linux` registers `builds/linux/DNA-Tools` when that artifact exists.
+`desktop:linux` registers `App/DNA-Tools` when that portable binary exists
+(so the dock opens `App/Data`). It falls back to `builds/linux/DNA-Tools`.
 
 ## Remote / Docker / headless
 

@@ -4,6 +4,7 @@
   import { saveReportBundle, saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
+  import ReportLoadingState from './ReportLoadingState.svelte';
   import ReportExportActions from './ReportExportActions.svelte';
   import ReferenceIndex from './ReferenceIndex.svelte';
   import SectionCard from './SectionCard.svelte';
@@ -86,31 +87,6 @@
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
   let clinicalProvenanceExpanded = $state(false);
-
-  const REPORT_LOADING_STAGES = [
-    { title: 'Reading your local profile', detail: 'Opening the stored genotype data on this device.' },
-    { title: 'Matching curated markers', detail: 'Checking the curated marker packs against this profile.' },
-    { title: 'Organizing evidence', detail: 'Grouping findings, evidence tiers, and follow-up guidance.' },
-    { title: 'Preparing your dashboard', detail: 'Finishing the report so it opens ready for review.' },
-  ] as const;
-  let reportLoadingElapsedSeconds = $state(0);
-
-  $effect(() => {
-    if (!browser || !isGeneratingReport) {
-      reportLoadingElapsedSeconds = 0;
-      return;
-    }
-    const startedAt = Date.now();
-    const timer = window.setInterval(() => {
-      reportLoadingElapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-    }, 1000);
-    return () => window.clearInterval(timer);
-  });
-
-  let reportLoadingStageIndex = $derived(
-    Math.min(REPORT_LOADING_STAGES.length - 1, Math.floor(reportLoadingElapsedSeconds / 4)),
-  );
-  let reportLoadingStage = $derived(REPORT_LOADING_STAGES[reportLoadingStageIndex]);
 
   function presentationModeStorageKey(sampleId: number): string {
     return `genomics_presentation_mode_${sampleId}`;
@@ -360,9 +336,9 @@
       let markers = sec.markers.filter(m => {
         if (!showBenign && (m.severity_class === "benign" || m.severity_class === "no_data")) return false;
         if (tierFilter === "ab" && !m.evidence_tier.startsWith("A") && !m.evidence_tier.startsWith("B")) return false;
-        if (severityFilter === "risk_only" && 
-            m.severity_class !== "high_risk" && 
-            m.severity_class !== "moderate_risk" && 
+        if (severityFilter === "risk_only" &&
+            m.severity_class !== "high_risk" &&
+            m.severity_class !== "moderate_risk" &&
             m.severity_class !== "confirmation_required") {
           return false;
         }
@@ -537,51 +513,9 @@
 {/if}
 
 {#if isGeneratingReport}
-  <section
-    class="report-loading-state"
-    aria-busy="true"
-    aria-labelledby="report-loading-title"
-    role="status"
-  >
-    <div class="report-loading-content">
-      <div class="report-loading-heading">
-        <span class="report-loading-kicker">Preparing report</span>
-        <span class="report-loading-device">On-device · live</span>
-      </div>
-      <div class="report-loading-mark" aria-hidden="true">🧬</div>
-      <h3 id="report-loading-title">Mapping {selectedSample.name}'s DNA</h3>
-      <p class="report-loading-lead">Reviewing curated markers and assembling the most useful findings for this profile.</p>
-      <div class="report-loading-activity" role="group" aria-label="Live report preparation status">
-        <div class="report-loading-activity-heading">
-          <div>
-            <span class="report-loading-activity-label">Working now</span>
-            <strong>{reportLoadingStage.title}</strong>
-          </div>
-          <span class="report-loading-elapsed">
-            {reportLoadingElapsedSeconds < 1 ? 'Starting…' : `${reportLoadingElapsedSeconds}s elapsed`}
-          </span>
-        </div>
-        <div class="report-loading-indeterminate" aria-hidden="true"><span></span></div>
-        <p>{reportLoadingStage.detail}</p>
-        <ol class="report-loading-steps" aria-label="Report preparation phases">
-          {#each REPORT_LOADING_STAGES as stage, index}
-            <li class:active={index === reportLoadingStageIndex}>
-              <span class="report-loading-step-node" aria-hidden="true">{index + 1}</span>
-              <span>
-                <strong>{stage.title}</strong>
-                <small>{index === reportLoadingStageIndex ? 'In progress' : 'Queued'}</small>
-              </span>
-            </li>
-          {/each}
-        </ol>
-      </div>
-      <div class="report-loading-meta" aria-label="Report preparation details">
-        <span><span class="report-loading-dot" aria-hidden="true"></span> Your DNA stays on this computer</span>
-        <span>•</span>
-        <span>The report will open automatically when ready</span>
-      </div>
-    </div>
-  </section>
+  {#key selectedSample.id}
+    <ReportLoadingState sampleName={selectedSample.name} />
+  {/key}
 {:else if generatedReport}
   <!-- Start with profile/data quality, then the bounded action queue. -->
   <ReportHeader
@@ -789,10 +723,10 @@
       </div>
     {/if}
     {#each filteredSections as section}
-      <SectionCard 
-        {section} 
+      <SectionCard
+        {section}
         viewMode={presentationMode}
-        {onExploreResearch} 
+        {onExploreResearch}
         {highlightRsid}
         onNavigateToVariant={onNavigateToVariant}
         simpleRelatedMarkerCounts={simpleRelatedMarkerCounts}
@@ -877,301 +811,6 @@
 {/if}
 
 <style>
-  .report-loading-state {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 100%;
-    min-height: clamp(420px, 64vh, 620px);
-    padding: clamp(1.5rem, 4vw, 3rem);
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    background:
-      radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 44%),
-      linear-gradient(145deg, color-mix(in srgb, var(--surface-raised) 92%, var(--accent)), var(--surface-raised));
-    box-shadow: var(--shadow-card);
-    box-sizing: border-box;
-    text-align: center;
-  }
-
-  .report-loading-state::before {
-    content: "";
-    position: absolute;
-    inset: auto 14% -45% 14%;
-    height: 70%;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-    filter: blur(40px);
-    pointer-events: none;
-  }
-
-  .report-loading-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: min(100%, 720px);
-  }
-
-  .report-loading-heading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.55rem 0.75rem;
-  }
-
-  .report-loading-mark {
-    display: grid;
-    place-items: center;
-    width: 3.25rem;
-    height: 3.25rem;
-    margin-bottom: 0.9rem;
-    border: 1px solid var(--status-accent-border);
-    border-radius: 1rem;
-    background: var(--status-accent-bg);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 18%, transparent);
-    font-size: 1.45rem;
-    animation: report-loading-breathe 2.4s ease-in-out infinite;
-  }
-
-  .report-loading-kicker {
-    color: var(--accent);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .report-loading-device {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.35rem;
-    padding: 0.18rem 0.5rem;
-    border: 1px solid var(--status-success-border);
-    border-radius: 999px;
-    background: var(--status-success-bg);
-    color: var(--status-success-text);
-    font-family: var(--font-mono), monospace;
-    font-size: 0.62rem;
-    font-weight: 700;
-  }
-
-  .report-loading-state h3 {
-    margin: 0.3rem 0 0;
-    color: var(--text-primary);
-    font-size: clamp(1.25rem, 2vw, 1.6rem);
-  }
-
-  .report-loading-lead {
-    max-width: 38rem;
-    margin: 0.55rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.5;
-  }
-
-  .report-loading-activity {
-    width: min(100%, 600px);
-    margin-top: 1.45rem;
-    padding: 1rem;
-    border: 1px solid var(--border-strong);
-    border-radius: 0.85rem;
-    background: color-mix(in srgb, var(--surface-control) 88%, transparent);
-    text-align: left;
-  }
-
-  .report-loading-activity-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .report-loading-activity-heading > div {
-    display: grid;
-    gap: 0.2rem;
-    min-width: 0;
-  }
-
-  .report-loading-activity-label {
-    color: var(--accent);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .report-loading-activity-heading strong {
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    line-height: 1.3;
-  }
-
-  .report-loading-elapsed {
-    flex: 0 0 auto;
-    color: var(--text-muted);
-    font-family: var(--font-mono), monospace;
-    font-size: 0.64rem;
-  }
-
-  .report-loading-indeterminate {
-    position: relative;
-    height: 0.45rem;
-    margin-top: 0.85rem;
-    overflow: hidden;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--border-color) 75%, transparent);
-  }
-
-  .report-loading-indeterminate span {
-    position: absolute;
-    inset: 0 auto 0 -30%;
-    width: 42%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, transparent, var(--accent), var(--success), transparent);
-    animation: report-loading-sweep 1.8s ease-in-out infinite;
-  }
-
-  .report-loading-activity > p {
-    margin: 0.65rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.76rem;
-    line-height: 1.45;
-  }
-
-  .report-loading-steps {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin: 1rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .report-loading-steps li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
-    min-width: 0;
-    color: var(--text-muted);
-  }
-
-  .report-loading-steps li.active {
-    color: var(--text-primary);
-  }
-
-  .report-loading-step-node {
-    display: grid;
-    place-items: center;
-    width: 1.35rem;
-    height: 1.35rem;
-    flex: 0 0 auto;
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    color: var(--text-muted);
-    font-family: var(--font-mono), monospace;
-    font-size: 0.6rem;
-  }
-
-  .report-loading-steps li.active .report-loading-step-node {
-    border-color: var(--accent);
-    background: var(--status-accent-bg);
-    color: var(--accent);
-    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 10%, transparent);
-  }
-
-  .report-loading-steps li > span:last-child {
-    display: grid;
-    gap: 0.08rem;
-    min-width: 0;
-  }
-
-  .report-loading-steps strong {
-    color: inherit;
-    font-size: 0.68rem;
-    line-height: 1.3;
-  }
-
-  .report-loading-steps small {
-    color: var(--text-muted);
-    font-size: 0.58rem;
-  }
-
-  .report-loading-steps li.active small {
-    color: var(--accent);
-  }
-
-  .report-loading-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem 0.75rem;
-    margin-top: 0.15rem;
-    color: var(--text-secondary);
-    font-size: 0.72rem;
-  }
-
-  .report-loading-meta > span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .report-loading-dot {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--status-success-text);
-    box-shadow: 0 0 0.55rem color-mix(in srgb, var(--status-success-text) 55%, transparent);
-  }
-
-  @keyframes report-loading-breathe {
-    0%,
-    100% {
-      transform: translateY(0) scale(1);
-    }
-    50% {
-      transform: translateY(-2px) scale(1.04);
-    }
-  }
-
-  @keyframes report-loading-sweep {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(310%);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .report-loading-mark,
-    .report-loading-indeterminate span {
-      animation: none;
-    }
-  }
-
-  @media (max-width: 700px) {
-    .report-loading-steps {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 480px) {
-    .report-loading-activity-heading {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .report-loading-steps {
-      grid-template-columns: 1fr;
-    }
-  }
-
   .filter-context-hint {
     color: var(--text-secondary);
     font-size: 0.72rem;

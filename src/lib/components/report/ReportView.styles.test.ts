@@ -10,17 +10,26 @@ const catalogWarningStyles = theme.match(/\.catalog-warnings-banner \{[\s\S]*?\n
 
 describe('ReportView Help Guide surface', () => {
   it('gives report generation a focused, theme-aware loading surface', () => {
-    expect(source).toContain('class="report-loading-state"');
-    expect(source).toContain('Mapping {selectedSample.name}\'s DNA');
-    expect(source).toContain('Your DNA stays on this computer');
-    expect(source).toContain('class="report-loading-activity"');
-    expect(source).toContain('The report will open automatically when ready');
-    expect(source).toContain('REPORT_LOADING_STAGES');
-    expect(source).toContain('reportLoadingElapsedSeconds');
-    expect(source).toContain('min-height: clamp(420px, 64vh, 620px);');
-    expect(source).toContain('var(--surface-raised)');
-    expect(source).toContain('report-loading-indeterminate');
-    expect(source).toContain('prefers-reduced-motion: reduce');
+    const loading = readFileSync(new URL('./ReportLoadingState.svelte', import.meta.url), 'utf8');
+    const loadingCss = readFileSync(
+      new URL('../../styles/components/report-loading.css', import.meta.url),
+      'utf8',
+    );
+    expect(source).toContain("import ReportLoadingState from './ReportLoadingState.svelte'");
+    expect(source).toContain('<ReportLoadingState sampleName={selectedSample.name} />');
+    expect(source).not.toContain('On-device · live');
+    expect(source).not.toContain('Working now');
+    expect(loading).toContain("Preparing {sampleName}'s report");
+    expect(loading).toContain('Your DNA stays on this computer.');
+    expect(loading).toContain('class="report-loading-state"');
+    expect(loading).not.toContain('Queued');
+    expect(loading).not.toContain('s elapsed');
+    expect(loading).not.toContain('$effect');
+    expect(loadingCss).toContain('var(--surface-subtle)');
+    expect(loadingCss).toContain('var(--accent)');
+    expect(loadingCss).toContain('report-loading-sweep');
+    expect(loadingCss).toContain('prefers-reduced-motion: reduce');
+    expect(loadingCss).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
   it('keeps the general safety reminder in the application footer instead of repeating it in the Guide', () => {

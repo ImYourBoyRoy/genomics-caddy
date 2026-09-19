@@ -15,8 +15,10 @@ import { promisify } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 
 const projectRoot = resolve(new URL("..", import.meta.url).pathname);
-const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
-const bridgeToken = process.env.GENOMICS_AGENT_UI_TOKEN?.trim();
+import { resolveAgentUiEndpoint } from "./lib/agentUiEndpoint.mjs";
+
+let baseUrl = "";
+let bridgeToken = "";
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_UPDATE_TIMEOUT_MS, 120_000);
 const pollMs = 10;
 const execFileAsync = promisify(execFile);
@@ -137,10 +139,23 @@ async function assertNoUpdateCopy() {
   }
 }
 
+async function ensureBridge() {
+  if (baseUrl) return true;
+  try {
+    const endpoint = await resolveAgentUiEndpoint();
+    baseUrl = endpoint.url;
+    bridgeToken = endpoint.token || "";
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function waitForReport() {
   return waitFor(
     async () => {
       try {
+        if (!(await ensureBridge())) return null;
         const snapshot = await request("/ui/snapshot");
         return snapshot?.hasReport === true && snapshot?.sample ? snapshot : null;
       } catch {
@@ -213,6 +228,8 @@ async function runDesktopUpdateFlow(simulateFailure) {
       stdio: ["ignore", "ignore", "ignore"],
       detached: true,
     });
+    baseUrl = "";
+    bridgeToken = "";
     await waitForReport();
     const available = await waitForAvailable();
     phases.add(available.resourceUpdatePhase);

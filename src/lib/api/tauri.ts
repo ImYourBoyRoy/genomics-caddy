@@ -20,6 +20,7 @@ import type {
 import type { ChatMessage } from "../types/agent";
 import type {
   AppPaths,
+  LibraryStatus,
   AppBootstrapStatus,
   DiscoveredFindingSummary,
   GenomeSample,
@@ -53,6 +54,26 @@ export async function saveReportBundle(
 
 export async function getAppPaths(): Promise<AppPaths> {
   return invoke<AppPaths>("get_app_paths");
+}
+
+export async function getLibraryStatus(): Promise<LibraryStatus> {
+  return invoke<LibraryStatus>("get_library_status");
+}
+
+export async function openLibraryDir(): Promise<void> {
+  return invoke<void>("open_library_dir");
+}
+
+export async function setLibraryDir(dest: string, mode: "move" | "use"): Promise<LibraryStatus> {
+  return invoke<LibraryStatus>("set_library_dir", { dest, mode });
+}
+
+export async function resetLibraryDir(): Promise<LibraryStatus> {
+  return invoke<LibraryStatus>("reset_library_dir");
+}
+
+export async function eraseLibraryData(): Promise<void> {
+  return invoke<void>("erase_library_data");
 }
 
 export async function getAppBootstrap(): Promise<AppBootstrapStatus> {

@@ -1,6 +1,6 @@
 # ./.github/workflows/release.yml
 # Tag-only desktop publish. Quality gate is the reusable CI workflow; this job
-# only builds signed installers after Validate passes. Push a v* tag (e.g. v0.2.0)
+# only builds signed installers after Validate passes. Push a v* tag (e.g. v0.2.1)
 # that matches package.json / tauri.conf.json. Draft GitHub Releases include
 # latest.json for in-app updates. Publish the draft after smoke-checking artifacts.
 # Signing secrets: TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD.
@@ -104,3 +104,36 @@ jobs:
           args: ${{ matrix.args }}
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
+
+      - name: Attach Windows portable zip
+        if: matrix.platform == 'windows-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node ./scripts/package_windows_portable.mjs --upload --tag ${{ github.ref_name }}
+
+      - name: Rebuild macOS folder-layout DMG
+        if: matrix.platform == 'macos-latest'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          bash ./scripts/package_macos_folder_dmg.sh
+          # package_macos_folder_dmg.sh calls sign_updater_artifact.sh after hdiutil.
+
+      - name: Upload macOS folder-layout DMG
+        if: matrix.platform == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          dmg="$(find src-tauri/target -type f -name '*.dmg' ! -name 'rw.*' | head -1)"
+          if [ -z "$dmg" ]; then
+            echo "No macOS DMG found after folder-layout rebuild"
+            exit 1
+          fi
+          if [ ! -f "${dmg}.sig" ]; then
+            echo "Folder-layout DMG is missing ${dmg}.sig; updater latest.json would not match"
+            exit 1
+          fi
+          gh release upload "${{ github.ref_name }}" "$dmg" "${dmg}.sig" --clobber

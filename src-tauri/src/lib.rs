@@ -66,6 +66,7 @@ Operational Notes: Manages SQLite database connection pools and executes request
 pub mod agent;
 mod agent_commands;
 mod agent_ui;
+mod agent_ui_endpoint;
 pub mod app_log;
 pub mod config;
 pub mod db;
@@ -73,6 +74,7 @@ pub mod db_crypto;
 mod db_runtime;
 pub mod file_utils;
 pub mod inference_host;
+pub mod library;
 pub mod liftover;
 pub mod mcp;
 pub mod offline;
@@ -2146,6 +2148,11 @@ pub fn run() {
             save_report_bundle,
             get_app_bootstrap,
             get_app_paths,
+            library::get_library_status,
+            library::open_library_dir,
+            library::set_library_dir,
+            library::reset_library_dir,
+            library::erase_library_data,
             get_all_marker_packs,
             get_marker_pack_warnings,
             reload_marker_packs,
@@ -2279,6 +2286,7 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|_app, event| {
             if let tauri::RunEvent::Exit = event {
+                agent_ui::cleanup_endpoint_file();
                 let db_path = paths::db_path(&paths::resolve_data_dir());
                 if let Err(e) = db::seal(&db_path) {
                     eprintln!("Failed to seal genome database at rest: {e}");

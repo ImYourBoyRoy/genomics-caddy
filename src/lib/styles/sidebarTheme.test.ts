@@ -103,7 +103,7 @@ describe('sidebar status theme tokens', () => {
     expect(theme).toContain('background: var(--scrollbar-track);');
     expect(theme).toContain('background: var(--scrollbar-thumb);');
     expect(theme).toContain('background: var(--scrollbar-thumb-hover);');
-    expect(theme).toContain('background: radial-gradient(circle at top right, var(--app-gradient-highlight), var(--bg-primary));');
+    expect(theme).toContain('background: var(--bg-primary);');
     expect(theme).toContain('background-color: var(--sidebar-surface);');
   });
 

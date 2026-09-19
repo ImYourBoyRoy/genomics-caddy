@@ -80,10 +80,10 @@ available; GRCh38 sources retain their source coordinates and use validated
 inverse mapping for GRCh37 when available, leaving unmapped values explicit.
 
 For report/sidebar or other desktop UI changes, also run `pnpm run audit:tauri-ui`
-while the Tauri development window is running with `GENOMICS_AGENT_UI_TOKEN` set;
-pass the same token to the audit command. This is the application-level fixture
-check; the Svelte renderer URL and browser preview are supplemental only. The
-debug bridge requires that token for `/ui/*`; use
+while the Tauri window is running. The audit discovers `http://127.0.0.1:<port>`
+from the user-only runtime endpoint file (or `GENOMICS_AGENT_UI_URL` if that URL
+is loopback). Do not use `localhost` or guess port 17321. The debug bridge
+requires a session token for `/ui/*`; use
 `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` only for disposable debug QA.
 
 The fixture audit is read-only and must not emit or persist raw genotype values.

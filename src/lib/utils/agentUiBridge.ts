@@ -67,6 +67,7 @@ export interface AgentUiLayoutMetrics {
   dashboardGuidanceWidth: number | null;
   dashboardGuidanceCardMaxWidth: number | null;
   themeControlInSidebarFooter: boolean;
+  libraryControlInSidebarFooter: boolean;
   themeModeOptionCount: number;
   topToolbarPresent: boolean;
   themeMenuOpen: boolean;
@@ -487,6 +488,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
     dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,
     themeControlInSidebarFooter: document.querySelector('.sidebar-footer .theme-toggle') !== null,
+    libraryControlInSidebarFooter: document.querySelector('.sidebar-footer .library-panel') !== null,
     themeModeOptionCount: document.querySelectorAll('.sidebar-footer [data-theme-mode]').length,
     topToolbarPresent: document.querySelector('.focus-toolbar') !== null,
     themeMenuOpen: document.querySelector('.theme-options') !== null,

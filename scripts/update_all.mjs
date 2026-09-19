@@ -3,17 +3,17 @@
 /*
 Purpose: One-shot “Update All” for Genomics Caddy toolchains and project dependencies.
 Responsibilities:
-  - Refresh package managers / compilers when possible (pnpm, rustup/stable Rust).
+  - Refresh Node (fnm/nvm/n) unless --skip-node, then npm/pnpm shims and rustup.
+  - pnpm 12's native binary requires --allow-scripts=pnpm; stay on npm `latest` (not `next`).
   - Bump package.json deps to latest stable and reinstall without a lockfile, including TypeScript majors.
   - Svelte check remains usable on TS 7 via scripts/run_svelte_check.mjs (TS6 API shim until Svelte supports TS7 natively).
   - Refresh Cargo dependencies and incompatible crate bumps in src-tauri.
-  - Optionally refresh Node via fnm/nvm/n when --update-node is set.
   - Run light verification (frontend check + cargo check) unless skipped.
 How to run:
   pnpm run update:all
   pnpm run update:all -- --dry-run
   pnpm run update:all -- --skip-toolchains
-  pnpm run update:all -- --update-node
+  pnpm run update:all -- --skip-node
 Key inputs: CLI flags (see --help).
 Key outputs: Updated package.json / Cargo.toml; console report. Dependency lockfiles are removed.
 Assumptions: Network access; rustup for Rust updates; write access for global npm when updating npm itself.
@@ -45,11 +45,12 @@ if (hasFlag("help", "h")) {
 
   (default)         Apply toolchain + dependency updates, then verify
   --dry-run         Print the plan; do not mutate
-  --skip-toolchains Skip npm self-update and rustup
+  --skip-toolchains Skip npm self-update, Node, and rustup
+  --skip-node       Leave the Node runtime unchanged (still refresh npm/pnpm)
   --skip-npm        Skip npm-check-updates + pnpm install
   --skip-cargo      Skip cargo update / upgrade
   --skip-verify     Skip pnpm run check + cargo check
-  --update-node     Also try fnm/nvm/n to install latest Node (opt-in)
+  --update-node     Default: refresh Node via fnm/nvm/n (kept for compatibility)
   --help            Show this help
 `);
   process.exit(0);
@@ -60,7 +61,8 @@ const skipToolchains = hasFlag("skip-toolchains", "SkipToolchains");
 const skipNpm = hasFlag("skip-npm", "SkipNpm");
 const skipCargo = hasFlag("skip-cargo", "SkipCargo");
 const skipVerify = hasFlag("skip-verify", "SkipVerify");
-const updateNode = hasFlag("update-node", "UpdateNode");
+const skipNode = hasFlag("skip-node", "SkipNode");
+const updateNode = !skipNode;
 
 const report = {
   startedAt: new Date().toISOString(),
@@ -153,6 +155,7 @@ function tryUpdateNodeRuntime() {
   if (which("fnm")) {
     run("fnm", ["install", "--latest"], { allowFail: true });
     run("fnm", ["use", "--install-if-missing", "latest"], { allowFail: true });
+    run("fnm", ["default", "latest"], { allowFail: true });
     return;
   }
   if (which("n")) {
@@ -170,7 +173,7 @@ function tryUpdateNodeRuntime() {
     );
     return;
   }
-  log("  No fnm/n/nvm detected — skip Node runtime upgrade (install a Node version manager to enable --update-node).");
+  log("  No fnm/n/nvm detected — skip Node runtime upgrade.");
   report.steps.push({
     name: "update-node",
     ok: true,
@@ -224,17 +227,21 @@ async function main() {
   }
 
   if (!skipToolchains) {
-    step("1) Toolchains — pnpm + Rust (and optional Node)");
+    step("1) Toolchains — Node + pnpm + Rust");
     if (updateNode) {
       tryUpdateNodeRuntime();
     } else {
-      log("  Node runtime left unchanged (pass --update-node to use fnm/nvm/n).");
+      log("  Node runtime left unchanged (omit --skip-node to refresh via fnm/nvm/n).");
     }
 
-    // Refresh the package managers, not only project packages.
+    // Refresh package-manager shims on the active Node. pnpm 12 ships a native
+    // binary via its install script; npm 12 blocks that unless allowed.
     if (which("npm")) {
       try {
-        run("npm", ["install", "-g", "npm@latest", "pnpm@latest"], { allowFail: true });
+        run("npm", ["install", "-g", "npm@latest"], { allowFail: true });
+        run("npm", ["install", "-g", "--allow-scripts=pnpm", "pnpm@latest"], {
+          allowFail: true,
+        });
       } catch {
         log("  WARN: global package-manager update failed (permissions?). Continuing with project deps.");
       }
@@ -273,9 +280,23 @@ async function main() {
     step("2) frontend packages — bump package.json to latest + lock-free reinstall");
     // Update everything to latest, including TypeScript majors. Fix breaks after.
     // Uses --legacy-peer-deps (also in .npmrc): Kit's peerOptional still says TS≤6.
-    run("pnpm", ["dlx", "npm-check-updates@latest", "-u", "--target", "latest"], {
-      allowFail: false,
-    });
+    // cookie stays on 1.x: Kit still consumes cookie 1, and latest is 2.0.1.
+    // Tauri npm latest tags are 2.x; --target latest will not take the `next` 3.0 alpha.
+    run(
+      "pnpm",
+      [
+        "dlx",
+        "npm-check-updates@latest",
+        "-u",
+        "--target",
+        "latest",
+        "-x",
+        "cookie",
+      ],
+      {
+        allowFail: false,
+      },
+    );
     ensureTypescript6CompatDep();
     run(process.execPath, [path.join(scriptDir, "pnpm_unlocked.mjs"), "install"], { allowFail: false });
     // A fresh install runs dependency lifecycle scripts. pnpm 12's standalone
@@ -292,9 +313,27 @@ async function main() {
     }
     ensureCargoUpgrade();
     // Bump Cargo.toml deps past major barriers when crates.io has newer majors.
+    // Never take Tauri 3.0 alpha or libc 1.0 alpha from `cargo upgrade --incompatible`.
     run(
       "cargo",
-      ["upgrade", "--incompatible", "--manifest-path", cargoToml],
+      [
+        "upgrade",
+        "--incompatible",
+        "--manifest-path",
+        cargoToml,
+        "--exclude",
+        "tauri",
+        "--exclude",
+        "tauri-build",
+        "--exclude",
+        "tauri-plugin-opener",
+        "--exclude",
+        "tauri-plugin-updater",
+        "--exclude",
+        "tauri-plugin-process",
+        "--exclude",
+        "libc",
+      ],
       { allowFail: true }
     );
     run("cargo", ["update", "--manifest-path", cargoToml], { allowFail: false });

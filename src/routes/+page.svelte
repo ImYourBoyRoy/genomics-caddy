@@ -812,8 +812,7 @@
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <span class="pill font-mono">Sex: {formatGeneticSexLabel(selectedSample.genetic_sex)}</span>
-              <span class="pill">Sample ID: {selectedSample.id}</span>
+              <span class="pill">Sex: {formatGeneticSexLabel(selectedSample.genetic_sex)}</span>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">
               {#each PRIMARY_TABS as tab (tab.id)}

@@ -158,6 +158,16 @@ elif command -v sysctl >/dev/null 2>&1; then
 fi
 ok "CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-default}"
 
+if [[ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" && -f "$HOME/.config/genomics-caddy/tauri-updater.key" ]]; then
+  TAURI_SIGNING_PRIVATE_KEY="$(<"$HOME/.config/genomics-caddy/tauri-updater.key")"
+  export TAURI_SIGNING_PRIVATE_KEY
+  if [[ -f "$HOME/.config/genomics-caddy/tauri-updater.key.password" ]]; then
+    TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(<"$HOME/.config/genomics-caddy/tauri-updater.key.password")"
+    export TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+  fi
+  ok "updater signing key loaded from ~/.config/genomics-caddy/"
+fi
+
 run_cmd "Production Tauri build (no installer bundle)" pnpm run tauri build
 
 step "Stage portable App/ folder"

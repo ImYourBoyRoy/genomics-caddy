@@ -1,20 +1,29 @@
 // ./src/lib/utils/dialogState.svelte.ts
 /**
  * Dialog State Store.
- * Purpose: Manage global alert and confirm dialog states reactively for Svelte 5.
- * Key Inputs: Trigger methods `alert` and `confirm`.
+ * Purpose: Manage global alert, confirm, and multi-choice dialogs for Svelte 5.
+ * Key Inputs: Trigger methods `alert`, `confirm`, and `choice`.
  * Key Outputs: Reactive `state` object.
  * Operational Notes: Replaces standard browser window alert/confirm with custom UI dialogs.
+ * Choice Cancel (Escape, X, backdrop) aborts and does not pick an action.
  */
+
+export interface DialogChoice {
+  id: string;
+  label: string;
+  variant?: "accent" | "secondary" | "danger";
+}
 
 export interface DialogState {
   show: boolean;
-  type: "alert" | "confirm";
+  type: "alert" | "confirm" | "choice";
   title: string;
   message: string;
   busy?: boolean;
+  choices?: DialogChoice[];
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void;
+  onChoice?: (id: string) => void | Promise<void>;
 }
 
 class DialogStore {
@@ -37,6 +46,15 @@ class DialogStore {
     onCancel?: () => void,
   ) {
     this.state = { show: true, type: "confirm", title, message, onConfirm, onCancel };
+  }
+
+  choice(
+    message: string,
+    choices: DialogChoice[],
+    onChoice: (id: string) => void | Promise<void>,
+    title = "Choose an action",
+  ) {
+    this.state = { show: true, type: "choice", title, message, choices, onChoice };
   }
 
   close(options: { cancelled?: boolean } = {}) {
@@ -66,6 +84,25 @@ class DialogStore {
       // An async action may replace the confirmation with its own error dialog.
       // Only close the original dialog when it is still the active one.
       if (this.state.onConfirm === cb) {
+        this.state = { ...this.state, busy: false };
+        this.close();
+      }
+    }
+  }
+
+  async handleChoice(id: string): Promise<void> {
+    const cb = this.state.onChoice;
+    if (this.state.type !== "choice" || !cb || this.state.busy) return;
+
+    this.state = { ...this.state, busy: true };
+    try {
+      await cb(id);
+    } catch (error) {
+      if (this.state.onChoice === cb) {
+        this.alert(`Action failed: ${String(error)}`, "Genomics Caddy");
+      }
+    } finally {
+      if (this.state.onChoice === cb) {
         this.state = { ...this.state, busy: false };
         this.close();
       }

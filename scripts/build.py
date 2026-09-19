@@ -38,9 +38,9 @@ Safety:
   - All SSH commands are delivered via stdin (bash -s) — no secrets in argv.
 
 Outputs:
-  builds/macOS/   — .dmg + .app bundle
-  builds/linux/   — .deb, .rpm, .AppImage
-  builds/windows/ — .msi, .exe (when configured)
+  builds/macOS/   — folder DMG (.app + Data/)
+  builds/linux/   — .AppImage
+  builds/windows/ — NSIS .exe + portable zip
 """
 from __future__ import annotations
 
@@ -309,7 +309,7 @@ def main() -> None:
         help="Build target(s): mac linux windows all  (default: mac)",
     )
     parser.add_argument("--clean", action="store_true", help="cargo clean before build (cold)")
-    parser.add_argument("--create-bundle", action="store_true", help="Create full installers (.dmg, .msi, etc). Default is to build raw executable only.")
+    parser.add_argument("--create-bundle", action="store_true", help="Create GitHub-shaped installers (NSIS, AppImage, folder DMG). Default is to build raw executable only.")
     parser.add_argument("--skip-frontend", action="store_true", help="Skip pnpm run build locally")
     parser.add_argument("--skip-upgrade", action="store_true", help="Skip toolchain upgrade step")
     parser.add_argument("--skip-lint", action="store_true", help="Skip clippy + svelte-check")

@@ -2,7 +2,7 @@
 name: vector-research-sweep-qa
 description: >-
   Genomics Caddy Vector Research sweep QA: start/pause/resume/cancel races,
-  agent UI bridge (127.0.0.1:17321), SQLite research_jobs assertions, and known
+  agent UI bridge (dynamic 127.0.0.1 port), SQLite research_jobs assertions, and known
   cancel wind-down pitfalls. Use when testing or fixing Cancel Sweep, Pause,
   Resume, Run Controller progress, RESEARCH_RUNNING/CANCELLED flags, or
   research:progress UI races.
@@ -21,7 +21,7 @@ Project skill for Genomics Caddy. Read this before diagnosing or regressing swee
 ## Preconditions
 
 1. Kill stale `tauri`/`vite` processes; start fresh: `npm run tauri:dev` (log to `/tmp/tauri-cancel-test.log` if useful).
-2. Wait for Agent UI: `curl -s http://127.0.0.1:17321/health` → `"ok":true`.
+2. Wait for Agent UI: `pnpm run agent-ui:url` then `curl -s http://127.0.0.1:<port>/health` → `"ok":true`. Never use `localhost` or guess `:17321`.
 3. Sample selected (default sample id `1`); Vector Research tab open.
 4. Qdrant + Ollama live. Prefer **Test Connections** before Start.
 5. Wait until Start is clickable (scope preview non-empty, e.g. `83,820 queued`). Scope recount can take several seconds after boot/HMR.

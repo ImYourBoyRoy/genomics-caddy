@@ -133,9 +133,9 @@ def collect_linux(
         f"""
 set -euo pipefail
 mkdir -p '{remote_staging}'
-# Copy bundles (.deb, .rpm, .AppImage) and avoid pulling unpacked intermediate directories
+# Copy AppImage product artifacts and updater signatures (deb/rpm stay off GitHub)
 if [ -d "{remote_bundle_dir}" ]; then
-    find "{remote_bundle_dir}" -type f \\( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \\) -exec cp {{}} '{remote_staging}/' \\;
+    find "{remote_bundle_dir}" -type f \\( -name '*.AppImage' -o -name '*.AppImage.sig' \\) -exec cp {{}} '{remote_staging}/' \\;
 fi
 # Copy raw executables (maxdepth 1 excludes deps/, build/, etc)
 find "{remote_release_dir}" -maxdepth 1 -type f -executable -exec cp {{}} '{remote_staging}/' \\;
@@ -167,8 +167,9 @@ def collect_linux_cross_windows(
         f"""
 set -euo pipefail
 mkdir -p '{remote_staging}'
-# Copy executable and MSI/NSIS from release and bundle dirs, excluding deps
-find "{remote_release_dir}" -type f -not -path "*/deps/*" -not -path "*/build/*" \\( -name '*.exe' -o -name '*.msi' \\) -exec cp {{}} '{remote_staging}/' \\;
+# Copy NSIS/portable exe and zip, excluding deps. The portable zip is already
+# written into this staging directory by package_windows_portable.mjs.
+find "{remote_release_dir}" -type f -not -path "*/deps/*" -not -path "*/build/*" \\( -name '*.exe' -o -name '*.zip' -o -name '*.sig' \\) -exec cp -n {{}} '{remote_staging}/' \\;
 echo "WIN_CROSS_STAGING_OK"
 """,
         settings=s,
@@ -205,14 +206,22 @@ def collect(
 
 
 def _report_local(local_dir: str) -> None:
-    """Print sizes of collected artifacts."""
+    """Print sizes of collected product artifacts. Skip library Data/ trees."""
     p = Path(local_dir)
-    files = sorted(p.rglob("*"))
-    files = [f for f in files if f.is_file()]
-    if not files:
-        print(f"[COLLECT] Warning: no files found in {local_dir}")
+    files = sorted(f for f in p.rglob("*") if f.is_file())
+    product = []
+    for f in files:
+        parts = {part.lower() for part in f.parts}
+        if "data" in parts or "raw_downloads" in parts or "samples" in parts:
+            continue
+        suffix = f.suffix.lower()
+        name = f.name.lower()
+        if suffix in {".appimage", ".exe", ".zip", ".dmg", ".sig", ".dll"} or name.endswith(".appimage.sig"):
+            product.append(f)
+    if not product:
+        print(f"[COLLECT] Warning: no product files found in {local_dir}")
         return
     print(f"[COLLECT] Artifacts in {local_dir}:")
-    for f in files:
+    for f in product:
         size_mb = f.stat().st_size / 1024 / 1024
         print(f"  {size_mb:6.1f} MB  {f.relative_to(p)}")

@@ -22,8 +22,8 @@ Pull requests and pushes to `master` run `.github/workflows/ci.yml`
 That same job is required before a tagged desktop publish.
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 `.github/workflows/release.yml` waits for Validate, then uses
@@ -73,9 +73,11 @@ Resource or marker-pack edits should run the pack/resource/DNA-fixture audits
 plus `pnpm test`, `pnpm run check`, `pnpm run build`, `pnpm run cargo:test`,
 and `git diff --check`.
 
-Desktop UI fixture audit needs a running Tauri window and
-`GENOMICS_AGENT_UI_TOKEN`. See `pnpm run audit:tauri-ui`. Do not set
-`GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` except for disposable local QA.
+Desktop UI fixture audit needs a running Tauri window. Discover the live
+loopback URL with `pnpm run agent-ui:url` (never `localhost` or a guessed
+port). `pnpm run audit:tauri-ui` reads the same 0600 runtime endpoint file.
+Do not set `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` except for disposable
+local QA.
 
 ## `.env`
 
@@ -109,6 +111,10 @@ It does not delete `App/Data` or marker-pack trees.
 pnpm run update:all:dry
 node ./scripts/update_all.mjs
 ```
+
+That refreshes Node (fnm `latest`), npm, and pnpm unless you pass `--skip-node`
+or `--skip-toolchains`. pnpm 12's native shim needs its install script; the
+updater passes `--allow-scripts=pnpm` and stays on npm `latest` (not `next`).
 
 No `--locked` Cargo flags. After manifest changes run
 `node ./scripts/audit_reproducibility.mjs`.

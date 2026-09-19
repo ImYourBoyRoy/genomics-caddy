@@ -11,6 +11,7 @@ scanning the whole repository.
 | How do I connect Claude, Cursor, or another agent? | [mcp/README.md](mcp/README.md) |
 | How do I wire Ollama, vectors, or Connected Chat? | [ai-chat/README.md](ai-chat/README.md) |
 | How do I build a portable desktop binary or ship a signed GitHub update? | [build/README.md](build/README.md) |
+| How do I compile extra packages (deb/rpm) locally? | [../compile_instructions.md](../compile_instructions.md) |
 | How do I run tests and avoid committing private data? | [development/README.md](development/README.md) |
 | What does each tracked file do? | [../ARCHITECTURE.md](../ARCHITECTURE.md) |
 | How do I run the headless sweep worker? | [../docker/README.md](../docker/README.md) |

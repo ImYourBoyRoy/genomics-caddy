@@ -32,7 +32,15 @@ if (forwarded.length === 0) {
 
 function resolvePnpmExecutable() {
   const names = process.platform === "win32" ? ["pnpm.exe", "pnpm.cmd", "pnpm"] : ["pnpm"];
-  const searchDirs = [process.env.PNPM_HOME, path.join(repoRoot, "node_modules", ".bin")].filter(Boolean);
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const searchDirs = [
+    process.env.PNPM_HOME,
+    path.join(repoRoot, "node_modules", ".bin"),
+    home && path.join(home, ".local", "share", "pnpm"),
+    home && path.join(home, ".local", "bin"),
+    home && path.join(home, ".npm-global", "bin"),
+    ...String(process.env.PATH || process.env.Path || "").split(path.delimiter),
+  ].filter(Boolean);
   for (const dir of searchDirs) {
     for (const name of names) {
       const candidate = path.join(dir, name);

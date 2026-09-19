@@ -1,0 +1,83 @@
+/* ./src/lib/styles/components/library-panel.css
+ * Compact library-folder control in the sidebar footer.
+ */
+
+.library-panel {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.library-panel-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.library-panel-copy strong {
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.library-panel-path {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-panel-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.library-panel-actions .btn {
+  width: 100%;
+  min-height: 36px;
+}
+
+.library-panel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  line-height: 1.35;
+}
+
+.library-panel-warn {
+  color: var(--status-warning-text);
+}
+
+.library-text-btn {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.library-text-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.library-panel-error {
+  margin: 0;
+  color: var(--status-danger-text);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}

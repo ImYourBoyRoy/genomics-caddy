@@ -40,14 +40,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 pick_default_exe() {
-  if [[ -x "${ROOT}/builds/linux/DNA-Tools" ]]; then
+  # Prefer App/DNA-Tools: Data lives next to the launched file, and App/Data
+  # is the daily library. builds/linux is staging and must not silently open
+  # an empty sibling Data/ folder from the dock.
+  if [[ -x "${ROOT}/App/DNA-Tools" ]]; then
+    echo "${ROOT}/App/DNA-Tools"
+  elif [[ -x "${ROOT}/builds/linux/DNA-Tools" ]]; then
     echo "${ROOT}/builds/linux/DNA-Tools"
   elif [[ -x "${ROOT}/src-tauri/target/release/DNA-Tools" ]]; then
     echo "${ROOT}/src-tauri/target/release/DNA-Tools"
   elif [[ -x "${ROOT}/src-tauri/target/debug/DNA-Tools" ]]; then
     echo "${ROOT}/src-tauri/target/debug/DNA-Tools"
-  elif [[ -x "${ROOT}/App/DNA-Tools" ]]; then
-    echo "${ROOT}/App/DNA-Tools"
   else
     echo ""
   fi

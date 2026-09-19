@@ -499,8 +499,11 @@ export interface ImportProvenance {
 
 export type DataDirMode =
   | "env_override"
+  | "custom_pointer"
   | "app_layout"
-  | "legacy_project";
+  | "per_user"
+  | "legacy_project"
+  | "unwritable";
 
 export interface AppPaths {
   project_root: string;
@@ -512,6 +515,16 @@ export interface AppPaths {
   references_dir: string;
   raw_downloads_dir: string;
   env_path?: string;
+}
+
+export interface LibraryStatus {
+  data_dir: string;
+  default_data_dir: string;
+  mode: DataDirMode;
+  is_custom: boolean;
+  writable: boolean;
+  pointer_path: string;
+  truncated_path: string;
 }
 
 /** Startup payload after a single DB open + migration pass. */

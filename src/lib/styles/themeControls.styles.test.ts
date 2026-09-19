@@ -106,7 +106,7 @@ describe('shared theme controls', () => {
     expect(source).toContain('--scrollbar-track:');
     expect(source).toContain('--scrollbar-thumb:');
     expect(source).toContain('--scrollbar-thumb-hover:');
-    expect(source).toContain('background: radial-gradient(circle at top right, var(--app-gradient-highlight), var(--bg-primary));');
+    expect(source).toContain('background: var(--bg-primary);');
     expect(source).toContain('background-color: var(--sidebar-surface);');
   });
 

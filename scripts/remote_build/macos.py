@@ -28,6 +28,17 @@ from __future__ import annotations
 from remote_build.config import Settings, get_settings
 from remote_build.ssh import vm_ssh
 
+from pathlib import Path
+import importlib.util as _ilu
+
+def _with_sign_env(script: str) -> str:
+    spec = _ilu.spec_from_file_location(
+        "dna_tools_sign_env", Path(__file__).with_name("sign_env.py")
+    )
+    mod = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod.inject(script)
+
 _BUILD_SCRIPT = r"""
 set -euo pipefail
 source ~/.cargo/env 2>/dev/null || true
@@ -82,42 +93,46 @@ set -e
 
 if [ $TAURI_EXIT -eq 0 ]; then
     echo "TAURI_BUILD=OK"
-    exit 0
-fi
+else
+    # Packaging failed — likely AppleScript/hdiutil in headless VM.
+    # Patch bundle_dmg.sh to bypass the Jenkins AppleScript check.
+    echo "[MACOS] Tauri packaging failed (exit=$TAURI_EXIT). Applying headless patch…"
+    BUNDLE_DMG="$GUEST_DIR/src-tauri/target/universal-apple-darwin/release/bundle/dmg/bundle_dmg.sh"
+    if [ ! -f "$BUNDLE_DMG" ]; then
+        echo "[FAIL] bundle_dmg.sh not found at $BUNDLE_DMG" >&2
+        exit $TAURI_EXIT
+    fi
 
-# Packaging failed — likely AppleScript/hdiutil in headless VM.
-# Patch bundle_dmg.sh to bypass the Jenkins AppleScript check.
-echo "[MACOS] Tauri packaging failed (exit=$TAURI_EXIT). Applying headless patch…"
-BUNDLE_DMG="$GUEST_DIR/src-tauri/target/universal-apple-darwin/release/bundle/dmg/bundle_dmg.sh"
-if [ ! -f "$BUNDLE_DMG" ]; then
-    echo "[FAIL] bundle_dmg.sh not found at $BUNDLE_DMG" >&2
-    exit $TAURI_EXIT
-fi
+    # Patch: force SKIP_JENKINS=1 so AppleScript block is always skipped
+    sed -i.bak 's/SKIP_JENKINS -eq 0/1 -eq 0/' "$BUNDLE_DMG"
+    BUNDLE_DIR="$(dirname "$BUNDLE_DMG")"
+    cd "$BUNDLE_DIR"
 
-# Patch: force SKIP_JENKINS=1 so AppleScript block is always skipped
-sed -i.bak 's/SKIP_JENKINS -eq 0/1 -eq 0/' "$BUNDLE_DMG"
-BUNDLE_DIR="$(dirname "$BUNDLE_DMG")"
-cd "$BUNDLE_DIR"
+    # Detect the actual DMG + app name from what tauri generated
+    DMG_NAME=$(ls ./*.dmg 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
+    if [ -z "$DMG_NAME" ]; then
+        # Construct name from Cargo.toml if no DMG was started
+        DMG_NAME="Genomics Caddy_0.2.0_universal.dmg"
+    fi
 
-# Detect the actual DMG + app name from what tauri generated
-DMG_NAME=$(ls ./*.dmg 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
-if [ -z "$DMG_NAME" ]; then
-    # Construct name from Cargo.toml if no DMG was started
-    DMG_NAME="Genomics Caddy_0.2.0_universal.dmg"
-fi
+    APP_PATH="../macos/Genomics Caddy.app"
+    echo "[MACOS] Running patched bundle_dmg.sh: $DMG_NAME"
+    ./bundle_dmg.sh "$DMG_NAME" "$APP_PATH"
+    BUNDLE_EXIT=$?
 
-APP_PATH="../macos/Genomics Caddy.app"
-echo "[MACOS] Running patched bundle_dmg.sh: $DMG_NAME"
-./bundle_dmg.sh "$DMG_NAME" "$APP_PATH"
-BUNDLE_EXIT=$?
-
-if [ $BUNDLE_EXIT -eq 0 ]; then
+    if [ $BUNDLE_EXIT -ne 0 ]; then
+        echo "[FAIL] bundle_dmg.sh patched run also failed (exit=$BUNDLE_EXIT)" >&2
+        exit $BUNDLE_EXIT
+    fi
     echo "TAURI_BUILD=OK_PATCHED"
-    exit 0
 fi
 
-echo "[FAIL] bundle_dmg.sh patched run also failed (exit=$BUNDLE_EXIT)" >&2
-exit $BUNDLE_EXIT
+if [ -d "$GUEST_DIR/src-tauri/target/universal-apple-darwin/release/bundle/macos/Genomics Caddy.app" ]; then
+    echo "[MACOS] Rebuilding folder-layout DMG (.app + Data/)"
+    bash "$GUEST_DIR/scripts/package_macos_folder_dmg.sh"
+fi
+echo "MACOS_PACKAGING=OK"
+exit 0
 """
 
 
@@ -144,11 +159,11 @@ def build(
     else:
         print("[MAC] Generating raw executable only (--no-bundle)")
 
-    script = _BUILD_SCRIPT.format(
+    script = _with_sign_env(_BUILD_SCRIPT.format(
         guest_dir=guest_dir,
         clean_step=clean_step,
         bundle_arg=bundle_arg,
-    )
+    ))
 
     vm_ssh(
         host=s.remote_host,

@@ -28,7 +28,7 @@ launcher confusion.
 |------|--------|
 | Canonical profile data | Repo `App/Data` (not `builds/linux/App/Data`) |
 | Portable binaries | `./App/DNA-Tools` and `./builds/linux/DNA-Tools` |
-| Desktop launcher | `pnpm run desktop:linux` installs/refreshes `~/.local/share/applications/com.dna.explorer.desktop` and branded hicolor icons |
+| Desktop launcher | `pnpm run desktop:linux` installs/refreshes `~/.local/share/applications/com.dna.explorer.desktop` pointing at `App/DNA-Tools` when present (canonical `App/Data`), else `builds/linux/DNA-Tools` |
 | Opening portable | Does **not** install a launcher |
 | Stale UI after rebuild | Often `~/.local/share/com.dna.explorer/WebKitCache` (+ CacheStorage / GPUCache) |
 | No `.deb` required | “Installed” usually means FreeDesktop entry + icons |

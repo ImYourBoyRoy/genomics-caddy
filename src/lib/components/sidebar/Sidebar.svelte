@@ -27,7 +27,10 @@ import { onMount, onDestroy } from 'svelte';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
+  import LibraryPanel from './LibraryPanel.svelte';
+  import ThemeToggle from '../common/ThemeToggle.svelte';
   import '$lib/styles/components/sidebar.css';
+  import '$lib/styles/components/library-panel.css';
 
   /*
   Module Docstring:
@@ -941,6 +944,7 @@ import { onMount, onDestroy } from 'svelte';
 </script>
 
 <aside id="data-sidebar" class="sidebar" aria-label="Profile and data controls">
+  <div class="sidebar-scroll">
   <div class="brand">
     <img src="/logo.png" alt="Genomics Caddy Logo" class="brand-logo" />
     <h2>Genomics Caddy</h2>
@@ -1545,6 +1549,12 @@ import { onMount, onDestroy } from 'svelte';
 
       </div>
     {/if}
+  </div>
+  </div>
+
+  <div class="sidebar-footer no-print" role="toolbar" aria-label="Library and appearance">
+    <LibraryPanel />
+    <ThemeToggle />
   </div>
 
 </aside>

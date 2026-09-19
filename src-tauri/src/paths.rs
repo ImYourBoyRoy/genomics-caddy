@@ -3,7 +3,8 @@
 Module Docstring:
 Purpose: Resolve portable application data paths for Genomics Caddy.
 Responsibilities:
-- Locate the data directory from GENOMICS_DATA_DIR, portable exe layout, dev project root, or OS app data.
+- Locate the data directory from GENOMICS_DATA_DIR, a per-user pointer, portable
+  adjacent `Data/`, or per-account storage for machine installs.
 - Ensure expected subfolders exist (references, marker-packs, raw_downloads).
 Key Inputs: Environment variables, optional Tauri AppHandle, executable path.
 Key Outputs: Absolute PathBuf values for db, chain file, and reference downloads.
@@ -18,14 +19,17 @@ use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DataDirMode {
     EnvOverride,
+    CustomPointer,
     AppLayout,
+    PerUser,
     LegacyProject,
+    Unwritable,
 }
 
 #[derive(Debug, Clone)]
@@ -38,7 +42,10 @@ static RESOLVED_DATA_DIR: OnceLock<ResolvedDataDir> = OnceLock::new();
 
 /// Called once from Tauri setup so all later `resolve_data_dir()` calls agree with the running app.
 pub fn initialize_data_dir(app: &AppHandle) -> PathBuf {
+    let inputs = crate::library::gather_inputs(Some(app));
     let resolved = compute_data_dir(Some(app));
+    crate::library::migrate_legacy_if_needed(&resolved.path, &inputs, Some(app));
+    crate::library::finish_library_startup(&resolved.path, &inputs);
     let _ = RESOLVED_DATA_DIR.set(resolved.clone());
     ensure_data_layout(&resolved.path).ok();
     resolved.path.clone()
@@ -67,76 +74,18 @@ pub fn resolve_data_dir_info() -> ResolvedDataDir {
 }
 
 fn compute_data_dir(app: Option<&AppHandle>) -> ResolvedDataDir {
-    if let Ok(raw) = std::env::var("GENOMICS_DATA_DIR") {
-        let trimmed = raw.trim();
-        if !trimmed.is_empty() {
+    let inputs = crate::library::gather_inputs(app);
+    let resolved = crate::library::resolve_from_inputs(&inputs);
+    if resolved.mode == DataDirMode::AppLayout {
+        let legacy_data = resolve_project_root(app).join("data");
+        if !data_dir_has_content(&resolved.path) && data_dir_has_content(&legacy_data) {
             return ResolvedDataDir {
-                path: PathBuf::from(trimmed),
-                mode: DataDirMode::EnvOverride,
+                path: legacy_data,
+                mode: DataDirMode::LegacyProject,
             };
         }
     }
-
-    let project_root = resolve_project_root(app);
-    let app_data = app_data_dir(&project_root);
-    let legacy_data = project_root.join("data");
-
-    // Verify if app_data path is writable (fails on read-only system files or DMG mounts)
-    let is_writable = if app_data.exists() {
-        let temp_file = app_data.join(".write_test");
-        if fs::write(&temp_file, "").is_ok() {
-            let _ = fs::remove_file(temp_file);
-            true
-        } else {
-            false
-        }
-    } else {
-        fs::create_dir_all(&app_data).is_ok()
-    };
-
-    if !is_writable {
-        let fallback_path = if let Some(app_handle) = app {
-            app_handle.path().app_data_dir().ok()
-        } else {
-            None
-        }.unwrap_or_else(|| {
-            #[cfg(target_os = "windows")]
-            {
-                std::env::var_os("APPDATA")
-                    .map(|p| PathBuf::from(p).join("Genomics Caddy"))
-                    .unwrap_or_else(|| PathBuf::from("C:\\GenomicsCaddyData"))
-            }
-            #[cfg(target_os = "macos")]
-            {
-                std::env::var_os("HOME")
-                    .map(|p| PathBuf::from(p).join("Library/Application Support/Genomics Caddy"))
-                    .unwrap_or_else(|| PathBuf::from("/tmp/GenomicsCaddyData"))
-            }
-            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-            {
-                std::env::var_os("HOME")
-                    .map(|p| PathBuf::from(p).join(".local/share/genomics-caddy"))
-                    .unwrap_or_else(|| PathBuf::from("/tmp/genomics-caddy"))
-            }
-        });
-
-        return ResolvedDataDir {
-            path: fallback_path,
-            mode: DataDirMode::AppLayout,
-        };
-    }
-
-    if data_dir_has_content(&app_data) || !data_dir_has_content(&legacy_data) {
-        return ResolvedDataDir {
-            path: app_data,
-            mode: DataDirMode::AppLayout,
-        };
-    }
-
-    ResolvedDataDir {
-        path: legacy_data,
-        mode: DataDirMode::LegacyProject,
-    }
+    resolved
 }
 
 pub fn resolve_project_root(app: Option<&AppHandle>) -> PathBuf {
@@ -240,7 +189,7 @@ pub fn app_data_dir(project_root: &Path) -> PathBuf {
     app_layout_dir(project_root).join("Data")
 }
 
-fn data_dir_has_content(dir: &Path) -> bool {
+pub(crate) fn data_dir_has_content(dir: &Path) -> bool {
     dir.join("user_genome.db").exists()
         || dir.join("user_genome.db.enc").exists()
         || samples_dir(dir)
@@ -253,14 +202,11 @@ fn data_dir_has_content(dir: &Path) -> bool {
         || dir.join("GRCh37_to_GRCh38.chain.gz").exists()
 }
 
-fn executable_dir(app: Option<&AppHandle>) -> Option<PathBuf> {
-    if let Some(app) = app {
-        app.path().executable_dir().ok()
-    } else {
-        std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|parent| parent.to_path_buf()))
-    }
+pub(crate) fn executable_dir(_app: Option<&AppHandle>) -> Option<PathBuf> {
+    std::env::current_exe().ok().and_then(|exe| {
+        let canonical = exe.canonicalize().unwrap_or(exe);
+        canonical.parent().map(Path::to_path_buf)
+    })
 }
 
 pub fn ensure_data_layout(data_dir: &Path) -> std::io::Result<()> {

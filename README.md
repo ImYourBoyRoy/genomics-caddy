@@ -60,6 +60,27 @@ GitHub installers notify you when a newer signed release is published.
 Confirm in the app to download and restart. Local `App/` copies are the
 portable build path, not the in-app updater path.
 
+People may use and share this for noncommercial purposes. Companies may not
+use it commercially. See [LICENSE](LICENSE)
+([PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)).
+
+## Downloads
+
+GitHub [Releases](https://github.com/ImYourBoyRoy/genomics-caddy/releases) ship:
+
+| Platform | Artifact |
+| --- | --- |
+| Windows | NSIS setup (`Install for me only` or `Install for everyone`; the installer asks for administrator rights) and a portable zip |
+| Linux | AppImage |
+| macOS | Universal DMG |
+
+Portable copies keep genomes in a `Data/` folder next to the launched file.
+`Install for everyone` uses a per-account folder. Change it from the left
+**Library** row. To remove personal files from an AppImage, DMG, or zip copy,
+use **Erase** on that Library row, or delete the whole folder that contains
+the app and its `Data/` directory. Other package formats:
+[compile_instructions.md](compile_instructions.md).
+
 Optional production build (portable binary lands in `App/`):
 
 ```bash
@@ -79,6 +100,7 @@ window for a real workflow.
 | [docs/mcp/README.md](docs/mcp/README.md) | MCP server, client configs, tools |
 | [docs/ai-chat/README.md](docs/ai-chat/README.md) | Ollama, connections, evidence workbench |
 | [docs/build/README.md](docs/build/README.md) | Release builds, Linux launcher, Docker |
+| [compile_instructions.md](compile_instructions.md) | Extra OS packages and GitHub-shaped local bundles |
 | [docs/development/README.md](docs/development/README.md) | Tests, audits, repo layout, `.env` |
 
 ## Author

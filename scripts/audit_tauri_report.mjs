@@ -8,8 +8,10 @@ Privacy: Never prints sample names, genotype calls, technical disclosures, or ra
 
 import { setTimeout as sleep } from "node:timers/promises";
 
-const baseUrl = (process.env.GENOMICS_AGENT_UI_URL || "http://127.0.0.1:17321").replace(/\/$/, "");
-const bridgeToken = process.env.GENOMICS_AGENT_UI_TOKEN?.trim();
+import { resolveAgentUiEndpoint } from "./lib/agentUiEndpoint.mjs";
+
+let baseUrl = "";
+let bridgeToken = "";
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_TIMEOUT_MS, 120_000);
 const pollMs = 500;
 const requestedViewportWidth = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_WIDTH, 0);
@@ -87,6 +89,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     );
   }
   assert(layout.themeControlInSidebarFooter === true, "Theme control is not in the sidebar footer");
+  assert(layout.libraryControlInSidebarFooter === true, "Library folder control is not in the sidebar footer");
   assert(layout.themeModeOptionCount === 3, "Sidebar theme control does not expose Auto, Light, and Dark choices");
   assert(layout.topToolbarPresent === false, "Redundant top report toolbar is still present");
   assert(layout.themeMenuOpen === false, "Theme control still exposes a popover menu");
@@ -701,6 +704,9 @@ async function assertClinicalCollapsedHint() {
 }
 
 async function main() {
+  const endpoint = await resolveAgentUiEndpoint();
+  baseUrl = endpoint.url;
+  bridgeToken = endpoint.token || "";
   await prepareRequestedViewport();
   let ready = await waitForSnapshot(
     (snapshot) => snapshot.hasReport === true && snapshot.sample && snapshot.layout?.activePresentationMode && snapshot.resourceStatus !== null && snapshot.resourceUpdatePhase !== "checking",

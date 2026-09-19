@@ -48,7 +48,11 @@ Actions runs the same Validate job as pull requests, then
 macOS Universal DMG, plus `latest.json` for in-app updates. GitHub does not
 ship MSI, RPM, or `.deb`. A Windows portable zip is attached after the NSIS
 build. The macOS job rebuilds the DMG as a folder containing the `.app` and
-an empty `Data/` directory. Other formats: [compile_instructions.md](../../compile_instructions.md).
+an empty `Data/` directory. Tauri deletes the live `.app` after it writes the
+DMG, so that rebuild unpacks `Genomics Caddy.app.tar.gz` (and falls back to
+the just-built DMG) instead of looking only at `bundle/macos/*.app`.
+`bundle.targets` includes `app` so macOS updater artifacts are first-class.
+Other formats: [compile_instructions.md](../../compile_instructions.md).
 Publish the draft from the GitHub Releases UI after you inspect artifacts.
 
 The desktop app checks that endpoint quietly on launch. A dismissible banner

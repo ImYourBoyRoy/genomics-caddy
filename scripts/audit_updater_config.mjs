@@ -77,14 +77,16 @@ mustContain("src/lib/utils/updater.ts", "checkForAppUpdate");
 mustContain("src/lib/components/layout/AppShell.svelte", "AppUpdateHost");
 
 const bundleTargets = tauriConf?.bundle?.targets;
-const requiredTargets = ["nsis", "appimage", "dmg"];
+const requiredTargets = ["app", "nsis", "appimage", "dmg"];
 const blockedTargets = ["msi", "deb", "rpm", "all"];
 if (
   !Array.isArray(bundleTargets) ||
   !requiredTargets.every((target) => bundleTargets.includes(target)) ||
   bundleTargets.some((target) => blockedTargets.includes(target))
 ) {
-  problems.push("src-tauri/tauri.conf.json bundle.targets must be nsis, appimage, and dmg (no MSI/deb/rpm on GitHub)");
+  problems.push(
+    "src-tauri/tauri.conf.json bundle.targets must include app, nsis, appimage, and dmg (no MSI/deb/rpm on GitHub)"
+  );
 }
 if (tauriConf?.bundle?.windows?.nsis?.installMode !== "both") {
   problems.push("src-tauri/tauri.conf.json windows.nsis.installMode must be both");
@@ -98,6 +100,7 @@ mustContain(".github/workflows/release.yml", "${dmg}.sig");
 mustContain("scripts/package_windows_portable.mjs", "Data/.keep");
 mustContain("scripts/package_macos_folder_dmg.sh", "Data/.keep");
 mustContain("scripts/package_macos_folder_dmg.sh", "sign_updater_artifact.sh");
+mustContain("scripts/package_macos_folder_dmg.sh", ".app.tar.gz");
 mustContain("LICENSE", "PolyForm Noncommercial License 1.0.0");
 
 if (problems.length) {

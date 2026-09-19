@@ -30,7 +30,7 @@ From `src-tauri` after the frontend build (`pnpm run build`):
 ```bash
 cargo tauri build --bundles nsis      # Windows installer (me / everyone)
 cargo tauri build --bundles appimage  # Linux portable
-cargo tauri build --bundles dmg       # macOS folder + app
+cargo tauri build --bundles app,dmg   # macOS .app + DMG (updater needs app)
 ```
 
 Windows portable zip of the staged exe + empty `Data/` folder (includes

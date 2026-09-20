@@ -1,6 +1,6 @@
 [package]
 name = "DNA-Tools"
-version = "0.2.1"
+version = "0.2.2"
 description = "DNA-Tools"
 authors = ["Roy Dawson IV"]
 license = "PolyForm-Noncommercial-1.0.0"

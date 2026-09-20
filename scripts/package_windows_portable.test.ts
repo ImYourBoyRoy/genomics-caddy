@@ -11,4 +11,13 @@ describe('Windows portable zip', () => {
     expect(result.status, result.stderr || result.stdout).toBe(0);
     expect(result.stdout).toContain('Data/.keep present');
   });
+
+  it('writes a real PKZip without ./ prefixes or duplicate names', () => {
+    const script = resolve(process.cwd(), 'scripts/package_windows_portable.mjs');
+    const result = spawnSync(process.execPath, [script, '--self-test'], {
+      encoding: 'utf8',
+    });
+    expect(result.status, result.stderr || result.stdout).toBe(0);
+    expect(result.stdout).toContain('Windows Explorer-safe zip');
+  });
 });

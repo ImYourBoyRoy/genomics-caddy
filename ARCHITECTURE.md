@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **672**
-- Total size: **23.1 MB** (24,256,646 bytes)
-- Text lines (non-binary): **276,444**
+- Files: **673**
+- Total size: **23.1 MB** (24,265,923 bytes)
+- Text lines (non-binary): **276,697**
 - Directories: **72**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,7 +14,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 17 files, 121.3 KB
+- [`(repository root)`](#repository-root) — 17 files, 121.4 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.1 KB
 - [`.cursor/skills/vector-research-sweep-qa`](#.cursor-skills-vector-research-sweep-qa) — 1 files, 5.3 KB
@@ -23,14 +23,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`docker`](#docker) — 4 files, 5.9 KB
 - [`docs`](#docs) — 1 files, 1.3 KB
 - [`docs/ai-chat`](#docs-ai-chat) — 1 files, 2.5 KB
-- [`docs/build`](#docs-build) — 1 files, 4.3 KB
+- [`docs/build`](#docs-build) — 1 files, 4.6 KB
 - [`docs/development`](#docs-development) — 1 files, 4.6 KB
 - [`docs/mcp`](#docs-mcp) — 1 files, 5.1 KB
 - [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.4 KB
 - [`docs/usage`](#docs-usage) — 1 files, 3.5 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
-- [`scripts`](#scripts) — 46 files, 423.4 KB
-- [`scripts/lib`](#scripts-lib) — 2 files, 11.3 KB
+- [`scripts`](#scripts) — 46 files, 426.0 KB
+- [`scripts/lib`](#scripts-lib) — 3 files, 17.4 KB
 - [`scripts/remote_build`](#scripts-remote_build) — 11 files, 59.8 KB
 - [`src`](#src) — 1 files, 817 B
 - [`src-tauri`](#src-tauri) — 5 files, 4.4 KB
@@ -95,7 +95,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
 | `AGENTS.md` | 5.0 KB | 98 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 77.4 KB | 1,120 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `ARCHITECTURE.md` | 77.5 KB | 1,121 | Non-gitignored file map with sizes, line counts, and one-line roles. |
 | `compile_instructions.md` | 2.4 KB | 82 | Tracked file `compile_instructions.md`. |
 | `LICENSE` | 4.5 KB | 133 | Tracked file `LICENSE`. |
 | `package.json` | 4.7 KB | 98 | Frontend package manifest and npm/pnpm scripts. |
@@ -167,7 +167,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 4.3 KB | 130 | Release builds, Linux launcher, remote compile, Docker. |
+| `README.md` | 4.6 KB | 133 | Release builds, Linux launcher, remote compile, Docker. |
 
 ## `docs/development`
 
@@ -214,7 +214,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `audit_resource_quality.mjs` | 31.2 KB | 604 | Audit curated marker and support resources for evidence, claim-boundary, callability, actionability, and source-registry coverage. |
 | `audit_tauri_report.mjs` | 36.2 KB | 790 | Exercise the running Tauri desktop report through its local UI bridge. |
 | `audit_tauri_update_flow.mjs` | 10.0 KB | 304 | Exercise the desktop Tauri update path against a disposable fixture. |
-| `audit_updater_config.mjs` | 4.9 KB | 112 | Static audit of signed updater pubkey, endpoints, and release wiring. |
+| `audit_updater_config.mjs` | 5.1 KB | 114 | Static audit of signed updater pubkey, endpoints, and release wiring. |
 | `benchmark_build.ps1` | 5.2 KB | 168 | Time Genomics Caddy build-cache purge and/or full production rebuild on Windows. |
 | `benchmark_build.sh` | 5.3 KB | 210 | Time Genomics Caddy build-cache purge and/or full production rebuild on Linux/macOS. |
 | `benchmark_sweep.ps1` | 2.2 KB | 60 | Prints resolved tuning knobs for the current machine (or GENOMICS_CPU_LIMIT) and optionally probes Qdrant/Ollama from .env. |
@@ -228,8 +228,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `migrate_data_to_app.ps1` | 1.4 KB | 42 | One-time copy from legacy ./data to ./App/Data (does not delete source unless -Move). |
 | `package_macos_folder_dmg.sh` | 7.9 KB | 270 | Rebuild the macOS DMG as a folder containing Genomics Caddy.app plus an empty Data/ directory (USB-clean layout). |
 | `package_macos_folder_dmg.test.ts` | 603 B | 14 | Tests for `package_macos_folder_dmg`. |
-| `package_windows_portable.mjs` | 5.8 KB | 175 | Build a USB-clean Windows zip (exe + Data/.keep) for GitHub. |
-| `package_windows_portable.test.ts` | 573 B | 14 | Tests for `package_windows_portable`. |
+| `package_windows_portable.mjs` | 7.9 KB | 233 | Build a USB-clean Windows zip (exe + Data/.keep) for GitHub. |
+| `package_windows_portable.test.ts` | 977 B | 23 | Tests for `package_windows_portable`. |
 | `pnpm_unlocked.mjs` | 3.2 KB | 98 | Resolve pnpm dependencies without retaining a project lockfile. |
 | `preload-typescript6-for-svelte.cjs` | 1.9 KB | 47 | Compatibility shim so Svelte tooling can run while the project uses TypeScript 7. |
 | `print_agent_ui_endpoint.mjs` | 1.4 KB | 41 | Print the live 127.0.0.1 agent-UI URL from the runtime endpoint file. |
@@ -258,6 +258,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | --- | ---: | ---: | --- |
 | `agentUiEndpoint.mjs` | 6.8 KB | 216 | Discover and canonicalize loopback agent-UI / Vite endpoints. |
 | `agentUiEndpoint.test.ts` | 4.5 KB | 134 | Tests for `agentUiEndpoint`. |
+| `write_explorer_zip.py` | 6.1 KB | 180 | Write a PKZip archive Windows Explorer can open. |
 
 ## `scripts/remote_build`
 

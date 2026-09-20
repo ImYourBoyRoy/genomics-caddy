@@ -41,13 +41,16 @@ genomes; other Windows accounts are left alone.
 ## GitHub tagged release
 
 Push a `v*` tag after `master` CI is green. The tag must match
-`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.1`).
+`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.2`).
 Actions runs the same Validate job as pull requests, then
 `tauri-apps/tauri-action@v1` drafts **signed** installers: Windows NSIS
 (`Install for me only` or `Install for everyone`), Ubuntu AppImage, and
 macOS Universal DMG, plus `latest.json` for in-app updates. GitHub does not
 ship MSI, RPM, or `.deb`. A Windows portable zip is attached after the NSIS
-build. The macOS job rebuilds the DMG as a folder containing the `.app` and
+build. That zip is a PKZip of `DNA-Tools.exe` plus `Data/.keep` with no `./`
+prefixes, so Windows Explorer can open it. Do not create it with `tar -a`
+(Windows bsdtar stores `./…` entries that look empty in Explorer; GNU tar
+writes a tar archive named `.zip`). The macOS job rebuilds the DMG as a folder containing the `.app` and
 an empty `Data/` directory. Tauri deletes the live `.app` after it writes the
 DMG, so that rebuild unpacks `Genomics Caddy.app.tar.gz` (and falls back to
 the just-built DMG) instead of looking only at `bundle/macos/*.app`.

@@ -98,6 +98,8 @@ mustContain(".github/workflows/release.yml", "package_macos_folder_dmg.sh");
 mustContain(".github/workflows/release.yml", "sign_updater_artifact.sh");
 mustContain(".github/workflows/release.yml", "${dmg}.sig");
 mustContain("scripts/package_windows_portable.mjs", "Data/.keep");
+mustContain("scripts/package_windows_portable.mjs", "write_explorer_zip.py");
+mustContain("scripts/lib/write_explorer_zip.py", "Explorer-hostile");
 mustContain("scripts/package_macos_folder_dmg.sh", "Data/.keep");
 mustContain("scripts/package_macos_folder_dmg.sh", "sign_updater_artifact.sh");
 mustContain("scripts/package_macos_folder_dmg.sh", ".app.tar.gz");

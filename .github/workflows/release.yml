@@ -1,6 +1,6 @@
 # ./.github/workflows/release.yml
 # Tag-only desktop publish. Quality gate is the reusable CI workflow; this job
-# only builds signed installers after Validate passes. Push a v* tag (e.g. v0.2.1)
+# only builds signed installers after Validate passes. Push a v* tag (e.g. v0.2.2)
 # that matches package.json / tauri.conf.json. Draft GitHub Releases include
 # latest.json for in-app updates. Publish the draft after smoke-checking artifacts.
 # Signing secrets: TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD.

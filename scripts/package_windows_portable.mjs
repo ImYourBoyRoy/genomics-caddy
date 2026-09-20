@@ -3,11 +3,15 @@
 /**
  * Purpose: Build a USB-clean Windows zip (exe + Data/.keep) for GitHub.
  * How to run: `node ./scripts/package_windows_portable.mjs`
- * Optional: `--upload --tag v0.2.1` attaches the zip to the GitHub release.
- *           `--self-test` stages a fake exe, zips it, and asserts Data/.keep.
+ * Optional: `--upload --tag v0.2.2` attaches the zip to the GitHub release.
+ *           `--self-test` stages a fake exe, zips it, and asserts an
+ *           Explorer-safe PKZip with Data/.keep.
  * Inputs: DNA-Tools.exe (and sibling DLLs) under src-tauri/target release dirs.
  * Outputs: `builds/windows/GenomicsCaddy-portable-windows.zip` (gitignored).
  * Operational notes: Does not sign. The NSIS installer remains the updater path.
+ * Zip writer is Python zipfile (not `tar -a`). Windows `tar` stores `./`
+ * prefixes that make Explorer show an empty archive; GNU tar writes a tar
+ * named `.zip`. WinRAR then reports duplicate `./` vs implied current-dir names.
  */
 
 import {
@@ -19,6 +23,7 @@ import {
   rmSync,
   writeFileSync,
   mkdtempSync,
+  readFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,6 +31,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const zipWriter = resolve(root, "scripts/lib/write_explorer_zip.py");
 const args = new Set(process.argv.slice(2));
 const tagIndex = process.argv.indexOf("--tag");
 const tag = tagIndex >= 0 ? process.argv[tagIndex + 1] : process.env.GITHUB_REF_NAME;
@@ -88,26 +94,85 @@ function copyTree(from, to) {
   }
 }
 
+function pythonCmd() {
+  const candidates =
+    process.platform === "win32"
+      ? [
+          ["py", "-3"],
+          ["python"],
+          ["python3"],
+        ]
+      : [
+          ["python3"],
+          ["python"],
+        ];
+  for (const cmd of candidates) {
+    const probe = spawnSync(cmd[0], [...cmd.slice(1), "-c", "import zipfile"], {
+      encoding: "utf8",
+    });
+    if (probe.status === 0) return cmd;
+  }
+  throw new Error("package_windows_portable: Python 3 with zipfile is required");
+}
+
+function runZipWriter(args, options = {}) {
+  const python = pythonCmd();
+  return spawnSync(python[0], [...python.slice(1), zipWriter, ...args], {
+    encoding: "utf8",
+    ...options,
+  });
+}
+
 export function zipStaging(staging, zipPath) {
   mkdirSync(dirname(zipPath), { recursive: true });
   rmSync(zipPath, { force: true });
-  const zip = spawnSync("tar", ["-a", "-c", "-f", zipPath, "-C", staging, "."], {
-    stdio: "inherit",
-  });
+  const zip = runZipWriter(["create", staging, zipPath], { stdio: "inherit" });
   if (zip.status !== 0) {
     throw new Error("package_windows_portable: failed to create zip");
   }
 }
 
 export function listZipEntries(zipPath) {
-  const listed = spawnSync("tar", ["-tf", zipPath], { encoding: "utf8" });
+  const listed = runZipWriter(["audit", zipPath]);
   if (listed.status !== 0) {
-    throw new Error(listed.stderr || "package_windows_portable: failed to list zip");
+    throw new Error(
+      (listed.stderr || listed.stdout || "package_windows_portable: failed to list zip").trim()
+    );
   }
   return listed.stdout.split(/\r?\n/).filter(Boolean);
 }
 
+export function assertExplorerSafeZip(zipPath) {
+  const magic = readFileSync(zipPath).subarray(0, 2);
+  if (magic[0] !== 0x50 || magic[1] !== 0x4b) {
+    throw new Error("package_windows_portable: output is not a PKZip");
+  }
+  const entries = listZipEntries(zipPath);
+  const dotted = entries.filter((entry) => entry === "." || entry === "./" || entry.startsWith("./"));
+  if (dotted.length) {
+    throw new Error(`package_windows_portable: Explorer-hostile ./ entries: ${dotted.join(", ")}`);
+  }
+  const keys = entries.map((entry) => entry.replace(/\\/g, "/").replace(/\/$/, "").toLowerCase());
+  const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+  if (duplicates.length) {
+    throw new Error(`package_windows_portable: duplicate zip names: ${duplicates.join(", ")}`);
+  }
+  if (!entries.includes("Data/.keep")) {
+    throw new Error(`package_windows_portable: zip is missing Data/.keep: ${entries.join(", ")}`);
+  }
+  if (!entries.includes("DNA-Tools.exe") && !entries.includes("DNA-Tools")) {
+    throw new Error(`package_windows_portable: zip is missing DNA-Tools.exe: ${entries.join(", ")}`);
+  }
+  return entries;
+}
+
 function runSelfTest() {
+  const writerTest = runZipWriter(["self-test"]);
+  if (writerTest.status !== 0) {
+    throw new Error((writerTest.stderr || writerTest.stdout || "write_explorer_zip self-test failed").trim());
+  }
+  process.stdout.write(writerTest.stdout);
+
   const work = mkdtempSync(join(tmpdir(), "genomics-caddy-zip-"));
   const fakeRelease = join(work, "release");
   const staging = join(work, "staging");
@@ -116,13 +181,10 @@ function runSelfTest() {
   writeFileSync(join(fakeRelease, "DNA-Tools.exe"), "fake");
   stagePortable(fakeRelease, staging);
   zipStaging(staging, zipPath);
-  const entries = listZipEntries(zipPath);
-  const hasKeep = entries.some((entry) => entry.replace(/\\/g, "/").includes("Data/.keep"));
-  if (!hasKeep) {
-    throw new Error(`zip missing Data/.keep: ${entries.join(", ")}`);
-  }
+  assertExplorerSafeZip(zipPath);
   rmSync(work, { recursive: true, force: true });
   console.log("package_windows_portable self-test: Data/.keep present");
+  console.log("package_windows_portable self-test: Windows Explorer-safe zip");
 }
 
 function main() {
@@ -142,11 +204,7 @@ function main() {
   const zipPath = resolve(root, "builds/windows/GenomicsCaddy-portable-windows.zip");
   stagePortable(releaseDir, staging);
   zipStaging(staging, zipPath);
-  const entries = listZipEntries(zipPath);
-  if (!entries.some((entry) => entry.replace(/\\/g, "/").includes("Data/.keep"))) {
-    console.error("package_windows_portable: zip is missing Data/.keep");
-    process.exit(1);
-  }
+  assertExplorerSafeZip(zipPath);
   console.log(`Wrote ${zipPath}`);
 
   if (upload) {

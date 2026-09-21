@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **687**
-- Total size: **24.8 MB** (25,965,892 bytes)
-- Text lines (non-binary): **278,727**
+- Files: **691**
+- Total size: **24.7 MB** (25,877,081 bytes)
+- Text lines (non-binary): **279,282**
 - Directories: **73**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,27 +14,27 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 17 files, 127.2 KB
+- [`(repository root)`](#repository-root) — 18 files, 129.3 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.1 KB
 - [`.cursor/skills/vector-research-sweep-qa`](#.cursor-skills-vector-research-sweep-qa) — 1 files, 5.3 KB
 - [`.github/workflows`](#.github-workflows) — 2 files, 7.3 KB
 - [`.vscode`](#.vscode) — 2 files, 168 B
 - [`docker`](#docker) — 4 files, 5.9 KB
-- [`docs`](#docs) — 1 files, 1.3 KB
+- [`docs`](#docs) — 1 files, 1.4 KB
 - [`docs/ai-chat`](#docs-ai-chat) — 1 files, 2.5 KB
 - [`docs/build`](#docs-build) — 1 files, 4.9 KB
-- [`docs/development`](#docs-development) — 1 files, 4.7 KB
-- [`docs/images`](#docs-images) — 6 files, 1.6 MB
-- [`docs/mcp`](#docs-mcp) — 1 files, 5.1 KB
+- [`docs/development`](#docs-development) — 1 files, 4.8 KB
+- [`docs/images`](#docs-images) — 7 files, 1.5 MB
+- [`docs/mcp`](#docs-mcp) — 1 files, 5.4 KB
 - [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.6 KB
 - [`docs/usage`](#docs-usage) — 1 files, 3.9 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
-- [`scripts`](#scripts) — 48 files, 439.3 KB
-- [`scripts/lib`](#scripts-lib) — 5 files, 21.3 KB
+- [`scripts`](#scripts) — 48 files, 439.9 KB
+- [`scripts/lib`](#scripts-lib) — 6 files, 23.7 KB
 - [`scripts/remote_build`](#scripts-remote_build) — 11 files, 59.8 KB
 - [`src`](#src) — 1 files, 817 B
-- [`src-tauri`](#src-tauri) — 5 files, 4.9 KB
+- [`src-tauri`](#src-tauri) — 5 files, 5.0 KB
 - [`src-tauri/App/Data/marker-packs`](#src-tauri-app-data-marker-packs) — 25 files, 2.3 MB
 - [`src-tauri/capabilities`](#src-tauri-capabilities) — 1 files, 284 B
 - [`src-tauri/dev-bins`](#src-tauri-dev-bins) — 1 files, 800 B
@@ -59,21 +59,21 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src-tauri/windows`](#src-tauri-windows) — 1 files, 2.0 KB
 - [`src/lib/api`](#src-lib-api) — 1 files, 34.6 KB
 - [`src/lib/components/agent`](#src-lib-components-agent) — 7 files, 66.2 KB
-- [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 120.0 KB
-- [`src/lib/components/ai/evidence`](#src-lib-components-ai-evidence) — 20 files, 104.2 KB
+- [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 119.6 KB
+- [`src/lib/components/ai/evidence`](#src-lib-components-ai-evidence) — 20 files, 103.5 KB
 - [`src/lib/components/ai/settings`](#src-lib-components-ai-settings) — 8 files, 59.9 KB
-- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 82.2 KB
+- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 82.6 KB
 - [`src/lib/components/common/bootstrap`](#src-lib-components-common-bootstrap) — 9 files, 27.1 KB
 - [`src/lib/components/common/loading`](#src-lib-components-common-loading) — 3 files, 5.4 KB
-- [`src/lib/components/context`](#src-lib-components-context) — 3 files, 25.4 KB
+- [`src/lib/components/context`](#src-lib-components-context) — 3 files, 22.7 KB
 - [`src/lib/components/discovery`](#src-lib-components-discovery) — 1 files, 12.5 KB
-- [`src/lib/components/genome`](#src-lib-components-genome) — 2 files, 24.5 KB
+- [`src/lib/components/genome`](#src-lib-components-genome) — 2 files, 25.0 KB
 - [`src/lib/components/import`](#src-lib-components-import) — 1 files, 3.6 KB
 - [`src/lib/components/layout`](#src-lib-components-layout) — 2 files, 8.8 KB
 - [`src/lib/components/legal`](#src-lib-components-legal) — 2 files, 5.2 KB
 - [`src/lib/components/mcp`](#src-lib-components-mcp) — 3 files, 26.2 KB
 - [`src/lib/components/report`](#src-lib-components-report) — 28 files, 301.0 KB
-- [`src/lib/components/research`](#src-lib-components-research) — 21 files, 173.7 KB
+- [`src/lib/components/research`](#src-lib-components-research) — 21 files, 173.0 KB
 - [`src/lib/components/samples`](#src-lib-components-samples) — 1 files, 3.1 KB
 - [`src/lib/components/search`](#src-lib-components-search) — 2 files, 20.6 KB
 - [`src/lib/components/settings`](#src-lib-components-settings) — 2 files, 30.2 KB
@@ -81,11 +81,11 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src/lib/constants`](#src-lib-constants) — 3 files, 2.4 KB
 - [`src/lib/marker-packs`](#src-lib-marker-packs) — 53 files, 3.1 MB
 - [`src/lib/research`](#src-lib-research) — 4 files, 13.8 KB
-- [`src/lib/styles`](#src-lib-styles) — 8 files, 169.7 KB
-- [`src/lib/styles/components`](#src-lib-styles-components) — 24 files, 155.9 KB
+- [`src/lib/styles`](#src-lib-styles) — 8 files, 175.3 KB
+- [`src/lib/styles/components`](#src-lib-styles-components) — 25 files, 158.6 KB
 - [`src/lib/types`](#src-lib-types) — 4 files, 43.5 KB
 - [`src/lib/utils`](#src-lib-utils) — 120 files, 869.3 KB
-- [`src/routes`](#src-routes) — 2 files, 38.3 KB
+- [`src/routes`](#src-routes) — 2 files, 38.4 KB
 - [`static`](#static) — 5 files, 353.0 KB
 
 ## `(repository root)`
@@ -96,14 +96,15 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
 | `AGENTS.md` | 5.0 KB | 98 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 79.2 KB | 1,141 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `ARCHITECTURE.md` | 79.7 KB | 1,145 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `CITATION.cff` | 1.1 KB | 37 | Citation File Format 1.2 so GitHub shows Cite this repository. |
 | `compile_instructions.md` | 3.1 KB | 97 | Tracked file `compile_instructions.md`. |
 | `LICENSE` | 4.5 KB | 133 | Tracked file `LICENSE`. |
-| `package.json` | 4.7 KB | 98 | Frontend package manifest and npm/pnpm scripts. |
+| `package.json` | 5.1 KB | 112 | Frontend package manifest and npm/pnpm scripts. |
 | `paths.md` | 9.7 KB | 168 | Internal research-agent pathway map. |
 | `plan.md` | 1.2 KB | 19 | Legacy enhancement checklist kept in the tree. |
 | `pnpm-workspace.yaml` | 41 B | 2 | pnpm workspace definition. |
-| `README.md` | 7.7 KB | 168 | GitHub-facing product page: badges, per-OS install, first launch, screenshot tour. |
+| `README.md` | 7.8 KB | 170 | GitHub-facing product page: badges, per-OS install, first launch, screenshot tour. |
 | `svelte.config.js` | 885 B | 24 | SvelteKit adapter and preprocessor config. |
 | `tsconfig.json` | 694 B | 19 | TypeScript compiler options for the Svelte app. |
 | `vite.config.js` | 2.9 KB | 97 | Vite bundler config for the Tauri webview. |
@@ -156,7 +157,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 1.3 KB | 23 | Index of operator docs for humans and agents. |
+| `README.md` | 1.4 KB | 24 | Index of operator docs for humans and agents. |
 
 ## `docs/ai-chat`
 
@@ -174,24 +175,25 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 4.7 KB | 132 | Tests, audits, layout, and lock-free install. |
+| `README.md` | 4.8 KB | 135 | Tests, audits, layout, and lock-free install. |
 
 ## `docs/images`
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `readme-chromosome-map-dark.png` | 274.4 KB | — | Tracked file `readme-chromosome-map-dark.png`. |
-| `readme-chromosome-map-light.png` | 239.2 KB | — | Tracked file `readme-chromosome-map-light.png`. |
-| `readme-chromosome-map.webp` | 136.1 KB | — | README animated Dark/Light chromosome map shot with the data sidebar visible. |
-| `readme-report-simple-dark.png` | 321.4 KB | — | Tracked file `readme-report-simple-dark.png`. |
-| `readme-report-simple-light.png` | 322.7 KB | — | Tracked file `readme-report-simple-light.png`. |
-| `readme-report-simple.webp` | 298.3 KB | — | README animated Dark/Light Simple-mode shot with the data sidebar visible. |
+| `github-social-preview.png` | 96.2 KB | — | 1280×640 GitHub social-preview master (upload in repo Settings). |
+| `readme-chromosome-map-dark.png` | 236.5 KB | — | Tracked file `readme-chromosome-map-dark.png`. |
+| `readme-chromosome-map-light.png` | 219.3 KB | — | Tracked file `readme-chromosome-map-light.png`. |
+| `readme-chromosome-map.webp` | 133.0 KB | — | README animated Dark/Light chromosome map shot with the data sidebar visible. |
+| `readme-report-simple-dark.png` | 279.5 KB | — | Tracked file `readme-report-simple-dark.png`. |
+| `readme-report-simple-light.png` | 288.9 KB | — | Tracked file `readme-report-simple-light.png`. |
+| `readme-report-simple.webp` | 241.5 KB | — | README animated Dark/Light Simple-mode shot with the data sidebar visible. |
 
 ## `docs/mcp`
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 5.1 KB | 168 | MCP server flags, client configs, and tool catalog. |
+| `README.md` | 5.4 KB | 173 | MCP server flags, client configs, and tool catalog. |
 
 ## `docs/superpowers/specs`
 
@@ -231,10 +233,10 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `benchmark_build.sh` | 5.3 KB | 210 | Time Genomics Caddy build-cache purge and/or full production rebuild on Linux/macOS. |
 | `benchmark_sweep.ps1` | 2.2 KB | 60 | Prints resolved tuning knobs for the current machine (or GENOMICS_CPU_LIMIT) and optionally probes Qdrant/Ollama from .env. |
 | `build.py` | 16.2 KB | 388 | DNA-Tools remote build engine — CLI entry point. |
-| `capture_readme_screenshots.mjs` | 7.0 KB | 211 | Capture README gallery frames (dark + light) and a looping WebP. |
+| `capture_readme_screenshots.mjs` | 7.5 KB | 222 | Capture README gallery frames (dark + light) and a looping WebP. |
 | `clean_deep.mjs` | 4.8 KB | 125 | Remove project-local, rebuildable frontend and Tauri artifacts. |
 | `content_quality_metrics.mjs` | 30.7 KB | 744 | Privacy-safe content-quality metrics for curated genomic resources. |
-| `generate_architecture.py` | 20.4 KB | 475 | Regenerate ARCHITECTURE.md from the non-gitignored tree. |
+| `generate_architecture.py` | 20.6 KB | 477 | Regenerate ARCHITECTURE.md from the non-gitignored tree. |
 | `generate_synthetic_demo_fixture.mjs` | 4.5 KB | 123 | Build a parser-valid AncestryDNA-format fixture from curated pack rsIDs so docs screenshots can use a genome that is not a real person. |
 | `Inspect-GenomicsRefs.ps1` | 20.2 KB | 664 | requires -Version 7.0. |
 | `install_linux_desktop.sh` | 4.8 KB | 173 | Install FreeDesktop .desktop entry + hicolor icons so Genomics Caddy shows the DNA logo in the GNOME/Ubuntu dock (Wayland) instead of a generic gear. |
@@ -273,6 +275,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `agentUiEndpoint.mjs` | 6.8 KB | 216 | Discover and canonicalize loopback agent-UI / Vite endpoints. |
 | `agentUiEndpoint.test.ts` | 4.5 KB | 134 | Tests for `agentUiEndpoint`. |
 | `capture_window.py` | 2.4 KB | 68 | Capture one named X11 window to PNG and WebP. |
+| `make_github_social_preview.py` | 2.4 KB | 72 | Build the GitHub social-preview PNG (1280×640, under 1 MB). |
 | `make_theme_webp.py` | 1.5 KB | 51 | Build a looping light/dark animated WebP from two still PNG frames. |
 | `write_explorer_zip.py` | 6.1 KB | 180 | Write a PKZip archive Windows Explorer can open. |
 
@@ -304,7 +307,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | --- | ---: | ---: | --- |
 | `.gitignore` | 173 B | 7 | Ignore Cargo target/ and generated Tauri schemas. |
 | `build.rs` | 43 B | 3 | Tauri build script hook. |
-| `Cargo.toml` | 2.6 KB | 79 | Rust crate manifest, edition, dependencies, and production custom-protocol feature. |
+| `Cargo.toml` | 2.7 KB | 80 | Rust crate manifest, edition, dependencies, and production custom-protocol feature. |
 | `desktop.template` | 180 B | 10 | Linux .desktop template for packaged builds. |
 | `tauri.conf.json` | 1.9 KB | 66 | Tauri window, CSP, bundle, updater pubkey, and identifier config. |
 
@@ -646,7 +649,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `ChatSidebar.svelte` | 9.0 KB | 347 | Svelte UI component `ChatSidebar`. |
 | `ChatWindow.svelte` | 10.6 KB | 376 | Svelte UI component `ChatWindow`. |
 | `CycleDiaryEditor.svelte` | 8.5 KB | 311 | Svelte UI component `CycleDiaryEditor`. |
-| `EvidenceLibraryPanel.svelte` | 14.8 KB | 439 | Svelte UI component `EvidenceLibraryPanel`. |
+| `EvidenceLibraryPanel.svelte` | 14.4 KB | 439 | Svelte UI component `EvidenceLibraryPanel`. |
 | `ReproductiveContextEditor.svelte` | 6.4 KB | 219 | Svelte UI component `ReproductiveContextEditor`. |
 | `ReproductiveEditors.styles.test.ts` | 1.2 KB | 27 | CSS/layout tests for `ReproductiveEditors`. |
 | `VectorResearchCitations.svelte` | 10.1 KB | 343 | Svelte UI component `VectorResearchCitations`. |
@@ -668,12 +671,12 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `EvidenceSearchToolbar.svelte` | 8.4 KB | 238 | Svelte UI component `EvidenceSearchToolbar`. |
 | `EvidenceSearchToolbar.tooltip.test.ts` | 687 B | 13 | Tests for `EvidenceSearchToolbar.tooltip`. |
 | `EvidenceSourcesSidebar.svelte` | 2.1 KB | 102 | Svelte UI component `EvidenceSourcesSidebar`. |
-| `FindingsNavigator.svelte` | 11.4 KB | 356 | Svelte UI component `FindingsNavigator`. |
+| `FindingsNavigator.svelte` | 11.1 KB | 356 | Svelte UI component `FindingsNavigator`. |
 | `PathwayFlowPanel.svelte` | 3.3 KB | 111 | Svelte UI component `PathwayFlowPanel`. |
-| `QdrantResultsList.svelte` | 4.8 KB | 125 | Svelte UI component `QdrantResultsList`. |
+| `QdrantResultsList.svelte` | 4.7 KB | 125 | Svelte UI component `QdrantResultsList`. |
 | `SimilarAssociationsPanel.svelte` | 2.8 KB | 95 | Svelte UI component `SimilarAssociationsPanel`. |
 | `TraitClusterPanel.svelte` | 3.5 KB | 104 | Svelte UI component `TraitClusterPanel`. |
-| `VectorAtlasPanel.svelte` | 12.6 KB | 376 | Svelte UI component `VectorAtlasPanel`. |
+| `VectorAtlasPanel.svelte` | 12.3 KB | 376 | Svelte UI component `VectorAtlasPanel`. |
 | `VectorAtlasPanel.tooltip.test.ts` | 1.3 KB | 24 | Tests for `VectorAtlasPanel.tooltip`. |
 | `VectorEvidenceCard.svelte` | 14.3 KB | 457 | Svelte UI component `VectorEvidenceCard`. |
 | `VectorEvidenceTooltip.test.ts` | 1.3 KB | 25 | Tests for `VectorEvidenceTooltip`. |
@@ -706,9 +709,9 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `ImportWorkspaceState.svelte` | 13.2 KB | 468 | Svelte UI component `ImportWorkspaceState`. |
 | `ThemeToggle.styles.test.ts` | 3.3 KB | 69 | CSS/layout tests for `ThemeToggle`. |
 | `ThemeToggle.svelte` | 3.3 KB | 105 | Svelte UI component `ThemeToggle`. |
-| `Tooltip.accessibility.test.ts` | 3.7 KB | 68 | Tests for `Tooltip.accessibility`. |
+| `Tooltip.accessibility.test.ts` | 4.1 KB | 76 | Tests for `Tooltip.accessibility`. |
 | `Tooltip.styles.test.ts` | 1.0 KB | 23 | CSS/layout tests for `Tooltip`. |
-| `Tooltip.svelte` | 9.0 KB | 319 | Svelte UI component `Tooltip`. |
+| `Tooltip.svelte` | 9.0 KB | 323 | Svelte UI component `Tooltip`. |
 | `UpdateBanner.styles.test.ts` | 1.6 KB | 34 | CSS/layout tests for `UpdateBanner`. |
 | `UpdateBanner.svelte` | 1.5 KB | 47 | Dismissible signed-update notification strip. |
 
@@ -738,8 +741,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `ContextPanel.svelte` | 17.2 KB | 347 | Svelte UI component `ContextPanel`. |
-| `ContextWorkspace.contract.test.ts` | 1.8 KB | 40 | Tests for `ContextWorkspace.contract`. |
+| `ContextPanel.svelte` | 13.7 KB | 305 | Svelte UI component `ContextPanel`. |
+| `ContextWorkspace.contract.test.ts` | 2.5 KB | 52 | Tests for `ContextWorkspace.contract`. |
 | `DiaryPanel.svelte` | 6.4 KB | 135 | Svelte UI component `DiaryPanel`. |
 
 ## `src/lib/components/discovery`
@@ -753,7 +756,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `GenomeMap.svelte` | 22.9 KB | 620 | Live database-backed chromosome visualization with interactive zoom, overlays, and comparison views. |
-| `GenomeMap.tooltip.test.ts` | 1.6 KB | 31 | Tests for `GenomeMap.tooltip`. |
+| `GenomeMap.tooltip.test.ts` | 2.2 KB | 41 | Tests for `GenomeMap.tooltip`. |
 
 ## `src/lib/components/import`
 
@@ -820,10 +823,10 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `GnomadSetupPanel.svelte` | 15.3 KB | 507 | Svelte UI component `GnomadSetupPanel`. |
+| `GnomadSetupPanel.svelte` | 14.9 KB | 507 | Svelte UI component `GnomadSetupPanel`. |
 | `OfflineDataPanel.svelte` | 19.2 KB | 582 | Svelte UI component `OfflineDataPanel`. |
 | `OfflineDataPanel.update-state.test.ts` | 2.7 KB | 40 | Tests for `OfflineDataPanel.update-state`. |
-| `PackDraftPanel.svelte` | 6.8 KB | 221 | Export reviewable marker-pack drafts and merge into research_found only. |
+| `PackDraftPanel.svelte` | 6.9 KB | 221 | Export reviewable marker-pack drafts and merge into research_found only. |
 | `ResearchConnectionCard.svelte` | 16.1 KB | 482 | Svelte UI component `ResearchConnectionCard`. |
 | `ResearchConnectionEditForm.svelte` | 5.9 KB | 169 | Svelte UI component `ResearchConnectionEditForm`. |
 | `ResearchConnectionTooltip.test.ts` | 1.2 KB | 24 | Tests for `ResearchConnectionTooltip`. |
@@ -837,7 +840,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `ResearchLiveLog.svelte` | 2.8 KB | 96 | Svelte UI component `ResearchLiveLog`. |
 | `ResearchPanel.svelte` | 24.7 KB | 773 | Svelte UI component `ResearchPanel`. |
 | `ResearchScopeSection.styles.test.ts` | 1.1 KB | 23 | CSS/layout tests for `ResearchScopeSection`. |
-| `ResearchScopeSection.svelte` | 15.3 KB | 464 | Svelte UI component `ResearchScopeSection`. |
+| `ResearchScopeSection.svelte` | 14.9 KB | 464 | Svelte UI component `ResearchScopeSection`. |
 | `ResearchStandaloneTooltip.test.ts` | 780 B | 23 | Tests for `ResearchStandaloneTooltip`. |
 | `ResearchSurfaceTooltip.test.ts` | 1023 B | 19 | Tests for `ResearchSurfaceTooltip`. |
 | `VectorViewerPanel.svelte` | 7.7 KB | 257 | Browse indexed vectors + optional Qdrant named-vector semantic search. |
@@ -957,37 +960,38 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `reportLayout.styles.test.ts` | 5.7 KB | 119 | CSS/layout tests for `reportLayout`. |
 | `reportSeverityTheme.test.ts` | 3.6 KB | 82 | Tests for `reportSeverityTheme`. |
 | `sidebarTheme.test.ts` | 7.1 KB | 147 | Tests for `sidebarTheme`. |
-| `theme.css` | 136.6 KB | 5,648 | Centralized CSS stylesheet for Genomics Caddy glassmorphic theme. |
-| `themeControls.styles.test.ts` | 5.8 KB | 144 | CSS/layout tests for `themeControls`. |
+| `theme.css` | 139.9 KB | 5,746 | Centralized CSS stylesheet for Genomics Caddy glassmorphic theme. |
+| `themeControls.styles.test.ts` | 8.2 KB | 191 | CSS/layout tests for `themeControls`. |
 
 ## `src/lib/styles/components`
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `advanced-settings-section.css` | 5.6 KB | 249 | External stylesheet `advanced-settings-section.css`. |
-| `agent-research-panel.css` | 2.8 KB | 164 | External stylesheet `agent-research-panel.css`. |
-| `ai-assistant-panel.css` | 294 B | 12 | External stylesheet `ai-assistant-panel.css`. |
+| `agent-research-panel.css` | 2.7 KB | 164 | External stylesheet `agent-research-panel.css`. |
+| `ai-assistant-panel.css` | 281 B | 12 | External stylesheet `ai-assistant-panel.css`. |
 | `connections-panel.css` | 8.2 KB | 450 | Advanced → Connections: Ollama + vector DB setup, host probe, model ops. |
-| `discovery-panel.css` | 10.9 KB | 590 | Catalog discovery — premium findings browser. |
+| `context-panel.css` | 4.4 KB | 254 | Profile Context workspace — stacked field chrome that survives WebKitGTK first paint (do not keep these rules in a Svelte scoped <style> block). |
+| `discovery-panel.css` | 11.2 KB | 590 | Catalog discovery — premium findings browser. |
 | `empty-state.css` | 3.0 KB | 168 | External stylesheet `empty-state.css`. |
-| `evidence-corpus-overview.css` | 2.3 KB | 139 | External stylesheet `evidence-corpus-overview.css`. |
-| `evidence-library-panel.css` | 14.0 KB | 675 | External stylesheet `evidence-library-panel.css`. |
-| `findings-navigator.css` | 4.5 KB | 270 | External stylesheet `findings-navigator.css`. |
-| `genome-map.css` | 18.8 KB | 947 | Chromosome Map — proportional karyotype visualization. |
+| `evidence-corpus-overview.css` | 2.2 KB | 139 | External stylesheet `evidence-corpus-overview.css`. |
+| `evidence-library-panel.css` | 13.3 KB | 675 | External stylesheet `evidence-library-panel.css`. |
+| `findings-navigator.css` | 4.2 KB | 270 | External stylesheet `findings-navigator.css`. |
+| `genome-map.css` | 18.4 KB | 959 | Chromosome Map — proportional karyotype visualization. |
 | `global-dialogs.css` | 2.3 KB | 126 | Alert, confirm, and choice overlay using theme tokens. |
 | `library-panel.css` | 1.4 KB | 83 | Sidebar library-folder control using theme tokens. |
-| `local-reference-browser.css` | 6.2 KB | 327 | Local reference catalog browser (ClinVar / PharmGKB / ClinGen / GWAS / MANE). |
+| `local-reference-browser.css` | 6.3 KB | 327 | Local reference catalog browser (ClinVar / PharmGKB / ClinGen / GWAS / MANE). |
 | `report-loading.css` | 1.5 KB | 74 | Trait-report preparation surface. |
-| `research-connection-card.css` | 6.4 KB | 358 | External stylesheet `research-connection-card.css`. |
-| `research-job-controls.css` | 13.8 KB | 717 | External stylesheet `research-job-controls.css`. |
-| `research-live-log.css` | 2.2 KB | 114 | External stylesheet `research-live-log.css`. |
-| `research-panel.css` | 4.9 KB | 246 | External stylesheet `research-panel.css`. |
-| `research-scope-section.css` | 5.9 KB | 325 | External stylesheet `research-scope-section.css`. |
+| `research-connection-card.css` | 6.1 KB | 358 | External stylesheet `research-connection-card.css`. |
+| `research-job-controls.css` | 13.4 KB | 717 | External stylesheet `research-job-controls.css`. |
+| `research-live-log.css` | 2.1 KB | 114 | External stylesheet `research-live-log.css`. |
+| `research-panel.css` | 4.8 KB | 246 | External stylesheet `research-panel.css`. |
+| `research-scope-section.css` | 5.7 KB | 325 | External stylesheet `research-scope-section.css`. |
 | `sidebar.css` | 19.5 KB | 1,016 | Sidebar chrome (profiles, reference-DB controls, progress, sync callouts). |
 | `theme-toggle.css` | 1.8 KB | 79 | Sidebar appearance switcher. |
 | `update-banner.css` | 1.2 KB | 64 | Update banner and app-shell stack layout using theme tokens. |
-| `variant-browser.css` | 6.0 KB | 336 | Raw genotype + reference catalog browser — premium chrome. |
-| `vector-workbench.css` | 12.4 KB | 725 | Vector Research workbench: viewer, pack drafts, secondary tabs. |
+| `variant-browser.css` | 6.2 KB | 335 | Raw genotype + reference catalog browser — premium chrome. |
+| `vector-workbench.css` | 12.8 KB | 725 | Vector Research workbench: viewer, pack drafts, secondary tabs. |
 
 ## `src/lib/types`
 
@@ -1128,7 +1132,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `+layout.ts` | 295 B | 5 | SvelteKit route for the single-page desktop shell. |
-| `+page.svelte` | 38.0 KB | 1,048 | SvelteKit route for the single-page desktop shell. |
+| `+page.svelte` | 38.1 KB | 1,049 | SvelteKit route for the single-page desktop shell. |
 
 ## `static`
 

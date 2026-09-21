@@ -14,6 +14,7 @@ file instead of scanning the whole repository.
 | How do I compile extra packages (deb/rpm) locally? | [../compile_instructions.md](../compile_instructions.md) |
 | How do I run tests and avoid committing private data? | [development/README.md](development/README.md) |
 | What does each tracked file do? | [../ARCHITECTURE.md](../ARCHITECTURE.md) |
+| How should I cite the software? | [../CITATION.cff](../CITATION.cff) |
 | How do I run the headless sweep worker? | [../docker/README.md](../docker/README.md) |
 
 Repo-local agent rules live in [AGENTS.md](../AGENTS.md). Session notes belong

@@ -24,6 +24,8 @@ BIN_EXT = {".png", ".webp", ".ico", ".icns", ".woff", ".woff2", ".wasm"}
 
 EXPLICIT = {
     "README.md": "GitHub-facing product page: badges, per-OS install, first launch, screenshot tour.",
+    "CITATION.cff": "Citation File Format 1.2 so GitHub shows Cite this repository.",
+    "docs/images/github-social-preview.png": "1280×640 GitHub social-preview master (upload in repo Settings).",
     "AGENTS.md": "Repo-local agent rules: packs, privacy, and validation gates.",
     "ARCHITECTURE.md": "Non-gitignored file map with sizes, line counts, and one-line roles.",
     ".gitignore": "Ignore rules for DNA, reports, builds, env, and local memory.",

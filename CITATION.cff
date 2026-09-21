@@ -1,0 +1,37 @@
+# ./CITATION.cff
+# Citation File Format 1.2.0 — GitHub shows “Cite this repository” from this file.
+# Keep version in sync with package.json / src-tauri/tauri.conf.json when tagging.
+
+cff-version: 1.2.0
+message: If you use Genomics Caddy, please cite it as below.
+type: software
+title: Genomics Caddy
+version: 0.2.4
+date-released: 2026-09-21
+abstract: >-
+  Local-first desktop DNA explorer for AncestryDNA and 23andMe SNP exports.
+  Trait and pharmacogenomics reports, optional Ollama chat, and a stdin/stdout
+  MCP server run on the operator’s machine. Research and education only —
+  not a diagnostic or treatment product.
+authors:
+  - family-names: Dawson
+    given-names: Roy
+    name-suffix: IV
+    email: Roy.Dawson.IV@gmail.com
+    website: https://github.com/ImYourBoyRoy
+repository-code: https://github.com/ImYourBoyRoy/genomics-caddy
+url: https://github.com/ImYourBoyRoy/genomics-caddy
+license: PolyForm-Noncommercial-1.0.0
+keywords:
+  - personal genomics
+  - AncestryDNA
+  - 23andMe
+  - SNP
+  - pharmacogenomics
+  - bioinformatics
+  - Model Context Protocol
+  - MCP
+  - local-first
+  - privacy
+  - Tauri
+  - Rust

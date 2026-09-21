@@ -1,7 +1,7 @@
 {
   "name": "genomics-caddy",
   "version": "0.2.4",
-  "description": "",
+  "description": "Local-first desktop DNA explorer for AncestryDNA and 23andMe. Trait reports, pharmacogenomics, optional Ollama chat, and an MCP server.",
   "type": "module",
   "engines": {
     "node": ">=26"
@@ -67,6 +67,20 @@
     "build:remote:linux:clean": "python scripts/build.py --target linux --clean",
     "build:remote:lint": "python scripts/build.py --target mac linux --lint-only"
   },
+  "keywords": [
+    "genomics",
+    "dna",
+    "personal-genomics",
+    "ancestrydna",
+    "23andme",
+    "bioinformatics",
+    "pharmacogenomics",
+    "mcp",
+    "tauri",
+    "svelte",
+    "privacy",
+    "local-first"
+  ],
   "license": "PolyForm-Noncommercial-1.0.0",
   "dependencies": {
     "@tauri-apps/api": "2.11.1",

@@ -6,8 +6,9 @@
 
 <p align="center">
   <strong>Local-first desktop DNA explorer.</strong><br>
-  Import your AncestryDNA or 23andMe file, read a Simple-first report on this
-  machine, and optionally talk to a local AI. Nothing is uploaded to us.
+  Import AncestryDNA or 23andMe SNP files, read Simple-first trait and
+  pharmacogenomics reports on this machine, and optionally use Ollama or the
+  built-in MCP server. Nothing is uploaded to us.
 </p>
 
 <p align="center">
@@ -156,6 +157,7 @@ Simple mode is the public-safe view (no raw calls on the cards).
 | Clone the repo, tests, lock-free install | [Development](docs/development/README.md) |
 | Build a `.deb` / `.rpm` or extra OS package | [Compile instructions](compile_instructions.md) |
 | File map | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Cite this software | [CITATION.cff](CITATION.cff) |
 
 ## License
 

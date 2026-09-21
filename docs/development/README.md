@@ -27,6 +27,13 @@ git tag v0.2.4
 git push origin v0.2.4
 ```
 
+Keep `CITATION.cff` `version` / `date-released` aligned with that tag so GitHub’s
+**Cite this repository** prompt matches the signed release.
+
+After changing `docs/images/github-social-preview.png`, upload it in GitHub
+**Settings → General → Social preview** (1280×640 PNG, under 1 MB). GitHub does
+not pick that file up from the repo automatically.
+
 `.github/workflows/release.yml` waits for Validate, then uses
 `tauri-apps/tauri-action@v1` to build signed Windows, Linux, and macOS
 Universal installers as a **draft** GitHub Release and upload

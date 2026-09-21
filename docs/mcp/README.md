@@ -4,6 +4,11 @@ Genomics Caddy embeds a stdin/stdout [Model Context Protocol](https://modelconte
 server so local agents can query imported profiles without uploading DNA to a
 third-party host.
 
+- MCP Registry name: `mcp-name: io.github.ImYourBoyRoy/genomics-caddy`
+
+The desktop binary is the MCP server (`DNA-Tools --mcp`). There is no separate
+npm/crates MCP package yet; wire clients to the installed or portable binary.
+
 Read-only tools are the default. Mutating tools require `--mcp-write`.
 Connected Chat and report exports that include findings still carry raw
 genotype calls for those findings; treat MCP query results as sensitive.

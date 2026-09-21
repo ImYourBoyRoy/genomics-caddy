@@ -41,16 +41,17 @@ genomes; other Windows accounts are left alone.
 ## GitHub tagged release
 
 Push a `v*` tag after `master` CI is green. The tag must match
-`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.2`).
+`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.3`).
 Actions runs the same Validate job as pull requests, then
 `tauri-apps/tauri-action@v1` drafts **signed** installers: Windows NSIS
 (`Install for me only` or `Install for everyone`), Ubuntu AppImage, and
 macOS Universal DMG, plus `latest.json` for in-app updates. GitHub does not
 ship MSI, RPM, or `.deb`. A Windows portable zip is attached after the NSIS
 build. That zip is a PKZip of `DNA-Tools.exe` plus `Data/.keep` with no `./`
-prefixes, so Windows Explorer can open it. Do not create it with `tar -a`
-(Windows bsdtar stores `./…` entries that look empty in Explorer; GNU tar
-writes a tar archive named `.zip`). The macOS job rebuilds the DMG as a folder containing the `.app` and
+prefixes, so Windows Explorer can open it, and the job signs it with the
+same minisign key (`GenomicsCaddy-portable-windows.zip.sig`). Do not create
+it with `tar -a` (Windows bsdtar stores `./…` entries that look empty in
+Explorer; GNU tar writes a tar archive named `.zip`). The macOS job rebuilds the DMG as a folder containing the `.app` and
 an empty `Data/` directory. Tauri deletes the live `.app` after it writes the
 DMG, so that rebuild unpacks `Genomics Caddy.app.tar.gz` (and falls back to
 the just-built DMG) instead of looking only at `bundle/macos/*.app`.
@@ -59,14 +60,18 @@ Other formats: [compile_instructions.md](../../compile_instructions.md).
 Publish the draft from the GitHub Releases UI after you inspect artifacts.
 
 The desktop app checks that endpoint quietly on launch. A dismissible banner
-offers the new version; Install asks for confirmation, then downloads the
-signed artifact and relaunches. It does not upload DNA or reports.
+offers the new version; confirm then downloads the signed artifact. Windows
+NSIS, Linux AppImage, and macOS use the plugin updater. A Windows portable
+zip copy downloads the signed zip, verifies it, replaces files next to the
+exe, and leaves `Data/` alone. Closing the window is blocked while an update
+is in progress so the process cannot keep running after the UI is gone. It
+does not upload DNA or reports.
 
-In-app updates apply to GitHub-published installers. A local portable `App/`
-copy and `tauri dev` may check GitHub but are not the supported install path
-for applying those artifacts. The first signed release is the baseline;
-older unsigned copies will not self-update until someone installs a signed
-build once.
+`tauri dev` and debug builds may check GitHub but do not apply artifacts.
+Copies built before v0.2.3 still follow the NSIS plugin path until someone
+replaces them with a newer zip or installer. The first signed release is the
+baseline; older unsigned copies will not self-update until someone installs
+a signed build once.
 
 Signing uses repo secrets `TAURI_SIGNING_PRIVATE_KEY` and
 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. The public key lives in

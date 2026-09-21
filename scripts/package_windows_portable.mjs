@@ -3,15 +3,18 @@
 /**
  * Purpose: Build a USB-clean Windows zip (exe + Data/.keep) for GitHub.
  * How to run: `node ./scripts/package_windows_portable.mjs`
- * Optional: `--upload --tag v0.2.2` attaches the zip to the GitHub release.
- *           `--self-test` stages a fake exe, zips it, and asserts an
- *           Explorer-safe PKZip with Data/.keep.
+ * Optional: `--upload --tag v0.2.3` signs the zip and attaches zip + `.sig`
+ *           to the GitHub release. `--self-test` stages a fake exe, zips it,
+ *           and asserts an Explorer-safe PKZip with Data/.keep.
  * Inputs: DNA-Tools.exe (and sibling DLLs) under src-tauri/target release dirs.
- * Outputs: `builds/windows/GenomicsCaddy-portable-windows.zip` (gitignored).
- * Operational notes: Does not sign. The NSIS installer remains the updater path.
- * Zip writer is Python zipfile (not `tar -a`). Windows `tar` stores `./`
- * prefixes that make Explorer show an empty archive; GNU tar writes a tar
- * named `.zip`. WinRAR then reports duplicate `./` vs implied current-dir names.
+ * Outputs: `builds/windows/GenomicsCaddy-portable-windows.zip` (gitignored)
+ *          and, on `--upload`, the matching `.sig`.
+ * Operational notes: Upload signs with the same Tauri minisign key as NSIS.
+ * In-app portable copies replace themselves from that zip; NSIS still uses
+ * the plugin updater. Zip writer is Python zipfile (not `tar -a`). Windows
+ * `tar` stores `./` prefixes that make Explorer show an empty archive; GNU
+ * tar writes a tar named `.zip`. WinRAR then reports duplicate `./` vs
+ * implied current-dir names.
  */
 
 import {
@@ -166,6 +169,22 @@ export function assertExplorerSafeZip(zipPath) {
   return entries;
 }
 
+function signPortableZip(zipPath) {
+  const cli = resolve(root, "node_modules/@tauri-apps/cli/tauri.js");
+  if (!existsSync(cli)) {
+    throw new Error("package_windows_portable: Tauri CLI missing; cannot sign the zip");
+  }
+  const signed = spawnSync(process.execPath, [cli, "signer", "sign", zipPath], {
+    stdio: "inherit",
+  });
+  if (signed.status !== 0) {
+    throw new Error("package_windows_portable: failed to sign the portable zip");
+  }
+  if (!existsSync(`${zipPath}.sig`)) {
+    throw new Error("package_windows_portable: expected a .sig next to the zip");
+  }
+}
+
 function runSelfTest() {
   const writerTest = runZipWriter(["self-test"]);
   if (writerTest.status !== 0) {
@@ -212,9 +231,12 @@ function main() {
       console.error("package_windows_portable: --upload needs --tag or GITHUB_REF_NAME");
       process.exit(1);
     }
-    const gh = spawnSync("gh", ["release", "upload", tag, zipPath, "--clobber"], {
-      stdio: "inherit",
-    });
+    signPortableZip(zipPath);
+    const gh = spawnSync(
+      "gh",
+      ["release", "upload", tag, zipPath, `${zipPath}.sig`, "--clobber"],
+      { stdio: "inherit" },
+    );
     if (gh.status !== 0) {
       console.error("package_windows_portable: gh release upload failed");
       process.exit(gh.status ?? 1);

@@ -292,7 +292,7 @@ pub fn current_username() -> String {
         .unwrap_or_else(|_| "default".to_string())
 }
 
-fn dir_is_writable(path: &Path) -> bool {
+pub(crate) fn dir_is_writable(path: &Path) -> bool {
     if path.exists() {
         let probe = path.join(".write_test");
         if fs::write(&probe, b"").is_ok() {

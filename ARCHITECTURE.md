@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **673**
-- Total size: **23.1 MB** (24,265,923 bytes)
-- Text lines (non-binary): **276,697**
+- Files: **674**
+- Total size: **23.2 MB** (24,290,790 bytes)
+- Text lines (non-binary): **277,360**
 - Directories: **72**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,26 +14,26 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 17 files, 121.4 KB
+- [`(repository root)`](#repository-root) — 17 files, 121.7 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.1 KB
 - [`.cursor/skills/vector-research-sweep-qa`](#.cursor-skills-vector-research-sweep-qa) — 1 files, 5.3 KB
-- [`.github/workflows`](#.github-workflows) — 2 files, 7.1 KB
+- [`.github/workflows`](#.github-workflows) — 2 files, 7.3 KB
 - [`.vscode`](#.vscode) — 2 files, 168 B
 - [`docker`](#docker) — 4 files, 5.9 KB
 - [`docs`](#docs) — 1 files, 1.3 KB
 - [`docs/ai-chat`](#docs-ai-chat) — 1 files, 2.5 KB
-- [`docs/build`](#docs-build) — 1 files, 4.6 KB
+- [`docs/build`](#docs-build) — 1 files, 4.9 KB
 - [`docs/development`](#docs-development) — 1 files, 4.6 KB
 - [`docs/mcp`](#docs-mcp) — 1 files, 5.1 KB
-- [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.4 KB
+- [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.6 KB
 - [`docs/usage`](#docs-usage) — 1 files, 3.5 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
-- [`scripts`](#scripts) — 46 files, 426.0 KB
+- [`scripts`](#scripts) — 46 files, 427.3 KB
 - [`scripts/lib`](#scripts-lib) — 3 files, 17.4 KB
 - [`scripts/remote_build`](#scripts-remote_build) — 11 files, 59.8 KB
 - [`src`](#src) — 1 files, 817 B
-- [`src-tauri`](#src-tauri) — 5 files, 4.4 KB
+- [`src-tauri`](#src-tauri) — 5 files, 4.5 KB
 - [`src-tauri/App/Data/marker-packs`](#src-tauri-app-data-marker-packs) — 25 files, 2.3 MB
 - [`src-tauri/capabilities`](#src-tauri-capabilities) — 1 files, 284 B
 - [`src-tauri/dev-bins`](#src-tauri-dev-bins) — 1 files, 670 B
@@ -48,7 +48,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src-tauri/icons/android/values`](#src-tauri-icons-android-values) — 1 files, 115 B
 - [`src-tauri/icons/ios`](#src-tauri-icons-ios) — 18 files, 1.4 MB
 - [`src-tauri/linux`](#src-tauri-linux) — 2 files, 949 B
-- [`src-tauri/src`](#src-tauri-src) — 21 files, 670.5 KB
+- [`src-tauri/src`](#src-tauri-src) — 22 files, 686.5 KB
 - [`src-tauri/src/offline`](#src-tauri-src-offline) — 16 files, 249.2 KB
 - [`src-tauri/src/research`](#src-tauri-src-research) — 25 files, 397.1 KB
 - [`src-tauri/src/research/evidence`](#src-tauri-src-research-evidence) — 22 files, 231.9 KB
@@ -61,7 +61,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 120.0 KB
 - [`src/lib/components/ai/evidence`](#src-lib-components-ai-evidence) — 20 files, 104.2 KB
 - [`src/lib/components/ai/settings`](#src-lib-components-ai-settings) — 8 files, 59.9 KB
-- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 80.8 KB
+- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 82.2 KB
 - [`src/lib/components/common/bootstrap`](#src-lib-components-common-bootstrap) — 9 files, 27.1 KB
 - [`src/lib/components/common/loading`](#src-lib-components-common-loading) — 3 files, 5.4 KB
 - [`src/lib/components/context`](#src-lib-components-context) — 3 files, 25.4 KB
@@ -83,7 +83,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src/lib/styles`](#src-lib-styles) — 8 files, 169.7 KB
 - [`src/lib/styles/components`](#src-lib-styles-components) — 24 files, 155.9 KB
 - [`src/lib/types`](#src-lib-types) — 4 files, 43.5 KB
-- [`src/lib/utils`](#src-lib-utils) — 120 files, 864.8 KB
+- [`src/lib/utils`](#src-lib-utils) — 120 files, 869.3 KB
 - [`src/routes`](#src-routes) — 2 files, 38.3 KB
 - [`static`](#static) — 5 files, 353.0 KB
 
@@ -95,14 +95,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
 | `AGENTS.md` | 5.0 KB | 98 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 77.5 KB | 1,121 | Non-gitignored file map with sizes, line counts, and one-line roles. |
-| `compile_instructions.md` | 2.4 KB | 82 | Tracked file `compile_instructions.md`. |
+| `ARCHITECTURE.md` | 77.6 KB | 1,122 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `compile_instructions.md` | 2.5 KB | 83 | Tracked file `compile_instructions.md`. |
 | `LICENSE` | 4.5 KB | 133 | Tracked file `LICENSE`. |
 | `package.json` | 4.7 KB | 98 | Frontend package manifest and npm/pnpm scripts. |
 | `paths.md` | 9.7 KB | 168 | Internal research-agent pathway map. |
 | `plan.md` | 1.2 KB | 19 | Legacy enhancement checklist kept in the tree. |
 | `pnpm-workspace.yaml` | 41 B | 2 | pnpm workspace definition. |
-| `README.md` | 4.3 KB | 111 | GitHub-facing product page, warning, and quick start. |
+| `README.md` | 4.5 KB | 114 | GitHub-facing product page, warning, and quick start. |
 | `svelte.config.js` | 885 B | 24 | SvelteKit adapter and preprocessor config. |
 | `tsconfig.json` | 694 B | 19 | TypeScript compiler options for the Svelte app. |
 | `vite.config.js` | 2.9 KB | 97 | Vite bundler config for the Tauri webview. |
@@ -133,7 +133,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `ci.yml` | 2.4 KB | 97 | PR and master Validate workflow, including updater-config audit. |
-| `release.yml` | 4.7 KB | 139 | Tag publish: signed installers and latest.json for in-app updates. |
+| `release.yml` | 4.9 KB | 141 | Tag publish: signed installers and latest.json for in-app updates. |
 
 ## `.vscode`
 
@@ -167,7 +167,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 4.6 KB | 133 | Release builds, Linux launcher, remote compile, Docker. |
+| `README.md` | 4.9 KB | 138 | Release builds, Linux launcher, remote compile, Docker. |
 
 ## `docs/development`
 
@@ -185,7 +185,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `2026-09-18-portable-data-license-design.md` | 5.4 KB | 135 | Tracked file `2026-09-18-portable-data-license-design.md`. |
+| `2026-09-18-portable-data-license-design.md` | 5.6 KB | 136 | Tracked file `2026-09-18-portable-data-license-design.md`. |
 
 ## `docs/usage`
 
@@ -214,7 +214,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `audit_resource_quality.mjs` | 31.2 KB | 604 | Audit curated marker and support resources for evidence, claim-boundary, callability, actionability, and source-registry coverage. |
 | `audit_tauri_report.mjs` | 36.2 KB | 790 | Exercise the running Tauri desktop report through its local UI bridge. |
 | `audit_tauri_update_flow.mjs` | 10.0 KB | 304 | Exercise the desktop Tauri update path against a disposable fixture. |
-| `audit_updater_config.mjs` | 5.1 KB | 114 | Static audit of signed updater pubkey, endpoints, and release wiring. |
+| `audit_updater_config.mjs` | 5.6 KB | 121 | Static audit of signed updater pubkey, endpoints, and release wiring. |
 | `benchmark_build.ps1` | 5.2 KB | 168 | Time Genomics Caddy build-cache purge and/or full production rebuild on Windows. |
 | `benchmark_build.sh` | 5.3 KB | 210 | Time Genomics Caddy build-cache purge and/or full production rebuild on Linux/macOS. |
 | `benchmark_sweep.ps1` | 2.2 KB | 60 | Prints resolved tuning knobs for the current machine (or GENOMICS_CPU_LIMIT) and optionally probes Qdrant/Ollama from .env. |
@@ -228,7 +228,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `migrate_data_to_app.ps1` | 1.4 KB | 42 | One-time copy from legacy ./data to ./App/Data (does not delete source unless -Move). |
 | `package_macos_folder_dmg.sh` | 7.9 KB | 270 | Rebuild the macOS DMG as a folder containing Genomics Caddy.app plus an empty Data/ directory (USB-clean layout). |
 | `package_macos_folder_dmg.test.ts` | 603 B | 14 | Tests for `package_macos_folder_dmg`. |
-| `package_windows_portable.mjs` | 7.9 KB | 233 | Build a USB-clean Windows zip (exe + Data/.keep) for GitHub. |
+| `package_windows_portable.mjs` | 8.7 KB | 255 | Build a USB-clean Windows zip (exe + Data/.keep) for GitHub. |
 | `package_windows_portable.test.ts` | 977 B | 23 | Tests for `package_windows_portable`. |
 | `pnpm_unlocked.mjs` | 3.2 KB | 98 | Resolve pnpm dependencies without retaining a project lockfile. |
 | `preload-typescript6-for-svelte.cjs` | 1.9 KB | 47 | Compatibility shim so Svelte tooling can run while the project uses TypeScript 7. |
@@ -288,7 +288,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | --- | ---: | ---: | --- |
 | `.gitignore` | 173 B | 7 | Ignore Cargo target/ and generated Tauri schemas. |
 | `build.rs` | 43 B | 3 | Tauri build script hook. |
-| `Cargo.toml` | 2.2 KB | 71 | Rust crate manifest, edition, dependencies, and production custom-protocol feature. |
+| `Cargo.toml` | 2.2 KB | 73 | Rust crate manifest, edition, dependencies, and production custom-protocol feature. |
 | `desktop.template` | 180 B | 10 | Linux .desktop template for packaged builds. |
 | `tauri.conf.json` | 1.9 KB | 66 | Tauri window, CSP, bundle, updater pubkey, and identifier config. |
 
@@ -460,13 +460,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `db_runtime.rs` | 1.0 KB | 33 | Run SQLite work on blocking threads so the Tauri webview stays responsive. |
 | `file_utils.rs` | 2.9 KB | 83 | Rust backend `file_utils`. |
 | `inference_host.rs` | 21.3 KB | 635 | Dynamic inference-host and Ollama model capability discovery. |
-| `lib.rs` | 87.1 KB | 2,296 | Tauri library entry point and command handler declarations. |
+| `lib.rs` | 87.6 KB | 2,307 | Tauri library entry point and command handler declarations. |
 | `library.rs` | 29.6 KB | 863 | Resolve, display, and relocate the personal Genomics Caddy library folder. |
 | `liftover.rs` | 15.5 KB | 430 | Memory-efficient coordinate liftover (GRCh37 → GRCh38) using UCSC chain files. |
 | `main.rs` | 3.1 KB | 84 | Entry point for the Tauri app. |
 | `mcp.rs` | 82.9 KB | 1,972 | Model Context Protocol (MCP) server implementation for genomic database interaction. |
 | `parser.rs` | 27.8 KB | 719 | Validated parser for raw genomic data files (AncestryDNA and 23andMe formats), including CSV/TSV files and ZIP archives. |
 | `paths.rs` | 9.2 KB | 274 | Resolve portable application data paths for Genomics Caddy. |
+| `portable_update.rs` | 15.6 KB | 436 | Rust backend `portable_update`. |
 | `report.rs` | 132.2 KB | 3,421 | Direction-aware, template-based report generator for genetic trait profiling. |
 | `service_ops.rs` | 15.2 KB | 428 | Ollama / vector-DB service operations for Advanced → Connections. |
 | `stream_control.rs` | 2.0 KB | 69 | Cooperative cancellation and namespaced events for Ollama streaming. |
@@ -677,7 +678,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | --- | ---: | ---: | --- |
 | `AppBootstrapScreen.styles.test.ts` | 7.4 KB | 129 | CSS/layout tests for `AppBootstrapScreen`. |
 | `AppBootstrapScreen.svelte` | 20.4 KB | 661 | Svelte UI component `AppBootstrapScreen`. |
-| `AppUpdateHost.svelte` | 3.5 KB | 104 | Launch-time updater host: banner, confirm, download, relaunch. |
+| `AppUpdateHost.svelte` | 4.6 KB | 136 | Launch-time updater host: banner, confirm, download, relaunch. |
 | `EmptyState.copy.test.ts` | 794 B | 16 | Tests for `EmptyState.copy`. |
 | `EmptyState.svelte` | 5.3 KB | 135 | Welcome / onboarding screen when no genome profile is selected. |
 | `GlobalDialogs.styles.test.ts` | 1.6 KB | 40 | CSS/layout tests for `GlobalDialogs`. |
@@ -690,7 +691,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `Tooltip.styles.test.ts` | 1.0 KB | 23 | CSS/layout tests for `Tooltip`. |
 | `Tooltip.svelte` | 9.0 KB | 319 | Svelte UI component `Tooltip`. |
 | `UpdateBanner.styles.test.ts` | 1.6 KB | 34 | CSS/layout tests for `UpdateBanner`. |
-| `UpdateBanner.svelte` | 1.3 KB | 36 | Dismissible signed-update notification strip. |
+| `UpdateBanner.svelte` | 1.5 KB | 47 | Dismissible signed-update notification strip. |
 
 ## `src/lib/components/common/bootstrap`
 
@@ -1092,8 +1093,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `tooltipPosition.ts` | 2.9 KB | 88 | Calculate a fixed tooltip panel position without allowing it outside the visible viewport. |
 | `uiLabels.test.ts` | 1.1 KB | 21 | Tests for `uiLabels`. |
 | `uiLabels.ts` | 796 B | 24 | Normalize user-facing labels for deterministic local UI automation. |
-| `updater.test.ts` | 5.2 KB | 148 | Tests for `updater`. |
-| `updater.ts` | 4.8 KB | 171 | Quiet GitHub update check, dismissal, and confirm-to-install helpers. |
+| `updater.test.ts` | 7.6 KB | 211 | Tests for `updater`. |
+| `updater.ts` | 6.9 KB | 237 | Quiet GitHub update check, dismissal, and confirm-to-install helpers. |
 | `urlSafety.test.ts` | 1.3 KB | 33 | Tests for `urlSafety`. |
 | `urlSafety.ts` | 974 B | 26 | Safe URL helpers for dynamic href attributes in the Tauri webview. |
 | `userFinding.ts` | 7.2 KB | 173 | Converts normalized evidence cards into user-facing finding summaries. |

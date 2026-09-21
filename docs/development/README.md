@@ -22,8 +22,8 @@ Pull requests and pushes to `master` run `.github/workflows/ci.yml`
 That same job is required before a tagged desktop publish.
 
 ```bash
-git tag v0.2.2
-git push origin v0.2.2
+git tag v0.2.3
+git push origin v0.2.3
 ```
 
 `.github/workflows/release.yml` waits for Validate, then uses

@@ -34,7 +34,8 @@ cargo tauri build --bundles app,dmg   # macOS .app + DMG (updater needs app)
 ```
 
 Windows portable zip of the staged exe + empty `Data/` folder (includes
-`Data/.keep` so the directory survives zip):
+`Data/.keep` so the directory survives zip). `--upload` minisign-signs the
+zip so in-app portable copies can replace themselves:
 
 ```bash
 node ./scripts/package_windows_portable.mjs

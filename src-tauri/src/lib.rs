@@ -75,6 +75,7 @@ mod db_runtime;
 pub mod file_utils;
 pub mod inference_host;
 pub mod library;
+mod portable_update;
 pub mod liftover;
 pub mod mcp;
 pub mod offline;
@@ -2138,6 +2139,13 @@ pub fn run() {
                         ),
                     );
                 }
+                window.on_window_event(|event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        if crate::portable_update::update_in_progress() {
+                            api.prevent_close();
+                        }
+                    }
+                });
             }
             Ok(())
         })
@@ -2153,6 +2161,9 @@ pub fn run() {
             library::set_library_dir,
             library::reset_library_dir,
             library::erase_library_data,
+            portable_update::get_update_channel,
+            portable_update::set_update_in_progress,
+            portable_update::apply_portable_update,
             get_all_marker_packs,
             get_marker_pack_warnings,
             reload_marker_packs,

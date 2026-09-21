@@ -10,7 +10,7 @@ describe('signed update banner', () => {
     expect(source).toContain('role="status"');
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('class="app-update-banner no-print"');
-    expect(source).toContain("installing ? 'Installing…' : 'Install…'");
+    expect(source).toContain("kind === 'portable' ? 'Replace…' : 'Install…'");
     expect(source).toContain('Not now');
   });
 
@@ -25,10 +25,10 @@ describe('signed update banner', () => {
     expect(host).toContain('checkForAppUpdate({ quiet: true');
     expect(host).toContain('isTauri()');
     expect(host).toContain('dialogStore.confirm(');
-    expect(host).toContain('it does not upload your DNA or reports');
-    expect(host).toContain('confirmed: true');
+    expect(host).toContain("installKind === 'portable' ? 'Replace this copy' : 'Install update'");
+    expect(host).toContain('kind: installKind');
     expect(host).toContain("dialogStore.alert(");
-    expect(host).toContain('Could not install the signed update.');
+    expect(host).toContain('Could not apply the signed update.');
     expect(host).not.toContain('throw error');
   });
 });

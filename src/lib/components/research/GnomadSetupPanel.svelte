@@ -198,7 +198,7 @@
       </p>
     </div>
     {#if loading}
-      <ActivityPulse message="Checking setup…" accent="#38bdf8" maxWidth="140px" />
+      <ActivityPulse message="Checking setup…" accent="var(--status-info-text)" maxWidth="140px" />
     {:else if readiness}
       <span class:status-pill={true} class:ok={gnomadReady && frequencyCacheReady} class:warn={!gnomadReady || (gnomadReady && !frequencyCacheReady)}>
         {#if !readiness.enabled}

@@ -1,9 +1,9 @@
 # Compile instructions
 
-GitHub releases ship three shapes: Windows NSIS (`Install for me only` or
+GitHub releases ship four artifacts: Windows NSIS (`Install for me only` or
 `Install for everyone`), a Windows portable zip, a Linux AppImage, and a
-macOS universal DMG. Use this page when you want another package format or a
-local replica of those artifacts.
+macOS universal DMG. Use this page when you want another package format
+(Ubuntu `.deb`, Fedora `.rpm`) or a local replica of those artifacts.
 
 Needs **Node 26+**, current **Rust** (see `src-tauri/Cargo.toml`), and **pnpm**.
 The repo is lock-free: do not pass `--locked` to Cargo, and resolve JavaScript
@@ -54,16 +54,30 @@ key.
 
 ## Other package formats (not GitHub)
 
-These stay off GitHub because `/usr` cannot keep DNA next to the binary.
+Ubuntu/Debian `.deb` and Fedora `.rpm` are the **non-portable Linux
+installers**. They stay off GitHub Releases because `/usr` cannot keep DNA
+next to the binary; genomes go under `~/.local/share/Genomics Caddy/Data`.
+The signed GitHub Linux artifact is the AppImage.
+
+From `src-tauri` after `pnpm run build`:
 
 ```bash
 cargo tauri build --bundles deb
 cargo tauri build --bundles rpm
 ```
 
-Linux post-install/remove scripts live under `src-tauri/linux/`. A `.deb` or
-`.rpm` is a local convenience, not the supported personal-data layout. Prefer
-the AppImage if you want USB-clean storage.
+Install the package you just built (names include the version):
+
+```bash
+sudo apt install ./src-tauri/target/release/bundle/deb/Genomics.Caddy_*_amd64.deb
+# or
+sudo rpm -i ./src-tauri/target/release/bundle/rpm/Genomics.Caddy-*.rpm
+```
+
+Linux post-install/remove scripts live under `src-tauri/linux/`. They register
+the `com.dna.explorer.desktop` launcher. Prefer the AppImage if you want
+USB-clean storage (`Data/` beside the file). Uninstall with `sudo apt remove`
+using the package name printed by `dpkg -I ./Genomics.Caddy_*_amd64.deb`.
 
 BSD and other targets: install the OS WebKit/GTK (or WebView) dependencies,
 then `cargo tauri build` for that host. There is no CI matrix for them.

@@ -4,7 +4,7 @@
 
 This repository contains the local Tauri/Rust + Svelte DNA analysis tool. Stay
 inside this repository unless a task identifies a concrete external dependency.
-Human and agent operator docs: root `README.md` (quick start), `docs/`, and
+Human and agent operator docs: root `README.md` (download and first launch), `docs/`, and
 `ARCHITECTURE.md` (file map). Local session notes live in `MEMORY.md` and must
 stay untracked.
 

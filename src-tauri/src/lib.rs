@@ -66,6 +66,7 @@ Operational Notes: Manages SQLite database connection pools and executes request
 pub mod agent;
 mod agent_commands;
 mod agent_ui;
+mod agent_ui_capture;
 mod agent_ui_endpoint;
 pub mod app_log;
 pub mod config;

@@ -2,15 +2,17 @@
  * Chromosome Map — proportional karyotype visualization.
  */
 
-.map-container {
+.card.map-container {
   position: relative;
-  padding: 1.35rem 1.5rem 1.75rem;
-  overflow: hidden;
-  border: 1px solid rgba(94, 234, 212, 0.12);
+  min-width: 0;
+  padding: 1.15rem 1.25rem 1.4rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 1px solid var(--accent-border);
   background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(45, 212, 191, 0.09), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(56, 189, 248, 0.07), transparent 50%),
-    rgba(255, 255, 255, 0.02);
+    radial-gradient(ellipse 80% 50% at 10% -10%, var(--accent-soft), transparent 55%),
+    var(--surface-glass);
+  box-shadow: var(--shadow-card);
 }
 
 .map-container::before {
@@ -20,28 +22,30 @@
   pointer-events: none;
   opacity: 0.35;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 85%);
 }
 
 .map-header {
   position: relative;
+  z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
+  min-width: 0;
   margin-bottom: 0.55rem;
 }
 
-.map-header h3 {
+.card.map-container .map-header h3 {
   margin: 0;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
   font-weight: 700;
-  color: #ecfeff;
+  color: var(--text-primary);
 }
 
 .map-kicker {
@@ -51,40 +55,45 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #5eead4;
+  color: var(--accent-bright);
 }
 
 .privacy-pill {
   font-size: 0.7rem;
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
-  background: rgba(45, 212, 191, 0.1);
-  color: #5eead4;
-  border: 1px solid rgba(45, 212, 191, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+  border: 1px solid var(--accent-border);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .map-intro {
   position: relative;
+  z-index: 1;
+  min-width: 0;
   font-size: 0.84rem;
-  color: #cbd5e1; /* AA vs #0a0b10 ≈ 13:1 */
+  color: var(--text-secondary); /* AA vs #0a0b10 ≈ 13:1 */
   line-height: 1.5;
   margin: 0 0 0.85rem;
-  max-width: 42rem;
+  max-width: 46rem;
+  overflow-wrap: anywhere;
 }
 
 /* Pin insight — explains purpose before the color legend */
 .map-pin-insight {
   position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0 0 1rem;
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
-  border: 1px solid rgba(125, 211, 252, 0.28);
-  background:
-    linear-gradient(135deg, rgba(14, 165, 233, 0.1), transparent 55%),
-    rgba(2, 6, 23, 0.55);
-  max-width: 46rem;
+  border: 1px solid var(--status-info-border);
+  background: var(--status-info-bg);
 }
 
 .map-pin-insight-head {
@@ -101,53 +110,56 @@
   width: 1.15rem;
   height: 1.15rem;
   border-radius: 4px;
-  background: #0284c7;
-  color: #f0f9ff;
+  background: var(--status-info-text);
+  color: var(--bg-primary);
   font-size: 0.65rem;
   font-weight: 800;
-  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.9);
+  box-shadow: 0 0 0 1px var(--status-info-border);
   flex-shrink: 0;
 }
 
 .map-pin-insight strong {
   font-size: 0.8rem;
   letter-spacing: 0.02em;
-  color: #e0f2fe;
+  color: var(--text-primary);
 }
 
 .map-pin-insight p {
   margin: 0;
+  min-width: 0;
   font-size: 0.8rem;
   line-height: 1.5;
-  color: #cbd5e1;
+  color: var(--text-secondary);
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .map-pin-insight em {
   font-style: normal;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .map-chrome {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
   margin-bottom: 0.85rem;
 }
 
 .map-stat-warn .map-stat-value {
-  color: #7dd3fc;
+  color: var(--status-info-text);
 }
 
 .map-attention {
   position: relative;
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  background:
-    linear-gradient(135deg, rgba(14, 165, 233, 0.12), transparent 60%),
-    rgba(2, 6, 23, 0.65);
+  border: 1px solid var(--status-info-border);
+  background: var(--status-info-bg);
 }
 
 .map-attention-head {
@@ -161,13 +173,13 @@
 .map-attention-head h4 {
   margin: 0;
   font-size: 0.88rem;
-  color: #e0f2fe;
+  color: var(--text-primary);
 }
 
 .map-attention-count {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #7dd3fc;
+  color: var(--status-info-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -175,7 +187,7 @@
   margin: 0 0 0.65rem;
   font-size: 0.74rem;
   line-height: 1.45;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .map-attention-list {
@@ -196,9 +208,9 @@
   align-items: center;
   padding: 0.35rem 0.55rem 0.35rem 0.4rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.4);
-  color: #f8fafc;
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
   font: inherit;
@@ -206,9 +218,9 @@
 
 .attn-chip:hover,
 .attn-chip:focus-visible {
-  outline: 2px solid #e0f2fe;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
-  border-color: rgba(224, 242, 254, 0.45);
+  border-color: var(--status-info-border);
 }
 
 .attn-glyph {
@@ -239,7 +251,7 @@
 .attn-meta {
   grid-column: 2;
   font-size: 0.62rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .attn-why {
@@ -259,22 +271,22 @@
   font-weight: 650;
   padding: 0.28rem 0.55rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.35);
-  color: #e2e8f0;
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 .filter-chip:hover,
 .filter-chip:focus-visible {
-  border-color: rgba(94, 234, 212, 0.45);
+  border-color: var(--accent-border);
   outline: none;
 }
 
 .filter-chip.active {
-  background: rgba(45, 212, 191, 0.18);
-  border-color: rgba(45, 212, 191, 0.55);
-  color: #ccfbf1;
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent-bright);
 }
 
 .map-summary {
@@ -288,8 +300,8 @@
   min-width: 7.5rem;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -298,7 +310,7 @@
 .map-stat-value {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -324,10 +336,10 @@
   margin-bottom: 0.85rem;
   padding: 0.7rem 0.85rem;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.32);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-inset);
+  border: 1px solid var(--border-color);
   font-size: 0.74rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .map-legend .legend-item {
@@ -341,7 +353,7 @@
   display: block;
   font-size: 0.74rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   margin-bottom: 0.1rem;
 }
 
@@ -349,7 +361,7 @@
   display: block;
   font-size: 0.68rem;
   line-height: 1.35;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .map-legend .legend-swatch {
@@ -391,7 +403,7 @@
   margin: 0.15rem 0 0;
   font-size: 0.68rem;
   line-height: 1.4;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .map-controls-row {
@@ -403,8 +415,8 @@
   flex-wrap: wrap;
   margin-bottom: 0;
   padding: 0.65rem 0.85rem;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(94, 234, 212, 0.14);
+  background: var(--surface-inset);
+  border: 1px solid var(--accent-border);
   border-radius: 10px;
 }
 
@@ -422,23 +434,23 @@
 }
 
 .map-zoom-label strong {
-  color: #99f6e4;
+  color: var(--accent-bright);
   font-variant-numeric: tabular-nums;
 }
 
 .map-zoom-range {
   width: 140px;
   cursor: ew-resize;
-  accent-color: #2dd4bf;
+  accent-color: var(--accent-bright);
 }
 
 .map-error {
   position: relative;
   padding: 0.85rem 1rem;
   border-radius: 8px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-strong-text);
   font-size: 0.86rem;
   margin-bottom: 0.85rem;
 }
@@ -447,8 +459,8 @@
   position: relative;
   margin-bottom: 1.25rem;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(94, 234, 212, 0.16);
+  background: var(--surface-inset);
+  border: 1px solid var(--accent-border);
   border-radius: 10px;
   animation: mapFadeIn 0.22s ease;
 }
@@ -463,7 +475,7 @@
 
 .comparison-header h4 {
   margin: 0;
-  color: #99f6e4;
+  color: var(--accent-bright);
   font-size: 0.88rem;
 }
 
@@ -487,7 +499,7 @@
 .comparison-table th,
 .comparison-table td {
   padding: 0.4rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .comparison-table th {
@@ -496,7 +508,7 @@
 }
 
 .comparison-table th.active-sample {
-  color: #99f6e4;
+  color: var(--accent-bright);
 }
 
 .genotype-cell {
@@ -523,13 +535,13 @@
 }
 
 .chr-row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--surface-subtle);
 }
 
 /* Active row: outline the findings, do not paint a useless full-width wash */
 .chr-row-active {
-  border-color: rgba(94, 234, 212, 0.28);
-  background: rgba(45, 212, 191, 0.06);
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--accent-bright);
 }
 
 .chr-row-active .variant-pin {
@@ -546,7 +558,7 @@
 .chr-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -598,7 +610,7 @@
   bottom: -1px;
   width: 4px;
   border-radius: 2px;
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--surface-panel);
   border-left: 1px solid rgba(148, 163, 184, 0.25);
   border-right: 1px solid rgba(148, 163, 184, 0.25);
   z-index: 2;
@@ -708,7 +720,7 @@
 .variant-pin:focus-visible {
   transform: translate(-50%, -50%) scale(1.35);
   z-index: 20;
-  outline: 2px solid #e0f2fe;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -750,14 +762,14 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-right: 0.15rem;
 }
 
 .chr-findings-hint {
   margin: 0.15rem 0 0;
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .finding-chip {
@@ -766,9 +778,9 @@
   gap: 0.3rem;
   padding: 0.2rem 0.45rem 0.2rem 0.25rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.45);
-  color: #f1f5f9;
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
+  color: var(--text-primary);
   font: inherit;
   font-size: 0.68rem;
   cursor: pointer;
@@ -776,7 +788,7 @@
 
 .finding-chip:hover,
 .finding-chip:focus-visible {
-  outline: 2px solid #e0f2fe;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
 
@@ -810,7 +822,7 @@
 }
 
 .finding-why {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.62rem;
 }
 
@@ -837,7 +849,7 @@
 
 .total-snps-val {
   font-variant-numeric: tabular-nums;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -846,7 +858,7 @@
   padding: 0.18rem 0.45rem;
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.9);
-  color: #e2e8f0;
+  color: var(--text-primary);
   border: 1px solid rgba(148, 163, 184, 0.35);
   font-weight: 650;
   max-width: 11rem;
@@ -857,7 +869,7 @@
 
 .risk-count-pill.has-confirm {
   border-color: rgba(56, 189, 248, 0.55);
-  color: #e0f2fe;
+  color: var(--text-primary);
   background: rgba(7, 89, 133, 0.35);
 }
 
@@ -872,7 +884,7 @@
   padding: 0.08rem 0.4rem;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.1);
-  color: #7dd3fc;
+  color: var(--status-info-text);
   border: 1px solid rgba(56, 189, 248, 0.18);
 }
 

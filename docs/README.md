@@ -1,9 +1,9 @@
 # Documentation index
 
-Start at the root [README.md](../README.md) for what Genomics Caddy is and how
-to launch it. Use this folder for feature and operator detail. These pages are
-written for both people and coding agents: prefer the matching file instead of
-scanning the whole repository.
+Start at the root [README.md](../README.md) for download, first launch, and
+what Genomics Caddy is. Use this folder for feature and operator detail.
+These pages are written for both people and coding agents: prefer the matching
+file instead of scanning the whole repository.
 
 | Question | Read |
 | --- | --- |

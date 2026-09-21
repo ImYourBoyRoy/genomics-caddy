@@ -254,7 +254,7 @@
       </div>
 
       {#if loading}
-        <PanelLoadingState message="Loading findings page…" accent="#38bdf8" compact />
+        <PanelLoadingState message="Loading findings page…" accent="var(--status-info-text)" compact />
       {:else if error}
         <div class="fn-empty">{error}</div>
       {:else if cards.length === 0}

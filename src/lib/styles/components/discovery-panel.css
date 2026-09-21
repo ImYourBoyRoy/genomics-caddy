@@ -3,11 +3,11 @@
  */
 
 .discovery-panel {
-  --disc-accent: #2dd4bf;
-  --disc-accent-soft: rgba(45, 212, 191, 0.14);
-  --disc-clinvar: #fb7185;
-  --disc-gwas: #38bdf8;
-  --disc-pgx: #fbbf24;
+  --disc-accent: var(--accent-bright);
+  --disc-accent-soft: var(--accent-soft);
+  --disc-clinvar: var(--badge-clinvar-text);
+  --disc-gwas: var(--badge-gwas-text);
+  --disc-pgx: var(--badge-pgx-text);
 
   position: relative;
   display: flex;
@@ -16,11 +16,11 @@
   width: 100%;
   padding: 1.35rem 1.45rem 1.6rem;
   border-radius: 14px;
-  border: 1px solid rgba(94, 234, 212, 0.12);
+  border: 1px solid var(--accent-border);
   background:
-    radial-gradient(ellipse 70% 45% at 0% -10%, rgba(45, 212, 191, 0.1), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 0%, rgba(56, 189, 248, 0.07), transparent 50%),
-    rgba(255, 255, 255, 0.02);
+    radial-gradient(ellipse 70% 45% at 0% -10%, var(--accent-soft), transparent 55%),
+    var(--surface-glass);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -31,8 +31,8 @@
   pointer-events: none;
   opacity: 0.28;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 70%);
 }
@@ -53,7 +53,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #5eead4;
+  color: var(--accent-bright);
 }
 
 .discovery-hero h3 {
@@ -61,7 +61,7 @@
   font-size: 1.2rem;
   letter-spacing: -0.02em;
   font-weight: 700;
-  color: #ecfeff;
+  color: var(--text-primary);
 }
 
 .discovery-lead {
@@ -69,13 +69,13 @@
   max-width: 40rem;
   font-size: 0.84rem;
   line-height: 1.5;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .discovery-lead em {
   font-style: normal;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .discovery-stat-grid {
@@ -89,8 +89,8 @@
   min-width: 6.5rem;
   padding: 0.55rem 0.7rem;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
   display: flex;
   flex-direction: column;
   gap: 0.12rem;
@@ -99,7 +99,7 @@
 .discovery-stat-value {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -108,11 +108,11 @@
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-stat-cache .discovery-stat-value {
-  color: #5eead4;
+  color: var(--accent-bright);
   font-size: 0.9rem;
 }
 
@@ -120,22 +120,22 @@
   position: relative;
   padding: 0.7rem 0.85rem;
   border-radius: 10px;
-  border: 1px solid rgba(125, 211, 252, 0.22);
-  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid var(--status-info-border);
+  background: var(--surface-well);
 }
 
 .discovery-insight strong {
   display: block;
   margin-bottom: 0.25rem;
   font-size: 0.78rem;
-  color: #e0f2fe;
+  color: var(--text-primary);
 }
 
 .discovery-insight p {
   margin: 0;
   font-size: 0.78rem;
   line-height: 1.45;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .insight-tag {
@@ -148,14 +148,14 @@
 }
 
 .insight-tag.beyond {
-  background: rgba(45, 212, 191, 0.16);
-  color: #99f6e4;
-  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+  border: 1px solid var(--accent-border);
 }
 
 .insight-tag.pack {
   background: rgba(148, 163, 184, 0.16);
-  color: #e2e8f0;
+  color: var(--text-primary);
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
@@ -167,8 +167,8 @@
   align-items: center;
   padding: 0.75rem 0.85rem;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(94, 234, 212, 0.14);
+  background: var(--surface-inset);
+  border: 1px solid var(--accent-border);
 }
 
 .discovery-source-seg {
@@ -177,8 +177,8 @@
   gap: 0.25rem;
   padding: 0.2rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-inset);
+  border: 1px solid var(--border-color);
 }
 
 .seg-btn {
@@ -189,19 +189,19 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .seg-btn:hover,
 .seg-btn:focus-visible {
-  color: #e2e8f0;
+  color: var(--text-primary);
   outline: none;
 }
 
 .seg-btn.active {
   background: var(--disc-accent-soft);
-  color: #ccfbf1;
+  color: var(--accent-bright);
   box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.35);
 }
 
@@ -224,8 +224,8 @@
   width: 2.1rem;
   height: 1.15rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--surface-inset);
+  border: 1px solid var(--border-color);
   position: relative;
   transition: background 0.18s ease;
 }
@@ -238,29 +238,29 @@
   width: 0.85rem;
   height: 0.85rem;
   border-radius: 50%;
-  background: #e2e8f0;
+  background: var(--bg-secondary);
   transition: transform 0.18s ease;
 }
 
 .discovery-toggle input:checked + .toggle-ui {
-  background: rgba(45, 212, 191, 0.35);
-  border-color: rgba(45, 212, 191, 0.55);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .discovery-toggle input:checked + .toggle-ui::after {
   transform: translateX(0.85rem);
-  background: #ccfbf1;
+  background: var(--text-on-accent);
 }
 
 .discovery-toggle input:focus-visible + .toggle-ui {
-  outline: 2px solid #e0f2fe;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .toggle-label {
   font-size: 0.76rem;
   font-weight: 600;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .discovery-search {
@@ -273,15 +273,15 @@
   box-sizing: border-box;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(2, 6, 23, 0.55);
-  color: #f8fafc;
+  border: 1px solid var(--border-color);
+  background: var(--surface-well);
+  color: var(--text-primary);
   font: inherit;
   font-size: 0.82rem;
 }
 
 .discovery-search input::placeholder {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .discovery-search input:focus {
@@ -301,7 +301,7 @@
   border-radius: 10px;
   border: 1px solid rgba(248, 113, 113, 0.35);
   background: rgba(248, 113, 113, 0.08);
-  color: #fecaca;
+  color: var(--status-danger-text);
   font-size: 0.82rem;
 }
 
@@ -309,7 +309,7 @@
   position: relative;
   margin: 0;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-empty {
@@ -317,14 +317,14 @@
   padding: 1.5rem 1.25rem;
   border-radius: 12px;
   border: 1px dashed rgba(148, 163, 184, 0.35);
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--surface-inset);
   text-align: center;
 }
 
 .discovery-empty strong {
   display: block;
   margin-bottom: 0.35rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
   font-size: 0.95rem;
 }
 
@@ -333,7 +333,7 @@
   max-width: 28rem;
   font-size: 0.8rem;
   line-height: 1.45;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-skeleton {
@@ -348,9 +348,9 @@
   border-radius: 12px;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.07),
-    rgba(255, 255, 255, 0.03)
+    var(--shimmer-from),
+    var(--shimmer-mid),
+    var(--shimmer-from)
   );
   background-size: 200% 100%;
   animation: discShimmer 1.2s ease-in-out infinite;
@@ -377,18 +377,18 @@
   gap: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-color);
+  background: var(--surface-inset);
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 
 .discovery-card:hover {
-  border-color: rgba(94, 234, 212, 0.28);
-  background: rgba(45, 212, 191, 0.05);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
 }
 
 .discovery-card.beyond {
-  border-left: 3px solid rgba(45, 212, 191, 0.65);
+  border-left: 3px solid var(--accent-bright);
 }
 
 .discovery-card.in-pack {
@@ -413,22 +413,22 @@
 .discovery-rsid {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .discovery-gene {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #99f6e4;
+  color: var(--accent-bright);
 }
 
 .discovery-gt {
   font-size: 0.72rem;
   padding: 0.12rem 0.4rem;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .discovery-card-tags {
@@ -449,33 +449,33 @@
 }
 
 .src-pill.clinvar {
-  background: rgba(251, 113, 133, 0.14);
-  color: #fecdd3;
-  border: 1px solid rgba(251, 113, 133, 0.35);
+  background: var(--badge-clinvar-bg);
+  color: var(--badge-clinvar-text);
+  border: 1px solid var(--badge-clinvar-border);
 }
 
 .src-pill.gwas {
-  background: rgba(56, 189, 248, 0.14);
-  color: #bae6fd;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: var(--badge-gwas-bg);
+  color: var(--badge-gwas-text);
+  border: 1px solid var(--badge-gwas-border);
 }
 
 .src-pill.pharmgkb {
-  background: rgba(251, 191, 36, 0.14);
-  color: #fde68a;
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: var(--badge-pgx-bg);
+  color: var(--badge-pgx-text);
+  border: 1px solid var(--badge-pgx-border);
 }
 
 .pack-pill {
-  background: rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: var(--coverage-note-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .pack-pill.beyond {
-  background: rgba(45, 212, 191, 0.12);
-  color: #99f6e4;
-  border-color: rgba(45, 212, 191, 0.35);
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+  border-color: var(--accent-border);
 }
 
 .discovery-assoc {
@@ -490,7 +490,7 @@
 .discovery-assoc li {
   font-size: 0.76rem;
   line-height: 1.4;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-open {
@@ -507,11 +507,11 @@
   flex-wrap: wrap;
   padding: 0.55rem 0.15rem 0;
   font-size: 0.76rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-pager-range strong {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -527,21 +527,21 @@
   justify-content: space-between;
   gap: 0.75rem;
   font-size: 0.74rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .discovery-progress-pct {
   font-weight: 700;
-  color: #99f6e4;
+  color: var(--accent-bright);
   font-variant-numeric: tabular-nums;
 }
 
 .discovery-progress-bar {
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--control-hover-bg);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
 }
 
 .discovery-progress-fill {

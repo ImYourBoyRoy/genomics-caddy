@@ -137,7 +137,7 @@
 
   {#if !actionsEnabled}
     <div class="workbench-boot-banner" role="status">
-      <ActivityPulse message="Waiting for connections…" accent="#5eead4" />
+      <ActivityPulse message="Waiting for connections…" accent="var(--accent-bright)" />
     </div>
   {/if}
 
@@ -145,7 +145,7 @@
     <div class="workbench-boot-banner" role="status">
       <ActivityPulse
         message={progressMessage || (listing ? "Loading draft list…" : "Working…")}
-        accent="#38bdf8"
+        accent="var(--status-info-text)"
       />
     </div>
   {/if}

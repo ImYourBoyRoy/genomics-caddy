@@ -20,10 +20,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "ARCHITECTURE.md"
 SKIP = {"MEMORY.md", "MEMORY.local.md"}
-BIN_EXT = {".png", ".ico", ".icns", ".woff", ".woff2", ".wasm"}
+BIN_EXT = {".png", ".webp", ".ico", ".icns", ".woff", ".woff2", ".wasm"}
 
 EXPLICIT = {
-    "README.md": "GitHub-facing product page, warning, and quick start.",
+    "README.md": "GitHub-facing product page: badges, per-OS install, first launch, screenshot tour.",
     "AGENTS.md": "Repo-local agent rules: packs, privacy, and validation gates.",
     "ARCHITECTURE.md": "Non-gitignored file map with sizes, line counts, and one-line roles.",
     ".gitignore": "Ignore rules for DNA, reports, builds, env, and local memory.",
@@ -46,6 +46,8 @@ EXPLICIT = {
     "paths.md": "Internal research-agent pathway map.",
     "plan.md": "Legacy enhancement checklist kept in the tree.",
     "docs/README.md": "Index of operator docs for humans and agents.",
+    "docs/images/readme-report-simple.webp": "README animated Dark/Light Simple-mode shot with the data sidebar visible.",
+    "docs/images/readme-chromosome-map.webp": "README animated Dark/Light chromosome map shot with the data sidebar visible.",
     "docs/usage/README.md": "How to import DNA, read reports, and share exports.",
     "docs/mcp/README.md": "MCP server flags, client configs, and tool catalog.",
     "docs/ai-chat/README.md": "Ollama, vector connections, chat, and evidence workbench.",
@@ -103,6 +105,8 @@ RUST_KNOWN = {
     "mcp.rs": "stdin/stdout MCP JSON-RPC server.",
     "report.rs": "Marker evaluation and report assembly.",
     "config.rs": "App data roots and env loading.",
+    "agent_ui.rs": "Loopback HTTP bridge to drive and inspect the live UI.",
+    "agent_ui_capture.rs": "Linux WebKit viewport PNG capture for agent QA and README shots.",
 }
 
 

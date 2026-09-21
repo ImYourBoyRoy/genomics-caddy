@@ -60,6 +60,7 @@
   // Stylesheet imports
   import "$lib/styles/theme.css";
   import "$lib/styles/print.css";
+  import "$lib/styles/components/context-panel.css";
 
   import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";

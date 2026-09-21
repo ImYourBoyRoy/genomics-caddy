@@ -59,6 +59,53 @@ describe('shared theme controls', () => {
     expect(source).toContain('/* Printed reports use a neutral paper palette');
   });
 
+  it('keeps panel chrome tokens defined for dark, light, and system-light themes', () => {
+    expect((source.match(/--accent-bright:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--surface-panel:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--surface-inset:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--surface-glass:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--grid-line:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--surface-sticky:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--badge-gwas-text:/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((source.match(/--viz-canvas:/g) || []).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('keeps light-mode source badges at AA contrast on their tints', () => {
+    expect(
+      contrastRatio(hexToken(lightTheme, '--badge-gwas-text'), hexToken(lightTheme, '--badge-gwas-bg')),
+      'GWAS badge',
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(hexToken(lightTheme, '--badge-clinvar-text'), hexToken(lightTheme, '--badge-clinvar-bg')),
+      'ClinVar badge',
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(hexToken(lightTheme, '--badge-pgx-text'), hexToken(lightTheme, '--badge-pgx-bg')),
+      'PGx badge',
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps dark panel glass and light paper inset distinct', () => {
+    expect(darkTheme).toContain('--surface-panel: rgba(18, 19, 28, 0.92)');
+    expect(darkTheme).toContain('--shadow-card: 0 0 0 transparent');
+    expect(hexToken(lightTheme, '--surface-inset')).toBe('#f1f5f9');
+    expect(hexToken(lightTheme, '--surface-panel')).toBe('#ffffff');
+    expect(hexToken(lightTheme, '--bg-primary')).toBe('#f3f5f8');
+  });
+
+  it('keeps body text and kickers readable on the canvas in dark and light', () => {
+    for (const [name, block] of [['dark', darkTheme], ['light', lightTheme]] as const) {
+      expect(
+        contrastRatio(hexToken(block, '--text-primary'), hexToken(block, '--bg-primary')),
+        `${name} primary text on canvas`,
+      ).toBeGreaterThanOrEqual(7);
+      expect(
+        contrastRatio(hexToken(block, '--accent-bright'), hexToken(block, '--bg-primary')),
+        `${name} kicker on canvas`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('keeps accent button foregrounds at normal-text AA contrast in active and hover states', () => {
     for (const [name, block] of [['dark', darkTheme], ['light', lightTheme]] as const) {
       expect(

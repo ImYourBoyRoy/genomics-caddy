@@ -2,7 +2,8 @@
 
 For product usage see the [root README](../../README.md) and
 [../usage/README.md](../usage/README.md). This page is for people and agents
-changing the repo.
+changing the repo. Everyday installs come from GitHub Releases, not
+`pnpm run tauri:dev`.
 
 ## Rules of the road
 
@@ -22,8 +23,8 @@ Pull requests and pushes to `master` run `.github/workflows/ci.yml`
 That same job is required before a tagged desktop publish.
 
 ```bash
-git tag v0.2.3
-git push origin v0.2.3
+git tag v0.2.4
+git push origin v0.2.4
 ```
 
 `.github/workflows/release.yml` waits for Validate, then uses

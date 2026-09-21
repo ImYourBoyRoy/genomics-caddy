@@ -141,7 +141,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-inset);
 }
 
 .app-paths-info summary {

@@ -203,7 +203,7 @@
   <div class="scope-workbench-header">
     <h2 class="card-title">Sweep Scopes</h2>
     {#if isPreviewLoading}
-      <ActivityPulse message="Counting sweep scopes…" accent="#a78bfa" maxWidth="220px" />
+      <ActivityPulse message="Counting sweep scopes…" accent="var(--status-accent-text)" maxWidth="220px" />
     {:else if preview}
       <span class="scope-total">{preview.total_unique.toLocaleString()} queued</span>
     {/if}
@@ -398,7 +398,7 @@
         <div class="ref-row">
           <div class="ref-status">
             {#if refStatus === null}
-              <ActivityPulse message="Loading reference status…" accent="#34d399" maxWidth="220px" />
+              <ActivityPulse message="Loading reference status…" accent="var(--status-success-text)" maxWidth="220px" />
             {:else if gwasReady}
               <span class="ref-ok">GWAS catalog ready</span>
               <span>{refStatus.gwas_rsid_count.toLocaleString()} reference rsIDs</span>

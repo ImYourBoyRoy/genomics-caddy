@@ -27,7 +27,7 @@
     <PanelLoadingState
       message="Searching evidence library…"
       submessage="Querying local SQLite indices and semantic embeddings when available."
-      accent="#38bdf8"
+      accent="var(--status-info-text)"
       compact
     />
   {:else if searchError}

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const contextSource = readFileSync(new URL('./ContextPanel.svelte', import.meta.url), 'utf8');
+const contextStyles = readFileSync(new URL('../../styles/components/context-panel.css', import.meta.url), 'utf8');
 const diarySource = readFileSync(new URL('./DiaryPanel.svelte', import.meta.url), 'utf8');
 const pageSource = readFileSync(new URL('../../../routes/+page.svelte', import.meta.url), 'utf8');
 
@@ -36,5 +37,16 @@ describe('profile context workspaces', () => {
     expect(pageSource).toContain('{ id: "diary", label: "Diary" }');
     expect(pageSource).toContain('activeTab === "context"');
     expect(pageSource).toContain('activeTab === "diary"');
+  });
+
+  it('keeps context field chrome in an external stylesheet that cannot overlap', () => {
+    expect(contextSource).toContain("import '$lib/styles/components/context-panel.css'");
+    expect(pageSource).toContain('import "$lib/styles/components/context-panel.css"');
+    expect(contextSource).not.toContain('<style>');
+    expect(contextStyles).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(contextStyles).toContain('min-width: 0;');
+    expect(contextStyles).toContain('background: var(--surface-inset);');
+    expect(contextStyles).toContain('field-sizing: fixed;');
+    expect(contextStyles).not.toContain('repeat(3,');
   });
 });

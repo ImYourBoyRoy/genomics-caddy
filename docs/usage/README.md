@@ -1,7 +1,16 @@
 # Using Genomics Caddy
 
-This page covers the desktop workflow after [quick start](../../README.md#quick-start).
+This page covers the desktop workflow after [first launch](../../README.md#first-launch).
 It is not a medical guide.
+
+## Reference catalogs
+
+Signed GitHub builds do not ship ClinVar, dbSNP, GWAS, PharmGKB, or the
+liftover chain. After you install, open **Data & updates** in the left
+sidebar and run **Sync All Missing**. Wait until those catalogs are
+downloaded **and indexed**. For typical AncestryDNA / 23andMe GRCh37
+files, also use **Liftover assembly** → **Download chain**. Marker packs
+that ship with the app are not a substitute for these databases.
 
 ## Limits
 

@@ -3,7 +3,7 @@
  */
 
 .variant-browser {
-  --vb-accent: #2dd4bf;
+  --vb-accent: var(--accent-bright);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -11,11 +11,10 @@
   width: 100%;
   padding: 1.35rem 1.45rem 1.6rem;
   border-radius: 14px;
-  border: 1px solid rgba(94, 234, 212, 0.12);
+  border: 1px solid var(--accent-border);
   background:
-    radial-gradient(ellipse 70% 45% at 0% -10%, rgba(45, 212, 191, 0.1), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 0%, rgba(56, 189, 248, 0.06), transparent 50%),
-    rgba(255, 255, 255, 0.02);
+    radial-gradient(ellipse 70% 45% at 0% -10%, var(--accent-soft), transparent 55%),
+    var(--surface-glass);
   overflow: hidden;
 }
 
@@ -35,14 +34,14 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #5eead4;
+  color: var(--accent-bright);
 }
 
 .vb-hero h3 {
   margin: 0 0 0.35rem;
   font-size: 1.2rem;
   letter-spacing: -0.02em;
-  color: #ecfeff;
+  color: var(--text-primary);
 }
 
 .vb-lead {
@@ -50,7 +49,7 @@
   max-width: 40rem;
   font-size: 0.84rem;
   line-height: 1.5;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .vb-privacy {
@@ -59,7 +58,7 @@
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
   background: rgba(45, 212, 191, 0.1);
-  color: #5eead4;
+  color: var(--accent-bright);
   border: 1px solid rgba(45, 212, 191, 0.28);
   white-space: nowrap;
 }
@@ -69,27 +68,27 @@
   padding: 0.7rem 0.85rem;
   border-radius: 10px;
   border: 1px solid rgba(125, 211, 252, 0.22);
-  background: rgba(2, 6, 23, 0.45);
+  background: var(--surface-well);
 }
 
 .vb-insight strong {
   display: block;
   margin-bottom: 0.25rem;
   font-size: 0.78rem;
-  color: #e0f2fe;
+  color: var(--text-primary);
 }
 
 .vb-insight p {
   margin: 0;
   font-size: 0.78rem;
   line-height: 1.45;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .vb-insight em {
   font-style: normal;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .vb-subtabs {
@@ -98,8 +97,8 @@
   gap: 0.25rem;
   padding: 0.25rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-inset);
+  border: 1px solid var(--border-color);
   width: fit-content;
 }
 
@@ -111,19 +110,19 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .vb-subtab:hover,
 .vb-subtab:focus-visible {
-  color: #e2e8f0;
+  color: var(--text-primary);
   outline: none;
 }
 
 .vb-subtab.active {
   background: rgba(45, 212, 191, 0.16);
-  color: #ccfbf1;
+  color: var(--accent-bright);
   box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.35);
 }
 
@@ -141,7 +140,7 @@
   align-items: flex-end;
   padding: 0.75rem 0.85rem;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--surface-inset);
   border: 1px solid rgba(94, 234, 212, 0.14);
 }
 
@@ -153,7 +152,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-secondary);
   min-width: 6.5rem;
 }
 
@@ -171,9 +170,9 @@
   text-transform: none;
   padding: 0.45rem 0.55rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(2, 6, 23, 0.55);
-  color: #f8fafc;
+  border: 1px solid var(--border-color);
+  background: var(--surface-well);
+  color: var(--text-primary);
 }
 
 .vb-field input:focus,
@@ -197,7 +196,7 @@
 .vb-examples-label {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -209,15 +208,15 @@
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
   border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(0, 0, 0, 0.35);
-  color: #cbd5e1;
+  background: var(--surface-inset);
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .vb-example:hover,
 .vb-example:focus-visible {
   border-color: rgba(45, 212, 191, 0.45);
-  color: #99f6e4;
+  color: var(--accent-bright);
   outline: none;
 }
 
@@ -231,12 +230,12 @@
 .vb-results-head h4 {
   margin: 0;
   font-size: 0.88rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .vb-results-count {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -244,19 +243,19 @@
   padding: 1.25rem 1rem;
   border-radius: 12px;
   border: 1px dashed rgba(148, 163, 184, 0.35);
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--surface-inset);
   text-align: center;
 }
 
 .vb-empty.quiet {
   border-style: solid;
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-color);
 }
 
 .vb-empty strong {
   display: block;
   margin-bottom: 0.3rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .vb-empty p {
@@ -264,13 +263,13 @@
   max-width: 28rem;
   font-size: 0.8rem;
   line-height: 1.45;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .vb-table-wrap {
   overflow: auto;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   max-height: min(52vh, 560px);
 }
 
@@ -284,18 +283,18 @@
 .vb-table td {
   padding: 0.55rem 0.65rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
 
 .vb-table th {
   position: sticky;
   top: 0;
-  background: rgba(10, 11, 16, 0.96);
+  background: var(--surface-sticky);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #94a3b8;
+  color: var(--text-secondary);
   z-index: 1;
 }
 
@@ -308,7 +307,7 @@
 }
 
 .vb-table .muted {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .vb-gt {
@@ -316,9 +315,9 @@
   padding: 0.12rem 0.4rem;
   border-radius: 5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .vb-actions {
@@ -332,5 +331,5 @@
 .vb-truncate {
   margin: 0.35rem 0 0;
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }

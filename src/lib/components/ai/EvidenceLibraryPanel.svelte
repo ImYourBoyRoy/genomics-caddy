@@ -369,7 +369,7 @@
             <PanelLoadingState
               message="Running hybrid vector search…"
               submessage="Payload filters and evidence card normalization in progress."
-              accent="#38bdf8"
+              accent="var(--status-info-text)"
               compact
             />
           {:else if searchError}

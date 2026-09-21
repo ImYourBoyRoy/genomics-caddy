@@ -5,7 +5,7 @@
 
 [package]
 name = "genomics-caddy-dev-bins"
-version = "0.2.3"
+version = "0.2.4"
 description = "Local-only CLI helpers; not part of the desktop installer."
 edition = "2024"
 rust-version = "1.98.1"
@@ -19,5 +19,10 @@ path = "src/seed_mcp_fixture.rs"
 name = "inspect_db"
 path = "src/inspect_db.rs"
 
+[[bin]]
+name = "seed_demo_profile"
+path = "src/seed_demo_profile.rs"
+
 [dependencies]
 tauri_app_lib = { package = "DNA-Tools", path = ".." }
+rusqlite = { version = ">=0.40.2", features = ["bundled"] }

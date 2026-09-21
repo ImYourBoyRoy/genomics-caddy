@@ -28,4 +28,14 @@ describe('chromosome map tooltip surfaces', () => {
     expect(source).not.toContain('class="map-tooltip"');
     expect(styles).not.toContain('.map-tooltip');
   });
+
+  it('keeps pin insight copy wrapping and does not wash the active chromosome row', () => {
+    expect(styles).toContain('.map-pin-insight p {');
+    expect(styles).toContain('overflow-wrap: anywhere;');
+    expect(styles).toContain('white-space: normal;');
+    expect(styles).toContain('background: var(--surface-subtle);');
+    expect(styles).toContain('box-shadow: inset 3px 0 0 var(--accent-bright);');
+    expect(styles).not.toContain('background: rgba(45, 212, 191, 0.06)');
+    expect(styles).not.toContain('background: rgba(255, 255, 255, 0.015)');
+  });
 });

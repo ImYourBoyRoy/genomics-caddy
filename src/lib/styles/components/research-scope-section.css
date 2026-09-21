@@ -47,7 +47,7 @@
 }
 
 .scope-subcard {
-  background: var(--surface-card);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;

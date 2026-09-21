@@ -27,7 +27,7 @@
     <PanelLoadingState
       message="Searching Qdrant vector index…"
       submessage="Embedding query via Ollama and matching cosine similarities inside Qdrant collection."
-      accent="#a78bfa"
+      accent="var(--status-accent-text)"
       compact
     />
   {:else if searchError}

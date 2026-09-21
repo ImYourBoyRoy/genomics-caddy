@@ -4,9 +4,9 @@
 .research-panel {
   --research-gap: 18px;
   --research-card-radius: 14px;
-  --research-card-bg: rgba(18, 19, 28, 0.92);
-  --research-card-border: rgba(255, 255, 255, 0.1);
-  --research-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --research-card-bg: var(--surface-panel);
+  --research-card-border: var(--border-color);
+  --research-card-shadow: var(--shadow-panel);
   display: flex;
   flex-direction: column;
   gap: var(--research-gap);
@@ -15,7 +15,7 @@
 }
 
 .research-hero {
-  background: linear-gradient(135deg, rgba(88, 80, 236, 0.12), rgba(18, 19, 28, 0.6));
+  background: linear-gradient(135deg, var(--status-accent-bg), var(--surface-panel));
   border: 1px solid var(--research-card-border);
   border-radius: var(--research-card-radius);
   padding: 16px 20px;
@@ -131,27 +131,27 @@
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #6ee7b7;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.24);
+  color: var(--status-success-text);
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
 }
 
 .live-pill.idle {
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--surface-subtle);
+  border-color: var(--border-color);
 }
 
 .live-findings-empty {
   display: grid;
   gap: 5px;
   padding: 18px;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border: 1px dashed var(--border-color);
   border-radius: 10px;
   color: var(--text-secondary);
   font-size: 0.78rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.14);
+  background: var(--surface-inset);
 }
 
 .live-findings-empty strong {
@@ -165,21 +165,21 @@
 }
 
 .live-finding-item {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.18);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  background: var(--surface-inset);
+  box-shadow: var(--shadow-card);
 }
 
 .live-finding-item.bucket-clinical_review {
-  border-color: rgba(248, 113, 113, 0.35);
-  background: linear-gradient(135deg, rgba(127, 29, 29, 0.2), rgba(0, 0, 0, 0.16));
+  border-color: var(--status-danger-border);
+  background: var(--status-danger-bg);
 }
 
 .live-finding-item.bucket-wellness_relevant {
-  border-color: rgba(52, 211, 153, 0.32);
-  background: linear-gradient(135deg, rgba(6, 78, 59, 0.2), rgba(0, 0, 0, 0.16));
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
 }
 
 .live-finding-item.bucket-low_confidence {
@@ -201,7 +201,7 @@
   border-radius: 999px;
   padding: 2px 7px;
   font-size: 0.66rem;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-subtle);
 }
 
 .live-finding-rsid {
@@ -211,7 +211,7 @@
 }
 
 .live-finding-gene {
-  color: #c4b5fd;
+  color: var(--status-accent-text);
   font-weight: 700;
 }
 
@@ -234,7 +234,7 @@
 
 .live-finding-sources {
   margin: 8px 0 0;
-  color: var(--text-muted, rgba(255, 255, 255, 0.58));
+  color: var(--text-secondary);
   font-size: 0.7rem;
   line-height: 1.35;
 }

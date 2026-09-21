@@ -17,6 +17,7 @@
   } from '../../utils/personalSafetyContext';
   import { reproductiveContextOptionIsSuggestedForGeneticSex } from '../../utils/reproductiveContext';
   import { formatGeneticSexLabel } from '../../utils/uiLabels';
+  import '$lib/styles/components/context-panel.css';
 
   interface Props {
     selectedSample: GenomeSample;
@@ -302,46 +303,3 @@
     </div>
   </section>
 </div>
-
-<style>
-  .profile-context-page { display: flex; flex-direction: column; gap: 1rem; max-width: 1500px; margin: 0 auto; padding-bottom: 2rem; }
-  .context-hero, .context-toolbar, .legacy-context, .context-export { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; }
-  .context-hero { padding: 0.25rem 0 0.5rem; }
-  .context-kicker, .context-section-kicker { color: var(--accent); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-  .context-hero h2, .context-toolbar h3, .context-card h3, .context-export h3 { margin: 0.2rem 0 0; color: var(--text-primary); }
-  .context-hero p, .context-toolbar p, .context-card-heading p, .context-export p, .legacy-context p { margin: 0.35rem 0 0; color: var(--text-secondary); font-size: 0.78rem; line-height: 1.45; }
-  .context-profile-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; color: var(--text-secondary); font-size: 0.76rem; }
-  .context-profile-badge strong { color: var(--text-primary); font-size: 0.9rem; }
-  .context-toolbar, .legacy-context, .context-export { padding: 1rem 1.1rem; }
-  .context-toolbar-controls { display: flex; align-items: center; gap: 0.65rem; min-width: min(34rem, 45%); }
-  .context-toolbar-controls select { flex: 1; min-width: 0; }
-  .context-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
-  .context-card { padding: 1rem; }
-  .context-card-heading { margin-bottom: 0.8rem; }
-  .context-field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.72rem; }
-  .context-field span { color: var(--text-secondary); font-size: 0.72rem; font-weight: 600; }
-  .context-field textarea { width: 100%; min-height: 3.2rem; box-sizing: border-box; resize: vertical; border: 1px solid var(--border-color); border-radius: 0.45rem; background: var(--surface-control); color: var(--text-primary); font: inherit; font-size: 0.76rem; line-height: 1.35; padding: 0.55rem 0.6rem; }
-  .context-field-compact textarea { min-height: 2.35rem; }
-  .context-field textarea:focus, .context-toolbar select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .context-reproductive { padding: 1rem; }
-  .context-export { border-color: var(--status-success-border); background: var(--status-success-bg); }
-  .context-status { flex: 0 0 auto; color: var(--text-secondary); font-size: 0.74rem; }
-  .context-status-ready { color: var(--status-success-text); font-weight: 700; }
-  .context-export-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; color: var(--text-secondary); font-size: 0.72rem; }
-  .legacy-context { border-color: var(--status-warning-border); background: var(--status-warning-bg); }
-  .legacy-context strong { color: var(--text-primary); }
-  .legacy-context-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
-  @media (max-width: 1100px) {
-    .context-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .context-grid .context-card:first-child { grid-column: span 2; }
-  }
-  @media (max-width: 760px) {
-    .context-hero, .context-toolbar, .legacy-context, .context-export { align-items: flex-start; flex-direction: column; }
-    .context-profile-badge { align-items: flex-start; }
-    .context-export-controls { align-items: flex-start; }
-    .legacy-context-actions { justify-content: flex-start; }
-    .context-toolbar-controls { width: 100%; min-width: 0; }
-    .context-grid { grid-template-columns: 1fr; }
-    .context-grid .context-card:first-child { grid-column: auto; }
-  }
-</style>

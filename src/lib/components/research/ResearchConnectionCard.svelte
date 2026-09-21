@@ -318,7 +318,7 @@
     <div class="activity-strip activity-{connectionActivity.phase}" aria-live="polite">
       <ActivityPulse
         message={connectionActivity.message}
-        accent={connectionActivity.phase === "error" ? "var(--danger)" : "#8b5cf6"}
+        accent={connectionActivity.phase === "error" ? "var(--danger)" : "var(--status-accent-text)"}
         isError={connectionActivity.phase === "error"}
         maxWidth="100%"
       />

@@ -116,7 +116,7 @@
       <PanelLoadingState
         message={`Querying local ${selectedTable.toUpperCase()} reference database...`}
         submessage={searchQuery.trim() ? `Matching "${searchQuery}"` : "Retrieving all records"}
-        accent="#38bdf8"
+        accent="var(--status-info-text)"
         compact
       />
     </div>

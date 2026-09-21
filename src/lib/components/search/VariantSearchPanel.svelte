@@ -175,7 +175,7 @@
               submessage={searchRsid.trim()
                 ? `Looking up ${searchRsid.trim()}`
                 : `Region chr${browseChr}:${browseStart.toLocaleString()}–${browseEnd.toLocaleString()} (GRCh38)`}
-              accent="#2dd4bf"
+              accent="var(--accent-bright)"
               compact
             />
           {:else if !hasSearched && browserResults.length === 0}

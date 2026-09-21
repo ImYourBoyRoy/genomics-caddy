@@ -115,7 +115,7 @@ Operational Notes: Stays under the 500-line limit. Scoped styles.
       </div>
     {:else if isScanningDb && discoveredVariants.length === 0}
       <div class="no-variants-message active-progress">
-        <ActivityPulse message={scanProgressMsg} accent="#60a5fa" maxWidth="100%" />
+        <ActivityPulse message={scanProgressMsg} accent="var(--status-info-text)" maxWidth="100%" />
       </div>
     {:else if filteredVariants.length === 0}
       <div class="no-variants-message font-mono">

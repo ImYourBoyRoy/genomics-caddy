@@ -90,7 +90,7 @@
     close();
   }
 
-  function handleTriggerClick(event: MouseEvent) {
+  function handleTriggerActivate(event: Event) {
     event.stopPropagation();
     if (interactiveChildren && interactiveClickBehavior === 'dismiss') {
       // The child is an action control. Its click should complete the action
@@ -104,6 +104,10 @@
     }
     isClicked = true;
     refreshOpenState();
+  }
+
+  function handleTriggerClick(event: MouseEvent) {
+    handleTriggerActivate(event);
   }
 
   function syncInteractiveTrigger() {
@@ -199,24 +203,19 @@
   onmouseleave={handleHoverLeave}
   onfocusin={() => { isFocused = true; refreshOpenState(); }}
   onfocusout={handleHostFocusOut}
-  onclick={interactiveChildren ? handleTriggerClick : undefined}
+  onclick={handleTriggerClick}
 >
   {#if interactiveChildren}
     {@render children()}
   {:else}
-    <button
-      type="button"
+    <span
       class={`tooltip-trigger ${triggerClass}`}
       bind:this={triggerElement}
       aria-label={label}
       aria-describedby={isOpen ? panelDescriptionId : undefined}
-      aria-controls={isOpen && learnMoreHref ? tooltipId : undefined}
-      aria-haspopup={learnMoreHref ? 'dialog' : undefined}
-      aria-expanded={isOpen}
-      onclick={handleTriggerClick}
     >
       {@render children()}
-    </button>
+    </span>
   {/if}
   {#if isOpen}
     <span
@@ -254,14 +253,19 @@
   }
 
   .tooltip-trigger {
-    min-width: 44px;
-    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: 0.4rem;
     background: transparent;
     color: inherit;
     font: inherit;
+    line-height: inherit;
     cursor: help;
   }
 

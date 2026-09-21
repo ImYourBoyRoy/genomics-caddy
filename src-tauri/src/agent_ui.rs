@@ -359,6 +359,26 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
         };
     }
 
+    if method == "POST" && path == "/ui/capture" {
+        return match crate::agent_ui_capture::capture_main_window_png(app).await {
+            Ok(png) => {
+                let png_base64 =
+                    base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png);
+                (
+                    200,
+                    json!({
+                        "ok": true,
+                        "mime": "image/png",
+                        "byte_len": png.len(),
+                        "png_base64": png_base64,
+                    })
+                    .to_string(),
+                )
+            }
+            Err(error) => (501, json!({ "ok": false, "error": error }).to_string()),
+        };
+    }
+
     if method == "POST" && path == "/ui/resize" {
         let body = req.split("\r\n\r\n").nth(1).unwrap_or("{}").trim();
         let args: Value = serde_json::from_str(if body.is_empty() { "{}" } else { body })
@@ -439,7 +459,8 @@ async fn handle_http_request(app: &AppHandle, req: &str) -> (u16, String) {
                 "POST /ui/probeContrast",
                 "POST /ui/clickSection",
                 "POST /ui/queryText",
-                "POST /ui/resize"
+                "POST /ui/resize",
+                "POST /ui/capture"
             ]
         })
         .to_string(),

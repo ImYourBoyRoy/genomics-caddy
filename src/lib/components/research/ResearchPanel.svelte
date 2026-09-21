@@ -687,7 +687,7 @@
 
       {#if !workbenchReady}
         <div class="workbench-boot-banner" role="status" aria-live="polite">
-          <ActivityPulse message={workbenchBootMessage} accent="#5eead4" />
+          <ActivityPulse message={workbenchBootMessage} accent="var(--accent-bright)" />
           <p>Viewer, map, packs, and review unlock after connections finish loading.</p>
         </div>
       {/if}

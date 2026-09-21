@@ -7,6 +7,6 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border-color);
-  background: rgba(10, 11, 20, 0.3);
+  background: var(--surface-panel);
   backdrop-filter: blur(16px);
 }

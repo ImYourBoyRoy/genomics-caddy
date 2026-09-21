@@ -1,114 +1,168 @@
-# Genomics Caddy
+<p align="center">
+  <img src="src-tauri/icons/128x128.png" width="96" height="96" alt="Genomics Caddy">
+</p>
 
-Local-first desktop app for exploring your own consumer DNA export. It runs on
-your machine: parse AncestryDNA or 23andMe files, normalize GRCh37/GRCh38
-coordinates, score curated marker packs, and optionally talk to a local AI
-through chat or MCP.
+<h1 align="center">Genomics Caddy</h1>
 
-Created by **Roy Dawson IV**.
+<p align="center">
+  <strong>Local-first desktop DNA explorer.</strong><br>
+  Import your AncestryDNA or 23andMe file, read a Simple-first report on this
+  machine, and optionally talk to a local AI. Nothing is uploaded to us.
+</p>
 
-## Warning
+<p align="center">
+  <a href="https://github.com/ImYourBoyRoy/genomics-caddy/releases/latest"><img src="https://img.shields.io/github/v/release/ImYourBoyRoy/genomics-caddy?style=for-the-badge&color=2563eb" alt="Latest release"></a>
+  <a href="https://github.com/ImYourBoyRoy/genomics-caddy/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ImYourBoyRoy/genomics-caddy/ci.yml?branch=master&style=for-the-badge&label=CI" alt="CI"></a>
+  <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20macOS-0f766e?style=for-the-badge" alt="Windows, Linux, and macOS">
+  <img src="https://img.shields.io/badge/runtime-Tauri%202%20%2B%20Rust-D97706?style=for-the-badge&logo=rust&logoColor=white" alt="Tauri 2 and Rust">
+  <img src="https://img.shields.io/badge/privacy-local%20first-1d4ed8?style=for-the-badge" alt="Local-first privacy">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-15803D?style=for-the-badge" alt="PolyForm Noncommercial license"></a>
+</p>
 
-This is a research and education tool, not a diagnostic or treatment product.
-A consumer array call is an observation. It does not establish a disease,
-current hormone level, medication response, or care plan. High-stakes findings
-need validated clinical testing. AI chat and clinician/AI exports include the
-raw genotype calls behind the selected findings; share those files only with
-the person or system you intend.
+<p align="center">
+  <a href="https://github.com/ImYourBoyRoy/genomics-caddy/releases/latest"><strong>Download</strong></a>
+  ·
+  <a href="https://github.com/ImYourBoyRoy/genomics-caddy/issues">Issues</a>
+  ·
+  <a href="#install">Install</a>
+  ·
+  <a href="docs/usage/README.md">Usage</a>
+  ·
+  <a href="docs/mcp/README.md">MCP</a>
+  ·
+  <a href="LICENSE">License</a>
+</p>
 
-Do not commit raw DNA, reports, `.env`, or `App/` data. The repo gitignores
-them. The only committed genotype-shaped files are synthetic fixtures in
-`src-tauri/testdata/`.
+---
+
+> **Research and education only — not a diagnostic or treatment product.** A
+> consumer array call is an observation. It does not establish a disease, current
+> hormone level, medication response, or care plan. High-stakes findings need
+> validated clinical testing. AI chat and clinician/AI exports include the raw
+> genotype calls behind the selected findings; share those files only with the
+> person or system you intend.
+
+<p align="center">
+  <img src="docs/images/readme-report-simple.webp" alt="Simple trait report with data sidebar, looping dark and light themes" width="880">
+</p>
+<p align="center"><sub>Trait report · Simple mode · left rail is import, profiles, catalogs, and library</sub></p>
+
+<p align="center">
+  <img src="docs/images/readme-chromosome-map.webp" alt="Chromosome coverage map with data sidebar, looping dark and light themes" width="880">
+</p>
+<p align="center"><sub>Chromosome map · same synthetic example · loops Dark / Light</sub></p>
+
+## Install
+
+You do **not** need git, Node, or Rust. Open the
+**[latest GitHub Release](https://github.com/ImYourBoyRoy/genomics-caddy/releases/latest)**
+and take **one** file for your OS.
+
+### Windows
+
+| | File | What you get |
+| :--- | :--- | :--- |
+| **Installer** | `*_x64-setup.exe` | Start Menu, uninstaller. *Install for me only* or *Install for everyone* (everyone needs administrator rights). |
+| **Portable** | [`GenomicsCaddy-portable-windows.zip`](https://github.com/ImYourBoyRoy/genomics-caddy/releases/latest/download/GenomicsCaddy-portable-windows.zip) | Unzip and run `DNA-Tools.exe`. Keep `Data/` next to the exe. |
+
+SmartScreen may warn on a new publisher: *More info* → *Run anyway*. WebView2 is
+required. From v0.2.3, a portable copy **replaces itself** on update and leaves
+`Data/` in place.
+
+### Linux
+
+| | File | What you get |
+| :--- | :--- | :--- |
+| **Portable (GitHub)** | `*_amd64.AppImage` | The Linux download on Releases. `Data/` stays next to the AppImage. |
+| **Installer (local)** | `.deb` / `.rpm` | Menu/dock entry under `/usr`. **Not attached to GitHub Releases.** Build it with [compile instructions](compile_instructions.md), then install the package you built. Genomes go to `~/.local/share/Genomics Caddy/Data`. |
+
+```bash
+chmod +x Genomics.Caddy_*_amd64.AppImage
+./Genomics.Caddy_*_amd64.AppImage
+```
+
+```bash
+# after you built a .deb locally — not a Release asset
+sudo apt install ./Genomics.Caddy_*_amd64.deb
+```
+
+### macOS
+
+| | File | What you get |
+| :--- | :--- | :--- |
+| **Disk image** | `*_universal.dmg` | Folder with `Genomics Caddy.app` and `Data/` beside it. Tauri-signed, not Apple-notarized. |
+
+Right-click the app → **Open** (or allow it under Privacy & Security).
+
+Reference catalogs are **not** inside any of these files. Download them in the
+app after it starts.
+
+## First launch
+
+1. Start Genomics Caddy.
+2. Left sidebar → **Data & updates** → **Sync All Missing**. Wait until ClinVar,
+   dbSNP, GWAS, PharmGKB, and companions show as downloaded **and indexed**.
+   This needs a network connection and can take several minutes.
+3. Typical AncestryDNA / 23andMe files are GRCh37. **Liftover assembly** →
+   **Download chain** so coordinates can map to GRCh38.
+4. Import your `.txt`, `.csv`, `.tsv`, or ZIP from the sidebar. Read the
+   pre-write review, then confirm. Parsing alone does not write a profile.
+5. Read **Simple** mode first. Use **Clinical** or **Compare** for sources and
+   technical detail.
+6. Fill **Context** / **Diary** yourself if you want food, cycle, or medication
+   prompts. DNA does not infer those.
+
+If every finding looks empty or “unknown,” catalogs are usually still indexing.
+Stay on **Data & updates** until that finishes, then reopen the profile.
+
+Signed builds offer in-app updates. Confirm before download. The updater does
+not upload DNA.
+
+## Where genomes live
+
+| How you launched it | Default library |
+| :--- | :--- |
+| Windows portable zip | `Data/` next to `DNA-Tools.exe` |
+| Windows *Install for me only* | `Data/` next to the installed exe |
+| Windows *Install for everyone* | `%LOCALAPPDATA%\Genomics Caddy\Data` |
+| Linux AppImage | `Data/` next to the AppImage |
+| Linux `.deb` / `.rpm` | `~/.local/share/Genomics Caddy/Data` |
+| macOS DMG | `Data/` next to the `.app` |
+
+Change it from the sidebar **Library** row. To wipe a portable copy, use
+**Erase** there, or delete the folder that contains the app and `Data/`.
 
 ## What it does
 
-- Import `.txt`, `.csv`, `.tsv`, or ZIP exports and review them before any
-  profile is written
-- Build a Simple-first report with Clinical and Compare views
-- Keep food, supplement, and medication prompts conditional on context you
-  enter, not DNA alone
-- Optional local Ollama chat and a stdin/stdout MCP server for agents
+- Imports AncestryDNA / 23andMe style files locally, with a review step before
+  anything is saved
+- Scores curated marker packs into Simple, Clinical, and Compare reports
+- Keeps food, supplement, and medication prompts conditional on context *you*
+  enter
+- Optional local [Ollama chat](docs/ai-chat/README.md)
+- Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`
 
-## Quick start
-
-Needs **Node 26+**, a current **Rust** toolchain (see `src-tauri/Cargo.toml`),
-and **pnpm**.
-
-Linux one-time WebKit/GTK headers:
-
-```bash
-pnpm run setup:linux
-```
-
-Install and open the desktop window:
-
-```bash
-node ./scripts/pnpm_unlocked.mjs install
-pnpm run tauri:dev
-```
-
-Then in the app:
-
-1. Import your AncestryDNA or 23andMe export.
-2. Confirm the pre-write review (vendor, row counts, build, warnings).
-3. Read **Simple** mode first. Use **Clinical** or **Compare** when you want
-   sources and technical detail.
-4. Add Context/Diary yourself if you want food, cycle, or medication prompts
-   tailored to real life. The app does not infer those from DNA.
-
-GitHub installers and the Windows portable zip notify you when a newer
-signed release is published. Confirm in the app: installer copies run the
-signed setup; a portable zip copy replaces its own files and leaves `Data/`
-in place. Copies from before v0.2.3 still offer the Windows installer once
-— download the new zip if you want to stay portable. `tauri:dev` does not
-apply GitHub artifacts.
-
-People may use and share this for noncommercial purposes. Companies may not
-use it commercially. See [LICENSE](LICENSE)
-([PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)).
-
-## Downloads
-
-GitHub [Releases](https://github.com/ImYourBoyRoy/genomics-caddy/releases) ship:
-
-| Platform | Artifact |
-| --- | --- |
-| Windows | NSIS setup (`Install for me only` or `Install for everyone`; the installer asks for administrator rights) and a portable zip |
-| Linux | AppImage |
-| macOS | Universal DMG |
-
-Portable copies keep genomes in a `Data/` folder next to the launched file.
-`Install for everyone` uses a per-account folder. Change it from the left
-**Library** row. To remove personal files from an AppImage, DMG, or zip copy,
-use **Erase** on that Library row, or delete the whole folder that contains
-the app and its `Data/` directory. Other package formats:
-[compile_instructions.md](compile_instructions.md).
-
-Optional production build (portable binary lands in `App/`):
-
-```bash
-pnpm run build:release
-```
-
-Frontend-only web preview (`pnpm run dev`) cannot import DNA. Use the Tauri
-window for a real workflow.
+Screenshots above use a **synthetic** example genome, not a real person’s DNA.
+Simple mode is the public-safe view (no raw calls on the cards).
 
 ## Docs
 
-| Doc | Use it when |
-| --- | --- |
-| [docs/README.md](docs/README.md) | You need the full map (humans and agents) |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | File-by-file map: size, lines, and role |
-| [docs/usage/README.md](docs/usage/README.md) | Import, reports, exports, privacy |
-| [docs/mcp/README.md](docs/mcp/README.md) | MCP server, client configs, tools |
-| [docs/ai-chat/README.md](docs/ai-chat/README.md) | Ollama, connections, evidence workbench |
-| [docs/build/README.md](docs/build/README.md) | Release builds, Linux launcher, Docker |
-| [compile_instructions.md](compile_instructions.md) | Extra OS packages and GitHub-shaped local bundles |
-| [docs/development/README.md](docs/development/README.md) | Tests, audits, repo layout, `.env` |
+| If you want to… | Read |
+| :--- | :--- |
+| Import DNA, read reports, export | [Usage](docs/usage/README.md) |
+| Wire Claude / Cursor / another agent | [MCP](docs/mcp/README.md) |
+| Connect Ollama or vector research | [AI chat](docs/ai-chat/README.md) |
+| Build from source or ship a signed update | [Build](docs/build/README.md) |
+| Clone the repo, tests, lock-free install | [Development](docs/development/README.md) |
+| Build a `.deb` / `.rpm` or extra OS package | [Compile instructions](compile_instructions.md) |
+| File map | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
-## Author
+## License
 
-- Roy Dawson IV
-- Email: <Roy.Dawson.IV@gmail.com>
-- GitHub: [https://github.com/imyourboyroy](https://github.com/imyourboyroy)
-- PyPI: [https://pypi.org/user/ImYourBoyRoy/](https://pypi.org/user/ImYourBoyRoy/)
+People may use and share this for **noncommercial** purposes. Companies may not
+use it commercially. See [LICENSE](LICENSE)
+([PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)).
+
+---
+
+Created by **Roy Dawson IV** · <Roy.Dawson.IV@gmail.com> · [GitHub](https://github.com/imyourboyroy) · [PyPI](https://pypi.org/user/ImYourBoyRoy/)

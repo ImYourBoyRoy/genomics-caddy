@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-glass);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
@@ -36,8 +36,8 @@
 }
 
 .fn-audience-btn.active {
-  border-color: rgba(56, 189, 248, 0.7);
-  background: rgba(56, 189, 248, 0.12);
+  border-color: var(--status-info-border);
+  background: var(--status-info-bg);
 }
 
 .fn-layout {
@@ -54,10 +54,10 @@
 }
 
 .fn-sidebar {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--surface-inset);
   max-height: 520px;
   overflow-y: auto;
 }
@@ -86,12 +86,12 @@
 }
 
 .fn-trait-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--control-hover-bg);
 }
 
 .fn-trait-btn.active {
-  border-color: rgba(34, 197, 94, 0.45);
-  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
 }
 
 .fn-trait-count {
@@ -126,7 +126,7 @@
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-inset);
   color: inherit;
   font-size: 0.8rem;
   min-width: 120px;
@@ -159,7 +159,7 @@
 
 .fn-table-wrap {
   overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   max-height: 360px;
 }
@@ -173,7 +173,7 @@
 .fn-table th {
   position: sticky;
   top: 0;
-  background: rgba(15, 18, 28, 0.95);
+  background: var(--surface-sticky);
   text-align: left;
   padding: 8px 10px;
   border-bottom: 1px solid var(--border-color);
@@ -182,7 +182,7 @@
 
 .fn-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   vertical-align: top;
 }
 
@@ -222,12 +222,12 @@
 
 .fn-badge.dir-risk {
   background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  color: var(--status-danger-strong-text);
 }
 
 .fn-badge.dir-protect {
   background: rgba(34, 197, 94, 0.15);
-  color: #86efac;
+  color: var(--status-success-text);
 }
 
 .fn-badge.dir-unknown {

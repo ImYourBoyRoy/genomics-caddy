@@ -33,7 +33,7 @@
 
 .input-row input,
 .input-row select {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-inset);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   padding: 10px 14px;
@@ -131,22 +131,22 @@
 
 .severity-tag.high_risk {
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: var(--status-danger-text);
 }
 
 .severity-tag.moderate_risk {
   background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  color: var(--status-warning-text);
 }
 
 .severity-tag.protective {
   background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  color: var(--status-success-text);
 }
 
 .severity-tag.no_data {
   background: rgba(107, 114, 128, 0.15);
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 .font-mono {

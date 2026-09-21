@@ -15,11 +15,12 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain("interactiveClickBehavior = 'toggle'");
     expect(source).toContain('aria-label={label}');
     expect(source).toContain('aria-describedby={isOpen ? panelDescriptionId : undefined}');
+    expect(source).not.toContain('tabindex="0"');
   });
 
   it('keeps interactive tooltip content out of tooltip role semantics', () => {
     expect(source).toContain("role={learnMoreHref ? 'dialog' : 'tooltip'}");
-    expect(source).toContain("aria-haspopup={learnMoreHref ? 'dialog' : undefined}");
+    expect(source).toContain("nextTrigger.setAttribute('aria-haspopup', 'dialog')");
   });
 
   it('ships a static tooltip fallback for native WebKit first-render reliability', () => {
@@ -37,6 +38,13 @@ describe('Tooltip accessibility structure', () => {
     expect(source).toContain('if (isClicked) {');
     expect(source).toContain('close();');
     expect(source).toContain('onclick={handleTriggerClick}');
+  });
+
+  it('keeps explanatory chips as inline notes instead of 44px buttons', () => {
+    expect(source).toContain('class={`tooltip-trigger ${triggerClass}`}');
+    expect(source).not.toContain('<button');
+    expect(source).not.toContain('tabindex="0"');
+    expect(source).not.toMatch(/\.tooltip-trigger \{[\s\S]*?min-height: 44px/);
   });
 
   it('does not pin a tooltip when the wrapped child is an action control', () => {

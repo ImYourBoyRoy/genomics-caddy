@@ -343,7 +343,7 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
 {#if isScanningDb && totalToScan > 0}
   <div class="scan-progress-bar-container">
     <div class="progress-bar-label font-mono">
-      <ActivityPulse message={scanProgressMsg} accent="#60a5fa" maxWidth="100%" />
+      <ActivityPulse message={scanProgressMsg} accent="var(--status-info-text)" maxWidth="100%" />
       <span class="progress-count">{currentProgress}/{totalToScan}</span>
     </div>
     <div class="progress-track">

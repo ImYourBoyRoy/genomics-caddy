@@ -1,6 +1,6 @@
 [package]
 name = "DNA-Tools"
-version = "0.2.3"
+version = "0.2.4"
 description = "DNA-Tools"
 authors = ["Roy Dawson IV"]
 license = "PolyForm-Noncommercial-1.0.0"
@@ -64,6 +64,12 @@ toml_edit = ">=0.25.15"
 [target.'cfg(unix)'.dependencies]
 # libc 1.0 is still alpha. Stay on the 0.2 stable line.
 libc = ">=0.2.189, <1"
+
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))'.dependencies]
+# Match wry 0.55 / Tauri 2 webkit bindings so agent-UI viewport capture can
+# snapshot the live WebKit view on Wayland without compositor screenshot APIs.
+webkit2gtk = { version = "=2.0.2", features = ["v2_38"] }
+cairo-rs = { version = "0.18", features = ["png"] }
 
 # `tauri build` enables this automatically. Keep it default so a plain
 # `cargo build --release` also embeds frontendDist. Without it the window

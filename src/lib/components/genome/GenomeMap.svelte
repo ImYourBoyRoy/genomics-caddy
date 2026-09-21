@@ -494,7 +494,7 @@
     <PanelLoadingState
       message="Mapping chromosome density from your local database…"
       submessage="Counting SNPs per chromosome and placing report variant pins."
-      accent="#2dd4bf"
+      accent="var(--accent-bright)"
       compact
     />
   {:else if error}

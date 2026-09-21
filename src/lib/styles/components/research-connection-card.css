@@ -25,19 +25,19 @@
   border-radius: 8px;
   font-size: 0.78rem;
   color: var(--text-secondary);
-  background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  background: var(--status-accent-bg);
+  border: 1px solid var(--status-accent-border);
 }
 
 .activity-strip.activity-error {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-strong-text);
 }
 
 .edit-settings-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-glass);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   font-size: 0.76rem;
   font-weight: 600;
@@ -48,7 +48,7 @@
 }
 
 .edit-settings-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--control-hover-bg);
 }
 
 .connection-body {
@@ -146,12 +146,12 @@
 }
 
 .status-indicator-dot.live {
-  background-color: #10b981;
+  background-color: var(--success);
   box-shadow: 0 0 6px #10b981;
 }
 
 .status-indicator-dot.dead {
-  background-color: #ef4444;
+  background-color: var(--danger);
   box-shadow: 0 0 6px #ef4444;
 }
 
@@ -166,7 +166,7 @@
   flex-direction: column;
   gap: 12px;
   padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border-color);
 }
 
 .connection-hint {
@@ -195,13 +195,13 @@
 }
 
 .connection-status.success {
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
 }
 
 .connection-status.error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
 }
 
 .status-summary {
@@ -219,11 +219,11 @@
 }
 
 .indicator.success {
-  background-color: #10b981;
+  background-color: var(--success);
 }
 
 .indicator.error {
-  background-color: #ef4444;
+  background-color: var(--danger);
 }
 
 .status-detail {
@@ -234,7 +234,7 @@
 }
 
 .error-text {
-  color: #f87171;
+  color: var(--status-danger-text);
   font-family: monospace;
   font-size: 0.74rem;
 }
@@ -296,7 +296,7 @@
 
 .form-group-custom input,
 .form-group-custom select {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface-inset);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 8px 10px;
@@ -324,7 +324,7 @@
 }
 
 .refresh-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   color: var(--text-primary);
@@ -338,7 +338,7 @@
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--control-hover-bg);
 }
 
 .form-actions {

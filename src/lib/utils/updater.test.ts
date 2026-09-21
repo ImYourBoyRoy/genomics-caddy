@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check, type DownloadEvent, type Update } from '@tauri-apps/plugin-updater';
 import {
@@ -8,6 +10,7 @@ import {
   formatVersionLabel,
   getDismissedUpdateVersion,
   installAppUpdate,
+  resolveUpdateInstallKind,
   setDismissedUpdateVersion,
   shouldShowUpdateBanner,
 } from './updater';
@@ -18,6 +21,14 @@ vi.mock('@tauri-apps/plugin-updater', () => ({
 
 vi.mock('@tauri-apps/plugin-process', () => ({
   relaunch: vi.fn(),
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn(),
+}));
+
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn(),
 }));
 
 function mockLocalStorage() {
@@ -41,6 +52,10 @@ describe('updater helpers', () => {
     mockLocalStorage();
     vi.mocked(check).mockReset();
     vi.mocked(relaunch).mockReset();
+    vi.mocked(invoke).mockReset();
+    vi.mocked(listen).mockReset();
+    vi.mocked(listen).mockResolvedValue(() => {});
+    vi.mocked(invoke).mockResolvedValue('installer');
   });
 
   it('normalizes version labels and banner copy', () => {
@@ -55,6 +70,10 @@ describe('updater helpers', () => {
       .toBe('Downloading signed update… 25%');
     expect(formatUpdateBannerCopy({ version: 'v0.3.0', installing: true, progress: 100 }))
       .toBe('Installing signed update…');
+    expect(formatUpdateBannerCopy({ version: 'v0.3.0', installing: true, progress: 40, kind: 'portable' }))
+      .toBe('Downloading signed portable zip… 40%');
+    expect(formatUpdateBannerCopy({ version: 'v0.3.0', installing: true, progress: 100, kind: 'portable' }))
+      .toBe('Replacing this portable copy…');
   });
 
   it('hides the banner after that exact version is dismissed', () => {
@@ -131,6 +150,50 @@ describe('updater helpers', () => {
     expect(update.downloadAndInstall).toHaveBeenCalledOnce();
     expect(update.close).toHaveBeenCalledOnce();
     expect(relaunch).toHaveBeenCalledOnce();
+  });
+
+  it('replaces a Windows portable copy instead of launching NSIS', async () => {
+    const update = {
+      version: '0.2.3',
+      close: vi.fn().mockResolvedValue(undefined),
+      downloadAndInstall: vi.fn(),
+    } as unknown as Update;
+    vi.mocked(invoke).mockImplementation(async (cmd: string) => {
+      if (cmd === 'get_update_channel') return 'portable';
+      if (cmd === 'apply_portable_update') return undefined;
+      return undefined;
+    });
+
+    await expect(resolveUpdateInstallKind()).resolves.toBe('portable');
+    await expect(installAppUpdate(update, { confirmed: true, kind: 'portable' })).resolves.toEqual({
+      installed: true,
+      relaunched: true,
+    });
+    expect(update.downloadAndInstall).not.toHaveBeenCalled();
+    expect(relaunch).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledWith('apply_portable_update', { version: '0.2.3' });
+    expect(update.close).toHaveBeenCalledOnce();
+  });
+
+  it('surfaces a failed portable replace instead of launching NSIS', async () => {
+    const update = {
+      version: '0.2.3',
+      close: vi.fn().mockResolvedValue(undefined),
+      downloadAndInstall: vi.fn(),
+    } as unknown as Update;
+    vi.mocked(invoke).mockImplementation(async (cmd: string) => {
+      if (cmd === 'apply_portable_update') {
+        throw new Error('portable zip failed signature check');
+      }
+      return undefined;
+    });
+
+    await expect(installAppUpdate(update, { confirmed: true, kind: 'portable' })).rejects.toThrow(
+      'portable zip failed signature check',
+    );
+    expect(update.downloadAndInstall).not.toHaveBeenCalled();
+    expect(relaunch).not.toHaveBeenCalled();
+    expect(update.close).toHaveBeenCalledOnce();
   });
 
   it('reports an installed update when automatic relaunch is unavailable', async () => {

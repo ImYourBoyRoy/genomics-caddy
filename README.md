@@ -56,9 +56,12 @@ Then in the app:
 4. Add Context/Diary yourself if you want food, cycle, or medication prompts
    tailored to real life. The app does not infer those from DNA.
 
-GitHub installers notify you when a newer signed release is published.
-Confirm in the app to download and restart. Local `App/` copies are the
-portable build path, not the in-app updater path.
+GitHub installers and the Windows portable zip notify you when a newer
+signed release is published. Confirm in the app: installer copies run the
+signed setup; a portable zip copy replaces its own files and leaves `Data/`
+in place. Copies from before v0.2.3 still offer the Windows installer once
+— download the new zip if you want to stay portable. `tauri:dev` does not
+apply GitHub artifacts.
 
 People may use and share this for noncommercial purposes. Companies may not
 use it commercially. See [LICENSE](LICENSE)

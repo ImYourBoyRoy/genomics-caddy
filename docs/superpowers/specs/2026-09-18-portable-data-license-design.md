@@ -21,7 +21,9 @@ releases.
 | macOS | none | Universal DMG that contains a folder: `Genomics Caddy.app` + `Data/` |
 
 `latest.json` / in-app update keeps using signed NSIS, AppImage, and the
-macOS `.app.tar.gz`. The Windows zip is not an updater source.
+macOS `.app.tar.gz` for those layouts. A Windows portable zip copy (no
+uninstaller, writable folder, not Program Files) downloads the signed
+`GenomicsCaddy-portable-windows.zip` and replaces itself in place.
 
 Other OS or package formats (RPM, deb, BSD, etc.) are documented in
 `compile_instructions.md`, linked from the root README. They are not CI
@@ -130,6 +132,5 @@ medical-device clearance and does not change the existing research warning.
 
 - Apple notarization
 - Embedding a full WebView2 runtime in the portable zip
-- In-app updates for the portable zip
 - Rewriting existing v0.2.0 GitHub assets in place; next tag (for example
   `v0.2.1`) ships this layout

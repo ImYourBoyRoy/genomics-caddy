@@ -1,16 +1,20 @@
 // ./src/lib/utils/updater.ts
 /**
  * Desktop self-update helpers for Genomics Caddy.
- * Purpose: Quietly check GitHub Releases for a newer signed installer, remember
- * dismissed versions, and install only after an explicit confirm.
+ * Purpose: Quietly check GitHub Releases for a newer signed build, remember
+ * dismissed versions, and apply only after an explicit confirm.
  * How to run: imported by AppUpdateHost in the Tauri webview; unit-tested via
  * `pnpm test`.
- * Key inputs: `@tauri-apps/plugin-updater` check result, localStorage dismissal.
- * Key outputs: banner state, progress callbacks, relaunch after install.
+ * Key inputs: `@tauri-apps/plugin-updater` check result, localStorage dismissal,
+ *          install layout (`installer` vs Windows portable zip).
+ * Key outputs: banner state, progress callbacks, relaunch or in-place replace.
  * Notes: Never logs genotypes. The updater talks only to GitHub for latest.json
- * and the signed artifact. Web/Vite preview is a no-op.
+ * and the signed artifact. Windows portable copies replace themselves; NSIS
+ * copies still run the signed installer. Web/Vite preview is a no-op.
  */
 
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check, type DownloadEvent, type Update } from '@tauri-apps/plugin-updater';
 
@@ -25,8 +29,11 @@ export interface UpdateCheckResult {
   message: string;
 }
 
+export type UpdateInstallKind = 'installer' | 'portable';
+
 export interface InstallUpdateOptions {
   confirmed: boolean;
+  kind?: UpdateInstallKind;
   onProgress?: (percent: number) => void;
 }
 
@@ -61,8 +68,14 @@ export function formatUpdateBannerCopy(input: {
   version: string;
   installing: boolean;
   progress: number;
+  kind?: UpdateInstallKind;
 }): string {
   if (!input.installing) return `Genomics Caddy ${input.version} is available`;
+  if (input.kind === 'portable') {
+    if (input.progress >= 100) return 'Replacing this portable copy…';
+    if (input.progress > 0) return `Downloading signed portable zip… ${input.progress}%`;
+    return 'Downloading signed portable zip…';
+  }
   if (input.progress >= 100) return 'Installing signed update…';
   if (input.progress > 0) return `Downloading signed update… ${input.progress}%`;
   return 'Downloading signed update…';
@@ -141,6 +154,48 @@ function progressPercent(event: DownloadEvent, downloaded: { bytes: number; tota
   return 0;
 }
 
+export async function resolveUpdateInstallKind(): Promise<UpdateInstallKind> {
+  try {
+    const kind = await invoke<string>('get_update_channel');
+    return kind === 'portable' ? 'portable' : 'installer';
+  } catch {
+    return 'installer';
+  }
+}
+
+async function markUpdateInProgress(active: boolean): Promise<void> {
+  try {
+    await invoke('set_update_in_progress', { active });
+  } catch {
+    // Preview windows and missing commands must not block cancel or dismiss.
+  }
+}
+
+export async function closeUpdateResource(update: Update | undefined): Promise<void> {
+  if (!update) return;
+  try {
+    await update.close();
+  } catch {
+    // The installer may already have released the resource.
+  }
+}
+
+async function replacePortableCopy(
+  update: Update,
+  onProgress?: (percent: number) => void,
+): Promise<InstallUpdateResult> {
+  const unlisten = await listen<{ percentage?: number }>('portable-update-progress', (event) => {
+    onProgress?.(event.payload?.percentage ?? 0);
+  });
+  try {
+    await invoke('apply_portable_update', { version: update.version });
+    return { installed: true, relaunched: true };
+  } finally {
+    unlisten();
+    await closeUpdateResource(update);
+  }
+}
+
 export async function installAppUpdate(
   update: Update,
   options: InstallUpdateOptions,
@@ -149,23 +204,34 @@ export async function installAppUpdate(
     throw new Error('Confirm the update before downloading the signed installer.');
   }
 
-  const downloaded = { bytes: 0, total: 0 };
+  const kind = options.kind ?? 'installer';
+  await markUpdateInProgress(true);
+  let keepWindowUntilExit = false;
   try {
-    await update.downloadAndInstall((event) => {
-      options.onProgress?.(progressPercent(event, downloaded));
-    });
-  } finally {
-    try {
-      await update.close();
-    } catch {
-      // The installer may already have released the resource.
+    if (kind === 'portable') {
+      const result = await replacePortableCopy(update, options.onProgress);
+      keepWindowUntilExit = true;
+      return result;
     }
-  }
 
-  try {
-    await relaunch();
-    return { installed: true, relaunched: true };
-  } catch {
-    return { installed: true, relaunched: false };
+    const downloaded = { bytes: 0, total: 0 };
+    try {
+      await update.downloadAndInstall((event) => {
+        options.onProgress?.(progressPercent(event, downloaded));
+      });
+    } finally {
+      await closeUpdateResource(update);
+    }
+
+    try {
+      await relaunch();
+      return { installed: true, relaunched: true };
+    } catch {
+      return { installed: true, relaunched: false };
+    }
+  } finally {
+    if (!keepWindowUntilExit) {
+      await markUpdateInProgress(false);
+    }
   }
 }

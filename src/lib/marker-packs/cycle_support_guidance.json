@@ -1,12 +1,21 @@
 {
-  "name": "Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.16.0",
-  "last_updated": "2026-08-26",
+  "name": "Menopause, Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
+  "version": "1.17.0",
+  "last_updated": "2026-09-21",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
     "menstrual",
     "hormone",
+    "menopause",
+    "perimenopause",
+    "postmenopause",
+    "hot flash",
+    "hot flashes",
+    "night sweats",
+    "postpartum",
+    "lactation",
+    "breastfeeding",
     "reproductive",
     "pmdd",
     "ovarian",
@@ -226,6 +235,23 @@
         ]
       },
       {
+        "id": "menopause_postpartum_body_support",
+        "title": "Menopause or postpartum body-support context",
+        "description": "Use only for self-reported life-stage or recovery context. Record symptoms, food, products, measurements, and support needs without asking DNA to establish menopause, postpartum status, or current hormone levels.",
+        "context_ids": [
+          "menopause_hormone_therapy",
+          "pregnancy_postpartum"
+        ],
+        "field_ids": [
+          "life_stage_or_recovery_context",
+          "hot_flash_sleep_body_symptoms",
+          "postpartum_feeding_recovery_context",
+          "postpartum_mood_support_context",
+          "nutrition_digestive_support_context",
+          "bone_cardiometabolic_thyroid_context"
+        ]
+      },
+      {
         "id": "measured_hormone_context",
         "title": "Measured hormones and treatment timing",
         "description": "Use when a person already has hormone or related laboratory results. Record the test date, units, reference range, cycle or bleeding timing, exact product timing, and clinician interpretation instead of asking DNA to estimate a current level.",
@@ -339,6 +365,48 @@
         "help": "Record severity and functional impact when useful; urgent symptoms still need timely care."
       },
       {
+        "id": "life_stage_or_recovery_context",
+        "label": "Life-stage or recovery context",
+        "input_type": "textarea",
+        "placeholder": "e.g. perimenopause symptoms, postmenopause, weeks or months postpartum, recent delivery or procedure, or leave blank",
+        "help": "Optional self-reported context. This does not diagnose menopause, postpartum status, or current hormone levels."
+      },
+      {
+        "id": "hot_flash_sleep_body_symptoms",
+        "label": "Hot flashes, sleep, and body symptoms",
+        "input_type": "textarea",
+        "placeholder": "e.g. hot flashes, night sweats, sleep changes, mood, concentration, pain, vaginal or urinary symptoms, energy",
+        "help": "Record timing, severity, and functional impact; do not attribute the cause to a DNA marker."
+      },
+      {
+        "id": "postpartum_feeding_recovery_context",
+        "label": "Postpartum feeding and recovery context",
+        "input_type": "textarea",
+        "placeholder": "e.g. postpartum timing, lactating/chestfeeding, formula or mixed feeding, bleeding, incision, pelvic-floor, urinary, bowel, breast, or pain concerns",
+        "help": "Use only what is relevant and comfortable to share. Feeding and recovery are clinical context, not genetic evidence."
+      },
+      {
+        "id": "postpartum_mood_support_context",
+        "label": "Mood, sleep, support, or safety context",
+        "input_type": "textarea",
+        "placeholder": "e.g. sleep loss, anxiety, depression, intrusive thoughts, practical support, or a safety concern",
+        "help": "Record concrete support needs. Suicidal thoughts, thoughts of harming a baby, or inability to remain safe need urgent local help."
+      },
+      {
+        "id": "nutrition_digestive_support_context",
+        "label": "Food, gut, and nutrient-support context",
+        "input_type": "textarea",
+        "placeholder": "e.g. appetite, constipation/diarrhea, food restrictions, allergies, iron-rich foods, protein, fiber, fluids, or supplement questions",
+        "help": "Use food and symptom context to guide questions; do not use DNA to prescribe an elimination diet, cleanse, probiotic, or supplement dose."
+      },
+      {
+        "id": "bone_cardiometabolic_thyroid_context",
+        "label": "Bone, cardiometabolic, or thyroid context",
+        "input_type": "textarea",
+        "placeholder": "e.g. fractures, blood pressure, lipids, glucose, thyroid history, measured labs, or clinician questions",
+        "help": "Measured history and clinician-directed testing matter more than common SNPs for these questions."
+      },
+      {
         "id": "androgen_prostate_testicular_symptoms",
         "label": "Androgen, prostate, testicular, or urinary symptoms",
         "input_type": "textarea",
@@ -432,6 +500,7 @@
     ],
     "do_not_infer": [
       "Do not infer current estrogen, progesterone, progestin, allopregnanolone, ovulation, pregnancy, or medication response from DNA or from a symptom pattern.",
+      "Do not infer menopause stage, postpartum recovery, feeding status, infant exposure, or hormone level from DNA or from a symptom pattern.",
       "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
       "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker.",
       "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context.",
@@ -440,8 +509,8 @@
   },
   "diary_schema": {
     "id": "cycle_symptom_diary",
-    "title": "Optional daily cycle and symptom diary",
-    "description": "Use this local diary to compare bleeding, symptoms, functioning, sleep, stress, and treatment timing across cycles. Include lower-symptom days as well as difficult days.",
+    "title": "Optional daily reproductive-health symptom diary",
+    "description": "Use this local diary to compare bleeding when relevant, menopause or postpartum symptoms, functioning, sleep, stress, and treatment timing over time. Include lower-symptom days as well as difficult days.",
     "privacy_note": "Stored locally per DNA profile with a bounded history. Diary entries are self-reported observations, not genotype evidence, hormone measurements, or a diagnosis.",
     "retention_limit": 180,
     "context_ids": [
@@ -450,7 +519,9 @@
       "cyclic_mood_symptoms",
       "ovarian_reproductive",
       "uterine_pelvic",
-      "suspected_adenomyosis"
+      "suspected_adenomyosis",
+      "menopause_hormone_therapy",
+      "pregnancy_postpartum"
     ],
     "fields": [
       {
@@ -531,6 +602,7 @@
     ],
     "do_not_infer": [
       "Do not infer estrogen, progesterone, ovulation, PMDD, adenomyosis, endometriosis, or medication response from diary scores or timing.",
+      "Do not infer menopause stage, postpartum recovery, feeding status, infant exposure, or current hormone level from diary scores or timing.",
       "Do not treat a missing diary entry as a symptom-free day or a normal result.",
       "Do not use diary patterns to start, stop, dose, or switch medication or supplements.",
       "Do not infer personality, intent, relationship meaning, or a fixed character trait from cyclic withdrawal, avoidance, irritability, or a request for space."
@@ -678,11 +750,12 @@
       "id": "menopause_hormone_therapy",
       "label": "Menopause / hormone therapy",
       "description": "Use when menopause or hormone-therapy context is relevant; record the exact product and ingredients.",
-      "profile_keywords": ["menopause", "perimenopause", "postmenopause", "hot flashes", "hormone replacement"],
+      "profile_keywords": ["menopause", "perimenopause", "postmenopause", "hot flashes", "hot flash", "night sweats", "menopause transition", "hormone replacement"],
       "domain_ids": [
         "exogenous_hormone_medication_context",
         "measured_hormone_context",
         "contraception_thrombophilia_context",
+        "menopause_transition_support",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -710,6 +783,7 @@
       "profile_keywords": ["pregnancy", "pregnant", "postpartum", "post-partum", "lactation", "breastfeeding", "chestfeeding", "feeding an infant"],
       "domain_ids": [
         "pregnancy_postpartum_lactation_context",
+        "postpartum_recovery_support",
         "general_symptom_day_support"
       ],
       "medication_rule_ids": [
@@ -852,6 +926,9 @@
     ],
     "menopause_hormone_therapy": [
       "GUARDRAIL_EXOGENOUS_HORMONE_REGIMEN_NOT_IN_DNA",
+      "GUARDRAIL_MENOPAUSE_STATUS_NOT_IN_DNA",
+      "PANEL_AGE_AT_NATURAL_MENOPAUSE_RESEARCH",
+      "PANEL_POI_CLINICAL_EVALUATION_GAP",
       "rs1799971",
       "rs324420"
     ],
@@ -1303,6 +1380,99 @@
         "acog_transgender_gender_diverse_care",
         "user_declared_values_required",
         "clinical_confirmation_required"
+      ]
+    },
+    {
+      "id": "menopause_transition_support",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "bone_growth_mineral_density",
+        "thyroid_autoimmune",
+        "cardiovascular",
+        "metabolic",
+        "sleep",
+        "neuropsych",
+        "digestive_gut_microbiome",
+        "nutrients"
+      ],
+      "title": "Menopause transition and body-support context",
+      "context": "Perimenopause and menopause are user-supplied clinical life-stage contexts. DNA cannot stage the transition, measure current hormones, identify the cause of a symptom, or select hormone therapy.",
+      "questions": [
+        "What has changed in bleeding or periods, if relevant, and when did it change? Include surgery, contraception, or hormone treatment only when relevant to the person's care.",
+        "Which symptoms matter most: hot flashes or night sweats, sleep, mood, concentration, headaches, pain, vaginal or urinary symptoms, libido, energy, or changes in function?",
+        "What are the exact prescription, OTC, supplement, herbal, and topical-product names, active ingredients, dose, route, schedule, and treatment goals?",
+        "Are there personal or family factors that affect clinical review, such as clotting events, migraine with aura, breast or uterine cancer, liver disease, thyroid disease, fractures, osteoporosis, or pregnancy possibility?"
+      ],
+      "support_options": [
+        "Track symptoms, bleeding when relevant, sleep, activity, food, and treatment timing. Use regular meals, hydration, adequate protein and fiber, and calcium-rich or fortified foods as they fit the person's diet and medical context.",
+        "When safe, build gradual resistance, weight-bearing, balance, and aerobic activity around the person's symptoms and clinician guidance; consider menopause-specific CBT or clinician-directed nonhormonal and hormone-therapy discussions.",
+        "Use the exact product label and clinician or pharmacist review for hormone therapy and natural products. Do not use DNA to start, stop, dose, or substitute a hormone, supplement, or medication, and avoid detox or unregulated hormone claims."
+      ],
+      "confirm_with": [
+        "age, bleeding, surgical, contraceptive, medication, and symptom context",
+        "CBC and ferritin when bleeding or iron deficiency is a concern; TSH when symptoms or cycle changes warrant it",
+        "blood pressure, lipids, A1c, 25(OH)D, calcium, PTH, or DXA only when risk or clinical indications support them",
+        "clinician-directed evaluation rather than routine hormone testing for every typical menopause question"
+      ],
+      "red_flags": [
+        "postmenopausal bleeding, very heavy or prolonged bleeding, fainting, or rapidly worsening pelvic pain",
+        "chest pain, sudden shortness of breath, one-sided leg swelling, or new neurologic symptoms",
+        "suicidal thoughts or inability to remain safe"
+      ],
+      "sources": [
+        "nice_menopause_identification_management",
+        "menopause_society_hormone_therapy",
+        "menopause_society_nonhormone_therapy",
+        "phenotype_required",
+        "clinical_confirmation_required",
+        "user_declared_values_required",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "postpartum_recovery_support",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "nutrients",
+        "thyroid_autoimmune",
+        "metabolic",
+        "cardiovascular",
+        "digestive_gut_microbiome",
+        "sleep",
+        "neuropsych",
+        "connective_tissue"
+      ],
+      "title": "Postpartum body, gut, feeding and recovery support",
+      "context": "Postpartum recovery and feeding are time-sensitive, user-supplied clinical contexts. DNA cannot establish postpartum timing, infant exposure, recovery status, or the safety of a medication, supplement, or herb.",
+      "questions": [
+        "What is the recovery timing, and what feeding context applies now: lactating or chestfeeding, formula feeding, mixed feeding, recently stopped, or not relevant?",
+        "Are there bleeding, incision, pelvic-floor, urinary, bowel, breast, pain, sleep, fatigue, mood, anxiety, or intrusive-thought concerns?",
+        "What exact medicines, OTC products, supplements, teas, herbs, topical products, and foods are being used, and has a clinician, pharmacist, or lactation professional reviewed them?"
+      ],
+      "support_options": [
+        "Use regular meals, fluids, protein, fiber, and iron- or nutrient-rich foods as tolerated and compatible with the person's diet; address constipation or diarrhea with the treating clinician rather than a cleanse or restrictive diet.",
+        "Scale movement and pelvic-floor or other rehabilitation to the delivery or procedure and clinician guidance. Protect sleep and practical support where possible, and preserve the person's feeding goals without treating DNA as an infant-safety test.",
+        "For lactation or infant-exposure questions, review the exact substance with a clinician, pharmacist, pediatric clinician, and current LactMed information when appropriate; natural does not mean risk-free."
+      ],
+      "confirm_with": [
+        "user-supplied postpartum timing, delivery or procedure history, feeding context, symptoms, and medication list",
+        "CBC and ferritin when blood loss, fatigue, or iron deficiency is a concern",
+        "TSH/free T4 and thyroid antibodies when symptoms or history warrant it; glucose or A1c when gestational diabetes or metabolic risk is relevant",
+        "obstetric, primary-care, pediatric, pelvic-floor, lactation, or dietitian review as appropriate"
+      ],
+      "red_flags": [
+        "heavy bleeding, fainting, severe shortness of breath, chest pain, or one-sided leg swelling",
+        "severe headache, vision changes, seizure, severe upper-abdominal pain, fever with severe pelvic or abdominal pain, or rapidly worsening illness",
+        "suicidal thoughts, thoughts of harming the baby, or inability to remain safe"
+      ],
+      "sources": [
+        "acog_optimizing_postpartum_care",
+        "acog_breastfeeding_medication_support",
+        "acog_urgent_maternal_warning_signs",
+        "ncbi_lactmed",
+        "user_declared_values_required",
+        "clinical_confirmation_required",
+        "safety_guardrail"
       ]
     },
     {

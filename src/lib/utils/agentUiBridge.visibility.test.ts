@@ -112,6 +112,12 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).not.toContain('accessibility.textContent');
   });
 
+  it('reports the visible mobile data-controls launcher without exposing profile text', () => {
+    expect(source).toContain('mobileDataControlsTogglePresent: boolean;');
+    expect(source).toContain("document.querySelector<HTMLElement>('.mobile-sidebar-toggle')");
+    expect(source).toContain('mobileDataControlsTogglePresent: !!mobileSidebarToggle');
+  });
+
   it('exposes only aggregate Simple-card contract metrics', () => {
     expect(source).toContain('export interface AgentUiSimpleCardContractMetrics');
     expect(source).toContain('simpleCardContract: AgentUiSimpleCardContractMetrics;');
@@ -244,5 +250,12 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("statusToggle.querySelector('.update-pill, .missing-pill')");
     expect(source).toContain('resourceStatus: collectResourceStatus(),');
     expect(source).not.toContain('statusPill.textContent');
+  });
+
+  it('exposes only aggregate visibility metrics for catalog associations', () => {
+    expect(source).toContain('catalogAssociationPanelPresent: catalogAssociationPanel !== null');
+    expect(source).toContain('catalogAssociationPanelExpanded: catalogAssociationPanel?.open ?? false');
+    expect(source).toContain("catalogAssociationPanel?.querySelectorAll('.catalog-association-row').length ?? 0");
+    expect(source).not.toContain('catalogAssociationPanel.textContent');
   });
 });

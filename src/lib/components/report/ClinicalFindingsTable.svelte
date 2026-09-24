@@ -3,7 +3,7 @@
   import type { EvaluatedMarker } from '../../types/genomics';
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getEffectAllele, getEffectCount, isCallableGenotype } from '../../utils/genotype';
-  import { getScopeLabel, getSeverityInfo, getTierInfo } from '../../utils/evidence';
+  import { getSeverityInfo, getTierInfo } from '../../utils/evidence';
   import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';
   import {
     clinicalStateLabel,
@@ -23,6 +23,7 @@
     normalizeSharedInterpretation,
   } from '../../utils/sharedInterpretations';
   import SourcesList from './SourcesList.svelte';
+  import ContextSummary from './ContextSummary.svelte';
 
   interface Props {
     markers: EvaluatedMarker[];
@@ -152,7 +153,11 @@
           </td>
           <td data-label="Applicability">
             <span class="clinical-mobile-label">Applicability</span>
-            {marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise'}
+            {#if (marker.context_tags && marker.context_tags.length > 0) || (marker.sex_scope && marker.sex_scope !== 'all')}
+              <ContextSummary contextTags={marker.context_tags} scope={marker.sex_scope} maxVisible={2} />
+            {:else}
+              All users unless context says otherwise
+            {/if}
           </td>
           <td data-label="Clinical status">
             <span class="clinical-mobile-label">Clinical status</span>

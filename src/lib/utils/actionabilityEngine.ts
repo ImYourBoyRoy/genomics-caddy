@@ -45,7 +45,12 @@ import {
   type CanonicalActionabilityLevel,
   type CanonicalCallState,
 } from './findingIdentity';
-import { buildConditionEvidenceSummaries, type ConditionEvidenceSummary } from './conditionEvidence';
+import {
+  buildCatalogAssociationSummaries,
+  buildConditionEvidenceSummaries,
+  type CatalogAssociationSummary,
+  type ConditionEvidenceSummary,
+} from './conditionEvidence';
 import { isCallableGenotype } from './genotype';
 import { getLaypersonTranslation, getSimpleFindingCopy } from './layperson';
 import { isVerifiedAssertionStatus } from './reportStatuses';
@@ -296,6 +301,8 @@ export interface ActionablePlan {
   topFindings: TopFinding[];
   /** Named condition and health-pattern summaries derived from matched DNA signals. */
   conditionEvidence: ConditionEvidenceSummary[];
+  /** ClinVar, GWAS, and ClinGen relationships with their source-specific scope retained. */
+  catalogAssociations: CatalogAssociationSummary[];
   diet: DietaryGuidance;
   /** Fully qualified mixed-domain rule guidance for Clinical/AI consumers. */
   advancedGuidance: string[];
@@ -1221,7 +1228,7 @@ function deriveMedicationSafety(
     .map(([, value]) => value);
   const context = [
     ...sectionNames,
-    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''} ${(marker.context_tags || []).join(' ')}`),
     ...(personalSafetyContext?.medications || []),
     ...structuredMedicationNames,
   ].join(' ').toLowerCase();
@@ -1607,6 +1614,7 @@ export function deriveActionablePlan(
 
   const canonicalFindingGroups = buildCanonicalFindingGroups(report);
   const conditionEvidence = buildConditionEvidenceSummaries(report);
+  const catalogAssociations = buildCatalogAssociationSummaries(report);
   const priorityGroupMembers = new Map<string, EvaluatedMarker[]>();
   for (const { marker } of allMarkers) {
     if (!marker.interpretation_allowed || isExcludedFromPriorityQueue(marker)) continue;
@@ -2006,6 +2014,7 @@ export function deriveActionablePlan(
   return {
     topFindings,
     conditionEvidence,
+    catalogAssociations,
     diet: {
       favor: candidateDietFavor.filter((item) => !foodSafety.suppressedSuggestions.includes(item)),
       avoid: dietaryAvoidItems.map((item) => item.name),

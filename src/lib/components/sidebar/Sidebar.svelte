@@ -26,9 +26,11 @@ import { onMount, onDestroy } from 'svelte';
   import { clearOfflineUpdate, formatUpdateSummary, hasFreshProvenOfflineUpdate, isCompleteOfflineStatus, listOfflineUpdates, offlineStatusFailureMessage } from '../../utils/offlineUpdates';
   import ActivityPulse from '../common/loading/ActivityPulse.svelte';
   import Tooltip from '../common/Tooltip.svelte';
+  import DownloadProgressDetails from './DownloadProgressDetails.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
   import LibraryPanel from './LibraryPanel.svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
+  import { formatTransferEta, updateDownloadProgress, type DownloadProgressSample } from '../../utils/offlineDownloadProgress';
   import '$lib/styles/components/sidebar.css';
   import '$lib/styles/components/library-panel.css';
 
@@ -111,14 +113,6 @@ import { onMount, onDestroy } from 'svelte';
     runtimeAvailable = true,
   }: Props = $props();
 
-  interface DownloadProgress {
-    percent: number;       // 0–100, or -1 if total unknown
-    bytesDone: number;
-    totalBytes: number;
-    speedMbps: number;
-    startedAt: number;     // Date.now()
-  }
-
   let customDir = $state<string | null>(null);
   let offlineStatus = $state<OfflineUpdateCheck | null>(null);
   let syncingAll = $state(false);
@@ -130,11 +124,11 @@ import { onMount, onDestroy } from 'svelte';
   let syncErrors = $state<Record<string, string>>({});
   let syncMessages = $state<Record<string, string>>({});
   /** assetId -> in-progress download stats */
-  let downloadProgress = $state<Record<string, DownloadProgress>>({});
+  let downloadProgress = $state<Record<string, DownloadProgressSample>>({});
   /** assetId -> currently syncing */
   let syncingAsset = $state<Record<string, boolean>>({});
   interface ImportProgressInfo {
-    percent?: number;
+    percent?: number | null;
     rows_processed: number;
     rows_per_second?: number;
     eta_seconds?: number | null;
@@ -481,28 +475,21 @@ import { onMount, onDestroy } from 'svelte';
       label: string;
       bytes_downloaded: number;
       total_bytes: number;
+      resumed_bytes?: number;
     }>('offline:download_progress', (event) => {
-      const { asset_id, label, bytes_downloaded, total_bytes } = event.payload;
-      const prev = downloadProgress[asset_id];
-      const now = Date.now();
-      const startedAt = prev?.startedAt ?? now;
-      const elapsedSec = Math.max((now - startedAt) / 1000, 0.1);
-      const speedMbps = bytes_downloaded / elapsedSec / (1024 * 1024);
-      const percent = total_bytes > 0 ? Math.min(Math.round((bytes_downloaded / total_bytes) * 100), 99) : -1;
+      const { asset_id, label, bytes_downloaded, total_bytes, resumed_bytes } = event.payload;
 
       downloadProgress = {
         ...downloadProgress,
-        [asset_id]: {
-          percent,
-          bytesDone: bytes_downloaded,
-          totalBytes: total_bytes,
-          speedMbps,
-          startedAt,
-        },
+        [asset_id]: updateDownloadProgress(
+          downloadProgress[asset_id],
+          { bytesDone: bytes_downloaded, totalBytes: total_bytes, resumedBytes: resumed_bytes },
+          Date.now(),
+        ),
       };
       if (syncingAll || updatingAllOutdated) {
         bulkActiveAssetId = asset_id;
-        bulkSyncMessage = `Downloading ${asset_id}…`;
+        bulkSyncMessage = `Downloading ${label}…`;
         if (resourceSyncOverlayActive) {
           onResourceSyncStateChange?.({ active: true, message: `Downloading ${label}…` });
         }
@@ -714,14 +701,15 @@ import { onMount, onDestroy } from 'svelte';
     const imp = importProgress[assetId];
     if (imp && syncingAsset[assetId]) {
       const step = phase ? `Step ${phase.step}/${phase.total_steps} · ` : '';
-      const pct = imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…';
+      const pct = imp.percent != null && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…';
       return `${step}${pct} · ${imp.message || 'Importing…'}`;
     }
     const prog = downloadProgress[assetId];
     if (prog && syncingAsset[assetId]) {
       const step = phase ? `Step ${phase.step}/${phase.total_steps} · ` : 'Step 1/2 · ';
       const pct = prog.percent >= 0 ? `${prog.percent}%` : formatByteSize(prog.bytesDone);
-      return `${step}${pct} · ${prog.speedMbps.toFixed(2)} MB/s`;
+      const eta = prog.etaSeconds == null ? '' : ` · ${formatTransferEta(prog.etaSeconds)}`;
+      return `${step}${pct}${eta}`;
     }
     if (syncingAsset[assetId]) {
       return phase?.message || 'Preparing sync…';
@@ -791,7 +779,10 @@ import { onMount, onDestroy } from 'svelte';
     },
     {
       tierNum: 1, assetId: 'clinvar_variant_summary', label: 'ClinVar',
-      blurb: 'NCBI ClinVar variant annotations. Pathogenicity classifications.',
+      blurb: 'NCBI ClinVar variants plus condition-specific submitted classifications for broader local DNA discovery.',
+      companions: [
+        { assetId: 'clinvar_submission_summary', label: 'ClinVar condition-level submissions' },
+      ],
     },
     {
       tierNum: 1, assetId: 'pharmgkb_clinical_variants', label: 'PharmGKB (+ ClinGen, MANE)',
@@ -1017,7 +1008,6 @@ import { onMount, onDestroy } from 'svelte';
         <span class="badge success">🟢 GRCh38 Active</span>
       {:else}
         <span class="badge warning">⚠️ GRCh37 Only</span>
-        <span class="liftover-status-detail">Download the chain to map imported coordinates to GRCh38.</span>
       {/if}
     </div>
     <div class="liftover-status-actions">
@@ -1250,20 +1240,19 @@ import { onMount, onDestroy } from 'svelte';
             <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="var(--status-success-text)" />
             {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
               {@const prog = downloadProgress[bulkActiveAssetId]}
-              <ProgressTrack percent={prog.percent} spaced label="Bulk download progress" />
-              <div class="bulk-sync-meta">
-                <span>{prog.percent >= 0 ? `${prog.percent}%` : 'streaming…'}</span>
-                <span>{prog.speedMbps.toFixed(1)} MB/s</span>
-              </div>
+              <DownloadProgressDetails progress={prog} compact label="Bulk download" />
             {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
               {@const imp = importProgress[bulkActiveAssetId]}
               <ProgressTrack percent={imp.percent ?? -1} variant="indexing" spaced label="Bulk indexing progress" />
               <div class="bulk-sync-meta bulk-sync-meta-indexing">
-                <span>{imp.percent !== undefined && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
+                <span>{imp.percent != null && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
                 {#if imp.eta_seconds != null}
                   <span>{imp.eta_seconds}s remaining</span>
                 {/if}
               </div>
+            {:else if bulkActiveAssetId && syncPhase[bulkActiveAssetId]?.phase === 'download'}
+              <ProgressTrack variant="preparing" spaced label="Preparing bulk download" />
+              <div class="progress-preparing">Connecting to source · checking saved partial data…</div>
             {/if}
           </div>
         {/if}
@@ -1296,6 +1285,7 @@ import { onMount, onDestroy } from 'svelte';
           {#each DB_DEFS as db}
             {@const btnState = assetButtonState(db.tierNum, db.assetId)}
             {@const prog = downloadProgress[db.assetId]}
+            {@const phase = syncPhase[db.assetId]}
             {@const isActive = assetIsShowingProgress(db.assetId)}
             <div class="db-item-wrap">
               <div class="db-item">
@@ -1332,16 +1322,12 @@ import { onMount, onDestroy } from 'svelte';
               <!-- Per-asset progress bar (shown while downloading or importing) -->
               {#if isActive}
                 {#if prog && !importProgress[db.assetId]}
-                  <ProgressTrack percent={prog.percent} label={`${db.label} download progress`} />
-                  <div class="progress-meta">
-                    <span>{prog.percent >= 0 ? prog.percent + '%' : 'streaming…'}</span>
-                    <span>{prog.speedMbps.toFixed(1)} MB/s</span>
-                  </div>
+                  <DownloadProgressDetails progress={prog} label={`${db.label} download`} />
                 {:else if importProgress[db.assetId]}
                   {@const imp = importProgress[db.assetId]}
                   <ProgressTrack percent={imp.percent ?? -1} variant="indexing" label={`${db.label} indexing progress`} />
                   <div class="progress-meta progress-meta-indexing">
-                    <span>{imp.percent !== undefined && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
+                    <span>{imp.percent != null && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
                     {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
                       <span>{imp.eta_seconds}s remaining</span>
                     {/if}
@@ -1350,6 +1336,9 @@ import { onMount, onDestroy } from 'svelte';
                     <span class="import-dot"></span>
                     <span>{imp.message}</span>
                   </div>
+                {:else if phase?.phase === 'download'}
+                  <ProgressTrack variant="preparing" label={`${db.label} download connection`} />
+                  <div class="progress-preparing">Connecting to source · checking whether a saved download can resume…</div>
                 {:else}
                   <ProgressTrack variant="preparing" label={`${db.label} import preparation`} />
                   <div class="progress-preparing">

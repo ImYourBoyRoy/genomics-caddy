@@ -125,6 +125,46 @@ describe('audience-specific report exports', () => {
     expect(output.match(/### REF-[A-F0-9]{8} —/g)).toHaveLength(1);
   });
 
+  it('adds source-scoped full-genome disease associations to a handoff without allele strings', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'clinician',
+      report: {
+        ...report([]),
+        genomewide_clinvar: {
+          local_index_ready: true,
+          genotypes_scanned: 600_000,
+          exact_variant_count: 1,
+          association_count: 1,
+          omitted_association_count: 0,
+          allele_orientation: 'Forward strand',
+          source_asset_ids: ['clinvar_variant_summary', 'clinvar_submission_summary'],
+          associations: [{
+            association_is: 'variant_condition_summary',
+            association_scope: 'variant',
+            condition: 'Synthetic condition',
+            rsid: 'rs-condition',
+            variation_id: '123',
+            scv_accession: 'SCV000000001.1',
+            clinical_significance: 'Likely pathogenic',
+            variant_summary_clinical_significance: 'Likely pathogenic',
+            review_status: 'criteria provided, single submitter',
+            allele_match: 'matched',
+            origin_status: 'Origin not specified',
+            variant_summary_conflict: false,
+            source_url: 'https://www.ncbi.nlm.nih.gov/clinvar/?term=SCV000000001.1',
+          }],
+        },
+      },
+      sample,
+      includeRawGenotypes: false,
+    });
+
+    expect(output).toContain('Potential disease associations from full-genome ClinVar scan');
+    expect(output).toContain('Synthetic condition');
+    expect(output).toContain('Origin not specified');
+    expect(output).not.toContain('A/G');
+  });
+
   it('enumerates incomplete PGx components in technical handoffs', () => {
     const output = buildReportAudienceMarkdown({
       audience: 'clinician',
@@ -222,6 +262,37 @@ describe('audience-specific report exports', () => {
     expect(output).toContain('Indicators: 1 of 7 aligned; 1 callable');
     expect(output).toContain('Relative signal: Limited relative signal');
     expect(output).toContain('Clinical capability: Clinical evaluation is required');
+  });
+
+  it('renders catalog relationships with source scope and allele-match status', () => {
+    const output = buildReportAudienceMarkdown({
+      audience: 'personal',
+      report: report([marker({
+        rsid: 'rs-clinvar-export',
+        gene: 'SYNTHETIC1',
+        link_id: 'test:clinvar-export',
+        user_genotype: 'AG',
+        normalized_genotype: 'AG',
+        expected_plus_alleles: ['A', 'G'],
+        orientation_state: 'verified',
+        clinvar_annotations: [{
+          clinical_significance: 'Pathogenic',
+          conditions: 'Synthetic catalog condition',
+          variation_id: '45678',
+          rcv_accession: 'RCV000000003',
+          reference_allele: 'A',
+          alternate_allele: 'G',
+        }],
+      })]),
+      sample,
+    });
+
+    expect(output).toContain('## Catalog-linked conditions, traits & medication responses');
+    expect(output).toContain('Synthetic catalog condition');
+    expect(output).toContain('variant_condition_summary (variant-level)');
+    expect(output).toContain('- Allele match: matched');
+    expect(output).toContain('condition-specific RCV assertion');
+    expect(output).not.toContain('AG');
   });
 
   it('keeps zero and partial condition coverage in technical handoffs', () => {

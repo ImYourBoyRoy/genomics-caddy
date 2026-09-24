@@ -94,7 +94,7 @@ pub fn save_gnomad_config(conn: &Connection, cfg: &GnomadConfig) -> Result<(), S
         source_mode = GnomadSourceMode::RemoteIndexedVcfHttps;
     }
     conn.execute(
-        "UPDATE gnomad_config SET
+        "UPDATE reference.gnomad_config SET
             enabled = ?, source_mode = ?, release = ?, provider = ?,
             local_vcf_dir = ?, max_remote_concurrent_files = ?,
             max_queries_per_second = ?, graphql_enabled_for_sweep = ?,
@@ -189,5 +189,36 @@ pub fn tabix_reference_name(chrom: &str) -> String {
         format!("chr{c}")
     } else {
         format!("chr{}", c.to_uppercase())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    #[test]
+    fn saves_attached_config_when_legacy_compatibility_view_exists() {
+        let conn = Connection::open_in_memory().expect("open test database");
+        conn.execute_batch("ATTACH DATABASE ':memory:' AS reference;")
+            .expect("attach reference database");
+        super::super::schema::migrate_gnomad_schema(&conn)
+            .expect("create gnomAD schema");
+        conn.execute_batch(
+            "CREATE TEMP VIEW gnomad_config AS SELECT * FROM reference.gnomad_config;",
+        )
+        .expect("create legacy compatibility view");
+
+        let mut config = load_gnomad_config(&conn).expect("load gnomAD config");
+        config.max_queries_per_second = 7.5;
+        save_gnomad_config(&conn, &config).expect("save gnomAD config");
+        let saved_rate: f64 = conn
+            .query_row(
+                "SELECT max_queries_per_second FROM reference.gnomad_config WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read saved gnomAD config");
+        assert_eq!(saved_rate, 7.5);
     }
 }

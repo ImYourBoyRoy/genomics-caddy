@@ -251,6 +251,7 @@ describe('AI marker payload claim boundaries', () => {
     });
 
     expect(prompt).toContain('condition_evidence');
+    expect(prompt).toContain('catalog_associations');
     expect(prompt).toContain('condition_coverage');
     expect(prompt).toContain('PMDD-related steroid sensitivity');
     expect(prompt).toContain('coded_indicator_count');
@@ -258,6 +259,7 @@ describe('AI marker payload claim boundaries', () => {
     expect(prompt).toContain('not probabilities');
     const payload = JSON.parse(prompt.slice(prompt.indexOf('[JSON CONTEXT]') + '[JSON CONTEXT]'.length));
     expect(payload.sample_context.raw_genotypes_included).toBe(true);
+    expect(payload.sample_context.catalog_associations).toEqual([]);
     expect(payload.sample_context.sections[0].findings[0]).toHaveProperty('user_genotype');
   });
 

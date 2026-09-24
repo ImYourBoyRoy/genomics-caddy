@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
-  "version": "2.5.0",
-  "last_updated": "2026-08-26",
+  "version": "2.7.0",
+  "last_updated": "2026-09-24",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -98,6 +98,14 @@
       "evidence_type": "Professional clinical practice guideline",
       "conflict_of_interest": "Professional medical society guideline; review the guideline disclosures when using clinically",
       "notes": "Use for PMS/PMDD assessment and treatment framing. The app must not turn a marker or a report into a diagnosis or treatment plan."
+    },
+    "pots_heart_rhythm_society_consensus": {
+      "name": "Heart Rhythm Society Expert Consensus on POTS, IST, and Vasovagal Syncope",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5267948/",
+      "accessed": "2026-09-24",
+      "evidence_type": "Multisociety clinical expert consensus",
+      "conflict_of_interest": "Professional society consensus; review disclosures and current guidance when using clinically",
+      "notes": "Use for symptom-context and clinical-evaluation framing only. The app does not diagnose POTS, infer it from DNA, or recommend treatment from a genotype."
     },
     "womenshealth_pmdd": {
       "name": "Office on Women's Health: Premenstrual Dysphoric Disorder",
@@ -946,6 +954,62 @@
       "evidence_type": "U.S. public-health oral-cancer guidance",
       "conflict_of_interest": "U.S. Centers for Disease Control and Prevention public-health resource",
       "notes": "Use for persistent oral lesions, unusual bleeding or swelling, swallowing/breathing difficulty, and dental or medical evaluation prompts."
+    },
+    "nice_menopause_identification_management": {
+      "name": "NICE: Menopause: identification and management",
+      "url": "https://www.nice.org.uk/guidance/ng23/chapter/Recommendations",
+      "accessed": "2026-09-21",
+      "evidence_type": "National clinical guideline",
+      "conflict_of_interest": "National Institute for Health and Care Excellence guideline; review current disclosures when using clinically",
+      "notes": "Use for symptom- and bleeding-based identification, limits of routine hormone testing in people aged 45 or over, bone and muscle health, CBT, and clinician-directed treatment."
+    },
+    "menopause_society_hormone_therapy": {
+      "name": "The Menopause Society: Hormone Therapy",
+      "url": "https://menopause.org/patient-education/menopause-topics/hormone-therapy",
+      "accessed": "2026-09-21",
+      "evidence_type": "Professional menopause-care patient education",
+      "conflict_of_interest": "Professional medical society patient resource; review current disclosures when using clinically",
+      "notes": "Use for clinician-directed hormone-therapy discussion, benefits and risks, contraindication questions, and the boundary that product and monitoring details come from clinical care."
+    },
+    "menopause_society_nonhormone_therapy": {
+      "name": "The Menopause Society: Nonhormone Therapy Position Statement",
+      "url": "https://www.menopause.org/docs/default-source/professional/2023-nonhormone-therapy-position-statement.pdf",
+      "accessed": "2026-09-21",
+      "evidence_type": "Professional society position statement",
+      "conflict_of_interest": "Professional medical society position statement; review document disclosures when using clinically",
+      "notes": "Use for evidence-based nonhormonal options and for distinguishing supported interventions from unregulated or unproven products."
+    },
+    "nccih_menopausal_symptoms": {
+      "name": "NCCIH: Menopausal Symptoms and Complementary Health Approaches",
+      "url": "https://www.nccih.nih.gov/health/menopausal-symptoms-in-depth",
+      "accessed": "2026-09-21",
+      "evidence_type": "U.S. National Center for Complementary and Integrative Health evidence summary",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for the limits and uncertainty of complementary approaches for hot flashes and other menopause symptoms; exact product and safety review remain necessary."
+    },
+    "nih_ods_black_cohosh": {
+      "name": "NIH Office of Dietary Supplements: Black Cohosh",
+      "url": "https://ods.od.nih.gov/factsheets/Blackcohosh-HealthProfessional/",
+      "accessed": "2026-09-21",
+      "evidence_type": "NIH dietary supplement fact sheet",
+      "conflict_of_interest": "U.S. NIH public health resource",
+      "notes": "Use for variable product composition, uncertain efficacy, reported liver concerns, and the need to review supplements with a clinician."
+    },
+    "reproductive_aging_gwas_2021": {
+      "name": "Genome-wide association study of age at natural menopause",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34050765/",
+      "accessed": "2026-09-21",
+      "evidence_type": "Peer-reviewed genome-wide association study",
+      "conflict_of_interest": "Review article disclosures and cohort limitations when using clinically",
+      "notes": "Use for population-level reproductive-aging association provenance only; aggregate small-effect associations do not make a personal menopause-age prediction."
+    },
+    "asrm_poi_guideline": {
+      "name": "ASRM: Evidence-based guideline: Premature Ovarian Insufficiency",
+      "url": "https://www.asrm.org/practice-guidance/practice-committee-documents/evidence-based-guideline-premature-ovarian-insufficiency--2024/",
+      "accessed": "2026-09-21",
+      "evidence_type": "Professional clinical guideline",
+      "conflict_of_interest": "American Society for Reproductive Medicine guideline; review current disclosures when using clinically",
+      "notes": "Use for the boundary between clinical POI evaluation and consumer SNP context."
     },
     "user_declared_values_required": {
       "name": "DNA Tools support policy: user-declared values required",

@@ -76,6 +76,7 @@ pub fn connect<P: AsRef<Path>>(path: P) -> Result<Connection> {
             "reference",
             "api_cache_db",
             "clinvar",
+            "clinvar_submissions",
             "dbsnp",
             "gwas",
             "pharmgkb",
@@ -101,6 +102,7 @@ pub fn connect_sample(data_dir: &Path, sample_id: i64) -> Result<Connection> {
             "reference",
             "api_cache_db",
             "clinvar",
+            "clinvar_submissions",
             "dbsnp",
             "gwas",
             "pharmgkb",
@@ -230,6 +232,7 @@ fn attach_or_create(conn: &Connection, path: &Path, schema: &str) -> Result<()> 
 fn migrate_misplaced_catalog_dbs(data_dir: &Path) {
     for name in [
         "clinvar.db",
+        "clinvar_submissions.db",
         "dbsnp.db",
         "gwas.db",
         "pharmgkb.db",
@@ -274,6 +277,11 @@ fn attach_public_databases(conn: &Connection, parent_dir: &Path) -> Result<()> {
 
     // Catalog sidecars — attach when present under App/Data/.
     let has_clinvar = try_attach_existing(conn, &parent_dir.join("clinvar.db"), "clinvar");
+    let _has_clinvar_submissions = try_attach_existing(
+        conn,
+        &parent_dir.join("clinvar_submissions.db"),
+        "clinvar_submissions",
+    );
     let has_dbsnp = try_attach_existing(conn, &parent_dir.join("dbsnp.db"), "dbsnp");
     let has_gwas = try_attach_existing(conn, &parent_dir.join("gwas.db"), "gwas");
     let has_pharmgkb = try_attach_existing(conn, &parent_dir.join("pharmgkb.db"), "pharmgkb");
@@ -469,6 +477,7 @@ fn migrate_reference_catalogs_to_sidecars(conn: &Connection, data_dir: &Path) ->
 pub fn ensure_catalog_db_attached(conn: &Connection, data_dir: &Path, schema: &str) -> Result<()> {
     let filename = match schema {
         "clinvar" => "clinvar.db",
+        "clinvar_submissions" => "clinvar_submissions.db",
         "dbsnp" => "dbsnp.db",
         "gwas" => "gwas.db",
         "pharmgkb" => "pharmgkb.db",
@@ -569,6 +578,31 @@ pub fn ensure_catalog_schema_ddl(conn: &Connection, schema: &str) -> Result<()> 
         }
         "clinvar" | "dbsnp" => {
             // Created by their importers / migrate_offline_schema.
+        }
+        "clinvar_submissions" => {
+            conn.execute_batch(
+                "CREATE TABLE IF NOT EXISTS clinvar_submissions.clinvar_submissions (
+                    scv TEXT PRIMARY KEY,
+                    variation_id TEXT NOT NULL,
+                    clinical_significance TEXT NOT NULL DEFAULT '',
+                    date_last_evaluated TEXT NOT NULL DEFAULT '',
+                    description TEXT NOT NULL DEFAULT '',
+                    submitted_phenotype_info TEXT NOT NULL DEFAULT '',
+                    reported_phenotype_info TEXT NOT NULL DEFAULT '',
+                    review_status TEXT NOT NULL DEFAULT '',
+                    collection_method TEXT NOT NULL DEFAULT '',
+                    origin_counts TEXT NOT NULL DEFAULT '',
+                    submitter TEXT NOT NULL DEFAULT '',
+                    gene_symbol TEXT NOT NULL DEFAULT '',
+                    explanation_of_interpretation TEXT NOT NULL DEFAULT '',
+                    somatic_clinical_impact TEXT NOT NULL DEFAULT '',
+                    oncogenicity TEXT NOT NULL DEFAULT ''
+                );
+                CREATE INDEX IF NOT EXISTS clinvar_submissions.idx_clinvar_submissions_variation
+                    ON clinvar_submissions(variation_id);
+                CREATE INDEX IF NOT EXISTS clinvar_submissions.idx_clinvar_submissions_classification
+                    ON clinvar_submissions(clinical_significance);",
+            )?;
         }
         other => {
             return Err(rusqlite::Error::InvalidParameterName(format!(

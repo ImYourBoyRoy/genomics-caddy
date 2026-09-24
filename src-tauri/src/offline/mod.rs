@@ -15,6 +15,7 @@ pub mod schema;
 mod download;
 mod import_clingen;
 mod import_clinvar;
+mod import_clinvar_submission;
 mod import_dbsnp;
 mod import_mane;
 mod import_pharmgkb;

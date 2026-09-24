@@ -5,8 +5,8 @@
 This repository contains the local Tauri/Rust + Svelte DNA analysis tool. Stay
 inside this repository unless a task identifies a concrete external dependency.
 Human and agent operator docs: root `README.md` (download and first launch), `docs/`, and
-`ARCHITECTURE.md` (file map). Local session notes live in `MEMORY.md` and must
-stay untracked.
+`ARCHITECTURE.md` (file map). Durable shared backlog lives in `TASKS.md`; local
+session notes live in `MEMORY.md` and must stay untracked.
 
 Raw DNA fixtures and local app data are private; do not print genotype values,
 copy them into logs, or commit secrets.
@@ -30,6 +30,19 @@ any `App/Data/` tree. The curated runtime mirror at
   truth for discovery category labels, keyword routing, pack links, and
   consultation-mode hints. The Svelte UI and Rust crossmap must consume this
   resource rather than maintaining parallel biomedical keyword lists.
+- Full-genome ClinVar condition discovery joins the local variant summary to
+  condition-specific submission assertions. Require a known source build and
+  allele orientation, preserve the exact `association_is`, SCV/review/source
+  provenance, distinguish variant-wide summaries from condition assertions,
+  exclude explicitly somatic/oncogenic records, and never serialize genotype
+  alleles in the discovery summary.
+- A ClinVar per-submission classification is not a diagnosis or a complete
+  inheritance model. Do not infer zygosity actionability, phase, penetrance, or
+  clinical fit from the array match. POTS/dysautonomia remain clinical-context
+  routes unless validated consumer-array evidence becomes available.
+- Download resumes are safe only when the saved object identity and returned
+  byte range validate. Progress rates exclude resumed bytes; unknown sizes or
+  row-index imports must not display fabricated percentages or ETAs.
 - Reproductive and hormone resources must not infer anatomy, identity, current
   hormone levels, pregnancy, contraception, or adenomyosis from raw DNA.
   Route cycle symptoms, medication composition, and suspected pelvic disease to
@@ -85,6 +98,10 @@ from the user-only runtime endpoint file (or `GENOMICS_AGENT_UI_URL` if that URL
 is loopback). Do not use `localhost` or guess port 17321. The debug bridge
 requires a session token for `/ui/*`; use
 `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` only for disposable debug QA.
+Stop `tauri:dev` before running `pnpm test`, `pnpm run check`, or
+`pnpm run build`, since SvelteKit sync/build output can trigger transient
+HMR/IPC reloads in the live window. Restart Tauri afterward for the native UI
+audit.
 
 The fixture audit is read-only and must not emit or persist raw genotype values.
 Report source/runtime drift, unverified external behavior, warnings, and

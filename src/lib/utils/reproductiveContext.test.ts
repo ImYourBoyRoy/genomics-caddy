@@ -105,11 +105,21 @@ describe('reproductive marker context routing', () => {
     expect(option?.medication_rule_ids).toContain('HORMONE_THERAPY_COMPOSITION_NOT_IN_DNA');
   });
 
+  it('routes menopause context to transition guardrails and research-only markers', () => {
+    const option = selectedReproductiveContextOption('menopause_hormone_therapy');
+
+    expect(option?.domain_ids).toContain('menopause_transition_support');
+    expect(reproductiveMarkerContextRank('GUARDRAIL_MENOPAUSE_STATUS_NOT_IN_DNA', 'menopause_hormone_therapy')).toBe(3);
+    expect(reproductiveMarkerContextRank('PANEL_AGE_AT_NATURAL_MENOPAUSE_RESEARCH', 'menopause_hormone_therapy')).toBe(3);
+    expect(reproductiveContextIdsForProfileText('perimenopause hot flashes and night sweats')).toContain('menopause_hormone_therapy');
+  });
+
   it('keeps pregnancy and lactation status as explicit clinical context', () => {
     const option = selectedReproductiveContextOption('pregnancy_postpartum');
 
     expect(option?.domain_ids).toContain('pregnancy_postpartum_lactation_context');
     expect(option?.medication_rule_ids).toContain('PREGNANCY_LACTATION_MEDICATION_REVIEW_NOT_IN_DNA');
+    expect(option?.domain_ids).toContain('postpartum_recovery_support');
   });
 
   it('routes explicit preconception and fertility goals without making fertility claims', () => {

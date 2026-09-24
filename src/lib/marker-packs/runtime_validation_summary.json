@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 59,
+    "hormones_reproductive": 62,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -68,7 +68,7 @@
       "food_requirement_prompts.json",
       "user_diet_profile_schema.json"
     ],
-    "rules_count": 28,
+    "rules_count": 30,
     "food_groups_count": 33,
     "diet_profiles_count": 16,
     "note": "Food requirement logic is a support layer, not a genetic marker pack; manifest pack count is unchanged."
@@ -78,7 +78,7 @@
     "new_support_files": [
       "supplement_safety.json"
     ],
-    "rules_count": 16,
+    "rules_count": 18,
     "note": "Supplement guidance is a food-first, medication-aware safety layer; genotype can prompt a question but cannot establish need, dose, or safety."
   },
   "cycle_support_layer": {
@@ -86,13 +86,13 @@
     "new_support_files": [
       "cycle_support_guidance.json"
     ],
-    "domains_count": 13,
+    "domains_count": 15,
     "context_options_count": 12,
     "evidence_layers_count": 6,
     "marker_context_pack_routes_count": 5,
     "review_metrics_count": 3,
     "cycle_day_comparison_min_observations": 2,
-    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, medication composition, inherited clotting/contraception review, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis. Cross-pack marker routes connect selected hormone contexts to the cardiovascular thrombophilia markers without duplicating or reclassifying those markers."
+    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, menopause-transition and postpartum-recovery body support, medication composition, inherited clotting/contraception review, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis. Cross-pack marker routes connect selected hormone contexts to the cardiovascular thrombophilia markers without duplicating or reclassifying those markers."
   },
   "pgx_diplotype_layer": {
     "added": true,
@@ -126,7 +126,7 @@
     "new_support_files": [
       "research_taxonomy.json"
     ],
-    "categories_count": 21,
+    "categories_count": 22,
     "discovery_categories_count": 23,
       "note": "Discovery keyword routing is shared by the Svelte UI and Rust enrichment path; taxonomy matches are navigation hints and do not upgrade evidence or imply a diagnosis."
   },

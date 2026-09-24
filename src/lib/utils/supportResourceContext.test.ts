@@ -171,6 +171,7 @@ describe('support resource context', () => {
 
     expect(context.cycle_support.relevant_domains.map((domain) => domain.id)).toEqual([
       'pregnancy_postpartum_lactation_context',
+      'postpartum_recovery_support',
       'general_symptom_day_support',
     ]);
     expect(context.cycle_support.source_registry.cdc_medicine_pregnancy).toBeDefined();

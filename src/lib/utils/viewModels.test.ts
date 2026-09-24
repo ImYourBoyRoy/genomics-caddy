@@ -52,7 +52,18 @@ describe('report display view models', () => {
       },
       enrichment: {
         PANEL_EXAMPLE: {
+          clinvar_annotations: [{
+            clinical_significance: 'Pathogenic',
+            conditions: 'Synthetic linked condition',
+            variation_id: '12345',
+          }],
           gwas_hits: [],
+          gwas_associations: [{
+            association_is: 'variant_trait_statistical_association',
+            trait_name: 'Synthetic linked trait',
+            pvalue: 1e-9,
+            study_accession: 'GCST000001',
+          }],
           db_enriched_sources: [],
         },
       },
@@ -89,6 +100,8 @@ describe('report display view models', () => {
     expect(marker?.callability_state).toBe('not_callable');
     expect(marker?.assertion_key).toContain('"version":1');
     expect(marker?.assertion_key).not.toContain('NotInRawFile');
+    expect(marker?.clinvar_annotations?.[0]?.conditions).toBe('Synthetic linked condition');
+    expect(marker?.gwas_associations?.[0]?.study_accession).toBe('GCST000001');
     expect(marker ? getLaypersonTranslation(marker).isFallback : undefined).not.toBe(true);
     expect(marker ? getLaypersonTranslation(marker).signal : '').toContain('Example clinical panel');
   });

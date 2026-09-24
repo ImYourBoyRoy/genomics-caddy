@@ -3,7 +3,8 @@
 import type { GeneratedReport } from '../../types/genomics';
 import allergySensitivityCatalog from '../../marker-packs/allergy_sensitivity_catalog.json';
 import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
-import { conditionDiagnosticCapabilityLabel, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
+import { conditionDiagnosticCapabilityLabel, type CatalogAssociationSummary, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
+import GenomeWideConditionDiscovery from './GenomeWideConditionDiscovery.svelte';
 import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
 import type { PresentationMode } from '../../utils/presentationPreferences';
 
@@ -42,6 +43,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   let expandedLabReasons = $state<Record<string, boolean>>({});
   let labRequestCopied = $state(false);
+  let showAllCatalogAssociations = $state(false);
 
   function dashboardCollapseStorageKey(profileId: number): string {
     // v3: labs + review queue open by default; prior keys forced everything closed.
@@ -146,6 +148,19 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     if (summary.matched_marker_link_ids.length === 0) return;
     onJumpToMarkers?.(summary.matched_marker_link_ids);
     if (!onJumpToMarkers) onJumpToMarker?.(summary.matched_marker_link_ids[0]);
+  }
+
+  function viewCatalogAssociation(summary: CatalogAssociationSummary): void {
+    if (summary.matched_marker_link_ids.length === 0) return;
+    onJumpToMarkers?.(summary.matched_marker_link_ids);
+    if (!onJumpToMarkers) onJumpToMarker?.(summary.matched_marker_link_ids[0]);
+  }
+
+  function catalogAlleleMatchLabel(value: CatalogAssociationSummary['allele_match']): string {
+    if (value === 'matched') return 'Reported alternate allele present';
+    if (value === 'not_detected') return 'Reported alternate allele not detected';
+    if (value === 'not_reported') return 'Effect allele not reported';
+    return 'Exact allele match not verified';
   }
 
   function activityDomainLabel(domain: { id: string; label?: string }): string {
@@ -413,6 +428,74 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       </div>
       <p class="condition-evidence-footer">Counts show how many curated indicators matched in this report.</p>
     </section>
+  {/if}
+
+  {#if report.genomewide_clinvar}
+    <GenomeWideConditionDiscovery discovery={report.genomewide_clinvar} />
+  {/if}
+
+  {#if plan.catalogAssociations.length > 0}
+    <details class="catalog-associations summary-card card">
+      <summary class="catalog-associations-summary">
+        <span class="catalog-associations-heading">
+          <span class="section-kicker">Reference databases</span>
+          <span class="catalog-associations-title">Catalog-linked conditions, traits &amp; responses</span>
+          <span class="catalog-associations-hint">Links to reported markers; allele matching is shown when verifiable</span>
+        </span>
+        <span class="catalog-associations-count">{plan.catalogAssociations.length} links</span>
+      </summary>
+      <p class="catalog-associations-intro">
+        These are database relationships, not diagnoses or personal risk estimates. Variant, locus, and gene-level links are labeled separately.
+      </p>
+      <ul class="catalog-associations-list">
+        {#each (showAllCatalogAssociations ? plan.catalogAssociations : plan.catalogAssociations.slice(0, 6)) as association (association.id)}
+          <li class="catalog-association-row">
+            <div class="catalog-association-top">
+              <h4>{association.label}</h4>
+              <span class="catalog-association-kind">{association.relationship_label}</span>
+            </div>
+            <p class="catalog-association-copy">{association.evidence_summary}</p>
+            <div class="catalog-association-meta">
+              <span>{association.source_type}</span>
+              <span>{association.marker_count} {association.marker_count === 1 ? 'marker' : 'markers'}</span>
+              {#if association.clinical_significance}<span>{association.clinical_significance}</span>{/if}
+              {#if association.review_statuses?.length}<span>Review: {association.review_statuses.join(' · ')}</span>{/if}
+              {#if association.allele_match}<span>{catalogAlleleMatchLabel(association.allele_match)}</span>{/if}
+              {#if association.classification}<span>{association.source_type === 'ClinPGx' ? `Evidence ${association.classification}` : association.classification}</span>{/if}
+              {#if association.best_p_value != null}<span>p={association.best_p_value.toExponential(1)}</span>{/if}
+            </div>
+            <details class="catalog-association-details">
+              <summary>Genes, markers &amp; source records</summary>
+              <div>
+                <span>Genes: {association.genes.join(' · ') || 'Not recorded'}</span>
+                <span>Markers: {association.rsids.join(' · ') || 'Not recorded'}</span>
+                <span>Relationship: <code>{association.association_is}</code> ({association.association_scope}-level)</span>
+                {#if association.condition_specific_assertion_available === false}
+                  <span>Condition-specific ClinVar RCV assertion: not retained in this local variant summary</span>
+                {/if}
+                {#if association.record_ids.length}<span>Record IDs: {association.record_ids.join(' · ')}</span>{/if}
+                {#if association.rcv_accessions?.length}<span>RCV accessions on the variant-summary row (not mapped per condition): {association.rcv_accessions.join(' · ')}</span>{/if}
+                {#if association.inheritance_models?.length}<span>Inheritance: {association.inheritance_models.join(' · ')}</span>{/if}
+                {#if association.study_accessions?.length}<span>Studies: {association.study_accessions.join(' · ')}</span>{/if}
+                {#each association.source_urls.slice(0, 2) as url (url)}
+                  <a href={url} target="_blank" rel="noopener noreferrer">Open {association.source_type} record</a>
+                {/each}
+              </div>
+            </details>
+            {#if (onJumpToMarkers || onJumpToMarker) && association.matched_marker_link_ids.length > 0}
+              <button class="btn btn-xs btn-link catalog-association-link" type="button" onclick={() => viewCatalogAssociation(association)}>
+                View linked DNA →
+              </button>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+      {#if plan.catalogAssociations.length > 6}
+        <button class="catalog-associations-more" type="button" onclick={() => (showAllCatalogAssociations = !showAllCatalogAssociations)}>
+          {showAllCatalogAssociations ? 'Show fewer links' : `Show all ${plan.catalogAssociations.length} links`}
+        </button>
+      {/if}
+    </details>
   {/if}
 
   {#if presentationMode !== 'simple' && plan.safetyNotes.length > 0}
@@ -1039,41 +1122,45 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
           <div class="card-body lab-body" id="lab-followups-body">
             <p class="section-hint">Grouped by priority</p>
             <div class="lab-tier-stack">
-              {#each plan.labGroups as group (group.label)}
-                <section class="lab-tier-block">
-                  <div class="lab-tier-header">
-                    <span class="lab-tier-title">{group.label}</span>
-                    <span class="lab-tier-count">{group.tests.length}</span>
-                  </div>
-                  <p class="lab-tier-hint">{group.hint}</p>
-                  {#each labsByCategory(group.tests) as { category, tests } (category)}
-                    <div class="lab-category">
-                      <div class="lab-category-label">{category}</div>
-                      <div class="lab-chip-grid">
-                        {#each tests as lt (labKey(lt))}
-                          <div class="lab-chip" class:lab-chip-requires-counselor={lt.requires_counselor}>
-                            <button
-                              type="button"
-                              class="lab-chip-main"
-                              onclick={() => toggleLabReason(lt)}
-                              aria-expanded={expandedLabReasons[labKey(lt)] ? 'true' : 'false'}
-                            >
-                              <span class="lab-chip-name">{lt.name}</span>
-                              <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
-                            </button>
-                            {#if lt.requires_counselor && lt.tier !== 'counselor'}
-                              <span class="lab-chip-counselor-note">Genetic counselor advised</span>
-                            {/if}
-                            {#if expandedLabReasons[labKey(lt)]}
-                              <p class="lab-chip-purpose">{lt.purpose}</p>
-                              <p class="lab-chip-reason">{lt.reason}</p>
-                            {/if}
-                          </div>
-                        {/each}
+              {#each plan.labGroups as group, groupIndex (group.label)}
+                <details class="lab-tier-block" open={groupIndex === 0}>
+                  <summary class="lab-tier-toggle">
+                    <span class="lab-tier-header">
+                      <span class="lab-tier-title">{group.label}</span>
+                      <span class="lab-tier-count" aria-label={`${group.tests.length} follow-ups`}>{group.tests.length}</span>
+                    </span>
+                    <span class="lab-tier-hint">{group.hint}</span>
+                  </summary>
+                  <div class="lab-tier-content">
+                    {#each labsByCategory(group.tests) as { category, tests } (category)}
+                      <div class="lab-category">
+                        <div class="lab-category-label">{category}</div>
+                        <div class="lab-chip-grid">
+                          {#each tests as lt (labKey(lt))}
+                            <div class="lab-chip" class:lab-chip-requires-counselor={lt.requires_counselor}>
+                              <button
+                                type="button"
+                                class="lab-chip-main"
+                                onclick={() => toggleLabReason(lt)}
+                                aria-expanded={expandedLabReasons[labKey(lt)] ? 'true' : 'false'}
+                              >
+                                <span class="lab-chip-name">{lt.name}</span>
+                                <span class="lab-chip-badge {getTierBadgeClass(lt.tier)}">{getTierChipLabel(lt.tier)}</span>
+                              </button>
+                              {#if lt.requires_counselor && lt.tier !== 'counselor'}
+                                <span class="lab-chip-counselor-note">Genetic counselor advised</span>
+                              {/if}
+                              {#if expandedLabReasons[labKey(lt)]}
+                                <p class="lab-chip-purpose">{lt.purpose}</p>
+                                <p class="lab-chip-reason">{lt.reason}</p>
+                              {/if}
+                            </div>
+                          {/each}
+                        </div>
                       </div>
-                    </div>
-                  {/each}
-                </section>
+                    {/each}
+                  </div>
+                </details>
               {/each}
             </div>
             <details class="lab-request-details">
@@ -1096,26 +1183,28 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   </div>
 
   {#if healthAreaSections.length > 0}
-    <nav class="health-area-index summary-card card" aria-labelledby="health-area-index-title">
-      <div class="health-area-index-heading">
-        <div>
+    <details class="health-area-index summary-card card">
+      <summary class="health-area-index-heading">
+        <span class="health-area-index-heading-copy">
           <span class="section-kicker">Deep dive</span>
-          <h3 id="health-area-index-title">Explore all health areas</h3>
-          <p>Jump to a health area for complete findings, evidence, and technical details.</p>
-        </div>
+          <span class="health-area-index-title" id="health-area-index-title">Explore all health areas</span>
+          <span class="health-area-index-hint">Jump to a health area for complete findings, evidence, and technical details.</span>
+        </span>
         <span class="health-area-index-count">{healthAreaSections.length} areas</span>
-      </div>
-      <ul class="health-area-index-list">
-        {#each healthAreaSections as section (section.name)}
-          <li>
-            <a href={'#' + sectionAnchorId(section.name)} onclick={() => onJumpToSection?.(section.name)}>
-              <span>{section.name}</span>
-              <span class="health-area-index-markers">{section.markers.length} markers</span>
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </nav>
+      </summary>
+      <nav aria-labelledby="health-area-index-title">
+        <ul class="health-area-index-list">
+          {#each healthAreaSections as section (section.name)}
+            <li>
+              <a href={'#' + sectionAnchorId(section.name)} onclick={() => onJumpToSection?.(section.name)}>
+                <span>{section.name}</span>
+                <span class="health-area-index-markers">{section.markers.length} markers</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </nav>
+    </details>
   {/if}
 </div>
 
@@ -1770,6 +1859,152 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     line-height: 1.4;
   }
 
+  .catalog-associations {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    padding: 0.85rem 1rem;
+    border-color: var(--border-color);
+    background: var(--surface-raised);
+  }
+
+  .catalog-associations-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .catalog-associations-summary::-webkit-details-marker { display: none; }
+
+  .catalog-associations-heading {
+    display: grid;
+    min-width: 0;
+    gap: 0.12rem;
+  }
+
+  .catalog-associations-title {
+    color: var(--text-primary);
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .catalog-associations-hint,
+  .catalog-associations-intro {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .catalog-associations-count {
+    flex: 0 0 auto;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+
+  .catalog-associations[open] > .catalog-associations-summary {
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .catalog-associations-intro { margin: 0.6rem 0 0.25rem; }
+
+  .catalog-associations-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .catalog-association-row {
+    display: grid;
+    min-width: 0;
+    gap: 0.38rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .catalog-association-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .catalog-association-top h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.84rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .catalog-association-kind {
+    color: var(--status-info-text);
+    font-size: 0.67rem;
+    font-weight: 700;
+  }
+
+  .catalog-association-copy {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.42;
+  }
+
+  .catalog-association-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .catalog-association-meta span {
+    max-width: 100%;
+    color: var(--text-secondary);
+    font-size: 0.66rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .catalog-association-details {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+  }
+
+  .catalog-association-details summary,
+  .catalog-associations-more {
+    cursor: pointer;
+    color: var(--status-info-text);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .catalog-association-details div {
+    display: grid;
+    gap: 0.25rem;
+    padding-top: 0.35rem;
+    overflow-wrap: anywhere;
+  }
+
+  .catalog-association-details a { color: var(--status-info-text); }
+
+  .catalog-association-link { justify-self: start; padding-inline: 0; }
+
+  .catalog-associations-more {
+    margin-top: 0.65rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
   .health-area-index {
     padding: 1rem;
     width: min(100%, var(--report-dashboard-surface-width));
@@ -1782,14 +2017,56 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    list-style: none;
   }
 
-  .health-area-index-heading h3 {
-    margin: 0;
+  .health-area-index-heading::-webkit-details-marker {
+    display: none;
+  }
+
+  .health-area-index-heading-copy {
+    min-width: 0;
+  }
+
+  .health-area-index-title {
+    display: block;
     color: var(--text-primary);
     font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .health-area-index-hint {
+    display: block;
+    max-width: 48rem;
+    margin-top: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .health-area-index-heading:focus-visible {
+    border-radius: 0.2rem;
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  .health-area-index-heading::before {
+    content: '›';
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.2;
+    transition: transform 0.15s ease;
+  }
+
+  .health-area-index[open] > .health-area-index-heading::before {
+    transform: rotate(90deg);
+  }
+
+  .health-area-index[open] > .health-area-index-heading {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .health-area-index-count {
@@ -2193,14 +2470,57 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   .lab-tier-stack {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: 0.35rem;
   }
 
   .lab-tier-block {
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.55rem 0.65rem;
-    background: var(--surface-control);
+    min-width: 0;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .lab-tier-block:last-child {
+    border-bottom: 0;
+  }
+
+  .lab-tier-toggle {
+    display: grid;
+    grid-template-columns: 0.8rem minmax(0, 1fr);
+    align-items: start;
+    column-gap: 0.35rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .lab-tier-toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .lab-tier-toggle::before {
+    content: '›';
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.15;
+    transition: transform 0.15s ease;
+  }
+
+  .lab-tier-block[open] > .lab-tier-toggle::before {
+    transform: rotate(90deg);
+  }
+
+  .lab-tier-toggle:focus-visible {
+    border-radius: 0.2rem;
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  .lab-tier-content {
+    min-width: 0;
+    margin: 0.4rem 0 0 1.15rem;
+    padding-left: 0.65rem;
+    border-left: 1px solid var(--border-color);
   }
 
   .lab-tier-header {
@@ -2226,7 +2546,9 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .lab-tier-hint {
-    margin: 0.2rem 0 0.45rem;
+    grid-column: 2;
+    display: block;
+    margin-top: 0.18rem;
     font-size: 0.64rem;
     opacity: 0.62;
     line-height: 1.3;
@@ -2248,19 +2570,20 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   .lab-chip-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-    gap: 0.5rem;
+    gap: 0 0.8rem;
   }
 
   .lab-chip {
     min-width: 0;
-    min-height: 3.1rem;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.55rem;
-    background: var(--surface-card);
+    padding: 0.42rem 0.1rem;
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
+    background: transparent;
     box-sizing: border-box;
   }
 
@@ -2329,7 +2652,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .lab-chip-requires-counselor {
-    border-color: var(--status-accent-soft-border);
+    border-bottom-color: var(--status-accent-soft-border);
   }
 
   .lab-chip-counselor-note {

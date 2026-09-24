@@ -33,6 +33,7 @@ export interface AgentUiLayoutMetrics {
   mainContentWidth: number | null;
   mainContentScrollWidth: number | null;
   sidebarWidth: number | null;
+  mobileDataControlsTogglePresent: boolean;
   profileNameCount: number;
   profileNameMinWidth: number | null;
   connectionsLaunchHeight: number | null;
@@ -195,6 +196,9 @@ export interface AgentUiSnapshot {
   reportTitle: string | null;
   sectionCount: number;
   labFollowupsCollapsed: boolean | null;
+  catalogAssociationPanelPresent: boolean;
+  catalogAssociationPanelExpanded: boolean;
+  catalogAssociationRowCount: number;
   matchedAlleleLabelPresent: boolean;
   dietaryAlignmentPresent: boolean;
   dualExportButtonsPresent: boolean;
@@ -395,6 +399,7 @@ function collectOverflowingElements(root: HTMLElement | null): AgentUiLayoutMetr
 function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
+  const mobileSidebarToggle = document.querySelector<HTMLElement>('.mobile-sidebar-toggle');
   const connectionsLaunch = document.querySelector<HTMLElement>('.connections-launch-card');
   const liftoverStatus = document.querySelector<HTMLElement>('.liftover-status-card');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
@@ -449,6 +454,9 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     mainContentWidth: mainContent?.getBoundingClientRect().width ?? null,
     mainContentScrollWidth: mainContent?.scrollWidth ?? null,
     sidebarWidth: sidebar?.getBoundingClientRect().width ?? null,
+    mobileDataControlsTogglePresent: !!mobileSidebarToggle
+      && mobileSidebarToggle.getBoundingClientRect().width > 0
+      && mobileSidebarToggle.getBoundingClientRect().height > 0,
     profileNameCount: profileNameWidths.length,
     profileNameMinWidth: profileNameWidths.length ? Math.min(...profileNameWidths) : null,
     connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
@@ -1038,6 +1046,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
       );
       const labCard = labHeader?.closest('.summary-card');
       const labCollapsed = labCard ? labCard.classList.contains('collapsed') : null;
+      const catalogAssociationPanel = document.querySelector<HTMLDetailsElement>('.catalog-associations');
 
       return {
         title: document.title,
@@ -1048,6 +1057,9 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         reportTitle: report?.title ?? null,
         sectionCount: report?.sections?.length ?? 0,
         labFollowupsCollapsed: labCollapsed,
+        catalogAssociationPanelPresent: catalogAssociationPanel !== null,
+        catalogAssociationPanelExpanded: catalogAssociationPanel?.open ?? false,
+        catalogAssociationRowCount: catalogAssociationPanel?.querySelectorAll('.catalog-association-row').length ?? 0,
         matchedAlleleLabelPresent: !!document.body.innerText.match(/Matched alleles/i),
         dietaryAlignmentPresent: !!document.body.innerText.match(/Dietary Alignment/i),
         dualExportButtonsPresent:

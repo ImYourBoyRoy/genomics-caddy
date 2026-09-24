@@ -103,18 +103,27 @@ app after it starts.
 1. Start Genomics Caddy.
 2. Left sidebar → **Data & updates** → **Sync All Missing**. Wait until ClinVar,
    dbSNP, GWAS, PharmGKB, and companions show as downloaded **and indexed**.
-   This needs a network connection and can take several minutes.
+   The two current ClinVar summary downloads total about 846 MB compressed; the
+   local SQLite indexes need additional disk space. The downloader uses the
+   server-reported size and measured transfer rate, and only resumes when the
+   saved file and remote byte range still match.
 3. Typical AncestryDNA / 23andMe files are GRCh37. **Liftover assembly** →
    **Download chain** so coordinates can map to GRCh38.
 4. Import your `.txt`, `.csv`, `.tsv`, or ZIP from the sidebar. Read the
    pre-write review, then confirm. Parsing alone does not write a profile.
 5. Read **Simple** mode first. Use **Clinical** or **Compare** for sources and
    technical detail.
-6. Fill **Context** / **Diary** yourself if you want food, cycle, or medication
-   prompts. DNA does not infer those.
+6. Fill **Context** / **Diary** yourself if you want food, gut, cycle, menopause,
+   postpartum, supplement, or medication prompts. DNA does not infer those.
+   Report cards use compact, authored context badges when a finding is
+   biologically or life-stage relevant; extra badges stay behind `+N more`.
 
 If every finding looks empty or “unknown,” catalogs are usually still indexing.
 Stay on **Data & updates** until that finishes, then reopen the profile.
+
+The desktop shell adapts to the available WebView viewport, including high-DPI
+display scaling. Longer startup, import, and welcome surfaces remain
+reachable through their scroll regions instead of being clipped.
 
 Signed builds offer in-app updates. Confirm before download. The updater does
 not upload DNA.
@@ -138,8 +147,18 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
 - Imports AncestryDNA / 23andMe style files locally, with a review step before
   anything is saved
 - Scores curated marker packs into Simple, Clinical, and Compare reports
-- Keeps food, supplement, and medication prompts conditional on context *you*
-  enter
+- Adds a compact, expandable index of ClinVar condition labels, GWAS traits,
+  ClinGen gene–disease validity, and pharmacogenomic response links, with each
+  relationship’s evidence scope kept explicit
+- Scans all imported calls locally against ClinVar variant and condition-specific
+  submission indexes, then groups exact allele matches by condition and review
+  status. This is distinct from curated pack coverage and is not a diagnosis or
+  a personal-risk estimate; known somatic/oncogenic records are excluded.
+- Shows POTS/dysautonomia as symptom and clinician-evaluation context only; it
+  does not score a consumer-DNA POTS risk model or recommend treatment.
+- Keeps food, gut, supplement, medication, menopause, and postpartum prompts
+  conditional on context *you* enter
+- Prioritizes clinical follow-ups and expands deeper lists only when needed
 - Optional local [Ollama chat](docs/ai-chat/README.md)
 - Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`
 

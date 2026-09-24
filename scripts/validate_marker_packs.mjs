@@ -77,6 +77,8 @@ function isStringArray(value) {
 const manifestFile = path.join(sourceDir, 'manifest.json');
 const manifest = readJson(manifestFile);
 const manifestIds = new Set((manifest?.packs || []).map((pack) => pack.id));
+const evidencePolicy = readJson(path.join(sourceDir, 'evidence_policy.json'));
+const contextIndicatorIds = new Set(Object.keys(evidencePolicy?.display?.context_indicators || {}));
 
 if (!manifest || !Array.isArray(manifest.packs)) {
   errors.push('manifest.json: expected a packs array');
@@ -130,6 +132,22 @@ for (const fileName of fs.readdirSync(sourceDir).filter((name) => name.endsWith(
       }
       if (marker.sex_scope !== undefined && marker.sex_scope !== null && typeof marker.sex_scope !== 'string') {
         errors.push(`${location} ${marker.rsid || '(unknown)'}: sex_scope must be a string when present`);
+      }
+      if (marker.context_tags !== undefined && marker.context_tags !== null) {
+        if (!isStringArray(marker.context_tags) || marker.context_tags.length === 0) {
+          errors.push(`${location} ${marker.rsid || '(unknown)'}: context_tags must be a non-empty string array when present`);
+        } else {
+          const uniqueContextTags = new Set();
+          for (const contextTag of marker.context_tags) {
+            if (!contextIndicatorIds.has(contextTag)) {
+              errors.push(`${location} ${marker.rsid || '(unknown)'}: unknown context_tags value ${contextTag}`);
+            }
+            if (uniqueContextTags.has(contextTag)) {
+              errors.push(`${location} ${marker.rsid || '(unknown)'}: duplicate context_tags value ${contextTag}`);
+            }
+            uniqueContextTags.add(contextTag);
+          }
+        }
       }
       if (marker.clinical_semantics !== undefined && marker.clinical_semantics !== null) {
         const semantics = marker.clinical_semantics;
@@ -319,6 +337,21 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
     for (const [variantType, policy] of Object.entries(registry)) {
       if (policy?.scoring_policy === 'snp_allele_count' && !['snp', 'pharmacogenomic_snp'].includes(variantType)) {
         errors.push(`callability_rules.json: only direct SNP types may use snp_allele_count (${variantType})`);
+      }
+    }
+  }
+  if (resourceId === 'evidence_policy') {
+    const indicators = resource.display?.context_indicators;
+    if (!indicators || typeof indicators !== 'object' || Array.isArray(indicators)) {
+      errors.push('evidence_policy.json: display.context_indicators must be an object');
+    } else {
+      for (const [contextId, indicator] of Object.entries(indicators)) {
+        const location = `evidence_policy.json display.context_indicators.${contextId}`;
+        for (const field of ['label', 'short_label', 'group', 'description']) {
+          if (typeof indicator?.[field] !== 'string' || indicator[field].trim() === '') {
+            errors.push(`${location}: ${field} must be a non-empty string`);
+          }
+        }
       }
     }
   }

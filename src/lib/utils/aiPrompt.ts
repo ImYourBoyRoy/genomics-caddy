@@ -23,6 +23,7 @@ import { buildVectorResearchBlock, type VectorSearchMeta } from "./qdrantRag";
 import { markerPacksStore } from "./markerPacksState.svelte";
 import { buildSupportResourceContext } from "./supportResourceContext";
 import {
+  buildCatalogAssociationSummaries,
   buildConditionCoverageSummaries,
   buildConditionEvidenceSummaries,
   getConditionCoverageGaps,
@@ -149,6 +150,7 @@ export function buildMarkerPayload(
     direction: m.effect_direction,
     evidence_tier: m.evidence_tier,
     sex_scope: m.sex_scope || undefined,
+    context_tags: m.context_tags || undefined,
     severity: m.severity_class,
     clinical_semantics: normalizeFindingSemantics(m),
     assertion_status: m.assertion_status,
@@ -266,6 +268,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
       : undefined,
   });
   const conditionEvidence = buildConditionEvidenceSummaries(generatedReport);
+  const catalogAssociations = buildCatalogAssociationSummaries(generatedReport);
   const conditionCoverage = buildConditionCoverageSummaries(generatedReport);
   const conditionCoverageGaps = getConditionCoverageGaps();
 
@@ -289,6 +292,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         profile: userProfile.injectProfile ? userProfile : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
         condition_evidence: conditionEvidence,
+        catalog_associations: catalogAssociations,
         condition_coverage: conditionCoverage,
         condition_coverage_gaps: conditionCoverageGaps,
         raw_report: generatedReport,
@@ -332,6 +336,7 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         } : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
         condition_evidence: conditionEvidence,
+        catalog_associations: catalogAssociations,
         condition_coverage: conditionCoverage,
         condition_coverage_gaps: conditionCoverageGaps,
         sections: sectionsData

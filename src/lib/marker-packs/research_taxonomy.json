@@ -1,7 +1,7 @@
 {
   "name": "Research Trait Taxonomy",
-  "version": "1.0.0",
-  "last_updated": "2026-08-26",
+  "version": "1.1.0",
+  "last_updated": "2026-09-24",
   "type": "routing_resource",
   "purpose": "Shared keyword routing for discovery search, consultation suggestions, and marker-pack cross-links. Categories are navigation hints, not clinical diagnoses or evidence upgrades.",
   "do_not_claim": [
@@ -38,6 +38,14 @@
       "label": "Cardiovascular",
       "query_hint": "heart stroke blood pressure cholesterol lipid thrombosis",
       "keywords": ["coronary", "cardiovascular", "heart", "myocardial", "stroke", "blood pressure", "hypertension", "cholesterol", "ldl", "hdl", "lipid", "thrombo", "venous", "arrhythmia"],
+      "packs": ["cardiovascular"],
+      "modes": ["cardiovascular", "general"]
+    },
+    {
+      "id": "autonomic_orthostatic",
+      "label": "Autonomic & orthostatic health",
+      "query_hint": "POTS dysautonomia orthostatic intolerance postural tachycardia",
+      "keywords": ["POTS", "postural orthostatic tachycardia", "dysautonomia", "autonomic dysfunction", "orthostatic intolerance", "orthostatic tachycardia", "neurally mediated syncope"],
       "packs": ["cardiovascular"],
       "modes": ["cardiovascular", "general"]
     },

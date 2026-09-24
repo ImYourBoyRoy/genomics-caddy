@@ -170,6 +170,9 @@ pub fn row_count_for_asset(conn: &Connection, asset_id: OfflineAssetId) -> u64 {
         OfflineAssetId::ClinvarVariantSummary => {
             catalog_table_count(conn, "clinvar", "clinvar_reference")
         }
+        OfflineAssetId::ClinvarSubmissionSummary => {
+            catalog_table_count(conn, "clinvar_submissions", "clinvar_submissions")
+        }
         OfflineAssetId::PharmgkbClinicalVariants => {
             catalog_table_count(conn, "pharmgkb", "pharmgkb_clinical_variants")
         }

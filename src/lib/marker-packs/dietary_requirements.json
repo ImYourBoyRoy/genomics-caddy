@@ -1,7 +1,7 @@
 {
   "name": "Dietary Requirements & Food Decision Rules",
-  "version": "1.2.0",
-  "last_updated": "2026-08-26",
+  "version": "1.3.0",
+  "last_updated": "2026-09-21",
   "type": "support_engine",
   "purpose": "Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute decisions.",
   "critical_design_rule": "Food requirements are not inferred from DNA unless the rule explicitly uses genotype as one weak input. Allergy, medical diagnosis, medication safety, pregnancy, kidney disease, and user-declared values override nutrigenomic optimization.",
@@ -79,9 +79,9 @@
     "cyclic_mood_symptoms": ["RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY"],
     "cycle_linked_pain_headache": ["RULE_PMDD_CYCLE_STABILITY_NUTRITION_OVERLAY"],
     "suspected_adenomyosis": ["RULE_LOW_IRON_OR_ANEMIA_CONTEXT"],
-    "pregnancy_postpartum": ["RULE_OMEGA3_LOW_SEAFOOD_OR_FADS_CONTEXT", "RULE_CHOLINE_SUPPORT_PEMT_MTHFD1", "RULE_FOLATE_ONE_CARBON_SUPPORT"],
-    "menopause_hormone_therapy": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN"],
-    "hormone_therapy_context": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN"]
+    "pregnancy_postpartum": ["RULE_OMEGA3_LOW_SEAFOOD_OR_FADS_CONTEXT", "RULE_CHOLINE_SUPPORT_PEMT_MTHFD1", "RULE_FOLATE_ONE_CARBON_SUPPORT", "RULE_POSTPARTUM_RECOVERY_FOOD_SUPPORT"],
+    "menopause_hormone_therapy": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN", "RULE_MENOPAUSE_FOUNDATIONAL_FOOD_SUPPORT"],
+    "hormone_therapy_context": ["RULE_BONE_DENSITY_CALCIUM_D_VITK_PROTEIN", "RULE_MENOPAUSE_FOUNDATIONAL_FOOD_SUPPORT"]
   },
   "profile_notes": {
     "hard_exclusions": "These are user-entered food exclusions. Keep them ahead of genetic optimization and verify ingredient or cross-contact needs when safety depends on them.",
@@ -1549,6 +1549,122 @@
       "conflict_resolution": "PMDD support rules do not override allergy, CKD, pregnancy, or eating-disorder safety rules.",
       "sources": [
         "phenotype_required"
+      ]
+    },
+    {
+      "id": "RULE_MENOPAUSE_FOUNDATIONAL_FOOD_SUPPORT",
+      "label": "Menopause-transition foundational food support",
+      "trigger_sources": [
+        "menopause_hormone_therapy",
+        "menopause_transition",
+        "perimenopause",
+        "postmenopause",
+        "hot_flashes",
+        "night_sweats"
+      ],
+      "rule_type": "emphasize_and_monitor",
+      "priority": 52,
+      "applies_to_food_tags": [
+        "protein",
+        "fiber",
+        "calcium_rich",
+        "vitamin_K",
+        "magnesium_rich",
+        "omega3_EPA_DHA"
+      ],
+      "recommendation": "For menopause-transition body support, favor a sustainable eating pattern with adequate protein, fiber-rich plants or whole grains as tolerated, calcium-rich or fortified foods, and omega-3 foods when compatible with the person's diet. Use symptoms, measured labs, medication context, and goals to individualize the pattern; food does not restore or balance a hormone level.",
+      "substitutions": [
+        "dairy or fortified plant milks if tolerated",
+        "calcium-set tofu and beans",
+        "eggs, fish, poultry, or plant proteins that fit the person's values",
+        "leafy greens, nuts, and seeds when appropriate",
+        "algal omega-3 or other clinician-reviewed alternative when fish is excluded"
+      ],
+      "confirm_with": [
+        "diet pattern, allergies, kidney/liver history, medications, and eating-disorder risk",
+        "25(OH)D, calcium, PTH, lipids, A1c, blood pressure, or DXA when clinically indicated",
+        "exact supplement or hormone product label and clinician or dietitian review"
+      ],
+      "do_not_claim": [
+        "hormone balancing from a food list",
+        "genotype-specific menopause diet",
+        "high-dose vitamin or mineral need from a common SNP",
+        "food as a substitute for evaluation of bleeding, bone, thyroid, or cardiometabolic symptoms"
+      ],
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "bone_growth_mineral_density",
+        "nutrients",
+        "metabolic",
+        "cardiovascular",
+        "digestive_gut_microbiome",
+        "thyroid_autoimmune"
+      ],
+      "conflict_resolution": "Allergy, celiac, kidney, liver, anticoagulant, eating-disorder, and clinician-directed medical-diet rules override general menopause food support.",
+      "sources": [
+        "nice_menopause_identification_management",
+        "dietary_guidelines_2025_2030",
+        "nih_ods_calcium",
+        "nih_ods_vitamin_d",
+        "phenotype_required",
+        "user_declared_values_required"
+      ]
+    },
+    {
+      "id": "RULE_POSTPARTUM_RECOVERY_FOOD_SUPPORT",
+      "label": "Postpartum recovery food and nutrient support",
+      "trigger_sources": [
+        "pregnancy_postpartum",
+        "postpartum_recovery",
+        "lactation",
+        "breastfeeding",
+        "feeding_an_infant"
+      ],
+      "rule_type": "supportive_overlay",
+      "priority": 54,
+      "applies_to_food_tags": [
+        "protein",
+        "fiber",
+        "non_heme_iron",
+        "heme_iron",
+        "B12_high",
+        "omega3_EPA_DHA",
+        "choline_context"
+      ],
+      "recommendation": "For postpartum recovery, prioritize regular meals, fluids, adequate protein and fiber, and iron- or nutrient-rich foods as tolerated and compatible with the person's diet. Review prenatal/postpartum products and total intake by their exact labels; use symptoms and measured labs rather than DNA to decide whether a nutrient or supplement is needed.",
+      "substitutions": [
+        "beans, lentils, tofu, eggs, fish, poultry, or meat according to diet and clinician advice",
+        "fortified foods when animal foods are limited",
+        "easy-prep meals and snacks that preserve hydration and regular intake",
+        "fish or algae-based omega-3 options when compatible and reviewed"
+      ],
+      "confirm_with": [
+        "postpartum timing, blood loss, feeding context, allergies, diet, and exact medication/supplement labels",
+        "CBC and ferritin when fatigue, blood loss, or iron deficiency is a concern",
+        "obstetric, primary-care, pediatric, lactation, pharmacist, or dietitian guidance as appropriate"
+      ],
+      "do_not_claim": [
+        "postpartum supplement selection from genotype",
+        "infant medication or herbal safety from genotype",
+        "milk supply or feeding outcome prediction from DNA",
+        "a cleanse, elimination diet, or weight-loss plan as recovery care"
+      ],
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "nutrients",
+        "thyroid_autoimmune",
+        "metabolic",
+        "digestive_gut_microbiome",
+        "sleep",
+        "neuropsych"
+      ],
+      "conflict_resolution": "Allergy, celiac, kidney, liver, eating-disorder, infant-exposure, and clinician-directed medical-diet rules override general postpartum food support.",
+      "sources": [
+        "acog_optimizing_postpartum_care",
+        "acog_breastfeeding_medication_support",
+        "nih_ods_supplements",
+        "user_declared_values_required",
+        "clinical_confirmation_required"
       ]
     },
     {

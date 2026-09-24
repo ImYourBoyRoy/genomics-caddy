@@ -141,7 +141,8 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('.liftover-status-copy');
     expect(source).toContain('.liftover-status-actions');
     expect(sidebarComponent).toContain('class="chain-status-card card liftover-status-card"');
-    expect(sidebarComponent).toContain('Download the chain to map imported coordinates to GRCh38.');
+    expect(sidebarComponent).not.toContain('class="liftover-status-detail"');
+    expect(sidebarComponent).toContain('The chain maps imported GRCh37 coordinates to GRCh38 for report context; it does not change your genotype calls.');
     expect(sidebarComponent).toContain('Update chain');
   });
 });

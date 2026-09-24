@@ -30,6 +30,7 @@ use zip::ZipArchive;
 const GWAS_DOWNLOAD_URL: &str = "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated-full.zip";
 const GWAS_DOWNLOAD_URL_LEGACY: &str =
     "https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations-full.zip";
+const MAX_STORED_GWAS_ASSOCIATIONS_PER_RSID: usize = 12;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct ReferenceStatus {
@@ -319,10 +320,12 @@ impl GwasRsidAggregate {
             self.top_trait = trait_name.to_string();
         }
         if let Some(p) = pvalue {
-            self.best_pvalue = Some(match self.best_pvalue {
-                Some(current) => current.min(p),
-                None => p,
-            });
+            if self.best_pvalue.is_none_or(|current| p < current) {
+                self.best_pvalue = Some(p);
+                if !trait_name.is_empty() {
+                    self.top_trait = trait_name.to_string();
+                }
+            }
         }
         for gene in reported {
             self.reported_genes.insert(gene.clone());
@@ -330,16 +333,36 @@ impl GwasRsidAggregate {
         if let Some(gene) = mapped.filter(|g| !g.is_empty()) {
             self.mapped_genes.insert(gene.to_string());
         }
-        if self.associations.len() < 12 {
-            self.associations
-                .push(super::util::canonical_gwas_association(
-                    trait_name,
-                    pvalue,
-                    reported,
-                    mapped,
-                    study_accession,
-                    "gwas_catalog_local",
-                ));
+        let association = super::util::canonical_gwas_association(
+            trait_name,
+            pvalue,
+            reported,
+            mapped,
+            study_accession,
+            "gwas_catalog_local",
+        );
+        if self.associations.len() < MAX_STORED_GWAS_ASSOCIATIONS_PER_RSID {
+            self.associations.push(association);
+        } else {
+            let weakest_index = self
+                .associations
+                .iter()
+                .enumerate()
+                .max_by(|(_, left), (_, right)| {
+                    left["pvalue"]
+                        .as_f64()
+                        .unwrap_or(f64::INFINITY)
+                        .total_cmp(&right["pvalue"].as_f64().unwrap_or(f64::INFINITY))
+                })
+                .map(|(index, _)| index);
+            if let Some(index) = weakest_index {
+                let weakest_pvalue = self.associations[index]["pvalue"]
+                    .as_f64()
+                    .unwrap_or(f64::INFINITY);
+                if pvalue.unwrap_or(f64::INFINITY) < weakest_pvalue {
+                    self.associations[index] = association;
+                }
+            }
         }
     }
 
@@ -511,8 +534,15 @@ fn import_gwas_reference_tsv(
             .cloned()
             .collect::<Vec<_>>()
             .join("; ");
+        let mut stored_associations = agg.associations.clone();
+        stored_associations.sort_by(|left, right| {
+            left["pvalue"]
+                .as_f64()
+                .unwrap_or(f64::INFINITY)
+                .total_cmp(&right["pvalue"].as_f64().unwrap_or(f64::INFINITY))
+        });
         let associations_json =
-            serde_json::to_string(&agg.associations).unwrap_or_else(|_| "[]".to_string());
+            serde_json::to_string(&stored_associations).unwrap_or_else(|_| "[]".to_string());
         tx.execute(
             &format!(
                 "INSERT INTO {gwas_table} (rsid, association_count, top_trait, primary_gene, mapped_genes, reported_genes, best_pvalue, associations_json)
@@ -570,4 +600,39 @@ fn import_gwas_reference_tsv(
         );
     }
     Ok(total)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn keeps_the_strongest_gwas_records_within_the_per_rsid_limit() {
+        let mut aggregate = GwasRsidAggregate::default();
+        for index in 0..20 {
+            let trait_name = format!("Synthetic trait {index}");
+            let study_accession = format!("GCST{index:06}");
+            let pvalue = 10f64.powi(-(index + 1));
+            aggregate.record_association(
+                &trait_name,
+                Some(pvalue),
+                &[],
+                None,
+                Some(&study_accession),
+            );
+        }
+
+        assert_eq!(aggregate.count, 20);
+        assert_eq!(aggregate.best_pvalue, Some(1e-20));
+        assert_eq!(aggregate.top_trait, "Synthetic trait 19");
+        assert_eq!(aggregate.associations.len(), MAX_STORED_GWAS_ASSOCIATIONS_PER_RSID);
+        assert!(aggregate
+            .associations
+            .iter()
+            .any(|record| record["trait_name"] == "Synthetic trait 19"));
+        assert!(!aggregate
+            .associations
+            .iter()
+            .any(|record| record["trait_name"] == "Synthetic trait 0"));
+    }
 }

@@ -61,6 +61,15 @@ describe('desktop bootstrap screen', () => {
     expect(themeSource).toContain('animation: bootstrap-helix-drift 9s ease-in-out infinite;');
   });
 
+  it('keeps the loader reachable when display scaling reduces the CSS viewport height', () => {
+    expect(themeSource).toContain('overflow-y: auto;');
+    expect(themeSource).toContain('min-height: 100dvh;');
+    expect(themeSource).toContain('@media screen and (max-height: 800px)');
+    expect(themeSource).toContain('place-items: start center;');
+    expect(screenSource).toContain('overflow: visible;');
+    expect(screenSource).toContain('flex-wrap: wrap;');
+  });
+
   it('keeps DNA import confirmation inside the waterfall until cancel or confirm', () => {
     const pageSource = readFileSync(resolve(process.cwd(), 'src/routes/+page.svelte'), 'utf8');
     expect(pageSource).toContain('importPhase === "error" && !importOverlayDismissed');

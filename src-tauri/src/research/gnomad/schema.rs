@@ -121,14 +121,14 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
     )?;
 
     let count: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM gnomad_config WHERE id = 1",
+        "SELECT COUNT(*) FROM reference.gnomad_config WHERE id = 1",
         [],
         |row| row.get(0),
     )?;
     if count == 0 {
         let defaults = super::types::GnomadConfig::default();
         conn.execute(
-            "INSERT INTO gnomad_config (
+            "INSERT INTO reference.gnomad_config (
                 id, enabled, source_mode, release, provider, local_vcf_dir,
                 max_remote_concurrent_files, max_queries_per_second,
                 graphql_enabled_for_sweep, graphql_fallback_enabled, dataset_policy,
@@ -147,4 +147,30 @@ pub fn migrate_gnomad_schema(conn: &Connection) -> Result<()> {
         )?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    #[test]
+    fn seeds_attached_table_when_legacy_compatibility_view_exists() {
+        let conn = Connection::open_in_memory().expect("open test database");
+        conn.execute_batch("ATTACH DATABASE ':memory:' AS reference;")
+            .expect("attach reference database");
+        migrate_gnomad_schema(&conn).expect("create initial gnomAD schema");
+        conn.execute("DELETE FROM reference.gnomad_config", [])
+            .expect("clear initial gnomAD config");
+        conn.execute_batch(
+            "CREATE TEMP VIEW gnomad_config AS SELECT * FROM reference.gnomad_config;",
+        )
+        .expect("create legacy compatibility view");
+
+        migrate_gnomad_schema(&conn).expect("seed config through attached table");
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM reference.gnomad_config", [], |row| row.get(0))
+            .expect("count seeded config rows");
+        assert_eq!(count, 1);
+    }
 }

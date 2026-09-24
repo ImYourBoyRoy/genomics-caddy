@@ -10,7 +10,11 @@ liftover chain. After you install, open **Data & updates** in the left
 sidebar and run **Sync All Missing**. Wait until those catalogs are
 downloaded **and indexed**. For typical AncestryDNA / 23andMe GRCh37
 files, also use **Liftover assembly** → **Download chain**. Marker packs
-that ship with the app are not a substitute for these databases.
+that ship with the app are not a substitute for these databases. The current
+ClinVar variant and submission-summary downloads together are about 846 MB
+compressed; their local indexes require extra disk space. Transfer estimates
+use reported file size and observed speed; indexing reports processed rows and
+does not invent a byte-based ETA for decompressed data.
 
 ## Limits
 
@@ -19,10 +23,10 @@ that ship with the app are not a substitute for these databases.
 - Chromosome-call sex display (`Male` / `Female` / `Unknown` / `Uncertain`) is
   a coverage hint. It is not gender, anatomy, fertility, pregnancy, or hormone
   status.
-- Reproductive, cycle, contraceptive, and pelvic-disease prompts require
-  context you enter. DNA does not infer them.
-- Raw DNA never by itself changes medication, high-dose supplements, or a
-  permanent restrictive diet.
+- Reproductive, cycle, contraceptive, menopause, postpartum, and pelvic-disease
+  prompts require context you enter. DNA does not infer them.
+- Raw DNA never by itself changes medication, high-dose supplements, botanical
+  products, or a permanent restrictive diet.
 
 ## Import
 
@@ -60,8 +64,42 @@ Use Simple first. Filters can hide benign/uncalled markers; they do not turn
 unknown coverage into a clean bill of health. Cancer and PGx sections that
 require clinical confirmation suppress fake-precise risk percentages.
 
+Findings with an authored biological or life-stage applicability show a compact
+context badge, such as **Pregnancy**, **Postpartum**, **Menopause**, or
+**Hormone therapy**. Cards show the primary badge; additional context stays
+behind a `+N more` disclosure that expands in the page flow. These badges
+describe why a finding may be relevant; they do not infer pregnancy, current
+hormone levels, anatomy, or reproductive status from DNA.
+
+The report separates **catalog-linked associations** on curated findings from
+**potential disease associations** discovered by scanning the full imported
+genome against the local ClinVar variant and condition-specific submission
+indexes. The latter requires both ClinVar indexes, a known source build, and
+verified allele orientation; only exact single-base matches are included.
+Individual ClinVar submission classifications and review status remain visible,
+and records with explicit somatic/oncogenic labels are excluded. Some records
+may not specify origin. This is not a diagnosis, a personal-risk estimate, or a
+complete disease screen. GWAS rows remain locus–trait statistics, ClinGen
+entries gene-level disease-validity context, and ClinPGx entries medication
+response annotations.
+
+POTS and dysautonomia appear as clinical context, not a DNA score. Standing-
+related symptoms, positional heart rate/blood pressure, medication context, and
+other possible causes are matters for clinical evaluation; the app does not
+recommend salt loading, supplements, or medication changes from DNA.
+
+For a bounded local report, the GWAS Catalog index retains up to the 12
+strongest study records per rsID (ordered by reported p-value); the linked
+study records remain available for source review. This cap does not imply that
+the catalog contains only 12 associations for that marker.
+
+Long lab follow-up lists open with the highest-priority group; lower-priority
+groups and the deep-dive health-area directory expand in place. Counts keep the
+full scope visible without crowding the first report view.
+
 Optional **Context** and **Diary** fields (medications, allergies, labs,
-cycle notes, diet) stay per-profile. They inform chat and dashboard prompts.
+cycle/menopause/postpartum notes, diet, and product labels) stay per-profile.
+They inform chat and dashboard prompts.
 They never become genotype evidence.
 
 ## Exports and sharing

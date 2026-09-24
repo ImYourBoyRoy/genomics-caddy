@@ -2240,6 +2240,140 @@
       ]
     },
     {
+      "rsid": "GUARDRAIL_MENOPAUSE_STATUS_NOT_IN_DNA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Perimenopause, menopause status, and current hormone state are not callable from consumer DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates reproductive-aging symptoms and clinical staging from inherited SNP context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Consumer DNA cannot establish perimenopause or menopause status, stage a transition, measure current estrogen or progesterone, identify the cause of hot flashes or night sweats, determine ovarian reserve, or select hormone therapy. Use the person's age and bleeding or surgical history, symptoms, medications, and clinician-directed evaluation.",
+      "do_not_claim": [
+        "perimenopause or menopause diagnosis from a common SNP",
+        "current hormone level or ovarian-reserve measurement",
+        "hot-flash cause from genotype",
+        "hormone-therapy start, stop, dose, or product selection from genotype"
+      ],
+      "confirm_with": [
+        "user-supplied age, bleeding, surgical, contraceptive, and medication context",
+        "vasomotor, sleep, mood, genitourinary, pain, and bone-health symptoms",
+        "clinician evaluation and targeted testing when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Menopause is a dynamic clinical life-stage and consumer SNP arrays do not measure current reproductive hormones or establish the reason for a symptom.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "all_bodies_menopause_context",
+      "context_tags": [
+        "perimenopause",
+        "menopause",
+        "age_sensitive",
+        "hormone_sensitive"
+      ],
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NICE: Menopause: identification and management",
+          "url": "https://www.nice.org.uk/guidance/ng23/chapter/Recommendations",
+          "accessed": "2026-09-21",
+          "evidence_type": "National clinical guideline",
+          "conflict_of_interest": "National Institute for Health and Care Excellence guideline; review current disclosures when using clinically",
+          "notes": "Use for symptom- and bleeding-based identification, limits of routine hormone testing in people aged 45 or over, and clinician-directed management."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_AGE_AT_NATURAL_MENOPAUSE_RESEARCH",
+      "gene": "MCM8/SYCP2L/BRCA1/HELQ/FANCM/BRSK1/MULTI_GENE",
+      "variant_name": "Age at natural menopause research panel",
+      "effect_allele": "N/A",
+      "impact": "Reproductive-aging association context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "Genome-wide studies have identified many small-effect associations with age at natural menopause. This panel is research context only: it cannot predict an individual's menopause age, stage perimenopause, measure ovarian reserve, diagnose premature ovarian insufficiency, or determine hormone-therapy response.",
+      "do_not_claim": [
+        "personal age-at-menopause prediction",
+        "perimenopause or menopause staging",
+        "ovarian-reserve or fertility prediction",
+        "premature ovarian insufficiency diagnosis",
+        "hormone-therapy selection or response"
+      ],
+      "confirm_with": [
+        "age, bleeding and surgical history, medications, and symptom pattern",
+        "clinician evaluation when periods change unexpectedly or symptoms are concerning",
+        "validated clinical genetics testing only when a clinician identifies an indication"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Research associations are small-effect, ancestry- and model-dependent, and incomplete on consumer arrays; they do not establish an individual life-stage or current hormone state.",
+      "clinical_confirmation_required": true,
+      "context_tags": [
+        "age_sensitive",
+        "menopause"
+      ],
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "Genome-wide association study of age at natural menopause",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34050765/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Review article disclosures and cohort limitations when using clinically",
+          "notes": "Use for research provenance only; the study's aggregate associations do not make a personal clinical prediction."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for association provenance and trait/locus validation; GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_POI_CLINICAL_EVALUATION_GAP",
+      "gene": "MULTI_GENE",
+      "variant_name": "Premature ovarian insufficiency requires clinical evaluation",
+      "effect_allele": "N/A",
+      "impact": "Prevents common-SNP data from substituting for POI or ovarian-reserve assessment",
+      "evidence_tier": "E_negative_evidence_or_gap",
+      "interpretation": "Common consumer SNP data cannot diagnose or exclude premature ovarian insufficiency, ovarian reserve changes, or an underlying chromosomal or monogenic cause. Unexpectedly absent or changing periods, vasomotor symptoms at a young age, or fertility concerns require clinical assessment rather than a polygenic interpretation.",
+      "do_not_claim": [
+        "premature ovarian insufficiency diagnosis or exclusion",
+        "ovarian-reserve result",
+        "fertility prediction",
+        "reassurance from an uncalled or negative consumer marker"
+      ],
+      "confirm_with": [
+        "bleeding, symptom, medication, surgical, and family-history review",
+        "clinician-directed hormone testing and evaluation",
+        "clinical genetics or chromosomal testing when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "A consumer SNP array is not a complete evaluation for POI, ovarian reserve, chromosomal variation, rare variants, or current endocrine function.",
+      "clinical_confirmation_required": true,
+      "context_tags": [
+        "age_sensitive",
+        "ovarian"
+      ],
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "Genome-wide association study of age at natural menopause",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34050765/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Review article disclosures and cohort limitations when using clinically",
+          "notes": "Use to distinguish population-level reproductive-aging associations from clinical POI evaluation."
+        },
+        {
+          "name": "ASRM: Evidence-based guideline: Premature Ovarian Insufficiency",
+          "url": "https://www.asrm.org/practice-guidance/practice-committee-documents/evidence-based-guideline-premature-ovarian-insufficiency--2024/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Professional clinical guideline",
+          "conflict_of_interest": "American Society for Reproductive Medicine guideline; review current disclosures when using clinically",
+          "notes": "Use for the boundary between clinical POI evaluation and consumer SNP context."
+        }
+      ]
+    },
+    {
       "rsid": "GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA",
       "gene": "MULTI_GENE",
       "variant_name": "Fertility and preconception status are not predictable from consumer DNA",
@@ -2265,6 +2399,10 @@
       "raw_dna_limitation": "Fertility depends on age, anatomy, gamete and partner factors, medical history, medications, exposures, and chance. Consumer SNP arrays are not a complete fertility, carrier, HLA, structural-variant, or reproductive-endocrinology evaluation.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_preconception_fertility_context",
+      "context_tags": [
+        "preconception",
+        "fertility"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {
@@ -2316,6 +2454,10 @@
       "raw_dna_limitation": "Exogenous hormone exposure and response are clinical medication and phenotype facts, not properties that can be recovered from a consumer SNP array.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_hormone_therapy_context",
+      "context_tags": [
+        "hormone_therapy",
+        "hormone_sensitive"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {
@@ -2359,6 +2501,11 @@
       "raw_dna_limitation": "Pregnancy, postpartum physiology, lactation, infant exposure, and medication safety depend on timing, clinical history, the exact substance, and measured or observed outcomes rather than a consumer SNP array.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_pregnancy_lactation_context",
+      "context_tags": [
+        "pregnancy",
+        "postpartum",
+        "lactation"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {

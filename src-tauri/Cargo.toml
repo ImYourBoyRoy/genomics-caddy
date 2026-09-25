@@ -1,6 +1,6 @@
 [package]
 name = "DNA-Tools"
-version = "0.2.6"
+version = "0.2.7"
 description = "Local-first desktop DNA explorer (Genomics Caddy) for AncestryDNA and 23andMe exports."
 authors = ["Roy Dawson IV"]
 license = "PolyForm-Noncommercial-1.0.0"

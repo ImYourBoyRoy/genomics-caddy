@@ -89,9 +89,15 @@ export async function getDiscoveredFindingsSummary(
 export async function importGenome(
   filePath: string,
   sampleName: string,
+  expectedSourceFileSha256: string,
   replaceExistingSampleId?: number,
 ): Promise<number> {
-  return invoke<number>("import_genome", { filePath, sampleName, replaceExistingSampleId });
+  return invoke<number>("import_genome", {
+    filePath,
+    sampleName,
+    replaceExistingSampleId,
+    expectedSourceFileSha256,
+  });
 }
 
 export async function inspectGenome(filePath: string): Promise<GenomeImportPreview> {

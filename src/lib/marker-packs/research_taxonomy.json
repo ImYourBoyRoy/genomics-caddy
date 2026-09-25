@@ -1,7 +1,7 @@
 {
   "name": "Research Trait Taxonomy",
-  "version": "1.1.0",
-  "last_updated": "2026-09-24",
+  "version": "1.2.0",
+  "last_updated": "2026-09-25",
   "type": "routing_resource",
   "purpose": "Shared keyword routing for discovery search, consultation suggestions, and marker-pack cross-links. Categories are navigation hints, not clinical diagnoses or evidence upgrades.",
   "do_not_claim": [
@@ -61,7 +61,7 @@
       "id": "neuropsych",
       "label": "Brain & mood",
       "query_hint": "depression anxiety mood attention neurodevelopment",
-      "keywords": ["depression", "anxiety", "bipolar", "schizophrenia", "mood", "neuroticism", "attention", "adhd", "autism", "neurodevelopment"],
+      "keywords": ["depression", "depressive", "anxiety disorder", "generalized anxiety", "anxiety", "bipolar", "schizophrenia", "mood", "neuroticism", "attention-deficit", "attention", "adhd", "autism", "neurodevelopment"],
       "packs": ["neuropsych"],
       "modes": ["brain_mood"]
     },

@@ -77,13 +77,7 @@ export async function runImportGenome(
     });
     return;
   }
-  onState({
-    isImportPreparing: false,
-    importPhase: "awaiting-confirmation",
-    importPreview: preview,
-    progressPercent: 0,
-    progressStatus: "Preview ready. No profile data has been written.",
-  });
+  onState({ importPreview: preview });
   const startImport = async (replaceExistingSampleId?: number): Promise<void> => {
     onState({
       isImportPreparing: false,
@@ -98,7 +92,12 @@ export async function runImportGenome(
     });
 
     try {
-      const sampleId = await apiImportGenome(filePath, normalizedName, replaceExistingSampleId);
+      const sampleId = await apiImportGenome(
+        filePath,
+        normalizedName,
+        preview.source_file_sha256,
+        replaceExistingSampleId,
+      );
       onState({
         importPhase: "profile",
         progressPercent: 100,
@@ -143,8 +142,28 @@ export async function runImportGenome(
     }
   };
 
-  onState({ progressStatus: "Preview ready. Review the results, then choose an action below." });
-  onConfirmationRequired(() => startImport(existing?.id), existing !== undefined);
+  const diagnostics = preview.diagnostics;
+  const requiresReview = existing !== undefined ||
+    diagnostics.accepted_rows <= 0 ||
+    diagnostics.accepted_rows !== diagnostics.total_rows ||
+    diagnostics.malformed_rows > 0 ||
+    diagnostics.duplicate_rows > 0 ||
+    diagnostics.warnings.length > 0 ||
+    diagnostics.vendor === "Generic genomic export" ||
+    diagnostics.source_build.trim().toLowerCase() === "unknown";
+
+  if (requiresReview) {
+    onState({
+      isImportPreparing: false,
+      importPhase: "awaiting-confirmation",
+      progressPercent: 0,
+      progressStatus: "Review the import details before continuing.",
+    });
+    onConfirmationRequired(() => startImport(existing?.id), existing !== undefined);
+    return;
+  }
+
+  await startImport();
 }
 
 export interface WarmReportParams {

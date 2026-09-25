@@ -373,6 +373,18 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(styleBlock).not.toContain('.catalog-associations-list {\n    display: grid;\n    grid-template-columns:');
   });
 
+  it('surfaces symptom-led mental-health support while separating it from DNA evidence', () => {
+    expect(source).toContain('hasNeuropsychSection');
+    expect(source).toContain('catalogAssociationsForTopic(plan.catalogAssociations, \'neuropsych\')');
+    expect(source).toContain('No psychiatric score calculated');
+    expect(source).toContain('A dopamine-pathway SNP is not evidence of low dopamine');
+    expect(source).toContain('childhood history and whether difficulties appear in more than one setting');
+    expect(source).toContain('No link here confirms or rules out a condition.');
+    expect(source).toContain('call or text 988');
+    expect(styleBlock).toContain('.brain-mood-context-grid {');
+    expect(styleBlock).toContain('grid-template-columns: 1fr;');
+  });
+
   it('uses the available desktop report pane without exceeding the shared surface cap', () => {
     const grid = styleBlock.match(/\.grid-layout \{[\s\S]*?\n  \}/)?.[0] ?? '';
 

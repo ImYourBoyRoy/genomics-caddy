@@ -1905,17 +1905,17 @@
       "category": "neuropsych",
       "name": "Val158Met",
       "risk_allele": "A",
-      "impact": "Slower prefrontal dopamine & norepinephrine clearance",
-      "description": "COMT Val158Met. Homozygous A/A (Met/Met) decreases COMT enzyme activity up to 4-fold, leading to higher prefrontal dopamine levels. Associated with high cognitive focus and executive capacity, but increases stress and anxiety vulnerability ('Worrier' type)."
+      "impact": "Common COMT enzyme-activity context; not a brain dopamine measurement",
+      "description": "COMT Val158Met has measurable effects on enzyme activity in some tissues and has been studied for cognition and stress response, but behavioral associations vary across studies and context. A consumer SNP does not measure prefrontal dopamine, diagnose ADHD or anxiety, or predict stimulant response."
     },
     {
       "rsid": "rs1800497",
-      "gene": "DRD2",
+      "gene": "ANKK1",
       "category": "neuropsych",
-      "name": "TaqIA (ANKK1)",
+      "name": "TaqIA (ANKK1, near DRD2)",
       "risk_allele": "T",
-      "impact": "Reduced dopamine D2 receptor density",
-      "description": "DRD2 TaqIA (A1 allele, represented by T) is located in the adjacent ANKK1 gene and is associated with a 30-40% reduction in dopamine D2 receptor density in the striatum, potentially predisposing to reward-seeking behaviors and ADHD-like traits."
+      "impact": "Candidate research on a dopamine-receptor-region variant; receptor density is not inferable",
+      "description": "TaqIA is located in ANKK1 near DRD2. It has been studied for possible differences in dopamine D2 receptor binding, but findings do not support estimating an individual’s receptor density, reward behavior, ADHD status, or treatment response from this consumer marker."
     },
     {
       "rsid": "rs6277",
@@ -1923,8 +1923,8 @@
       "category": "neuropsych",
       "name": "C957T",
       "risk_allele": "T",
-      "impact": "Altered DRD2 mRNA stability & translation efficiency",
-      "description": "DRD2 C957T regulates translation efficiency and binding affinity of dopamine D2 receptors. The T allele is linked to differences in D2 receptor availability, which has been replicated in working memory and cognitive flexibility tasks."
+      "impact": "Synonymous DRD2 variant studied in exploratory receptor and cognition research",
+      "description": "DRD2 C957T is a synonymous variant studied for possible effects on mRNA stability and receptor binding. Associations with cognition or receptor availability are exploratory and inconsistent; this consumer SNP does not establish working-memory ability, a cognitive disorder, or medication response."
     },
     {
       "rsid": "rs7794154",
@@ -1951,7 +1951,7 @@
       "name": "-1291C>G promoter",
       "risk_allele": "G",
       "impact": "Altered prefrontal alpha-2A adrenergic receptor tone",
-      "description": "ADRA2A encodes the alpha-2A adrenergic receptor, which regulates norepinephrine in the prefrontal cortex. The G allele is linked to differences in receptor density and has been replicated in studies of methylphenidate response in ADHD."
+      "description": "ADRA2A encodes the alpha-2A adrenergic receptor. This promoter variant has appeared in candidate studies of methylphenidate response, but it is not a validated pharmacogenomic test and cannot diagnose ADHD or predict whether a medication will work."
     },
     {
       "rsid": "rs1801132",

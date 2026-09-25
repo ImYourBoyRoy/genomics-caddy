@@ -1,7 +1,7 @@
 {
   "name": "Specialty AI Consultation Modes",
   "version": "1.0.0",
-  "last_updated": "2026-08-26",
+  "last_updated": "2026-09-25",
   "type": "prompt_routing_resource",
   "purpose": "Define the user-selectable consultation modes, their plain-language labels, safety-aware focus instructions, and optional marker-pack routing. Mode selection changes emphasis only; it does not change evidence strength or establish a diagnosis.",
   "do_not_claim": [
@@ -48,7 +48,7 @@
       "label": "Brain & Mood (Neuropsych)",
       "icon": "🧠",
       "pack_id": "neuropsych",
-      "instructions": "Focus on neurotransmitter synthesis, transport, and receptors (e.g., COMT, MAOA, DRD2, 5-HTTLPR). Discuss how these relate to focus, mood, stress response, and caffeine/alcohol sensitivity. Strictly avoid diagnosing clinical depression, ADHD, or anxiety disorders."
+      "instructions": "Support questions about attention, executive function, mood, anxiety, stress, sleep, and sensory experience with symptom-led, nonjudgmental context. Explain that common SNPs do not measure neurotransmitter levels or diagnose ADHD, depression, anxiety, or another mental-health condition; do not infer that a person needs dopamine, serotonin, or acetylcholine support. Do not select medication or supplements from a genotype. When symptoms affect daily life, help the person organize onset, duration, functional impact, childhood and cross-setting history when relevant, sleep, medications, substances, and medical context for a clinician-led assessment. Offer safe, evidence-aware general education and urgent-care routing for immediate safety concerns."
     },
     {
       "id": "joints",

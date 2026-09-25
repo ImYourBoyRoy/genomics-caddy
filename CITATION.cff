@@ -6,7 +6,7 @@ cff-version: 1.2.0
 message: If you use Genomics Caddy, please cite it as below.
 type: software
 title: Genomics Caddy
-version: 0.2.7
+version: 0.2.8
 date-released: 2026-09-25
 abstract: >-
   Local-first desktop DNA explorer for AncestryDNA and 23andMe SNP exports.

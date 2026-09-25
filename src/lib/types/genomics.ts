@@ -547,6 +547,7 @@ export interface GenomeImportDiagnostics {
 
 export interface GenomeImportPreview {
   source_file_name: string;
+  source_file_sha256: string;
   diagnostics: GenomeImportDiagnostics;
   liftover_available: boolean;
 }

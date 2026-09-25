@@ -22,6 +22,16 @@ describe('DNA import review workspace', () => {
     expect(pageSource).toContain('onCancelImport={cancelImportReview}');
   });
 
+  it('offers a report handoff when import and report preparation have completed', () => {
+    const handoff = pageSource.match(/function continueToImportedReport\(\) \{([\s\S]*?)\n  \}/)?.[1] ?? '';
+    expect(workspaceSource).toContain('{:else if phase === "ready"}');
+    expect(workspaceSource).toContain('Continue to report');
+    expect(workspaceSource).toContain('onclick={onContinueToReport}');
+    expect(handoff).toContain('isImporting = false;');
+    expect(handoff).toContain('importPhase = "idle";');
+    expect(pageSource).toContain('onContinueToReport={continueToImportedReport}');
+  });
+
   it('explains accepted and skipped DNA rows before confirmation', () => {
     expect(workspaceSource).toContain('Accepted records');
     expect(workspaceSource).toContain('Not imported');

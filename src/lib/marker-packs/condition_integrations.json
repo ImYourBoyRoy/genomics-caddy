@@ -1,12 +1,12 @@
 {
   "name": "condition_integrations",
-  "version": "1.1.0",
-  "last_updated": "2026-09-24",
+  "version": "1.2.0",
+  "last_updated": "2026-09-25",
   "purpose": "Condition-level evidence groupings for displaying matched DNA indicators as potential health patterns without converting marker counts into probabilities or diagnoses.",
   "policy": {
     "counting": "Count unique curated marker IDs with a verified call and a non-zero reported effect. Cross-pack copies of one rsID count once within a condition.",
     "denominator": "The denominator is the number of indicator IDs curated for the condition, not a disease probability denominator.",
-    "prs": "Polygenic risk scores remain context-only unless a calibrated score and validation metadata are present; these groupings do not calculate PRS values.",
+    "prs": "This app does not calculate PRS values. GWAS Catalog rows are population locus–trait associations, and PGS Catalog entries are model metadata rather than personal results. Any future score requires model-specific validation, ancestry-aware performance review, source-build and allele harmonization, and adequate genotype coverage.",
     "diagnostic_language": "A clinical-variant route may be shown when a marker is explicitly authored as clinically actionable, but a consumer-array call remains unconfirmed until an appropriate clinical test verifies it.",
     "coverage_gaps": [
       {
@@ -22,6 +22,14 @@
         "label": "Hypermobile Ehlers-Danlos syndrome",
         "status": "clinical",
         "display": "No single validated consumer-array marker panel establishes hypermobile EDS. Use hypermobility, tissue, skin, injury, and family-history assessment."
+      },
+      {
+        "id": "psychiatric_prs",
+        "label": "ADHD, depression & anxiety assessment",
+        "status": "research_limitations",
+        "display": "Common neuropsychology markers and population GWAS links cannot establish ADHD, depression, or anxiety or explain a person’s current symptoms. This app does not calculate or validate a psychiatric polygenic score.",
+        "clinical_next_step": "Start with a symptom timeline and its effects on daily life. For attention concerns, include childhood history and more than one setting. Review sleep, medications, substances, and medical conditions with a clinician; symptom-based assessment determines appropriate support.",
+        "sources": ["gwas_catalog", "pgs_catalog", "nimh_adhd_adults", "nimh_depression", "nimh_generalized_anxiety"]
       }
     ]
   },
@@ -130,9 +138,9 @@
       "diagnostic_capability": "clinical_evaluation_required",
       "max_relative_signal": "limited",
       "marker_ids": ["PRS_DEPRESSION_RISK_CONTEXT"],
-      "plain_meaning": "This is an uncalibrated polygenic research module related to depression vulnerability. It is not a personal risk score and cannot explain symptoms by itself.",
+      "plain_meaning": "The pack reserves a research slot for a future validated depression polygenic model; this app does not calculate a depression score. Common DNA findings cannot diagnose depression or explain symptoms by themselves.",
       "clinical_route": "If relevant, review symptoms, duration, sleep, medications, family history, and a standard mental-health assessment.",
-      "sources": ["gwas_catalog", "hpo"]
+      "sources": ["gwas_catalog", "pgs_catalog", "nimh_depression", "hpo"]
     },
     {
       "id": "anxiety_stress_reactivity_research_context",
@@ -142,9 +150,21 @@
       "diagnostic_capability": "clinical_evaluation_required",
       "max_relative_signal": "limited",
       "marker_ids": ["PRS_ANXIETY_STRESS_REACTIVITY_CONTEXT"],
-      "plain_meaning": "This is an early polygenic research module related to anxiety and stress reactivity. It is not a personal risk score or an explanation for a current symptom.",
+      "plain_meaning": "The pack reserves a research slot for a future validated anxiety polygenic model; this app does not calculate an anxiety score. Common DNA findings cannot diagnose an anxiety disorder or explain current symptoms.",
       "clinical_route": "If relevant, compare symptoms with sleep, stressors, medications, substance use, family history, and clinical assessment.",
-      "sources": ["gwas_catalog", "hpo"]
+      "sources": ["gwas_catalog", "pgs_catalog", "nimh_generalized_anxiety", "hpo"]
+    },
+    {
+      "id": "adhd_attention_research_context",
+      "label": "ADHD & attention research context",
+      "category": "mood_and_stress",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["PRS_ADHD_ATTENTION_CONTEXT"],
+      "plain_meaning": "The pack reserves a research slot for a future validated ADHD polygenic model; this app does not calculate an ADHD score. Common pathway markers and attention-related associations do not establish ADHD or explain an individual’s difficulties.",
+      "clinical_route": "If attention concerns affect daily life, discuss developmental history, symptoms across settings, sleep, learning, mood, medications, and other health factors with a clinician.",
+      "sources": ["gwas_catalog", "pgs_catalog", "nimh_adhd_adults", "hpo"]
     },
     {
       "id": "bipolar_spectrum_research_context",
@@ -156,7 +176,7 @@
       "marker_ids": ["rs1006737", "rs10994336"],
       "plain_meaning": "These common GWAS loci have been studied in bipolar-spectrum research, but they are weak, non-specific signals and do not identify bipolar disorder.",
       "clinical_route": "Use symptoms over time, sleep and energy changes, medication history, family history, and a clinician's assessment.",
-      "sources": ["gwas_catalog", "hpo"]
+      "sources": ["gwas_catalog", "pgs_catalog", "hpo"]
     },
     {
       "id": "hereditary_breast_ovarian_cancer_clinical_route",

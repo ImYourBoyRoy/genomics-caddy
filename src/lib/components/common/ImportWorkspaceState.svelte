@@ -14,6 +14,7 @@
     replacingExisting?: boolean;
     onConfirmImport: () => void;
     onCancelImport: () => void;
+    onContinueToReport: () => void;
   }
 
   let {
@@ -26,6 +27,7 @@
     replacingExisting = false,
     onConfirmImport,
     onCancelImport,
+    onContinueToReport,
   }: Props = $props();
 
   let isCheckingPreview = $derived(phase === "preview");
@@ -34,7 +36,6 @@
   let skippedRows = $derived(
     preview ? preview.diagnostics.malformed_rows + preview.diagnostics.duplicate_rows : 0,
   );
-
   let title = $derived(
     isAwaitingConfirmation
       ? "Review DNA import"
@@ -47,7 +48,9 @@
 
   let lead = $derived(
     isAwaitingConfirmation
-      ? "The local check is finished. Review the counts below, then choose an action here. Nothing is written until you confirm."
+      ? replacingExisting
+        ? "This profile name already exists. Review the details, then confirm replacement or cancel."
+        : "The local check found details that need review. Nothing is written until you confirm."
       : isCheckingPreview
         ? "Checking the selected export on this device before writing any profile data."
       : phase === "ready"
@@ -77,11 +80,11 @@
 
   {#if isAwaitingConfirmation}
     <div class="import-workspace-confirmation-note" role="note">
-      <strong>{replacingExisting ? "Profile replacement needs your confirmation" : "Ready to create an active profile"}</strong>
+      <strong>{replacingExisting ? "Profile replacement needs your confirmation" : "Review needed before import"}</strong>
       {#if replacingExisting}
         <span>This replaces the existing profile’s genotype data and clears its derived report, research, and chat state. Entered Context and Diary data are preserved.</span>
       {:else}
-        <span>The file has only been checked. Import it as “{profileName}” to create the profile and open its report, or cancel to leave your data unchanged.</span>
+        <span>Review the details, then import or cancel.</span>
       {/if}
     </div>
   {:else}
@@ -169,6 +172,12 @@
       <button type="button" class="btn btn-secondary" onclick={onCancelImport}>Cancel</button>
       <button type="button" class="btn btn-accent" onclick={onConfirmImport}>
         {replacingExisting ? "Replace profile" : "Import profile"}
+      </button>
+    </div>
+  {:else if phase === "ready"}
+    <div class="import-workspace-actions">
+      <button type="button" class="btn btn-accent" onclick={onContinueToReport}>
+        Continue to report
       </button>
     </div>
   {/if}

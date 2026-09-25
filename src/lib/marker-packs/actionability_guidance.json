@@ -1,7 +1,7 @@
 {
   "name": "Actionability Guidance (Diet, Supplements, Labs)",
   "version": "1.10.0",
-  "last_updated": "2026-08-30",
+  "last_updated": "2026-09-25",
   "type": "support_engine",
   "purpose": "Pack-authored lifestyle and follow-up guidance keyed by gene. Applied only when matching markers appear in the curated pack report with the listed severity/interpretation filters.",
   "implementation_note": "This file is the source of truth for dashboard Diet / Supplements / Labs. `dietary_favor` and `dietary_avoid` contain concise food or beverage ideas; `supplement_favor` and `supplement_avoid` contain concise product-level prompts. Generic `favor`, `avoid`, and legacy supplement guardrails remain available to advanced consumers and safety disclosures. Do not hardcode parallel rules in the UI. Soft genetic context must yield to allergies, medical diets, pregnancy/lactation context, medications, labs, and clinician orders (see meal_planning_rules.json).",
@@ -13,7 +13,8 @@
       "More markers increase coverage, not certainty or personal disease probability.",
       "Do not start, stop, or change a medication from raw DNA alone; use a current CPIC/FDA/label-supported PGx result with a clinician or pharmacist.",
       "Do not start high-dose supplements or impose long-term food exclusions from a common SNP alone.",
-      "A safety concern can be more important than a wellness suggestion: review allergies, pregnancy/lactation, kidney/liver disease, eating-disorder risk, and medication interactions first."
+      "A safety concern can be more important than a wellness suggestion: review allergies, pregnancy/lactation, kidney/liver disease, eating-disorder risk, and medication interactions first.",
+      "Do not recommend dopamine-, serotonin-, or acetylcholine-targeting supplements from common neuropsych SNPs or inferred neurotransmitter levels. A pathway marker does not establish a deficiency or indicate that a supplement is needed; review the specific concern, evidence, medications, and health context with a qualified clinician or pharmacist."
     ]
   },
   "lab_categories": [

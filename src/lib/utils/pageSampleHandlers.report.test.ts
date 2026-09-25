@@ -71,6 +71,7 @@ describe('runImportGenome', () => {
     vi.mocked(apiImportGenome).mockResolvedValueOnce(7);
     vi.mocked(inspectGenome).mockResolvedValueOnce({
       source_file_name: 'fixture.txt',
+      source_file_sha256: 'preview-hash',
       diagnostics: {
         format: '23andMe',
         vendor: '23andMe',
@@ -122,15 +123,16 @@ describe('runImportGenome', () => {
 
     await pending.confirm?.();
 
-    expect(apiImportGenome).toHaveBeenCalledWith('/private/fixture.txt', 'fixture profile', 7);
+    expect(apiImportGenome).toHaveBeenCalledWith('/private/fixture.txt', 'fixture profile', 'preview-hash', 7);
     await vi.waitFor(() => expect(refreshSamples).toHaveBeenCalledOnce());
     expect(selectSample).toHaveBeenCalledWith(expect.objectContaining({ id: 7 }));
   });
 
-  it('imports a new profile without replacement when the name is unique', async () => {
+  it('imports a clean preview immediately when the profile name is unique', async () => {
     vi.mocked(apiImportGenome).mockResolvedValueOnce(8);
     vi.mocked(inspectGenome).mockResolvedValueOnce({
       source_file_name: 'fixture.txt',
+      source_file_sha256: 'preview-hash',
       diagnostics: {
         format: '23andMe',
         vendor: '23andMe',
@@ -147,10 +149,7 @@ describe('runImportGenome', () => {
       liftover_available: true,
     });
     const onState = vi.fn();
-    const pending = { confirm: null as (() => void | Promise<void>) | null };
-    const onConfirmationRequired = vi.fn((callback: () => void | Promise<void>) => {
-      pending.confirm = callback;
-    });
+    const onConfirmationRequired = vi.fn();
     const refreshSamples = vi.fn().mockResolvedValue([{
       id: 8,
       name: 'New profile',
@@ -169,20 +168,18 @@ describe('runImportGenome', () => {
       selectSample,
     });
 
-    expect(apiImportGenome).not.toHaveBeenCalled();
-    expect(onConfirmationRequired).toHaveBeenCalledOnce();
-    expect(onConfirmationRequired).toHaveBeenCalledWith(expect.any(Function), false);
-    await pending.confirm?.();
-    await vi.waitFor(() => expect(apiImportGenome).toHaveBeenCalledWith('/private/fixture.txt', 'New profile', undefined));
+    expect(onConfirmationRequired).not.toHaveBeenCalled();
+    expect(apiImportGenome).toHaveBeenCalledWith('/private/fixture.txt', 'New profile', 'preview-hash', undefined);
     expect(refreshSamples).toHaveBeenCalledOnce();
     expect(selectSample).toHaveBeenCalledWith(expect.objectContaining({ id: 8, name: 'New profile' }));
     expect(onState).toHaveBeenCalledWith(expect.objectContaining({ importSuccess: 'Successfully imported profile as ID: 8.' }));
   });
 
-  it('allows an explicitly GRCh38 export after preview instead of rejecting it', async () => {
+  it('automatically imports a clean explicitly GRCh38 export', async () => {
     vi.mocked(apiImportGenome).mockResolvedValueOnce(9);
     vi.mocked(inspectGenome).mockResolvedValueOnce({
       source_file_name: 'grch38-fixture.txt',
+      source_file_sha256: 'grch38-preview-hash',
       diagnostics: {
         format: '23andMe',
         vendor: '23andMe',
@@ -198,10 +195,7 @@ describe('runImportGenome', () => {
       },
       liftover_available: true,
     });
-    const pending = { confirm: null as (() => void | Promise<void>) | null };
-    const onConfirmationRequired = vi.fn((callback: () => void | Promise<void>) => {
-      pending.confirm = callback;
-    });
+    const onConfirmationRequired = vi.fn();
     const refreshSamples = vi.fn().mockResolvedValue([{
       id: 9,
       name: 'GRCh38 profile',
@@ -219,9 +213,8 @@ describe('runImportGenome', () => {
       selectSample: vi.fn(),
     });
 
-    expect(onConfirmationRequired).toHaveBeenCalledOnce();
-    await pending.confirm?.();
-    await vi.waitFor(() => expect(apiImportGenome).toHaveBeenCalledWith('/private/grch38-fixture.txt', 'GRCh38 profile', undefined));
+    expect(onConfirmationRequired).not.toHaveBeenCalled();
+    expect(apiImportGenome).toHaveBeenCalledWith('/private/grch38-fixture.txt', 'GRCh38 profile', 'grch38-preview-hash', undefined);
   });
 });
 

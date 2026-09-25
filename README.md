@@ -127,8 +127,9 @@ there is no association. The curated marker-pack report and local DNA browsing
 are separate from the status of those public catalogs.
 
 The desktop shell adapts to the available WebView viewport, including high-DPI
-display scaling. Longer startup, import, and welcome surfaces remain
-reachable through their scroll regions instead of being clipped.
+display scaling. Long startup, import, welcome, and data-control content scroll
+within their own panes instead of being clipped; Library, appearance, and
+version controls stay in the sidebar footer.
 
 Use **Help** in the top navigation for plain-language guidance, the installed
 app version, and a manual signed-update check. Confirm before installing; app

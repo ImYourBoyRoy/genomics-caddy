@@ -22,4 +22,13 @@ describe('welcome data-controls copy', () => {
     expect(styles).toContain('justify-content: flex-start;');
     expect(styles).toContain('min-height: auto;');
   });
+
+  it('styles the help action in the static welcome sheet for the first WebKit paint', () => {
+    expect(source).toContain('class="welcome-help-icon"');
+    expect(source).toContain('class="welcome-help-arrow"');
+    expect(styles).toContain('.welcome-help-link {');
+    expect(styles).toContain('background: var(--status-accent-bg);');
+    expect(styles).toContain('.welcome-help-link:focus-visible {');
+    expect(source).not.toMatch(/<style>[\s\S]*?\.welcome-help-link/);
+  });
 });

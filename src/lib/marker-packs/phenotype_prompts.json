@@ -1,7 +1,7 @@
 {
   "name": "Phenotype Prompt Library",
-  "version": "1.2.0",
-  "last_updated": "2026-08-26",
+  "version": "1.3.0",
+  "last_updated": "2026-09-25",
   "domains": [
     {
       "id": "allergy_atopy_mast_cell",
@@ -481,10 +481,11 @@
         "sensory or neurodevelopmental context"
       ],
       "questions": [
-        "Which symptoms are present, when did they begin, and how do sleep, stress, pain, substances, medications, and life context change them?",
-        "Are attention, organization, mood, anxiety, sensory sensitivity, headaches, or impulse-control concerns present across more than one setting?",
-        "What was the developmental, educational, work, and family history, and what strategies or treatments have helped or harmed?",
-        "Are any symptoms clearly cyclic, episodic, medication-related, or new rather than lifelong?"
+        "Which attention, mood, anxiety, sleep, or sensory concerns are present; when did they begin; how often do they occur; and how do they affect daily life?",
+        "For attention concerns, were similar patterns present earlier in life and across settings such as school, home, work, or relationships? Records or observations from someone who knew you earlier can help a clinician assess the history.",
+        "For mood or anxiety concerns, what is the duration and pattern, what changes the symptoms, and are there distinct episodes of unusually high energy or reduced need for sleep?",
+        "How do sleep quality, stress, pain, medications, supplements, caffeine or other substances, and current medical conditions affect the symptoms?",
+        "What supports or treatments have helped or caused problems, and what goals would you like help with?"
       ],
       "red_flags": [
         "suicidal thoughts or immediate safety concerns",
@@ -493,13 +494,18 @@
         "rapidly worsening symptoms after starting or stopping a medication"
       ],
       "confirmations": [
-        "clinician-led history and standardized assessments",
-        "sleep, thyroid, substance, medication, and relevant laboratory review",
-        "collateral or longitudinal information when symptoms vary by setting",
+        "clinician-led history and appropriate standardized assessments; DNA markers do not establish ADHD, depression, or anxiety",
+        "developmental, educational, work, and relationship context for attention concerns, including symptoms across settings",
+        "review of sleep, thyroid and other relevant medical factors, medication effects, and substance use when indicated",
+        "shared treatment planning based on symptoms, history, preferences, and safety rather than a common SNP or inferred neurotransmitter level",
         "urgent mental-health or neurologic care when red flags are present"
       ],
       "sources": [
         "gwas_catalog",
+        "pgs_catalog",
+        "nimh_adhd_adults",
+        "nimh_depression",
+        "nimh_generalized_anxiety",
         "hpo",
         "phenotype_required",
         "clinical_confirmation_required"

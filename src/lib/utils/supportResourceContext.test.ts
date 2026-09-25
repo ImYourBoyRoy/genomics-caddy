@@ -393,6 +393,23 @@ describe('support resource context', () => {
     expect(context.activity_safety.stop_and_escalate.some((item) => item.includes('Chest pain'))).toBe(true);
   });
 
+  it('routes neuropsych questions to symptom assessment without creating a DNA diagnosis or supplement action', () => {
+    const context = buildSupportResourceContext({ packIds: ['neuropsych'], consultationMode: 'brain_mood' });
+    const prompt = context.phenotype_prompts.find((domain) => domain.id === 'neuropsych');
+
+    expect(prompt?.questions.join(' ')).toContain('earlier in life');
+    expect(prompt?.confirmations.join(' ')).toContain('DNA markers do not establish ADHD');
+    expect(context.condition_integrations.conditions.some((condition) => condition.id === 'adhd_attention_research_context')).toBe(true);
+    expect(context.condition_integrations.policy.prs).toContain('This app does not calculate PRS values');
+    expect(context.food_safety.source_registry.pgs_catalog).toBeDefined();
+    expect(context.food_safety.source_registry.nimh_adhd_adults).toBeDefined();
+    expect(context.food_safety.source_registry.nimh_depression).toBeDefined();
+    expect(context.food_safety.source_registry.nimh_generalized_anxiety).toBeDefined();
+    expect(context.actionability_policy.safety_notes?.some((note) =>
+      note.includes('Do not recommend dopamine-, serotonin-, or acetylcholine-targeting supplements'),
+    )).toBe(true);
+  });
+
   it('routes the inflammation domain schema and canonical lab IDs', () => {
     const context = buildSupportResourceContext({ packIds: ['core'] });
     const systemic = context.inflammation_support.domains.find((domain) => domain.id === 'systemic_inflammatory_signaling');

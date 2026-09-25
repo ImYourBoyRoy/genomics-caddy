@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
-  "version": "2.7.0",
-  "last_updated": "2026-09-24",
+  "version": "2.8.0",
+  "last_updated": "2026-09-25",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -90,6 +90,38 @@
       "evidence_type": "Phenotype ontology",
       "conflict_of_interest": "Academic phenotype resource",
       "notes": "Use to standardize symptom prompts and phenotype tags."
+    },
+    "pgs_catalog": {
+      "name": "Polygenic Score (PGS) Catalog",
+      "url": "https://www.pgscatalog.org/",
+      "accessed": "2026-09-25",
+      "evidence_type": "Curated polygenic score model catalog",
+      "conflict_of_interest": "Public EMBL-EBI research resource",
+      "notes": "Provides published score-model metadata and links to separate scoring files; a listed model is not a personal result or proof of clinical utility. This app does not import or calculate psychiatric PGS. Any future use requires model-specific phenotype and ancestry review, source-build and effect-allele harmonization, genotyping coverage, and suitable independent validation."
+    },
+    "nimh_adhd_adults": {
+      "name": "NIMH: ADHD in Adults",
+      "url": "https://www.nimh.nih.gov/health/publications/adhd-what-you-need-to-know",
+      "accessed": "2026-09-25",
+      "evidence_type": "U.S. government clinical information",
+      "conflict_of_interest": "U.S. National Institute of Mental Health public health resource",
+      "notes": "Use for symptom-history and assessment prompts, including childhood history, symptoms across settings, daily impact, and consideration of other causes. The app must not diagnose ADHD from DNA or substitute this information for clinical assessment."
+    },
+    "nimh_depression": {
+      "name": "NIMH: Depression",
+      "url": "https://www.nimh.nih.gov/health/publications/depression",
+      "accessed": "2026-09-25",
+      "evidence_type": "U.S. government clinical information",
+      "conflict_of_interest": "U.S. National Institute of Mental Health public health resource",
+      "notes": "Use for symptom duration, impact on daily functioning, care-seeking, and review of medication or medical contributors. Suicidal thoughts or immediate danger require urgent support."
+    },
+    "nimh_generalized_anxiety": {
+      "name": "NIMH: Generalized Anxiety Disorder",
+      "url": "https://www.nimh.nih.gov/health/publications/generalized-anxiety-disorder-gad",
+      "accessed": "2026-09-25",
+      "evidence_type": "U.S. government clinical information",
+      "conflict_of_interest": "U.S. National Institute of Mental Health public health resource",
+      "notes": "Use for symptom-history and care-navigation prompts about persistent, difficult-to-control worry, associated symptoms, and functional impact. This is not a DNA diagnostic rule."
     },
     "acog_premenstrual_disorders": {
       "name": "ACOG Clinical Practice Guideline: Management of Premenstrual Disorders",

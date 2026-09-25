@@ -134,21 +134,24 @@
       "gene": "COMT",
       "variant_name": "Val158Met",
       "effect_allele": "A",
-      "impact": "Slower prefrontal dopamine & norepinephrine clearance",
-      "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "COMT Val158Met. Homozygous A/A (Met/Met) decreases COMT enzyme activity up to 4-fold, leading to higher prefrontal dopamine levels. Associated with high cognitive focus and executive capacity, but increases stress and anxiety vulnerability ('Worrier' type).",
+      "impact": "Common COMT enzyme-activity context; not a brain dopamine measurement",
+      "evidence_tier": "D_research_only",
+      "interpretation": "COMT Val158Met has measurable effects on enzyme activity in some tissues and has been studied for cognition and stress response, but behavioral associations vary across studies and context. A consumer SNP does not measure prefrontal dopamine, diagnose ADHD or anxiety, or predict stimulant response.",
       "do_not_claim": [
         "ADHD diagnosis",
         "OCD diagnosis",
-        "high IQ certainty"
+        "high IQ certainty",
+        "dopamine level prediction",
+        "specific focus or anxiety profile",
+        "medication or supplement selection"
       ],
       "confirm_with": [
-        "executive function capacity",
-        "stress vulnerability",
-        "response to dopaminergic stimulants"
+        "current attention, mood, and sleep symptoms",
+        "medication and caffeine history",
+        "clinical assessment when symptoms affect daily life"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Estrogens inhibit COMT transcription; COMT activity is significantly lower in females than males.",
+      "raw_dna_limitation": "Cell type, sex hormones, environment, and many other factors shape COMT activity. Common genotype does not measure neurotransmitter levels or establish a 'warrior/worrier' personality type.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
@@ -164,23 +167,25 @@
     },
     {
       "rsid": "rs1800497",
-      "gene": "DRD2",
-      "variant_name": "TaqIA (ANKK1)",
+      "gene": "ANKK1",
+      "variant_name": "TaqIA (ANKK1, near DRD2)",
       "effect_allele": "T",
-      "impact": "Reduced dopamine D2 receptor density",
-      "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "DRD2 TaqIA (A1 allele, represented by T) is located in the adjacent ANKK1 gene and is associated with a 30-40% reduction in dopamine D2 receptor density in the striatum, potentially predisposing to reward-seeking behaviors and ADHD-like traits.",
+      "impact": "Candidate research on a dopamine-receptor-region variant; receptor density is not inferable",
+      "evidence_tier": "D_research_only",
+      "interpretation": "TaqIA is located in ANKK1 near DRD2. It has been studied for possible differences in dopamine D2 receptor binding, but findings do not support estimating an individual’s receptor density, reward behavior, ADHD status, or treatment response from this consumer marker.",
       "do_not_claim": [
         "addiction diagnosis",
-        "ADHD diagnosis"
+        "ADHD diagnosis",
+        "individual D2 receptor density",
+        "ADHD-like behavior from genotype",
+        "dopamine supplement need"
       ],
       "confirm_with": [
-        "reward-seeking tendencies",
-        "impulsivity levels",
-        "dopaminergic drug response"
+        "current symptoms and functional impact",
+        "clinical assessment when relevant"
       ],
       "effect_direction": "risk",
-      "raw_dna_limitation": "Striatal dopamine tone is also modified by daily reward cues, sleep duration, and physical exercise.",
+      "raw_dna_limitation": "This older candidate marker is not a clinical test. Published group-level binding estimates are not individual measurements and should not be presented as a personal percentage.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
@@ -190,7 +195,7 @@
           "accessed": "2026-06-07",
           "evidence_type": "Peer-reviewed Paper",
           "conflict_of_interest": "None declared",
-          "notes": "Confirms receptor density reduction in human PET imaging."
+          "notes": "Older PET candidate-gene study of group-level receptor binding; it does not establish an individual receptor-density estimate or ADHD/reward-behavior prediction."
         }
       ]
     },
@@ -199,19 +204,22 @@
       "gene": "DRD2",
       "variant_name": "C957T",
       "effect_allele": "T",
-      "impact": "Altered DRD2 mRNA stability & translation efficiency",
-      "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "DRD2 C957T regulates translation efficiency and binding affinity of dopamine D2 receptors. The T allele is linked to differences in D2 receptor availability, which has been replicated in working memory and cognitive flexibility tasks.",
+      "impact": "Synonymous DRD2 variant studied in exploratory receptor and cognition research",
+      "evidence_tier": "D_research_only",
+      "interpretation": "DRD2 C957T is a synonymous variant studied for possible effects on mRNA stability and receptor binding. Associations with cognition or receptor availability are exploratory and inconsistent; this consumer SNP does not establish working-memory ability, a cognitive disorder, or medication response.",
       "do_not_claim": [
         "cognitive deficit diagnosis",
-        "schizophrenia diagnosis"
+        "schizophrenia diagnosis",
+        "individual receptor availability",
+        "working-memory profile",
+        "dopamine supplement need"
       ],
       "confirm_with": [
-        "working memory capacity",
-        "cognitive flexibility (ability to shift tasks)"
+        "reported cognitive concerns and functional impact",
+        "clinical assessment when symptoms warrant"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Receptor activity operates in concert with prefrontal dopamine levels (COMT status).",
+      "raw_dna_limitation": "Candidate-gene findings do not yield a clinical measure of receptor abundance or a dependable prediction of cognition.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
@@ -293,18 +301,20 @@
       "variant_name": "-1291C>G promoter",
       "effect_allele": "G",
       "impact": "Altered prefrontal alpha-2A adrenergic receptor tone",
-      "evidence_tier": "C_biohacker_hypothesis",
-      "interpretation": "ADRA2A encodes the alpha-2A adrenergic receptor, which regulates norepinephrine in the prefrontal cortex. The G allele is linked to differences in receptor density and has been replicated in studies of methylphenidate response in ADHD.",
+      "evidence_tier": "D_research_only",
+      "interpretation": "ADRA2A encodes the alpha-2A adrenergic receptor. This promoter variant has appeared in candidate studies of methylphenidate response, but it is not a validated pharmacogenomic test and cannot diagnose ADHD or predict whether a medication will work.",
       "do_not_claim": [
         "stimulant success certainty",
-        "ADHD diagnosis"
+        "ADHD diagnosis",
+        "individual methylphenidate response",
+        "medication selection"
       ],
       "confirm_with": [
-        "methylphenidate response",
-        "baseline inattention/hyperactivity"
+        "clinical ADHD assessment",
+        "prescriber review of observed benefit and adverse effects"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Individual therapeutic response is mediated by secondary factors including sleep hygiene and thyroid status.",
+      "raw_dna_limitation": "Candidate response findings are not sufficient for medication selection; use clinical assessment and observed response with a prescriber.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
@@ -314,7 +324,7 @@
           "accessed": "2026-06-07",
           "evidence_type": "Peer-reviewed Paper",
           "conflict_of_interest": "None declared",
-          "notes": "Finds association between G allele and improved response rate in children with ADHD."
+          "notes": "Candidate study in children with ADHD; do not interpret as a validated or individual medication-response test."
         }
       ]
     },
@@ -570,12 +580,14 @@
       "effect_allele": "N/A",
       "impact": "Prevents psychiatric/personality overcalling from common SNPs",
       "evidence_tier": "A_clinical_guardrail",
-      "interpretation": "Single common neuropsych variants must not be used to diagnose depression, anxiety, ADHD, autism, bipolar disorder, schizophrenia, addiction, personality disorders, empathy level, intelligence, trauma response, or medication outcome. Treat common markers as weak pathway hints only.",
+      "interpretation": "Single common neuropsych variants must not be used to diagnose depression, anxiety, ADHD, autism, bipolar disorder, schizophrenia, addiction, personality disorders, empathy level, intelligence, trauma response, or medication outcome. They also do not measure brain neurotransmitter levels or justify choosing a medication or supplement. Treat common markers as weak pathway research only.",
       "do_not_claim": [
         "psychiatric diagnosis",
         "personality typing certainty",
         "trauma explanation from genotype",
-        "medication decision from raw DNA"
+        "medication decision from raw DNA",
+        "neurotransmitter deficiency from a common SNP",
+        "supplement indication from a common SNP"
       ],
       "confirm_with": [
         "clinical assessment",
@@ -584,7 +596,7 @@
         "validated PGx where medication-specific"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Psychiatric and behavioral traits are highly polygenic and environment-sensitive; candidate-gene literature has a high false-positive history.",
+      "raw_dna_limitation": "Psychiatric and behavioral traits are highly polygenic and environment-sensitive; candidate-gene literature has a high false-positive history. A consumer array cannot measure neurotransmitter levels or identify a supplement need.",
       "clinical_confirmation_required": true,
       "variant_type": "guardrail",
       "sources": [
@@ -621,20 +633,19 @@
       "effect_allele": "VALIDATED_PRS_ONLY",
       "impact": "Polygenic liability / depression vulnerability context",
       "evidence_tier": "B_polygenic_trait",
-      "interpretation": "Depression liability is distributed across many loci with small effects. Use only a validated PRS with ancestry/platform calibration and never as a diagnosis.",
+      "interpretation": "Depression liability is distributed across many loci with small effects. This app does not calculate a depression polygenic score; any future score would require model-specific validation and could not diagnose depression or select treatment.",
       "do_not_claim": [
         "depression diagnosis",
         "suicide risk estimate",
         "treatment selection from PRS alone"
       ],
       "confirm_with": [
-        "validated PRS",
         "clinical interview",
         "symptom history",
         "sleep/stress/inflammation context"
       ],
       "effect_direction": "risk",
-      "raw_dna_limitation": "PRS transferability varies by ancestry, genotyping platform, and model version.",
+      "raw_dna_limitation": "No depression PRS is calculated here. Score performance can vary by ancestry, genotyping platform, phenotype definition, and model version.",
       "clinical_confirmation_required": true,
       "variant_type": "polygenic_panel",
       "sources": [
@@ -671,7 +682,7 @@
       "effect_allele": "VALIDATED_PRS_ONLY",
       "impact": "Polygenic anxiety/stress sensitivity context",
       "evidence_tier": "D_polygenic_research_only",
-      "interpretation": "Anxiety and stress-reactivity genetics are highly polygenic and overlap with depression, neuroticism, sleep, and trauma exposure. Use as research context only unless validated clinically.",
+      "interpretation": "Anxiety and stress-reactivity genetics are highly polygenic and overlap with depression, neuroticism, sleep, and life context. This app does not calculate an anxiety polygenic score; common SNPs cannot diagnose an anxiety disorder or explain current symptoms.",
       "do_not_claim": [
         "anxiety disorder diagnosis",
         "panic prediction",
@@ -681,10 +692,10 @@
         "clinical symptoms",
         "HRV/stress recovery",
         "sleep quality",
-        "validated PRS"
+        "clinical assessment when symptoms affect daily life"
       ],
       "effect_direction": "risk",
-      "raw_dna_limitation": "PRS interpretation is immature for individual anxiety prediction.",
+      "raw_dna_limitation": "No anxiety PRS is calculated here. Individual prediction from common markers is not established for this app's consumer-array workflow.",
       "clinical_confirmation_required": false,
       "variant_type": "polygenic_panel",
       "sources": [
@@ -721,7 +732,7 @@
       "effect_allele": "VALIDATED_PRS_ONLY",
       "impact": "Polygenic attention/executive-function liability context",
       "evidence_tier": "B_polygenic_trait",
-      "interpretation": "ADHD-associated common variation is polygenic. A validated PRS may contextualize attention/executive-function predisposition but cannot diagnose ADHD or predict stimulant response.",
+      "interpretation": "ADHD-associated common variation is polygenic. This app does not calculate an ADHD polygenic score; common variants cannot diagnose ADHD, establish executive dysfunction, or predict stimulant response.",
       "do_not_claim": [
         "ADHD diagnosis",
         "stimulant need",

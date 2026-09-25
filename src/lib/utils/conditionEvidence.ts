@@ -26,6 +26,7 @@ import { callabilityStateForResult } from './callability';
 import { isCallableGenotype } from './genotype';
 import { getLaypersonTranslation, getSimpleFindingCopy } from './layperson';
 import { isVerifiedAssertionStatus } from './reportStatuses';
+import { classifyConditionTopic } from './genomewideConditionDiscovery';
 
 export type ConditionSignalType =
   | 'susceptibility_context'
@@ -152,6 +153,21 @@ export interface CatalogAssociationSummary {
   study_accessions?: string[];
   classification?: string;
   inheritance_models?: string[];
+}
+
+/**
+ * Select population GWAS locus-trait rows by the shared research taxonomy.
+ * These are research links, not allele-aligned personal risk estimates.
+ */
+export function catalogAssociationsForTopic(
+  associations: readonly CatalogAssociationSummary[],
+  topicId: string,
+): CatalogAssociationSummary[] {
+  return associations.filter((association) =>
+    association.source_type === 'GWAS Catalog'
+      && association.association_is === 'variant_trait_statistical_association'
+      && classifyConditionTopic(association.label).id === topicId,
+  );
 }
 
 interface ConditionDefinition {

@@ -2,8 +2,9 @@
 <script lang="ts">
 import type { GeneratedReport } from '../../types/genomics';
 import allergySensitivityCatalog from '../../marker-packs/allergy_sensitivity_catalog.json';
+import sourceRegistry from '../../marker-packs/source_registry.json';
 import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
-import { conditionDiagnosticCapabilityLabel, type CatalogAssociationSummary, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
+import { catalogAssociationsForTopic, conditionDiagnosticCapabilityLabel, type CatalogAssociationSummary, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
 import GenomeWideConditionDiscovery from './GenomeWideConditionDiscovery.svelte';
 import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
 import type { PresentationMode } from '../../utils/presentationPreferences';
@@ -27,6 +28,13 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }: Props = $props();
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report));
+  let hasNeuropsychSection = $derived(report.sections.some((section) => section.name === 'Neurotransmitter & Mood Resiliency'));
+  let brainMoodCatalogAssociations = $derived(catalogAssociationsForTopic(plan.catalogAssociations, 'neuropsych'));
+  const brainMoodAssessmentGuides = [
+    { label: 'NIMH: ADHD in adults', url: sourceRegistry.sources.nimh_adhd_adults.url },
+    { label: 'NIMH: Depression', url: sourceRegistry.sources.nimh_depression.url },
+    { label: 'NIMH: Generalized anxiety disorder', url: sourceRegistry.sources.nimh_generalized_anxiety.url },
+  ];
 
   // Fresh profile defaults keep Review-first + lab follow-ups open; other
   // guidance panels stay collapsed until the user expands them.
@@ -367,6 +375,60 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
           <span class="lab-spotlight-more">+{plan.labTests.length - 8} more below</span>
         {/if}
       </div>
+    </section>
+  {/if}
+
+  {#if hasNeuropsychSection}
+    <section class="brain-mood-context summary-card card" aria-labelledby="brain-mood-context-title">
+      <div class="brain-mood-context-header">
+        <div>
+          <span class="section-kicker">Brain, mood &amp; attention</span>
+          <h3 id="brain-mood-context-title">Start with what you’re experiencing</h3>
+          <p>Common DNA markers do not diagnose ADHD, depression, or anxiety, measure neurotransmitter levels, or show which treatment will help.</p>
+        </div>
+        <span class="brain-mood-context-badge">No psychiatric score calculated</span>
+      </div>
+
+      <div class="brain-mood-context-grid">
+        <div>
+          <h4>Useful context to bring to an assessment</h4>
+          <ul>
+            <li>When symptoms began, how often they occur, and their effect on sleep, work, school, relationships, and daily tasks.</li>
+            <li>For attention concerns, include childhood history and whether difficulties appear in more than one setting.</li>
+            <li>Review sleep, medications, supplements, caffeine or other substances, and relevant health conditions with a clinician.</li>
+          </ul>
+          <p class="brain-mood-context-care">A dopamine-pathway SNP is not evidence of low dopamine or a reason to take a “dopamine booster.” Choose medication or supplements with symptom, safety, and clinician context.</p>
+        </div>
+
+        <div class="brain-mood-context-links">
+          <h4>Trusted assessment guides</h4>
+          {#each brainMoodAssessmentGuides as guide (guide.label)}
+            <a href={guide.url} target="_blank" rel="noopener noreferrer">{guide.label}</a>
+          {/each}
+          <p>If you or someone else may be in immediate danger, contact local emergency support. In the U.S., call or text 988.</p>
+        </div>
+      </div>
+
+      <p class="brain-mood-pgs-note"><a href={sourceRegistry.sources.pgs_catalog.url} target="_blank" rel="noopener noreferrer">PGS Catalog</a> lists published score models; it is not a personal result, and this app does not calculate a psychiatric score.</p>
+
+      {#if brainMoodCatalogAssociations.length > 0}
+        <details class="brain-mood-research-links">
+          <summary>Published brain &amp; mood research links ({brainMoodCatalogAssociations.length})</summary>
+          <p>These are population GWAS associations reported at loci shown in this report. The local catalog does not align study effect alleles to your result or estimate your personal risk. No link here confirms or rules out a condition.</p>
+          <ul>
+            {#each brainMoodCatalogAssociations.slice(0, 5) as association (association.id)}
+              <li>
+                <span>{association.label}</span>
+                {#if association.source_urls[0]}
+                  <a href={association.source_urls[0]} target="_blank" rel="noopener noreferrer">Open study</a>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </details>
+      {:else}
+        <p class="brain-mood-no-links">No brain or mood GWAS links were present for the reported loci in the installed local catalog. That does not rule out a condition or replace symptom-based care.</p>
+      {/if}
     </section>
   {/if}
 
@@ -1857,6 +1919,137 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     color: var(--text-secondary);
     font-size: 0.68rem;
     line-height: 1.4;
+  }
+
+  .brain-mood-context {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    padding: 0.85rem 1rem;
+    border-color: color-mix(in srgb, var(--status-info-border) 45%, var(--border-color));
+    background: var(--surface-raised);
+  }
+
+  .brain-mood-context-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .brain-mood-context-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+  }
+
+  .brain-mood-context-header p,
+  .brain-mood-context-grid p,
+  .brain-mood-research-links p,
+  .brain-mood-no-links {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .brain-mood-context-badge {
+    flex: 0 0 auto;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--status-info-border);
+    border-radius: 999px;
+    color: var(--status-info-text);
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+
+  .brain-mood-context-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(13rem, 1fr);
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .brain-mood-context-grid h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.76rem;
+  }
+
+  .brain-mood-context-grid ul,
+  .brain-mood-research-links ul {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    line-height: 1.42;
+  }
+
+  .brain-mood-context-care {
+    padding: 0.45rem 0.55rem;
+    border-left: 2px solid var(--status-warning-border);
+    border-radius: 0 0.4rem 0.4rem 0;
+    background: var(--status-warning-bg);
+    color: var(--text-primary) !important;
+  }
+
+  .brain-mood-context-links {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding-left: 0.85rem;
+    border-left: 1px solid var(--border-color);
+  }
+
+  .brain-mood-context-links a,
+  .brain-mood-research-links a {
+    color: var(--status-info-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .brain-mood-context-links p {
+    margin-top: 0.15rem;
+    font-size: 0.66rem;
+  }
+
+  .brain-mood-research-links {
+    margin-top: 0.7rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+  }
+
+  .brain-mood-research-links summary {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--status-info-text);
+    font-weight: 700;
+  }
+
+  .brain-mood-research-links li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.65rem;
+    align-items: baseline;
+  }
+
+  .brain-mood-pgs-note {
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .brain-mood-no-links {
+    margin-top: 0.65rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border-color);
   }
 
   .catalog-associations {
@@ -3433,6 +3626,17 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     .condition-evidence-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .brain-mood-context-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .brain-mood-context-links {
+      padding-left: 0;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border-color);
+      border-left: 0;
+    }
   }
 
   @media (min-width: 1101px) and (max-width: 1400px) {
@@ -3462,6 +3666,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
     .condition-evidence-grid {
       grid-template-columns: 1fr;
+    }
+
+    .brain-mood-context-header {
+      flex-direction: column;
     }
   }
 </style>

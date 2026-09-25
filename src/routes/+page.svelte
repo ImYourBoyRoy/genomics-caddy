@@ -706,6 +706,14 @@
     progressStatus = "";
   }
 
+  function continueToImportedReport() {
+    isImportPreparing = false;
+    isImporting = false;
+    importPhase = "idle";
+    importFailedStep = null;
+    importOverlayDismissed = true;
+  }
+
   async function warmReport(sampleId: number) {
     const generation = ++reportRequestGeneration;
     await runWarmReport({
@@ -858,6 +866,7 @@
           replacingExisting={importReplacingExisting}
           onConfirmImport={confirmImportReview}
           onCancelImport={cancelImportReview}
+          onContinueToReport={continueToImportedReport}
         />
       {:else if selectedSample === null}
         {#if activeTab === "help"}

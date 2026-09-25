@@ -44,18 +44,29 @@ does not invent a byte-based ETA for decompressed data.
   evaluation.
 - Raw DNA never by itself changes medication, high-dose supplements, botanical
   products, or a permanent restrictive diet.
+- Common neuropsych SNPs do not diagnose ADHD, depression, anxiety, or another
+  mental-health condition; they do not measure dopamine or other brain
+  neurotransmitters. The app does not calculate a psychiatric polygenic score
+  or choose a supplement or medication from these markers.
 
 ## Import
 
 Supported inputs: AncestryDNA and 23andMe style `.txt`, `.csv`, `.tsv`, and
-ZIP. Parsing alone does not write a profile.
+ZIP. A clean local check starts the import automatically. Skipped rows,
+warnings, an unrecognized format/build, or an existing profile name pause for
+review; replacing an existing profile always needs explicit confirmation.
 
 1. Choose the file in the sidebar import panel.
-2. Read the local review: vendor/format, accepted vs skipped rows, source
-   build, orientation evidence, liftover availability, warnings.
-3. Choose **Import profile**, **Replace profile**, or **Cancel**.
-4. After confirmation, the app reads, normalizes coordinates, ingests
-   genotypes, and prepares the report.
+2. Clean previews proceed directly to local import. If rows were skipped,
+   warnings were found, or the format/build was unrecognized, review
+   vendor/format, accepted vs skipped rows, source build, orientation evidence,
+   liftover availability, and warnings before choosing **Import profile** or
+   **Cancel**.
+3. If the profile name already exists, choose **Replace profile** or **Cancel**.
+4. The app reads, normalizes coordinates, ingests genotypes, and prepares the
+   report. Replacing an existing profile always waits for confirmation. When
+   preparation completes, the screen advances automatically; if it remains on
+   the completed screen, choose **Continue to report**.
 
 Empty files and conflicting duplicate marker rows are rejected. `NN` stays
 no-data. Mixed `N` calls are blocked as ambiguous.
@@ -99,6 +110,20 @@ may not specify origin. This is not a diagnosis, a personal-risk estimate, or a
 complete disease screen. GWAS rows remain locus–trait statistics, ClinGen
 entries gene-level disease-validity context, and ClinPGx entries medication
 response annotations.
+
+When the Neurotransmitter & Mood Resiliency pack is present, a **Brain, mood &
+attention** panel organizes symptom history, daily impact, sleep/medication
+context, clinician assessment routes, and NIMH guides for ADHD, depression, and
+generalized anxiety. When available, published GWAS links are labeled as
+population locus associations; the local index does not align study effect
+alleles to the person's genotype or estimate personal risk. The app does not
+calculate a psychiatric polygenic score. The PGS Catalog is a directory of
+published scoring models, not a personal result; candidate models require
+model-specific validation, ancestry and platform review, allele harmonization,
+and adequate coverage before any future score could be responsibly considered.
+A dopamine-pathway result is not evidence of low dopamine or an indication for
+a dopamine-targeting supplement. Assessment and support should follow the
+person's symptoms, history, preferences, and clinical context.
 
 POTS and dysautonomia appear as clinical context, not a DNA score. Standing-
 related symptoms, positional heart rate/blood pressure, medication context, and

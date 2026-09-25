@@ -100,10 +100,13 @@ app after it starts.
 
 ## First launch
 
-1. Start Genomics Caddy. Import your `.txt`, `.csv`, `.tsv`, or ZIP from the
-   left sidebar, review the pre-write summary, then confirm. Once local profile
-   indexing is complete, use **Raw Browser** and local genome views while
-   reference catalogs download.
+1. Start Genomics Caddy. Choose your `.txt`, `.csv`, `.tsv`, or ZIP in the left
+   sidebar. A clean local check starts the import automatically; skipped rows,
+   warnings, an unrecognized format/build, or an existing profile name pause
+   for review and confirmation.
+   Once local profile indexing is complete, use **Raw Browser** and local
+   genome views while reference catalogs download. The completed import screen
+   advances automatically; if it remains visible, choose **Continue to report**.
 2. Left sidebar → **Data & updates** → **Sync All Missing** to install the
    public catalogs used for database-backed annotations and full-genome
    discovery. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions show as
@@ -152,8 +155,9 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
 
 ## What it does
 
-- Imports AncestryDNA / 23andMe style files locally, with a review step before
-  anything is saved
+- Imports AncestryDNA / 23andMe style files locally; clean checks start the
+  import automatically, while skipped rows, warnings, or profile replacement
+  require review
 - Scores curated marker packs into Simple, Clinical, and Compare reports
 - Adds a compact, expandable index of ClinVar condition labels, GWAS traits,
   ClinGen gene–disease validity, and pharmacogenomic response links, with each
@@ -164,6 +168,10 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   a personal-risk estimate; known somatic/oncogenic records are excluded.
 - Shows POTS/dysautonomia as symptom and clinician-evaluation context only; it
   does not score a consumer-DNA POTS risk model or recommend treatment.
+- Adds symptom-led Brain, Mood & Attention support with research links and
+  trusted assessment guides for ADHD, depression, and anxiety; common variants
+  do not diagnose these conditions, and the app calculates no psychiatric PRS
+  or genotype-based neurotransmitter supplement/medication recommendations.
 - Keeps food, gut, supplement, medication, menopause, and postpartum prompts
   conditional on context *you* enter
 - Uses conservative chromosome-pattern labels only as routing hints; mixed or

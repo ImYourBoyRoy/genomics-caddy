@@ -117,6 +117,7 @@ fn get_chain_path(app: &AppHandle) -> PathBuf {
 #[derive(Debug, serde::Serialize, Clone)]
 struct GenomeImportPreview {
     source_file_name: String,
+    source_file_sha256: String,
     diagnostics: parser::ParseDiagnostics,
     liftover_available: bool,
 }
@@ -169,9 +170,19 @@ async fn inspect_genome(app: AppHandle, file_path: String) -> Result<GenomeImpor
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        let source_path = Path::new(&file_path);
+        let source_file_sha256_before = sha256_file(source_path)?;
         let parsed = parser::parse_dna_file_with_metadata(&file_path, |_| {})?;
+        let source_file_sha256 = sha256_file(source_path)?;
+        if source_file_sha256_before != source_file_sha256 {
+            return Err(
+                "The DNA export changed while the local check was running; check it again before importing."
+                    .to_string(),
+            );
+        }
         Ok(GenomeImportPreview {
-            source_file_name: source_file_name(Path::new(&file_path)),
+            source_file_name: source_file_name(source_path),
+            source_file_sha256,
             diagnostics: parsed.diagnostics,
             liftover_available: offline::liftover_chain_path(&data_dir, &db_path).is_file(),
         })
@@ -762,12 +773,19 @@ async fn import_genome(
     file_path: String,
     sample_name: String,
     replace_existing_sample_id: Option<i64>,
+    expected_source_file_sha256: String,
 ) -> Result<i64, String> {
     config::validate_import_path(&file_path)?;
     let app_handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let source_path = Path::new(&file_path);
         let source_file_sha256 = sha256_file(source_path)?;
+        if source_file_sha256 != expected_source_file_sha256 {
+            return Err(
+                "The DNA export changed after its local check; check it again before importing."
+                    .to_string(),
+            );
+        }
         app_handle
             .emit(
                 "import-progress",

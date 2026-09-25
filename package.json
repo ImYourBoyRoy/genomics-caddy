@@ -1,6 +1,6 @@
 {
   "name": "genomics-caddy",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Local-first desktop DNA explorer for AncestryDNA and 23andMe. Trait reports, pharmacogenomics, optional Ollama chat, and an MCP server.",
   "type": "module",
   "engines": {

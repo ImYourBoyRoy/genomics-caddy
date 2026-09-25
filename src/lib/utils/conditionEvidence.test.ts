@@ -4,6 +4,7 @@ import {
   buildCatalogAssociationSummaries,
   buildConditionCoverageSummaries,
   buildConditionEvidenceSummaries,
+  catalogAssociationsForTopic,
   getConditionCoverageGaps,
 } from './conditionEvidence';
 
@@ -181,6 +182,36 @@ describe('condition-level evidence aggregation', () => {
     expect(associations.some((association) => association.label === 'Internal routing seed')).toBe(false);
   });
 
+  it('routes brain and mood GWAS research links through the shared taxonomy', () => {
+    const associations = buildCatalogAssociationSummaries(report([marker({
+      rsid: 'rs-synthetic-brain-mood',
+      link_id: 'test:brain-mood-links',
+      gwas_associations: [{
+        association_is: 'variant_trait_statistical_association',
+        trait_name: 'major depressive disorder',
+        pvalue: 1e-8,
+        study_accession: 'GCST000001',
+      }, {
+        association_is: 'variant_trait_statistical_association',
+        trait_name: 'attention-deficit/hyperactivity disorder',
+        pvalue: 1e-7,
+        study_accession: 'GCST000002',
+      }, {
+        association_is: 'variant_trait_statistical_association',
+        trait_name: 'fasting glucose',
+        pvalue: 1e-9,
+        study_accession: 'GCST000003',
+      }],
+    })]));
+
+    expect(catalogAssociationsForTopic(associations, 'neuropsych').map(({ label }) => label).sort())
+      .toEqual(['attention-deficit/hyperactivity disorder', 'major depressive disorder']);
+    expect(catalogAssociationsForTopic(associations, 'neuropsych').every((item) =>
+      item.source_type === 'GWAS Catalog'
+        && item.association_is === 'variant_trait_statistical_association',
+    )).toBe(true);
+  });
+
   it('reports PMDD-related marker coverage without turning coverage into probability', () => {
     const ids = [
       'rs2234693', 'rs9340799', 'rs4986938', 'rs1256049', 'rs1042838', 'rs10895068',
@@ -296,6 +327,7 @@ describe('condition-level evidence aggregation', () => {
     expect(getConditionCoverageGaps()).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'pots', status: 'emerging_research' }),
       expect.objectContaining({ id: 'hypermobile_eds', status: 'clinical' }),
+      expect.objectContaining({ id: 'psychiatric_prs', status: 'research_limitations' }),
     ]));
   });
 

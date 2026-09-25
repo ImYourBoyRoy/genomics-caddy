@@ -1,6 +1,6 @@
 [package]
 name = "DNA-Tools"
-version = "0.2.4"
+version = "0.2.5"
 description = "Local-first desktop DNA explorer (Genomics Caddy) for AncestryDNA and 23andMe exports."
 authors = ["Roy Dawson IV"]
 license = "PolyForm-Noncommercial-1.0.0"
@@ -29,7 +29,7 @@ tauri-build = { version = "2.6.3", features = [] }
 [dependencies]
 tauri = { version = "2.11.5", features = ["image-png"] }
 tauri-plugin-opener = "2.5.5"
-tauri-plugin-updater = "2.11.0"
+tauri-plugin-updater = "=2.12.0"
 tauri-plugin-process = "2.3.1"
 minisign-verify = "0.2.5"
 base64 = ">=0.23.1"

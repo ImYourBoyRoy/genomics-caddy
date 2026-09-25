@@ -39,6 +39,7 @@ export interface CanonicalFindingActionability {
 
 export interface CanonicalFindingApplicability {
   scopes: string[];
+  contextTags: string[];
   contextRequired: boolean;
 }
 
@@ -194,6 +195,7 @@ function semanticPartitionKey(marker: EvaluatedMarker): string {
     normalize(marker.effect_allele),
     [...(marker.expected_plus_alleles || [])].map(normalize).sort().join(','),
     normalize(marker.effect_direction),
+    [...(marker.context_tags || [])].map(normalize).sort().join(','),
     normalize(authored.condition_label),
     normalize(authored.interpretation_class),
     normalize(authored.inheritance_model),
@@ -301,8 +303,12 @@ function finalizeGroup(
           .map((source) => source.marker.sex_scope || '')
           .filter((scope) => scope && scope !== 'all'),
       ),
+      contextTags: uniqueStrings(sources.flatMap((source) => source.marker.context_tags || [])),
       contextRequired: sources.some((source) =>
-        Boolean(source.marker.sex_scope && source.marker.sex_scope !== 'all'),
+        Boolean(
+          (source.marker.sex_scope && source.marker.sex_scope !== 'all')
+          || (source.marker.context_tags && source.marker.context_tags.length > 0),
+        ),
       ),
     },
     referenceIds: uniqueStrings(sources.flatMap((source) => source.marker.reference_ids || [])),

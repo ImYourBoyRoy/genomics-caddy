@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const appShell = readFileSync(new URL('./AppShell.svelte', import.meta.url), 'utf8');
 const sidebar = readFileSync(new URL('../sidebar/Sidebar.svelte', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
+const shellStyles = readFileSync(new URL('../../styles/components/update-banner.css', import.meta.url), 'utf8');
 
 describe('responsive data-sidebar access', () => {
   it('gives the narrow drawer a keyboard and assistive-technology control contract', () => {
@@ -50,5 +51,15 @@ describe('responsive data-sidebar access', () => {
     expect(theme).toContain('box-shadow: none;');
     expect(theme).toContain('.focus-restore-toggle {');
     expect(theme).toContain('position: absolute;');
+  });
+
+  it('lets the shell follow the viewport without clipping scaled desktop windows', () => {
+    expect(shellStyles).toContain('width: 100%;');
+    expect(shellStyles).toContain('height: 100%;');
+    expect(shellStyles).toContain('min-height: 100dvh;');
+    expect(shellStyles).toContain('min-width: 0;');
+    expect(theme).toContain('height: auto;');
+    expect(theme).toContain('width: 100%;');
+    expect(theme).toContain('.main-content {');
   });
 });

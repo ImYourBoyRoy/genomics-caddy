@@ -128,6 +128,7 @@ export interface AssertionIdentityInput {
   effect_allele?: string | null;
   category_id?: string | null;
   sex_scope?: string | null;
+  context_tags?: string[] | null;
   clinical_semantics?: ClinicalSemantics | null;
   reference_ids?: string[] | null;
   sources?: MarkerSource[] | null;
@@ -165,6 +166,7 @@ export function buildAssertionKey(input: AssertionIdentityInput): string {
     },
     population_context: {
       sex_scope: input.sex_scope || null,
+      context_tags: [...new Set(input.context_tags || [])].sort(),
     },
     assay_requirement: callabilityPolicyForVariantType(input.variant_type).assay_requirement,
     source_assertion: [...new Set(sourceAssertion)].sort(),

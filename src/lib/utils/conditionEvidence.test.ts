@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EvaluatedMarker, GeneratedReport } from '../types/genomics';
 import {
+  buildCatalogAssociationSummaries,
   buildConditionCoverageSummaries,
   buildConditionEvidenceSummaries,
   getConditionCoverageGaps,
@@ -72,6 +73,114 @@ function report(markers: EvaluatedMarker[], secondSection = false): GeneratedRep
 }
 
 describe('condition-level evidence aggregation', () => {
+  it('links a ClinVar condition only when the reported alternate allele is present and verifiable', () => {
+    const associations = buildCatalogAssociationSummaries(report([marker({
+      rsid: 'rs-clinvar-match',
+      link_id: 'test:clinvar:match',
+      user_genotype: 'AG',
+      normalized_genotype: 'AG',
+      expected_plus_alleles: ['A', 'G'],
+      orientation_state: 'verified',
+      clinvar_annotations: [{
+        clinical_significance: 'Pathogenic',
+        conditions: 'Synthetic inherited condition',
+        review_status: 'reviewed by expert panel',
+        variation_id: '12345',
+        rcv_accession: 'RCV000000001|RCV000000002',
+        reference_allele: 'A',
+        alternate_allele: 'G',
+      }, {
+        clinical_significance: 'Pathogenic',
+        conditions: 'Synthetic inherited condition',
+        review_status: 'criteria provided, multiple submitters',
+        variation_id: '12346',
+        reference_allele: 'A',
+        alternate_allele: 'G',
+      }],
+    })]));
+
+    expect(associations).toContainEqual(expect.objectContaining({
+      label: 'Synthetic inherited condition',
+      association_is: 'variant_condition_summary',
+      association_scope: 'variant',
+      source_type: 'ClinVar',
+      clinical_significance: 'Pathogenic',
+      review_statuses: ['criteria provided, multiple submitters', 'reviewed by expert panel'],
+      allele_match: 'matched',
+      condition_specific_assertion_available: false,
+      record_ids: ['12345', '12346'],
+      rcv_accessions: ['RCV000000001', 'RCV000000002'],
+    }));
+    expect(JSON.stringify(associations)).not.toContain('AG');
+  });
+
+  it('does not surface benign, uncertain, or non-matching ClinVar records as potential conditions', () => {
+    const associations = buildCatalogAssociationSummaries(report([marker({
+      rsid: 'rs-clinvar-not-matched',
+      user_genotype: 'AA',
+      normalized_genotype: 'AA',
+      expected_plus_alleles: ['A', 'G'],
+      orientation_state: 'verified',
+      clinvar_annotations: [
+        {
+          clinical_significance: 'Pathogenic',
+          conditions: 'Not carried condition',
+          reference_allele: 'A',
+          alternate_allele: 'G',
+        },
+        { clinical_significance: 'Benign', conditions: 'Benign condition' },
+        { clinical_significance: 'Uncertain significance', conditions: 'Uncertain condition' },
+      ],
+    })]));
+
+    expect(associations).toEqual([]);
+  });
+
+  it('keeps GWAS locus traits and ClinGen gene validity as separate relationship types', () => {
+    const associations = buildCatalogAssociationSummaries(report([marker({
+      rsid: 'rs-catalog-links',
+      link_id: 'test:catalog-links',
+      gene: 'SYNTHETIC1',
+      gwas_associations: [{
+        association_is: 'variant_trait_statistical_association',
+        trait_name: 'Synthetic glucose trait',
+        pvalue: 1e-9,
+        study_accession: 'GCST000001',
+      }, {
+        association_is: 'variant_trait_statistical_association',
+        trait_name: 'Internal routing seed',
+        pvalue: 1e-10,
+        source: 'discovery_catalog_fallback',
+      }],
+      clingen_annotations: [{
+        gene_symbol: 'SYNTHETIC1',
+        disease_label: 'Synthetic gene-level condition',
+        classification: 'Definitive',
+        mode_of_inheritance: 'Autosomal dominant',
+        report_url: 'https://example.test/clingen',
+      }],
+    })]));
+
+    expect(associations).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        label: 'Synthetic glucose trait',
+        association_is: 'variant_trait_statistical_association',
+        association_scope: 'locus',
+        best_p_value: 1e-9,
+        study_accessions: ['GCST000001'],
+        evidence_summary: expect.stringContaining('keeps up to 12 strongest study records per marker'),
+      }),
+      expect.objectContaining({
+        label: 'Synthetic gene-level condition',
+        association_is: 'gene_disease_validity',
+        association_scope: 'gene',
+        classification: 'Definitive',
+        evidence_summary: expect.stringContaining('not evidence that this marker causes'),
+      }),
+    ]));
+    expect(associations.some((association) => association.label === 'Internal routing seed')).toBe(false);
+  });
+
   it('reports PMDD-related marker coverage without turning coverage into probability', () => {
     const ids = [
       'rs2234693', 'rs9340799', 'rs4986938', 'rs1256049', 'rs1042838', 'rs10895068',

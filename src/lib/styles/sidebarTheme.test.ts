@@ -51,6 +51,8 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('.samples-card .sample-name:focus-visible');
     expect(source).toContain('.samples-card .sample-name-text');
     expect(source).toContain('.samples-card .sample-sex-symbol');
+    expect(source).toContain('.samples-card .sample-sex-indicator');
+    expect(source).toContain('.samples-card .sample-sex-indicator:focus-visible');
     expect(source).toContain('.samples-card .btn-delete:focus-visible');
     expect(source).toContain('.samples-card .btn-delete svg');
     expect(source).toContain('.samples-card .samples-actions-note');
@@ -58,6 +60,13 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('min-width: 2.25rem;');
     expect(source).toContain('min-height: 2.25rem;');
     expect(source).toContain('var(--focus-ring)');
+  });
+
+  it('prints the runtime app version in the sidebar footer', () => {
+    expect(sidebarComponent).toContain("import { appUpdateState } from '../../utils/appUpdateState';");
+    expect(sidebarComponent).toContain('class="sidebar-footer-meta"');
+    expect(sidebarComponent).toContain('class="sidebar-app-version"');
+    expect(source).toContain('.sidebar-app-version');
   });
 
   it('keeps profile-list presentation in the sidebar stylesheet', () => {
@@ -72,11 +81,13 @@ describe('sidebar status theme tokens', () => {
     }
     expect(sampleList).toContain('class="sample-name-text"');
     expect(sampleList).toContain('class="sample-sex-symbol"');
+    expect(sampleList).toContain('class="sample-sex-indicator"');
+    expect(sampleList).toContain('Open chromosome context for');
     expect(sampleList).toContain('aria-label={`Delete profile ${s.name}`}');
     expect(sampleList).toContain('title={disabled ? disabledReason');
     expect(sampleList).toContain('<svg viewBox="0 0 20 20"');
     expect(sampleList).not.toContain('🗑️');
-    expect(sampleList).toContain("label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•'");
+    expect(sampleList).toContain("label === 'Female-like' ? '♀' : label === 'Male-like' ? '♂' : '•'");
     expect(sampleList).not.toContain('Tooltip');
     expect(sampleList).not.toContain('sample-scope-help');
 
@@ -89,7 +100,7 @@ describe('sidebar status theme tokens', () => {
 
   it('gives profile names a stable readable track beside the sex symbol and actions', () => {
     expect(source).toContain('grid-template-columns: minmax(0, 1fr) auto;');
-    expect(source).toContain('grid-template-columns: 1.4rem minmax(0, 1fr);');
+    expect(source).toContain('grid-template-columns: 2.75rem minmax(0, 1fr);');
     expect(source).toContain('display: block;');
     expect(source).toContain('min-width: 0;');
   });
@@ -141,7 +152,8 @@ describe('sidebar status theme tokens', () => {
     expect(source).toContain('.liftover-status-copy');
     expect(source).toContain('.liftover-status-actions');
     expect(sidebarComponent).toContain('class="chain-status-card card liftover-status-card"');
-    expect(sidebarComponent).toContain('Download the chain to map imported coordinates to GRCh38.');
+    expect(sidebarComponent).not.toContain('class="liftover-status-detail"');
+    expect(sidebarComponent).toContain('The chain maps imported GRCh37 coordinates to GRCh38 for report context; it does not change your genotype calls.');
     expect(sidebarComponent).toContain('Update chain');
   });
 });

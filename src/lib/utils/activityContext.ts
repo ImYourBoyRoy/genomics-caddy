@@ -57,7 +57,7 @@ export function activityDomainMatches(
 ): boolean {
   const context = [
     ...sectionNames,
-    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''}`),
+    ...markers.map((marker) => `${marker.gene} ${marker.variant_name || ''} ${marker.sex_scope || ''} ${(marker.context_tags || []).join(' ')}`),
   ].join(' ').toLowerCase();
   const keywords = Array.isArray(domain.section_keywords) ? domain.section_keywords : [];
   return keywords.some((keyword) => context.includes(String(keyword).toLowerCase()))

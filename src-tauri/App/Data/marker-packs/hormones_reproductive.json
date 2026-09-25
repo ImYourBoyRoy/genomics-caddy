@@ -2240,6 +2240,140 @@
       ]
     },
     {
+      "rsid": "GUARDRAIL_MENOPAUSE_STATUS_NOT_IN_DNA",
+      "gene": "MULTI_GENE",
+      "variant_name": "Perimenopause, menopause status, and current hormone state are not callable from consumer DNA",
+      "effect_allele": "N/A",
+      "impact": "Separates reproductive-aging symptoms and clinical staging from inherited SNP context",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Consumer DNA cannot establish perimenopause or menopause status, stage a transition, measure current estrogen or progesterone, identify the cause of hot flashes or night sweats, determine ovarian reserve, or select hormone therapy. Use the person's age and bleeding or surgical history, symptoms, medications, and clinician-directed evaluation.",
+      "do_not_claim": [
+        "perimenopause or menopause diagnosis from a common SNP",
+        "current hormone level or ovarian-reserve measurement",
+        "hot-flash cause from genotype",
+        "hormone-therapy start, stop, dose, or product selection from genotype"
+      ],
+      "confirm_with": [
+        "user-supplied age, bleeding, surgical, contraceptive, and medication context",
+        "vasomotor, sleep, mood, genitourinary, pain, and bone-health symptoms",
+        "clinician evaluation and targeted testing when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Menopause is a dynamic clinical life-stage and consumer SNP arrays do not measure current reproductive hormones or establish the reason for a symptom.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "all_bodies_menopause_context",
+      "context_tags": [
+        "perimenopause",
+        "menopause",
+        "age_sensitive",
+        "hormone_sensitive"
+      ],
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "NICE: Menopause: identification and management",
+          "url": "https://www.nice.org.uk/guidance/ng23/chapter/Recommendations",
+          "accessed": "2026-09-21",
+          "evidence_type": "National clinical guideline",
+          "conflict_of_interest": "National Institute for Health and Care Excellence guideline; review current disclosures when using clinically",
+          "notes": "Use for symptom- and bleeding-based identification, limits of routine hormone testing in people aged 45 or over, and clinician-directed management."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_AGE_AT_NATURAL_MENOPAUSE_RESEARCH",
+      "gene": "MCM8/SYCP2L/BRCA1/HELQ/FANCM/BRSK1/MULTI_GENE",
+      "variant_name": "Age at natural menopause research panel",
+      "effect_allele": "N/A",
+      "impact": "Reproductive-aging association context",
+      "evidence_tier": "D_research_only",
+      "interpretation": "Genome-wide studies have identified many small-effect associations with age at natural menopause. This panel is research context only: it cannot predict an individual's menopause age, stage perimenopause, measure ovarian reserve, diagnose premature ovarian insufficiency, or determine hormone-therapy response.",
+      "do_not_claim": [
+        "personal age-at-menopause prediction",
+        "perimenopause or menopause staging",
+        "ovarian-reserve or fertility prediction",
+        "premature ovarian insufficiency diagnosis",
+        "hormone-therapy selection or response"
+      ],
+      "confirm_with": [
+        "age, bleeding and surgical history, medications, and symptom pattern",
+        "clinician evaluation when periods change unexpectedly or symptoms are concerning",
+        "validated clinical genetics testing only when a clinician identifies an indication"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "Research associations are small-effect, ancestry- and model-dependent, and incomplete on consumer arrays; they do not establish an individual life-stage or current hormone state.",
+      "clinical_confirmation_required": true,
+      "context_tags": [
+        "age_sensitive",
+        "menopause"
+      ],
+      "variant_type": "polygenic_panel",
+      "sources": [
+        {
+          "name": "Genome-wide association study of age at natural menopause",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34050765/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Review article disclosures and cohort limitations when using clinically",
+          "notes": "Use for research provenance only; the study's aggregate associations do not make a personal clinical prediction."
+        },
+        {
+          "name": "NHGRI-EBI GWAS Catalog",
+          "url": "https://www.ebi.ac.uk/gwas/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Curated GWAS Catalog",
+          "conflict_of_interest": "Public academic/NIH-EBI resource",
+          "notes": "Use for association provenance and trait/locus validation; GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_POI_CLINICAL_EVALUATION_GAP",
+      "gene": "MULTI_GENE",
+      "variant_name": "Premature ovarian insufficiency requires clinical evaluation",
+      "effect_allele": "N/A",
+      "impact": "Prevents common-SNP data from substituting for POI or ovarian-reserve assessment",
+      "evidence_tier": "E_negative_evidence_or_gap",
+      "interpretation": "Common consumer SNP data cannot diagnose or exclude premature ovarian insufficiency, ovarian reserve changes, or an underlying chromosomal or monogenic cause. Unexpectedly absent or changing periods, vasomotor symptoms at a young age, or fertility concerns require clinical assessment rather than a polygenic interpretation.",
+      "do_not_claim": [
+        "premature ovarian insufficiency diagnosis or exclusion",
+        "ovarian-reserve result",
+        "fertility prediction",
+        "reassurance from an uncalled or negative consumer marker"
+      ],
+      "confirm_with": [
+        "bleeding, symptom, medication, surgical, and family-history review",
+        "clinician-directed hormone testing and evaluation",
+        "clinical genetics or chromosomal testing when indicated"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "A consumer SNP array is not a complete evaluation for POI, ovarian reserve, chromosomal variation, rare variants, or current endocrine function.",
+      "clinical_confirmation_required": true,
+      "context_tags": [
+        "age_sensitive",
+        "ovarian"
+      ],
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "Genome-wide association study of age at natural menopause",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34050765/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Review article disclosures and cohort limitations when using clinically",
+          "notes": "Use to distinguish population-level reproductive-aging associations from clinical POI evaluation."
+        },
+        {
+          "name": "ASRM: Evidence-based guideline: Premature Ovarian Insufficiency",
+          "url": "https://www.asrm.org/practice-guidance/practice-committee-documents/evidence-based-guideline-premature-ovarian-insufficiency--2024/",
+          "accessed": "2026-09-21",
+          "evidence_type": "Professional clinical guideline",
+          "conflict_of_interest": "American Society for Reproductive Medicine guideline; review current disclosures when using clinically",
+          "notes": "Use for the boundary between clinical POI evaluation and consumer SNP context."
+        }
+      ]
+    },
+    {
       "rsid": "GUARDRAIL_FERTILITY_NOT_PREDICTABLE_FROM_CONSUMER_DNA",
       "gene": "MULTI_GENE",
       "variant_name": "Fertility and preconception status are not predictable from consumer DNA",
@@ -2265,6 +2399,10 @@
       "raw_dna_limitation": "Fertility depends on age, anatomy, gamete and partner factors, medical history, medications, exposures, and chance. Consumer SNP arrays are not a complete fertility, carrier, HLA, structural-variant, or reproductive-endocrinology evaluation.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_preconception_fertility_context",
+      "context_tags": [
+        "preconception",
+        "fertility"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {
@@ -2316,6 +2454,10 @@
       "raw_dna_limitation": "Exogenous hormone exposure and response are clinical medication and phenotype facts, not properties that can be recovered from a consumer SNP array.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_hormone_therapy_context",
+      "context_tags": [
+        "hormone_therapy",
+        "hormone_sensitive"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {
@@ -2359,6 +2501,11 @@
       "raw_dna_limitation": "Pregnancy, postpartum physiology, lactation, infant exposure, and medication safety depend on timing, clinical history, the exact substance, and measured or observed outcomes rather than a consumer SNP array.",
       "clinical_confirmation_required": true,
       "sex_scope": "all_bodies_pregnancy_lactation_context",
+      "context_tags": [
+        "pregnancy",
+        "postpartum",
+        "lactation"
+      ],
       "variant_type": "guardrail",
       "sources": [
         {
@@ -2384,6 +2531,362 @@
           "evidence_type": "Professional patient-safety resource",
           "conflict_of_interest": "American College of Obstetricians and Gynecologists patient-safety resource",
           "notes": "Use for urgent symptoms during or after pregnancy."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4785384",
+      "gene": "HEATR3 locus",
+      "variant_name": "Uterine leiomyoma GWAS locus near HEATR3",
+      "effect_allele": "T",
+      "impact": "Study-level association: OR 1.08 (95% CI 1.05-1.10); not an individual risk estimate",
+      "evidence_tier": "D_research_only",
+      "interpretation": "In a 2019 trans-ethnic GWAS meta-analysis, the T allele (compared with C) was associated with higher odds of uterine fibroids (OR 1.08, 95% CI 1.05-1.10). This is a study-group estimate, not a personal risk calculation. It cannot diagnose or exclude fibroids, explain recurrence, describe a lesion, or predict IUD response; ancestry portability is uncertain.",
+      "do_not_claim": [
+        "fibroid diagnosis or exclusion",
+        "a personal risk percentage or combined genetic score",
+        "fibroid recurrence, growth, number, size, location, or subtype",
+        "IUD suitability, response, or treatment selection"
+      ],
+      "confirm_with": ["Fibroid history and clinician-directed imaging when evaluating the condition; neither confirms this SNP nor validates its study association"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a population association from a study of predominantly African- and European-ancestry cohorts, not an individual prediction model. Consumer-array callability and ancestry portability are uncertain. Only the study-reported T/C allele pair is eligible; unexpected allele calls block interpretation. No call or allele count diagnoses, excludes, or predicts recurrence, fibroid anatomy, or treatment response.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "context_tags": ["uterine", "hormone_sensitive"],
+      "variant_type": "snp",
+      "expected_plus_alleles": ["T", "C"],
+      "source_build": "GRCh37",
+      "allele_orientation_verified": true,
+      "orientation_source": "2019 GWAS Table 2 EFF/OTH alleles cross-checked against Ensembl GRCh37 forward-strand mapping",
+      "interpretation_blocked_if_unverified": true,
+      "sources": [
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids (Table 2)",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; the reported odds ratio is cohort-level, not an individual prediction",
+          "notes": "Table 2 reports rs4785384 T/C, OR 1.08 (95% CI 1.05-1.10), in GRCh37 coordinates. Use only as a study association."
+        },
+        {
+          "name": "Ensembl GRCh37 variation record: rs4785384",
+          "url": "https://grch37.rest.ensembl.org/variation/human/rs4785384?content-type=application/json",
+          "accessed": "2026-09-24",
+          "evidence_type": "Reference genome variant/allele mapping",
+          "conflict_of_interest": "Ensembl reference resource; does not verify the strand used by an imported consumer file",
+          "notes": "Cross-check of the reference assembly and forward-strand allele set."
+        }
+      ]
+    },
+    {
+      "rsid": "rs1812264",
+      "gene": "LOC105375949 locus",
+      "variant_name": "Uterine leiomyoma GWAS locus near LOC105375949",
+      "effect_allele": "T",
+      "impact": "Study-level association: OR 0.91 (95% CI 0.89-0.93); not an individual risk estimate",
+      "evidence_tier": "D_research_only",
+      "interpretation": "In a 2019 trans-ethnic GWAS meta-analysis, the T allele (compared with G) was associated with lower odds of uterine fibroids (OR 0.91, 95% CI 0.89-0.93). This is a study-group estimate, not a personal protective effect or risk calculation. It cannot diagnose or exclude fibroids, explain recurrence, describe a lesion, or predict IUD response; ancestry portability is uncertain.",
+      "do_not_claim": [
+        "fibroid diagnosis or exclusion",
+        "a personal risk percentage or combined genetic score",
+        "fibroid recurrence, growth, number, size, location, or subtype",
+        "IUD suitability, response, or treatment selection"
+      ],
+      "confirm_with": ["Fibroid history and clinician-directed imaging when evaluating the condition; neither confirms this SNP nor validates its study association"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a population association from a study of predominantly African- and European-ancestry cohorts, not an individual prediction model. Consumer-array callability and ancestry portability are uncertain. Only the study-reported T/G allele pair is eligible; unexpected allele calls block interpretation. No call or allele count diagnoses, excludes, or predicts recurrence, fibroid anatomy, or treatment response.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "context_tags": ["uterine", "hormone_sensitive"],
+      "variant_type": "snp",
+      "expected_plus_alleles": ["T", "G"],
+      "source_build": "GRCh37",
+      "allele_orientation_verified": true,
+      "orientation_source": "2019 GWAS Table 2 EFF/OTH alleles cross-checked against Ensembl GRCh37 forward-strand mapping",
+      "interpretation_blocked_if_unverified": true,
+      "sources": [
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids (Table 2)",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; the reported odds ratio is cohort-level, not an individual prediction",
+          "notes": "Table 2 reports rs1812264 T/G, OR 0.91 (95% CI 0.89-0.93), in GRCh37 coordinates. Use only as a study association."
+        },
+        {
+          "name": "Ensembl GRCh37 variation record: rs1812264",
+          "url": "https://grch37.rest.ensembl.org/variation/human/rs1812264?content-type=application/json",
+          "accessed": "2026-09-24",
+          "evidence_type": "Reference genome variant/allele mapping",
+          "conflict_of_interest": "Ensembl reference resource; does not verify the strand used by an imported consumer file",
+          "notes": "Cross-check of the reference assembly and forward-strand allele set."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7907606",
+      "gene": "OBFC1 locus",
+      "variant_name": "Uterine leiomyoma GWAS locus near OBFC1",
+      "effect_allele": "T",
+      "impact": "Study-level association: OR 0.89 (95% CI 0.87-0.92); not an individual risk estimate",
+      "evidence_tier": "D_research_only",
+      "interpretation": "In a 2019 trans-ethnic GWAS meta-analysis, the T allele (compared with G) was associated with lower odds of uterine fibroids (OR 0.89, 95% CI 0.87-0.92). This is a study-group estimate, not a personal protective effect or risk calculation. It cannot diagnose or exclude fibroids, explain recurrence, describe a lesion, or predict IUD response; ancestry portability is uncertain.",
+      "do_not_claim": [
+        "fibroid diagnosis or exclusion",
+        "a personal risk percentage or combined genetic score",
+        "fibroid recurrence, growth, number, size, location, or subtype",
+        "IUD suitability, response, or treatment selection"
+      ],
+      "confirm_with": ["Fibroid history and clinician-directed imaging when evaluating the condition; neither confirms this SNP nor validates its study association"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a population association from a study of predominantly African- and European-ancestry cohorts, not an individual prediction model. Consumer-array callability and ancestry portability are uncertain. Only the study-reported T/G allele pair is eligible; unexpected allele calls block interpretation. No call or allele count diagnoses, excludes, or predicts recurrence, fibroid anatomy, or treatment response.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "context_tags": ["uterine", "hormone_sensitive"],
+      "variant_type": "snp",
+      "expected_plus_alleles": ["T", "G"],
+      "source_build": "GRCh37",
+      "allele_orientation_verified": true,
+      "orientation_source": "2019 GWAS Table 2 EFF/OTH alleles cross-checked against Ensembl GRCh37 forward-strand mapping",
+      "interpretation_blocked_if_unverified": true,
+      "sources": [
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids (Table 2)",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; the reported odds ratio is cohort-level, not an individual prediction",
+          "notes": "Table 2 reports rs7907606 T/G, OR 0.89 (95% CI 0.87-0.92), in GRCh37 coordinates. Use only as a study association."
+        },
+        {
+          "name": "Ensembl GRCh37 variation record: rs7907606",
+          "url": "https://grch37.rest.ensembl.org/variation/human/rs7907606?content-type=application/json",
+          "accessed": "2026-09-24",
+          "evidence_type": "Reference genome variant/allele mapping",
+          "conflict_of_interest": "Ensembl reference resource; does not verify the strand used by an imported consumer file",
+          "notes": "Cross-check of the reference assembly and forward-strand allele set."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7124615",
+      "gene": "SCGB1C1 / BET1L locus",
+      "variant_name": "Uterine leiomyoma GWAS locus near SCGB1C1/BET1L",
+      "effect_allele": "T",
+      "impact": "Study-level association: OR 0.86 (95% CI 0.83-0.89); not an individual risk estimate",
+      "evidence_tier": "D_research_only",
+      "interpretation": "In a 2019 trans-ethnic GWAS meta-analysis, the T allele (compared with C) was associated with lower odds of uterine fibroids (OR 0.86, 95% CI 0.83-0.89). This is a study-group estimate, not a personal protective effect or risk calculation. It cannot diagnose or exclude fibroids, explain recurrence, describe a lesion, or predict IUD response; ancestry portability is uncertain.",
+      "do_not_claim": [
+        "fibroid diagnosis or exclusion",
+        "a personal risk percentage or combined genetic score",
+        "fibroid recurrence, growth, number, size, location, or subtype",
+        "IUD suitability, response, or treatment selection"
+      ],
+      "confirm_with": ["Fibroid history and clinician-directed imaging when evaluating the condition; neither confirms this SNP nor validates its study association"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a population association from a study of predominantly African- and European-ancestry cohorts, not an individual prediction model. Consumer-array callability and ancestry portability are uncertain. Only the study-reported T/C allele pair is eligible; unexpected allele calls block interpretation. No call or allele count diagnoses, excludes, or predicts recurrence, fibroid anatomy, or treatment response.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "context_tags": ["uterine", "hormone_sensitive"],
+      "variant_type": "snp",
+      "expected_plus_alleles": ["T", "C"],
+      "source_build": "GRCh37",
+      "allele_orientation_verified": true,
+      "orientation_source": "2019 GWAS Table 2 EFF/OTH alleles cross-checked against Ensembl GRCh37 forward-strand mapping",
+      "interpretation_blocked_if_unverified": true,
+      "sources": [
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids (Table 2)",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; the reported odds ratio is cohort-level, not an individual prediction",
+          "notes": "Table 2 reports rs7124615 T/C, OR 0.86 (95% CI 0.83-0.89), in GRCh37 coordinates. Use only as a study association."
+        },
+        {
+          "name": "Ensembl GRCh37 variation record: rs7124615",
+          "url": "https://grch37.rest.ensembl.org/variation/human/rs7124615?content-type=application/json",
+          "accessed": "2026-09-24",
+          "evidence_type": "Reference genome variant/allele mapping",
+          "conflict_of_interest": "Ensembl reference resource; does not verify the strand used by an imported consumer file",
+          "notes": "Cross-check of the reference assembly and forward-strand allele set."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10835889",
+      "gene": "WT1 locus",
+      "variant_name": "Uterine leiomyoma GWAS locus near WT1",
+      "effect_allele": "A",
+      "impact": "Study-level association: OR 1.16 (95% CI 1.13-1.19); not an individual risk estimate",
+      "evidence_tier": "D_research_only",
+      "interpretation": "In a 2019 trans-ethnic GWAS meta-analysis, the A allele (compared with G) was associated with higher odds of uterine fibroids (OR 1.16, 95% CI 1.13-1.19). This is a study-group estimate, not a personal risk calculation or proof that WT1 is causal. It cannot diagnose or exclude fibroids, explain recurrence, describe a lesion, or predict IUD response; ancestry portability is uncertain.",
+      "do_not_claim": [
+        "fibroid diagnosis or exclusion",
+        "a personal risk percentage or combined genetic score",
+        "fibroid recurrence, growth, number, size, location, or subtype",
+        "IUD suitability, response, or treatment selection"
+      ],
+      "confirm_with": ["Fibroid history and clinician-directed imaging when evaluating the condition; neither confirms this SNP nor validates its study association"],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This is a population association from a study of predominantly African- and European-ancestry cohorts, not an individual prediction model. Consumer-array callability and ancestry portability are uncertain. Only the study-reported A/G allele pair is eligible; unexpected allele calls block interpretation. No call or allele count diagnoses, excludes, or predicts recurrence, fibroid anatomy, or treatment response.",
+      "clinical_confirmation_required": false,
+      "sex_scope": "uterine_context",
+      "context_tags": ["uterine", "hormone_sensitive"],
+      "variant_type": "snp",
+      "expected_plus_alleles": ["A", "G"],
+      "source_build": "GRCh37",
+      "allele_orientation_verified": true,
+      "orientation_source": "2019 GWAS Table 2 EFF/OTH alleles cross-checked against Ensembl GRCh37 forward-strand mapping",
+      "interpretation_blocked_if_unverified": true,
+      "sources": [
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids (Table 2)",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; the reported odds ratio is cohort-level, not an individual prediction",
+          "notes": "Table 2 reports rs10835889 A/G, OR 1.16 (95% CI 1.13-1.19), in GRCh37 coordinates. Use only as a study association; WT1 causality is not established."
+        },
+        {
+          "name": "Ensembl GRCh37 variation record: rs10835889",
+          "url": "https://grch37.rest.ensembl.org/variation/human/rs10835889?content-type=application/json",
+          "accessed": "2026-09-24",
+          "evidence_type": "Reference genome variant/allele mapping",
+          "conflict_of_interest": "Ensembl reference resource; does not verify the strand used by an imported consumer file",
+          "notes": "Cross-check of the reference assembly and forward-strand allele set."
+        }
+      ]
+    },
+    {
+      "rsid": "GUARDRAIL_UTERINE_FIBROIDS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "gene": "MULTI_GENE/MED12/HMGA2/FH/COL4A5/COL4A6",
+      "variant_name": "Uterine fibroids require clinical and imaging workup",
+      "effect_allele": "N/A",
+      "impact": "Separates fibroid care from consumer-DNA interpretation",
+      "evidence_tier": "A_clinical_guardrail",
+      "interpretation": "Uterine fibroids (leiomyomas) are structural uterine growths. A consumer SNP array cannot diagnose or exclude a fibroid, explain recurrence after myomectomy, determine fibroid number, size, location, or cavity distortion, or choose an IUD or other treatment. Some recurrent fibroid biology is somatic and tissue-specific, while inherited associations remain research context.",
+      "do_not_claim": [
+        "uterine fibroid diagnosis or exclusion",
+        "an explanation for recurrence after myomectomy",
+        "fibroid size, number, location, or cavity distortion from DNA",
+        "IUD suitability, response, or treatment selection from DNA",
+        "a fibroid-related cancer diagnosis from a consumer array"
+      ],
+      "confirm_with": [
+        "bleeding, pain, pressure, urinary, bowel, and fertility-goal history",
+        "pelvic examination when appropriate",
+        "clinically indicated pelvic ultrasound or MRI",
+        "CBC and ferritin when bleeding is heavy or prolonged",
+        "gynecology review and pathology when tissue has been removed"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "Blood or saliva consumer arrays do not test the fibroid tissue itself and do not provide a validated fibroid diagnosis, recurrence prediction, subtype, or IUD-response prediction.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "uterine_context",
+      "context_tags": [
+        "uterine",
+        "hormone_sensitive"
+      ],
+      "variant_type": "guardrail",
+      "sources": [
+        {
+          "name": "ACOG: Uterine Fibroids",
+          "url": "https://www.acog.org/womens-health/faqs/uterine-fibroids",
+          "accessed": "2026-09-24",
+          "evidence_type": "Professional patient guidance",
+          "conflict_of_interest": "American College of Obstetricians and Gynecologists patient guidance",
+          "notes": "Use for symptoms, treatment goals, recurrence after myomectomy, and the distinction between reducing bleeding and treating fibroids."
+        },
+        {
+          "name": "NICE NG88: Heavy Menstrual Bleeding Assessment and Management",
+          "url": "https://www.nice.org.uk/guidance/ng88/chapter/Recommendations",
+          "accessed": "2026-09-24",
+          "evidence_type": "National clinical guideline",
+          "conflict_of_interest": "UK National Institute for Health and Care Excellence guideline",
+          "notes": "Use for fibroid size, location, cavity-distortion, imaging, and treatment-discussion prompts."
+        }
+      ]
+    },
+    {
+      "rsid": "PANEL_UTERINE_FIBROID_RESEARCH_GAP",
+      "gene": "MED12/HMGA2/FH/COL4A5/COL4A6/WNT4/ESR1/TERT/MULTI_GENE",
+      "variant_name": "Uterine fibroid inherited GWAS loci—not a consumer risk score",
+      "effect_allele": "N/A",
+      "impact": "Research context for fibroid biology and inherited susceptibility",
+      "evidence_tier": "E_negative_evidence_or_gap",
+      "interpretation": "Uterine fibroid research describes tissue-level somatic drivers such as MED12, HMGA2, and FH-related pathways alongside many inherited GWAS loci. The five listed common SNPs are individual study associations only; they are not combined into a score. Research polygenic scores also exist, but this app does not compute a clinically validated consumer-array score. Raw array data cannot test the fibroid tissue, establish personal risk, predict recurrence, identify fibroid subtype, or predict response to an IUD.",
+      "do_not_claim": [
+        "a personal fibroid risk percentage",
+        "fibroid diagnosis or exclusion",
+        "fibroid subtype from blood or saliva DNA",
+        "recurrence prediction after surgery",
+        "IUD or other treatment response from common SNPs"
+      ],
+      "confirm_with": [
+        "clinically indicated ultrasound or MRI",
+        "pathology and tissue testing when a clinician indicates it",
+        "gynecology review of symptoms, fibroid anatomy, and treatment goals",
+        "clinical genetics evaluation when FH/HLRCC features or a relevant family history are present"
+      ],
+      "effect_direction": "no_claim",
+      "raw_dna_limitation": "The included inherited GWAS loci are small-effect population associations and must not be summed as a personal risk score. Association estimates and polygenic models depend on cohort, phenotype, ancestry, and assay. Common fibroid driver alterations are often acquired in the lesion; consumer arrays are not tumor sequencing or an established clinical fibroid test.",
+      "clinical_confirmation_required": true,
+      "sex_scope": "uterine_context",
+      "context_tags": [
+        "uterine",
+        "hormone_sensitive"
+      ],
+      "variant_type": "research_gap",
+      "sources": [
+        {
+          "name": "Genetic predisposition to uterine leiomyoma is determined by loci for genitourinary development and genome stability",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6203434/",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed GWAS and tumor-genetics research",
+          "conflict_of_interest": "Research publication; review cohort, ancestry, and assay limitations when using clinically",
+          "notes": "Use to distinguish small-effect inherited susceptibility loci from tissue-specific somatic fibroid biology."
+        },
+        {
+          "name": "Integrated data analysis reveals uterine leiomyoma subtypes with distinct driver pathways and biomarkers",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4747776/",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed tumor-genetics study",
+          "conflict_of_interest": "Research publication; review assay and tumor-sampling limitations when using clinically",
+          "notes": "Use for lesion-level molecular subtype research, not for interpreting a blood or saliva consumer array."
+        },
+        {
+          "name": "NCI: Hereditary Leiomyomatosis and Renal Cell Cancer (HLRCC)",
+          "url": "https://www.cancer.gov/publications/pdq/information-summaries/genetics/hlrcc-syndrome-hp-pdq",
+          "accessed": "2026-09-24",
+          "evidence_type": "National Cancer Institute genetics summary",
+          "conflict_of_interest": "U.S. National Cancer Institute clinical genetics information resource",
+          "notes": "Use for the rare FH/HLRCC clinical-genetics route; most uterine leiomyomas are sporadic."
+        },
+        {
+          "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids",
+          "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; findings are study-level associations, not individual predictions",
+          "notes": "Reports 13 African- and European-ancestry study strata and multiple inherited loci; supports listing selected alleles as research context only."
+        },
+        {
+          "name": "Genome-wide meta-analysis identifies novel risk loci for uterine fibroids within and across multiple ancestry groups",
+          "url": "https://www.nature.com/articles/s41467-025-57483-5",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed multi-ancestry GWAS meta-analysis",
+          "conflict_of_interest": "Research publication; association findings are not a consumer diagnostic or treatment test",
+          "notes": "Large, more recent association study; it expands research on inherited susceptibility but does not validate a five-SNP personal risk score or treatment response."
+        },
+        {
+          "name": "Constructing a multi-ancestry polygenic risk score for uterine fibroids using publicly available data highlights need for inclusive genetic research",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11731894/",
+          "accessed": "2026-09-24",
+          "evidence_type": "Peer-reviewed polygenic score research",
+          "conflict_of_interest": "Research publication; not a clinical validation or endorsement of a consumer test",
+          "notes": "Demonstrates that multi-variant fibroid scores are an active research area, with performance and portability constraints; not a basis for individual diagnosis, recurrence, or treatment decisions."
         }
       ]
     }

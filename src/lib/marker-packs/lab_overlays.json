@@ -1,7 +1,7 @@
 {
   "name": "Lab Overlay Map",
-  "version": "1.1.0",
-  "last_updated": "2026-08-26",
+  "version": "1.2.0",
+  "last_updated": "2026-09-21",
   "principle": "Labs confirm phenotype. Genotype suggests what to check, not what to diagnose.",
   "overlays": [
     {
@@ -186,6 +186,41 @@
         "MRI when ultrasound is insufficient or a specialist recommends it"
       ],
       "notes": "Adenomyosis is not diagnosed or excluded by consumer DNA. Symptoms, pelvic examination, and gynecologic imaging guide the workup; endometriosis, fibroids, pregnancy, and other causes may overlap."
+    },
+    {
+      "domain": "menopause_transition",
+      "markers_or_packs": [
+        "hormones_reproductive",
+        "thyroid_autoimmune",
+        "bone_growth_mineral_density",
+        "cardiovascular",
+        "metabolic",
+        "sleep"
+      ],
+      "labs": [
+        "CBC and ferritin when bleeding is heavy, prolonged, or iron deficiency is possible",
+        "TSH/free T4 when symptoms, thyroid history, or changing bleeding warrant it",
+        "blood pressure, lipid panel, and HbA1c when cardiovascular or metabolic risk makes them clinically relevant",
+        "25(OH)D, calcium, PTH, and DXA only when bone, fracture, medication, or other clinical risk indicates"
+      ],
+      "notes": "Use age, bleeding or surgical history, symptoms, exact medication and supplement labels, and clinician evaluation. Do not use consumer DNA to stage menopause or order a routine hormone panel for every typical menopause question."
+    },
+    {
+      "domain": "postpartum_recovery",
+      "markers_or_packs": [
+        "hormones_reproductive",
+        "thyroid_autoimmune",
+        "nutrients",
+        "metabolic",
+        "cardiovascular"
+      ],
+      "labs": [
+        "CBC and ferritin when blood loss, fatigue, or iron deficiency is a concern",
+        "TSH/free T4 and thyroid antibodies when symptoms or thyroid history warrant it",
+        "glucose or HbA1c when gestational diabetes or metabolic risk is relevant",
+        "clinician-directed blood pressure, urine, or other testing based on postpartum symptoms and findings"
+      ],
+      "notes": "Postpartum timing, feeding, infant exposure, symptoms, and medications are user-supplied clinical context. DNA does not establish recovery or medication and supplement safety."
     }
   ]
 }

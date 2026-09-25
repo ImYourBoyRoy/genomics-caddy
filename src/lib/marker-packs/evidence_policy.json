@@ -1,7 +1,7 @@
 {
   "name": "Evidence Policy",
-  "version": "1.3.0",
-  "last_updated": "2026-08-26",
+  "version": "1.4.0",
+  "last_updated": "2026-09-22",
   "tiers": {
     "A_clinical_guideline": "Clinical guideline or guideline-backed marker. Display with clinical confirmation and clinician action warning.",
     "A_clinically_actionable_gene_panel": "Clinically meaningful when confirmed by validated sequencing or assay. Raw DNA is not sufficient.",
@@ -259,6 +259,98 @@
       "all_bodies_preconception_fertility_context": "All-bodies preconception/fertility context",
       "all_bodies_hormone_therapy_context": "All-bodies hormone-therapy context",
       "all_bodies_pregnancy_lactation_context": "All-bodies pregnancy/lactation context"
+    },
+    "context_indicators": {
+      "pregnancy": {
+        "label": "Pregnancy-related",
+        "short_label": "Pregnancy",
+        "group": "Reproductive stage",
+        "description": "This marker or association has explicit pregnancy-related evidence or safety relevance. It does not establish pregnancy."
+      },
+      "postpartum": {
+        "label": "Postpartum-related",
+        "short_label": "Postpartum",
+        "group": "Reproductive stage",
+        "description": "This marker or association has explicit postpartum-related evidence or safety relevance. It does not establish postpartum timing."
+      },
+      "lactation": {
+        "label": "Lactation-related",
+        "short_label": "Lactation",
+        "group": "Reproductive stage",
+        "description": "This marker or association has explicit lactation or feeding-related evidence or safety relevance. It does not establish feeding status."
+      },
+      "preconception": {
+        "label": "Preconception-related",
+        "short_label": "Preconception",
+        "group": "Reproductive stage",
+        "description": "This marker or association is relevant to preconception planning or review. It does not establish fertility or reproductive goals."
+      },
+      "fertility": {
+        "label": "Fertility-related",
+        "short_label": "Fertility",
+        "group": "Reproductive stage",
+        "description": "This marker or association has explicit fertility-related context. It does not diagnose infertility or predict an individual outcome."
+      },
+      "menstrual_cycle": {
+        "label": "Menstrual-cycle-related",
+        "short_label": "Menstrual cycle",
+        "group": "Reproductive stage",
+        "description": "This marker or association is relevant to menstrual-cycle timing or cycle-linked symptoms. It does not establish cycle phase."
+      },
+      "perimenopause": {
+        "label": "Perimenopause-related",
+        "short_label": "Perimenopause",
+        "group": "Reproductive aging",
+        "description": "This marker or association is relevant to perimenopause context. It does not establish perimenopause status or current hormone levels."
+      },
+      "menopause": {
+        "label": "Menopause-related",
+        "short_label": "Menopause",
+        "group": "Reproductive aging",
+        "description": "This marker or association is relevant to menopause or reproductive-aging context. It does not establish menopause status."
+      },
+      "postmenopause": {
+        "label": "Postmenopause-related",
+        "short_label": "Postmenopause",
+        "group": "Reproductive aging",
+        "description": "This marker or association is relevant to postmenopause context. It does not establish a person's life stage."
+      },
+      "age_sensitive": {
+        "label": "Age-sensitive evidence",
+        "short_label": "Age-sensitive",
+        "group": "Age",
+        "description": "The evidence or interpretation changes with age or an age-defined life stage."
+      },
+      "hormone_sensitive": {
+        "label": "Hormone-sensitive evidence",
+        "short_label": "Hormone-sensitive",
+        "group": "Hormonal context",
+        "description": "The evidence may depend on hormone exposure, hormone transitions, or measured clinical context. DNA does not measure current hormone levels."
+      },
+      "hormone_therapy": {
+        "label": "Hormone-therapy-related",
+        "short_label": "Hormone therapy",
+        "group": "Hormonal context",
+        "description": "This marker or association is relevant to review of an exact hormone-therapy product or clinical monitoring. DNA does not identify the product or dose."
+      },
+      "ovarian": {
+        "label": "Ovarian biological context",
+        "short_label": "Ovarian",
+        "group": "Biological scope",
+        "description": "This marker or association is explicitly scoped to ovarian biology. It does not establish anatomy or current ovarian function."
+      },
+      "uterine": {
+        "label": "Uterine biological context",
+        "short_label": "Uterine",
+        "group": "Biological scope",
+        "description": "This marker or association is explicitly scoped to uterine biology. It does not establish anatomy or a clinical condition."
+      },
+      "androgen_reproductive": {
+        "label": "Androgen-reproductive context",
+        "short_label": "Androgen / reproductive",
+        "group": "Biological scope",
+        "description": "This marker or association is relevant to androgen-reproductive biology. It does not establish hormone levels or treatment response."
+      }
     }
   }
 }

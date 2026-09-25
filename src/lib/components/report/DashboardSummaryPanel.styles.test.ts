@@ -20,7 +20,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
       '--status-accent-bg',
       '--surface-card',
       '--surface-subtle',
-      '--surface-control',
       '--border-color',
       '--text-primary',
       '--text-secondary',
@@ -172,10 +171,16 @@ describe('DashboardSummaryPanel semantic styling', () => {
   it('provides a compact health-area index that targets report section headers', () => {
     expect(source).toContain('Explore all health areas');
     expect(source).toContain('healthAreaSections');
+    expect(source).toContain('<details class="health-area-index summary-card card">');
+    expect(source).toContain('<summary class="health-area-index-heading">');
+    expect(source).toContain('<nav aria-labelledby="health-area-index-title">');
+    expect(source).not.toContain('<details class="health-area-index summary-card card" open');
     expect(source).toContain("href={'#' + sectionAnchorId(section.name)}");
     expect(source).toContain('onJumpToSection?.(section.name)');
     expect(source).toContain('{section.markers.length} markers');
     expect(source).toContain('Jump to a health area for complete findings, evidence, and technical details.');
+    expect(styleBlock).toContain('.health-area-index[open] > .health-area-index-heading::before');
+    expect(theme).toContain('.main-content .dashboard-v2 .health-area-index[open] > .health-area-index-heading::before');
 
     const index = styleBlock.match(/\.health-area-index \{[\s\S]*?\.actionability-safety/)?.[0] ?? '';
     expect(index).toContain('grid-template-columns: repeat(auto-fit');
@@ -250,6 +255,20 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(styleBlock).toContain('.clinical-guidance-grid {');
     expect(styleBlock).toContain('grid-template-columns: minmax(20rem, 0.85fr) minmax(0, 1.15fr);');
     expect(styleBlock).toContain('.clinical-guidance-grid {\n      grid-template-columns: 1fr;');
+  });
+
+  it('progressively discloses lower-priority follow-ups and keeps the list visually quiet', () => {
+    expect(source).toContain('{#each plan.labGroups as group, groupIndex (group.label)}');
+    expect(source).toContain('<details class="lab-tier-block" open={groupIndex === 0}>');
+    expect(source).toContain('aria-label={`${group.tests.length} follow-ups`}');
+    expect(styleBlock).toContain('.lab-tier-toggle:focus-visible');
+    expect(styleBlock).toContain('.lab-tier-content {');
+    expect(styleBlock).toContain('border-bottom: 1px solid var(--border-color);');
+    expect(styleBlock).toContain('background: transparent;');
+    expect(styleBlock).not.toContain('border-radius: 0.55rem;\n    background: var(--surface-card);');
+    expect(theme).toContain('.main-content .dashboard-v2 .lab-tier-block {\n  display: block;');
+    expect(theme).toContain('.main-content .dashboard-v2 .lab-chip {\n  min-width: 0;\n  min-height: 0;');
+    expect(theme).toContain('background: transparent;');
   });
 
   it('sends lab links to the lab list and keeps medication gene references below their titles', () => {
@@ -341,6 +360,17 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(conditionGrid).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
     expect(source).toContain('.condition-evidence-grid {\n      grid-template-columns: repeat(2, minmax(0, 1fr));');
     expect(source).toContain('.condition-evidence-grid {\n      grid-template-columns: 1fr;');
+  });
+
+  it('keeps database-linked conditions discoverable without adding a wall of cards or chips', () => {
+    expect(source).toContain('<details class="catalog-associations summary-card card">');
+    expect(source).toContain('Catalog-linked conditions, traits &amp; responses');
+    expect(source).toContain('plan.catalogAssociations.slice(0, 6)');
+    expect(source).toContain('association.association_is');
+    expect(source).toContain('association.association_scope');
+    expect(source).toContain('Exact allele match not verified');
+    expect(styleBlock).toContain('.catalog-associations-list {');
+    expect(styleBlock).not.toContain('.catalog-associations-list {\n    display: grid;\n    grid-template-columns:');
   });
 
   it('uses the available desktop report pane without exceeding the shared surface cap', () => {

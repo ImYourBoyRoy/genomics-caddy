@@ -2,9 +2,10 @@
 //! HTTP download helpers — streaming to disk with progress events and atomic completion.
 
 use futures_util::StreamExt;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, Default)]
@@ -158,7 +159,7 @@ async fn range_metadata_probe(client: &reqwest::Client, url: &str) -> Result<Rem
 }
 
 fn merge_missing_remote_metadata(head: &mut RemoteHead, supplement: RemoteHead) {
-    if head.content_length.is_none() {
+    if head.content_length.is_none_or(|length| length == 0) {
         head.content_length = supplement.content_length;
     }
     if head.content_filename.is_none() {
@@ -297,7 +298,7 @@ pub fn verify_local_hash_sidecar(path: &Path) -> Result<(), String> {
 /// Writes to a `.part` temp file during download and atomically renames to
 /// `dest` on success — a partial or failed download never leaves a corrupt file.
 ///
-/// `on_progress(bytes_written, total_bytes)` is called every ~250 ms.
+/// `on_progress(bytes_written, total_bytes, resumed_bytes)` is called every ~250 ms.
 /// `total_bytes` is 0 when the server did not send Content-Length.
 ///
 /// `max_bytes` is an absolute ceiling (enforced during streaming, not from
@@ -309,11 +310,11 @@ pub async fn download_to_path<F>(
     on_progress: F,
 ) -> Result<(u64, RemoteHead), String>
 where
-    F: Fn(u64, u64) + Send + Sync,
+    F: Fn(u64, u64, u64) + Send + Sync,
 {
     // HEAD — fetch ETag/Last-Modified for update detection; size is advisory only.
     let head = head_remote(url).await?;
-    let total_bytes = head.content_length.unwrap_or(0);
+    let mut total_bytes = head.content_length.unwrap_or(0);
 
     // Ensure destination parent exists.
     if let Some(parent) = dest.parent() {
@@ -332,12 +333,30 @@ where
         p.set_extension(ext);
         p
     };
+    let metadata_path = PathBuf::from(format!("{}.meta", part_path.display()));
 
     let mut initial_bytes = 0u64;
-    if part_path.is_file() {
-        if let Ok(m) = std::fs::metadata(&part_path) {
-            initial_bytes = m.len();
+    let mut saved_metadata = None;
+    if part_path.is_file() && metadata_path.is_file() {
+        let file_bytes = std::fs::metadata(&part_path).map(|m| m.len()).unwrap_or(0);
+        let metadata = std::fs::read(&metadata_path)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<PartMetadata>(&bytes).ok());
+        if let Some(metadata) = metadata.filter(|metadata| {
+            file_bytes > 0
+                && metadata.total_bytes > file_bytes
+                && metadata.total_bytes == total_bytes
+                && resume_identity_matches(&head, metadata)
+        }) {
+            initial_bytes = file_bytes;
+            saved_metadata = Some(metadata);
         }
+    }
+    if initial_bytes == 0 {
+        // A partial from an older app version, a changed remote object, or a
+        // server without stable validators cannot be resumed safely.
+        let _ = std::fs::remove_file(&part_path);
+        let _ = std::fs::remove_file(&metadata_path);
     }
 
     let client = reqwest::Client::builder()
@@ -346,23 +365,78 @@ where
         .build()
         .map_err(|e| e.to_string())?;
 
-    let mut req_builder = client.get(url);
-    if initial_bytes > 0 && initial_bytes < total_bytes {
-        req_builder = req_builder.header("Range", format!("bytes={}-", initial_bytes));
-    } else {
-        initial_bytes = 0; // reset if invalid or full
+    let mut request = client.get(url);
+    if initial_bytes > 0 {
+        request = request.header(reqwest::header::RANGE, format!("bytes={initial_bytes}-"));
+        let metadata = saved_metadata
+            .as_ref()
+            .expect("resume bytes require matching metadata");
+        let if_range = metadata
+            .etag
+            .as_deref()
+            .filter(|etag| !etag.trim_start().starts_with("W/"))
+            .or(metadata.last_modified.as_deref())
+            .expect("resume metadata requires an HTTP validator");
+        request = request.header(reqwest::header::IF_RANGE, if_range);
     }
 
-    let response = req_builder
+    let mut response = request
         .send()
         .await
         .map_err(|e| format!("GET failed for {url}: {e}"))?;
 
-    let status = response.status();
-    let is_partial = status == reqwest::StatusCode::PARTIAL_CONTENT;
+    let mut is_partial = response.status() == reqwest::StatusCode::PARTIAL_CONTENT;
+    if initial_bytes > 0 {
+        let metadata = saved_metadata
+            .as_ref()
+            .expect("resume bytes require matching metadata");
+        let response_head = remote_head_from_headers(response.headers(), response.content_length());
+        let range = response_content_range(response.headers());
+        let validator_matches = match (metadata.etag.as_deref(), response_head.etag.as_deref()) {
+            (Some(expected), Some(actual)) if !expected.trim_start().starts_with("W/") => {
+                expected == actual
+            }
+            _ => metadata.last_modified.as_deref().is_some_and(|expected| {
+                response_head.last_modified.as_deref() == Some(expected)
+            }),
+        };
+        let valid_range = is_partial
+            && range.is_some_and(|(start, end, total)| {
+                start == initial_bytes
+                    && end >= start
+                    && end.saturating_add(1) == total
+                    && total == metadata.total_bytes
+                    && response
+                        .content_length()
+                        .is_none_or(|length| length == end.saturating_sub(start).saturating_add(1))
+            })
+            && validator_matches;
 
+        if !valid_range {
+            // If-Range normally makes a changed object return 200. Be defensive
+            // about broken range servers: throw away the stale part and retry
+            // once from byte zero instead of concatenating unrelated versions.
+            drop(response);
+            let _ = std::fs::remove_file(&part_path);
+            let _ = std::fs::remove_file(&metadata_path);
+            initial_bytes = 0;
+            response = client
+                .get(url)
+                .send()
+                .await
+                .map_err(|e| format!("GET retry failed for {url}: {e}"))?;
+            is_partial = response.status() == reqwest::StatusCode::PARTIAL_CONTENT;
+        }
+    }
+
+    let status = response.status();
     if !status.is_success() {
         return Err(format!("GET {} returned HTTP {}", url, status));
+    }
+    if is_partial && initial_bytes == 0 {
+        return Err(format!(
+            "GET {url} returned HTTP 206 without a validated resume range"
+        ));
     }
 
     // Prefer identity headers from the actual GET (ClinGen stamps LM on every request;
@@ -378,9 +452,25 @@ where
     if get_meta.last_modified.is_some() {
         head.last_modified = get_meta.last_modified;
     }
-    if let Some(n) = get_meta.content_length.filter(|n| *n > 0) {
+    if let Some((_, _, range_total)) = response_content_range(response.headers()) {
+        head.content_length = Some(range_total);
+        total_bytes = range_total;
+    } else if initial_bytes == 0
+        && let Some(n) = get_meta.content_length.filter(|n| *n > 0)
+    {
         head.content_length = Some(n);
+        total_bytes = n;
     }
+
+    let transfer_metadata = PartMetadata {
+        etag: head.etag.clone(),
+        last_modified: head.last_modified.clone(),
+        total_bytes,
+    };
+    let encoded_metadata = serde_json::to_vec(&transfer_metadata)
+        .map_err(|e| format!("Could not serialize download resume metadata: {e}"))?;
+    std::fs::write(&metadata_path, encoded_metadata)
+        .map_err(|e| format!("Could not save download resume metadata: {e}"))?;
 
     let mut file = if is_partial && initial_bytes > 0 {
         std::fs::OpenOptions::new()
@@ -398,6 +488,7 @@ where
     };
 
     let mut bytes_written: u64 = if is_partial { initial_bytes } else { 0 };
+    on_progress(bytes_written, total_bytes, initial_bytes);
     let mut stream = response.bytes_stream();
     let mut last_progress_emit = Instant::now();
 
@@ -407,6 +498,7 @@ where
         // Ceiling check enforced during streaming (handles servers that omit Content-Length).
         if max_bytes > 0 && bytes_written + chunk.len() as u64 > max_bytes {
             let _ = std::fs::remove_file(&part_path);
+            let _ = std::fs::remove_file(&metadata_path);
             return Err(format!(
                 "Download aborted: received >{}MB which exceeds the configured {}MB ceiling for {}",
                 bytes_written / 1024 / 1024,
@@ -421,7 +513,7 @@ where
 
         // Emit progress at most every 250 ms.
         if last_progress_emit.elapsed() >= Duration::from_millis(250) {
-            on_progress(bytes_written, total_bytes);
+            on_progress(bytes_written, total_bytes, initial_bytes);
             last_progress_emit = Instant::now();
         }
     }
@@ -430,11 +522,19 @@ where
     file.flush()
         .map_err(|e| format!("Final flush error: {e}"))?;
     drop(file);
-    on_progress(bytes_written, total_bytes);
+    on_progress(bytes_written, total_bytes, initial_bytes);
+
+    if total_bytes > 0 && bytes_written != total_bytes {
+        return Err(format!(
+            "Download ended at {} of {} bytes; the partial file is retained for a safe retry.",
+            bytes_written, total_bytes
+        ));
+    }
 
     // Atomic rename — only now is the file visible at the final path.
     std::fs::rename(&part_path, dest)
         .map_err(|e| format!("Failed to finalize download (rename failed): {e}"))?;
+    let _ = std::fs::remove_file(&metadata_path);
 
     // Verify MD5 checksum if MD5 file exists on server
     if let Err(e) = verify_remote_md5(url, dest).await {
@@ -443,6 +543,35 @@ where
     }
 
     Ok((bytes_written, head))
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct PartMetadata {
+    etag: Option<String>,
+    last_modified: Option<String>,
+    total_bytes: u64,
+}
+
+fn resume_identity_matches(head: &RemoteHead, saved: &PartMetadata) -> bool {
+    if let (Some(current), Some(previous)) = (head.etag.as_deref(), saved.etag.as_deref()) {
+        if !current.trim_start().starts_with("W/") && current == previous {
+            return true;
+        }
+    }
+    head.last_modified
+        .as_deref()
+        .is_some_and(|current| saved.last_modified.as_deref() == Some(current))
+}
+
+fn response_content_range(headers: &reqwest::header::HeaderMap) -> Option<(u64, u64, u64)> {
+    let value = headers
+        .get(reqwest::header::CONTENT_RANGE)?
+        .to_str()
+        .ok()?
+        .strip_prefix("bytes ")?;
+    let (bounds, total) = value.split_once('/')?;
+    let (start, end) = bounds.split_once('-')?;
+    Some((start.parse().ok()?, end.parse().ok()?, total.parse().ok()?))
 }
 
 pub async fn verify_remote_md5(url: &str, file_path: &Path) -> Result<(), String> {
@@ -688,6 +817,64 @@ mod tests {
         })
     }
 
+    fn spawn_resume_fixture_server(listener: TcpListener) -> thread::JoinHandle<()> {
+        thread::spawn(move || {
+            for _ in 0..4 {
+                let (mut stream, _) = listener.accept().expect("accept resume fixture request");
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .expect("set resume fixture read timeout");
+                let request = read_request(&mut stream).expect("read resume fixture request");
+                let method = request.split_whitespace().next().unwrap_or_default();
+                let path = request.split_whitespace().nth(1).unwrap_or_default();
+                if path.ends_with(".md5") {
+                    write_fixture_response(&mut stream, "404 Not Found", &[], "");
+                } else if method == "HEAD" {
+                    write_fixture_head_response(
+                        &mut stream,
+                        "ETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\n",
+                    );
+                } else if request.lines().any(|line| {
+                    line.to_ascii_lowercase().starts_with("range: bytes=0-0")
+                }) {
+                    write_fixture_response(
+                        &mut stream,
+                        "206 Partial Content",
+                        b"h",
+                        "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else {
+                    let resume_headers: Vec<&str> = request
+                        .lines()
+                        .map(str::trim)
+                        .filter(|line| {
+                            let line = line.to_ascii_lowercase();
+                            line.starts_with("range:") || line.starts_with("if-range:")
+                        })
+                        .collect();
+                    assert!(
+                        resume_headers
+                            .iter()
+                            .any(|line| line.eq_ignore_ascii_case("Range: bytes=3-")),
+                        "expected resume Range header, got {resume_headers:?}"
+                    );
+                    assert!(
+                        resume_headers
+                            .iter()
+                            .any(|line| line.eq_ignore_ascii_case("If-Range: \"fixture-v1\"")),
+                        "expected resume If-Range header, got {resume_headers:?}"
+                    );
+                    write_fixture_response(
+                        &mut stream,
+                        "206 Partial Content",
+                        b"lo",
+                        "Content-Range: bytes 3-4/5\r\nETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\n",
+                    );
+                }
+            }
+        })
+    }
+
     fn spawn_head_fallback_fixture_server(
         listener: TcpListener,
         head_status: &'static str,
@@ -899,7 +1086,7 @@ mod tests {
         let server = spawn_retry_fixture_server(listener);
         let url = format!("http://{address}/fixture.bin");
 
-        let first_attempt = download_to_path(&url, &destination, 1024, |_, _| {}).await;
+        let first_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {}).await;
         assert!(first_attempt.is_err());
         assert_eq!(
             std::fs::read(&destination).expect("read preserved file"),
@@ -907,7 +1094,7 @@ mod tests {
         );
         assert!(!part_path.exists());
 
-        let second_attempt = download_to_path(&url, &destination, 1024, |_, _| {})
+        let second_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {})
             .await
             .expect("retry fixture download");
         assert_eq!(second_attempt.0, 5);
@@ -919,5 +1106,55 @@ mod tests {
 
         server.join().expect("join fixture server");
         std::fs::remove_dir_all(&directory).expect("remove fixture directory");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn validated_partial_download_resumes_and_reports_retained_bytes() {
+        let directory = fixture_directory("download_resume");
+        std::fs::create_dir_all(&directory).expect("create resume fixture directory");
+        let destination = directory.join("fixture.bin");
+        let part_path = directory.join("fixture.bin.part");
+        let metadata_path = directory.join("fixture.bin.part.meta");
+        std::fs::write(&part_path, b"hel").expect("write retained partial payload");
+        std::fs::write(
+            &metadata_path,
+            serde_json::to_vec(&PartMetadata {
+                etag: Some("\"fixture-v1\"".into()),
+                last_modified: Some("Sat, 11 Jul 2026 21:00:00 GMT".into()),
+                total_bytes: 5,
+            })
+            .expect("serialize resume metadata"),
+        )
+        .expect("write resume metadata");
+
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind resume fixture server");
+        let address = listener.local_addr().expect("read resume fixture address");
+        let server = spawn_resume_fixture_server(listener);
+        let events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let recorded = events.clone();
+        let (bytes, _) = download_to_path(
+            &format!("http://{address}/fixture.bin"),
+            &destination,
+            1024,
+            move |done, total, resumed| {
+                recorded
+                    .lock()
+                    .expect("lock progress events")
+                    .push((done, total, resumed));
+            },
+        )
+        .await
+        .expect("resume validated partial payload");
+
+        assert_eq!(bytes, 5);
+        assert_eq!(std::fs::read(&destination).expect("read final payload"), b"hello");
+        assert!(!part_path.exists());
+        assert!(!metadata_path.exists());
+        let events = events.lock().expect("lock recorded events");
+        assert!(events.iter().any(|event| *event == (3, 5, 3)));
+        assert!(events.iter().any(|event| *event == (5, 5, 3)));
+
+        server.join().expect("join resume fixture server");
+        std::fs::remove_dir_all(&directory).expect("remove resume fixture directory");
     }
 }

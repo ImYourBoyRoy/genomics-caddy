@@ -380,9 +380,10 @@
     place-items: center;
     width: 100%;
     min-height: 100%;
+    min-height: 100dvh;
     padding: 2rem clamp(1rem, 3.5vw, 2.75rem);
     text-align: center;
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
   }
 
@@ -462,7 +463,9 @@
 
   .inner-progress-stats {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
+    gap: 1rem;
     font-size: 0.72rem;
     color: var(--text-secondary);
     font-family: var(--font-mono), monospace;
@@ -639,6 +642,14 @@
   .workspace-action:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
+  }
+
+  @media screen and (max-height: 800px) {
+    .bootstrap-screen {
+      place-items: start center;
+      padding-top: clamp(1rem, 3vh, 1.5rem);
+      padding-bottom: clamp(1rem, 3vh, 1.5rem);
+    }
   }
 
   @media (max-width: 720px) {

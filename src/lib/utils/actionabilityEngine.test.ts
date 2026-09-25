@@ -884,6 +884,22 @@ describe('actionability engine safety policy', () => {
     expect(neutralPlan.supplementSafety.relevantRules.map((rule) => rule.id)).not.toContain('iron');
   });
 
+  it('routes menopause and postpartum context into food, product, and body-support guardrails', () => {
+    const menopausePlan = deriveActionablePlan(report([]), { reproductiveContext: 'menopause_hormone_therapy' });
+    expect(menopausePlan.cycleSupport.relevantDomains.map((domain) => domain.id)).toContain('menopause_transition_support');
+    expect(menopausePlan.foodSafety.relevantRules.map((rule) => rule.id)).toContain('RULE_MENOPAUSE_FOUNDATIONAL_FOOD_SUPPORT');
+    expect(menopausePlan.supplementSafety.relevantRules.map((rule) => rule.id)).toContain('menopause_botanical_products');
+    expect(menopausePlan.medication.rules.join(' ')).toContain('current hormone-therapy product');
+    expect(menopausePlan.supplements).toHaveLength(0);
+
+    const postpartumPlan = deriveActionablePlan(report([]), { reproductiveContext: 'pregnancy_postpartum' });
+    expect(postpartumPlan.cycleSupport.relevantDomains.map((domain) => domain.id)).toContain('postpartum_recovery_support');
+    expect(postpartumPlan.foodSafety.relevantRules.map((rule) => rule.id)).toContain('RULE_POSTPARTUM_RECOVERY_FOOD_SUPPORT');
+    expect(postpartumPlan.supplementSafety.relevantRules.map((rule) => rule.id)).toContain('lactation_herbal_products');
+    expect(postpartumPlan.medication.rules.join(' ')).toContain('pregnancy, postpartum timing, lactation/feeding status');
+    expect(postpartumPlan.supplements).toHaveLength(0);
+  });
+
   it('routes an explicitly named B6 product to the neuropathy guardrail', () => {
     const plan = deriveActionablePlan(report([]), {
       personalSafetyContext: {

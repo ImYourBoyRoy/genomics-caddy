@@ -28,6 +28,7 @@
   } from '../../utils/reportAudienceExport';
   import { buildAiReviewJson, buildReportBundleFiles, reportBundleFilename } from '../../utils/reportBundleExport';
   import { buildCanonicalFindingGroups } from '../../utils/findingIdentity';
+  import { getRuntimeAppVersion } from '../../utils/appVersion';
 
   /*
   Module Docstring:
@@ -54,6 +55,7 @@
     onExploreResearch?: (rsid: string) => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     onOpenDiscovery?: () => void;
+    onOpenHelp?: () => void;
   }
 
   let {
@@ -69,24 +71,24 @@
     onExploreResearch,
     onNavigateToVariant,
     onOpenDiscovery,
+    onOpenHelp,
   }: Props = $props();
 
   let showBenign = $state(false);
-  let severityFilter = $state<"all" | "risk_only">("all");
+  let severityFilter = $state<"all" | "higher_concern" | "priority">("all");
+  let findingSearch = $state("");
+  let sectionFilter = $state("all");
   let tierFilter = $state<string>("all");
   let sortBy = $state<"default" | "severity">("default");
   let reportFiltersOpen = $state(false);
   let presentationMode = $state<PresentationMode>(DEFAULT_PRESENTATION_MODE);
   let loadedPresentationModeKey = $state("");
-  let showHelpGuide = $state(false);
-  let helpDialogElement = $state<HTMLDivElement | undefined>(undefined);
-  let helpCloseButton = $state<HTMLButtonElement | undefined>(undefined);
-  let previousHelpFocus: HTMLElement | null = null;
   let collapsedSections = $state<Record<string, boolean>>({});
   let loadedCollapseProfileId = $state<number | null>(null);
   let isPreparingPrint = $state(false);
   let printRestore: (() => void) | null = null;
   let clinicalProvenanceExpanded = $state(false);
+  let showClinicalExtraColumns = $state(false);
 
   function presentationModeStorageKey(sampleId: number): string {
     return `genomics_presentation_mode_${sampleId}`;
@@ -104,52 +106,6 @@
     presentationMode = mode;
     if (browser && selectedSample?.id) {
       writePresentationMode(localStorage, presentationModeStorageKey(selectedSample.id), mode);
-    }
-  }
-
-  function openHelpGuide() {
-    previousHelpFocus = browser && document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
-    showHelpGuide = true;
-    void tick().then(() => helpCloseButton?.focus());
-  }
-
-  function closeHelpGuide() {
-    showHelpGuide = false;
-    const focusTarget = previousHelpFocus;
-    previousHelpFocus = null;
-    void tick().then(() => focusTarget?.focus());
-  }
-
-  function handleHelpKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeHelpGuide();
-      return;
-    }
-    if (event.key !== 'Tab' || !helpDialogElement) return;
-
-    const focusable = Array.from(
-      helpDialogElement.querySelectorAll<HTMLElement>(
-        'button, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => !element.hasAttribute('aria-hidden') && element.offsetParent !== null);
-
-    if (focusable.length === 0) {
-      event.preventDefault();
-      helpDialogElement.focus();
-      return;
-    }
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
     }
   }
 
@@ -331,17 +287,68 @@
     }
   }
 
+  let quickFilterCounts = $derived.by(() => {
+    const sections = generatedReport?.sections.map((section) => ({
+      ...section,
+      markers: section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data'),
+    })) ?? [];
+    const signals = buildCanonicalFindingGroups({ sections });
+    return {
+      all: signals.length,
+      higherConcern: signals.filter((signal) =>
+        signal.severityClasses.some((severity) => severity === 'high_risk' || severity === 'confirmation_required'),
+      ).length,
+      priority: signals.filter((signal) =>
+        signal.severityClasses.some((severity) =>
+          severity === 'high_risk' || severity === 'moderate_risk' || severity === 'confirmation_required',
+        ),
+      ).length,
+    };
+  });
+
+  function matchesFindingSearch(marker: GeneratedReport['sections'][number]['markers'][number], sectionName: string): boolean {
+    const query = findingSearch.trim().toLocaleLowerCase();
+    if (!query) return true;
+    const searchable = [
+      sectionName,
+      marker.gene,
+      marker.rsid,
+      marker.variant_name,
+      marker.impact,
+      marker.interpretation,
+      marker.clinvar_conditions,
+      marker.gwas_top_trait,
+      marker.clinical_semantics?.condition_label,
+    ].filter(Boolean).join(' ').toLocaleLowerCase();
+    return searchable.includes(query);
+  }
+
+  function clearReportFilters() {
+    findingSearch = '';
+    sectionFilter = 'all';
+    severityFilter = 'all';
+    tierFilter = 'all';
+    showBenign = false;
+    sortBy = 'default';
+  }
+
   let filteredSourceSections = $derived(
     generatedReport?.sections.map(sec => {
       let markers = sec.markers.filter(m => {
         if (!showBenign && (m.severity_class === "benign" || m.severity_class === "no_data")) return false;
         if (tierFilter === "ab" && !m.evidence_tier.startsWith("A") && !m.evidence_tier.startsWith("B")) return false;
-        if (severityFilter === "risk_only" &&
+        if (severityFilter === "higher_concern" &&
+            m.severity_class !== "high_risk" &&
+            m.severity_class !== "confirmation_required") {
+          return false;
+        }
+        if (severityFilter === "priority" &&
             m.severity_class !== "high_risk" &&
             m.severity_class !== "moderate_risk" &&
             m.severity_class !== "confirmation_required") {
           return false;
         }
+        if (!matchesFindingSearch(m, sec.name)) return false;
         return true;
       });
 
@@ -353,9 +360,8 @@
         ...sec,
         markers
       };
-    }).filter(sec => sec.markers.length > 0) ?? []
+    }).filter(sec => (sectionFilter === 'all' || sec.name === sectionFilter) && sec.markers.length > 0) ?? []
   );
-
   // Source rows remain available in Clinical mode. Simple mode instead shows
   // one representative card per canonical locus so a repeated rsID across
   // packs does not read like several unrelated concerns.
@@ -385,6 +391,11 @@
       }))
       .filter((section) => section.markers.length > 0),
   );
+  let visibleMarkerCount = $derived(
+    presentationMode === 'simple'
+      ? simpleCanonicalGroups.length
+      : filteredSourceSections.reduce((total, section) => total + section.markers.length, 0),
+  );
 
   let clinicalSectionsExpanded = $derived(
     presentationMode !== 'clinical'
@@ -402,13 +413,15 @@
     const targetReport = rawReport || generatedReport;
     if (!targetReport) return;
     try {
+      const appVersion = await getRuntimeAppVersion();
       const envelope = {
         schema_version: "2.0.0",
-        app_version: "0.1.0",
+        app_version: appVersion,
         export_kind: "curated_marker_packs",
         exported_at: new Date().toISOString(),
         sample: {
           name: selectedSample.name,
+          chromosome_call_context: selectedSample.genetic_sex,
           genetic_sex: selectedSample.genetic_sex,
           imported_at: selectedSample.imported_at
         },
@@ -670,14 +683,49 @@
       <button
         type="button"
         class="view-mode-btn guide-mode-btn"
-        onclick={openHelpGuide}
-        aria-haspopup="dialog"
-        aria-expanded={showHelpGuide}
+        onclick={() => onOpenHelp?.()}
       >
-        📖 Guide
+        Help &amp; app info
       </button>
       </div>
     </div>
+
+    <div class="quick-finding-filters" aria-label="Find and filter report entries">
+      <label class="quick-search-label">
+        <span>Find a gene, marker, or condition</span>
+        <input type="search" bind:value={findingSearch} placeholder="Search this report" aria-label="Search report genes, markers, conditions, and health areas" />
+      </label>
+      <div class="quick-filter-block">
+        <span class="filter-label">Focus</span>
+        <div class="quick-filter-buttons" role="group" aria-label="Quick finding filters">
+          <button type="button" class:quick-filter-active={severityFilter === 'all'} aria-pressed={severityFilter === 'all'} onclick={() => severityFilter = 'all'}>
+            All findings <span>{quickFilterCounts.all}</span>
+          </button>
+          <button type="button" class:quick-filter-active={severityFilter === 'higher_concern'} aria-pressed={severityFilter === 'higher_concern'} onclick={() => severityFilter = 'higher_concern'}>
+            Higher concern <span>{quickFilterCounts.higherConcern}</span>
+          </button>
+          <button type="button" class:quick-filter-active={severityFilter === 'priority'} aria-pressed={severityFilter === 'priority'} onclick={() => severityFilter = 'priority'}>
+            Review first <span>{quickFilterCounts.priority}</span>
+          </button>
+        </div>
+      </div>
+      <p class="quick-filter-result" role="status" aria-live="polite">
+        Showing {visibleMarkerCount.toLocaleString()} {presentationMode === 'simple'
+          ? (visibleMarkerCount === 1 ? 'finding card' : 'finding cards')
+          : (visibleMarkerCount === 1 ? 'entry' : 'entries')}.
+        <span>Filter counts are unique DNA signals; detailed views may show one signal in more than one health area.</span>
+      </p>
+      {#if findingSearch || sectionFilter !== 'all' || severityFilter !== 'all' || tierFilter !== 'all' || showBenign || sortBy !== 'default'}
+        <button type="button" class="clear-report-filters" onclick={clearReportFilters}>Clear filters</button>
+      {/if}
+    </div>
+
+    {#if presentationMode === 'clinical'}
+      <label class="clinical-extra-columns-toggle">
+        <input type="checkbox" bind:checked={showClinicalExtraColumns} />
+        Show additional clinical fields
+      </label>
+    {/if}
 
     <details class="report-filter-details" bind:open={reportFiltersOpen}>
       <summary>Filters &amp; ordering</summary>
@@ -688,13 +736,15 @@
         <input type="checkbox" bind:checked={showBenign} aria-label="Show benign and uncalled markers" />
         Show benign &amp; uncalled
       </label>
-      <label class="filter-toggle">
-        <input type="checkbox" checked={severityFilter === "risk_only"} onchange={(e) => severityFilter = e.currentTarget.checked ? "risk_only" : "all"} />
-        Risk-focused
-      </label>
       <select class="filter-select" aria-label="Evidence tier filter" bind:value={tierFilter}>
         <option value="all">All evidence tiers</option>
         <option value="ab">Tier A & B only</option>
+      </select>
+      <select class="filter-select" aria-label="Health area filter" bind:value={sectionFilter}>
+        <option value="all">All health areas</option>
+        {#each generatedReport.sections as section (section.name)}
+          <option value={section.name}>{section.name}</option>
+        {/each}
       </select>
     </div>
 
@@ -730,6 +780,7 @@
         {highlightRsid}
         onNavigateToVariant={onNavigateToVariant}
         simpleRelatedMarkerCounts={simpleRelatedMarkerCounts}
+        showClinicalExtraColumns={showClinicalExtraColumns}
         collapsed={collapsedSections[section.name]}
         onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}
       />
@@ -742,79 +793,154 @@
   <VectorPromotedSection {selectedSample} {presentationMode} {highlightRsid} {onExploreResearch} onNavigate={onNavigateToVariant} />
   <DiscoveredFindingsBanner {selectedSample} {presentationMode} {onExploreResearch} onNavigate={onNavigateToVariant} />
 
-  {#if showHelpGuide}
-    <div class="modal-backdrop help-backdrop" onclick={closeHelpGuide} role="presentation">
-      <div
-        class="modal-content help-content"
-        bind:this={helpDialogElement}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="genomics-guide-title"
-        aria-describedby="genomics-guide-description"
-        tabindex="-1"
-        onclick={(e) => e.stopPropagation()}
-        onkeydown={handleHelpKeydown}
-      >
-        <div class="modal-header">
-          <h3 id="genomics-guide-title">📖 Genomics &amp; Genetics Guide</h3>
-          <button type="button" class="modal-close" bind:this={helpCloseButton} aria-label="Close genetics guide" onclick={closeHelpGuide}>&times;</button>
-        </div>
-        <div class="modal-body help-body">
-          <p id="genomics-guide-description" class="sr-only">Plain-language explanations of DNA results, evidence tiers, and the limits of this report.</p>
-          <section class="help-section">
-            <h5>🧬 What are DNA Letters and Genotypes?</h5>
-            <p>
-              Your DNA contains genetic instruction markers called <strong>SNPs</strong> (Single Nucleotide Polymorphisms). For each marker, you inherit two DNA letters (one from each biological parent). This pair of letters is called your <strong>genotype</strong> (e.g. <code>AG</code> or <code>GG</code>).
-            </p>
-          </section>
-
-          <section class="help-section">
-            <h5>📊 What does "Your Result" Mean?</h5>
-            <p>
-              We scan your raw DNA file to find your specific genetic letters. Depending on what is found:
-            </p>
-            <ul>
-              <li><strong>🔴 Two association copies:</strong> Both copies match the allele used by the pack's researched association rule.</li>
-              <li><strong>🟡 One association copy:</strong> One copy matches the association allele; effects are usually smaller and remain context-dependent.</li>
-              <li><strong>🟢 Protective association:</strong> This variant may be linked to a beneficial or lower-risk direction, not guaranteed protection.</li>
-              <li><strong>🟣 Context-dependent:</strong> The variant's effect depends on other environmental factors (e.g. diet, exercise, drugs).</li>
-            </ul>
-          </section>
-
-          <section class="help-section">
-            <h5>📚 Evidence Tiers (How certain is this science?)</h5>
-            <p>
-              Not all genetic research is equal. We sort findings by scientific credibility:
-            </p>
-            <ul>
-              <li><strong>Tier A / B (Well-Studied):</strong> Strongly backed by multiple clinical studies and consensus medical guidelines.</li>
-              <li><strong>Tier C (Preliminary):</strong> Shows a statistical link in early studies, but requires more research.</li>
-              <li><strong>Tier D / E (Research-Only):</strong> Early scientific hypotheses based on small cohorts. Treat these as ideas to explore, not facts.</li>
-            </ul>
-          </section>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-accent" onclick={closeHelpGuide}>Got it, thank you!</button>
-        </div>
-      </div>
-    </div>
-  {/if}
 {:else}
   <div class="report-idle-empty" role="status">
     <strong>No report loaded yet</strong>
     <p>
-      Import a genome and ensure reference catalogs are ready. The trait report builds automatically
-      from curated marker packs once your profile is selected.
+      Import a genome and select its profile. You can browse local DNA calls while reference catalogs download;
+      database-backed findings become more complete as those catalogs are installed and indexed.
     </p>
   </div>
 {/if}
 
 <style>
-  .filter-context-hint {
+  .quick-finding-filters {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.85fr) minmax(0, 1.5fr);
+    gap: 0.65rem 1rem;
+    align-items: end;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    background: var(--surface-subtle);
+  }
+
+  .quick-search-label,
+  .quick-filter-block {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .quick-search-label > span,
+  .quick-filter-block > .filter-label {
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 650;
+  }
+
+  .quick-search-label input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.7rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font: inherit;
+  }
+
+  .quick-search-label input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  .quick-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .quick-filter-buttons button {
+    display: inline-flex;
+    min-height: 2.7rem;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .quick-filter-buttons button:hover,
+  .quick-filter-buttons button:focus-visible {
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+
+  .quick-filter-buttons button:focus-visible,
+  .clear-report-filters:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  .quick-filter-buttons button.quick-filter-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text-primary);
+  }
+
+  .quick-filter-buttons button span {
+    min-width: 1.35rem;
+    padding: 0.08rem 0.25rem;
+    border-radius: 999px;
+    background: var(--surface-subtle);
     color: var(--text-secondary);
     font-size: 0.72rem;
-    max-width: 180px;
+    text-align: center;
+  }
+
+  .quick-filter-result {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.55rem;
+    margin: -0.1rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .quick-filter-result span { opacity: 0.85; }
+
+  .clear-report-filters {
+    grid-column: 2;
+    justify-self: end;
+    min-height: 2rem;
+    padding: 0.25rem 0.45rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .clear-report-filters:hover { background: var(--accent-soft); }
+
+  .clinical-extra-columns-toggle {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .clinical-extra-columns-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .quick-finding-filters { grid-template-columns: minmax(0, 1fr); }
+    .quick-filter-result, .clear-report-filters { grid-column: 1; }
+    .clear-report-filters { justify-self: start; }
   }
 
   .clinical-empty-hint {
@@ -873,133 +999,4 @@
     }
   }
 
-  .help-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: var(--modal-backdrop-bg);
-    backdrop-filter: blur(10px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1200;
-    animation: modalFadeIn 0.2s ease-out;
-  }
-
-  .help-content {
-    background: var(--surface-raised);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 20px 40px var(--shadow-modal);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .help-body {
-    padding: 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    text-align: left;
-  }
-
-  .help-section h5 {
-    margin: 0 0 8px 0;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .help-section p {
-    margin: 0;
-    color: var(--text-secondary);
-  }
-
-  .help-section ul {
-    margin: 8px 0 0 0;
-    padding-left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    color: var(--text-secondary);
-  }
-
-  .warning-section {
-    background: color-mix(in srgb, var(--danger) 10%, var(--surface-raised));
-    border-left: 4px solid var(--danger);
-    padding: 12px 16px;
-    border-radius: 6px;
-  }
-
-  /* Modal header/footer styling */
-  .modal-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--surface-subtle);
-  }
-
-  .modal-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-  }
-
-  .modal-close {
-    min-width: 44px;
-    min-height: 44px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    transition: color 0.2s;
-  }
-
-  .modal-close:hover {
-    color: var(--danger);
-  }
-
-  .modal-close:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-  }
-
-  .modal-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    background: var(--surface-subtle);
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
 </style>

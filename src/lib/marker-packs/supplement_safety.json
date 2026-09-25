@@ -1,14 +1,15 @@
 {
   "name": "Supplement Safety & Interaction Guardrails",
-  "version": "1.3.0",
-  "last_updated": "2026-08-26",
+  "version": "1.4.0",
+  "last_updated": "2026-09-21",
   "type": "support_engine",
   "purpose": "Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits.",
   "principles": [
     "A genotype can suggest a question; it cannot establish that a person needs a supplement.",
     "Prefer food and measured deficiency/excess context before supplements when medically appropriate.",
     "Review medications, pregnancy/lactation, kidney/liver disease, allergies, and total intake before starting a supplement.",
-    "Do not stack multiple products containing the same nutrient without checking the total amount and upper limits."
+    "Do not stack multiple products containing the same nutrient without checking the total amount and upper limits.",
+    "Natural or botanical products are not automatically safer than medicines; exact formulation, contamination, interactions, life stage, and infant exposure matter."
   ],
   "rules": [
     {
@@ -320,6 +321,100 @@
       "sources": ["nih_ods_vitamin_b6", "nih_ods_supplements"]
     },
     {
+      "id": "menopause_botanical_products",
+      "label": "Menopause botanicals and hormone-claim safety",
+      "context_ids": [
+        "menopause_hormone_therapy",
+        "hormone_therapy_context",
+        "pregnancy_postpartum",
+        "preconception_fertility"
+      ],
+      "signal_genes": [],
+      "match_terms": [
+        "black cohosh",
+        "isoflavone",
+        "soy extract",
+        "red clover",
+        "dong quai",
+        "DHEA",
+        "wild yam",
+        "maca",
+        "chasteberry",
+        "hormone balance",
+        "natural hormone",
+        "bioidentical",
+        "menopause supplement"
+      ],
+      "medication_terms": [
+        "hormone",
+        "tamoxifen",
+        "aromatase inhibitor",
+        "anticoagulant",
+        "statin",
+        "thyroid",
+        "liver"
+      ],
+      "food_first": [
+        "Use ordinary soy foods, adequate protein and fiber, calcium-rich or fortified foods, hydration, and symptom tracking when they fit the person's diet and goals before reaching for a botanical product.",
+        "Treat a supplement as a separate product-safety question; the menopause marker pack cannot establish need, dose, efficacy, or hormone response."
+      ],
+      "avoid": [
+        "Do not treat black cohosh, isoflavones, red clover, DHEA, wild yam, maca, or an unregulated bioidentical product as proven hormone replacement or a way to balance hormones.",
+        "Do not use genotype to start, stop, dose, or substitute a botanical, DHEA, hormone, or prescribed medication.",
+        "Use extra caution and clinician or pharmacist review with pregnancy, lactation, hormone-sensitive cancer, liver disease, clotting history, anticoagulants, endocrine medicines, or multiple products; stop and seek care for jaundice, dark urine, severe abdominal pain, or an allergic reaction."
+      ],
+      "confirm_with": [
+        "exact product label, botanical species or extract, dose, lot or quality information, and duration",
+        "current prescription, OTC, supplement, pregnancy/lactation, cancer, liver, clotting, and thyroid context",
+        "clinician or pharmacist review of evidence, interactions, and monitoring"
+      ],
+      "sources": [
+        "nice_menopause_identification_management",
+        "nccih_menopausal_symptoms",
+        "nih_ods_black_cohosh",
+        "nih_ods_supplements",
+        "safety_guardrail"
+      ]
+    },
+    {
+      "id": "lactation_herbal_products",
+      "label": "Lactation and herbal-product safety",
+      "context_ids": ["pregnancy_postpartum"],
+      "signal_genes": [],
+      "match_terms": [
+        "galactagogue",
+        "lactation tea",
+        "breastfeeding tea",
+        "fenugreek",
+        "blessed thistle",
+        "goat's rue",
+        "moringa",
+        "milk thistle",
+        "CBD",
+        "cannabis",
+        "essential oil"
+      ],
+      "medication_terms": ["breastfeeding", "lactation", "infant", "newborn"],
+      "food_first": [
+        "For feeding or milk-supply concerns, start with a feeding assessment, hydration and regular meals, and lactation or clinical support rather than assuming an herb is needed."
+      ],
+      "avoid": [
+        "Do not assume a tea, herb, essential oil, CBD product, or galactagogue is safe because it is natural; infant exposure, contamination, dose, and interactions may be uncertain.",
+        "Do not use a DNA result to select a lactation product, alter medication, or promise an increase in milk supply."
+      ],
+      "confirm_with": [
+        "exact product label, ingredients, dose, preparation, and timing",
+        "infant age, prematurity, health conditions, feeding goals, and the lactating person's medical history",
+        "clinician, pharmacist, pediatric clinician, lactation professional, and current LactMed review as appropriate"
+      ],
+      "sources": [
+        "acog_breastfeeding_medication_support",
+        "ncbi_lactmed",
+        "nih_ods_supplements",
+        "safety_guardrail"
+      ]
+    },
+    {
       "id": "creatine",
       "label": "Creatine and kidney-context safety",
       "signal_genes": ["CKM", "SLC6A8"],
@@ -339,6 +434,7 @@
   "do_not_do": [
     "Do not infer supplement need, safety, dose, or efficacy from a common SNP alone.",
     "Do not treat supplement ideas as medication substitutes or use them to counteract a prescribed treatment.",
-    "Do not recommend a supplement while ignoring a user's allergy, eating-disorder risk, kidney/liver disease, pregnancy/lactation, or medication list."
+    "Do not recommend a supplement while ignoring a user's allergy, eating-disorder risk, kidney/liver disease, pregnancy/lactation, or medication list.",
+    "Do not present a botanical or natural remedy as a hormone treatment, detox, or infant-safe product without exact-product and clinical review."
   ]
 }

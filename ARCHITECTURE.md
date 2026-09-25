@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **691**
-- Total size: **24.7 MB** (25,877,081 bytes)
-- Text lines (non-binary): **279,282**
+- Files: **705**
+- Total size: **24.9 MB** (26,094,469 bytes)
+- Text lines (non-binary): **284,140**
 - Directories: **73**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,7 +14,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 18 files, 129.3 KB
+- [`(repository root)`](#repository-root) — 19 files, 135.8 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.1 KB
 - [`.cursor/skills/vector-research-sweep-qa`](#.cursor-skills-vector-research-sweep-qa) — 1 files, 5.3 KB
@@ -24,13 +24,13 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`docs`](#docs) — 1 files, 1.4 KB
 - [`docs/ai-chat`](#docs-ai-chat) — 1 files, 2.5 KB
 - [`docs/build`](#docs-build) — 1 files, 4.9 KB
-- [`docs/development`](#docs-development) — 1 files, 4.8 KB
+- [`docs/development`](#docs-development) — 1 files, 5.1 KB
 - [`docs/images`](#docs-images) — 7 files, 1.5 MB
 - [`docs/mcp`](#docs-mcp) — 1 files, 5.4 KB
 - [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.6 KB
-- [`docs/usage`](#docs-usage) — 1 files, 3.9 KB
+- [`docs/usage`](#docs-usage) — 1 files, 6.3 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
-- [`scripts`](#scripts) — 48 files, 439.9 KB
+- [`scripts`](#scripts) — 48 files, 446.6 KB
 - [`scripts/lib`](#scripts-lib) — 6 files, 23.7 KB
 - [`scripts/remote_build`](#scripts-remote_build) — 11 files, 59.8 KB
 - [`src`](#src) — 1 files, 817 B
@@ -49,11 +49,11 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src-tauri/icons/android/values`](#src-tauri-icons-android-values) — 1 files, 115 B
 - [`src-tauri/icons/ios`](#src-tauri-icons-ios) — 18 files, 1.4 MB
 - [`src-tauri/linux`](#src-tauri-linux) — 2 files, 949 B
-- [`src-tauri/src`](#src-tauri-src) — 23 files, 690.2 KB
-- [`src-tauri/src/offline`](#src-tauri-src-offline) — 16 files, 249.2 KB
-- [`src-tauri/src/research`](#src-tauri-src-research) — 25 files, 397.1 KB
+- [`src-tauri/src`](#src-tauri-src) — 23 files, 717.4 KB
+- [`src-tauri/src/offline`](#src-tauri-src-offline) — 17 files, 271.3 KB
+- [`src-tauri/src/research`](#src-tauri-src-research) — 25 files, 399.5 KB
 - [`src-tauri/src/research/evidence`](#src-tauri-src-research-evidence) — 22 files, 231.9 KB
-- [`src-tauri/src/research/gnomad`](#src-tauri-src-research-gnomad) — 16 files, 145.1 KB
+- [`src-tauri/src/research/gnomad`](#src-tauri-src-research-gnomad) — 16 files, 147.2 KB
 - [`src-tauri/src/research/vector_store`](#src-tauri-src-research-vector_store) — 4 files, 68.6 KB
 - [`src-tauri/testdata`](#src-tauri-testdata) — 5 files, 14.3 KB
 - [`src-tauri/windows`](#src-tauri-windows) — 1 files, 2.0 KB
@@ -62,29 +62,29 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 119.6 KB
 - [`src/lib/components/ai/evidence`](#src-lib-components-ai-evidence) — 20 files, 103.5 KB
 - [`src/lib/components/ai/settings`](#src-lib-components-ai-settings) — 8 files, 59.9 KB
-- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 82.6 KB
+- [`src/lib/components/common`](#src-lib-components-common) — 16 files, 83.7 KB
 - [`src/lib/components/common/bootstrap`](#src-lib-components-common-bootstrap) — 9 files, 27.1 KB
 - [`src/lib/components/common/loading`](#src-lib-components-common-loading) — 3 files, 5.4 KB
 - [`src/lib/components/context`](#src-lib-components-context) — 3 files, 22.7 KB
 - [`src/lib/components/discovery`](#src-lib-components-discovery) — 1 files, 12.5 KB
 - [`src/lib/components/genome`](#src-lib-components-genome) — 2 files, 25.0 KB
 - [`src/lib/components/import`](#src-lib-components-import) — 1 files, 3.6 KB
-- [`src/lib/components/layout`](#src-lib-components-layout) — 2 files, 8.8 KB
+- [`src/lib/components/layout`](#src-lib-components-layout) — 2 files, 9.3 KB
 - [`src/lib/components/legal`](#src-lib-components-legal) — 2 files, 5.2 KB
 - [`src/lib/components/mcp`](#src-lib-components-mcp) — 3 files, 26.2 KB
-- [`src/lib/components/report`](#src-lib-components-report) — 28 files, 301.0 KB
+- [`src/lib/components/report`](#src-lib-components-report) — 32 files, 332.7 KB
 - [`src/lib/components/research`](#src-lib-components-research) — 21 files, 173.0 KB
 - [`src/lib/components/samples`](#src-lib-components-samples) — 1 files, 3.1 KB
 - [`src/lib/components/search`](#src-lib-components-search) — 2 files, 20.6 KB
 - [`src/lib/components/settings`](#src-lib-components-settings) — 2 files, 30.2 KB
-- [`src/lib/components/sidebar`](#src-lib-components-sidebar) — 5 files, 77.8 KB
+- [`src/lib/components/sidebar`](#src-lib-components-sidebar) — 7 files, 81.6 KB
 - [`src/lib/constants`](#src-lib-constants) — 3 files, 2.4 KB
 - [`src/lib/marker-packs`](#src-lib-marker-packs) — 53 files, 3.1 MB
 - [`src/lib/research`](#src-lib-research) — 4 files, 13.8 KB
-- [`src/lib/styles`](#src-lib-styles) — 8 files, 175.3 KB
-- [`src/lib/styles/components`](#src-lib-styles-components) — 25 files, 158.6 KB
-- [`src/lib/types`](#src-lib-types) — 4 files, 43.5 KB
-- [`src/lib/utils`](#src-lib-utils) — 120 files, 869.3 KB
+- [`src/lib/styles`](#src-lib-styles) — 8 files, 178.8 KB
+- [`src/lib/styles/components`](#src-lib-styles-components) — 25 files, 159.1 KB
+- [`src/lib/types`](#src-lib-types) — 4 files, 45.9 KB
+- [`src/lib/utils`](#src-lib-utils) — 126 files, 921.1 KB
 - [`src/routes`](#src-routes) — 2 files, 38.4 KB
 - [`static`](#static) — 5 files, 353.0 KB
 
@@ -95,8 +95,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.env.example` | 2.1 KB | 82 | Documented env keys; copy to local `.env`, never commit secrets. |
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
-| `AGENTS.md` | 5.0 KB | 98 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 79.7 KB | 1,145 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `AGENTS.md` | 6.2 KB | 115 | Repo-local agent rules: packs, privacy, and validation gates. |
+| `ARCHITECTURE.md` | 81.0 KB | 1,159 | Non-gitignored file map with sizes, line counts, and one-line roles. |
 | `CITATION.cff` | 1.1 KB | 37 | Citation File Format 1.2 so GitHub shows Cite this repository. |
 | `compile_instructions.md` | 3.1 KB | 97 | Tracked file `compile_instructions.md`. |
 | `LICENSE` | 4.5 KB | 133 | Tracked file `LICENSE`. |
@@ -104,8 +104,9 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `paths.md` | 9.7 KB | 168 | Internal research-agent pathway map. |
 | `plan.md` | 1.2 KB | 19 | Legacy enhancement checklist kept in the tree. |
 | `pnpm-workspace.yaml` | 41 B | 2 | pnpm workspace definition. |
-| `README.md` | 7.8 KB | 170 | GitHub-facing product page: badges, per-OS install, first launch, screenshot tour. |
+| `README.md` | 9.2 KB | 189 | GitHub-facing product page: badges, per-OS install, first launch, screenshot tour. |
 | `svelte.config.js` | 885 B | 24 | SvelteKit adapter and preprocessor config. |
+| `TASKS.md` | 2.7 KB | 48 | Tracked file `TASKS.md`. |
 | `tsconfig.json` | 694 B | 19 | TypeScript compiler options for the Svelte app. |
 | `vite.config.js` | 2.9 KB | 97 | Vite bundler config for the Tauri webview. |
 | `vitest.config.ts` | 188 B | 8 | Vitest test runner config. |
@@ -175,7 +176,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 4.8 KB | 135 | Tests, audits, layout, and lock-free install. |
+| `README.md` | 5.1 KB | 139 | Tests, audits, layout, and lock-free install. |
 
 ## `docs/images`
 
@@ -205,7 +206,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 3.9 KB | 98 | How to import DNA, read reports, and share exports. |
+| `README.md` | 6.3 KB | 136 | How to import DNA, read reports, and share exports. |
 
 ## `reference_files`
 
@@ -226,7 +227,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `audit_mcp_runtime.mjs` | 13.8 KB | 366 | Exercise the compiled Genomics Caddy MCP process without exposing private report or genotype content. |
 | `audit_reproducibility.mjs` | 2.5 KB | 78 | Enforce the repository's lock-free dependency contract. |
 | `audit_resource_quality.mjs` | 31.2 KB | 604 | Audit curated marker and support resources for evidence, claim-boundary, callability, actionability, and source-registry coverage. |
-| `audit_tauri_report.mjs` | 36.2 KB | 790 | Exercise the running Tauri desktop report through its local UI bridge. |
+| `audit_tauri_report.mjs` | 41.1 KB | 880 | Exercise the running Tauri desktop report through its local UI bridge. |
 | `audit_tauri_update_flow.mjs` | 10.0 KB | 304 | Exercise the desktop Tauri update path against a disposable fixture. |
 | `audit_updater_config.mjs` | 5.6 KB | 121 | Static audit of signed updater pubkey, endpoints, and release wiring. |
 | `benchmark_build.ps1` | 5.2 KB | 168 | Time Genomics Caddy build-cache purge and/or full production rebuild on Windows. |
@@ -265,7 +266,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `system_check.sh` | 2.1 KB | 66 | Quick environment diagnostic for Genomics Caddy builds (Linux/macOS). |
 | `uninstall_linux_desktop.sh` | 1.5 KB | 44 | Remove FreeDesktop launcher + icons and clear WebKit asset caches so the portable DNA-Tools binary is not shadowed by a stale desktop registration. |
 | `update_all.mjs` | 13.1 KB | 384 | One-shot “Update All” for Genomics Caddy toolchains and project dependencies. |
-| `validate_marker_packs.mjs` | 70.0 KB | 1,347 | Validate the curated marker-pack contract and source/runtime parity. |
+| `validate_marker_packs.mjs` | 71.7 KB | 1,380 | Validate the curated marker-pack contract and source/runtime parity. |
 | `verify_vite_css_load.mjs` | 4.5 KB | 142 | Fail if Vite emits "failed to load virtual css module" for our Svelte components. |
 
 ## `scripts/lib`
@@ -324,11 +325,11 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `dental_oral_health.json` | 34.9 KB | 843 | Runtime mirror of curated pack `dental_oral_health`: Dental, Oral Health & Taste Context. |
 | `digestive_gut_microbiome.json` | 61.4 KB | 1,462 | Runtime mirror of curated pack `digestive_gut_microbiome`: Digestive, Gut & Microbiome Context. |
 | `discovery_catalog.json` | 376.2 KB | 7,774 | Runtime mirror: curated discovery targets for catalog scans and research UI. |
-| `hormones_reproductive.json` | 116.6 KB | 2,391 | Runtime mirror of curated pack `hormones_reproductive`: Hormones, Reproductive Biology & PMDD Context. |
+| `hormones_reproductive.json` | 124.3 KB | 2,538 | Runtime mirror of curated pack `hormones_reproductive`: Hormones, Reproductive Biology & PMDD Context. |
 | `immune_autoimmune_general.json` | 68.1 KB | 1,574 | Runtime mirror of curated pack `immune_autoimmune_general`: Immune & Autoimmune General Susceptibility. |
 | `kidney_fluid_electrolytes.json` | 46.8 KB | 1,140 | Runtime mirror of curated pack `kidney_fluid_electrolytes`: Kidney, Fluid Balance & Electrolytes. |
 | `longevity_aging_resilience.json` | 62.7 KB | 1,434 | Runtime mirror of curated pack `longevity_aging_resilience`: Longevity, Aging Resilience & Healthspan Context. |
-| `manifest.json` | 7.9 KB | 165 | Runtime mirror: pack catalog: ids, titles, and which JSON files load at runtime. |
+| `manifest.json` | 8.0 KB | 165 | Runtime mirror: pack catalog: ids, titles, and which JSON files load at runtime. |
 | `metabolic.json` | 114.3 KB | 2,626 | Runtime mirror of curated pack `metabolic`: Metabolic Health & T2D. |
 | `muscle_performance_recovery.json` | 66.1 KB | 1,555 | Runtime mirror of curated pack `muscle_performance_recovery`: Muscle Performance, Hypertrophy & Recovery. |
 | `neuropsych.json` | 159.2 KB | 3,379 | Runtime mirror of curated pack `neuropsych`: Neurotransmitter & Mood Resiliency. |
@@ -476,7 +477,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `agent_ui_endpoint.rs` | 9.7 KB | 273 | Discover and advertise the local agent-UI HTTP bridge securely. |
 | `app_log.rs` | 1.9 KB | 63 | Provide robust file logging for the Genomics Caddy application. |
 | `config.rs` | 34.0 KB | 1,030 | Application configuration, .env loading, and secure secret storage. |
-| `db.rs` | 125.4 KB | 3,529 | Database management (SQLite) for storing standard genomes and clinical reference data. |
+| `db.rs` | 127.2 KB | 3,563 | Database management (SQLite) for storing standard genomes and clinical reference data. |
 | `db_crypto.rs` | 3.9 KB | 110 | Legacy sealed-DB cleanup only (encryption removed). |
 | `db_runtime.rs` | 1.0 KB | 33 | Run SQLite work on blocking threads so the Tauri webview stays responsive. |
 | `file_utils.rs` | 2.9 KB | 83 | Rust backend `file_utils`. |
@@ -489,7 +490,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `parser.rs` | 27.8 KB | 719 | Validated parser for raw genomic data files (AncestryDNA and 23andMe formats), including CSV/TSV files and ZIP archives. |
 | `paths.rs` | 9.2 KB | 274 | Resolve portable application data paths for Genomics Caddy. |
 | `portable_update.rs` | 15.5 KB | 436 | Rust backend `portable_update`. |
-| `report.rs` | 132.2 KB | 3,421 | Direction-aware, template-based report generator for genetic trait profiling. |
+| `report.rs` | 157.6 KB | 4,028 | Direction-aware, template-based report generator for genetic trait profiling. |
 | `service_ops.rs` | 15.2 KB | 428 | Ollama / vector-DB service operations for Advanced → Connections. |
 | `stream_control.rs` | 2.0 KB | 69 | Cooperative cancellation and namespaced events for Ollama streaming. |
 
@@ -500,18 +501,19 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `commands.rs` | 11.7 KB | 326 | Rust offline catalog/update `commands`. |
 | `compress.rs` | 5.0 KB | 138 | Rust offline catalog/update `compress`. |
 | `discovery_export.rs` | 23.7 KB | 700 | Export marker-pack coverage vs genome-wide catalog hits for pack authoring. |
-| `download.rs` | 33.0 KB | 923 | Rust offline catalog/update `download`. |
+| `download.rs` | 43.6 KB | 1,160 | Rust offline catalog/update `download`. |
 | `import_clingen.rs` | 7.9 KB | 215 | Import ClinGen gene–disease validity CSV into the clingen catalog DB. |
-| `import_clinvar.rs` | 18.9 KB | 494 | Rust offline catalog/update `import_clinvar`. |
+| `import_clinvar.rs` | 17.9 KB | 470 | Rust offline catalog/update `import_clinvar`. |
+| `import_clinvar_submission.rs` | 11.0 KB | 279 | Rust offline catalog/update `import_clinvar_submission`. |
 | `import_dbsnp.rs` | 22.7 KB | 675 | Import NCBI dbSNP merged/withdrawn RefSNP JSON into dbsnp.db. |
 | `import_mane.rs` | 5.8 KB | 156 | Import MANE Select summary TSV into the mane catalog DB. |
 | `import_pharmgkb.rs` | 15.1 KB | 409 | Rust offline catalog/update `import_pharmgkb`. |
 | `lookup.rs` | 10.4 KB | 333 | Rust offline catalog/update `lookup`. |
-| `manifest.rs` | 10.4 KB | 293 | Rust offline catalog/update `manifest`. |
-| `mod.rs` | 936 B | 33 | Offline genomics reference layer (Tiers 0–2). |
-| `registry.rs` | 11.2 KB | 320 | Rust offline catalog/update `registry`. |
+| `manifest.rs` | 11.1 KB | 309 | Rust offline catalog/update `manifest`. |
+| `mod.rs` | 967 B | 34 | Offline genomics reference layer (Tiers 0–2). |
+| `registry.rs` | 11.3 KB | 323 | Rust offline catalog/update `registry`. |
 | `schema.rs` | 6.0 KB | 183 | Offline/reference SQLite schema migrations that are safe when catalog DBs are absent. |
-| `sync.rs` | 61.8 KB | 1,649 | Rust offline catalog/update `sync`. |
+| `sync.rs` | 62.5 KB | 1,662 | Rust offline catalog/update `sync`. |
 | `tier2.rs` | 4.7 KB | 139 | Rust offline catalog/update `tier2`. |
 
 ## `src-tauri/src/research`
@@ -532,7 +534,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `prefetch.rs` | 9.7 KB | 286 | Rust research/enrichment `prefetch`. |
 | `promote.rs` | 4.2 KB | 140 | Auto-promote high-confidence vector-enriched GWAS hits into SQLite for trait report display. |
 | `qdrant.rs` | 50.3 KB | 1,769 | Rust research/enrichment `qdrant`. |
-| `references.rs` | 19.9 KB | 573 | Download and load external reference catalogs into ./data/references. |
+| `references.rs` | 22.3 KB | 638 | Download and load external reference catalogs into ./data/references. |
 | `research_found_pack.rs` | 18.8 KB | 571 | Enrich, review, and manage the research_found marker pack. |
 | `sources.rs` | 16.4 KB | 525 | Rust research/enrichment `sources`. |
 | `sources_config.rs` | 3.6 KB | 131 | Rust research/enrichment `sources_config`. |
@@ -542,7 +544,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `sweep_runtime.rs` | 2.0 KB | 62 | Rust research/enrichment `sweep_runtime`. |
 | `tuning.rs` | 15.8 KB | 523 | Runtime pipeline tuning for vector enrichment sweeps. |
 | `types.rs` | 12.9 KB | 377 | Rust research/enrichment `types`. |
-| `util.rs` | 23.1 KB | 700 | Rust research/enrichment `util`. |
+| `util.rs` | 23.1 KB | 701 | Rust research/enrichment `util`. |
 
 ## `src-tauri/src/research/evidence`
 
@@ -579,13 +581,13 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `batch.rs` | 7.6 KB | 234 | Rust research/enrichment `batch`. |
 | `cache.rs` | 17.8 KB | 557 | Rust research/enrichment `cache`. |
 | `commands.rs` | 4.4 KB | 118 | Rust research/enrichment `commands`. |
-| `config.rs` | 8.2 KB | 193 | Rust research/enrichment `config`. |
+| `config.rs` | 9.3 KB | 224 | Rust research/enrichment `config`. |
 | `graphql.rs` | 9.5 KB | 269 | Rust research/enrichment `graphql`. |
 | `lookup.rs` | 15.8 KB | 531 | Rust research/enrichment `lookup`. |
 | `manifest.rs` | 13.5 KB | 382 | Rust research/enrichment `manifest`. |
 | `mod.rs` | 652 B | 24 | Rust research/enrichment `mod`. |
 | `readiness.rs` | 18.5 KB | 540 | Rust research/enrichment `readiness`. |
-| `schema.rs` | 5.0 KB | 150 | Rust research/enrichment `schema`. |
+| `schema.rs` | 6.1 KB | 176 | Rust research/enrichment `schema`. |
 | `types.rs` | 13.4 KB | 420 | Rust research/enrichment `types`. |
 | `validate.rs` | 5.5 KB | 153 | Rust research/enrichment `validate`. |
 | `vcf_local.rs` | 6.8 KB | 189 | Rust research/enrichment `vcf_local`. |
@@ -698,10 +700,10 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `AppBootstrapScreen.styles.test.ts` | 7.4 KB | 129 | CSS/layout tests for `AppBootstrapScreen`. |
-| `AppBootstrapScreen.svelte` | 20.4 KB | 661 | Svelte UI component `AppBootstrapScreen`. |
+| `AppBootstrapScreen.styles.test.ts` | 7.8 KB | 138 | CSS/layout tests for `AppBootstrapScreen`. |
+| `AppBootstrapScreen.svelte` | 20.6 KB | 672 | Svelte UI component `AppBootstrapScreen`. |
 | `AppUpdateHost.svelte` | 4.6 KB | 136 | Launch-time updater host: banner, confirm, download, relaunch. |
-| `EmptyState.copy.test.ts` | 794 B | 16 | Tests for `EmptyState.copy`. |
+| `EmptyState.copy.test.ts` | 1.3 KB | 25 | Tests for `EmptyState.copy`. |
 | `EmptyState.svelte` | 5.3 KB | 135 | Welcome / onboarding screen when no genome profile is selected. |
 | `GlobalDialogs.styles.test.ts` | 1.6 KB | 40 | CSS/layout tests for `GlobalDialogs`. |
 | `GlobalDialogs.svelte` | 3.3 KB | 85 | Global dialog backdrop rendering alerts, confirms, and choices. |
@@ -768,7 +770,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `AppShell.accessibility.test.ts` | 3.0 KB | 54 | Tests for `AppShell.accessibility`. |
+| `AppShell.accessibility.test.ts` | 3.6 KB | 65 | Tests for `AppShell.accessibility`. |
 | `AppShell.svelte` | 5.7 KB | 178 | Main layout grid wrapper for the Genomics Caddy application. |
 
 ## `src/lib/components/legal`
@@ -791,14 +793,18 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `ClinicalFindingsTable.copy.test.ts` | 4.7 KB | 79 | Tests for `ClinicalFindingsTable.copy`. |
-| `ClinicalFindingsTable.svelte` | 15.2 KB | 489 | Svelte UI component `ClinicalFindingsTable`. |
+| `ClinicalFindingsTable.svelte` | 15.5 KB | 494 | Svelte UI component `ClinicalFindingsTable`. |
 | `ConfirmWithList.svelte` | 821 B | 29 | Displays follow-up laboratory testing suggestions for a variant. |
-| `DashboardSummaryPanel.styles.test.ts` | 22.7 KB | 399 | CSS/layout tests for `DashboardSummaryPanel`. |
-| `DashboardSummaryPanel.svelte` | 98.0 KB | 3,144 | Svelte UI component `DashboardSummaryPanel`. |
+| `ContextSummary.styles.test.ts` | 1.8 KB | 36 | CSS/layout tests for `ContextSummary`. |
+| `ContextSummary.svelte` | 4.3 KB | 185 | Svelte UI component `ContextSummary`. |
+| `DashboardSummaryPanel.styles.test.ts` | 24.9 KB | 429 | CSS/layout tests for `DashboardSummaryPanel`. |
+| `DashboardSummaryPanel.svelte` | 108.5 KB | 3,467 | Svelte UI component `DashboardSummaryPanel`. |
 | `DiscoveredFindingsBanner.styles.test.ts` | 2.0 KB | 41 | CSS/layout tests for `DiscoveredFindingsBanner`. |
 | `DiscoveredFindingsBanner.svelte` | 7.1 KB | 265 | Svelte UI component `DiscoveredFindingsBanner`. |
 | `EffectDirectionBadge.svelte` | 1.1 KB | 34 | Badge displaying effect direction with plain-language explanation. |
 | `EvidenceBadge.svelte` | 1017 B | 31 | Badge displaying scientific evidence tier (Tiers A-D) with tooltip. |
+| `GenomeWideConditionDiscovery.styles.test.ts` | 1.2 KB | 25 | CSS/layout tests for `GenomeWideConditionDiscovery`. |
+| `GenomeWideConditionDiscovery.svelte` | 11.5 KB | 232 | Svelte UI component `GenomeWideConditionDiscovery`. |
 | `ReferenceIndex.svelte` | 5.7 KB | 208 | Svelte UI component `ReferenceIndex`. |
 | `ReportExportActions.styles.test.ts` | 1.2 KB | 28 | CSS/layout tests for `ReportExportActions`. |
 | `ReportExportActions.svelte` | 5.7 KB | 204 | Svelte UI component `ReportExportActions`. |
@@ -813,7 +819,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `SourcesList.styles.test.ts` | 999 B | 22 | CSS/layout tests for `SourcesList`. |
 | `SourcesList.svelte` | 3.6 KB | 131 | Formatted list of academic/clinical sources for genomic markers. |
 | `VariantCard.styles.test.ts` | 6.7 KB | 125 | Reference enrichment chips. |
-| `VariantCard.svelte` | 28.6 KB | 896 | Svelte UI component `VariantCard`. |
+| `VariantCard.svelte` | 28.5 KB | 895 | Svelte UI component `VariantCard`. |
 | `VectorPromotedSection.styles.test.ts` | 1.6 KB | 39 | CSS/layout tests for `VectorPromotedSection`. |
 | `VectorPromotedSection.svelte` | 8.9 KB | 268 | Svelte UI component `VectorPromotedSection`. |
 | `WarningBlocks.svelte` | 3.1 KB | 86 | Aggregated safety warnings, diagnostic limitations, and clinical validation flags. |
@@ -869,10 +875,12 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
+| `DownloadProgressDetails.styles.test.ts` | 887 B | 19 | CSS/layout tests for `DownloadProgressDetails`. |
+| `DownloadProgressDetails.svelte` | 2.9 KB | 104 | Svelte UI component `DownloadProgressDetails`. |
 | `LibraryPanel.styles.test.ts` | 1.3 KB | 34 | CSS/layout tests for `LibraryPanel`. |
 | `LibraryPanel.svelte` | 4.9 KB | 152 | Open, change, reset, and erase the resolved library folder. |
 | `ProgressTrack.svelte` | 1.4 KB | 46 | Svelte UI component `ProgressTrack`. |
-| `Sidebar.svelte` | 64.2 KB | 1,560 | Sidebar panel container aggregating assembly settings, file import, profiles, and reference DB downloader. |
+| `Sidebar.svelte` | 64.2 KB | 1,549 | Sidebar panel container aggregating assembly settings, file import, profiles, and reference DB downloader. |
 | `Sidebar.update-state.test.ts` | 6.0 KB | 87 | Tests for `Sidebar.update-state`. |
 
 ## `src/lib/constants`
@@ -898,27 +906,27 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `callability_rules.json` | 11.6 KB | 326 | When a consumer-array row can or cannot score an assertion. |
 | `cancer_confirmation_only.json` | 222.5 KB | 4,767 | Curated marker pack `cancer_confirmation_only`: High-Stakes Cancer Predisposition. |
 | `cardiovascular.json` | 149.3 KB | 3,375 | Curated marker pack `cardiovascular`: Cardiovascular & Lipid Transport. |
-| `condition_integrations.json` | 14.3 KB | 220 | Curated marker pack `condition_integrations`: condition_integrations. |
+| `condition_integrations.json` | 14.8 KB | 222 | Curated marker pack `condition_integrations`: condition_integrations. |
 | `connective_tissue.json` | 134.5 KB | 2,925 | Curated marker pack `connective_tissue`: Connective Tissue Laxity. |
-| `consultation_modes.json` | 5.7 KB | 82 | Specialty-mode labels and routing for Connected Chat. |
+| `consultation_modes.json` | 5.9 KB | 82 | Specialty-mode labels and routing for Connected Chat. |
 | `core.json` | 58.7 KB | 1,372 | Curated marker pack `core`: Core Physiology Traits. |
-| `cycle_support_guidance.json` | 72.8 KB | 1,400 | Support resource `cycle_support_guidance`: Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts…. |
+| `cycle_support_guidance.json` | 83.2 KB | 1,570 | Support resource `cycle_support_guidance`: Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts…. |
 | `dental_oral_health.json` | 34.9 KB | 843 | Curated marker pack `dental_oral_health`: Dental, Oral Health & Taste Context. |
 | `diet_pattern_profiles.json` | 12.3 KB | 502 | Support resource `diet_pattern_profiles`: Reusable diet-pattern templates for user-declared values, medical constraints, allergies/intolerances, and biohacking goals. |
-| `dietary_requirements.json` | 55.1 KB | 1,600 | Support resource `dietary_requirements`: Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute…. |
+| `dietary_requirements.json` | 60.2 KB | 1,716 | Support resource `dietary_requirements`: Convert genetics, labs, symptoms, medical conditions, allergies, medications, values, religion/culture and user preference into food-level allow/avoid/emphasize/substitute…. |
 | `digestive_gut_microbiome.json` | 61.4 KB | 1,462 | Curated marker pack `digestive_gut_microbiome`: Digestive, Gut & Microbiome Context. |
 | `discovery_catalog.json` | 376.2 KB | 7,774 | Curated discovery targets for catalog scans and research UI. |
-| `evidence_policy.json` | 12.3 KB | 264 | Shared evidence-tier, severity, and claim-frame wording. |
+| `evidence_policy.json` | 16.7 KB | 356 | Shared evidence-tier, severity, and claim-frame wording. |
 | `food_nutrient_matrix.json` | 27.0 KB | 1,169 | Support resource `food_nutrient_matrix`: Provide food-group tags, nutrient strengths, caution flags, and substitution logic for local meal filtering and food requirement reasoning. |
 | `food_requirement_prompts.json` | 4.9 KB | 171 | Support resource `food_requirement_prompts`: Structured questions to capture hard food requirements, values, allergies, symptoms, labs and goals before generating diet guidance. |
-| `hormones_reproductive.json` | 116.6 KB | 2,391 | Curated marker pack `hormones_reproductive`: Hormones, Reproductive Biology & PMDD Context. |
+| `hormones_reproductive.json` | 124.3 KB | 2,538 | Curated marker pack `hormones_reproductive`: Hormones, Reproductive Biology & PMDD Context. |
 | `immune_autoimmune_general.json` | 68.1 KB | 1,574 | Curated marker pack `immune_autoimmune_general`: Immune & Autoimmune General Susceptibility. |
 | `inflammation_support_guidance.json` | 10.3 KB | 156 | Support resource `inflammation_support_guidance`: Connect inflammatory-pathway markers to plain-language context, a short set of foundational food and routine cues, and measured follow-up without treating DNA as a measure of…. |
 | `kidney_fluid_electrolytes.json` | 46.8 KB | 1,140 | Curated marker pack `kidney_fluid_electrolytes`: Kidney, Fluid Balance & Electrolytes. |
-| `lab_overlays.json` | 4.9 KB | 191 | Curated marker pack `lab_overlays`: Lab Overlay Map. |
+| `lab_overlays.json` | 6.6 KB | 226 | Curated marker pack `lab_overlays`: Lab Overlay Map. |
 | `layperson_translations.json` | 212.9 KB | 3,038 | Plain-English marker copy for Simple mode. |
 | `longevity_aging_resilience.json` | 62.7 KB | 1,434 | Curated marker pack `longevity_aging_resilience`: Longevity, Aging Resilience & Healthspan Context. |
-| `manifest.json` | 7.9 KB | 165 | Pack catalog: ids, titles, and which JSON files load at runtime. |
+| `manifest.json` | 8.0 KB | 165 | Pack catalog: ids, titles, and which JSON files load at runtime. |
 | `meal_planning_rules.json` | 5.0 KB | 156 | Support resource `meal_planning_rules`: Score, filter, and explain meal/food recommendations using hard requirements, soft goals, genetic context, lab context, and user preferences. |
 | `metabolic.json` | 114.3 KB | 2,626 | Curated marker pack `metabolic`: Metabolic Health & T2D. |
 | `muscle_performance_recovery.json` | 66.1 KB | 1,555 | Curated marker pack `muscle_performance_recovery`: Muscle Performance, Hypertrophy & Recovery. |
@@ -930,14 +938,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `phenotype_prompts.json` | 27.8 KB | 709 | Curated marker pack `phenotype_prompts`: Phenotype Prompt Library. |
 | `prs_registry.json` | 3.2 KB | 133 | Curated marker pack `prs_registry`: PRS Registry. |
 | `research_found.json` | 69 B | 4 | Protected pack for research-found drafts only. |
-| `research_taxonomy.json` | 10.8 KB | 206 | Shared discovery labels, keyword routing, pack links, consultation hints. |
+| `research_taxonomy.json` | 11.2 KB | 214 | Shared discovery labels, keyword routing, pack links, consultation hints. |
 | `respiratory_airway.json` | 53.3 KB | 1,215 | Curated marker pack `respiratory_airway`: Respiratory, Airway & Oxygenation Context. |
 | `runtime_validation_summary.json` | 5.6 KB | 142 | Curated source resource `runtime_validation_summary.json`. |
 | `safety_guardrails.json` | 9.0 KB | 215 | Curated marker pack `safety_guardrails`: Global Safety Guardrails. |
 | `skin_hair_dermatology.json` | 56.1 KB | 1,312 | Curated marker pack `skin_hair_dermatology`: Skin, Hair & Dermatology Context. |
 | `sleep.json` | 70.3 KB | 1,695 | Curated marker pack `sleep`: Sleep & Circadian Rhythms. |
-| `source_registry.json` | 66.0 KB | 981 | Registered citation sources for packs and support resources. |
-| `supplement_safety.json` | 17.9 KB | 344 | Support resource `supplement_safety`: Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits. |
+| `source_registry.json` | 70.5 KB | 1,045 | Registered citation sources for packs and support resources. |
+| `supplement_safety.json` | 22.1 KB | 440 | Support resource `supplement_safety`: Keep genotype-informed supplement prompts food-first, lab-aware, medication-aware, and bounded by nutrient safety limits. |
 | `thyroid_autoimmune.json` | 108.2 KB | 2,466 | Curated marker pack `thyroid_autoimmune`: Thyroid Hormone & Autoimmune Risk. |
 | `user_diet_profile_schema.json` | 3.6 KB | 159 | Curated marker pack `user_diet_profile_schema`: User Diet Profile Schema. |
 
@@ -959,8 +967,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `printReport.styles.test.ts` | 1.8 KB | 40 | CSS/layout tests for `printReport`. |
 | `reportLayout.styles.test.ts` | 5.7 KB | 119 | CSS/layout tests for `reportLayout`. |
 | `reportSeverityTheme.test.ts` | 3.6 KB | 82 | Tests for `reportSeverityTheme`. |
-| `sidebarTheme.test.ts` | 7.1 KB | 147 | Tests for `sidebarTheme`. |
-| `theme.css` | 139.9 KB | 5,746 | Centralized CSS stylesheet for Genomics Caddy glassmorphic theme. |
+| `sidebarTheme.test.ts` | 7.3 KB | 148 | Tests for `sidebarTheme`. |
+| `theme.css` | 143.2 KB | 5,894 | Centralized CSS stylesheet for Genomics Caddy glassmorphic theme. |
 | `themeControls.styles.test.ts` | 8.2 KB | 191 | CSS/layout tests for `themeControls`. |
 
 ## `src/lib/styles/components`
@@ -973,7 +981,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `connections-panel.css` | 8.2 KB | 450 | Advanced → Connections: Ollama + vector DB setup, host probe, model ops. |
 | `context-panel.css` | 4.4 KB | 254 | Profile Context workspace — stacked field chrome that survives WebKitGTK first paint (do not keep these rules in a Svelte scoped <style> block). |
 | `discovery-panel.css` | 11.2 KB | 590 | Catalog discovery — premium findings browser. |
-| `empty-state.css` | 3.0 KB | 168 | External stylesheet `empty-state.css`. |
+| `empty-state.css` | 3.5 KB | 182 | External stylesheet `empty-state.css`. |
 | `evidence-corpus-overview.css` | 2.2 KB | 139 | External stylesheet `evidence-corpus-overview.css`. |
 | `evidence-library-panel.css` | 13.3 KB | 675 | External stylesheet `evidence-library-panel.css`. |
 | `findings-navigator.css` | 4.2 KB | 270 | External stylesheet `findings-navigator.css`. |
@@ -989,7 +997,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `research-scope-section.css` | 5.7 KB | 325 | External stylesheet `research-scope-section.css`. |
 | `sidebar.css` | 19.5 KB | 1,016 | Sidebar chrome (profiles, reference-DB controls, progress, sync callouts). |
 | `theme-toggle.css` | 1.8 KB | 79 | Sidebar appearance switcher. |
-| `update-banner.css` | 1.2 KB | 64 | Update banner and app-shell stack layout using theme tokens. |
+| `update-banner.css` | 1.2 KB | 68 | Update banner and app-shell stack layout using theme tokens. |
 | `variant-browser.css` | 6.2 KB | 335 | Raw genotype + reference catalog browser — premium chrome. |
 | `vector-workbench.css` | 12.8 KB | 725 | Vector Research workbench: viewer, pack drafts, secondary tabs. |
 
@@ -999,19 +1007,19 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | --- | ---: | ---: | --- |
 | `agent.ts` | 2.5 KB | 104 | TypeScript interface definitions for Genomics Research Agent and Evidence-Grade Validation. |
 | `api.ts` | 1.8 KB | 77 | Typed IPC payloads for Tauri commands in tauri.ts. |
-| `genomics.ts` | 16.3 KB | 573 | Centralized TypeScript interface definitions for genetic data structures. |
+| `genomics.ts` | 18.7 KB | 636 | Centralized TypeScript interface definitions for genetic data structures. |
 | `research.ts` | 22.9 KB | 883 | TypeScript types for the Qdrant research loop and autonomous marker enrichment. |
 
 ## `src/lib/utils`
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `actionabilityEngine.test.ts` | 64.1 KB | 1,516 | Tests for `actionabilityEngine`. |
-| `actionabilityEngine.ts` | 79.2 KB | 2,049 | Derive dashboard diet / supplement / lab / activity / medication-safety guidance and top findings from a report. |
+| `actionabilityEngine.test.ts` | 65.5 KB | 1,532 | Tests for `actionabilityEngine`. |
+| `actionabilityEngine.ts` | 79.5 KB | 2,058 | Derive dashboard diet / supplement / lab / activity / medication-safety guidance and top findings from a report. |
 | `activityContext.ts` | 2.6 KB | 65 | Frontend logic `activityContext`. |
 | `agentApis.ts` | 13.3 KB | 361 | Frontend logic `agentApis`. |
-| `agentUiBridge.ts` | 51.8 KB | 1,251 | Dev/agent UI control surface for MCP and automated QA. |
-| `agentUiBridge.visibility.test.ts` | 16.0 KB | 248 | Tests for `agentUiBridge.visibility`. |
+| `agentUiBridge.ts` | 52.6 KB | 1,263 | Dev/agent UI control surface for MCP and automated QA. |
+| `agentUiBridge.visibility.test.ts` | 16.8 KB | 261 | Tests for `agentUiBridge.visibility`. |
 | `aiAssistantExportActions.ts` | 2.6 KB | 82 | Clipboard copy and markdown export actions for the AI consultation export modal. |
 | `aiAssistantModelActions.ts` | 2.3 KB | 73 | Ollama model scan and detail loading for AiAssistantPanel. |
 | `aiAssistantPreferences.ts` | 2.6 KB | 61 | Load persisted AI consultation UI preferences from localStorage. |
@@ -1021,12 +1029,12 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `aiAssistantVectorDiagnostics.ts` | 927 B | 29 | Vector research diagnostics loader for AiAssistantPanel. |
 | `aiExport.test.ts` | 3.3 KB | 95 | Tests for `aiExport`. |
 | `aiExport.ts` | 11.1 KB | 215 | Frontend logic `aiExport`. |
-| `aiPrompt.test.ts` | 12.5 KB | 306 | Tests for `aiPrompt`. |
-| `aiPrompt.ts` | 22.8 KB | 642 | Frontend logic `aiPrompt`. |
+| `aiPrompt.test.ts` | 12.6 KB | 308 | Tests for `aiPrompt`. |
+| `aiPrompt.ts` | 23.0 KB | 647 | Frontend logic `aiPrompt`. |
 | `atlasColors.ts` | 939 B | 41 | Category → color mapping for the Vector Atlas scatter plot. |
 | `auditMarkerSemantics.test.ts` | 1.7 KB | 41 | Tests for `auditMarkerSemantics`. |
 | `callability.test.ts` | 2.1 KB | 41 | Tests for `callability`. |
-| `callability.ts` | 6.9 KB | 172 | Frontend logic `callability`. |
+| `callability.ts` | 7.0 KB | 174 | Frontend logic `callability`. |
 | `catalogCategoryRouting.test.ts` | 2.4 KB | 64 | Tests for `catalogCategoryRouting`. |
 | `catalogCategoryRouting.ts` | 3.6 KB | 107 | Dynamic routing for the research discovery catalog. |
 | `chatParser.test.ts` | 1.9 KB | 52 | Tests for `chatParser`. |
@@ -1034,11 +1042,13 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `chatSession.ts` | 1.6 KB | 60 | Consultation Chat Session Serialization & Persistence Helpers. |
 | `clinicalPresentation.test.ts` | 850 B | 21 | Tests for `clinicalPresentation`. |
 | `clinicalPresentation.ts` | 734 B | 17 | Keep the structured Clinical table actionable without making long follow-up lists widen or dominate a row. |
-| `conditionEvidence.test.ts` | 9.1 KB | 259 | Tests for `conditionEvidence`. |
-| `conditionEvidence.ts` | 20.1 KB | 505 | Frontend logic `conditionEvidence`. |
+| `conditionEvidence.test.ts` | 13.3 KB | 368 | Tests for `conditionEvidence`. |
+| `conditionEvidence.ts` | 36.1 KB | 863 | Frontend logic `conditionEvidence`. |
 | `consultationChat.ts` | 9.7 KB | 309 | Ollama consultation streaming: RAG retrieval, primary response, optional safety review. |
 | `consultationSession.svelte.ts` | 3.6 KB | 92 | Manage active and historical chat sessions reactively. |
 | `contentQualityAudit.test.ts` | 8.1 KB | 213 | Tests for `contentQualityAudit`. |
+| `contextIndicators.test.ts` | 1.5 KB | 38 | Tests for `contextIndicators`. |
+| `contextIndicators.ts` | 2.9 KB | 84 | Frontend logic `contextIndicators`. |
 | `cycleDiary.test.ts` | 2.0 KB | 55 | Tests for `cycleDiary`. |
 | `cycleDiary.ts` | 3.3 KB | 92 | Resource-backed local diary for explicitly selected menstrual/cycle contexts. |
 | `cycleDiaryReview.test.ts` | 2.9 KB | 62 | Tests for `cycleDiaryReview`. |
@@ -1051,10 +1061,12 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `evidence.ts` | 9.9 KB | 243 | Evidence tier, direction, and severity display utility. |
 | `evidenceSearch.ts` | 4.3 KB | 142 | Evidence library search orchestration (SQLite, Qdrant, workbench hybrid, corpus browse). |
 | `findingIdentity.test.ts` | 8.0 KB | 235 | Tests for `findingIdentity`. |
-| `findingIdentity.ts` | 12.8 KB | 365 | Canonical finding identity and topic grouping. |
+| `findingIdentity.ts` | 13.1 KB | 371 | Canonical finding identity and topic grouping. |
 | `findingsCatalog.ts` | 2.9 KB | 86 | Non-AI findings catalog: presets, labels, and sort options for individuals vs clinicians. |
 | `findingSemantics.test.ts` | 6.5 KB | 159 | Tests for `findingSemantics`. |
 | `findingSemantics.ts` | 4.7 KB | 118 | Frontend logic `findingSemantics`. |
+| `genomewideConditionDiscovery.test.ts` | 2.0 KB | 52 | Tests for `genomewideConditionDiscovery`. |
+| `genomewideConditionDiscovery.ts` | 2.3 KB | 71 | Frontend logic `genomewideConditionDiscovery`. |
 | `genotype.test.ts` | 1.2 KB | 32 | Tests for `genotype`. |
 | `genotype.ts` | 2.0 KB | 57 | Genotype extraction and normalization utility functions. |
 | `image.ts` | 2.3 KB | 74 | Loads an image file, resizes it using HTML5 Canvas to a maximum dimension of 1024px, and converts it to a standard base64 JPEG format to prevent model context clutter. |
@@ -1063,6 +1075,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `layperson.test.ts` | 23.2 KB | 520 | Tests for `layperson`. |
 | `layperson.ts` | 37.4 KB | 823 | Provide clear, plain-English translations for genetic marker impacts and meanings. |
 | `markerPacksState.svelte.ts` | 1.9 KB | 67 | Frontend logic `markerPacksState.svelte`. |
+| `offlineDownloadProgress.test.ts` | 2.4 KB | 66 | Tests for `offlineDownloadProgress`. |
+| `offlineDownloadProgress.ts` | 3.0 KB | 87 | Frontend logic `offlineDownloadProgress`. |
 | `offlineUpdates.test.ts` | 4.6 KB | 119 | Tests for `offlineUpdates`. |
 | `offlineUpdates.ts` | 5.3 KB | 142 | Build a clear, named list of offline assets that need updates. |
 | `ollamaSettings.test.ts` | 2.2 KB | 64 | Tests for `ollamaSettings`. |
@@ -1085,10 +1099,10 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `promptTemplates.ts` | 658 B | 9 | Render a resource-authored prompt template without silently dropping data. |
 | `prsReadiness.ts` | 819 B | 28 | Frontend logic `prsReadiness`. |
 | `qdrantRag.ts` | 4.8 KB | 130 | Format Qdrant vector hits for AI Consultation system prompts and UI citations. |
-| `reportAudienceExport.test.ts` | 9.7 KB | 260 | Tests for `reportAudienceExport`. |
-| `reportAudienceExport.ts` | 28.8 KB | 658 | Frontend logic `reportAudienceExport`. |
-| `reportBundleExport.test.ts` | 11.6 KB | 326 | Tests for `reportBundleExport`. |
-| `reportBundleExport.ts` | 9.3 KB | 232 | Frontend logic `reportBundleExport`. |
+| `reportAudienceExport.test.ts` | 12.4 KB | 331 | Tests for `reportAudienceExport`. |
+| `reportAudienceExport.ts` | 34.7 KB | 756 | Frontend logic `reportAudienceExport`. |
+| `reportBundleExport.test.ts` | 14.7 KB | 407 | Tests for `reportBundleExport`. |
+| `reportBundleExport.ts` | 9.4 KB | 235 | Frontend logic `reportBundleExport`. |
 | `reportOverview.test.ts` | 3.6 KB | 130 | Tests for `reportOverview`. |
 | `reportOverview.ts` | 2.4 KB | 68 | Unique, called signals that have a meaningful review or context route. |
 | `reportReferences.test.ts` | 3.8 KB | 121 | Tests for `reportReferences`. |
@@ -1096,7 +1110,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `reportStatuses.test.ts` | 2.1 KB | 56 | Tests for `reportStatuses`. |
 | `reportStatuses.ts` | 2.4 KB | 78 | Report status compatibility helpers. |
 | `reportTemplate.ts` | 1.5 KB | 43 | Builds the merged marker-pack report template for Tauri report generation. |
-| `reproductiveContext.test.ts` | 10.9 KB | 222 | Tests for `reproductiveContext`. |
+| `reproductiveContext.test.ts` | 11.5 KB | 232 | Tests for `reproductiveContext`. |
 | `reproductiveContext.ts` | 13.9 KB | 355 | Frontend logic `reproductiveContext`. |
 | `reproductiveIntake.test.ts` | 3.0 KB | 67 | Tests for `reproductiveIntake`. |
 | `reproductiveIntake.ts` | 2.8 KB | 75 | Resource-backed normalization for optional cycle and hormone context. |
@@ -1110,7 +1124,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `severityGlyphs.ts` | 1.5 KB | 59 | Shared severity / association glyphs for Map, Report, and Browser. |
 | `sharedInterpretations.test.ts` | 1.0 KB | 30 | Tests for `sharedInterpretations`. |
 | `sharedInterpretations.ts` | 1.2 KB | 37 | Group exact marker interpretations that describe the same family-level context. |
-| `supportResourceContext.test.ts` | 28.3 KB | 504 | Tests for `supportResourceContext`. |
+| `supportResourceContext.test.ts` | 28.3 KB | 505 | Tests for `supportResourceContext`. |
 | `supportResourceContext.ts` | 21.2 KB | 489 | Selects the evidence, phenotype, laboratory, food-safety, and callability resources that belong in an AI consultation context. |
 | `tooltipPosition.test.ts` | 2.1 KB | 68 | Tests for `tooltipPosition`. |
 | `tooltipPosition.ts` | 2.9 KB | 88 | Calculate a fixed tooltip panel position without allowing it outside the visible viewport. |
@@ -1122,8 +1136,8 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `urlSafety.ts` | 974 B | 26 | Safe URL helpers for dynamic href attributes in the Tauri webview. |
 | `userFinding.ts` | 7.2 KB | 173 | Converts normalized evidence cards into user-facing finding summaries. |
 | `variantNavigation.ts` | 2.4 KB | 82 | Cross-tab variant navigation helpers for the main dashboard. |
-| `viewModels.test.ts` | 3.9 KB | 119 | Tests for `viewModels`. |
-| `viewModels.ts` | 7.4 KB | 201 | Derived view-model selector for genomics reports. |
+| `viewModels.test.ts` | 4.5 KB | 132 | Tests for `viewModels`. |
+| `viewModels.ts` | 7.6 KB | 206 | Derived view-model selector for genomics reports. |
 | `warningTaxonomy.test.ts` | 2.1 KB | 49 | Tests for `warningTaxonomy`. |
 | `warningTaxonomy.ts` | 3.9 KB | 109 | Presentation policy for caveats carried by genomic resources. |
 

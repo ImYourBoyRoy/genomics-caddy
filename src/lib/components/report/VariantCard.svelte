@@ -3,11 +3,12 @@
   import type { EvaluatedMarker, SeverityClass, EnrichedSource } from '../../types/genomics';
   import EvidenceBadge from './EvidenceBadge.svelte';
   import EffectDirectionBadge from './EffectDirectionBadge.svelte';
+  import ContextSummary from './ContextSummary.svelte';
   import SourcesList from './SourcesList.svelte';
   import ConfirmWithList from './ConfirmWithList.svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele, isCallableGenotype } from '../../utils/genotype';
-  import { getClaimFrame, getScopeLabel, getSeverityInfo } from '../../utils/evidence';
+  import { getClaimFrame, getSeverityInfo } from '../../utils/evidence';
   import { getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle } from '../../utils/layperson';
   import {
     clinicalStateLabel,
@@ -141,10 +142,8 @@
       {/if}
     <div class="marker-meta">
       <EvidenceBadge tier={marker.evidence_tier} simple={viewMode === 'simple'} />
-      {#if marker.sex_scope && marker.sex_scope !== 'all'}
-        <Tooltip label={getScopeLabel(marker.sex_scope)} description="Biological applicability hint only; this is not gender identity, anatomy, fertility, pregnancy, or hormone status.">
-          <span class="scope-badge">{getScopeLabel(marker.sex_scope)}</span>
-        </Tooltip>
+      {#if (marker.context_tags && marker.context_tags.length > 0) || (marker.sex_scope && marker.sex_scope !== 'all')}
+        <ContextSummary contextTags={marker.context_tags} scope={marker.sex_scope} maxVisible={1} />
       {/if}
       {#if viewMode === 'simple'}
         <span class="marker-severity-label simple-severity-label">

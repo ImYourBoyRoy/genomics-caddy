@@ -113,6 +113,45 @@ export interface ConditionCoverageGap {
   label: string;
   status: string;
   display: string;
+  clinical_next_step?: string;
+  sources?: string[];
+}
+
+export type AssociationIs =
+  | 'variant_condition_summary'
+  | 'variant_risk_factor_summary'
+  | 'variant_trait_statistical_association'
+  | 'gene_disease_validity'
+  | 'variant_drug_response';
+
+export type AssociationScope = 'variant' | 'locus' | 'gene';
+export type AssociationAlleleMatch = 'matched' | 'not_detected' | 'not_verifiable' | 'not_reported';
+
+/** A source-specific catalog relationship, kept separate from curated health-pattern scores. */
+export interface CatalogAssociationSummary {
+  id: string;
+  label: string;
+  association_is: AssociationIs;
+  association_scope: AssociationScope;
+  source_type: 'ClinVar' | 'GWAS Catalog' | 'ClinGen' | 'ClinPGx';
+  relationship_label: string;
+  evidence_summary: string;
+  marker_count: number;
+  genes: string[];
+  rsids: string[];
+  matched_marker_link_ids: string[];
+  reference_ids: string[];
+  record_ids: string[];
+  source_urls: string[];
+  clinical_significance?: string;
+  review_statuses?: string[];
+  allele_match?: AssociationAlleleMatch;
+  condition_specific_assertion_available?: boolean;
+  rcv_accessions?: string[];
+  best_p_value?: number;
+  study_accessions?: string[];
+  classification?: string;
+  inheritance_models?: string[];
 }
 
 interface ConditionDefinition {
@@ -258,6 +297,325 @@ function dedupeSources(markers: readonly SourceMarker[]): SourceMarker[] {
     }
   }
   return Array.from(selected.values());
+}
+
+interface MutableCatalogAssociation {
+  id: string;
+  label: string;
+  association_is: AssociationIs;
+  association_scope: AssociationScope;
+  source_type: CatalogAssociationSummary['source_type'];
+  relationship_label: string;
+  evidence_summary: string;
+  clinical_significance?: string;
+  reviewStatuses: Set<string>;
+  allele_match?: AssociationAlleleMatch;
+  condition_specific_assertion_available?: boolean;
+  classification?: string;
+  markerIds: Set<string>;
+  genes: Set<string>;
+  rsids: Set<string>;
+  links: Set<string>;
+  referenceIds: Set<string>;
+  recordIds: Set<string>;
+  urls: Set<string>;
+  studyAccessions: Set<string>;
+  rcvAccessions: Set<string>;
+  inheritanceModels: Set<string>;
+  pValues: number[];
+}
+
+function hasObservedCall(marker: EvaluatedMarker): boolean {
+  const state = coverageState(marker);
+  return isCallableGenotype(marker.normalized_genotype || marker.user_genotype)
+    && state !== 'not_present'
+    && state !== 'not_callable'
+    && state !== 'unknown';
+}
+
+function associationSlug(value: string): string {
+  return normalize(value).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 72) || 'unnamed';
+}
+
+function clinvarAssociationClass(significance: string): 'pathogenic' | 'risk' | null {
+  const value = normalize(significance);
+  if (!value || /conflict|uncertain|benign|drug response|not provided/.test(value)) return null;
+  if (/likely\s+pathogenic|pathogenic/.test(value)) return 'pathogenic';
+  if (/risk factor|risk allele|association/.test(value)) return 'risk';
+  return null;
+}
+
+function parsedSnpCall(marker: EvaluatedMarker): string[] | null {
+  const genotype = String(marker.normalized_genotype || marker.user_genotype || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[|/]/g, '');
+  return /^[ACGT]{2}$/.test(genotype) ? genotype.split('') : null;
+}
+
+function clinvarAlleleMatch(
+  marker: EvaluatedMarker,
+  annotation: NonNullable<EvaluatedMarker['clinvar_annotations']>[number],
+): AssociationAlleleMatch {
+  const alleles = parsedSnpCall(marker);
+  const reference = String(annotation.reference_allele || '').trim().toUpperCase();
+  const alternate = String(annotation.alternate_allele || '').trim().toUpperCase();
+  const expected = (marker.expected_plus_alleles || []).map((allele) => String(allele).toUpperCase());
+  const orientationUsable = marker.orientation_state === 'verified' || marker.orientation_state === 'not_required';
+  if (!hasObservedCall(marker) || !knownCall(marker) || !marker.interpretation_allowed
+      || !orientationUsable || !alleles || !/^[ACGT]$/.test(reference)
+      || !/^[ACGT]$/.test(alternate) || !expected.includes(reference) || !expected.includes(alternate)) {
+    return 'not_verifiable';
+  }
+  return alleles.includes(alternate) ? 'matched' : 'not_detected';
+}
+
+function numericPvalue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+/**
+ * Collect database-backed links from called markers. Variant summaries,
+ * locus-level GWAS traits, and gene-level validity remain distinct; none is a
+ * disease diagnosis or a personal risk estimate.
+ */
+export function buildCatalogAssociationSummaries(
+  report: Pick<GeneratedReport, 'sections'>,
+): CatalogAssociationSummary[] {
+  const groups = new Map<string, MutableCatalogAssociation>();
+  const add = (input: {
+    marker: EvaluatedMarker;
+    label: string;
+    association_is: AssociationIs;
+    association_scope: AssociationScope;
+    source_type: MutableCatalogAssociation['source_type'];
+    relationship_label: string;
+    evidence_summary: string;
+    clinical_significance?: string;
+    review_status?: string;
+    allele_match?: AssociationAlleleMatch;
+    condition_specific_assertion_available?: boolean;
+    rcv_accessions?: string[];
+    classification?: string;
+    record_id?: string | null;
+    url?: string | null;
+    study_accession?: string | null;
+    p_value?: number | null;
+    inheritance_model?: string | null;
+  }) => {
+    const label = input.label.trim();
+    if (!label) return;
+    const groupKey = [input.association_is, normalize(label), normalize(input.clinical_significance),
+      normalize(input.allele_match), normalize(input.classification)].join('|');
+    const current = groups.get(groupKey) || {
+      id: `catalog-${input.association_is}-${associationSlug(label)}-${associationSlug(input.allele_match || input.classification || 'linked')}`,
+      label,
+      association_is: input.association_is,
+      association_scope: input.association_scope,
+      source_type: input.source_type,
+      relationship_label: input.relationship_label,
+      evidence_summary: input.evidence_summary,
+      clinical_significance: input.clinical_significance,
+      reviewStatuses: new Set<string>(),
+      allele_match: input.allele_match,
+      condition_specific_assertion_available: input.condition_specific_assertion_available,
+      classification: input.classification,
+      markerIds: new Set<string>(),
+      genes: new Set<string>(),
+      rsids: new Set<string>(),
+      links: new Set<string>(),
+      referenceIds: new Set<string>(),
+      recordIds: new Set<string>(),
+      urls: new Set<string>(),
+      studyAccessions: new Set<string>(),
+      rcvAccessions: new Set<string>(),
+      inheritanceModels: new Set<string>(),
+      pValues: [],
+    };
+    const markerId = indicatorId(input.marker);
+    if (markerId) current.markerIds.add(markerId);
+    if (input.marker.gene) current.genes.add(input.marker.gene);
+    if (input.marker.rsid) current.rsids.add(input.marker.rsid);
+    if (input.marker.link_id) current.links.add(input.marker.link_id);
+    if (input.review_status) current.reviewStatuses.add(input.review_status);
+    (input.marker.reference_ids || []).forEach((id) => current.referenceIds.add(id));
+    if (input.record_id) current.recordIds.add(input.record_id);
+    if (input.url) current.urls.add(input.url);
+    if (input.study_accession) current.studyAccessions.add(input.study_accession);
+    (input.rcv_accessions || []).forEach((accession) => current.rcvAccessions.add(accession));
+    if (input.inheritance_model) current.inheritanceModels.add(input.inheritance_model);
+    if (typeof input.p_value === 'number' && Number.isFinite(input.p_value)) current.pValues.push(input.p_value);
+    groups.set(groupKey, current);
+  };
+
+  for (const section of report.sections || []) {
+    for (const marker of section.markers || []) {
+      if (!hasObservedCall(marker)) continue;
+
+      const clinvar = marker.clinvar_annotations?.length
+        ? marker.clinvar_annotations
+        : marker.clinvar_significance
+          ? [{
+              clinical_significance: marker.clinvar_significance,
+              conditions: marker.clinvar_conditions,
+              review_status: marker.clinvar_review_status,
+            }]
+          : [];
+      for (const annotation of clinvar) {
+        const kind = clinvarAssociationClass(annotation.clinical_significance || '');
+        const conditionLabels = String(annotation.conditions || '')
+          .split('|')
+          .map((label) => label.trim())
+          .filter((label) => label && !/^not provided$/i.test(label));
+        if (!kind || conditionLabels.length === 0) continue;
+        const alleleMatch = clinvarAlleleMatch(marker, annotation);
+        if (alleleMatch === 'not_detected') continue;
+        const pathogenic = kind === 'pathogenic';
+        const id = annotation.variation_id || annotation.allele_id || marker.rsid;
+        for (const condition of conditionLabels) {
+          add({
+            marker,
+            label: condition,
+            association_is: pathogenic ? 'variant_condition_summary' : 'variant_risk_factor_summary',
+            association_scope: 'variant',
+            source_type: 'ClinVar',
+            relationship_label: pathogenic ? 'ClinVar variant-summary condition label' : 'ClinVar variant-summary risk label',
+            evidence_summary: alleleMatch === 'matched'
+              ? `ClinVar's variant-level summary lists this condition and ${annotation.clinical_significance}. The local index does not preserve which condition-specific RCV assertion supplied that classification.`
+              : `ClinVar's variant-level summary lists this condition and ${annotation.clinical_significance}, but this report could not verify the exact allele match or a condition-specific RCV assertion.`,
+            clinical_significance: annotation.clinical_significance,
+            review_status: annotation.review_status || undefined,
+            allele_match: alleleMatch,
+            condition_specific_assertion_available: false,
+            rcv_accessions: (annotation.rcv_accession || '').split('|').map((accession) => accession.trim()).filter(Boolean),
+            record_id: id,
+            url: annotation.variation_id
+              ? `https://www.ncbi.nlm.nih.gov/clinvar/?term=${encodeURIComponent(annotation.variation_id)}%5BVariant+ID%5D`
+              : `https://www.ncbi.nlm.nih.gov/clinvar/?term=${encodeURIComponent(marker.rsid)}`,
+          });
+        }
+      }
+
+      const gwasRecords = marker.gwas_associations?.length
+        ? marker.gwas_associations
+        : marker.gwas_top_trait && marker.gwas_best_pvalue != null
+          ? [{ trait_name: marker.gwas_top_trait, pvalue: marker.gwas_best_pvalue }]
+          : [];
+      for (const association of gwasRecords) {
+        // A lightweight internal routing seed is stored in the same table as
+        // downloaded GWAS records, but its placeholder p-value is not evidence.
+        if (normalize(association.source) === 'discovery_catalog_fallback') continue;
+        const trait = association.trait_name || association.trait?.trait || '';
+        const pValue = numericPvalue(association.pvalue);
+        if (!trait || pValue == null || pValue > 1e-5) continue;
+        const study = association.study_accession || undefined;
+        add({
+          marker,
+          label: trait,
+          association_is: 'variant_trait_statistical_association',
+          association_scope: 'locus',
+          source_type: 'GWAS Catalog',
+          relationship_label: 'GWAS locus–trait association',
+          evidence_summary: 'A published statistical association is reported at this locus. The local index keeps up to 12 strongest study records per marker and does not establish effect-allele alignment or personal disease risk.',
+          record_id: study || marker.rsid,
+          study_accession: study,
+          p_value: pValue,
+          url: study
+            ? `https://www.ebi.ac.uk/gwas/studies/${encodeURIComponent(study)}`
+            : `https://www.ebi.ac.uk/gwas/variants/${encodeURIComponent(marker.rsid)}`,
+        });
+      }
+
+      const geneRecords = marker.clingen_annotations?.length
+        ? marker.clingen_annotations
+        : marker.clingen
+          ? [marker.clingen]
+          : [];
+      for (const annotation of geneRecords) {
+        if (!annotation.disease_label) continue;
+        add({
+          marker,
+          label: annotation.disease_label,
+          association_is: 'gene_disease_validity',
+          association_scope: 'gene',
+          source_type: 'ClinGen',
+          relationship_label: 'ClinGen gene–disease validity',
+          evidence_summary: `ClinGen curates this relationship for ${annotation.gene_symbol || marker.gene}; it is gene-level context, not evidence that this marker causes the condition.`,
+          classification: annotation.classification || undefined,
+          record_id: annotation.hgnc_id || annotation.gene_symbol || marker.gene,
+          inheritance_model: annotation.mode_of_inheritance || undefined,
+          url: annotation.report_url || (annotation.gene_symbol
+            ? `https://search.clinicalgenome.org/kb/genes/${encodeURIComponent(annotation.gene_symbol)}`
+            : undefined),
+        });
+      }
+
+      const pgxRecords = marker.pharmgkb_annotations?.length
+        ? marker.pharmgkb_annotations
+        : marker.pharmgkb
+          ? [marker.pharmgkb]
+          : [];
+      for (const annotation of pgxRecords) {
+        if (!annotation.drug && !annotation.phenotype) continue;
+        const label = [annotation.drug, annotation.phenotype].filter(Boolean).join(' — ');
+        add({
+          marker,
+          label,
+          association_is: 'variant_drug_response',
+          association_scope: 'variant',
+          source_type: 'ClinPGx',
+          relationship_label: 'Pharmacogenomic drug–response annotation',
+          evidence_summary: 'This is a medication-response annotation linked to the marker; it is not a diagnosis, dosing instruction, or reason to change a medicine.',
+          classification: annotation.evidence_level || undefined,
+          record_id: annotation.drug || marker.rsid,
+          url: `https://api.clinpgx.org/v1/variant?name=${encodeURIComponent(marker.rsid)}`,
+        });
+      }
+    }
+  }
+
+  const relationOrder: Record<AssociationIs, number> = {
+    variant_condition_summary: 0,
+    variant_risk_factor_summary: 1,
+    variant_trait_statistical_association: 2,
+    gene_disease_validity: 3,
+    variant_drug_response: 4,
+  };
+  return Array.from(groups.values()).map((group): CatalogAssociationSummary => ({
+    id: group.id,
+    label: group.label,
+    association_is: group.association_is,
+    association_scope: group.association_scope,
+    source_type: group.source_type,
+    relationship_label: group.relationship_label,
+    evidence_summary: group.evidence_summary,
+    marker_count: group.markerIds.size,
+    genes: [...group.genes].sort(),
+    rsids: [...group.rsids].sort(),
+    matched_marker_link_ids: [...group.links].sort(),
+    reference_ids: [...group.referenceIds].sort(),
+    record_ids: [...group.recordIds].sort(),
+    source_urls: [...group.urls].sort(),
+    ...(group.clinical_significance ? { clinical_significance: group.clinical_significance } : {}),
+    ...(group.reviewStatuses.size ? { review_statuses: [...group.reviewStatuses].sort() } : {}),
+    ...(group.allele_match ? { allele_match: group.allele_match } : {}),
+    ...(group.condition_specific_assertion_available != null
+      ? { condition_specific_assertion_available: group.condition_specific_assertion_available }
+      : {}),
+    ...(group.rcvAccessions.size ? { rcv_accessions: [...group.rcvAccessions].sort() } : {}),
+    ...(group.pValues.length ? { best_p_value: Math.min(...group.pValues) } : {}),
+    ...(group.studyAccessions.size ? { study_accessions: [...group.studyAccessions].sort() } : {}),
+    ...(group.classification ? { classification: group.classification } : {}),
+    ...(group.inheritanceModels.size ? { inheritance_models: [...group.inheritanceModels].sort() } : {}),
+  })).sort((left, right) => relationOrder[left.association_is] - relationOrder[right.association_is]
+    || right.marker_count - left.marker_count
+    || (left.best_p_value ?? Number.POSITIVE_INFINITY) - (right.best_p_value ?? Number.POSITIVE_INFINITY)
+    || left.label.localeCompare(right.label));
 }
 
 function summaryFromDefinition(

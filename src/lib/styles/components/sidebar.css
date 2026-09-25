@@ -225,15 +225,44 @@
 }
 
 .samples-card .sample-name-wrap {
-  display: block;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem;
   min-width: 0;
 }
 
+.samples-card .sample-sex-indicator {
+  display: inline-grid;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.samples-card .sample-sex-indicator:hover:not(:disabled) {
+  background: var(--surface-subtle);
+}
+
+.samples-card .sample-sex-indicator:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.samples-card .sample-sex-indicator:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .samples-card .sample-name {
-  display: grid;
-  grid-template-columns: 1.4rem minmax(0, 1fr);
+  display: block;
   align-items: start;
-  gap: 0.5rem;
   width: 100%;
   min-width: 0;
   min-height: 2.75rem;
@@ -706,7 +735,7 @@
 .update-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -721,7 +750,7 @@
 .resource-status-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -754,7 +783,7 @@
 .missing-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -858,22 +887,42 @@
 }
 
 .resource-update-state-time {
-  font-size: 0.62rem;
+  font-size: 0.68rem;
 }
 
 .status-warn {
   margin-top: 0.35rem;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--status-warning-text);
   line-height: 1.35;
 }
 
 .status-note {
   margin-top: 0.35rem;
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
   opacity: 0.9;
   line-height: 1.35;
+}
+
+.sidebar-footer-meta {
+  display: flex;
+  min-width: 0;
+  min-height: 1.25rem;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 0.15rem;
+}
+
+.sidebar-app-version {
+  display: block;
+  min-width: 0;
+  color: var(--text-muted, var(--text-secondary));
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 @keyframes import-pulse-dot {

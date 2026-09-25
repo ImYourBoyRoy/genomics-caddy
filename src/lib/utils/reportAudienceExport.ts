@@ -5,7 +5,8 @@ import type {
 } from '../types/genomics';
 import allergySensitivityCatalog from '../marker-packs/allergy_sensitivity_catalog.json';
 import sourceRegistry from '../marker-packs/source_registry.json';
-import { getScopeLabel, getTierInfo } from './evidence';
+import { getTierInfo } from './evidence';
+import { contextLabels } from './contextIndicators';
 import {
   buildLabRequestListText,
   deriveActionablePlan,
@@ -34,6 +35,7 @@ import {
   type ReportReference,
 } from './reportReferences';
 import { dedupeWarnings, classifyWarnings } from './warningTaxonomy';
+import { groupGenomeWideConditionAssociations } from './genomewideConditionDiscovery';
 import aiPromptPolicy from '../marker-packs/ai_prompt_policy.json';
 import {
   buildAssertionKey,
@@ -188,7 +190,8 @@ function findingFor(
     finding.orientationState = orientationStateLabel(
       marker.orientation_state || orientationStateForResult(marker.assertion_status, marker.requires_orientation_verification),
     );
-    finding.applicability = marker.sex_scope ? getScopeLabel(marker.sex_scope) : 'All users unless context says otherwise';
+    finding.applicability = contextLabels(marker.context_tags, marker.sex_scope).join('; ')
+      || 'All users unless context says otherwise';
     finding.clinicalConfirmation = marker.clinical_confirmation_required ? 'Discuss confirmation' : 'Not specifically required by this marker';
     finding.conditionLabel = semantics.condition_label || undefined;
     finding.interpretationClass = interpretationClassLabel(semantics.interpretation_class);
@@ -297,6 +300,93 @@ function renderConditionEvidence(report: GeneratedReport, audience: ReportExport
     'Named DNA signal groups to help prioritize personal or clinical review. Indicator counts describe coverage within this toolkit; they are not probabilities.',
     '',
     summaries.map((summary) => renderConditionSummary(summary, audience)).join('\n\n'),
+  ].join('\n');
+}
+
+function renderCatalogAssociations(report: GeneratedReport): string {
+  const associations = deriveActionablePlan(report).catalogAssociations;
+  if (associations.length === 0) {
+    return [
+      '## Catalog-linked conditions, traits & medication responses',
+      '',
+      'No named links from the available local ClinVar, GWAS Catalog, or ClinGen records were found for called markers. This can reflect catalog coverage or sync limits; it is not a negative disease result.',
+    ].join('\n');
+  }
+  return [
+    '## Catalog-linked conditions, traits & medication responses',
+    '',
+    'Each link names its source and scope. ClinVar variant assertions, GWAS locus–trait statistics, ClinGen gene–disease validity, and pharmacogenomic response annotations are different evidence types; none by itself establishes a diagnosis, personal risk, or medication recommendation.',
+    '',
+    ...associations.slice(0, 30).flatMap((association) => [
+      `### ${association.label}`,
+      `- Relationship: ${association.association_is} (${association.association_scope}-level) · ${association.relationship_label}`,
+      `- Source: ${association.source_type} · ${association.marker_count} called ${association.marker_count === 1 ? 'marker' : 'markers'}`,
+      `- Evidence: ${association.evidence_summary}`,
+      ...(association.clinical_significance ? [`- Clinical significance: ${association.clinical_significance}`] : []),
+      ...(association.review_statuses?.length
+        ? [`- Review status: ${association.review_statuses.join(', ')}`]
+        : []),
+      ...(association.allele_match ? [`- Allele match: ${association.allele_match}`] : []),
+      ...(association.condition_specific_assertion_available === false
+        ? ['- Granularity: ClinVar variant summary; the local index does not retain the condition-specific RCV assertion.']
+        : []),
+      ...(association.rcv_accessions?.length
+        ? [`- RCV accessions on source row (not mapped per condition): ${association.rcv_accessions.join(', ')}`]
+        : []),
+      ...(association.classification ? [`- Gene–disease validity: ${association.classification}`] : []),
+      ...(association.best_p_value != null ? [`- Best reported p-value: ${association.best_p_value}`] : []),
+      ...(association.study_accessions?.length ? [`- Study accessions: ${association.study_accessions.join(', ')}`] : []),
+      `- Genes: ${association.genes.join(', ') || 'Not recorded'}`,
+      `- Markers: ${association.rsids.join(', ') || 'Not recorded'}`,
+      `- Source record IDs: ${association.record_ids.join(', ') || 'Not recorded'}`,
+      `- Reference IDs: ${association.reference_ids.join(', ') || 'Not recorded'}`,
+      ...association.source_urls.slice(0, 3).map((url) => `- Source URL: ${url}`),
+      '',
+    ]),
+    ...(associations.length > 30 ? [`Showing 30 of ${associations.length} links; the complete list is retained in structured JSON.`] : []),
+  ].join('\n').trim();
+}
+
+function renderGenomewideConditionDiscovery(report: GeneratedReport): string {
+  const discovery = report.genomewide_clinvar;
+  if (!discovery) return '';
+  const groups = groupGenomeWideConditionAssociations(discovery.associations);
+  const header = [
+    '## Potential disease associations from full-genome ClinVar scan',
+    '',
+    'Exact allele matches to local ClinVar condition-specific submissions. These are not diagnoses, personal-risk estimates, or a complete disease screen. This scan does not resolve inheritance, phase, penetrance, or clinical fit. Explicit somatic/oncogenic records are excluded; some records may not specify origin.',
+    '',
+  ];
+  if (!discovery.local_index_ready) {
+    return [...header, 'Local ClinVar variant and submission indexes were not both ready for this report.'].join('\n');
+  }
+  if (groups.length === 0) {
+    return [
+      ...header,
+      `No qualifying exact-allele condition submissions were reported. ${discovery.genotypes_scanned.toLocaleString()} imported calls were available for scanning; this does not rule out a condition.`,
+    ].join('\n');
+  }
+  return [
+    ...header,
+    `- Exact matched variants: ${discovery.exact_variant_count}`,
+    `- Matched condition labels: ${groups.length}`,
+    `- Allele/build handling: ${clean(discovery.allele_orientation)}`,
+    '',
+    ...groups.slice(0, 40).flatMap((group) => [
+      `### ${clean(group.condition)}`,
+      `- Taxonomy topic (navigation only): ${clean(group.categoryLabel)}`,
+      `- Matched variants: ${group.variantCount}`,
+      ...(group.conflicts ? ['- The ClinVar variant-wide summary contains a conflict, which may span conditions.'] : []),
+      ...group.assertions.slice(0, 5).map((assertion) =>
+        `- ${clean(assertion.rsid)}${assertion.gene_symbol ? ` (${clean(assertion.gene_symbol)})` : ''}: ${clean(assertion.association_is)} (${clean(assertion.association_scope)} scope); ${clean(assertion.clinical_significance)}; variant-wide summary ${clean(assertion.variant_summary_clinical_significance)}; ${clean(assertion.review_status)}; ${clean(assertion.origin_status)}; [${clean(assertion.scv_accession)}](${clean(assertion.source_url)})`
+      ),
+      ...(group.assertions.length > 5 ? [`- ${group.assertions.length - 5} additional SCV submissions are retained in the JSON report.`] : []),
+      '',
+    ]),
+    ...(groups.length > 40 ? [`${groups.length - 40} additional condition labels are retained in the JSON report.`] : []),
+    ...(discovery.omitted_association_count > 0
+      ? [`The source association list was capped; ${discovery.omitted_association_count} matching submissions were omitted from this report payload.`]
+      : []),
   ].join('\n');
 }
 
@@ -584,7 +674,7 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       options.audience === 'clinician' ? '# Clinician Handoff — Genomics Report' : '# AI Review — Genomics Report',
     '',
     `- Profile: ${clean(options.sample.name)}`,
-    `- Sex: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
+    `- Chromosome pattern: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
     `- Report generated: ${generatedAt}`,
     '- Data source: local consumer-array interpretation; not a clinical laboratory report',
     '',
@@ -602,6 +692,10 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       renderPersonalContext(options),
       '',
       renderConditionEvidence(options.report, options.audience),
+      '',
+      renderCatalogAssociations(options.report),
+      '',
+      renderGenomewideConditionDiscovery(options.report),
       '',
       renderAllergyGuidance(options.report),
       '',
@@ -632,6 +726,10 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
     renderPersonalContext(options),
     '',
     renderConditionEvidence(options.report, options.audience),
+    '',
+    renderCatalogAssociations(options.report),
+    '',
+    renderGenomewideConditionDiscovery(options.report),
     '',
     renderConditionCoverage(options.report),
     '',

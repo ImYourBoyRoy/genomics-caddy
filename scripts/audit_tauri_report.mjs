@@ -13,6 +13,7 @@ import { resolveAgentUiEndpoint } from "./lib/agentUiEndpoint.mjs";
 let baseUrl = "";
 let bridgeToken = "";
 const timeoutMs = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_TIMEOUT_MS, 120_000);
+const requireCatalogAssociations = process.env.GENOMICS_TAURI_REQUIRE_CATALOG_ASSOCIATIONS === "1";
 const pollMs = 500;
 const requestedViewportWidth = parsePositiveInteger(process.env.GENOMICS_TAURI_AUDIT_WIDTH, 0);
 const requestedViewportHeight = parsePositiveInteger(
@@ -60,8 +61,10 @@ function layoutOf(snapshot) {
 
 function validateDesktopSnapshot(snapshot, expectedMode) {
   assert(snapshot.hasReport === true, "Report is not ready");
-  const sex = snapshot.sample?.genetic_sex;
-  assert(sex === "Male" || sex === "Female", "Report did not expose a concise Male/Female sex label");
+  const rawSex = String(snapshot.sample?.genetic_sex || "");
+  const sexMatch = rawSex.match(/^(Male|Female|Unknown|Uncertain)\b/i);
+  assert(sexMatch, "Report did not expose a supported concise biological sex label");
+  const sex = sexMatch[1][0].toUpperCase() + sexMatch[1].slice(1).toLowerCase();
 
   const layout = layoutOf(snapshot);
   assert(layout.activePresentationMode === expectedMode, `Expected ${expectedMode} mode`);
@@ -73,7 +76,8 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       "Desktop report content overflows horizontally"
     );
   }
-  if (layout.profileNameCount > 0) {
+  const sidebarVisible = (layout.sidebarWidth ?? 0) > 0;
+  if (layout.profileNameCount > 0 && sidebarVisible) {
     assert(
       layout.profileNameMinWidth !== null && layout.profileNameMinWidth >= 80,
       "Active profile names do not have a readable sidebar text region",
@@ -94,13 +98,17 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
   assert(layout.topToolbarPresent === false, "Redundant top report toolbar is still present");
   assert(layout.themeMenuOpen === false, "Theme control still exposes a popover menu");
   assert(layout.appContextMenuInstalled === true, "Application context menu is not installed in the desktop app");
-  assert(layout.sidebarFocusControlInsideSidebar === true, "Sidebar hide control is not contained by the sidebar");
-  assert(layout.sidebarFocusControlOverlapsBrand === false, "Sidebar hide control overlaps the sidebar brand");
-  if (layout.sidebarFocusControlTop !== null) {
-    assert(layout.sidebarFocusControlTop <= 24, "Sidebar hide control is not anchored near the sidebar top");
-  }
-  if (layout.sidebarFocusControlRightGap !== null) {
-    assert(layout.sidebarFocusControlRightGap >= 4 && layout.sidebarFocusControlRightGap <= 20, "Sidebar hide control is not aligned to the sidebar edge");
+  if (sidebarVisible) {
+    assert(layout.sidebarFocusControlInsideSidebar === true, "Sidebar hide control is not contained by the sidebar");
+    assert(layout.sidebarFocusControlOverlapsBrand === false, "Sidebar hide control overlaps the sidebar brand");
+    if (layout.sidebarFocusControlTop !== null) {
+      assert(layout.sidebarFocusControlTop <= 24, "Sidebar hide control is not anchored near the sidebar top");
+    }
+    if (layout.sidebarFocusControlRightGap !== null) {
+      assert(layout.sidebarFocusControlRightGap >= 4 && layout.sidebarFocusControlRightGap <= 20, "Sidebar hide control is not aligned to the sidebar edge");
+    }
+  } else if (layout.viewportWidth <= 720) {
+    assert(layout.mobileDataControlsTogglePresent === true, "Mobile layout hides the data sidebar without exposing its launcher");
   }
   assert(layout.actionQueueItemCount <= 9, "Action queue exceeds the nine-item desktop contract");
   if (expectedMode === "simple" && layout.actionQueueItemCount > 0) {
@@ -347,7 +355,13 @@ function validateAccessibilitySnapshot(snapshot) {
     accessibility.expandedControlCount === accessibility.boundExpandedControlCount,
     "At least one expanded-state control points to a missing panel",
   );
-  assert(accessibility.focusControlTargetsSidebar === true, "Focus Report control does not target the data sidebar");
+  const mobileSidebarHidden = (snapshot.layout?.viewportWidth ?? 0) <= 720
+    && snapshot.layout?.sidebarWidth === 0;
+  if (mobileSidebarHidden) {
+    assert(snapshot.layout?.mobileDataControlsTogglePresent === true, "Mobile data controls are not available from the report");
+  } else {
+    assert(accessibility.focusControlTargetsSidebar === true, "Focus Report control does not target the data sidebar");
+  }
 }
 
 function validateFocusModeSnapshot(snapshot) {
@@ -385,7 +399,10 @@ async function prepareRequestedViewport() {
   await waitForSnapshot(
     (snapshot) => {
       const width = snapshot.layout?.viewportWidth;
-      const sidebarSettled = snapshot.layout?.profileNameCount === 0 || (
+      const mobileSidebarSettled = requestedViewportWidth <= 720
+        && snapshot.layout?.sidebarWidth === 0
+        && snapshot.layout?.mobileDataControlsTogglePresent === true;
+      const sidebarSettled = mobileSidebarSettled || snapshot.layout?.profileNameCount === 0 || (
         (snapshot.layout?.sidebarWidth ?? 0) > 0 &&
         (snapshot.layout?.profileNameMinWidth ?? 0) >= 80
       );
@@ -606,13 +623,15 @@ async function assertRecommendationPresentation(initialMetrics) {
   }
 }
 
-async function assertProfileSexSymbols() {
-  for (const symbol of ["♀", "♂"]) {
+async function assertProfileSexMarker(geneticSex) {
+  const sex = String(geneticSex || "");
+  const expectedSymbol = /^Female\b/i.test(sex) ? "♀" : /^Male\b/i.test(sex) ? "♂" : null;
+  if (expectedSymbol) {
     const result = await request("/ui/queryText", {
       method: "POST",
-      body: JSON.stringify({ text: symbol }),
+      body: JSON.stringify({ text: expectedSymbol }),
     });
-    assert(result?.ok === true && result.count > 0, `Active Profiles is missing the ${symbol} sex symbol`);
+    assert(result?.ok === true && result.count > 0, `Active Profiles is missing the ${expectedSymbol} sex symbol`);
   }
 
   const legacyIcon = await request("/ui/queryText", {
@@ -703,6 +722,69 @@ async function assertClinicalCollapsedHint() {
   await waitForMode("simple");
 }
 
+async function assertCatalogAssociationPanel() {
+  let snapshot = await request("/ui/snapshot");
+  if (!snapshot.catalogAssociationPanelPresent) {
+    assert(!requireCatalogAssociations, "Synthetic catalog fixture did not produce any linked association rows");
+    return { present: false, rows: 0, overflow: 0 };
+  }
+
+  assert(snapshot.catalogAssociationPanelExpanded === false, "Catalog association panel should start collapsed");
+  assert(snapshot.catalogAssociationRowCount > 0, "Catalog association panel has no linked rows");
+  const opened = await request("/ui/clickText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Catalog-linked conditions, traits & responses" }),
+  });
+  assert(opened?.ok === true, "Could not expand the catalog association panel");
+  snapshot = await waitForSnapshot(
+    (candidate) => candidate.catalogAssociationPanelExpanded === true,
+    "catalog association panel expansion",
+  );
+  assert(snapshot.layout?.overflowingElements?.length === 0, "Expanded catalog associations overflow the report surface");
+  const expandedRows = snapshot.catalogAssociationRowCount;
+
+  const closed = await request("/ui/clickText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Catalog-linked conditions, traits & responses" }),
+  });
+  assert(closed?.ok === true, "Could not collapse the catalog association panel");
+  snapshot = await waitForSnapshot(
+    (candidate) => candidate.catalogAssociationPanelExpanded === false,
+    "catalog association panel collapse",
+  );
+  return { present: true, rows: expandedRows, overflow: snapshot.layout?.overflowingElements?.length ?? 0 };
+}
+
+async function assertGenomeWideDiseasePanel() {
+  const heading = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Potential disease associations" }),
+  });
+  assert(heading?.ok === true && heading.count === 1, "Report is missing its single genome-wide disease discovery section");
+
+  const opened = await request("/ui/clickText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Potential disease associations" }),
+  });
+  assert(opened?.ok === true, "Could not expand genome-wide disease discovery");
+  const pots = await request("/ui/queryText", {
+    method: "POST",
+    body: JSON.stringify({ text: "POTS & dysautonomia" }),
+  });
+  assert(pots?.ok === true && pots.count > 0, "Expanded disease discovery is missing its POTS clinical-context route");
+  let snapshot = await request("/ui/snapshot");
+  assert(snapshot.layout?.overflowingElements?.length === 0, "Expanded genome-wide disease discovery overflows the report surface");
+
+  const closed = await request("/ui/clickText", {
+    method: "POST",
+    body: JSON.stringify({ text: "Potential disease associations" }),
+  });
+  assert(closed?.ok === true, "Could not collapse genome-wide disease discovery");
+  snapshot = await request("/ui/snapshot");
+  assert(snapshot.layout?.overflowingElements?.length === 0, "Collapsing disease discovery introduced report overflow");
+  return { present: true, potsContext: true, overflow: snapshot.layout?.overflowingElements?.length ?? 0 };
+}
+
 async function main() {
   const endpoint = await resolveAgentUiEndpoint();
   baseUrl = endpoint.url;
@@ -724,12 +806,14 @@ async function main() {
   await assertNoUnverifiedUpdateCopy(ready);
   validateDesktopSnapshot(ready, "simple");
   validateAccessibilitySnapshot(ready);
+  const diseasePanel = await assertGenomeWideDiseasePanel();
+  const catalogPanel = await assertCatalogAssociationPanel();
   await assertNoRedundantPublicCopy();
   await assertAllergySurface();
   await assertReportOrganization();
   const recommendationMetrics = await assertRecommendationPresentation(ready.recommendationMetrics);
   await assertMedicationSurface();
-  await assertProfileSexSymbols();
+  await assertProfileSexMarker(ready.sample?.genetic_sex);
   await ensureCollapsedSections();
   await assertClinicalCollapsedHint();
   modes.simple = validateDesktopSnapshot(await ensurePopulatedSection(), "simple");
@@ -759,10 +843,14 @@ async function main() {
   await clickText("Simple");
   const restored = validateDesktopSnapshot(await waitForMode("simple"), "simple");
 
-  await clickText("Hide data sidebar");
-  validateFocusModeSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === true, "Focus Report mode"));
-  await clickText("Show data sidebar");
-  validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
+  if (ready.layout.viewportWidth > 720) {
+    await clickText("Hide data sidebar");
+    validateFocusModeSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === true, "Focus Report mode"));
+    await clickText("Show data sidebar");
+    validateDesktopSnapshot(await waitForSnapshot((snapshot) => snapshot.layout?.focusMode === false, "the restored data sidebar"), "simple");
+  } else {
+    assert(ready.layout.mobileDataControlsTogglePresent, "Mobile data-controls launcher disappeared after report checks");
+  }
 
   await selectTheme("Light mode", "light");
   const lightContrast = await probeContrast("light");
@@ -781,6 +869,8 @@ async function main() {
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
   const warningMetrics = restored.warningMetrics;
   console.log(`  warnings=generic:${warningMetrics?.genericWarningPhraseCount ?? "n/a"};duplicates:${warningMetrics?.duplicateGenericWarningPhraseCount ?? "n/a"};actionable:${warningMetrics?.actionableAlertCount ?? "n/a"};clinical_review:${warningMetrics?.clinicalReviewAlertCount ?? "n/a"};guide:${warningMetrics?.reportGuideCount ?? "n/a"};footer:${warningMetrics?.footerReminderCount ?? "n/a"};legal:${warningMetrics?.legalPrivacyPageCount ?? "n/a"}`);
+  console.log(`  genomewide_disease=${diseasePanel.present ? "present" : "missing"};pots_context=${diseasePanel.potsContext ? "visible" : "missing"};overflow=${diseasePanel.overflow}`);
+  console.log(`  catalog_associations=${catalogPanel.present ? `present:${catalogPanel.rows}` : "not-present"};collapsed_after_audit=${catalogPanel.present};overflow=${catalogPanel.overflow}`);
   console.log(`  resource_status=${resourceStatus}; update_phase=${resourceUpdatePhase ?? "idle"}; app_context_menu=installed`);
 }
 

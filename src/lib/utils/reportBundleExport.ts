@@ -111,6 +111,7 @@ function dnaAnalysisJson(options: ReportBundleOptions): string {
           severity_class: marker.severity_class,
           assertion_status: marker.assertion_status,
           sex_scope: marker.sex_scope,
+          context_tags: marker.context_tags,
           interpretation_allowed: marker.interpretation_allowed,
           clinical_confirmation_required: marker.clinical_confirmation_required,
           clinical_semantics: semantics,
@@ -141,6 +142,8 @@ function dnaAnalysisJson(options: ReportBundleOptions): string {
       medication_safety: allergy.medicationSafety,
     },
     condition_evidence: actionable.conditionEvidence,
+    catalog_associations: actionable.catalogAssociations,
+    genomewide_clinvar_discovery: options.report.genomewide_clinvar ?? null,
     condition_coverage: buildConditionCoverageSummaries(options.report),
     condition_coverage_gaps: getConditionCoverageGaps(),
     pgx: {

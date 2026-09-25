@@ -8,6 +8,7 @@ use super::download::{
 };
 use super::import_clingen::import_clingen_gene_validity;
 use super::import_clinvar::import_clinvar_variant_summary;
+use super::import_clinvar_submission::import_clinvar_submission_summary;
 use super::import_dbsnp::{import_dbsnp_merged, import_dbsnp_withdrawn};
 use super::import_mane::import_mane_summary;
 use super::import_pharmgkb::{import_pharmgkb_clinical_variants, import_pharmgkb_genes};
@@ -222,6 +223,7 @@ const APP_OWNED_SQLITE_DATABASES: &[&str] = &[
     "api_cache.db",
     "genomics_reference.db",
     "clinvar.db",
+    "clinvar_submissions.db",
     "dbsnp.db",
     "gwas.db",
     "pharmgkb.db",
@@ -832,7 +834,7 @@ pub async fn sync_offline_assets_subset(
                     &format!("Step 1/2 · Downloading {label}…"),
                 );
 
-                let progress_cb = move |bytes_done: u64, total: u64| {
+                let progress_cb = move |bytes_done: u64, total: u64, resumed: u64| {
                     if let Some(ref handle) = app_clone {
                         let _ = handle.emit(
                             "offline:download_progress",
@@ -841,6 +843,7 @@ pub async fn sync_offline_assets_subset(
                                 "label": label,
                                 "bytes_downloaded": bytes_done,
                                 "total_bytes": total,
+                                "resumed_bytes": resumed,
                             }),
                         );
                     }
@@ -919,7 +922,7 @@ pub async fn sync_offline_assets_subset(
                                 1,
                                 "Step 1/2 · Downloading GWAS catalog…",
                             );
-                            let progress_cb = move |bytes_done: u64, total: u64| {
+                            let progress_cb = move |bytes_done: u64, total: u64, resumed: u64| {
                                 if let Some(ref handle) = app_clone {
                                     let _ = handle.emit(
                                         "offline:download_progress",
@@ -928,6 +931,7 @@ pub async fn sync_offline_assets_subset(
                                             "label": label,
                                             "bytes_downloaded": bytes_done,
                                             "total_bytes": total,
+                                            "resumed_bytes": resumed,
                                         }),
                                     );
                                 }
@@ -1263,6 +1267,7 @@ fn import_asset_sync(
     if matches!(
         id,
         OfflineAssetId::ClinvarVariantSummary
+            | OfflineAssetId::ClinvarSubmissionSummary
             | OfflineAssetId::DbsnpMergedJson
             | OfflineAssetId::DbsnpWithdrawnJson
             | OfflineAssetId::GwasCatalog
@@ -1324,6 +1329,14 @@ fn import_asset_sync(
             let eff_path = resolve_local_asset_path(&path)
                 .ok_or_else(|| "ClinVar file missing — run Tier 1 sync".to_string())?;
             import_clinvar_variant_summary(conn, &eff_path, app)?
+        }
+        OfflineAssetId::ClinvarSubmissionSummary => {
+            crate::db::ensure_catalog_db_attached(conn, data_dir, "clinvar_submissions")
+                .map_err(|e| e.to_string())?;
+            let eff_path = resolve_local_asset_path(&path).ok_or_else(|| {
+                "ClinVar submission summary missing — download the companion file first".to_string()
+            })?;
+            import_clinvar_submission_summary(data_dir, &eff_path, app)?
         }
         OfflineAssetId::PharmgkbClinicalVariants => {
             crate::db::ensure_catalog_db_attached(conn, data_dir, "pharmgkb")

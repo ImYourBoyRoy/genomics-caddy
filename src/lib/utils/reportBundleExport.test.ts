@@ -105,6 +105,87 @@ describe('report bundle export', () => {
     }
   });
 
+  it('includes source-scoped catalog associations without adding genotype values to that metadata', () => {
+    const sourceReport: GeneratedReport = {
+      ...report(),
+      sections: [{
+        ...report().sections[0],
+        markers: [marker({
+          rsid: 'rs-bundle-gwas',
+          gene: 'SYNTHETIC1',
+          user_genotype: 'AG',
+          normalized_genotype: 'AG',
+          gwas_associations: [{
+            association_is: 'variant_trait_statistical_association',
+            trait_name: 'Synthetic trait',
+            pvalue: 1e-9,
+            study_accession: 'GCST000001',
+          }],
+        })],
+      }],
+    };
+    const files = buildReportBundleFiles({
+      audience: 'personal',
+      report: sourceReport,
+      sample,
+      profileContext,
+    });
+    const dna = JSON.parse(files.find((file) => file.filename === 'dna_analysis.json')!.content);
+
+    expect(dna.catalog_associations).toContainEqual(expect.objectContaining({
+      label: 'Synthetic trait',
+      association_is: 'variant_trait_statistical_association',
+      association_scope: 'locus',
+      study_accessions: ['GCST000001'],
+    }));
+    expect(JSON.stringify(dna.catalog_associations)).not.toContain('AG');
+  });
+
+  it('exports full-genome ClinVar condition submissions without serializing raw alleles', () => {
+    const sourceReport: GeneratedReport = {
+      ...report(),
+      genomewide_clinvar: {
+        local_index_ready: true,
+        genotypes_scanned: 650_000,
+        exact_variant_count: 1,
+        association_count: 1,
+        omitted_association_count: 0,
+        allele_orientation: 'Forward strand',
+        source_asset_ids: ['clinvar_variant_summary', 'clinvar_submission_summary'],
+        associations: [{
+          association_is: 'variant_condition_summary',
+          association_scope: 'variant',
+          condition: 'Synthetic inherited condition',
+          rsid: 'rs-synthetic-condition',
+          gene_symbol: 'SYNTHETIC1',
+          variation_id: '12345',
+          scv_accession: 'SCV000000001.1',
+          clinical_significance: 'Pathogenic',
+          variant_summary_clinical_significance: 'Pathogenic',
+          review_status: 'criteria provided, multiple submitters, no conflicts',
+          allele_match: 'matched',
+          origin_status: 'Germline observation reported',
+          variant_summary_conflict: false,
+          source_url: 'https://www.ncbi.nlm.nih.gov/clinvar/?term=SCV000000001.1',
+        }],
+      },
+    };
+    const files = buildReportBundleFiles({
+      audience: 'personal',
+      report: sourceReport,
+      sample,
+      profileContext,
+    });
+    const markdown = files.find((file) => file.filename === 'report.md')!.content;
+    const dna = JSON.parse(files.find((file) => file.filename === 'dna_analysis.json')!.content);
+
+    expect(markdown).toContain('Potential disease associations from full-genome ClinVar scan');
+    expect(markdown).toContain('Synthetic inherited condition');
+    expect(dna.genomewide_clinvar_discovery.associations[0].scv_accession).toBe('SCV000000001.1');
+    expect(JSON.stringify(dna.genomewide_clinvar_discovery)).not.toContain('A/G');
+    expect(JSON.stringify(dna.genomewide_clinvar_discovery)).not.toContain('allele1');
+  });
+
   it('keeps personal DNA JSON free of raw genotype fields while retaining them for explicit technical audiences', () => {
     const personalFiles = buildReportBundleFiles({
       audience: 'personal',
@@ -313,7 +394,7 @@ describe('report bundle export', () => {
       profile: {
         sample_id: 42,
         sample_name: 'Bundle Test Profile',
-        chromosome_call_context: 'Male',
+        chromosome_call_context: 'Male-like',
       },
     });
     expect(aiJson.review_instructions).toEqual(expect.any(Array));

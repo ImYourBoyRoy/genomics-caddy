@@ -22,6 +22,7 @@
     onImportGenome?: () => void;
     onDownloadDatabases?: () => void;
     onDownloadChain?: () => void;
+    onOpenHelp?: () => void;
   }
 
   let {
@@ -33,6 +34,7 @@
     onImportGenome,
     onDownloadDatabases,
     onDownloadChain,
+    onOpenHelp,
   }: Props = $props();
 
   function assetReady(asset: { local_present: boolean; row_count: number; local_bytes: number }): boolean {
@@ -115,9 +117,10 @@
     {/if}
   </div>
 
-  <p class="welcome-aside">
-    Use Data controls for downloads, profiles, and progress while you work.
-  </p>
+  <div class="welcome-aside-row">
+    <p class="welcome-aside">Use Data controls for downloads, profiles, and progress while you work.</p>
+    <button type="button" class="welcome-help-link" onclick={() => onOpenHelp?.()}>Help &amp; app info <span aria-hidden="true">→</span></button>
+  </div>
 
   {#if !runtimeAvailable}
     <p class="welcome-runtime-note" role="note">
@@ -133,3 +136,11 @@
     </details>
   {/if}
 </div>
+
+<style>
+  .welcome-aside-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.35rem 0.75rem; }
+  .welcome-aside-row .welcome-aside { margin: 0; }
+  .welcome-help-link { min-height: 2.5rem; padding: 0.35rem 0.55rem; border: 0; border-radius: 0.45rem; background: transparent; color: var(--accent); font: inherit; font-size: 0.84rem; font-weight: 650; cursor: pointer; }
+  .welcome-help-link:hover { background: var(--accent-soft); }
+  .welcome-help-link:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+</style>

@@ -120,6 +120,8 @@ export interface MarkerDefinition {
   raw_dna_limitation?: string | null;
   clinical_confirmation_required?: boolean | null;
   sex_scope?: MarkerSexScope | null;
+  /** Explicit biological/life-stage context tags for compact UI and handoffs. */
+  context_tags?: string[] | null;
   variant_type?: VariantType | null;
   sources?: MarkerSource[] | null;
   expected_plus_alleles?: string[] | null;
@@ -219,6 +221,8 @@ export interface VariantCategoryLink {
   raw_dna_limitation?: string | null;
   clinical_confirmation_required?: boolean | null;
   sex_scope?: MarkerSexScope | null;
+  /** Explicit biological/life-stage context tags for compact UI and handoffs. */
+  context_tags?: string[] | null;
   interpretation_blocked_if_unverified?: boolean | null;
   clinical_semantics?: ClinicalSemantics | null;
   sources: MarkerSource[];
@@ -233,6 +237,8 @@ export interface ClinVarAnnotation {
   rsid?: string | null;
   allele_id?: string | null;
   variation_id?: string | null;
+  /** RCV IDs carried by ClinVar's variant-summary row; not necessarily mapped one-to-one to its condition labels. */
+  rcv_accession?: string | null;
   gene_symbol?: string | null;
   name?: string | null;
   phenotype_ids?: string | null;
@@ -252,6 +258,24 @@ export interface GwasHit {
   neg_log10_p: number;
   association_count?: number | null;
   p_value_underflow?: boolean | null;
+}
+
+/** Per-study GWAS Catalog record retained for traceable variant-to-trait links. */
+export interface GwasAssociation {
+  association_is?: 'variant_trait_statistical_association';
+  trait_name?: string | null;
+  trait?: { trait?: string | null } | null;
+  pvalue?: number | null;
+  study_accession?: string | null;
+  mapped_gene?: string | null;
+  reported_genes?: string[];
+  effect_allele?: string | null;
+  beta?: number | null;
+  odds_ratio?: number | null;
+  ancestry?: string | null;
+  sample_size?: number | null;
+  pubmed_id?: string | null;
+  source?: string | null;
 }
 
 export interface DbsnpAnnotation {
@@ -308,6 +332,7 @@ export interface VariantEnrichment {
   clinvar?: ClinVarAnnotation | null;
   clinvar_annotations?: ClinVarAnnotation[];
   gwas_hits: GwasHit[];
+  gwas_associations?: GwasAssociation[];
   dbsnp?: DbsnpAnnotation | null;
   population?: PopulationAnnotation | null;
   pharmgkb?: PharmGkbAnnotation | null;
@@ -366,6 +391,7 @@ export interface NormalizedReport {
   sections: NormalizedSection[];
   /** Deduplicated source metadata from the Rust report generator. */
   references?: ReportReferenceRecord[];
+  genomewide_clinvar?: GenomeWideClinVarDiscovery | null;
   import_provenance?: ImportProvenance | null;
 }
 
@@ -405,15 +431,21 @@ export interface DisplayMarker {
   clinvar_significance: string | null;
   clinvar_conditions: string | null;
   clinvar_review_status: string | null;
+  /** Full per-assertion records are required to verify condition and allele links. */
+  clinvar_annotations?: ClinVarAnnotation[];
   gwas_top_trait: string | null;
   gwas_best_pvalue: number | null;
   gwas_association_count: number | null;
+  /** Individual local catalog records; their biological scope is explicit in derived associations. */
+  gwas_associations?: GwasAssociation[];
   population_af: number | null;
   population_rarity: string | null;
   confirm_with: string[];
   do_not_claim: string[];
   clinical_confirmation_required?: boolean;
   sex_scope?: MarkerSexScope;
+  /** Explicit biological/life-stage context tags for compact UI and handoffs. */
+  context_tags?: string[];
   raw_dna_limitation?: string;
   clinical_semantics?: ClinicalSemantics | null;
   pharmgkb?: PharmGkbAnnotation | null;
@@ -449,7 +481,38 @@ export interface GeneratedReport {
   references?: ReportReferenceRecord[];
   /** Explicit when ClinVar/dbSNP catalogs are missing or empty (never silent). */
   catalog_warnings?: string[];
+  /** Local exact-allele matches across the imported genome; no raw calls are serialized here. */
+  genomewide_clinvar?: GenomeWideClinVarDiscovery | null;
   import_provenance?: ImportProvenance | null;
+}
+
+export interface GenomeWideClinVarDiscovery {
+  local_index_ready: boolean;
+  genotypes_scanned: number;
+  exact_variant_count: number;
+  association_count: number;
+  omitted_association_count: number;
+  allele_orientation: string;
+  source_asset_ids: string[];
+  associations: GenomeWideClinVarAssociation[];
+}
+
+export interface GenomeWideClinVarAssociation {
+  association_is: 'variant_condition_summary' | 'variant_risk_factor_summary';
+  association_scope: 'variant';
+  condition: string;
+  rsid: string;
+  gene_symbol?: string | null;
+  variation_id: string;
+  scv_accession: string;
+  clinical_significance: string;
+  variant_summary_clinical_significance: string;
+  review_status: string;
+  last_evaluated?: string | null;
+  allele_match: 'matched';
+  origin_status: string;
+  variant_summary_conflict: boolean;
+  source_url: string;
 }
 
 export interface ReportPayload {

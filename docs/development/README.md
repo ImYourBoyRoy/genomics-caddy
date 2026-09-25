@@ -23,8 +23,8 @@ Pull requests and pushes to `master` run `.github/workflows/ci.yml`
 That same job is required before a tagged desktop publish.
 
 ```bash
-git tag v0.2.4
-git push origin v0.2.4
+git tag v0.2.5
+git push origin v0.2.5
 ```
 
 Keep `CITATION.cff` `version` / `date-released` aligned with that tag so GitHub’s

@@ -7769,6 +7769,24 @@
       "risk_allele": "T",
       "impact": "Preliminary adenomyosis susceptibility research context",
       "description": "HRH1 rs184700 T was associated with adenomyosis in a 2026 GWAS, but it is not a diagnostic test. Results may vary by ancestry and phenotype definition; clinical history and indicated imaging matter more than this SNP, and an uncalled result is unknown."
+    },
+    {
+      "rsid": "GUARDRAIL_UTERINE_FIBROIDS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "gene": "MULTI_GENE/MED12/HMGA2/FH/COL4A5/COL4A6",
+      "category": "hormones_reproductive",
+      "name": "Uterine fibroids require clinical and imaging workup",
+      "risk_allele": "N/A",
+      "impact": "Separates fibroid care from consumer-DNA interpretation",
+      "description": "Uterine fibroids are structural uterine findings. A consumer SNP array cannot diagnose or exclude a fibroid, explain recurrence after myomectomy, characterize fibroid anatomy, or choose an IUD or other treatment."
+    },
+    {
+      "rsid": "PANEL_UTERINE_FIBROID_RESEARCH_GAP",
+      "gene": "MED12/HMGA2/FH/COL4A5/COL4A6/WNT4/ESR1/TERT/MULTI_GENE",
+      "category": "hormones_reproductive",
+      "name": "Uterine fibroid genetics research context—not a consumer risk panel",
+      "risk_allele": "N/A",
+      "impact": "Research context for fibroid biology and inherited susceptibility",
+      "description": "Fibroid research includes tissue-level somatic drivers and many small-effect inherited loci, but these do not form a validated consumer-DNA panel. Use this as an evidence-gap note, not a diagnosis, personal risk percentage, recurrence prediction, subtype call, or IUD-response prediction."
     }
   ]
 }

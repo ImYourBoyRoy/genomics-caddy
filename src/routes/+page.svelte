@@ -55,6 +55,10 @@
   import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
   import { installDesktopContextMenu } from "$lib/utils/desktopContextMenu";
   import { formatGeneticSexLabel } from "$lib/utils/uiLabels";
+  import {
+    hasSeenReproductiveContextPrompt,
+    markReproductiveContextPromptSeen,
+  } from "$lib/utils/reproductiveContext";
   import type { Component } from "svelte";
 
   // Stylesheet imports
@@ -145,7 +149,7 @@
   let importOverlayPhase = $derived(bootstrapPhaseForImport(importPhase));
   let importOverlayProgress = $derived({ percentage: progressPercent, status: progressStatus });
 
-  let activeTab = $state("report"); // report | context | diary | map | discovery | legal | browser | mcp | agent | research | ai | connections
+  let activeTab = $state("report"); // report | context | diary | map | discovery | help | legal | browser | mcp | agent | research | ai | connections
   const ADVANCED_TAB_KEY = "genomics_caddy_last_advanced_tab";
 
   const PRIMARY_TABS = [
@@ -154,6 +158,7 @@
     { id: "diary", label: "Diary" },
     { id: "map", label: "Chromosome Map" },
     { id: "discovery", label: "Discovery" },
+    { id: "help", label: "Help" },
   ] as const;
 
   const ADVANCED_TABS = [
@@ -181,6 +186,7 @@
       "diary",
       "map",
       "discovery",
+      "help",
       "connections",
       "browser",
       "mcp",
@@ -201,6 +207,7 @@
           case "diary": return import("$lib/components/context/DiaryPanel.svelte");
           case "map": return import("$lib/components/genome/GenomeMap.svelte");
           case "discovery": return import("$lib/components/discovery/DiscoveryPanel.svelte");
+          case "help": return import("$lib/components/common/HelpCenter.svelte");
           case "connections": return import("$lib/components/settings/ConnectionsPanel.svelte");
           case "browser": return import("$lib/components/search/VariantSearchPanel.svelte");
           case "mcp": return import("$lib/components/mcp/McpPanel.svelte");
@@ -310,6 +317,53 @@
     syncAllMissing: () => Promise<void>;
     expandDatabases: () => void;
   } | null>(null);
+
+  const CHROMOSOME_CONTEXT_DIALOG_TITLE = "DNA-derived chromosome pattern";
+  const CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN = "open-context";
+
+  function chromosomeContextDialogMessage(sample: GenomeSample): string {
+    const label = formatGeneticSexLabel(sample.genetic_sex);
+    if (label === "Inconclusive") {
+      return "This profile has an inconclusive DNA-derived chromosome pattern because the available consumer-array calls are limited or internally inconsistent. This is not a diagnosis and does not determine gender identity, anatomy, fertility, or hormone status.\n\nWould you like to choose an optional reproductive or hormone context to tailor the report? That context is user-provided and will not change the DNA result.";
+    }
+    return `The DNA-derived chromosome pattern is ${label}. It is a routing hint, not gender identity, anatomy, fertility, hormone status, or a diagnosis.\n\nWould you like to review the optional reproductive or hormone context for this profile?`;
+  }
+
+  function openChromosomeContextDialog(sample: GenomeSample): void {
+    markReproductiveContextPromptSeen(sample.id);
+    dialogStore.choice(
+      chromosomeContextDialogMessage(sample),
+      [
+        {
+          id: CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN,
+          label: "Open context settings",
+          variant: "accent",
+        },
+        { id: "keep-report", label: "Keep report as-is", variant: "secondary" },
+      ],
+      (choice) => {
+        if (choice === CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN) selectTab("context");
+      },
+      CHROMOSOME_CONTEXT_DIALOG_TITLE,
+    );
+  }
+
+  function maybeOfferInconclusiveContext(sample: GenomeSample, reportReady: boolean): void {
+    if (
+      !reportReady ||
+      formatGeneticSexLabel(sample.genetic_sex) !== "Inconclusive" ||
+      hasSeenReproductiveContextPrompt(sample.id) ||
+      dialogStore.state.show ||
+      loadProfileContext(sample.id).selectedReproductiveContext
+    ) return;
+
+    markReproductiveContextPromptSeen(sample.id);
+    setTimeout(() => {
+      if (selectedSample?.id === sample.id && !dialogStore.state.show) {
+        openChromosomeContextDialog(sample);
+      }
+    }, 0);
+  }
 
   $effect(() => {
     activeSampleId = selectedSample?.id ?? null;
@@ -533,6 +587,7 @@
       }
     }
     isBootstrapping = false;
+    if (pendingSample) maybeOfferInconclusiveContext(pendingSample, generatedReport != null);
   }
 
   async function refreshChainStatus() {
@@ -569,6 +624,12 @@
       generatedReport: null,
       warmReportFn: (id) => warmReport(id),
     });
+    maybeOfferInconclusiveContext(sample, generatedReport != null);
+  }
+
+  async function openSampleChromosomeContext(sample: GenomeSample): Promise<void> {
+    if (selectedSample?.id !== sample.id) await selectSample(sample);
+    openChromosomeContextDialog(sample);
   }
 
   async function browseFile() {
@@ -767,6 +828,7 @@
       onBrowseFile={browseFile}
       onImportGenome={importGenome}
       onSelectSample={selectSample}
+      onOpenChromosomeContext={openSampleChromosomeContext}
       onDeleteSample={deleteSample}
       onOpenConnections={() => selectTab("connections")}
       onResourcesUpdated={async () => {
@@ -798,22 +860,45 @@
           onCancelImport={cancelImportReview}
         />
       {:else if selectedSample === null}
-        <EmptyState
-          {appPaths}
-          offlineStatus={offlineStatusForWelcome}
-          offlineStatusFresh={offlineStatusFreshForWelcome}
-          {isChainDownloaded}
-          {runtimeAvailable}
-          onImportGenome={handleWelcomeImport}
-          onDownloadDatabases={handleWelcomeDownloadDatabases}
-          onDownloadChain={downloadChain}
-        />
+        {#if activeTab === "help"}
+          <div class="welcome-help-return">
+            <button type="button" class="btn btn-secondary btn-sm" onclick={() => activeTab = "report"}>← Back to welcome</button>
+          </div>
+          {#if deferredPanels.help}
+            {@const WelcomeHelpPanel = deferredPanels.help}
+            <WelcomeHelpPanel />
+          {:else}
+            <div class="tab-loading-state" role="status">{deferredPanelStatus("help", "Help & app info")}</div>
+          {/if}
+        {:else}
+          <EmptyState
+            {appPaths}
+            offlineStatus={offlineStatusForWelcome}
+            offlineStatusFresh={offlineStatusFreshForWelcome}
+            {isChainDownloaded}
+            {runtimeAvailable}
+            onImportGenome={handleWelcomeImport}
+            onDownloadDatabases={handleWelcomeDownloadDatabases}
+            onDownloadChain={downloadChain}
+            onOpenHelp={() => activeTab = "help"}
+          />
+        {/if}
       {:else}
         <header class="content-header">
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <span class="pill">Sex: {formatGeneticSexLabel(selectedSample.genetic_sex)}</span>
+              <button
+                type="button"
+                class="pill chromosome-pattern-trigger"
+                title="Review chromosome pattern and optional reproductive context"
+                aria-haspopup="dialog"
+                onclick={() => {
+                  if (selectedSample) openChromosomeContextDialog(selectedSample);
+                }}
+              >
+                Chromosome pattern: {formatGeneticSexLabel(selectedSample.genetic_sex)}
+              </button>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">
               {#each PRIMARY_TABS as tab (tab.id)}
@@ -902,6 +987,7 @@
                 onExploreResearch={handleExploreResearch}
                 onNavigateToVariant={navigateToVariant}
                 onOpenDiscovery={() => selectTab("discovery")}
+                onOpenHelp={() => selectTab("help")}
               />
             {:else}
               <div class="tab-loading-state" role="status">{deferredPanelStatus("report", "Trait Report")}</div>
@@ -944,6 +1030,13 @@
               />
             {:else}
               <div class="tab-loading-state" role="status">{deferredPanelStatus("discovery", "Discovery")}</div>
+            {/if}
+          {:else if activeTab === "help"}
+            {#if deferredPanels.help}
+              {@const HelpPanel = deferredPanels.help}
+              <HelpPanel />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("help", "Help & app info")}</div>
             {/if}
           {:else if activeTab === "legal"}
             {#if deferredPanels.legal}
@@ -1047,3 +1140,22 @@
 </AppShell>
 
 <GlobalDialogs />
+
+<style>
+  .chromosome-pattern-trigger {
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .chromosome-pattern-trigger:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chromosome-pattern-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+</style>

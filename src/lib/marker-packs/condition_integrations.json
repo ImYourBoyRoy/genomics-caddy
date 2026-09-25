@@ -1,7 +1,7 @@
 {
   "name": "condition_integrations",
-  "version": "1.0.0",
-  "last_updated": "2026-08-31",
+  "version": "1.1.0",
+  "last_updated": "2026-09-24",
   "purpose": "Condition-level evidence groupings for displaying matched DNA indicators as potential health patterns without converting marker counts into probabilities or diagnoses.",
   "policy": {
     "counting": "Count unique curated marker IDs with a verified call and a non-zero reported effect. Cross-pack copies of one rsID count once within a condition.",
@@ -11,9 +11,11 @@
     "coverage_gaps": [
       {
         "id": "pots",
-        "label": "POTS",
+        "label": "POTS & dysautonomia",
         "status": "emerging_research",
-        "display": "No validated consumer-array POTS model is scored here. Orthostatic vitals, symptom history, medication review, and clinical evaluation are the useful next inputs."
+        "display": "No validated consumer-array POTS or dysautonomia model is scored here. Recurrent symptoms on standing—such as lightheadedness, palpitations, tremulousness, blurred vision, weakness, fatigue, or exercise intolerance—are useful context to discuss with a clinician, not a DNA risk result.",
+        "clinical_next_step": "Discuss symptom timing and duration, positional heart rate and blood pressure, medications, hydration, and other possible causes with a clinician. POTS requires clinical evaluation; do not start salt loading, supplements, or medication changes from a DNA report.",
+        "sources": ["pots_heart_rhythm_society_consensus"]
       },
       {
         "id": "hypermobile_eds",

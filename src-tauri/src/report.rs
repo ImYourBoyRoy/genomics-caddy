@@ -19,7 +19,7 @@ Operational Notes: Designed for consumer-grade raw DNA, not clinical diagnostics
 
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 
 use crate::offline::schema::schema_attached;
@@ -271,6 +271,7 @@ impl ReportReferenceRegistryBuilder {
 #[derive(Debug, Default)]
 struct LocalEnrichment {
     pub clinvar_annotations: Vec<ClinVarAnnotation>,
+    pub gwas_associations: Vec<serde_json::Value>,
     pub clinvar_significance: Option<String>,
     pub clinvar_conditions: Option<String>,
     pub clinvar_review_status: Option<String>,
@@ -339,6 +340,8 @@ pub struct MarkerDefinition {
     pub clinical_confirmation_required: Option<bool>,
     /// Optional biological applicability hint; never inferred as gender or anatomy.
     pub sex_scope: Option<String>,
+    /// Explicit biological/life-stage context tags used for compact UI and handoffs.
+    pub context_tags: Option<Vec<String>>,
     pub sources: Option<Vec<MarkerSource>>,
     pub variant_type: Option<String>,
     pub expected_plus_alleles: Option<Vec<String>>,
@@ -487,6 +490,8 @@ pub struct VariantCategoryLink {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sex_scope: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub interpretation_blocked_if_unverified: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clinical_semantics: Option<ClinicalSemantics>,
@@ -509,6 +514,8 @@ pub struct ClinVarAnnotation {
     pub allele_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub variation_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rcv_accession: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gene_symbol: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -629,6 +636,9 @@ pub struct VariantEnrichment {
     pub clinvar_annotations: Vec<ClinVarAnnotation>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub gwas_hits: Vec<GwasHit>,
+    /// Individual local GWAS Catalog records retained for condition/trait linking.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub gwas_associations: Vec<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dbsnp: Option<DbsnpAnnotation>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -703,10 +713,45 @@ pub struct GeneratedReport {
     /// Explicit catalog readiness notes (never silent when ClinVar/dbSNP expected but missing).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub catalog_warnings: Vec<String>,
+    /// Local, all-imported-variant ClinVar condition matches. Raw alleles are
+    /// evaluated in-process and are never serialized into this summary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub genomewide_clinvar: Option<GenomeWideClinVarDiscovery>,
     /// Source-file and coordinate provenance for the genotype database used
     /// to produce this report. This contains metadata, not raw genotype rows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub import_provenance: Option<crate::parser::ImportProvenance>,
+}
+
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct GenomeWideClinVarDiscovery {
+    pub local_index_ready: bool,
+    pub genotypes_scanned: u64,
+    pub exact_variant_count: u64,
+    pub association_count: u64,
+    pub omitted_association_count: u64,
+    pub allele_orientation: String,
+    pub source_asset_ids: Vec<String>,
+    pub associations: Vec<GenomeWideClinVarAssociation>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct GenomeWideClinVarAssociation {
+    pub association_is: String,
+    pub association_scope: String,
+    pub condition: String,
+    pub rsid: String,
+    pub gene_symbol: Option<String>,
+    pub variation_id: String,
+    pub scv_accession: String,
+    pub clinical_significance: String,
+    pub variant_summary_clinical_significance: String,
+    pub review_status: String,
+    pub last_evaluated: Option<String>,
+    pub allele_match: String,
+    pub origin_status: String,
+    pub variant_summary_conflict: bool,
+    pub source_url: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -954,6 +999,25 @@ fn catalog_table_available(conn: &Connection, schema: &str, table: &str) -> bool
     conn.query_row(&sql, [table], |_| Ok(true)).is_ok()
 }
 
+fn table_column_available(
+    conn: &Connection,
+    schema: Option<&str>,
+    table: &str,
+    column: &str,
+) -> bool {
+    let pragma = match schema {
+        Some(schema) => format!("PRAGMA {schema}.table_info({table})"),
+        None => format!("PRAGMA table_info({table})"),
+    };
+    conn.prepare(&pragma)
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| row.get::<_, String>(1))
+                .map(|rows| rows.flatten().any(|name| name.eq_ignore_ascii_case(column)))
+        })
+        .unwrap_or(false)
+}
+
 fn non_empty_option(value: Option<String>) -> Option<String> {
     value.filter(|text| !text.trim().is_empty())
 }
@@ -997,8 +1061,18 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
     // catalog_warnings field already explains that state, so do not emit a
     // duplicate stderr warning for an expected missing table.
     if catalog_table_available(conn, "clinvar", "clinvar_reference") {
+        let rcv_accession = if table_column_available(
+            conn,
+            Some("clinvar"),
+            "clinvar_reference",
+            "rcv_accession",
+        ) {
+            "rcv_accession"
+        } else {
+            "'' AS rcv_accession"
+        };
         let sql_clinvar = format!(
-            "SELECT rsid, allele_id, variation_id, name, gene_symbol,
+            "SELECT rsid, allele_id, variation_id, {rcv_accession}, name, gene_symbol,
                     clinical_significance, clin_sig_simple, phenotype_ids,
                     phenotype_list, conditions, review_status, assembly,
                     chromosome, start, stop, last_evaluated, number_submitters,
@@ -1014,26 +1088,27 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
                 Ok((
                     row.get::<_, String>(0)?,
                     ClinVarAnnotation {
-                        clinical_significance: row.get::<_, String>(5)?,
+                        clinical_significance: row.get::<_, String>(6)?,
                         conditions: first_non_empty(
-                            row.get::<_, Option<String>>(8)?,
                             row.get::<_, Option<String>>(9)?,
+                            row.get::<_, Option<String>>(10)?,
                         ),
-                        review_status: non_empty_option(row.get(10)?),
+                        review_status: non_empty_option(row.get(11)?),
                         rsid: non_empty_option(row.get(0)?),
                         allele_id: non_empty_option(row.get(1)?),
                         variation_id: non_empty_option(row.get(2)?),
-                        gene_symbol: non_empty_option(row.get(4)?),
-                        name: non_empty_option(row.get(3)?),
-                        phenotype_ids: non_empty_option(row.get(7)?),
-                        assembly: non_empty_option(row.get(11)?),
-                        chromosome: non_empty_option(row.get(12)?),
-                        start: row.get(13)?,
-                        stop: row.get(14)?,
-                        last_evaluated: non_empty_option(row.get(15)?),
-                        number_submitters: row.get(16)?,
-                        reference_allele: non_empty_option(row.get(17)?),
-                        alternate_allele: non_empty_option(row.get(18)?),
+                        rcv_accession: non_empty_option(row.get(3)?),
+                        gene_symbol: non_empty_option(row.get(5)?),
+                        name: non_empty_option(row.get(4)?),
+                        phenotype_ids: non_empty_option(row.get(8)?),
+                        assembly: non_empty_option(row.get(12)?),
+                        chromosome: non_empty_option(row.get(13)?),
+                        start: row.get(14)?,
+                        stop: row.get(15)?,
+                        last_evaluated: non_empty_option(row.get(16)?),
+                        number_submitters: row.get(17)?,
+                        reference_allele: non_empty_option(row.get(18)?),
+                        alternate_allele: non_empty_option(row.get(19)?),
                     },
                 ))
             })
@@ -1045,8 +1120,13 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
     }
 
     // Query GWAS Catalog
+    let associations_json = if table_column_available(conn, None, "gwas_reference", "associations_json") {
+        "associations_json"
+    } else {
+        "'[]' AS associations_json"
+    };
     let sql_gwas = format!(
-        "SELECT rsid, top_trait, best_pvalue, association_count 
+        "SELECT rsid, top_trait, best_pvalue, association_count, {associations_json}
          FROM gwas_reference WHERE rsid IN ({})",
         placeholders
     );
@@ -1058,6 +1138,7 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
                 row.get::<_, Option<String>>(1)?,
                 row.get::<_, Option<f64>>(2)?,
                 row.get::<_, Option<i64>>(3)?,
+                row.get::<_, Option<String>>(4)?,
             ))
         }) {
             for r in rows.flatten() {
@@ -1088,6 +1169,21 @@ fn fetch_local_enrichment(conn: &Connection, rsids: &[String]) -> HashMap<String
             entry.gwas_top_trait = g_row.1.clone();
             entry.gwas_best_pvalue = g_row.2;
             entry.gwas_association_count = g_row.3;
+            entry.gwas_associations = g_row
+                .4
+                .as_deref()
+                .and_then(|json| serde_json::from_str::<Vec<serde_json::Value>>(json).ok())
+                .unwrap_or_default()
+                .into_iter()
+                .map(|mut association| {
+                    if let Some(fields) = association.as_object_mut() {
+                        fields.entry("association_is").or_insert_with(|| {
+                            serde_json::json!("variant_trait_statistical_association")
+                        });
+                    }
+                    association
+                })
+                .collect();
             has_data = true;
         }
 
@@ -1161,8 +1257,46 @@ fn build_enriched_sources(
         });
     }
 
-    // GWAS
-    if let Some(ref trait_name) = enr.gwas_top_trait
+    // GWAS: retain per-study provenance when available, with a legacy fallback.
+    if !enr.gwas_associations.is_empty() {
+        for association in &enr.gwas_associations {
+            // Internal discovery seeds share this table but carry a placeholder
+            // p-value; they are not published GWAS evidence for report sources.
+            if association["source"].as_str() == Some("discovery_catalog_fallback") {
+                continue;
+            }
+            let trait_name = association["trait_name"]
+                .as_str()
+                .or_else(|| association["trait"]["trait"].as_str())
+                .filter(|value| !value.trim().is_empty());
+            let Some(trait_name) = trait_name else { continue };
+            let pval_str = association["pvalue"]
+                .as_f64()
+                .map(|value| format!("{value:.2e}"))
+                .unwrap_or_else(|| "not recorded".to_string());
+            let accession = association["study_accession"].as_str();
+            let mapped_gene = association["mapped_gene"].as_str();
+            let effect_allele = association["effect_allele"].as_str();
+            let mut details = Vec::new();
+            if let Some(accession) = accession {
+                details.push(format!("Study {accession}"));
+            }
+            if let Some(gene) = mapped_gene {
+                details.push(format!("mapped gene {gene}"));
+            }
+            if let Some(allele) = effect_allele {
+                details.push(format!("reported effect allele {allele}"));
+            }
+            sources.push(EnrichedSource {
+                source_type: "GWAS".to_string(),
+                citation: format!("GWAS Catalog: {trait_name} (p={pval_str})"),
+                details: (!details.is_empty()).then(|| details.join(" · ")),
+                url: Some(accession
+                    .map(|accession| format!("https://www.ebi.ac.uk/gwas/studies/{accession}"))
+                    .unwrap_or_else(|| format!("https://www.ebi.ac.uk/gwas/variants/{rsid}"))),
+            });
+        }
+    } else if let Some(ref trait_name) = enr.gwas_top_trait
         && enr.gwas_best_pvalue.is_some_and(|p| p < 1e-5)
     {
         let pval_str = enr
@@ -1453,6 +1587,7 @@ fn build_clinvar_annotation(enr: &LocalEnrichment) -> Option<ClinVarAnnotation> 
                 rsid: None,
                 allele_id: None,
                 variation_id: None,
+                rcv_accession: None,
                 gene_symbol: None,
                 name: None,
                 phenotype_ids: None,
@@ -1675,6 +1810,274 @@ fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String,
         }
     }
     map
+}
+
+const MAX_GENOMEWIDE_CLINVAR_ASSOCIATIONS: usize = 500;
+
+fn clinvar_submission_kind(classification: &str) -> Option<&'static str> {
+    let value = classification.trim().to_ascii_lowercase();
+    if value.is_empty()
+        || value.contains("conflict")
+        || value.contains("uncertain")
+        || value.contains("benign")
+        || value.contains("not pathogenic")
+    {
+        return None;
+    }
+    if value.contains("pathogenic") {
+        Some("variant_condition_summary")
+    } else if value.contains("risk allele") || value.contains("risk factor") {
+        Some("variant_risk_factor_summary")
+    } else {
+        None
+    }
+}
+
+fn orient_dna_base(value: &str, reverse_strand: bool) -> Option<char> {
+    let normalized = value.trim().to_ascii_uppercase();
+    let mut bases = normalized.chars();
+    let base = bases.next()?;
+    if bases.next().is_some() || !matches!(base, 'A' | 'C' | 'G' | 'T') {
+        return None;
+    }
+    if !reverse_strand {
+        return Some(base);
+    }
+    match base {
+        'A' => Some('T'),
+        'C' => Some('G'),
+        'G' => Some('C'),
+        'T' => Some('A'),
+        _ => None,
+    }
+}
+
+fn review_status_has_criteria(value: &str) -> bool {
+    let status = value.to_ascii_lowercase();
+    !status.trim().is_empty()
+        && !status.contains("no assertion criteria")
+        && !status.contains("no classification provided")
+}
+
+fn clinvar_field_is_present(value: &str) -> bool {
+    let value = value.trim();
+    !value.is_empty()
+        && !matches!(
+            value.to_ascii_lowercase().as_str(),
+            "-" | "na" | "n/a" | "not provided" | "not specified"
+        )
+}
+
+fn review_status_rank(value: &str) -> u8 {
+    let status = value.to_ascii_lowercase();
+    if status.contains("practice guideline") {
+        5
+    } else if status.contains("expert panel") {
+        4
+    } else if status.contains("multiple submitters") && !status.contains("conflict") {
+        3
+    } else if status.contains("single submitter") {
+        2
+    } else {
+        1
+    }
+}
+
+/// Cross-match every imported genotype against locally indexed, condition-specific
+/// ClinVar submissions. Exact allele matches are evaluated in-process; genotype
+/// bases are not included in the report payload.
+fn fetch_genomewide_clinvar_discovery(
+    conn: &Connection,
+    sample_id: i64,
+    provenance: Option<&crate::parser::ImportProvenance>,
+) -> Result<GenomeWideClinVarDiscovery, String> {
+    let genotypes_scanned = conn
+        .query_row(
+            "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
+            [sample_id],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0)
+        .max(0) as u64;
+    let orientation = provenance
+        .map(|item| item.diagnostics.allele_orientation.to_ascii_lowercase())
+        .unwrap_or_default();
+    let reverse_strand = orientation.contains("reverse") || orientation.contains("minus strand");
+    let forward_strand = orientation.contains("forward") || orientation.contains("plus strand");
+    let orientation_label = if reverse_strand {
+        "Reverse strand converted to reference orientation"
+    } else if forward_strand {
+        "Forward strand"
+    } else {
+        "Unverified; exact allele matching unavailable"
+    };
+
+    let mut discovery = GenomeWideClinVarDiscovery {
+        genotypes_scanned,
+        allele_orientation: orientation_label.to_string(),
+        ..GenomeWideClinVarDiscovery::default()
+    };
+    if !catalog_table_available(conn, "clinvar", "clinvar_reference")
+        || !catalog_table_available(conn, "clinvar_submissions", "clinvar_submissions")
+    {
+        return Ok(discovery);
+    }
+
+    discovery.local_index_ready = true;
+    discovery.source_asset_ids = vec![
+        "clinvar_variant_summary".to_string(),
+        "clinvar_submission_summary".to_string(),
+    ];
+    if !forward_strand && !reverse_strand {
+        return Ok(discovery);
+    }
+
+    let source_build = provenance
+        .map(|item| item.diagnostics.source_build.to_ascii_uppercase())
+        .unwrap_or_default();
+    let assembly = if source_build.contains("38") {
+        "GRCh38"
+    } else if source_build.contains("37") || source_build.contains("19") {
+        "GRCh37"
+    } else {
+        discovery.allele_orientation =
+            "Unverified assembly; exact ClinVar matching unavailable".to_string();
+        return Ok(discovery);
+    };
+
+    let mut statement = conn
+        .prepare(
+            "SELECT g.rsid, g.allele1, g.allele2,
+                    c.variation_id, c.gene_symbol, c.reference_allele_vcf,
+                    c.alternate_allele_vcf, c.clinical_significance,
+                    s.scv, s.clinical_significance, s.reported_phenotype_info,
+                    s.submitted_phenotype_info, s.review_status, s.date_last_evaluated,
+                    s.origin_counts, s.somatic_clinical_impact, s.oncogenicity
+             FROM genotypes AS g
+             JOIN clinvar.clinvar_reference AS c ON c.rsid = g.rsid
+             JOIN clinvar_submissions.clinvar_submissions AS s
+               ON s.variation_id = c.variation_id
+             WHERE g.sample_id = ?1 AND c.assembly = ?2
+             ORDER BY g.rsid, s.scv",
+        )
+        .map_err(|error| format!("Prepare local ClinVar full-genome scan: {error}"))?;
+    let mut rows = statement
+        .query(rusqlite::params![sample_id, assembly])
+        .map_err(|error| format!("Run local ClinVar full-genome scan: {error}"))?;
+    let mut seen = HashSet::new();
+    let mut matched_variants = HashSet::new();
+    let mut matches = Vec::new();
+
+    while let Some(row) = rows.next().map_err(|error| error.to_string())? {
+        let rsid: String = row.get(0).unwrap_or_default();
+        let allele1: String = row.get(1).unwrap_or_default();
+        let allele2: String = row.get(2).unwrap_or_default();
+        let variation_id: String = row.get(3).unwrap_or_default();
+        let gene: String = row.get(4).unwrap_or_default();
+        let reference: String = row.get(5).unwrap_or_default();
+        let alternate: String = row.get(6).unwrap_or_default();
+        let aggregate_classification: String = row.get(7).unwrap_or_default();
+        let scv: String = row.get(8).unwrap_or_default();
+        let clinical_significance: String = row.get(9).unwrap_or_default();
+        let reported_phenotype: String = row.get(10).unwrap_or_default();
+        let submitted_phenotype: String = row.get(11).unwrap_or_default();
+        let review_status: String = row.get(12).unwrap_or_default();
+        let last_evaluated: String = row.get(13).unwrap_or_default();
+        let origin_counts: String = row.get(14).unwrap_or_default();
+        let somatic_clinical_impact: String = row.get(15).unwrap_or_default();
+        let oncogenicity: String = row.get(16).unwrap_or_default();
+
+        let Some(association_is) = clinvar_submission_kind(&clinical_significance) else {
+            continue;
+        };
+        if !review_status_has_criteria(&review_status) {
+            continue;
+        }
+        if origin_counts.to_ascii_lowercase().contains("somatic")
+            || clinvar_field_is_present(&somatic_clinical_impact)
+            || clinvar_field_is_present(&oncogenicity)
+        {
+            continue;
+        }
+
+        // ClinVar's variant summary alleles are reference-oriented already; only
+        // the imported sample calls need conversion when the source is reverse-strand.
+        let Some(reference_base) = orient_dna_base(&reference, false) else {
+            continue;
+        };
+        let Some(alternate_base) = orient_dna_base(&alternate, false) else {
+            continue;
+        };
+        let Some(allele1) = orient_dna_base(&allele1, reverse_strand) else {
+            continue;
+        };
+        let Some(allele2) = orient_dna_base(&allele2, reverse_strand) else {
+            continue;
+        };
+        if allele1 != reference_base
+            && allele1 != alternate_base
+            || allele2 != reference_base && allele2 != alternate_base
+            || (allele1 != alternate_base && allele2 != alternate_base)
+        {
+            continue;
+        }
+
+        let condition = if clinvar_field_is_present(&submitted_phenotype) {
+            submitted_phenotype
+        } else {
+            reported_phenotype
+        };
+        if !clinvar_field_is_present(&condition) || variation_id.is_empty() || scv.is_empty() {
+            continue;
+        }
+        let unique_key = format!("{rsid}|{variation_id}|{scv}|{condition}");
+        if !seen.insert(unique_key) {
+            continue;
+        }
+        matched_variants.insert(rsid.clone());
+        discovery.association_count += 1;
+        matches.push(GenomeWideClinVarAssociation {
+            association_is: association_is.to_string(),
+            association_scope: "variant".to_string(),
+            condition: condition.trim().to_string(),
+            rsid: rsid.clone(),
+            gene_symbol: (!gene.trim().is_empty()).then_some(gene),
+            variation_id: variation_id.clone(),
+            scv_accession: scv.clone(),
+            clinical_significance,
+            variant_summary_clinical_significance: aggregate_classification.clone(),
+            review_status,
+            last_evaluated: (!last_evaluated.trim().is_empty()).then_some(last_evaluated),
+            allele_match: "matched".to_string(),
+            origin_status: if origin_counts.to_ascii_lowercase().contains("germline") {
+                "Germline observation reported".to_string()
+            } else {
+                "Origin not specified".to_string()
+            },
+            variant_summary_conflict: aggregate_classification
+                .to_ascii_lowercase()
+                .contains("conflict"),
+            source_url: format!(
+                "https://www.ncbi.nlm.nih.gov/clinvar/?term={scv}"
+            ),
+        });
+    }
+
+    matches.sort_by(|left, right| {
+        review_status_rank(&right.review_status)
+            .cmp(&review_status_rank(&left.review_status))
+            .then_with(|| left.condition.cmp(&right.condition))
+            .then_with(|| left.rsid.cmp(&right.rsid))
+            .then_with(|| left.scv_accession.cmp(&right.scv_accession))
+    });
+    discovery.exact_variant_count = matched_variants.len() as u64;
+    discovery.omitted_association_count = matches
+        .len()
+        .saturating_sub(MAX_GENOMEWIDE_CLINVAR_ASSOCIATIONS)
+        as u64;
+    matches.truncate(MAX_GENOMEWIDE_CLINVAR_ASSOCIATIONS);
+    discovery.associations = matches;
+    Ok(discovery)
 }
 
 /// Evaluates a template against a user's database records.
@@ -2252,6 +2655,7 @@ pub fn generate_report(
                 gwas_top_trait: e.gwas_top_trait.clone(),
                 gwas_best_pvalue: e.gwas_best_pvalue,
                 gwas_association_count: e.gwas_association_count,
+                gwas_associations: e.gwas_associations.clone(),
                 population_af: dbsnp_data.get(&m.rsid).and_then(|d| d.af),
             });
 
@@ -2333,6 +2737,9 @@ pub fn generate_report(
                     .map(|e| e.clinvar_annotations.is_empty())
                     .unwrap_or(true)
                 || !gwas_hits.is_empty()
+                || enrichment_map
+                    .get(&rsid_lower)
+                    .is_some_and(|e| !e.gwas_associations.is_empty())
                 || dbsnp.is_some()
                 || population.is_some()
                 || !pharmgkb_annotations.is_empty()
@@ -2351,6 +2758,10 @@ pub fn generate_report(
                             .map(|e| e.clinvar_annotations.clone())
                             .unwrap_or_default(),
                         gwas_hits,
+                        gwas_associations: enrichment_map
+                            .get(&rsid_lower)
+                            .map(|e| e.gwas_associations.clone())
+                            .unwrap_or_default(),
                         dbsnp,
                         population,
                         pharmgkb,
@@ -2414,6 +2825,7 @@ pub fn generate_report(
                 },
                 "population_context": {
                     "sex_scope": m.sex_scope,
+                    "context_tags": m.context_tags,
                 },
                 "assay_requirement": callability_assay_requirement(m.variant_type.as_deref()),
                 "source_assertion": reference_ids.clone(),
@@ -2489,6 +2901,7 @@ pub fn generate_report(
                 raw_dna_limitation: m.raw_dna_limitation.clone(),
                 clinical_confirmation_required: m.clinical_confirmation_required,
                 sex_scope: m.sex_scope.clone(),
+                context_tags: m.context_tags.clone(),
                 interpretation_blocked_if_unverified: m.interpretation_blocked_if_unverified,
                 clinical_semantics: m.clinical_semantics.clone(),
                 sources,
@@ -2542,6 +2955,20 @@ pub fn generate_report(
     } else {
         0.0
     };
+    let genomewide_clinvar = match fetch_genomewide_clinvar_discovery(
+        conn,
+        sample_id,
+        import_provenance.as_ref(),
+    ) {
+        Ok(discovery) => Some(discovery),
+        Err(error) => {
+            eprintln!("Local full-genome ClinVar discovery was unavailable: {error}");
+            catalog_warnings.push(
+                "Local ClinVar condition discovery could not complete. The curated marker report is still available; check the local ClinVar indexes and re-sync if needed.".to_string(),
+            );
+            None
+        }
+    };
 
     Ok(GeneratedReport {
         schema_version: "2.0.0".to_string(),
@@ -2557,6 +2984,7 @@ pub fn generate_report(
         sections: evaluated_sections,
         references: reference_registry.references,
         catalog_warnings,
+        genomewide_clinvar,
         import_provenance,
     })
 }
@@ -2715,6 +3143,90 @@ mod tests {
     }
 
     #[test]
+    fn genomewide_clinvar_scan_keeps_condition_provenance_and_filters_somatic_rows() {
+        let conn = setup_test_db();
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", [])
+            .unwrap();
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar_submissions", [])
+            .unwrap();
+        conn.execute_batch(
+            "CREATE TABLE clinvar.clinvar_reference (
+                rsid TEXT, variation_id TEXT, gene_symbol TEXT,
+                reference_allele_vcf TEXT, alternate_allele_vcf TEXT,
+                clinical_significance TEXT, assembly TEXT
+            );
+            CREATE TABLE clinvar_submissions.clinvar_submissions (
+                scv TEXT, variation_id TEXT, clinical_significance TEXT,
+                reported_phenotype_info TEXT, submitted_phenotype_info TEXT,
+                review_status TEXT, date_last_evaluated TEXT, origin_counts TEXT,
+                somatic_clinical_impact TEXT, oncogenicity TEXT
+            );
+            INSERT INTO genotypes
+                (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+            VALUES (1, 'rsClinvarTest', '1', 101, 201, 'A', 'G'),
+                   (1, 'rsSomaticTest', '1', 102, 202, 'T', 'C');
+            INSERT INTO clinvar.clinvar_reference VALUES
+                ('rsClinvarTest', '1001', 'TEST1', 'A', 'G', 'Pathogenic', 'GRCh37'),
+                ('rsSomaticTest', '1002', 'TEST2', 'T', 'C', 'Pathogenic', 'GRCh37');
+            INSERT INTO clinvar_submissions VALUES
+                ('SCV000000001.1', '1001', 'Pathogenic', 'MedGen:C1 (Synthetic condition)', 'Synthetic condition', 'criteria provided, multiple submitters, no conflicts', '2026-01-01', 'germline:2', 'NA', '-'),
+                ('SCV000000002.1', '1002', 'Pathogenic', 'Synthetic cancer', 'Synthetic cancer', 'criteria provided, single submitter', '2026-01-01', 'somatic:1', 'Tier I', 'Oncogenic');",
+        )
+        .unwrap();
+
+        let provenance = crate::parser::ImportProvenance::new(
+            "synthetic-import".into(),
+            "synthetic.txt".into(),
+            "synthetic-sha".into(),
+            crate::parser::ParseDiagnostics {
+                format: "23andMe".into(),
+                vendor: "synthetic".into(),
+                delimiter: "tab".into(),
+                source_build: "GRCh37".into(),
+                coordinate_system: "1-based-inclusive".into(),
+                allele_orientation: "forward-strand (synthetic test)".into(),
+                total_rows: 2,
+                accepted_rows: 2,
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        );
+
+        let discovery = fetch_genomewide_clinvar_discovery(&conn, 1, Some(&provenance)).unwrap();
+        assert!(discovery.local_index_ready);
+        assert_eq!(discovery.genotypes_scanned, 2);
+        assert_eq!(discovery.exact_variant_count, 1);
+        assert_eq!(discovery.association_count, 1);
+        assert_eq!(discovery.associations[0].condition, "Synthetic condition");
+        assert_eq!(discovery.associations[0].origin_status, "Germline observation reported");
+        let serialized = serde_json::to_string(&discovery).unwrap();
+        assert!(!serialized.contains("A/G"));
+        assert!(!serialized.contains("allele1"));
+        assert!(!serialized.contains("rsSomaticTest"));
+
+        conn.execute(
+            "UPDATE genotypes SET allele1 = 'T', allele2 = 'C' WHERE rsid = 'rsClinvarTest'",
+            [],
+        )
+        .unwrap();
+        let mut reverse_provenance = provenance.clone();
+        reverse_provenance.diagnostics.allele_orientation =
+            "reverse-strand (synthetic test)".into();
+        let reverse_discovery =
+            fetch_genomewide_clinvar_discovery(&conn, 1, Some(&reverse_provenance)).unwrap();
+        assert_eq!(reverse_discovery.exact_variant_count, 1);
+        assert!(reverse_discovery.allele_orientation.starts_with("Reverse strand"));
+
+        let mut unknown_provenance = provenance;
+        unknown_provenance.diagnostics.allele_orientation = "Unknown".into();
+        let unknown_discovery =
+            fetch_genomewide_clinvar_discovery(&conn, 1, Some(&unknown_provenance)).unwrap();
+        assert_eq!(unknown_discovery.exact_variant_count, 0);
+        assert!(unknown_discovery.allele_orientation.starts_with("Unverified"));
+    }
+
+    #[test]
     fn missing_optional_catalog_table_is_detected_without_querying_it() {
         let conn = setup_test_db();
         assert!(!catalog_table_available(
@@ -2740,6 +3252,50 @@ mod tests {
             "clinvar",
             "clinvar_reference"
         ));
+    }
+
+    #[test]
+    fn catalog_enrichment_supports_older_schemas_without_new_association_columns() {
+        let conn = setup_test_db();
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", [])
+            .unwrap();
+        conn.execute(
+            "CREATE TABLE clinvar.clinvar_reference (
+                rsid TEXT, allele_id TEXT, variation_id TEXT, name TEXT, gene_symbol TEXT,
+                clinical_significance TEXT, clin_sig_simple TEXT, phenotype_ids TEXT,
+                phenotype_list TEXT, conditions TEXT, review_status TEXT, assembly TEXT,
+                chromosome TEXT, start INTEGER, stop INTEGER, last_evaluated TEXT,
+                number_submitters INTEGER, reference_allele_vcf TEXT, alternate_allele_vcf TEXT
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO clinvar.clinvar_reference
+             (rsid, variation_id, name, gene_symbol, clinical_significance, conditions)
+             VALUES ('rs321', '54321', 'Older row', 'GENE2', 'Pathogenic', 'Synthetic condition')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "CREATE TABLE gwas_reference (
+                rsid TEXT PRIMARY KEY, top_trait TEXT, best_pvalue REAL, association_count INTEGER
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO gwas_reference (rsid, top_trait, best_pvalue, association_count)
+             VALUES ('rs321', 'Older GWAS trait', 1e-8, 1)",
+            [],
+        )
+        .unwrap();
+
+        let local = fetch_local_enrichment(&conn, &["rs321".to_string()]);
+        assert_eq!(local["rs321"].clinvar_annotations.len(), 1);
+        assert_eq!(local["rs321"].clinvar_annotations[0].rcv_accession, None);
+        assert_eq!(local["rs321"].gwas_top_trait.as_deref(), Some("Older GWAS trait"));
+        assert!(local["rs321"].gwas_associations.is_empty());
     }
 
     #[test]
@@ -2819,6 +3375,7 @@ mod tests {
                 rsid TEXT,
                 allele_id TEXT,
                 variation_id TEXT,
+                rcv_accession TEXT,
                 name TEXT,
                 gene_symbol TEXT,
                 clinical_significance TEXT,
@@ -2841,11 +3398,32 @@ mod tests {
         .unwrap();
         conn.execute(
             "INSERT INTO clinvar.clinvar_reference
-             (rsid, allele_id, variation_id, name, gene_symbol, clinical_significance,
+             (rsid, allele_id, variation_id, rcv_accession, name, gene_symbol, clinical_significance,
               conditions, review_status, assembly, chromosome, start, stop)
              VALUES
-                ('rs123', '1', '101', 'Variant A', 'GENE1', 'Pathogenic', 'Condition A', 'reviewed', 'GRCh38', '1', 10, 10),
-                ('rs123', '2', '102', 'Variant B', 'GENE1', 'Benign', 'Condition B', 'criteria provided', 'GRCh38', '1', 11, 11)",
+                ('rs123', '1', '101', 'RCV000000001', 'Variant A', 'GENE1', 'Pathogenic', 'Condition A', 'reviewed', 'GRCh38', '1', 10, 10),
+                ('rs123', '2', '102', 'RCV000000002', 'Variant B', 'GENE1', 'Benign', 'Condition B', 'criteria provided', 'GRCh38', '1', 11, 11)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "CREATE TABLE gwas_reference (
+                rsid TEXT PRIMARY KEY,
+                top_trait TEXT,
+                best_pvalue REAL,
+                association_count INTEGER,
+                associations_json TEXT
+            )",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO gwas_reference
+             (rsid, top_trait, best_pvalue, association_count, associations_json)
+             VALUES ('rs123', 'Synthetic trait', 1e-9, 2,
+               '[{\"trait_name\":\"Synthetic trait\",\"pvalue\":1e-9,\"study_accession\":\"GCST000001\"},
+                 {\"trait_name\":\"Second synthetic trait\",\"pvalue\":2e-8,\"study_accession\":\"GCST000002\"},
+                 {\"trait_name\":\"Internal routing seed\",\"pvalue\":1e-10,\"source\":\"discovery_catalog_fallback\"}]')",
             [],
         )
         .unwrap();
@@ -2863,7 +3441,30 @@ mod tests {
         let local = fetch_local_enrichment(&conn, &["rs123".to_string()]);
         assert_eq!(local["rs123"].clinvar_annotations.len(), 2);
         assert_eq!(local["rs123"].clinvar_annotations[0].variation_id.as_deref(), Some("101"));
+        assert_eq!(local["rs123"].clinvar_annotations[0].rcv_accession.as_deref(), Some("RCV000000001"));
         assert_eq!(local["rs123"].clinvar_annotations[1].clinical_significance, "Benign");
+        assert_eq!(local["rs123"].gwas_associations.len(), 3);
+        assert_eq!(
+            local["rs123"].gwas_associations[0]["association_is"],
+            "variant_trait_statistical_association"
+        );
+        assert_eq!(
+            local["rs123"].gwas_associations[1]["study_accession"],
+            "GCST000002"
+        );
+        let sources = build_enriched_sources("rs123", &local["rs123"], None);
+        assert!(sources.iter().any(|source| {
+            source.source_type == "GWAS"
+                && source.citation.contains("Second synthetic trait")
+                && source.details.as_deref().is_some_and(|details| details.contains("GCST000002"))
+        }));
+        assert!(sources.iter().any(|source| {
+            source.source_type == "GWAS"
+                && source.url.as_deref() == Some("https://www.ebi.ac.uk/gwas/studies/GCST000001")
+        }));
+        assert!(!sources.iter().any(|source| {
+            source.citation.contains("Internal routing seed")
+        }));
     }
 
     #[test]
@@ -2900,6 +3501,7 @@ mod tests {
             raw_dna_limitation: None,
             clinical_confirmation_required: Some(true),
             sex_scope: None,
+            context_tags: None,
             sources: None,
             variant_type: Some("snp".to_string()),
             expected_plus_alleles: Some(vec!["A".to_string(), "C".to_string()]),
@@ -3058,6 +3660,7 @@ mod tests {
                     raw_dna_limitation: None,
                     clinical_confirmation_required: None,
                     sex_scope: None,
+                    context_tags: None,
                     sources: None,
                     variant_type: Some("snp".to_string()),
                     expected_plus_alleles: Some(vec!["A".to_string(), "G".to_string()]),
@@ -3128,6 +3731,7 @@ mod tests {
                         raw_dna_limitation: None,
                         clinical_confirmation_required: Some(true),
                         sex_scope: None,
+                        context_tags: None,
                         sources: None,
                         variant_type: Some("rare_variant".to_string()),
                         expected_plus_alleles: Some(vec!["A".to_string(), "G".to_string()]),
@@ -3237,6 +3841,7 @@ mod tests {
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
             sex_scope: None,
+            context_tags: None,
             sources: Some(vec![MarkerSource {
                 name: "Generated report test source".to_string(),
                 url: Some("https://example.test/report-source".to_string()),
@@ -3270,6 +3875,7 @@ mod tests {
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
             sex_scope: None,
+            context_tags: None,
             sources: None,
             variant_type: None,
             expected_plus_alleles: None,
@@ -3296,6 +3902,7 @@ mod tests {
             raw_dna_limitation: None,
             clinical_confirmation_required: None,
             sex_scope: None,
+            context_tags: None,
             sources: None,
             variant_type: None,
             expected_plus_alleles: None,

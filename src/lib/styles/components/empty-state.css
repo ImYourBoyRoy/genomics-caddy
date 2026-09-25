@@ -6,11 +6,13 @@
   justify-content: center;
   align-items: center;
   text-align: center;
+  width: min(100%, 45rem);
   min-height: 70vh;
   max-width: 720px;
   margin: 0 auto;
   gap: 16px;
   padding: 24px 12px;
+  box-sizing: border-box;
 }
 
 .welcome-logo {
@@ -164,5 +166,17 @@
     justify-content: flex-start;
     min-height: auto;
     padding-bottom: 1rem;
+  }
+}
+
+/* At high display scaling a 1920x1080 monitor can expose only about
+   1280x720 CSS pixels. Do not vertically center a welcome stack that is
+   taller than that viewport: centering would move its first pixels above the
+   scroll origin and make the logo look cut off. */
+@media (max-height: 800px) {
+  .welcome-screen {
+    justify-content: flex-start;
+    min-height: auto;
+    padding-top: clamp(1rem, 3vh, 1.5rem);
   }
 }

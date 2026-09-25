@@ -268,6 +268,7 @@ pub(crate) fn canonical_gwas_association(
     source: &str,
 ) -> serde_json::Value {
     serde_json::json!({
+        "association_is": "variant_trait_statistical_association",
         "trait_name": trait_name,
         "trait": { "trait": trait_name },
         "pvalue": pvalue,

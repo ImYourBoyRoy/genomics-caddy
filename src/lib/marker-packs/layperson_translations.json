@@ -1,7 +1,7 @@
 {
   "name": "Plain-English Marker Translations",
-  "version": "1.8.0",
-  "last_updated": "2026-08-30",
+  "version": "1.9.0",
+  "last_updated": "2026-09-24",
   "type": "layperson_translation_resource",
   "purpose": "Provide short, plain-English impact and meaning text for curated marker IDs without changing evidence strength or claim boundaries.",
   "do_not_claim": [
@@ -1465,6 +1465,56 @@
       "signal": "This VEZT locus is a research association reported for endometriosis-related traits.",
       "whyItMatters": "It does not diagnose or exclude endometriosis, adenomyosis, or any individual's pelvic symptoms.",
       "reviewAction": "Compare this signal with relevant symptoms, measurements, and health history.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "rsid": "rs4785384",
+      "simpleImpact": "HEATR3-region fibroid GWAS association",
+      "simpleMeaning": "Researchers found a small group-level association between this marker and uterine fibroids. It is not a personal risk estimate and cannot confirm or rule out fibroids, explain recurrence, or predict IUD response.",
+      "plainTitle": "fibroid research association near HEATR3",
+      "signal": "This marker was associated with fibroid odds in a population study.",
+      "whyItMatters": "The study result does not show whether a person has fibroids or explain what will happen for them.",
+      "reviewAction": "Use clinical history and clinician-directed imaging—not this marker—to evaluate fibroids or discuss an IUD.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "rsid": "rs1812264",
+      "simpleImpact": "9p24.3 fibroid GWAS association",
+      "simpleMeaning": "Researchers found a small group-level association between this marker and uterine fibroids. It is not a personal protective effect or risk estimate and cannot confirm or rule out fibroids, explain recurrence, or predict IUD response.",
+      "plainTitle": "fibroid research association at 9p24.3",
+      "signal": "This marker was associated with fibroid odds in a population study.",
+      "whyItMatters": "The study result does not show whether a person has fibroids or explain what will happen for them.",
+      "reviewAction": "Use clinical history and clinician-directed imaging—not this marker—to evaluate fibroids or discuss an IUD.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "rsid": "rs7907606",
+      "simpleImpact": "OBFC1-region fibroid GWAS association",
+      "simpleMeaning": "Researchers found a small group-level association between this marker and uterine fibroids. It is not a personal protective effect or risk estimate and cannot confirm or rule out fibroids, explain recurrence, or predict IUD response.",
+      "plainTitle": "fibroid research association near OBFC1",
+      "signal": "This marker was associated with fibroid odds in a population study.",
+      "whyItMatters": "The study result does not show whether a person has fibroids or explain what will happen for them.",
+      "reviewAction": "Use clinical history and clinician-directed imaging—not this marker—to evaluate fibroids or discuss an IUD.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "rsid": "rs7124615",
+      "simpleImpact": "SCGB1C1/BET1L-region fibroid GWAS association",
+      "simpleMeaning": "Researchers found a small group-level association between this marker and uterine fibroids. It is not a personal protective effect or risk estimate and cannot confirm or rule out fibroids, explain recurrence, or predict IUD response.",
+      "plainTitle": "fibroid research association near SCGB1C1/BET1L",
+      "signal": "This marker was associated with fibroid odds in a population study.",
+      "whyItMatters": "The study result does not show whether a person has fibroids or explain what will happen for them.",
+      "reviewAction": "Use clinical history and clinician-directed imaging—not this marker—to evaluate fibroids or discuss an IUD.",
+      "evidenceLabel": "Research context"
+    },
+    {
+      "rsid": "rs10835889",
+      "simpleImpact": "WT1-region fibroid GWAS association",
+      "simpleMeaning": "Researchers found a small group-level association between this marker and uterine fibroids. It is not a personal risk estimate or proof that WT1 is causal; it cannot confirm or rule out fibroids, explain recurrence, or predict IUD response.",
+      "plainTitle": "fibroid research association near WT1",
+      "signal": "This marker was associated with fibroid odds in a population study.",
+      "whyItMatters": "The study result does not show whether a person has fibroids or explain what will happen for them.",
+      "reviewAction": "Use clinical history and clinician-directed imaging—not this marker—to evaluate fibroids or discuss an IUD.",
       "evidenceLabel": "Research context"
     },
     {

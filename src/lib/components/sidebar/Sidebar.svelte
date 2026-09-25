@@ -30,6 +30,7 @@ import { onMount, onDestroy } from 'svelte';
   import ProgressTrack from './ProgressTrack.svelte';
   import LibraryPanel from './LibraryPanel.svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
+  import { appUpdateState } from '../../utils/appUpdateState';
   import { formatTransferEta, updateDownloadProgress, type DownloadProgressSample } from '../../utils/offlineDownloadProgress';
   import '$lib/styles/components/sidebar.css';
   import '$lib/styles/components/library-panel.css';
@@ -76,6 +77,7 @@ import { onMount, onDestroy } from 'svelte';
     onBrowseFile: () => void;
     onImportGenome: (e: Event) => void;
     onSelectSample: (sample: GenomeSample) => void;
+    onOpenChromosomeContext: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
     onOpenConnections?: () => void;
     onResourcesUpdated?: () => void | Promise<void>;
@@ -106,6 +108,7 @@ import { onMount, onDestroy } from 'svelte';
     onBrowseFile,
     onImportGenome,
     onSelectSample,
+    onOpenChromosomeContext,
     onDeleteSample,
     onOpenConnections,
     onResourcesUpdated,
@@ -958,6 +961,7 @@ import { onMount, onDestroy } from 'svelte';
         ? 'Profile actions pause while a research sweep is running.'
         : 'The desktop runtime is unavailable.'}
       {onSelectSample}
+      {onOpenChromosomeContext}
       {onDeleteSample}
     />
 
@@ -1544,6 +1548,9 @@ import { onMount, onDestroy } from 'svelte';
   <div class="sidebar-footer no-print" role="toolbar" aria-label="Library and appearance">
     <LibraryPanel />
     <ThemeToggle />
+    <div class="sidebar-footer-meta" aria-label="Application version">
+      <span class="sidebar-app-version">{$appUpdateState.currentVersion || 'Preview build'}</span>
+    </div>
   </div>
 
 </aside>

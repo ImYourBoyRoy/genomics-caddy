@@ -1040,6 +1040,62 @@
       "evidence_type": "Local support-engine policy",
       "conflict_of_interest": "Project safety contract; not an external clinical source",
       "notes": "Used for stop, avoid, escalation, interaction, and uncertainty language that must remain visible even when the genetic signal is weak or incomplete."
+    },
+    "acog_uterine_fibroids": {
+      "name": "ACOG: Uterine Fibroids",
+      "url": "https://www.acog.org/womens-health/faqs/uterine-fibroids",
+      "accessed": "2026-09-24",
+      "evidence_type": "Professional patient guidance",
+      "conflict_of_interest": "American College of Obstetricians and Gynecologists patient guidance; review current clinical advice when using clinically",
+      "notes": "Use for fibroid definitions, symptom-focused treatment choices, recurrence after myomectomy, and the distinction between reducing bleeding and treating the fibroid itself."
+    },
+    "nice_fibroids_heavy_bleeding": {
+      "name": "NICE NG88: Heavy Menstrual Bleeding Assessment and Management",
+      "url": "https://www.nice.org.uk/guidance/ng88/chapter/Recommendations",
+      "accessed": "2026-09-24",
+      "evidence_type": "National clinical guideline",
+      "conflict_of_interest": "UK National Institute for Health and Care Excellence guideline; review current recommendations when using clinically",
+      "notes": "Use for fibroid size, location, cavity-distortion, imaging, and treatment-discussion prompts. It does not turn a consumer DNA result into a fibroid or treatment decision."
+    },
+    "nci_hlrcc_fh_uterine_leiomyomas": {
+      "name": "NCI: Hereditary Leiomyomatosis and Renal Cell Cancer (HLRCC)",
+      "url": "https://www.cancer.gov/publications/pdq/information-summaries/genetics/hlrcc-syndrome-hp-pdq",
+      "accessed": "2026-09-24",
+      "evidence_type": "National Cancer Institute genetics summary",
+      "conflict_of_interest": "U.S. National Cancer Institute clinical genetics information resource",
+      "notes": "Use for the rare FH/HLRCC clinical-genetics route when fibroid history is accompanied by relevant skin, renal, pathology, age-of-onset, or family-history clues; most uterine leiomyomas are sporadic."
+    },
+    "uterine_leiomyoma_genetics_gwas_and_somatic": {
+      "name": "Uterine leiomyoma susceptibility loci and somatic driver study",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6203434/",
+      "accessed": "2026-09-24",
+      "evidence_type": "Peer-reviewed GWAS and tumor-genetics research",
+      "conflict_of_interest": "Research publication; review cohort, ancestry, and assay limitations when using clinically",
+      "notes": "Use to distinguish small-effect inherited susceptibility loci from tissue-specific somatic fibroid drivers. This is research context, not a validated consumer-array risk or treatment test."
+    },
+    "uterine_fibroid_transethnic_gwas_2019": {
+      "name": "A Trans-Ethnic Genome-Wide Association Study of Uterine Fibroids",
+      "url": "https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00511/full",
+      "accessed": "2026-09-24",
+      "evidence_type": "Peer-reviewed trans-ethnic GWAS meta-analysis",
+      "conflict_of_interest": "Research publication; findings are study-level associations, not individual predictions",
+      "notes": "Table 2 reports sentinel SNPs from 13 African- and European-ancestry study strata. Use selected allele odds ratios only as cohort estimates; ancestry portability and consumer-array applicability are uncertain."
+    },
+    "uterine_fibroid_multiancestry_gwas_2025": {
+      "name": "Genome-wide meta-analysis identifies novel risk loci for uterine fibroids within and across multiple ancestry groups",
+      "url": "https://www.nature.com/articles/s41467-025-57483-5",
+      "accessed": "2026-09-24",
+      "evidence_type": "Peer-reviewed multi-ancestry GWAS meta-analysis",
+      "conflict_of_interest": "Research publication; association findings are not a consumer diagnostic or treatment test",
+      "notes": "A larger, more recent association study expands inherited-susceptibility research but does not validate a five-SNP personal risk score or treatment response."
+    },
+    "uterine_fibroid_multiancestry_prs_2024": {
+      "name": "Constructing a multi-ancestry polygenic risk score for uterine fibroids using publicly available data highlights need for inclusive genetic research",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11731894/",
+      "accessed": "2026-09-24",
+      "evidence_type": "Peer-reviewed polygenic score research",
+      "conflict_of_interest": "Research publication; not a clinical validation or endorsement of a consumer test",
+      "notes": "Shows multi-variant fibroid scores are an active research area with model-performance and portability constraints; not a basis for individual diagnosis, recurrence, or treatment decisions."
     }
   }
 }

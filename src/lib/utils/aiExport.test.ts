@@ -58,7 +58,7 @@ describe('clinical handoff export', () => {
     expect(markdown).toContain('missing entries are not symptom-free days');
   });
 
-  it('keeps the exported sex label concise when stored data uses a legacy description', () => {
+  it('keeps the exported chromosome-pattern label concise when stored data uses a legacy description', () => {
     const markdown = buildClinicalHandoffMarkdown(
       [],
       { name: 'Example', genetic_sex: 'Male-like (XY chromosome pattern)' } as never,
@@ -69,8 +69,8 @@ describe('clinical handoff export', () => {
       { sections: [] },
     );
 
-    expect(markdown).toContain('* **Sex:** Male');
-    expect(markdown).not.toContain('Male-like');
+    expect(markdown).toContain('* **Chromosome pattern:** Male-like');
+    expect(markdown).not.toContain('* **Sex:**');
   });
 
   it('always includes raw genotype calls in the legacy clinician handoff path', () => {

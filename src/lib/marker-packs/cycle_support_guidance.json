@@ -1,7 +1,7 @@
 {
   "name": "Menopause, Menstrual Cycle, Hormone and Pelvic-Symptom Support Guidance",
-  "version": "1.17.0",
-  "last_updated": "2026-09-21",
+  "version": "1.18.0",
+  "last_updated": "2026-09-24",
   "type": "support_engine",
   "purpose": "Provide cycle-, hormone-, androgen-, pelvic-, and fertility-context questions, local symptom tracking, low-risk support options, safety escalation, and clinical follow-up prompts when explicitly relevant. This is not a diagnostic or treatment engine.",
   "context_keywords": [
@@ -20,6 +20,12 @@
     "pmdd",
     "ovarian",
     "uterine",
+    "fibroid",
+    "fibroids",
+    "leiomyoma",
+    "leiomyomas",
+    "myoma",
+    "myomectomy",
     "contracept",
     "estrogen",
     "progesterone",
@@ -48,6 +54,7 @@
         "ovarian_reproductive",
         "uterine_pelvic",
         "suspected_adenomyosis",
+        "uterine_fibroid",
         "androgen_reproductive",
         "menopause_hormone_therapy",
         "hormone_therapy_context",
@@ -103,6 +110,7 @@
         "ovarian_reproductive",
         "uterine_pelvic",
         "suspected_adenomyosis",
+        "uterine_fibroid",
         "androgen_reproductive",
         "menopause_hormone_therapy",
         "hormone_therapy_context",
@@ -114,6 +122,7 @@
       "next_step": "Read the pack's evidence tier, callability status, and limitation for each finding, then pair the result with the person's observed pattern and clinically appropriate evaluation.",
       "do_not_claim": [
         "PMDD, PCOS, endometriosis, adenomyosis, infertility, or a psychiatric diagnosis from a common SNP",
+        "fibroid diagnosis, recurrence, subtype, or treatment response from consumer DNA",
         "A positive or negative research association as an individual risk percentage",
         "A missing or uncalled marker as evidence that a condition is absent"
       ],
@@ -305,6 +314,21 @@
         "field_ids": [
           "clinical_questions_or_findings"
         ]
+      },
+      {
+        "id": "fibroid_workup",
+        "title": "Fibroid history, imaging, and treatment goals",
+        "description": "Record self-reported fibroid history and clinician-provided findings so the care discussion stays anchored to symptoms, anatomy, prior procedures, and goals. DNA is a research-context prompt only and cannot diagnose a fibroid or choose an IUD.",
+        "context_ids": [
+          "uterine_fibroid"
+        ],
+        "field_ids": [
+          "fibroid_history_and_prior_treatment",
+          "fibroid_imaging_findings",
+          "fibroid_symptom_pattern",
+          "fibroid_treatment_goal",
+          "fibroid_pathology_family_history"
+        ]
       }
     ],
     "fields": [
@@ -491,11 +515,46 @@
         "help": "Keep uncertainty visible. The tool should compare this statement with the exact label, not treat it as established fact."
       },
       {
+        "id": "fibroid_history_and_prior_treatment",
+        "label": "Fibroid history and prior treatment",
+        "input_type": "textarea",
+        "placeholder": "e.g. prior fibroids, myomectomy or other procedure, when symptoms returned, and what the clinician has said",
+        "help": "Use the person's or clinician's words. Recurrence after a procedure is clinical history, not something a consumer DNA file can explain."
+      },
+      {
+        "id": "fibroid_imaging_findings",
+        "label": "Fibroid imaging findings",
+        "input_type": "textarea",
+        "placeholder": "e.g. ultrasound or MRI date; number, size, location, submucosal/intramural/subserosal description, and whether the uterine cavity is distorted",
+        "help": "Copy the report rather than guessing. Size, location, number, and cavity distortion can affect treatment discussions."
+      },
+      {
+        "id": "fibroid_symptom_pattern",
+        "label": "Fibroid-related symptoms and impact",
+        "input_type": "textarea",
+        "placeholder": "e.g. bleeding days, clots, pain, pressure, urinary or bowel symptoms, fatigue, dizziness, or pain with sex",
+        "help": "Record timing, severity, and effect on daily life; heavy bleeding may warrant clinician-directed CBC and ferritin review."
+      },
+      {
+        "id": "fibroid_treatment_goal",
+        "label": "Fibroid treatment goal",
+        "input_type": "textarea",
+        "placeholder": "e.g. reduce bleeding, pain or pressure relief, preserve fertility, contraception, avoid another procedure, or clarify options",
+        "help": "A goal is personal clinical context. The DNA report cannot select an IUD, medication, or procedure."
+      },
+      {
+        "id": "fibroid_pathology_family_history",
+        "label": "Pathology, skin, kidney, or family-history clues",
+        "input_type": "textarea",
+        "placeholder": "e.g. pathology wording, multiple painful skin leiomyomas, kidney cancer history, unusually early or severe fibroids, or relevant family history",
+        "help": "Use this only to prepare a clinical-genetics question. It does not diagnose HLRCC or another syndrome."
+      },
+      {
         "id": "clinical_questions_or_findings",
         "label": "Clinical questions or findings to discuss",
         "input_type": "textarea",
-        "placeholder": "e.g. heavy bleeding, suspected adenomyosis, CBC/ferritin, ultrasound, migraine assessment",
-        "help": "Use this to prepare for clinical care; a consumer DNA file cannot diagnose or exclude adenomyosis."
+        "placeholder": "e.g. heavy bleeding, fibroid size/location, cavity distortion, CBC/ferritin, ultrasound/MRI, suspected adenomyosis",
+        "help": "Use this to prepare for clinical care; a consumer DNA file cannot diagnose or exclude fibroids or adenomyosis."
       }
     ],
     "do_not_infer": [
@@ -503,6 +562,7 @@
       "Do not infer menopause stage, postpartum recovery, feeding status, infant exposure, or hormone level from DNA or from a symptom pattern.",
       "Do not infer that a product is contraceptive, estrogen-containing, or progestin-only without the exact label or prescribing record.",
       "Do not infer PMDD, adenomyosis, endometriosis, PCOS, infertility, or a psychiatric diagnosis from these fields or from a DNA marker.",
+      "Do not infer a fibroid diagnosis, recurrence cause, fibroid subtype, cavity distortion, IUD suitability, or treatment response from a DNA marker.",
       "Do not infer hypogonadism, prostate disease, testicular disease, fertility, or anatomy from a DNA marker or from a selected context.",
       "Do not infer personality, intent, relationship meaning, or a fixed character trait from cyclic withdrawal, avoidance, irritability, or a request for space."
     ]
@@ -520,6 +580,7 @@
       "ovarian_reproductive",
       "uterine_pelvic",
       "suspected_adenomyosis",
+      "uterine_fibroid",
       "menopause_hormone_therapy",
       "pregnancy_postpartum"
     ],
@@ -726,6 +787,18 @@
       "medication_rule_ids": []
     },
     {
+      "id": "uterine_fibroid",
+      "label": "Uterine fibroid / leiomyoma workup",
+      "description": "Use when a person reports known or suspected fibroids, prior myomectomy, recurrent symptoms, or a clinician discussion about an IUD or another fibroid treatment. Keep imaging, pathology, symptoms, and goals separate from DNA research context.",
+      "profile_keywords": ["fibroid", "fibroids", "leiomyoma", "leiomyomas", "myoma", "myomas", "myomectomy", "uterine fibroid", "uterine leiomyoma"],
+      "domain_ids": [
+        "fibroid_workup_context",
+        "heavy_bleeding_pelvic_pain",
+        "general_symptom_day_support"
+      ],
+      "medication_rule_ids": []
+    },
+    {
       "id": "suspected_adenomyosis",
       "label": "Suspected adenomyosis / heavy-bleeding workup",
       "description": "Use when the person reports a concern about adenomyosis or symptoms that warrant a uterine/pelvic workup. Consumer DNA cannot diagnose or exclude adenomyosis; route to symptom history, examination, and clinically indicated imaging.",
@@ -904,6 +977,15 @@
       "rs10859871",
       "rs184700"
     ],
+    "uterine_fibroid": [
+      "GUARDRAIL_UTERINE_FIBROIDS_NOT_CALLABLE_FROM_CONSUMER_SNP",
+      "PANEL_UTERINE_FIBROID_RESEARCH_GAP",
+      "rs4785384",
+      "rs1812264",
+      "rs7907606",
+      "rs7124615",
+      "rs10835889"
+    ],
     "suspected_adenomyosis": [
       "GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP",
       "PANEL_ADENOMYOSIS_RESEARCH_GAP",
@@ -961,6 +1043,9 @@
     },
     "menopause_hormone_therapy": {
       "cardiovascular": ["rs6025", "rs1799963"]
+    },
+    "uterine_fibroid": {
+      "cancer_confirmation_only": ["PANEL_FH_PATHOGENIC_VARIANTS"]
     }
   },
   "principles": [
@@ -969,6 +1054,7 @@
     "Hormonal contraception can change bleeding and hormone patterns. Identify the exact product and active ingredients before discussing cycle effects; progestin is not the same chemical as endogenous progesterone.",
     "Cyclic irritability, avoidance, anxiety, depression, pain, or bleeding are reasons to organize timing and clinical questions, not reasons to infer PMDD, adenomyosis, endometriosis, or a medication problem from DNA.",
     "Cycle-linked pelvic pain, headache, or migraine should be tracked against bleeding and other symptoms; timing can guide clinical questions, but DNA cannot diagnose dysmenorrhea, menstrual-related migraine, or the cause of pelvic pain.",
+    "Fibroids are structural uterine findings. A few specific common variants have study-level associations and may be reported individually as research context, but they are not a personal score; DNA cannot diagnose fibroids, explain recurrence, characterize the lesion, or choose an IUD.",
     "Food, supplement, sleep, and activity changes should be treated as small, reversible experiments based on the person's symptoms, diet, medications, allergies, labs, and goals; DNA does not establish a nutrient deficiency or a universal menstrual trigger.",
     "When symptoms are present, use sleep, regular meals, hydration, and activity scaled to symptoms as general supportive options; do not present them as genotype-specific treatment."
   ],
@@ -1192,6 +1278,53 @@
         "adenomyosis_2026_gwas",
         "clinical_confirmation_required",
         "lab_confirmation_required"
+      ]
+    },
+    {
+      "id": "fibroid_workup_context",
+      "relevant_pack_signals": [
+        "hormones_reproductive",
+        "cancer_confirmation_only"
+      ],
+      "title": "Uterine fibroid / leiomyoma workup",
+      "context": "Fibroids are structural uterine findings. The DNA layer can list five selected common GWAS associations as single-locus research context and preserve a separate rare FH/HLRCC clinical-genetics prompt. The five associations are not added into a risk score; consumer DNA cannot diagnose a fibroid, explain recurrence, characterize a lesion, or choose treatment.",
+      "questions": [
+        "What do the latest ultrasound or MRI report say about the number, size, location, type, growth, and whether the uterine cavity is distorted?",
+        "What is the main goal right now: reduce bleeding, relieve pain or pressure, preserve fertility, provide contraception, avoid another procedure, or clarify alternatives?",
+        "If an IUD is being discussed, what exact product is it, is the goal bleeding control or contraception or both, and has the clinician assessed whether the cavity is suitable?",
+        "Are there unusually early or severe fibroids, multiple painful skin leiomyomas, kidney cancer history, suggestive pathology, or a family history that should prompt clinical-genetics discussion?"
+      ],
+      "support_options": [
+        "Bring the imaging report, prior operative or pathology report, bleeding and pain timeline, medication list, and fertility goals to gynecology; the DNA result should remain a secondary research-context note.",
+        "Ask whether CBC and ferritin are appropriate when bleeding is heavy or prolonged, and discuss symptom changes or anemia concerns rather than treating an SNP as the cause.",
+        "A levonorgestrel-releasing IUD may reduce heavy bleeding for some people but does not remove fibroids; suitability depends on the cavity, fibroid anatomy, symptoms, goals, and clinician assessment. Do not use DNA to choose or reject it.",
+        "Ask about alternatives when fibroids are large, numerous, recurrent, or cavity-distorting; treatment choice depends on anatomy, symptoms, fertility goals, and the person's preferences."
+      ],
+      "confirm_with": [
+        "pelvic ultrasound or MRI when clinically indicated",
+        "gynecology review of fibroid size, location, number, and cavity distortion",
+        "CBC and ferritin when heavy bleeding or iron deficiency is a concern",
+        "prior pathology and operative reports when available",
+        "clinical genetics and validated germline testing when FH/HLRCC features or family history warrant it"
+      ],
+      "red_flags": [
+        "very heavy bleeding with dizziness, fainting, weakness, or shortness of breath",
+        "severe or sudden pelvic pain",
+        "postmenopausal bleeding or rapidly worsening symptoms"
+      ],
+      "sources": [
+        "acog_uterine_fibroids",
+        "nice_fibroids_heavy_bleeding",
+        "cdc_usmec_2024",
+        "nci_hlrcc_fh_uterine_leiomyomas",
+        "uterine_leiomyoma_genetics_gwas_and_somatic",
+        "uterine_fibroid_transethnic_gwas_2019",
+        "uterine_fibroid_multiancestry_gwas_2025",
+        "uterine_fibroid_multiancestry_prs_2024",
+        "clinical_confirmation_required",
+        "lab_confirmation_required",
+        "phenotype_required",
+        "user_declared_values_required"
       ]
     },
     {

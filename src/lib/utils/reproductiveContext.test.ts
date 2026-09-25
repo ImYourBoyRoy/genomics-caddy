@@ -9,8 +9,11 @@ import {
   reproductiveContextIdsForProfileText,
   reproductiveContextIdsForPersonalContext,
   reproductiveContextOptionIsSuggestedForGeneticSex,
+  hasSeenReproductiveContextPrompt,
+  markReproductiveContextPromptSeen,
   reproductiveMarkerContextIds,
   reproductiveMarkerContextRank,
+  reproductiveContextPromptSeenStorageKey,
   reproductiveSectionHasContext,
   selectedReproductiveContextOption,
 } from './reproductiveContext';
@@ -18,11 +21,14 @@ import {
 describe('reproductive marker context routing', () => {
   it('groups, but does not hide, context options for known chromosome patterns', () => {
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Female')).toBe(true);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('uterine_fibroid', 'Female-like (XX chromosome pattern; no Y calls observed)')).toBe(true);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Female')).toBe(false);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Male')).toBe(true);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Male')).toBe(false);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Male-like (XY chromosome pattern)')).toBe(false);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('androgen_reproductive', 'Female-like (XX chromosome pattern; no Y calls observed)')).toBe(false);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('uterine_fibroid', 'Inconclusive (mixed X/Y chromosome calls)')).toBe(true);
+    expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Inconclusive (mixed X/Y chromosome calls)')).toBe(true);
     expect(reproductiveContextOptionIsSuggestedForGeneticSex('menstrual_cycle', 'Unknown')).toBe(true);
   });
 
@@ -86,6 +92,36 @@ describe('reproductive marker context routing', () => {
     expect(selectedReproductiveContextOption('')).toBeUndefined();
     expect(reproductiveMarkerContextRank('rs2234693', '')).toBe(0);
     expect(reproductiveMarkerContextRank('future_marker', 'menstrual_cycle')).toBe(1);
+  });
+
+  it('keeps the inconclusive-context prompt state scoped to the profile', () => {
+    const firstSampleId = 901;
+    const secondSampleId = 902;
+    const values = new Map<string, string>();
+    const previousStorage = globalThis.localStorage;
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => values.set(key, value),
+        removeItem: (key: string) => values.delete(key),
+      },
+    });
+
+    try {
+      expect(reproductiveContextPromptSeenStorageKey(firstSampleId)).not.toBe(
+        reproductiveContextPromptSeenStorageKey(secondSampleId),
+      );
+      expect(hasSeenReproductiveContextPrompt(firstSampleId)).toBe(false);
+      markReproductiveContextPromptSeen(firstSampleId);
+      expect(hasSeenReproductiveContextPrompt(firstSampleId)).toBe(true);
+      expect(hasSeenReproductiveContextPrompt(secondSampleId)).toBe(false);
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        value: previousStorage,
+      });
+    }
   });
 
   it('uses resource-authored section keywords and marker contexts for prioritization', () => {
@@ -158,6 +194,41 @@ describe('reproductive marker context routing', () => {
     ]);
     expect(option?.medication_rule_ids).toContain('CONTRACEPTIVE_COMPOSITION_NOT_IN_DNA');
     expect(reproductiveMarkerContextRank('GUARDRAIL_MENSTRUAL_PHASE_HORMONE_DIRECTION', 'cycle_linked_pain_headache')).toBe(3);
+  });
+
+  it('routes fibroid workup to clinical context and separate research-only DNA associations', () => {
+    const option = selectedReproductiveContextOption('uterine_fibroid');
+    const fibroidStudyAlleles: Record<string, string[]> = {
+      rs4785384: ['T', 'C'],
+      rs1812264: ['T', 'G'],
+      rs7907606: ['T', 'G'],
+      rs7124615: ['T', 'C'],
+      rs10835889: ['A', 'G'],
+    };
+
+    expect(option?.domain_ids).toEqual([
+      'fibroid_workup_context',
+      'heavy_bleeding_pelvic_pain',
+      'general_symptom_day_support',
+    ]);
+    expect(reproductiveMarkerContextRank('GUARDRAIL_UTERINE_FIBROIDS_NOT_CALLABLE_FROM_CONSUMER_SNP', 'uterine_fibroid')).toBe(3);
+    expect(reproductiveMarkerContextRank('PANEL_UTERINE_FIBROID_RESEARCH_GAP', 'uterine_fibroid')).toBe(3);
+    expect(reproductiveMarkerContextRank('PANEL_FH_PATHOGENIC_VARIANTS', 'uterine_fibroid')).toBe(3);
+    for (const [rsid, studyAlleles] of Object.entries(fibroidStudyAlleles)) {
+      const marker = hormonesReproductive.markers.find((candidate) => candidate.rsid === rsid);
+      expect(marker?.evidence_tier).toBe('D_research_only');
+      expect(marker?.effect_direction).toBe('context_dependent');
+      expect(marker?.clinical_confirmation_required).toBe(false);
+      expect(marker?.expected_plus_alleles).toEqual(studyAlleles);
+      expect(marker?.effect_allele).toBe(studyAlleles[0]);
+      expect(marker?.source_build).toBe('GRCh37');
+      expect(marker?.allele_orientation_verified).toBe(true);
+      expect(marker?.interpretation_blocked_if_unverified).toBe(true);
+      expect(reproductiveMarkerContextRank(rsid, 'uterine_fibroid')).toBe(3);
+    }
+    expect(reproductiveMarkerContextRank('GUARDRAIL_ADENOMYOSIS_NOT_CALLABLE_FROM_CONSUMER_SNP', 'uterine_fibroid')).toBe(0);
+    expect(reproductiveMarkerContextRank('PANEL_ADENOMYOSIS_RESEARCH_GAP', 'uterine_fibroid')).toBe(0);
+    expect(reproductiveContextIdsForProfileText('recurrent fibroids after myomectomy')).toContain('uterine_fibroid');
   });
 
   it('selects resource-authored evidence layers for menstrual and adenomyosis questions', () => {

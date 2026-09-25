@@ -47,11 +47,21 @@ describe('plain-English claim framing', () => {
       .map((marker) => marker.rsid)
       .filter((rsid) => /^rs\d+$/i.test(rsid));
 
-    expect(hormoneRsids).toHaveLength(44);
+    expect(hormoneRsids).toHaveLength(49);
     for (const rsid of hormoneRsids) {
       expect(LAYPERSON_MAP[rsid]?.simpleMeaning, rsid).toBeTruthy();
     }
     expect(DEFAULT_LAYPERSON_TRANSLATION.simpleMeaning).toContain('probabilistic association');
+  });
+
+  it('explains fibroid GWAS loci as research associations, not personal predictions', () => {
+    for (const rsid of ['rs4785384', 'rs1812264', 'rs7907606', 'rs7124615', 'rs10835889']) {
+      const meaning = LAYPERSON_MAP[rsid]?.simpleMeaning || '';
+      expect(meaning, rsid).toContain('group-level association');
+      expect(meaning, rsid).toContain('not a personal');
+      expect(meaning, rsid).toContain('cannot confirm or rule out fibroids');
+      expect(meaning, rsid).toContain('predict IUD response');
+    }
   });
 
   it('covers high-value bone and digestive markers with dedicated boundaries', () => {

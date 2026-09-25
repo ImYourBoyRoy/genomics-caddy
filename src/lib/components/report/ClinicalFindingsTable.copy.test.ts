@@ -5,6 +5,15 @@ const source = readFileSync(new URL('./ClinicalFindingsTable.svelte', import.met
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
 
 describe('ClinicalFindingsTable copy', () => {
+  it('starts with a focused clinician table and lets users reveal the extra context columns', () => {
+    expect(source).toContain('showExtraColumns = false');
+    expect(source).toContain('{#if showExtraColumns}');
+    expect(source).toContain('<th scope="col">Interpretation</th>');
+    expect(source).toContain('<th scope="col">Applicability</th>');
+    expect(source).toContain('min-width: 760px;');
+    expect(source).toContain('font-size: 0.82rem;');
+  });
+
   it('keeps repeated next-step guidance concise', () => {
     expect(source).toContain("import { formatClinicalFollowUp } from '../../utils/clinicalPresentation';");
     expect(source).toContain('const followUp = formatClinicalFollowUp(marker.confirm_with);');

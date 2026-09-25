@@ -21,8 +21,11 @@ describe('signed update banner', () => {
     expect(styles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
   });
 
-  it('checks quietly on desktop launch and requires a confirm before download', () => {
-    expect(host).toContain('checkForAppUpdate({ quiet: true');
+  it('checks quietly on launch, exposes a manual check, and requires confirmation before download', () => {
+    expect(host).toContain('checkForAppUpdate({ quiet, previous: pendingUpdate })');
+    expect(host).toContain('getVersion()');
+    expect(host).toContain('checkNow: () => { void checkManually(); }');
+    expect(host).toContain('installAvailable: () => promptInstall()');
     expect(host).toContain('isTauri()');
     expect(host).toContain('dialogStore.confirm(');
     expect(host).toContain("installKind === 'portable' ? 'Replace this copy' : 'Install update'");

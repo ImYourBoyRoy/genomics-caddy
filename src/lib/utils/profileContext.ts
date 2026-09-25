@@ -18,6 +18,7 @@ import {
 } from './personalSafetyContext';
 import {
   loadReproductiveContext,
+  reproductiveContextPromptSeenStorageKey,
   reproductiveContextStorageKey,
   saveReproductiveContext,
 } from './reproductiveContext';
@@ -135,6 +136,7 @@ export function clearProfileScopedStorage(
   const exactKeys = new Set([
     storageKey(sampleId),
     reproductiveContextStorageKey(sampleId),
+    reproductiveContextPromptSeenStorageKey(sampleId),
     personalSafetyContextStorageKey(sampleId),
     `genomics_active_session_id_${sampleId}`,
     `genomics_presentation_mode_${sampleId}`,

@@ -11,14 +11,17 @@ export function normalizeUiLabel(value: string): string {
     .toLowerCase();
 }
 
-/** Keep legacy chromosome-call descriptions out of primary result surfaces. */
+/** Keep chromosome-call descriptions concise in primary result surfaces. */
 export function formatGeneticSexLabel(value: string | null | undefined): string {
   const label = value?.trim() ?? '';
   if (!label) return 'Unknown';
 
-  if (/^female\b/i.test(label)) return 'Female';
-  if (/^male\b/i.test(label)) return 'Male';
-  if (/^uncertain\b/i.test(label)) return 'Uncertain';
+  // These are deliberately chromosome-pattern labels. They are not a
+  // person's gender identity, anatomy, fertility, hormone state, or a
+  // diagnosis of mosaicism/chimerism.
+  if (/^female(?:-like)?\b/i.test(label)) return 'Female-like';
+  if (/^male(?:-like)?\b/i.test(label)) return 'Male-like';
+  if (/^(?:inconclusive|uncertain)\b/i.test(label)) return 'Inconclusive';
   if (/^unknown\b/i.test(label)) return 'Unknown';
   return 'Unknown';
 }

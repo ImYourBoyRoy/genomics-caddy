@@ -11,11 +11,13 @@ describe('UI label normalization', () => {
     expect(normalizeUiLabel('  Highest   Priority FIRST  ')).toBe('highest priority first');
   });
 
-  it('keeps primary sex results concise while preserving unknown states', () => {
-    expect(formatGeneticSexLabel('Female-like (XX chromosome pattern; no Y calls observed)')).toBe('Female');
-    expect(formatGeneticSexLabel('Male')).toBe('Male');
+  it('keeps chromosome-pattern results concise while preserving inconclusive states', () => {
+    expect(formatGeneticSexLabel('Female-like (XX chromosome pattern; no Y calls observed)')).toBe('Female-like');
+    expect(formatGeneticSexLabel('Female')).toBe('Female-like');
+    expect(formatGeneticSexLabel('Male')).toBe('Male-like');
     expect(formatGeneticSexLabel('Unknown (Y chromosome not observed)')).toBe('Unknown');
-    expect(formatGeneticSexLabel('Uncertain (limited Y chromosome calls)')).toBe('Uncertain');
+    expect(formatGeneticSexLabel('Uncertain (limited sex-chromosome calls)')).toBe('Inconclusive');
+    expect(formatGeneticSexLabel('Inconclusive (mixed X/Y chromosome calls)')).toBe('Inconclusive');
     expect(formatGeneticSexLabel('XX chromosome pattern; no Y calls observed')).toBe('Unknown');
   });
 });

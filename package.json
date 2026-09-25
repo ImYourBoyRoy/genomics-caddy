@@ -1,6 +1,6 @@
 {
   "name": "genomics-caddy",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Local-first desktop DNA explorer for AncestryDNA and 23andMe. Trait reports, pharmacogenomics, optional Ollama chat, and an MCP server.",
   "type": "module",
   "engines": {
@@ -86,7 +86,7 @@
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-opener": "2.5.5",
     "@tauri-apps/plugin-process": "2.3.1",
-    "@tauri-apps/plugin-updater": "2.11.0",
+    "@tauri-apps/plugin-updater": "2.12.0",
     "isomorphic-dompurify": "4.2.0"
   },
   "devDependencies": {

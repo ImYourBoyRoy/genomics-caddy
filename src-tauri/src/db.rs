@@ -1392,14 +1392,13 @@ fn normalize_sex_chromosome(raw: &str) -> String {
     }
 }
 
-/// Infer a chromosome-pattern label from X/Y call coverage.
+/// Infer a conservative chromosome-pattern label from X/Y call coverage.
 ///
-/// Y calls support a male chromosome pattern. When Y is absent, a
-/// sufficiently called and heterozygous X pattern supports a female
-/// chromosome pattern; missing Y coverage alone remains unknown. This is an
-/// applicability hint for
-/// biological/genomic context, not a statement about gender identity,
-/// anatomy, fertility, or hormone status.
+/// This deliberately does not attempt to diagnose sex-chromosome mosaicism,
+/// chimerism, aneuploidy, gender identity, anatomy, fertility, or hormone
+/// status. A consumer array can produce a useful routing hint, but a strong
+/// XX-like X pattern plus any called Y data is a conflict that needs to stay
+/// inconclusive rather than being collapsed into a binary label.
 fn infer_genetic_sex(records: &[SnpRecord]) -> String {
     let mut x_records = 0usize;
     let mut x_calls = 0usize;
@@ -1435,19 +1434,21 @@ fn classify_genetic_sex(
     y_records: usize,
     y_calls: usize,
 ) -> String {
-    if y_calls >= MIN_SEX_CHROMOSOME_CALLS {
-        "Male".to_string()
-    } else if y_calls < MIN_SEX_CHROMOSOME_CALLS
-        && x_records >= MIN_SEX_CHROMOSOME_CALLS
+    let xx_like = x_records >= MIN_SEX_CHROMOSOME_CALLS
         && x_calls >= MIN_SEX_CHROMOSOME_CALLS
         && x_heterozygous >= 2
-        && x_heterozygous.saturating_mul(10) >= x_calls
-    {
-        "Female".to_string()
+        && x_heterozygous.saturating_mul(10) >= x_calls;
+
+    if xx_like && y_calls > 0 {
+        "Inconclusive (mixed X/Y chromosome calls; not a mosaicism/chimerism diagnosis)".to_string()
+    } else if xx_like {
+        "Female-like (XX chromosome pattern; no Y calls observed)".to_string()
+    } else if y_calls >= MIN_SEX_CHROMOSOME_CALLS {
+        "Male-like (XY chromosome pattern; robust Y calls)".to_string()
     } else if y_records == 0 {
-        "Unknown (Y chromosome not observed)".to_string()
+        "Unknown (sex-chromosome coverage not observed)".to_string()
     } else {
-        "Uncertain (limited Y chromosome calls)".to_string()
+        "Uncertain (limited sex-chromosome calls)".to_string()
     }
 }
 
@@ -3024,14 +3025,17 @@ mod sex_context_tests {
     fn missing_y_data_stays_unknown() {
         assert_eq!(
             infer_genetic_sex(&[]),
-            "Unknown (Y chromosome not observed)"
+            "Unknown (sex-chromosome coverage not observed)"
         );
     }
 
     #[test]
     fn strong_y_coverage_is_xy_like_not_gender_identity() {
         let records = (0..20).map(|i| y_record(i, true)).collect::<Vec<_>>();
-        assert_eq!(infer_genetic_sex(&records), "Male");
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Male-like (XY chromosome pattern; robust Y calls)"
+        );
     }
 
     #[test]
@@ -3039,7 +3043,7 @@ mod sex_context_tests {
         let records = (0..5).map(|i| y_record(i, i == 0)).collect::<Vec<_>>();
         assert_eq!(
             infer_genetic_sex(&records),
-            "Uncertain (limited Y chromosome calls)"
+            "Uncertain (limited sex-chromosome calls)"
         );
     }
 
@@ -3054,11 +3058,14 @@ mod sex_context_tests {
                 allele2: "G".to_string(),
             })
             .collect::<Vec<_>>();
-        assert_eq!(infer_genetic_sex(&records), "Female");
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Female-like (XX chromosome pattern; no Y calls observed)"
+        );
     }
 
     #[test]
-    fn sparse_y_calls_with_strong_xx_coverage_stay_female() {
+    fn sparse_y_calls_with_strong_xx_coverage_stay_inconclusive() {
         let mut records = (0..40)
             .map(|i| SnpRecord {
                 rsid: format!("rsx{i}"),
@@ -3070,11 +3077,14 @@ mod sex_context_tests {
             .collect::<Vec<_>>();
         records.extend((0..5).map(|i| y_record(i, true)));
 
-        assert_eq!(infer_genetic_sex(&records), "Female");
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Inconclusive (mixed X/Y chromosome calls; not a mosaicism/chimerism diagnosis)"
+        );
     }
 
     #[test]
-    fn ancestry_zero_placeholders_do_not_count_as_y_calls() {
+    fn ancestry_zero_placeholders_do_not_hide_sparse_real_y_calls() {
         let mut records = (0..40)
             .map(|i| SnpRecord {
                 rsid: format!("rsx{i}"),
@@ -3093,7 +3103,10 @@ mod sex_context_tests {
         }));
         records.extend((0..9).map(|i| y_record(i, true)));
 
-        assert_eq!(infer_genetic_sex(&records), "Female");
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Inconclusive (mixed X/Y chromosome calls; not a mosaicism/chimerism diagnosis)"
+        );
     }
 
     #[test]
@@ -3112,7 +3125,10 @@ mod sex_context_tests {
             record.chromosome = "24".to_string();
         }
 
-        assert_eq!(infer_genetic_sex(&records), "Male");
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Inconclusive (mixed X/Y chromosome calls; not a mosaicism/chimerism diagnosis)"
+        );
     }
 
     #[test]
@@ -3128,7 +3144,26 @@ mod sex_context_tests {
             .collect::<Vec<_>>();
         assert_eq!(
             infer_genetic_sex(&records),
-            "Unknown (Y chromosome not observed)"
+            "Unknown (sex-chromosome coverage not observed)"
+        );
+    }
+
+    #[test]
+    fn strong_x_and_robust_y_conflict_stays_inconclusive() {
+        let mut records = (0..40)
+            .map(|i| SnpRecord {
+                rsid: format!("rsx{i}"),
+                chromosome: "X".to_string(),
+                position: i as u64 + 1,
+                allele1: if i % 4 == 0 { "A" } else { "G" }.to_string(),
+                allele2: "G".to_string(),
+            })
+            .collect::<Vec<_>>();
+        records.extend((0..20).map(|i| y_record(i, true)));
+
+        assert_eq!(
+            infer_genetic_sex(&records),
+            "Inconclusive (mixed X/Y chromosome calls; not a mosaicism/chimerism diagnosis)"
         );
     }
 }

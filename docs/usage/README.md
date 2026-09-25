@@ -20,11 +20,28 @@ does not invent a byte-based ETA for decompressed data.
 
 - Consumer-array DNA is probabilistic context, not a diagnosis.
 - Missing or uncalled markers stay **unknown**, not negative evidence.
-- Chromosome-call sex display (`Male` / `Female` / `Unknown` / `Uncertain`) is
-  a coverage hint. It is not gender, anatomy, fertility, pregnancy, or hormone
-  status.
+- Chromosome-pattern output (`Female-like`, `Male-like`, `Unknown`, `Uncertain`,
+  or `Inconclusive`) is a conservative consumer-array routing hint, not a
+  clinical karyotype. Mixed X/Y calls do not diagnose mosaicism or chimerism;
+  the display does not determine gender identity, anatomy, fertility,
+  pregnancy, or hormone status.
+- When the pattern is **Inconclusive**, the app may offer a one-time prompt to
+  open the optional reproductive/hormone Context settings. The chromosome
+  indicator in the profile header or Active profiles list can reopen that
+  explanation at any time.
+  Context is user-provided routing information; it never changes the DNA
+  result. No biological-sex answer is required.
 - Reproductive, cycle, contraceptive, menopause, postpartum, and pelvic-disease
   prompts require context you enter. DNA does not infer them.
+- Fibroid prompts are clinician-workup context, not a DNA risk score, diagnosis,
+  recurrence/growth prediction, or treatment selector. The app can organize
+  user-entered imaging, symptoms, prior treatment/pathology, and goals; common
+  inherited associations cannot establish whether a fibroid is present or
+  explain a particular person's recurrence. Five selected GWAS loci may be
+  reported separately as population research associations; they are not summed
+  into a personal score and do not predict IUD suitability or response. A small
+  number of specific hereditary syndromes require separate clinical genetics
+  evaluation.
 - Raw DNA never by itself changes medication, high-dose supplements, botanical
   products, or a permanent restrictive diet.
 
@@ -87,6 +104,15 @@ POTS and dysautonomia appear as clinical context, not a DNA score. Standing-
 related symptoms, positional heart rate/blood pressure, medication context, and
 other possible causes are matters for clinical evaluation; the app does not
 recommend salt loading, supplements, or medication changes from DNA.
+
+For fibroids, the clinician discussion prompts distinguish symptom control
+from treating the fibroid itself and include fibroid location and uterine-cavity
+distortion as details to review with the treating clinician. For example,
+ACOG describes a progestin-releasing IUD as an option for some people whose
+fibroids do not distort the uterine cavity; it may reduce bleeding but does not
+treat the fibroids themselves ([ACOG](https://www.acog.org/womens-health/faqs/uterine-fibroids),
+[NICE NG88](https://www.nice.org.uk/guidance/ng88/chapter/Recommendations)).
+This is general background, not an assessment of an individual's suitability.
 
 For a bounded local report, the GWAS Catalog index retains up to the 12
 strongest study records per rsID (ordered by reported p-value); the linked

@@ -394,7 +394,7 @@ describe('report bundle export', () => {
       profile: {
         sample_id: 42,
         sample_name: 'Bundle Test Profile',
-        chromosome_call_context: 'Male',
+        chromosome_call_context: 'Male-like',
       },
     });
     expect(aiJson.review_instructions).toEqual(expect.any(Array));

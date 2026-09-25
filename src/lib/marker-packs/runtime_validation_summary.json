@@ -13,7 +13,7 @@
     "allergy_atopy_mast_cell": 43,
     "digestive_gut_microbiome": 45,
     "muscle_performance_recovery": 47,
-    "hormones_reproductive": 62,
+    "hormones_reproductive": 69,
     "skin_hair_dermatology": 39,
     "bone_growth_mineral_density": 32,
     "kidney_fluid_electrolytes": 32,
@@ -24,7 +24,7 @@
     "longevity_aging_resilience": 35,
     "research_found": 0
   },
-  "discovery_records": 863,
+  "discovery_records": 865,
   "manifest_packs": 23,
   "duplicate_rsids_skipped_from_discovery_catalog": 269,
   "validation_errors": [],
@@ -86,13 +86,13 @@
     "new_support_files": [
       "cycle_support_guidance.json"
     ],
-    "domains_count": 15,
-    "context_options_count": 12,
+    "domains_count": 16,
+    "context_options_count": 13,
     "evidence_layers_count": 6,
-    "marker_context_pack_routes_count": 5,
+    "marker_context_pack_routes_count": 6,
     "review_metrics_count": 3,
     "cycle_day_comparison_min_observations": 2,
-    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, menopause-transition and postpartum-recovery body support, medication composition, inherited clotting/contraception review, hormone therapy, pregnancy/postpartum/lactation context, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis. Cross-pack marker routes connect selected hormone contexts to the cardiovascular thrombophilia markers without duplicating or reclassifying those markers."
+    "note": "Cycle support separates phase physiology, measured hormone timing, symptom timing, menopause-transition and postpartum-recovery body support, medication composition, inherited clotting/contraception review, hormone therapy, pregnancy/postpartum/lactation context, fibroid workup, symptom-day support, cycle-linked pain/headache context, cycle-linked nutrition/activity support, and gynecologic escalation from genetic interpretation. Explicit selections take precedence; otherwise populated resource-declared intake/diary context or explicitly supplied profile goals can activate only their resource-mapped domains; profile routing is a relevance hint and does not infer anatomy, identity, hormones, or diagnosis. Cross-pack marker routes connect selected hormone contexts to the cardiovascular thrombophilia markers and fibroid context to the confirmation-only FH route without duplicating or reclassifying those markers."
   },
   "pgx_diplotype_layer": {
     "added": true,

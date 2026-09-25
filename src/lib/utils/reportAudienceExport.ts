@@ -674,7 +674,7 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       options.audience === 'clinician' ? '# Clinician Handoff — Genomics Report' : '# AI Review — Genomics Report',
     '',
     `- Profile: ${clean(options.sample.name)}`,
-    `- Sex: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
+    `- Chromosome pattern: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
     `- Report generated: ${generatedAt}`,
     '- Data source: local consumer-array interpretation; not a clinical laboratory report',
     '',

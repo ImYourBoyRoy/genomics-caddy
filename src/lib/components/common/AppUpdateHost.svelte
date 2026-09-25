@@ -2,8 +2,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { isTauri } from '@tauri-apps/api/core';
+  import { getVersion } from '@tauri-apps/api/app';
   import type { Update as TauriUpdate } from '@tauri-apps/plugin-updater';
   import { dialogStore } from '../../utils/dialogState.svelte';
+  import { appUpdateState, type AppUpdateState } from '../../utils/appUpdateState';
   import {
     checkForAppUpdate,
     closeUpdateResource,
@@ -37,27 +39,71 @@
     pendingUpdate = update;
   }
 
+  function publishSharedState(patch: Partial<AppUpdateState>) {
+    appUpdateState.update((current) => ({ ...current, ...patch }));
+  }
+
   onMount(() => {
+    publishSharedState({
+      isDesktop: isTauri(),
+      checkNow: undefined,
+      installAvailable: undefined,
+    });
+    appUpdateState.update((current) => ({
+      ...current,
+      checkNow: () => { void checkManually(); },
+      installAvailable: () => promptInstall(),
+    }));
     void bootstrap();
     return () => {
       void closeUpdateResource(liveUpdate);
+      appUpdateState.update((current) => ({
+        ...current,
+        checkNow: null,
+        installAvailable: null,
+      }));
     };
   });
 
   async function bootstrap() {
     if (!isTauri()) return;
+    try {
+      publishSharedState({ currentVersion: formatVersionLabel(await getVersion()) });
+    } catch {
+      publishSharedState({ currentVersion: 'Version unavailable' });
+    }
     installKind = await resolveUpdateInstallKind();
     await checkQuietly();
   }
 
   async function checkQuietly() {
+    await runUpdateCheck(true);
+  }
+
+  async function checkManually() {
+    await runUpdateCheck(false);
+  }
+
+  async function runUpdateCheck(quiet: boolean) {
     if (!isTauri()) return;
     if (updateCheckState === 'checking' || updateCheckState === 'installing') return;
     updateCheckState = 'checking';
     updateProgress = 0;
-    const result = await checkForAppUpdate({ quiet: true, previous: pendingUpdate });
+    publishSharedState({ status: 'checking', message: '' });
+    const result = await checkForAppUpdate({ quiet, previous: pendingUpdate });
     setPending(result.update);
     updateCheckState = result.state;
+    const message = result.state === 'current'
+      ? 'You are using the latest signed app release.'
+      : result.state === 'available' && quiet
+        ? 'A signed app update is available to review.'
+        : result.message;
+    publishSharedState({
+      status: result.state,
+      availableVersion: result.update?.version ?? null,
+      message,
+      checkedAt: Date.now(),
+    });
     showBanner =
       result.state === 'available' && result.update
         ? shouldShowUpdateBanner(result.update.version)
@@ -69,6 +115,11 @@
     void closeUpdateResource(liveUpdate);
     setPending(undefined);
     showBanner = false;
+    publishSharedState({
+      status: 'idle',
+      availableVersion: null,
+      message: 'The update was deferred. You can check again whenever you are ready.',
+    });
   }
 
   function confirmCopy(version: string): string {
@@ -92,17 +143,26 @@
   async function runInstall(update: TauriUpdate) {
     updateCheckState = 'installing';
     updateProgress = 0;
+    publishSharedState({ status: 'installing', message: 'Preparing the signed update…' });
     try {
       const installResult = await installAppUpdate(update, {
         confirmed: true,
         kind: installKind,
         onProgress: (percent) => {
           updateProgress = percent;
+          publishSharedState({ status: 'installing', message: `Update download ${percent}% complete.` });
         },
       });
       setPending(undefined);
       showBanner = false;
       updateCheckState = 'current';
+      publishSharedState({
+        status: 'current',
+        availableVersion: null,
+        message: installResult.relaunched
+          ? 'The signed update was applied and the app is restarting.'
+          : 'The signed update is ready. Restart Genomics Caddy to use it.',
+      });
       if (!installResult.relaunched) {
         dialogStore.alert(
           installKind === 'portable'
@@ -116,6 +176,11 @@
       setPending(undefined);
       showBanner = false;
       const detail = error instanceof Error ? error.message : String(error);
+      publishSharedState({
+        status: 'error',
+        availableVersion: null,
+        message: detail ? `Could not apply the signed update. ${detail}` : 'Could not apply the signed update.',
+      });
       dialogStore.alert(
         detail ? `Could not apply the signed update. ${detail}` : 'Could not apply the signed update.',
         'Update failed',

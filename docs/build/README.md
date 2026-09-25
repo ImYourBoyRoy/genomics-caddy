@@ -41,7 +41,7 @@ genomes; other Windows accounts are left alone.
 ## GitHub tagged release
 
 Push a `v*` tag after `master` CI is green. The tag must match
-`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.4`).
+`package.json` / `src-tauri/tauri.conf.json` (for example `v0.2.5`).
 Actions runs the same Validate job as pull requests, then
 `tauri-apps/tauri-action@v1` drafts **signed** installers: Windows NSIS
 (`Install for me only` or `Install for everyone`), Ubuntu AppImage, and

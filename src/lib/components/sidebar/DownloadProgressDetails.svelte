@@ -72,7 +72,7 @@
     gap: 0.5rem;
     min-width: 0;
     color: var(--text-secondary);
-    font-size: 0.64rem;
+    font-size: 0.7rem;
     line-height: 1.35;
     font-variant-numeric: tabular-nums;
   }
@@ -98,7 +98,7 @@
     border-radius: 999px;
     color: var(--status-accent-text);
     background: var(--status-accent-bg);
-    font-size: 0.6rem;
+    font-size: 0.66rem;
     line-height: 1.3;
   }
 </style>

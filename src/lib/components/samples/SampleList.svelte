@@ -21,6 +21,7 @@
     disabled?: boolean;
     disabledReason?: string;
     onSelectSample: (sample: GenomeSample) => void;
+    onOpenChromosomeContext: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
   }
 
@@ -30,12 +31,13 @@
     disabled = false,
     disabledReason = 'Profile actions are temporarily unavailable.',
     onSelectSample,
+    onOpenChromosomeContext,
     onDeleteSample
   }: Props = $props();
 
   function sexSymbol(value: string): string {
     const label = formatGeneticSexLabel(value);
-    return label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•';
+    return label === 'Female-like' ? '♀' : label === 'Male-like' ? '♂' : '•';
   }
 
   function sexSymbolLabel(value: string): string {
@@ -58,16 +60,21 @@
           <div class="sample-name-wrap">
             <button
               type="button"
+              class="sample-sex-indicator"
+              disabled={disabled}
+              aria-label={`Open chromosome context for ${s.name}: ${sexSymbolLabel(s.genetic_sex)}`}
+              title={disabled ? disabledReason : `Review chromosome pattern for ${s.name}`}
+              onclick={() => onOpenChromosomeContext(s)}
+            >
+              <span class="sample-sex-symbol" aria-hidden="true">{sexSymbol(s.genetic_sex)}</span>
+            </button>
+            <button
+              type="button"
               class="sample-name"
               disabled={disabled}
               aria-current={selectedSample?.id === s.id ? 'true' : undefined}
               onclick={() => onSelectSample(s)}
             >
-              <span
-                class="sample-sex-symbol"
-                role="img"
-                aria-label={sexSymbolLabel(s.genetic_sex)}
-              >{sexSymbol(s.genetic_sex)}</span>
               <span class="sample-name-text">{s.name}</span>
             </button>
           </div>

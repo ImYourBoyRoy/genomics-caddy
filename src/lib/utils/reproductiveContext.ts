@@ -35,6 +35,7 @@ const FEMALE_ASSOCIATED_CONTEXTS = new Set([
   'cyclic_mood_symptoms',
   'ovarian_reproductive',
   'uterine_pelvic',
+  'uterine_fibroid',
   'suspected_adenomyosis',
   'menopause_hormone_therapy',
   'pregnancy_postpartum',
@@ -54,15 +55,39 @@ export function reproductiveContextOptionIsSuggestedForGeneticSex(
 ): boolean {
   const normalizedSex = formatGeneticSexLabel(geneticSex).toLowerCase();
   const normalizedContext = String(contextId || '').trim().toLowerCase();
-  if (normalizedSex === 'male') return !FEMALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
-  if (normalizedSex === 'female') return !MALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
+  if (normalizedSex === 'male-like') return !FEMALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
+  if (normalizedSex === 'female-like') return !MALE_ASSOCIATED_CONTEXTS.has(normalizedContext);
   return true;
 }
 
 export const REPRODUCTIVE_CONTEXT_STORAGE_PREFIX = 'genomics_reproductive_context:';
+export const REPRODUCTIVE_CONTEXT_PROMPT_SEEN_PREFIX = 'genomics_reproductive_context_prompt_seen:';
 
 export function reproductiveContextStorageKey(sampleId?: number | null): string {
   return `${REPRODUCTIVE_CONTEXT_STORAGE_PREFIX}${sampleId ?? 'unknown'}`;
+}
+
+/** Presentation state for the one-time inconclusive chromosome-context prompt. */
+export function reproductiveContextPromptSeenStorageKey(sampleId?: number | null): string {
+  return `${REPRODUCTIVE_CONTEXT_PROMPT_SEEN_PREFIX}${sampleId ?? 'unknown'}`;
+}
+
+export function hasSeenReproductiveContextPrompt(sampleId?: number | null): boolean {
+  if (sampleId == null || typeof localStorage === 'undefined') return false;
+  try {
+    return localStorage.getItem(reproductiveContextPromptSeenStorageKey(sampleId)) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function markReproductiveContextPromptSeen(sampleId?: number | null): void {
+  if (sampleId == null || typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(reproductiveContextPromptSeenStorageKey(sampleId), 'true');
+  } catch {
+    // Prompt state is best-effort presentation state; context remains usable.
+  }
 }
 
 export function selectedReproductiveContextOption(

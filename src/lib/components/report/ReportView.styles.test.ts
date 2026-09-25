@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('./ReportView.svelte', import.meta.url), 'utf8');
 const dashboardSource = readFileSync(new URL('./DashboardSummaryPanel.svelte', import.meta.url), 'utf8');
+const helpSource = readFileSync(new URL('../common/HelpCenter.svelte', import.meta.url), 'utf8');
+const pageSource = readFileSync(new URL('../../../routes/+page.svelte', import.meta.url), 'utf8');
 const theme = readFileSync(new URL('../../styles/theme.css', import.meta.url), 'utf8');
-const interactiveTheme = theme.split('@media print')[0];
-const modalSurfaceStyles = source.match(/\.help-backdrop[\s\S]*?\.help-body/)?.[0] ?? '';
 const catalogWarningStyles = theme.match(/\.catalog-warnings-banner \{[\s\S]*?\n\}/)?.[0] ?? '';
 
 describe('ReportView Help Guide surface', () => {
@@ -38,15 +38,23 @@ describe('ReportView Help Guide surface', () => {
     expect(source).not.toContain('medical-grade clinical lab test');
   });
 
-  it('uses semantic backdrop and shadow tokens', () => {
-    expect(modalSurfaceStyles).toContain('var(--modal-backdrop-bg)');
-    expect(modalSurfaceStyles).toContain('var(--shadow-modal)');
-    expect(modalSurfaceStyles).not.toMatch(/(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\()/i);
+  it('provides a top-level Help hub before and after a profile is selected', () => {
+    expect(pageSource).toContain('{ id: "help", label: "Help" }');
+    expect(pageSource).toContain('onOpenHelp={() => activeTab = "help"}');
+    expect(pageSource).toContain('onOpenHelp={() => selectTab("help")}');
+    expect(helpSource).toContain('Getting started');
+    expect(helpSource).toContain('Understanding a finding');
+    expect(helpSource).toContain('Reference catalogs &amp; updates');
+    expect(helpSource).toContain('Privacy &amp; using results safely');
   });
 
-  it('defines modal tokens for dark, light, and system-light themes', () => {
-    expect(interactiveTheme.match(/--modal-backdrop-bg:/g)?.length).toBe(3);
-    expect(interactiveTheme.match(/--shadow-modal:/g)?.length).toBe(3);
+  it('keeps app releases distinct from reference-catalog updates and includes requested about links', () => {
+    expect(helpSource).toContain('Check for app updates');
+    expect(helpSource).toContain('Manage those separately under <strong>Data &amp; updates</strong>');
+    expect(helpSource).toContain('https://imyourboyroy.com');
+    expect(helpSource).toContain('https://github.com/imyourboyroy');
+    expect(helpSource).toContain('https://venmo.com/itsyourboyroy');
+    expect(helpSource).toContain('rel="noopener noreferrer"');
   });
 
   it('keeps catalog warnings readable across themes', () => {
@@ -79,6 +87,14 @@ describe('ReportView Help Guide surface', () => {
     expect(source).toContain('Show benign &amp; uncalled');
     expect(source).toContain('aria-label="Show benign and uncalled markers"');
     expect(source).not.toContain('>\n        Undetected\n');
+  });
+
+  it('surfaces quick concern filters and report search outside the advanced disclosure', () => {
+    expect(source).toContain('Find a gene, marker, or condition');
+    expect(source).toContain('Higher concern');
+    expect(source).toContain('Review first');
+    expect(source).toContain('showClinicalExtraColumns={showClinicalExtraColumns}');
+    expect(source).toContain('Clear filters');
   });
 
   it('expands a health-area target before scrolling to its findings', () => {

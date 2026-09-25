@@ -100,33 +100,40 @@ app after it starts.
 
 ## First launch
 
-1. Start Genomics Caddy.
-2. Left sidebar → **Data & updates** → **Sync All Missing**. Wait until ClinVar,
-   dbSNP, GWAS, PharmGKB, and companions show as downloaded **and indexed**.
+1. Start Genomics Caddy. Import your `.txt`, `.csv`, `.tsv`, or ZIP from the
+   left sidebar, review the pre-write summary, then confirm. Once local profile
+   indexing is complete, use **Raw Browser** and local genome views while
+   reference catalogs download.
+2. Left sidebar → **Data & updates** → **Sync All Missing** to install the
+   public catalogs used for database-backed annotations and full-genome
+   discovery. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions show as
+   downloaded **and indexed** before relying on those catalog-backed results.
    The two current ClinVar summary downloads total about 846 MB compressed; the
    local SQLite indexes need additional disk space. The downloader uses the
    server-reported size and measured transfer rate, and only resumes when the
    saved file and remote byte range still match.
 3. Typical AncestryDNA / 23andMe files are GRCh37. **Liftover assembly** →
    **Download chain** so coordinates can map to GRCh38.
-4. Import your `.txt`, `.csv`, `.tsv`, or ZIP from the sidebar. Read the
-   pre-write review, then confirm. Parsing alone does not write a profile.
-5. Read **Simple** mode first. Use **Clinical** or **Compare** for sources and
+4. Read **Simple** mode first. Use **Clinical** or **Compare** for sources and
    technical detail.
-6. Fill **Context** / **Diary** yourself if you want food, gut, cycle, menopause,
+5. Fill **Context** / **Diary** yourself if you want food, gut, cycle, menopause,
    postpartum, supplement, or medication prompts. DNA does not infer those.
    Report cards use compact, authored context badges when a finding is
    biologically or life-stage relevant; extra badges stay behind `+N more`.
 
-If every finding looks empty or “unknown,” catalogs are usually still indexing.
-Stay on **Data & updates** until that finishes, then reopen the profile.
+Catalog-backed annotations and full-genome discovery remain incomplete until
+their required indexes finish. A missing database result is not evidence that
+there is no association. The curated marker-pack report and local DNA browsing
+are separate from the status of those public catalogs.
 
 The desktop shell adapts to the available WebView viewport, including high-DPI
 display scaling. Longer startup, import, and welcome surfaces remain
 reachable through their scroll regions instead of being clipped.
 
-Signed builds offer in-app updates. Confirm before download. The updater does
-not upload DNA.
+Use **Help** in the top navigation for plain-language guidance, the installed
+app version, and a manual signed-update check. Confirm before installing; app
+updates and reference-catalog updates are separate. The updater does not upload
+DNA.
 
 ## Where genomes live
 
@@ -158,7 +165,17 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   does not score a consumer-DNA POTS risk model or recommend treatment.
 - Keeps food, gut, supplement, medication, menopause, and postpartum prompts
   conditional on context *you* enter
+- Uses conservative chromosome-pattern labels only as routing hints; mixed or
+  limited X/Y evidence stays inconclusive and does not diagnose mosaicism or
+  chimerism
+- Keeps fibroid prompts tied to clinical history, imaging, symptoms, and goals;
+  five selected common GWAS loci are shown only as separate research
+  associations—not a personal risk score—and cannot diagnose fibroids or
+  predict recurrence or IUD response
 - Prioritizes clinical follow-ups and expands deeper lists only when needed
+- Adds quick report search and concern filters, with a compact Clinical view
+  that reveals extra fields only when requested
+- Includes a top-level Help & app info hub with an app version/update check
 - Optional local [Ollama chat](docs/ai-chat/README.md)
 - Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`
 
@@ -186,4 +203,4 @@ use it commercially. See [LICENSE](LICENSE)
 
 ---
 
-Created by **Roy Dawson IV** · <Roy.Dawson.IV@gmail.com> · [GitHub](https://github.com/imyourboyroy) · [PyPI](https://pypi.org/user/ImYourBoyRoy/)
+Created by **Roy Dawson IV** · <Roy.Dawson.IV@gmail.com> · [Personal site](https://imyourboyroy.com) · [GitHub](https://github.com/imyourboyroy) · [PyPI](https://pypi.org/user/ImYourBoyRoy/) · [Support via Venmo](https://venmo.com/itsyourboyroy)

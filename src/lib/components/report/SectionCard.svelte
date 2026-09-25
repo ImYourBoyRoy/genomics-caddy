@@ -35,6 +35,7 @@
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     simpleRelatedMarkerCounts?: Record<string, number>;
+    showClinicalExtraColumns?: boolean;
     collapsed?: boolean;
     onCollapsedChange?: (collapsed: boolean) => void;
   }
@@ -46,6 +47,7 @@
     highlightRsid = "",
     onNavigateToVariant,
     simpleRelatedMarkerCounts = {},
+    showClinicalExtraColumns = false,
     collapsed = $bindable(),
     onCollapsedChange,
   }: Props = $props();
@@ -434,6 +436,7 @@
         {#if viewMode === 'clinical'}
           <ClinicalFindingsTable
             markers={section.markers}
+            showExtraColumns={showClinicalExtraColumns}
             {onExploreResearch}
             {highlightRsid}
             {onNavigateToVariant}

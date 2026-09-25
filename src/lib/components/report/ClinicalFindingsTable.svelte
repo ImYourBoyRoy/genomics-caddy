@@ -27,6 +27,7 @@
 
   interface Props {
     markers: EvaluatedMarker[];
+    showExtraColumns?: boolean;
     onExploreResearch?: (rsid: string) => void;
     highlightRsid?: string;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
@@ -34,6 +35,7 @@
 
   let {
     markers,
+    showExtraColumns = false,
     onExploreResearch,
     highlightRsid = '',
     onNavigateToVariant,
@@ -102,9 +104,11 @@
         <th scope="col">Finding</th>
         <th scope="col">DNA result</th>
         <th scope="col">Evidence</th>
-        <th scope="col">Interpretation</th>
-        <th scope="col">Inheritance</th>
-        <th scope="col">Applicability</th>
+        {#if showExtraColumns}
+          <th scope="col">Interpretation</th>
+          <th scope="col">Inheritance</th>
+          <th scope="col">Applicability</th>
+        {/if}
         <th scope="col">Clinical status</th>
         <th scope="col">Next helpful step</th>
         <th scope="col"><span class="sr-only">Details</span></th>
@@ -140,25 +144,27 @@
             <strong>{tier.label}</strong>
             <span class="clinical-cell-note">{tier.confidenceLabel}</span>
           </td>
-          <td data-label="Interpretation">
-            <span class="clinical-mobile-label">Interpretation</span>
-            {interpretationClassLabel(semantics.interpretation_class)}
-            {#if semantics.condition_label}
-              <span class="clinical-cell-note">{semantics.condition_label}</span>
-            {/if}
-          </td>
-          <td data-label="Inheritance">
-            <span class="clinical-mobile-label">Inheritance</span>
-            {inheritanceModelLabel(semantics.inheritance_model)}
-          </td>
-          <td data-label="Applicability">
-            <span class="clinical-mobile-label">Applicability</span>
-            {#if (marker.context_tags && marker.context_tags.length > 0) || (marker.sex_scope && marker.sex_scope !== 'all')}
-              <ContextSummary contextTags={marker.context_tags} scope={marker.sex_scope} maxVisible={2} />
-            {:else}
-              All users unless context says otherwise
-            {/if}
-          </td>
+          {#if showExtraColumns}
+            <td data-label="Interpretation">
+              <span class="clinical-mobile-label">Interpretation</span>
+              {interpretationClassLabel(semantics.interpretation_class)}
+              {#if semantics.condition_label}
+                <span class="clinical-cell-note">{semantics.condition_label}</span>
+              {/if}
+            </td>
+            <td data-label="Inheritance">
+              <span class="clinical-mobile-label">Inheritance</span>
+              {inheritanceModelLabel(semantics.inheritance_model)}
+            </td>
+            <td data-label="Applicability">
+              <span class="clinical-mobile-label">Applicability</span>
+              {#if (marker.context_tags && marker.context_tags.length > 0) || (marker.sex_scope && marker.sex_scope !== 'all')}
+                <ContextSummary contextTags={marker.context_tags} scope={marker.sex_scope} maxVisible={2} />
+              {:else}
+                All users unless context says otherwise
+              {/if}
+            </td>
+          {/if}
           <td data-label="Clinical status">
             <span class="clinical-mobile-label">Clinical status</span>
             <span class="clinical-severity {severity.cssClass}">{severity.label}</span>
@@ -250,16 +256,16 @@
 
   .clinical-findings-table {
     width: 100%;
-    min-width: 900px;
+    min-width: 760px;
     border-collapse: collapse;
     color: var(--text-primary);
-    font-size: 0.74rem;
+    font-size: 0.82rem;
   }
 
   .clinical-findings-table caption {
     padding: 0.7rem 0.8rem;
     color: var(--text-secondary);
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     text-align: left;
   }
 
@@ -274,7 +280,7 @@
 
   .clinical-findings-table th {
     color: var(--text-secondary);
-    font-size: 0.66rem;
+    font-size: 0.7rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -290,7 +296,7 @@
     display: block;
     margin-top: 0.2rem;
     color: var(--text-secondary);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     line-height: 1.35;
   }
 
@@ -323,7 +329,7 @@
     background: transparent;
     color: var(--accent);
     font: inherit;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     cursor: pointer;
   }
 

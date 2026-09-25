@@ -7,7 +7,7 @@ message: If you use Genomics Caddy, please cite it as below.
 type: software
 title: Genomics Caddy
 version: 0.2.5
-date-released: 2026-09-21
+date-released: 2026-09-24
 abstract: >-
   Local-first desktop DNA explorer for AncestryDNA and 23andMe SNP exports.
   Trait and pharmacogenomics reports, optional Ollama chat, and a stdin/stdout

@@ -537,7 +537,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar-scroll {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   flex-direction: column;
   gap: 0.65rem;
@@ -553,6 +553,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   position: relative;
   width: var(--sidebar-width);
 }
@@ -566,8 +567,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-region .sidebar {
-  flex: 1 1 auto;
-  height: auto;
+  flex: 1 1 0%;
+  height: 100%;
   min-height: 0;
 }
 

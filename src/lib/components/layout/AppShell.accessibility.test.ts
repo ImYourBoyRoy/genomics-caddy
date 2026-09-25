@@ -55,11 +55,26 @@ describe('responsive data-sidebar access', () => {
 
   it('lets the shell follow the viewport without clipping scaled desktop windows', () => {
     expect(shellStyles).toContain('width: 100%;');
-    expect(shellStyles).toContain('height: 100%;');
-    expect(shellStyles).toContain('min-height: 100dvh;');
+    expect(shellStyles).toContain('height: 100vh;');
+    expect(shellStyles).toContain('height: 100dvh;');
+    expect(shellStyles).toContain('height: 0;');
     expect(shellStyles).toContain('min-width: 0;');
     expect(theme).toContain('height: auto;');
     expect(theme).toContain('width: 100%;');
     expect(theme).toContain('.main-content {');
+  });
+
+  it('keeps long sidebar content in an independently scrollable flex region', () => {
+    const sidebarRegion = theme.match(/\.sidebar-region \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const scrollRegion = theme.match(/\.sidebar-scroll \{[\s\S]*?\n\}/)?.[0] ?? '';
+    const sidebarSurface = theme.match(/\.sidebar-region \.sidebar \{[\s\S]*?\n\}/)?.[0] ?? '';
+
+    expect(sidebarRegion).toContain('height: 100%;');
+    expect(sidebarSurface).toContain('flex: 1 1 0%;');
+    expect(sidebarSurface).toContain('height: 100%;');
+    expect(scrollRegion).toContain('flex: 1 1 0%;');
+    expect(scrollRegion).toContain('min-height: 0;');
+    expect(scrollRegion).toContain('overflow-y: auto;');
+    expect(sidebar).toMatch(/<div class="sidebar-scroll">[\s\S]*?\n\s*<\/div>\s*<div class="sidebar-footer/);
   });
 });

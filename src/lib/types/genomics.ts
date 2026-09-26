@@ -465,6 +465,19 @@ export interface EvaluatedSection {
   summary: SectionSummary;
 }
 
+/** Count-only backend progress emitted while a local report is being built. */
+export interface ReportGenerationProgress {
+  sampleId: number;
+  phase: 'preparing' | 'markers' | 'clinvar' | 'finalizing';
+  status: string;
+  current: number;
+  total: number;
+  matches: number;
+  matchesLabel: string;
+  elapsedMs: number;
+  phaseElapsedMs: number;
+}
+
 export interface GeneratedReport {
   schema_version: string;
   export_format: string;

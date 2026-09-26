@@ -66,7 +66,10 @@ review; replacing an existing profile always needs explicit confirmation.
 4. The app reads, normalizes coordinates, ingests genotypes, and prepares the
    report. Replacing an existing profile always waits for confirmation. When
    preparation completes, the screen advances automatically; if it remains on
-   the completed screen, choose **Continue to report**.
+   the completed screen, choose **Continue to report**. During report
+   preparation, the screen shows the active step, marker or genome-scan counts,
+   exact matches found, and elapsed time. A current-step estimate appears after
+   enough scan progress is available.
 
 Empty files and conflicting duplicate marker rows are rejected. `NN` stays
 no-data. Mixed `N` calls are blocked as ambiguous.

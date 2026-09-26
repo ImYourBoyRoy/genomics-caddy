@@ -21,6 +21,7 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
+use std::time::Instant;
 
 use crate::offline::schema::schema_attached;
 
@@ -733,6 +734,49 @@ pub struct GenomeWideClinVarDiscovery {
     pub allele_orientation: String,
     pub source_asset_ids: Vec<String>,
     pub associations: Vec<GenomeWideClinVarAssociation>,
+}
+
+/// Count-only progress for local report generation. This event intentionally
+/// contains no rsIDs, alleles, or other genotype-level values.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReportProgress {
+    pub sample_id: i64,
+    pub phase: String,
+    pub status: String,
+    pub current: u64,
+    pub total: u64,
+    pub matches: u64,
+    pub matches_label: String,
+    pub elapsed_ms: u64,
+    pub phase_elapsed_ms: u64,
+}
+
+fn notify_report_progress<F>(
+    on_progress: &mut F,
+    sample_id: i64,
+    phase: &str,
+    status: &str,
+    current: u64,
+    total: u64,
+    matches: u64,
+    matches_label: &str,
+    report_started: Instant,
+    phase_started: Instant,
+) where
+    F: FnMut(ReportProgress),
+{
+    on_progress(ReportProgress {
+        sample_id,
+        phase: phase.to_string(),
+        status: status.to_string(),
+        current,
+        total,
+        matches,
+        matches_label: matches_label.to_string(),
+        elapsed_ms: report_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
+        phase_elapsed_ms: phase_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
+    });
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -1886,11 +1930,31 @@ fn review_status_rank(value: &str) -> u8 {
 /// Cross-match every imported genotype against locally indexed, condition-specific
 /// ClinVar submissions. Exact allele matches are evaluated in-process; genotype
 /// bases are not included in the report payload.
+#[cfg(test)]
 fn fetch_genomewide_clinvar_discovery(
     conn: &Connection,
     sample_id: i64,
     provenance: Option<&crate::parser::ImportProvenance>,
 ) -> Result<GenomeWideClinVarDiscovery, String> {
+    fetch_genomewide_clinvar_discovery_with_progress(
+        conn,
+        sample_id,
+        provenance,
+        &mut |_| {},
+        Instant::now(),
+    )
+}
+
+fn fetch_genomewide_clinvar_discovery_with_progress<F>(
+    conn: &Connection,
+    sample_id: i64,
+    provenance: Option<&crate::parser::ImportProvenance>,
+    on_progress: &mut F,
+    report_started: Instant,
+) -> Result<GenomeWideClinVarDiscovery, String>
+where
+    F: FnMut(ReportProgress),
+{
     let genotypes_scanned = conn
         .query_row(
             "SELECT COUNT(*) FROM genotypes WHERE sample_id = ?",
@@ -1954,30 +2018,97 @@ fn fetch_genomewide_clinvar_discovery(
                     s.submitted_phenotype_info, s.review_status, s.date_last_evaluated,
                     s.origin_counts, s.somatic_clinical_impact, s.oncogenicity
              FROM genotypes AS g
-             JOIN clinvar.clinvar_reference AS c ON c.rsid = g.rsid
-             JOIN clinvar_submissions.clinvar_submissions AS s
+             LEFT JOIN clinvar.clinvar_reference AS c
+               ON c.rsid = g.rsid AND c.assembly = ?2
+             LEFT JOIN clinvar_submissions.clinvar_submissions AS s
                ON s.variation_id = c.variation_id
-             WHERE g.sample_id = ?1 AND c.assembly = ?2
-             ORDER BY g.rsid, s.scv",
+             WHERE g.sample_id = ?1
+             ORDER BY g.rsid",
         )
         .map_err(|error| format!("Prepare local ClinVar full-genome scan: {error}"))?;
+    let scan_started = Instant::now();
+    notify_report_progress(
+        on_progress,
+        sample_id,
+        "clinvar",
+        "Checking profile variants against local ClinVar condition records",
+        0,
+        genotypes_scanned,
+        0,
+        "exact allele matches found",
+        report_started,
+        scan_started,
+    );
     let mut rows = statement
         .query(rusqlite::params![sample_id, assembly])
         .map_err(|error| format!("Run local ClinVar full-genome scan: {error}"))?;
     let mut seen = HashSet::new();
     let mut matched_variants = HashSet::new();
     let mut matches = Vec::new();
+    let mut active_rsid: Option<String> = None;
+    let mut genotypes_completed = 0u64;
+    let mut last_progress_at = scan_started;
 
     while let Some(row) = rows.next().map_err(|error| error.to_string())? {
         let rsid: String = row.get(0).unwrap_or_default();
+        if active_rsid.as_ref().is_some_and(|active| active != &rsid) {
+            genotypes_completed = genotypes_completed.saturating_add(1);
+            active_rsid = Some(rsid.clone());
+            let now = Instant::now();
+            if genotypes_completed % 1_000 == 0
+                || now.duration_since(last_progress_at).as_millis() >= 400
+            {
+                notify_report_progress(
+                    on_progress,
+                    sample_id,
+                    "clinvar",
+                    "Checking profile variants against local ClinVar condition records",
+                    genotypes_completed,
+                    genotypes_scanned,
+                    matched_variants.len() as u64,
+                    "exact allele matches found",
+                    report_started,
+                    scan_started,
+                );
+                last_progress_at = now;
+            }
+        } else if active_rsid.is_none() {
+            active_rsid = Some(rsid.clone());
+        }
+
+        // A profile variant can join to many ClinVar submission assertions.
+        // Keep elapsed-time updates moving while those assertions are examined;
+        // the completed-variant count advances only when a variant's rows end.
+        let now = Instant::now();
+        if now.duration_since(last_progress_at).as_millis() >= 400 {
+            notify_report_progress(
+                on_progress,
+                sample_id,
+                "clinvar",
+                "Checking profile variants against local ClinVar condition records",
+                genotypes_completed,
+                genotypes_scanned,
+                matched_variants.len() as u64,
+                "exact allele matches found",
+                report_started,
+                scan_started,
+            );
+            last_progress_at = now;
+        }
+        let variation_id: String = row.get(3).unwrap_or_default();
+        if variation_id.is_empty() {
+            continue;
+        }
+        let scv: String = row.get(8).unwrap_or_default();
+        if scv.is_empty() {
+            continue;
+        }
         let allele1: String = row.get(1).unwrap_or_default();
         let allele2: String = row.get(2).unwrap_or_default();
-        let variation_id: String = row.get(3).unwrap_or_default();
         let gene: String = row.get(4).unwrap_or_default();
         let reference: String = row.get(5).unwrap_or_default();
         let alternate: String = row.get(6).unwrap_or_default();
         let aggregate_classification: String = row.get(7).unwrap_or_default();
-        let scv: String = row.get(8).unwrap_or_default();
         let clinical_significance: String = row.get(9).unwrap_or_default();
         let reported_phenotype: String = row.get(10).unwrap_or_default();
         let submitted_phenotype: String = row.get(11).unwrap_or_default();
@@ -2063,6 +2194,35 @@ fn fetch_genomewide_clinvar_discovery(
         });
     }
 
+    if active_rsid.is_some() {
+        genotypes_completed = genotypes_completed.saturating_add(1);
+    }
+    notify_report_progress(
+        on_progress,
+        sample_id,
+        "clinvar",
+        "Finished checking profile variants against local ClinVar records",
+        genotypes_completed.min(genotypes_scanned),
+        genotypes_scanned,
+        matched_variants.len() as u64,
+        "exact allele matches found",
+        report_started,
+        scan_started,
+    );
+
+    let sort_started = Instant::now();
+    notify_report_progress(
+        on_progress,
+        sample_id,
+        "finalizing",
+        "Sorting exact ClinVar matches for the report",
+        0,
+        0,
+        matched_variants.len() as u64,
+        "exact allele matches found",
+        report_started,
+        sort_started,
+    );
     matches.sort_by(|left, right| {
         review_status_rank(&right.review_status)
             .cmp(&review_status_rank(&left.review_status))
@@ -2086,6 +2246,33 @@ pub fn generate_report(
     sample_id: i64,
     template: &ReportTemplate,
 ) -> Result<GeneratedReport, String> {
+    generate_report_with_progress(conn, sample_id, template, |_| {})
+}
+
+pub fn generate_report_with_progress<F>(
+    conn: &Connection,
+    sample_id: i64,
+    template: &ReportTemplate,
+    mut on_progress: F,
+) -> Result<GeneratedReport, String>
+where
+    F: FnMut(ReportProgress),
+{
+    let report_started = Instant::now();
+    let initial_phase_started = report_started;
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "preparing",
+        "Opening the local profile and checking report resources",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        initial_phase_started,
+    );
+
     let import_provenance = conn
         .query_row(
             "SELECT import_id, source_file_name, source_file_sha256, source_format,
@@ -2161,6 +2348,20 @@ pub fn generate_report(
         }
     }
 
+    let preparing_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "preparing",
+        "Resolving curated marker IDs against this profile",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        preparing_started,
+    );
+
     // 1. Collect all rsIDs and genes to query in a single batch
     let mut rsids = Vec::new();
     let mut genes = Vec::new();
@@ -2183,6 +2384,19 @@ pub fn generate_report(
     }
 
     // 2. Query user genotypes from database
+    let call_lookup_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "preparing",
+        "Looking up profile calls for curated markers",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        call_lookup_started,
+    );
     let user_variants = crate::db::query_by_rsids(conn, sample_id, &query_rsids)
         .map_err(|e| format!("Database query error: {}", e))?;
 
@@ -2287,6 +2501,19 @@ pub fn generate_report(
     }
 
     // 3. Batch-fetch local reference enrichment and dbSNP metadata
+    let enrichment_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "preparing",
+        "Loading local reference annotations",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        enrichment_started,
+    );
     let enrichment_map = fetch_local_enrichment(conn, &rsids);
     let current_gnomad_release = conn
         .query_row(
@@ -2314,6 +2541,27 @@ pub fn generate_report(
     let mut total_risk_possible: u16 = 0;
     let mut total_risk_effects: u16 = 0;
     let mut evaluated_rsids = std::collections::HashSet::new();
+    let total_marker_assertions = template
+        .sections
+        .iter()
+        .map(|section| section.markers.len() as u64)
+        .sum::<u64>();
+    let marker_phase_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "markers",
+        "Evaluating curated marker assertions",
+        0,
+        total_marker_assertions,
+        0,
+        "profile calls found",
+        report_started,
+        marker_phase_started,
+    );
+    let mut marker_assertions_checked = 0u64;
+    let mut marker_calls_found = 0u64;
+    let mut last_marker_progress_at = marker_phase_started;
 
     for sec in &template.sections {
         let mut link_ids = Vec::new();
@@ -2910,6 +3158,30 @@ pub fn generate_report(
 
             category_links_map.insert(link_id.clone(), link);
             link_ids.push(link_id);
+
+            marker_assertions_checked = marker_assertions_checked.saturating_add(1);
+            if !is_missing {
+                marker_calls_found = marker_calls_found.saturating_add(1);
+            }
+            let now = Instant::now();
+            if marker_assertions_checked == total_marker_assertions
+                || marker_assertions_checked % 25 == 0
+                || now.duration_since(last_marker_progress_at).as_millis() >= 250
+            {
+                notify_report_progress(
+                    &mut on_progress,
+                    sample_id,
+                    "markers",
+                    "Evaluating curated marker assertions",
+                    marker_assertions_checked,
+                    total_marker_assertions,
+                    marker_calls_found,
+                    "profile calls found",
+                    report_started,
+                    marker_phase_started,
+                );
+                last_marker_progress_at = now;
+            }
         }
 
         let show_percent_score = !all_require_confirmation && risk_possible > 0;
@@ -2955,10 +3227,25 @@ pub fn generate_report(
     } else {
         0.0
     };
-    let genomewide_clinvar = match fetch_genomewide_clinvar_discovery(
+    let scan_check_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "preparing",
+        "Checking local ClinVar indexes for genome-wide matching",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        scan_check_started,
+    );
+    let genomewide_clinvar = match fetch_genomewide_clinvar_discovery_with_progress(
         conn,
         sample_id,
         import_provenance.as_ref(),
+        &mut on_progress,
+        report_started,
     ) {
         Ok(discovery) => Some(discovery),
         Err(error) => {
@@ -2970,7 +3257,20 @@ pub fn generate_report(
         }
     };
 
-    Ok(GeneratedReport {
+    let finalizing_started = Instant::now();
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "finalizing",
+        "Finishing and formatting the report",
+        0,
+        0,
+        0,
+        "",
+        report_started,
+        finalizing_started,
+    );
+    let generated_report = GeneratedReport {
         schema_version: "2.0.0".to_string(),
         export_format: "normalized_sparse".to_string(),
         generated_at: current_iso_8601(),
@@ -2986,7 +3286,20 @@ pub fn generate_report(
         catalog_warnings,
         genomewide_clinvar,
         import_provenance,
-    })
+    };
+    notify_report_progress(
+        &mut on_progress,
+        sample_id,
+        "finalizing",
+        "Report is ready",
+        1,
+        1,
+        0,
+        "",
+        report_started,
+        finalizing_started,
+    );
+    Ok(generated_report)
 }
 
 // ---------------------------------------------------------------------------

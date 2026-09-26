@@ -66,7 +66,7 @@
   import "$lib/styles/print.css";
   import "$lib/styles/components/context-panel.css";
 
-  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview } from "$lib/types/genomics";
+  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "$lib/types/genomics";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
   import {
     EMPTY_PROFILE_CONTEXT,
@@ -284,6 +284,8 @@
   let generatedReport = $state<GeneratedReport | null>(null);
   let rawReport = $state<NormalizedReport | null>(null);
   let isGeneratingReport = $state(false);
+  let reportProgress = $state<ReportGenerationProgress | null>(null);
+  let reportProgressSampleId = $state<number | null>(null);
   let reportError = $state("");
   let reportRequestGeneration = 0;
 
@@ -413,6 +415,7 @@
   }
 
   let unlistenProgress: () => void;
+  let unlistenReportProgress: (() => void) | null = null;
 
   $effect(() => {
     const sampleId = selectedSample?.id;
@@ -518,7 +521,15 @@
       aiOllamaToken = (await getOllamaToken()) || "";
       await runBootstrap();
     }
-    init();
+
+    const reportProgressListenerReady = listen<ReportGenerationProgress>("report-progress", (event) => {
+      if (event.payload.sampleId !== reportProgressSampleId) return;
+      reportProgress = event.payload;
+    }).then((unlisten) => {
+      unlistenReportProgress = unlisten;
+    }).catch((error) => {
+      console.error("Could not subscribe to report progress", error);
+    });
 
     listen<{ percentage: number; status: string }>("import-progress", (event) => {
       progressPercent = event.payload.percentage;
@@ -538,12 +549,17 @@
       unlistenBootstrap = unlisten;
     });
 
+    // Register before bootstrap starts because its selected profile can trigger
+    // report generation immediately.
+    void reportProgressListenerReady.then(() => init());
+
     void startResearchEventListeners();
 
     return () => {
       uninstallDesktopContextMenu();
       uninstallAgentUi();
       if (unlistenProgress) unlistenProgress();
+      if (unlistenReportProgress) unlistenReportProgress();
       if (unlistenBootstrap) unlistenBootstrap();
       stopResearchEventListeners();
     };
@@ -724,6 +740,8 @@
         if (patch.reportError !== undefined) reportError = patch.reportError;
         if (patch.generatedReport !== undefined) generatedReport = patch.generatedReport;
         if (patch.rawReport !== undefined) rawReport = patch.rawReport;
+        if (patch.reportProgress !== undefined) reportProgress = patch.reportProgress;
+        if (patch.reportProgressSampleId !== undefined) reportProgressSampleId = patch.reportProgressSampleId;
       },
     });
   }
@@ -987,6 +1005,7 @@
                 {generatedReport}
                 {rawReport}
                 {isGeneratingReport}
+                {reportProgress}
                 {selectedSample}
                 {foundMarkersCount}
                 {totalMarkersChecked}

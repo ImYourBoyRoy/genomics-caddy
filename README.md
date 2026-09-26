@@ -107,6 +107,9 @@ app after it starts.
    Once local profile indexing is complete, use **Raw Browser** and local
    genome views while reference catalogs download. The completed import screen
    advances automatically; if it remains visible, choose **Continue to report**.
+   Report preparation shows its current step, completed marker or genome-scan
+   counts, and exact match counts. It also shows elapsed time and an estimate
+   for the active scan after enough progress has been measured.
 2. Left sidebar → **Data & updates** → **Sync All Missing** to install the
    public catalogs used for database-backed annotations and full-genome
    discovery. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions show as

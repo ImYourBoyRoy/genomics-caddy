@@ -16,7 +16,7 @@ describe('ReportView Help Guide surface', () => {
       'utf8',
     );
     expect(source).toContain("import ReportLoadingState from './ReportLoadingState.svelte'");
-    expect(source).toContain('<ReportLoadingState sampleName={selectedSample.name} />');
+    expect(source).toContain('<ReportLoadingState sampleName={selectedSample.name} progress={reportProgress} />');
     expect(source).not.toContain('On-device · live');
     expect(source).not.toContain('Working now');
     expect(loading).toContain("Preparing {sampleName}'s report");

@@ -35,7 +35,7 @@
 .report-loading-progress {
   position: relative;
   overflow: hidden;
-  height: 3px;
+  height: 7px;
   border-radius: 999px;
   background: var(--border-color);
 }
@@ -47,6 +47,34 @@
   border-radius: inherit;
   background: var(--accent);
   animation: report-loading-sweep 1.7s ease-in-out infinite;
+}
+
+.report-loading-progress.determinate span {
+  width: var(--report-progress-width, 0%);
+  animation: none;
+  transition: width 180ms ease-out;
+}
+
+.report-loading-counts,
+.report-loading-timing {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin: 0.65rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.report-loading-counts strong,
+.report-loading-timing strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-loading-timing {
+  margin-top: 0.75rem;
 }
 
 .report-loading-note {
@@ -66,9 +94,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .report-loading-progress span {
-    width: 100%;
+  .report-loading-progress:not(.determinate) span {
+    width: 38%;
     animation: none;
     opacity: 0.72;
+  }
+
+  .report-loading-progress.determinate span {
+    transition: none;
   }
 }

@@ -1002,6 +1002,21 @@ async fn generate_report(
         app_log::log("CMD_GENERATE_REPORT", &format!("Validation failed: {}", e));
         return Err(e.clone());
     }
+    app.emit(
+        "report-progress",
+        report::ReportProgress {
+            sample_id,
+            phase: "preparing".to_string(),
+            status: "Preparing local report resources".to_string(),
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: String::new(),
+            elapsed_ms: 0,
+            phase_elapsed_ms: 0,
+        },
+    )
+    .ok();
     let data_dir = get_data_dir(&app);
     // Resolve an auto-managed gnomAD release before the synchronous report
     // worker reads its cache, so report metadata cannot lag behind the
@@ -1009,11 +1024,14 @@ async fn generate_report(
     // the local report remains available when the public listing is offline.
     let db_path = get_db_path(&app);
     let _ = research::gnomad::load_effective_gnomad_config(&db_path, &data_dir).await;
+    let progress_app = app.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         let template: report::ReportTemplate = serde_json::from_str(&template_json)
             .map_err(|e| format!("Failed to parse report template JSON: {}", e))?;
-        report::generate_report(&conn, sample_id, &template)
+        report::generate_report_with_progress(&conn, sample_id, &template, |progress| {
+            progress_app.emit("report-progress", progress).ok();
+        })
     })
     .await
     .map_err(|e| format!("Report worker failed: {e}"))?;

@@ -13,7 +13,7 @@ import {
   queryRegion,
   inspectGenome,
 } from "../api/tauri";
-import type { GenomeSample, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview } from "../types/genomics";
+import type { GenomeSample, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "../types/genomics";
 import { mergedReportTemplateJson } from "./reportTemplate";
 import { clearProfileScopedSessionState, clearProfileScopedStorage } from "./profileContext";
 import { isCallableGenotype } from "./genotype";
@@ -173,11 +173,18 @@ export interface WarmReportParams {
     reportError?: string;
     generatedReport?: GeneratedReport | null;
     rawReport?: NormalizedReport | null;
+    reportProgress?: ReportGenerationProgress | null;
+    reportProgressSampleId?: number | null;
   }) => void;
 }
 
 export async function warmReport({ sampleId, onState }: WarmReportParams): Promise<void> {
-  onState({ isGeneratingReport: true, reportError: "" });
+  onState({
+    isGeneratingReport: true,
+    reportError: "",
+    reportProgress: null,
+    reportProgressSampleId: sampleId,
+  });
   try {
     const payload = await generateReport(sampleId, mergedReportTemplateJson());
     onState({ generatedReport: payload.report, rawReport: payload.raw });
@@ -185,7 +192,11 @@ export async function warmReport({ sampleId, onState }: WarmReportParams): Promi
     onState({ reportError: "Report generation failed: " + String(err) });
     console.error(err);
   } finally {
-    onState({ isGeneratingReport: false });
+    onState({
+      isGeneratingReport: false,
+      reportProgress: null,
+      reportProgressSampleId: null,
+    });
   }
 }
 

@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/report/ReportView.svelte -->
 <script lang="ts">
-  import type { GeneratedReport, NormalizedReport, GenomeSample, SeverityClass } from '../../types/genomics';
+  import type { GeneratedReport, NormalizedReport, GenomeSample, SeverityClass, ReportGenerationProgress } from '../../types/genomics';
   import { saveReportBundle, saveReportJson, exportDiscoveryFindings } from '../../api/tauri';
   import { dialogStore } from '../../utils/dialogState.svelte';
   import ReportHeader from './ReportHeader.svelte';
@@ -46,6 +46,7 @@
     generatedReport: GeneratedReport | null;
     rawReport: NormalizedReport | null;
     isGeneratingReport: boolean;
+    reportProgress: ReportGenerationProgress | null;
     selectedSample: GenomeSample;
     foundMarkersCount: number;
     totalMarkersChecked: number;
@@ -62,6 +63,7 @@
     generatedReport,
     rawReport,
     isGeneratingReport,
+    reportProgress,
     selectedSample,
     foundMarkersCount,
     totalMarkersChecked,
@@ -527,7 +529,7 @@
 
 {#if isGeneratingReport}
   {#key selectedSample.id}
-    <ReportLoadingState sampleName={selectedSample.name} />
+    <ReportLoadingState sampleName={selectedSample.name} progress={reportProgress} />
   {/key}
 {:else if generatedReport}
   <!-- Start with profile/data quality, then the bounded action queue. -->

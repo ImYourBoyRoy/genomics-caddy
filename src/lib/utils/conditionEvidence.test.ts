@@ -115,6 +115,40 @@ describe('condition-level evidence aggregation', () => {
     expect(JSON.stringify(associations)).not.toContain('AG');
   });
 
+  it('keeps distinct ClinVar significance rows under unique each-keys', () => {
+    const associations = buildCatalogAssociationSummaries(report([marker({
+      rsid: 'rs-clinvar-dup-id',
+      link_id: 'test:clinvar:dup-id',
+      user_genotype: 'AG',
+      normalized_genotype: 'AG',
+      expected_plus_alleles: ['A', 'G'],
+      orientation_state: 'verified',
+      clinvar_annotations: [{
+        clinical_significance: 'Pathogenic',
+        conditions: 'Shared synthetic condition',
+        review_status: 'reviewed by expert panel',
+        variation_id: '90001',
+        reference_allele: 'A',
+        alternate_allele: 'G',
+      }, {
+        clinical_significance: 'Likely pathogenic',
+        conditions: 'Shared synthetic condition',
+        review_status: 'criteria provided, single submitter',
+        variation_id: '90002',
+        reference_allele: 'A',
+        alternate_allele: 'G',
+      }],
+    })]));
+
+    const ids = associations.map((item) => item.id);
+    expect(ids.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(associations.map((item) => item.clinical_significance).sort()).toEqual([
+      'Likely pathogenic',
+      'Pathogenic',
+    ]);
+  });
+
   it('does not surface benign, uncertain, or non-matching ClinVar records as potential conditions', () => {
     const associations = buildCatalogAssociationSummaries(report([marker({
       rsid: 'rs-clinvar-not-matched',

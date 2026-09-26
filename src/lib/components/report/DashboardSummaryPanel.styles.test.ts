@@ -340,6 +340,7 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(actionQueue).toContain('margin-inline: auto;');
     expect(actionQueue).toContain('box-sizing: border-box;');
     expect(source).toContain('<div class="action-queue-list">');
+    expect(source).toContain('{#each column as item (item.finding.finding_id)}');
     expect(actionQueue).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
     expect(source).toContain('action-queue-column');
     expect(source).toContain('columnIndex * 3 + rowIndex + 1');

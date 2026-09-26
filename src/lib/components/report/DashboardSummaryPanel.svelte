@@ -309,7 +309,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       <div class="action-queue-list">
         {#each priorityColumns as column, columnIndex}
           <div class="action-queue-column" data-column={columnIndex + 1}>
-            {#each column as item (item.finding.link_id || `${item.finding.rsid}:${item.finding.gene}`)}
+            {#each column as item (item.finding.finding_id)}
               <article class="action-queue-item" data-priority={item.rank} data-concern={priorityTone(item.finding)}>
                 <span class="action-queue-rank" aria-label={`Priority ${item.rank}`}>{item.rank}</span>
                 <div class="action-queue-item-content">

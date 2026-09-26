@@ -115,7 +115,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each markers as marker (marker.link_id || marker.rsid)}
+      {#each markers as marker (marker.link_id || `${marker.rsid}:${marker.gene}:${marker.variant_name || ''}`)}
         {@const severity = getSeverityInfo(marker.severity_class)}
         {@const tier = getTierInfo(marker.evidence_tier)}
         {@const effectCount = getEffectCount(marker)}

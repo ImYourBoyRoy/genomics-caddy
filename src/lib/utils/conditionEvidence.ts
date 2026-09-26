@@ -353,6 +353,12 @@ function associationSlug(value: string): string {
   return normalize(value).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 72) || 'unnamed';
 }
 
+/** Stable unique id for catalog rows used as Svelte each-keys. Do not truncate. */
+function catalogAssociationId(groupKey: string): string {
+  const slug = normalize(groupKey).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unnamed';
+  return `catalog-${slug}`;
+}
+
 function clinvarAssociationClass(significance: string): 'pathogenic' | 'risk' | null {
   const value = normalize(significance);
   if (!value || /conflict|uncertain|benign|drug response|not provided/.test(value)) return null;
@@ -426,10 +432,12 @@ export function buildCatalogAssociationSummaries(
   }) => {
     const label = input.label.trim();
     if (!label) return;
+    // groupKey is the uniqueness contract for Map merges; id must mirror it so
+    // Svelte keyed {#each} blocks never see colliding catalog rows.
     const groupKey = [input.association_is, normalize(label), normalize(input.clinical_significance),
       normalize(input.allele_match), normalize(input.classification)].join('|');
     const current = groups.get(groupKey) || {
-      id: `catalog-${input.association_is}-${associationSlug(label)}-${associationSlug(input.allele_match || input.classification || 'linked')}`,
+      id: catalogAssociationId(groupKey),
       label,
       association_is: input.association_is,
       association_scope: input.association_scope,

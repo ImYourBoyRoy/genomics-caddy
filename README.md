@@ -166,11 +166,15 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   ClinGen gene–disease validity, and pharmacogenomic response links, with each
   relationship’s evidence scope kept explicit
 - Scans all imported calls locally against ClinVar variant and condition-specific
-  submission indexes, then groups exact allele matches by condition and review
-  status. This is distinct from curated pack coverage and is not a diagnosis or
-  a personal-risk estimate; known somatic/oncogenic records are excluded.
-- Shows POTS/dysautonomia as symptom and clinician-evaluation context only; it
-  does not score a consumer-DNA POTS risk model or recommend treatment.
+  submission indexes and lists linked conditions in three groups: **May be
+  relevant to you** (variant-wide pathogenic consensus and a copy count that
+  fits ClinGen inheritance), **Carrier (one copy)** for recessive/X-linked
+  conditions, and **Disputed or unclear**. Variants ClinVar calls benign overall
+  and somatic/oncogenic records are excluded. When a vendor header does not
+  state the strand, it is verified by comparing strand-unambiguous calls with
+  ClinVar reference alleles before any matching.
+- Keeps POTS/dysautonomia as symptom and clinician-evaluation context in the
+  AI/clinician exports; it does not score a consumer-DNA POTS risk model.
 - Adds symptom-led Brain, Mood & Attention support with research links and
   trusted assessment guides for ADHD, depression, and anxiety; common variants
   do not diagnose these conditions, and the app calculates no psychiatric PRS

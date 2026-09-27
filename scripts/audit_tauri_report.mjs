@@ -767,11 +767,17 @@ async function assertGenomeWideDiseasePanel() {
     body: JSON.stringify({ text: "Potential disease associations" }),
   });
   assert(opened?.ok === true, "Could not expand genome-wide disease discovery");
-  const pots = await request("/ui/queryText", {
+  const sectionTitles = ["May be relevant to you", "Carrier (one copy)", "Disputed or unclear"];
+  let relevanceSections = 0;
+  for (const text of sectionTitles) {
+    const found = await request("/ui/queryText", { method: "POST", body: JSON.stringify({ text }) });
+    if (found?.ok === true && found.count > 0) relevanceSections += 1;
+  }
+  const unverified = await request("/ui/queryText", {
     method: "POST",
-    body: JSON.stringify({ text: "POTS & dysautonomia" }),
+    body: JSON.stringify({ text: "strand could not be confirmed" }),
   });
-  assert(pots?.ok === true && pots.count > 0, "Expanded disease discovery is missing its POTS clinical-context route");
+  const strandUnverified = unverified?.ok === true && unverified.count > 0;
   let snapshot = await request("/ui/snapshot");
   assert(snapshot.layout?.overflowingElements?.length === 0, "Expanded genome-wide disease discovery overflows the report surface");
 
@@ -782,7 +788,12 @@ async function assertGenomeWideDiseasePanel() {
   assert(closed?.ok === true, "Could not collapse genome-wide disease discovery");
   snapshot = await request("/ui/snapshot");
   assert(snapshot.layout?.overflowingElements?.length === 0, "Collapsing disease discovery introduced report overflow");
-  return { present: true, potsContext: true, overflow: snapshot.layout?.overflowingElements?.length ?? 0 };
+  return {
+    present: true,
+    relevanceSections,
+    strandUnverified,
+    overflow: snapshot.layout?.overflowingElements?.length ?? 0,
+  };
 }
 
 async function main() {
@@ -869,7 +880,7 @@ async function main() {
   console.log(`  contrast_pairs=light:${lightContrast.checkedPairCount};dark:${darkContrast.checkedPairCount};system:${systemContrast.checkedPairCount}; minimum=light:${lightContrast.minimumRatio};dark:${darkContrast.minimumRatio};system:${systemContrast.minimumRatio}`);
   const warningMetrics = restored.warningMetrics;
   console.log(`  warnings=generic:${warningMetrics?.genericWarningPhraseCount ?? "n/a"};duplicates:${warningMetrics?.duplicateGenericWarningPhraseCount ?? "n/a"};actionable:${warningMetrics?.actionableAlertCount ?? "n/a"};clinical_review:${warningMetrics?.clinicalReviewAlertCount ?? "n/a"};guide:${warningMetrics?.reportGuideCount ?? "n/a"};footer:${warningMetrics?.footerReminderCount ?? "n/a"};legal:${warningMetrics?.legalPrivacyPageCount ?? "n/a"}`);
-  console.log(`  genomewide_disease=${diseasePanel.present ? "present" : "missing"};pots_context=${diseasePanel.potsContext ? "visible" : "missing"};overflow=${diseasePanel.overflow}`);
+  console.log(`  genomewide_disease=${diseasePanel.present ? "present" : "missing"};relevance_sections=${diseasePanel.relevanceSections};strand=${diseasePanel.strandUnverified ? "unverified" : "verified"};overflow=${diseasePanel.overflow}`);
   console.log(`  catalog_associations=${catalogPanel.present ? `present:${catalogPanel.rows}` : "not-present"};collapsed_after_audit=${catalogPanel.present};overflow=${catalogPanel.overflow}`);
   console.log(`  resource_status=${resourceStatus}; update_phase=${resourceUpdatePhase ?? "idle"}; app_context_menu=installed`);
 }

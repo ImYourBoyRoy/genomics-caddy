@@ -106,11 +106,21 @@ The report separates **catalog-linked associations** on curated findings from
 **potential disease associations** discovered by scanning the full imported
 genome against the local ClinVar variant and condition-specific submission
 indexes. The latter requires both ClinVar indexes, a known source build, and
-verified allele orientation; only exact single-base matches are included.
-Individual ClinVar submission classifications and review status remain visible,
-and records with explicit somatic/oncogenic labels are excluded. Some records
-may not specify origin. This is not a diagnosis, a personal-risk estimate, or a
-complete disease screen. GWAS rows remain locus–trait statistics, ClinGen
+verified allele orientation; only exact single-base matches are included. A
+vendor header's strand statement is used when present (including "forward (+)
+strand" wording); otherwise at least 200 strand-unambiguous calls must agree
+with ClinVar's reference alleles at 98% or more.
+
+Matches are grouped as **May be relevant to you**, **Carrier (one copy)**, or
+**Disputed or unclear**. The first two require ClinVar's variant-wide summary to
+be Pathogenic or Likely pathogenic without conflicts, plus Definitive, Strong,
+or Moderate ClinGen inheritance for the gene: dominant conditions with one copy,
+or recessive/X-linked conditions with two copies (one copy on X for XY-pattern
+profiles), are "may be relevant"; one copy of a recessive or X-linked variant is
+"carrier". Conflicting, drug-response, uncertain, protective, low-penetrance,
+and risk-factor records stay "disputed or unclear". Variants whose variant-wide
+summary is benign are dropped, as are records with explicit somatic/oncogenic
+labels. Only the copy count (one or two) is serialized, never the bases. GWAS rows remain locus–trait statistics, ClinGen
 entries gene-level disease-validity context, and ClinPGx entries medication
 response annotations.
 

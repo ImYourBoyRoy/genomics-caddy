@@ -526,7 +526,13 @@ export interface GenomeWideClinVarAssociation {
   origin_status: string;
   variant_summary_conflict: boolean;
   source_url: string;
+  /** Copies of the ClinVar variant allele in the call; the bases are never serialized. */
+  alt_allele_copies: number;
+  inheritance?: string[];
+  relevance: GenomeWideConditionRelevance;
 }
+
+export type GenomeWideConditionRelevance = 'may_be_relevant' | 'carrier' | 'unclear';
 
 export interface ReportPayload {
   report: GeneratedReport;

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { GenomeWideClinVarAssociation } from '../types/genomics';
 import {
   classifyConditionTopic,
+  copyCountLabel,
   groupGenomeWideConditionAssociations,
+  sectionConditionGroupsByRelevance,
 } from './genomewideConditionDiscovery';
 
 function association(
@@ -24,6 +26,8 @@ function association(
     origin_status: 'Germline observation reported',
     variant_summary_conflict: false,
     source_url: 'https://www.ncbi.nlm.nih.gov/clinvar/?term=SCV000000001.1',
+    alt_allele_copies: 1,
+    relevance: 'unclear',
     ...overrides,
   };
 }
@@ -48,5 +52,43 @@ describe('genome-wide condition discovery grouping', () => {
     expect(grouped[0].variantCount).toBe(2);
     expect(grouped[0].assertions).toHaveLength(2);
     expect(grouped[0].conflicts).toBe(true);
+  });
+
+  it('promotes a condition to its most relevant assertion and merges inheritance', () => {
+    const [group] = groupGenomeWideConditionAssociations([
+      association('Cystic fibrosis', 'rs1', { relevance: 'carrier', inheritance: ['Autosomal recessive'] }),
+      association('Cystic fibrosis', 'rs2', {
+        relevance: 'may_be_relevant',
+        alt_allele_copies: 2,
+        inheritance: ['Autosomal recessive'],
+      }),
+    ]);
+    expect(group.relevance).toBe('may_be_relevant');
+    expect(group.maxCopies).toBe(2);
+    expect(group.inheritance).toEqual(['Autosomal recessive']);
+  });
+
+  it('sections groups in relevance order and drops empty sections', () => {
+    const sections = sectionConditionGroupsByRelevance(groupGenomeWideConditionAssociations([
+      association('Unclear condition', 'rs1'),
+      association('Carrier condition', 'rs2', { relevance: 'carrier' }),
+    ]));
+    expect(sections.map((section) => section.relevance)).toEqual(['carrier', 'unclear']);
+    expect(sections[0].title).toBe('Carrier (one copy)');
+  });
+
+  it('counts distinct variants behind repeated condition labels', () => {
+    const [section] = sectionConditionGroupsByRelevance(groupGenomeWideConditionAssociations([
+      association('Thrombophilia', 'rs1', { relevance: 'may_be_relevant' }),
+      association('Factor V deficiency', 'rs1', { relevance: 'may_be_relevant' }),
+    ]));
+    expect(section.groups).toHaveLength(2);
+    expect(section.variantCount).toBe(1);
+  });
+
+  it('labels copy counts without exposing alleles', () => {
+    expect(copyCountLabel(1)).toBe('One copy');
+    expect(copyCountLabel(2)).toBe('Two copies');
+    expect(copyCountLabel(0)).toBe('Copy count unavailable');
   });
 });

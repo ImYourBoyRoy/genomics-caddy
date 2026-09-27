@@ -36,10 +36,14 @@ any `App/Data/` tree. The curated runtime mirror at
   provenance, distinguish variant-wide summaries from condition assertions,
   exclude explicitly somatic/oncogenic records, and never serialize genotype
   alleles in the discovery summary.
-- A ClinVar per-submission classification is not a diagnosis or a complete
-  inheritance model. Do not infer zygosity actionability, phase, penetrance, or
-  clinical fit from the array match. POTS/dysautonomia remain clinical-context
-  routes unless validated consumer-array evidence becomes available.
+- Discovery groups (`may_be_relevant`, `carrier`, `unclear`) combine the
+ matched copy count with ClinGen Definitive/Strong/Moderate inheritance and
+ require a non-conflicting variant-wide Pathogenic/Likely pathogenic summary;
+ benign-consensus variants are dropped and a lone per-submission call never
+ promotes a condition. Serialize only the copy count, never bases. Do not infer
+ phase or penetrance. Unstated vendor strand may be verified only against
+ reference alleles at strand-unambiguous sites. POTS/dysautonomia remain
+ clinical-context routes unless validated consumer-array evidence exists.
 - Download resumes are safe only when the saved object identity and returned
   byte range validate. Progress rates exclude resumed bytes; unknown sizes or
   row-index imports must not display fabricated percentages or ETAs.

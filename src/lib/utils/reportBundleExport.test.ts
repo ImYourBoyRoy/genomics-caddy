@@ -167,6 +167,9 @@ describe('report bundle export', () => {
           origin_status: 'Germline observation reported',
           variant_summary_conflict: false,
           source_url: 'https://www.ncbi.nlm.nih.gov/clinvar/?term=SCV000000001.1',
+          alt_allele_copies: 2,
+          inheritance: ['Autosomal recessive'],
+          relevance: 'may_be_relevant',
         }],
       },
     };

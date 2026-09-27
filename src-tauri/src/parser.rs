@@ -182,9 +182,22 @@ fn infer_build_and_orientation(text: &str, format: FileFormat) -> (String, Strin
         "Unknown".to_string()
     };
 
-    let orientation = if lower.contains("reverse strand") || lower.contains("minus strand") {
+    // Vendors write "forward (+) strand", "plus strand", or "+ strand".
+    let strand_text = lower
+        .replace("(+)", " ")
+        .replace("(-)", " ")
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let orientation = if strand_text.contains("reverse strand")
+        || strand_text.contains("minus strand")
+        || strand_text.contains(" - strand")
+    {
         "reverse-strand (vendor header)".to_string()
-    } else if lower.contains("forward strand") || lower.contains("plus strand") {
+    } else if strand_text.contains("forward strand")
+        || strand_text.contains("plus strand")
+        || strand_text.contains(" + strand")
+    {
         "forward-strand (vendor header)".to_string()
     } else {
         "Unknown (vendor strand not stated)".to_string()
@@ -617,6 +630,21 @@ mod tests {
         assert_eq!(parsed.diagnostics.delimiter, "CSV");
         assert_eq!(parsed.diagnostics.allele_orientation, "forward-strand (vendor header)");
         assert_eq!(parsed.records.len(), 1);
+    }
+
+    #[test]
+    fn recognizes_vendor_strand_wording_with_symbols() {
+        for header in [
+            "#Genotypes are reported on the forward (+) strand with respect to build 37",
+            "# reported on the plus (+) strand",
+            "# alleles are on the + strand",
+        ] {
+            let (_, orientation) = infer_build_and_orientation(header, FileFormat::AncestryDna);
+            assert_eq!(orientation, "forward-strand (vendor header)", "{header}");
+        }
+        let (_, orientation) =
+            infer_build_and_orientation("# reported on the reverse (-) strand", FileFormat::AncestryDna);
+        assert_eq!(orientation, "reverse-strand (vendor header)");
     }
 
     #[test]

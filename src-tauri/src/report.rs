@@ -19,7 +19,7 @@ Operational Notes: Designed for consumer-grade raw DNA, not clinical diagnostics
 
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::LazyLock;
 use std::time::Instant;
 
@@ -796,6 +796,13 @@ pub struct GenomeWideClinVarAssociation {
     pub origin_status: String,
     pub variant_summary_conflict: bool,
     pub source_url: String,
+    /// Count of the ClinVar variant allele in the call (1 or 2); never the bases.
+    pub alt_allele_copies: u8,
+    /// ClinGen gene-level inheritance for Definitive/Strong/Moderate curations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inheritance: Vec<String>,
+    /// `may_be_relevant`, `carrier`, or `unclear`.
+    pub relevance: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -1858,6 +1865,230 @@ fn fetch_mane_enrichment(conn: &Connection, genes: &[String]) -> HashMap<String,
 
 const MAX_GENOMEWIDE_CLINVAR_ASSOCIATIONS: usize = 500;
 
+const STRAND_CHECK_MIN_INFORMATIVE: u64 = 200;
+const STRAND_CHECK_MAX_INFORMATIVE: u64 = 2_000;
+const STRAND_CHECK_MIN_AGREEMENT: f64 = 0.98;
+
+const RELEVANCE_MAY_BE_RELEVANT: &str = "may_be_relevant";
+const RELEVANCE_CARRIER: &str = "carrier";
+const RELEVANCE_UNCLEAR: &str = "unclear";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReferenceStrand {
+    Forward,
+    Reverse,
+}
+
+fn complement_base(base: char) -> char {
+    match base {
+        'A' => 'T',
+        'T' => 'A',
+        'C' => 'G',
+        _ => 'C',
+    }
+}
+
+/// Infers call orientation by comparing strand-unambiguous SNVs with ClinVar's
+/// reference-oriented VCF alleles. A/T and C/G sites read the same on both
+/// strands and are skipped; mixed evidence stays unverified.
+fn infer_strand_from_reference(
+    conn: &Connection,
+    sample_id: i64,
+    assembly: &str,
+) -> Option<ReferenceStrand> {
+    let mut statement = conn
+        .prepare(
+            // CROSS JOIN pins genotypes as the outer loop so the scan can stop
+            // early instead of walking every ClinVar row for the assembly.
+            "SELECT g.allele1, g.allele2, c.reference_allele_vcf, c.alternate_allele_vcf
+             FROM genotypes AS g
+             CROSS JOIN clinvar.clinvar_reference AS c
+               ON c.rsid = g.rsid AND c.assembly = ?2
+             WHERE g.sample_id = ?1
+               AND length(c.reference_allele_vcf) = 1
+               AND length(c.alternate_allele_vcf) = 1",
+        )
+        .ok()?;
+    let mut rows = statement
+        .query(rusqlite::params![sample_id, assembly])
+        .ok()?;
+    let (mut forward, mut reverse) = (0u64, 0u64);
+    while let Ok(Some(row)) = rows.next() {
+        let base = |index: usize| {
+            row.get::<_, String>(index)
+                .ok()
+                .and_then(|value| orient_dna_base(&value, false))
+        };
+        let (Some(call1), Some(call2), Some(reference), Some(alternate)) =
+            (base(0), base(1), base(2), base(3))
+        else {
+            continue;
+        };
+        if reference == alternate || complement_base(reference) == alternate {
+            continue;
+        }
+        let pair = [reference, alternate];
+        let forward_fit = pair.contains(&call1) && pair.contains(&call2);
+        let reverse_fit =
+            pair.contains(&complement_base(call1)) && pair.contains(&complement_base(call2));
+        match (forward_fit, reverse_fit) {
+            (true, false) => forward += 1,
+            (false, true) => reverse += 1,
+            _ => {}
+        }
+        if forward + reverse >= STRAND_CHECK_MAX_INFORMATIVE {
+            break;
+        }
+    }
+    let informative = forward + reverse;
+    if informative < STRAND_CHECK_MIN_INFORMATIVE {
+        return None;
+    }
+    let share = |count: u64| count as f64 / informative as f64;
+    if share(forward) >= STRAND_CHECK_MIN_AGREEMENT {
+        Some(ReferenceStrand::Forward)
+    } else if share(reverse) >= STRAND_CHECK_MIN_AGREEMENT {
+        Some(ReferenceStrand::Reverse)
+    } else {
+        None
+    }
+}
+
+const VERIFIED_FORWARD_ORIENTATION: &str = "forward-strand (verified against ClinVar reference alleles)";
+const VERIFIED_REVERSE_ORIENTATION: &str = "reverse-strand (verified against ClinVar reference alleles)";
+const VERIFIED_FORWARD_LABEL: &str = "Forward strand (verified against ClinVar reference alleles)";
+const VERIFIED_REVERSE_LABEL: &str =
+    "Reverse strand converted to reference orientation (verified against ClinVar reference alleles)";
+
+fn orientation_is_unstated(orientation: &str) -> bool {
+    orientation.trim().to_ascii_lowercase().starts_with("unknown")
+}
+
+fn assembly_for_source_build(source_build: &str) -> Option<&'static str> {
+    let build = source_build.to_ascii_uppercase();
+    if build.contains("38") {
+        Some("GRCh38")
+    } else if build.contains("37") || build.contains("19") {
+        Some("GRCh37")
+    } else {
+        None
+    }
+}
+
+/// Replaces an unstated vendor strand with one verified against ClinVar and
+/// persists it, so curated scoring and later reports share the same evidence.
+fn verify_unstated_import_orientation(
+    conn: &Connection,
+    sample_id: i64,
+    provenance: &mut crate::parser::ImportProvenance,
+) {
+    if !orientation_is_unstated(&provenance.diagnostics.allele_orientation)
+        || !catalog_table_available(conn, "clinvar", "clinvar_reference")
+    {
+        return;
+    }
+    let Some(assembly) = assembly_for_source_build(&provenance.diagnostics.source_build) else {
+        return;
+    };
+    let label = match infer_strand_from_reference(conn, sample_id, assembly) {
+        Some(ReferenceStrand::Forward) => VERIFIED_FORWARD_ORIENTATION,
+        Some(ReferenceStrand::Reverse) => VERIFIED_REVERSE_ORIENTATION,
+        None => return,
+    };
+    provenance.diagnostics.allele_orientation = label.to_string();
+    if let Err(error) = conn.execute(
+        "UPDATE import_provenance SET allele_orientation = ?1 WHERE import_id = ?2",
+        rusqlite::params![label, provenance.import_id],
+    ) {
+        crate::app_log::log(
+            "REPORT",
+            &format!("Verified strand orientation could not be saved: {error}"),
+        );
+    }
+}
+
+fn inheritance_label(moi: &str) -> Option<&'static str> {
+    let value = moi.trim().to_ascii_lowercase();
+    if value == "xl" || value.starts_with("x-linked") || value == "xlr" || value == "xld" {
+        Some("X-linked")
+    } else if value == "sd" || value.contains("semidominant") {
+        Some("Autosomal semidominant")
+    } else if value == "ad" || value.contains("dominant") {
+        Some("Autosomal dominant")
+    } else if value == "ar" || value.contains("recessive") {
+        Some("Autosomal recessive")
+    } else if value == "mt" || value.contains("mitochondrial") {
+        Some("Mitochondrial")
+    } else {
+        None
+    }
+}
+
+fn clingen_classification_supports_inheritance(classification: &str) -> bool {
+    matches!(
+        classification.trim().to_ascii_lowercase().as_str(),
+        "definitive" | "strong" | "moderate"
+    )
+}
+
+/// ClinVar's variant-wide verdict is benign, so a lone pathogenic submission is
+/// an outlier rather than a condition link.
+fn variant_summary_is_benign_consensus(summary: &str) -> bool {
+    let value = summary.to_ascii_lowercase();
+    value.contains("benign") && !value.contains("pathogenic") && !value.contains("conflict")
+}
+
+fn variant_summary_is_pathogenic_consensus(summary: &str) -> bool {
+    let value = summary.to_ascii_lowercase();
+    value.contains("pathogenic")
+        && !["conflict", "benign", "uncertain", "protective"]
+            .iter()
+            .any(|term| value.contains(term))
+}
+
+/// Groups a matched pathogenic assertion by what the copy count means under the
+/// gene's curated inheritance. Only variant-wide pathogenic consensus can be
+/// `may_be_relevant` or `carrier`; mixed or missing inheritance stays `unclear`
+/// unless both copies carry the variant.
+fn genomewide_condition_relevance(
+    association_is: &str,
+    variant_summary: &str,
+    alt_allele_copies: u8,
+    inheritance: &[String],
+    hemizygous_x: bool,
+) -> &'static str {
+    if association_is != "variant_condition_summary"
+        || inheritance.is_empty()
+        || !variant_summary_is_pathogenic_consensus(variant_summary)
+    {
+        return RELEVANCE_UNCLEAR;
+    }
+    let dominant = inheritance.iter().any(|mode| mode.contains("dominant"));
+    let recessive = inheritance.iter().any(|mode| mode.contains("recessive"));
+    let x_linked = inheritance.iter().any(|mode| mode == "X-linked");
+    let mitochondrial = inheritance.iter().any(|mode| mode == "Mitochondrial");
+    let kinds = u8::from(dominant) + u8::from(recessive) + u8::from(x_linked);
+    if mitochondrial || kinds != 1 {
+        return if alt_allele_copies >= 2 && !mitochondrial {
+            RELEVANCE_MAY_BE_RELEVANT
+        } else {
+            RELEVANCE_UNCLEAR
+        };
+    }
+    let affected = if dominant {
+        true
+    } else if recessive {
+        alt_allele_copies >= 2
+    } else {
+        alt_allele_copies >= 2 || hemizygous_x
+    };
+    if affected {
+        RELEVANCE_MAY_BE_RELEVANT
+    } else {
+        RELEVANCE_CARRIER
+    }
+}
+
 fn clinvar_submission_kind(classification: &str) -> Option<&'static str> {
     let value = classification.trim().to_ascii_lowercase();
     if value.is_empty()
@@ -1868,10 +2099,10 @@ fn clinvar_submission_kind(classification: &str) -> Option<&'static str> {
     {
         return None;
     }
-    if value.contains("pathogenic") {
-        Some("variant_condition_summary")
-    } else if value.contains("risk allele") || value.contains("risk factor") {
+    if value.contains("low penetrance") || value.contains("risk allele") || value.contains("risk factor") {
         Some("variant_risk_factor_summary")
+    } else if value.contains("pathogenic") {
+        Some("variant_condition_summary")
     } else {
         None
     }
@@ -1966,10 +2197,15 @@ where
     let orientation = provenance
         .map(|item| item.diagnostics.allele_orientation.to_ascii_lowercase())
         .unwrap_or_default();
-    let reverse_strand = orientation.contains("reverse") || orientation.contains("minus strand");
+    let mut reverse_strand = orientation.contains("reverse") || orientation.contains("minus strand");
     let forward_strand = orientation.contains("forward") || orientation.contains("plus strand");
-    let orientation_label = if reverse_strand {
+    let reference_verified = orientation.contains("verified against clinvar");
+    let orientation_label = if reverse_strand && reference_verified {
+        VERIFIED_REVERSE_LABEL
+    } else if reverse_strand {
         "Reverse strand converted to reference orientation"
+    } else if forward_strand && reference_verified {
+        VERIFIED_FORWARD_LABEL
     } else if forward_strand {
         "Forward strand"
     } else {
@@ -1992,22 +2228,36 @@ where
         "clinvar_variant_summary".to_string(),
         "clinvar_submission_summary".to_string(),
     ];
-    if !forward_strand && !reverse_strand {
-        return Ok(discovery);
-    }
 
     let source_build = provenance
-        .map(|item| item.diagnostics.source_build.to_ascii_uppercase())
+        .map(|item| item.diagnostics.source_build.clone())
         .unwrap_or_default();
-    let assembly = if source_build.contains("38") {
-        "GRCh38"
-    } else if source_build.contains("37") || source_build.contains("19") {
-        "GRCh37"
-    } else {
+    let Some(assembly) = assembly_for_source_build(&source_build) else {
         discovery.allele_orientation =
             "Unverified assembly; exact ClinVar matching unavailable".to_string();
         return Ok(discovery);
     };
+    if !forward_strand && !reverse_strand {
+        match infer_strand_from_reference(conn, sample_id, assembly) {
+            Some(ReferenceStrand::Forward) => {
+                discovery.allele_orientation = VERIFIED_FORWARD_LABEL.to_string();
+            }
+            Some(ReferenceStrand::Reverse) => {
+                reverse_strand = true;
+                discovery.allele_orientation = VERIFIED_REVERSE_LABEL.to_string();
+            }
+            None => return Ok(discovery),
+        }
+    }
+    let hemizygous_x = conn
+        .query_row(
+            "SELECT genetic_sex FROM samples WHERE id = ?1",
+            [sample_id],
+            |row| row.get::<_, Option<String>>(0),
+        )
+        .ok()
+        .flatten()
+        .is_some_and(|sex| sex.trim().to_ascii_lowercase().starts_with("male"));
 
     let mut statement = conn
         .prepare(
@@ -2121,6 +2371,9 @@ where
         let Some(association_is) = clinvar_submission_kind(&clinical_significance) else {
             continue;
         };
+        if variant_summary_is_benign_consensus(&aggregate_classification) {
+            continue;
+        }
         if !review_status_has_criteria(&review_status) {
             continue;
         }
@@ -2191,7 +2444,49 @@ where
             source_url: format!(
                 "https://www.ncbi.nlm.nih.gov/clinvar/?term={scv}"
             ),
+            alt_allele_copies: u8::from(allele1 == alternate_base)
+                + u8::from(allele2 == alternate_base),
+            inheritance: Vec::new(),
+            relevance: RELEVANCE_UNCLEAR.to_string(),
         });
+    }
+
+    let genes: Vec<String> = matches
+        .iter()
+        .filter_map(|item| item.gene_symbol.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    let clingen = fetch_clingen_enrichment(conn, &genes);
+    for item in &mut matches {
+        let mut modes = BTreeSet::new();
+        if let Some(annotations) = item
+            .gene_symbol
+            .as_ref()
+            .and_then(|gene| clingen.get(&gene.to_lowercase()))
+        {
+            for annotation in annotations {
+                if !clingen_classification_supports_inheritance(&annotation.classification) {
+                    continue;
+                }
+                if let Some(label) = annotation
+                    .mode_of_inheritance
+                    .as_deref()
+                    .and_then(inheritance_label)
+                {
+                    modes.insert(label.to_string());
+                }
+            }
+        }
+        item.inheritance = modes.into_iter().collect();
+        item.relevance = genomewide_condition_relevance(
+            &item.association_is,
+            &item.variant_summary_clinical_significance,
+            item.alt_allele_copies,
+            &item.inheritance,
+            hemizygous_x,
+        )
+        .to_string();
     }
 
     if active_rsid.is_some() {
@@ -2223,9 +2518,18 @@ where
         report_started,
         sort_started,
     );
+    let relevance_rank = |value: &str| match value {
+        RELEVANCE_MAY_BE_RELEVANT => 0,
+        RELEVANCE_CARRIER => 1,
+        _ => 2,
+    };
     matches.sort_by(|left, right| {
-        review_status_rank(&right.review_status)
-            .cmp(&review_status_rank(&left.review_status))
+        relevance_rank(&left.relevance)
+            .cmp(&relevance_rank(&right.relevance))
+            .then_with(|| {
+                review_status_rank(&right.review_status)
+                    .cmp(&review_status_rank(&left.review_status))
+            })
             .then_with(|| left.condition.cmp(&right.condition))
             .then_with(|| left.rsid.cmp(&right.rsid))
             .then_with(|| left.scv_accession.cmp(&right.scv_accession))
@@ -2305,6 +2609,24 @@ where
             },
         )
         .ok();
+    let mut import_provenance = import_provenance;
+    if let Some(provenance) = import_provenance.as_mut() {
+        if orientation_is_unstated(&provenance.diagnostics.allele_orientation) {
+            notify_report_progress(
+                &mut on_progress,
+                sample_id,
+                "preparing",
+                "Verifying DNA strand orientation against ClinVar reference alleles",
+                0,
+                0,
+                0,
+                "",
+                report_started,
+                Instant::now(),
+            );
+            verify_unstated_import_orientation(conn, sample_id, provenance);
+        }
+    }
     let import_source_build = import_provenance
         .as_ref()
         .map(|provenance| provenance.diagnostics.source_build.clone());
@@ -3537,6 +3859,285 @@ mod tests {
             fetch_genomewide_clinvar_discovery(&conn, 1, Some(&unknown_provenance)).unwrap();
         assert_eq!(unknown_discovery.exact_variant_count, 0);
         assert!(unknown_discovery.allele_orientation.starts_with("Unverified"));
+    }
+
+    fn attach_strand_reference(conn: &Connection, rows: &[(&str, &str, &str, &str)]) {
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", []).unwrap();
+        conn.execute_batch(
+            "CREATE TABLE clinvar.clinvar_reference (
+                rsid TEXT, variation_id TEXT, gene_symbol TEXT,
+                reference_allele_vcf TEXT, alternate_allele_vcf TEXT,
+                clinical_significance TEXT, assembly TEXT
+            );",
+        )
+        .unwrap();
+        for (index, (call1, call2, reference, alternate)) in rows.iter().enumerate() {
+            let rsid = format!("rsStrand{index}");
+            conn.execute(
+                "INSERT INTO genotypes VALUES (1, ?1, '1', ?2, NULL, ?3, ?4)",
+                rusqlite::params![rsid, index as i64 + 1, call1, call2],
+            )
+            .unwrap();
+            conn.execute(
+                "INSERT INTO clinvar.clinvar_reference VALUES (?1, ?2, 'G', ?3, ?4, 'Pathogenic', 'GRCh37')",
+                rusqlite::params![rsid, format!("{index}"), reference, alternate],
+            )
+            .unwrap();
+        }
+    }
+
+    #[test]
+    fn infers_forward_strand_from_unambiguous_reference_alleles() {
+        let conn = setup_test_db();
+        let rows = vec![("A", "G", "A", "G"); STRAND_CHECK_MIN_INFORMATIVE as usize];
+        attach_strand_reference(&conn, &rows);
+        assert_eq!(
+            infer_strand_from_reference(&conn, 1, "GRCh37"),
+            Some(ReferenceStrand::Forward)
+        );
+    }
+
+    #[test]
+    fn infers_reverse_strand_from_complemented_calls() {
+        let conn = setup_test_db();
+        let rows = vec![("T", "C", "A", "G"); STRAND_CHECK_MIN_INFORMATIVE as usize];
+        attach_strand_reference(&conn, &rows);
+        assert_eq!(
+            infer_strand_from_reference(&conn, 1, "GRCh37"),
+            Some(ReferenceStrand::Reverse)
+        );
+    }
+
+    #[test]
+    fn strand_inference_ignores_palindromic_and_sparse_evidence() {
+        let conn = setup_test_db();
+        let mut rows = vec![("A", "T", "A", "T"); STRAND_CHECK_MIN_INFORMATIVE as usize];
+        rows.push(("A", "G", "A", "G"));
+        attach_strand_reference(&conn, &rows);
+        assert_eq!(infer_strand_from_reference(&conn, 1, "GRCh37"), None);
+    }
+
+    #[test]
+    fn strand_inference_rejects_mixed_orientation() {
+        let conn = setup_test_db();
+        let half = STRAND_CHECK_MIN_INFORMATIVE as usize;
+        let mut rows = vec![("A", "G", "A", "G"); half];
+        rows.extend(vec![("T", "C", "A", "G"); half]);
+        attach_strand_reference(&conn, &rows);
+        assert_eq!(infer_strand_from_reference(&conn, 1, "GRCh37"), None);
+    }
+
+    #[test]
+    fn unknown_header_orientation_is_verified_against_reference_before_matching() {
+        let conn = setup_test_db();
+        let rows = vec![("A", "G", "A", "G"); STRAND_CHECK_MIN_INFORMATIVE as usize];
+        attach_strand_reference(&conn, &rows);
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar_submissions", [])
+            .unwrap();
+        conn.execute_batch(
+            "CREATE TABLE clinvar_submissions.clinvar_submissions (
+                scv TEXT, variation_id TEXT, clinical_significance TEXT,
+                reported_phenotype_info TEXT, submitted_phenotype_info TEXT,
+                review_status TEXT, date_last_evaluated TEXT, origin_counts TEXT,
+                somatic_clinical_impact TEXT, oncogenicity TEXT
+            );
+            INSERT INTO clinvar_submissions.clinvar_submissions VALUES
+                ('SCV000000009.1', '0', 'Pathogenic', 'Synthetic condition', 'Synthetic condition',
+                 'criteria provided, single submitter', '2026-01-01', 'germline:1', 'NA', '-');",
+        )
+        .unwrap();
+        let provenance = crate::parser::ImportProvenance::new(
+            "synthetic-import".into(),
+            "synthetic.csv".into(),
+            "synthetic-sha".into(),
+            crate::parser::ParseDiagnostics {
+                format: "AncestryDNA".into(),
+                vendor: "synthetic".into(),
+                delimiter: "tab".into(),
+                source_build: "GRCh37".into(),
+                coordinate_system: "1-based-inclusive".into(),
+                allele_orientation: "Unknown (vendor strand not stated)".into(),
+                total_rows: rows.len(),
+                accepted_rows: rows.len(),
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        );
+        let discovery = fetch_genomewide_clinvar_discovery(&conn, 1, Some(&provenance)).unwrap();
+        assert!(discovery.allele_orientation.contains("verified"));
+        assert_eq!(discovery.exact_variant_count, 1);
+        assert_eq!(discovery.associations[0].alt_allele_copies, 1);
+        // No ClinGen inheritance is attached in this fixture.
+        assert_eq!(discovery.associations[0].relevance, "unclear");
+    }
+
+    #[test]
+    fn verified_orientation_is_persisted_for_curated_scoring_and_later_reports() {
+        let conn = setup_test_db();
+        let rows = vec![("A", "G", "A", "G"); STRAND_CHECK_MIN_INFORMATIVE as usize];
+        attach_strand_reference(&conn, &rows);
+        conn.execute_batch(
+            "CREATE TABLE import_provenance (import_id TEXT PRIMARY KEY, allele_orientation TEXT NOT NULL);
+             INSERT INTO import_provenance VALUES ('import-1', 'Unknown (vendor strand not stated)');",
+        )
+        .unwrap();
+        let mut provenance = crate::parser::ImportProvenance::new(
+            "import-1".into(),
+            "synthetic.csv".into(),
+            "synthetic-sha".into(),
+            crate::parser::ParseDiagnostics {
+                format: "AncestryDNA".into(),
+                vendor: "synthetic".into(),
+                delimiter: "tab".into(),
+                source_build: "GRCh37".into(),
+                coordinate_system: "1-based-inclusive".into(),
+                allele_orientation: "Unknown (vendor strand not stated)".into(),
+                total_rows: rows.len(),
+                accepted_rows: rows.len(),
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        );
+        verify_unstated_import_orientation(&conn, 1, &mut provenance);
+        assert_eq!(provenance.diagnostics.allele_orientation, VERIFIED_FORWARD_ORIENTATION);
+        let stored: String = conn
+            .query_row("SELECT allele_orientation FROM import_provenance", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, VERIFIED_FORWARD_ORIENTATION);
+        assert!(!orientation_is_unstated(&stored));
+    }
+
+    #[test]
+    fn condition_relevance_uses_inheritance_and_copy_count() {
+        let dominant = vec!["Autosomal dominant".to_string()];
+        let recessive = vec!["Autosomal recessive".to_string()];
+        let x_linked = vec!["X-linked".to_string()];
+        let mixed = vec!["Autosomal dominant".to_string(), "Autosomal recessive".to_string()];
+        let condition = "variant_condition_summary";
+        let relevance = |copies, modes: &[String], hemizygous| {
+            genomewide_condition_relevance(condition, "Pathogenic", copies, modes, hemizygous)
+        };
+
+        assert_eq!(relevance(1, &dominant, false), RELEVANCE_MAY_BE_RELEVANT);
+        assert_eq!(relevance(1, &recessive, false), RELEVANCE_CARRIER);
+        assert_eq!(relevance(2, &recessive, false), RELEVANCE_MAY_BE_RELEVANT);
+        assert_eq!(relevance(1, &x_linked, false), RELEVANCE_CARRIER);
+        assert_eq!(relevance(1, &x_linked, true), RELEVANCE_MAY_BE_RELEVANT);
+        assert_eq!(relevance(1, &mixed, false), RELEVANCE_UNCLEAR);
+        assert_eq!(relevance(2, &mixed, false), RELEVANCE_MAY_BE_RELEVANT);
+        assert_eq!(relevance(2, &[], false), RELEVANCE_UNCLEAR);
+        assert_eq!(
+            genomewide_condition_relevance("variant_risk_factor_summary", "Pathogenic", 2, &dominant, false),
+            RELEVANCE_UNCLEAR
+        );
+    }
+
+    #[test]
+    fn condition_relevance_requires_variant_wide_pathogenic_consensus() {
+        let dominant = vec!["Autosomal dominant".to_string()];
+        let condition = "variant_condition_summary";
+        for summary in [
+            "Conflicting classifications of pathogenicity",
+            "drug response",
+            "Uncertain significance",
+            "Likely pathogenic; protective",
+        ] {
+            assert_eq!(
+                genomewide_condition_relevance(condition, summary, 2, &dominant, false),
+                RELEVANCE_UNCLEAR,
+                "{summary}"
+            );
+        }
+        for summary in ["Pathogenic", "Likely pathogenic", "Pathogenic/Likely pathogenic"] {
+            assert_eq!(
+                genomewide_condition_relevance(condition, summary, 1, &dominant, false),
+                RELEVANCE_MAY_BE_RELEVANT,
+                "{summary}"
+            );
+        }
+    }
+
+    #[test]
+    fn low_penetrance_submissions_are_risk_factors() {
+        assert_eq!(
+            clinvar_submission_kind("Pathogenic, low penetrance"),
+            Some("variant_risk_factor_summary")
+        );
+        assert_eq!(
+            clinvar_submission_kind("Likely pathogenic"),
+            Some("variant_condition_summary")
+        );
+    }
+
+    #[test]
+    fn benign_variant_wide_consensus_is_excluded() {
+        assert!(variant_summary_is_benign_consensus("Benign"));
+        assert!(variant_summary_is_benign_consensus("Benign/Likely benign"));
+        assert!(variant_summary_is_benign_consensus("Likely benign"));
+        assert!(!variant_summary_is_benign_consensus("Conflicting classifications of pathogenicity"));
+        assert!(!variant_summary_is_benign_consensus("Pathogenic"));
+    }
+
+    #[test]
+    fn genomewide_scan_skips_submissions_on_benign_consensus_variants() {
+        let conn = setup_test_db();
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar", []).unwrap();
+        conn.execute("ATTACH DATABASE ':memory:' AS clinvar_submissions", [])
+            .unwrap();
+        conn.execute_batch(
+            "CREATE TABLE clinvar.clinvar_reference (
+                rsid TEXT, variation_id TEXT, gene_symbol TEXT,
+                reference_allele_vcf TEXT, alternate_allele_vcf TEXT,
+                clinical_significance TEXT, assembly TEXT
+            );
+            CREATE TABLE clinvar_submissions.clinvar_submissions (
+                scv TEXT, variation_id TEXT, clinical_significance TEXT,
+                reported_phenotype_info TEXT, submitted_phenotype_info TEXT,
+                review_status TEXT, date_last_evaluated TEXT, origin_counts TEXT,
+                somatic_clinical_impact TEXT, oncogenicity TEXT
+            );
+            INSERT INTO genotypes VALUES (1, 'rsBenignConsensus', '1', 101, 201, 'A', 'G');
+            INSERT INTO clinvar.clinvar_reference VALUES
+                ('rsBenignConsensus', '2001', 'TEST3', 'A', 'G', 'Benign', 'GRCh37');
+            INSERT INTO clinvar_submissions.clinvar_submissions VALUES
+                ('SCV000000010.1', '2001', 'Pathogenic', 'Outlier condition', 'Outlier condition',
+                 'criteria provided, single submitter', '2026-01-01', 'germline:1', 'NA', '-');",
+        )
+        .unwrap();
+        let provenance = crate::parser::ImportProvenance::new(
+            "synthetic-import".into(),
+            "synthetic.txt".into(),
+            "synthetic-sha".into(),
+            crate::parser::ParseDiagnostics {
+                format: "23andMe".into(),
+                vendor: "synthetic".into(),
+                delimiter: "tab".into(),
+                source_build: "GRCh37".into(),
+                coordinate_system: "1-based-inclusive".into(),
+                allele_orientation: "forward-strand (synthetic test)".into(),
+                total_rows: 1,
+                accepted_rows: 1,
+                malformed_rows: 0,
+                duplicate_rows: 0,
+                warnings: Vec::new(),
+            },
+        );
+        let discovery = fetch_genomewide_clinvar_discovery(&conn, 1, Some(&provenance)).unwrap();
+        assert_eq!(discovery.exact_variant_count, 0);
+        assert!(discovery.associations.is_empty());
+    }
+
+    #[test]
+    fn inheritance_labels_normalize_clingen_codes_and_words() {
+        assert_eq!(inheritance_label("AD"), Some("Autosomal dominant"));
+        assert_eq!(inheritance_label("SD"), Some("Autosomal semidominant"));
+        assert_eq!(inheritance_label("Autosomal recessive"), Some("Autosomal recessive"));
+        assert_eq!(inheritance_label("XL"), Some("X-linked"));
+        assert_eq!(inheritance_label("X-linked recessive"), Some("X-linked"));
+        assert_eq!(inheritance_label("MT"), Some("Mitochondrial"));
+        assert_eq!(inheritance_label("UD"), None);
     }
 
     #[test]

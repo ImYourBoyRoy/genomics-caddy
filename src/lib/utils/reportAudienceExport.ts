@@ -35,7 +35,17 @@ import {
   type ReportReference,
 } from './reportReferences';
 import { dedupeWarnings, classifyWarnings } from './warningTaxonomy';
-import { groupGenomeWideConditionAssociations } from './genomewideConditionDiscovery';
+import {
+  copyCountLabel,
+  groupGenomeWideConditionAssociations,
+  sectionConditionGroupsByRelevance,
+} from './genomewideConditionDiscovery';
+
+const RELEVANCE_EXPORT_LABELS: Record<string, string> = {
+  may_be_relevant: 'May be relevant (copy count fits inheritance)',
+  carrier: 'Carrier (one copy, recessive or X-linked)',
+  unclear: 'Disputed or unclear (conflicting ClinVar submissions, uncurated inheritance, or risk factor)',
+};
 import aiPromptPolicy from '../marker-packs/ai_prompt_policy.json';
 import {
   buildAssertionKey,
@@ -350,11 +360,12 @@ function renderCatalogAssociations(report: GeneratedReport): string {
 function renderGenomewideConditionDiscovery(report: GeneratedReport): string {
   const discovery = report.genomewide_clinvar;
   if (!discovery) return '';
-  const groups = groupGenomeWideConditionAssociations(discovery.associations);
+  const groups = sectionConditionGroupsByRelevance(groupGenomeWideConditionAssociations(discovery.associations))
+    .flatMap((section) => section.groups);
   const header = [
     '## Potential disease associations from full-genome ClinVar scan',
     '',
-    'Exact allele matches to local ClinVar condition-specific submissions. These are not diagnoses, personal-risk estimates, or a complete disease screen. This scan does not resolve inheritance, phase, penetrance, or clinical fit. Explicit somatic/oncogenic records are excluded; some records may not specify origin.',
+    'Exact allele matches to reviewed ClinVar condition submissions (somatic/oncogenic and benign-consensus variants excluded). May-be-relevant and carrier groups require a variant-wide pathogenic consensus plus ClinGen inheritance. Rare pathogenic array calls need clinical confirmation.',
     '',
   ];
   if (!discovery.local_index_ready) {
@@ -374,11 +385,12 @@ function renderGenomewideConditionDiscovery(report: GeneratedReport): string {
     '',
     ...groups.slice(0, 40).flatMap((group) => [
       `### ${clean(group.condition)}`,
-      `- Taxonomy topic (navigation only): ${clean(group.categoryLabel)}`,
-      `- Matched variants: ${group.variantCount}`,
-      ...(group.conflicts ? ['- The ClinVar variant-wide summary contains a conflict, which may span conditions.'] : []),
+      `- Relevance: ${RELEVANCE_EXPORT_LABELS[group.relevance] ?? 'Unclear'}`,
+      `- Copies: ${copyCountLabel(group.maxCopies)}; inheritance: ${group.inheritance.length ? group.inheritance.map((mode) => clean(mode)).join(' / ') : 'not curated'}`,
+      `- Topic: ${clean(group.categoryLabel)}; matched variants: ${group.variantCount}`,
+      ...(group.conflicts ? ['- ClinVar submitters disagree about this variant.'] : []),
       ...group.assertions.slice(0, 5).map((assertion) =>
-        `- ${clean(assertion.rsid)}${assertion.gene_symbol ? ` (${clean(assertion.gene_symbol)})` : ''}: ${clean(assertion.association_is)} (${clean(assertion.association_scope)} scope); ${clean(assertion.clinical_significance)}; variant-wide summary ${clean(assertion.variant_summary_clinical_significance)}; ${clean(assertion.review_status)}; ${clean(assertion.origin_status)}; [${clean(assertion.scv_accession)}](${clean(assertion.source_url)})`
+        `- ${clean(assertion.rsid)}${assertion.gene_symbol ? ` (${clean(assertion.gene_symbol)})` : ''}: ${clean(assertion.clinical_significance)}; variant-wide summary ${clean(assertion.variant_summary_clinical_significance)}; ${clean(assertion.review_status)}; ${clean(assertion.origin_status)}; [${clean(assertion.scv_accession)}](${clean(assertion.source_url)})`
       ),
       ...(group.assertions.length > 5 ? [`- ${group.assertions.length - 5} additional SCV submissions are retained in the JSON report.`] : []),
       '',

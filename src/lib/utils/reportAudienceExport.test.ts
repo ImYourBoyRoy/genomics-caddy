@@ -151,6 +151,9 @@ describe('audience-specific report exports', () => {
             origin_status: 'Origin not specified',
             variant_summary_conflict: false,
             source_url: 'https://www.ncbi.nlm.nih.gov/clinvar/?term=SCV000000001.1',
+            alt_allele_copies: 1,
+            inheritance: ['Autosomal recessive'],
+            relevance: 'carrier',
           }],
         },
       },
@@ -160,6 +163,9 @@ describe('audience-specific report exports', () => {
 
     expect(output).toContain('Potential disease associations from full-genome ClinVar scan');
     expect(output).toContain('Synthetic condition');
+    expect(output).toContain('- Relevance: Carrier (one copy, recessive or X-linked)');
+    expect(output).toContain('- Copies: One copy; inheritance: Autosomal recessive');
+    expect(output).not.toContain('not diagnoses');
     expect(output).toContain('Origin not specified');
     expect(output).not.toContain('A/G');
   });

@@ -66,7 +66,7 @@
               title={disabled ? disabledReason : `Review chromosome pattern for ${s.name}`}
               onclick={() => onOpenChromosomeContext(s)}
             >
-              <span class="sample-sex-symbol" aria-hidden="true">{sexSymbol(s.genetic_sex)}</span>
+              <span class="sample-sex-symbol">{sexSymbol(s.genetic_sex)}</span>
             </button>
             <button
               type="button"

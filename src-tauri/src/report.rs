@@ -759,30 +759,32 @@ pub struct ReportProgress {
     pub phase_elapsed_ms: u64,
 }
 
-fn notify_report_progress<F>(
-    on_progress: &mut F,
+struct ReportProgressUpdate<'a> {
     sample_id: i64,
-    phase: &str,
-    status: &str,
+    phase: &'a str,
+    status: &'a str,
     current: u64,
     total: u64,
     matches: u64,
-    matches_label: &str,
+    matches_label: &'a str,
     report_started: Instant,
     phase_started: Instant,
-) where
+}
+
+fn notify_report_progress<F>(on_progress: &mut F, update: ReportProgressUpdate<'_>)
+where
     F: FnMut(ReportProgress),
 {
     on_progress(ReportProgress {
-        sample_id,
-        phase: phase.to_string(),
-        status: status.to_string(),
-        current,
-        total,
-        matches,
-        matches_label: matches_label.to_string(),
-        elapsed_ms: report_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
-        phase_elapsed_ms: phase_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
+        sample_id: update.sample_id,
+        phase: update.phase.to_string(),
+        status: update.status.to_string(),
+        current: update.current,
+        total: update.total,
+        matches: update.matches,
+        matches_label: update.matches_label.to_string(),
+        elapsed_ms: update.report_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
+        phase_elapsed_ms: update.phase_started.elapsed().as_millis().min(u64::MAX as u128) as u64,
     });
 }
 
@@ -2286,15 +2288,17 @@ where
     let scan_started = Instant::now();
     notify_report_progress(
         on_progress,
-        sample_id,
-        "clinvar",
-        "Checking profile variants against local ClinVar condition records",
-        0,
-        genotypes_scanned,
-        0,
-        "exact allele matches found",
-        report_started,
-        scan_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "clinvar",
+            status: "Checking profile variants against local ClinVar condition records",
+            current: 0,
+            total: genotypes_scanned,
+            matches: 0,
+            matches_label: "exact allele matches found",
+            report_started,
+            phase_started: scan_started,
+        },
     );
     let mut rows = statement
         .query(rusqlite::params![sample_id, assembly])
@@ -2312,20 +2316,22 @@ where
             genotypes_completed = genotypes_completed.saturating_add(1);
             active_rsid = Some(rsid.clone());
             let now = Instant::now();
-            if genotypes_completed % 1_000 == 0
+            if genotypes_completed.is_multiple_of(1_000)
                 || now.duration_since(last_progress_at).as_millis() >= 400
             {
                 notify_report_progress(
                     on_progress,
-                    sample_id,
-                    "clinvar",
-                    "Checking profile variants against local ClinVar condition records",
-                    genotypes_completed,
-                    genotypes_scanned,
-                    matched_variants.len() as u64,
-                    "exact allele matches found",
-                    report_started,
-                    scan_started,
+                    ReportProgressUpdate {
+                        sample_id,
+                        phase: "clinvar",
+                        status: "Checking profile variants against local ClinVar condition records",
+                        current: genotypes_completed,
+                        total: genotypes_scanned,
+                        matches: matched_variants.len() as u64,
+                        matches_label: "exact allele matches found",
+                        report_started,
+                        phase_started: scan_started,
+                    },
                 );
                 last_progress_at = now;
             }
@@ -2340,15 +2346,17 @@ where
         if now.duration_since(last_progress_at).as_millis() >= 400 {
             notify_report_progress(
                 on_progress,
-                sample_id,
-                "clinvar",
-                "Checking profile variants against local ClinVar condition records",
-                genotypes_completed,
-                genotypes_scanned,
-                matched_variants.len() as u64,
-                "exact allele matches found",
-                report_started,
-                scan_started,
+                ReportProgressUpdate {
+                    sample_id,
+                    phase: "clinvar",
+                    status: "Checking profile variants against local ClinVar condition records",
+                    current: genotypes_completed,
+                    total: genotypes_scanned,
+                    matches: matched_variants.len() as u64,
+                    matches_label: "exact allele matches found",
+                    report_started,
+                    phase_started: scan_started,
+                },
             );
             last_progress_at = now;
         }
@@ -2501,29 +2509,33 @@ where
     }
     notify_report_progress(
         on_progress,
-        sample_id,
-        "clinvar",
-        "Finished checking profile variants against local ClinVar records",
-        genotypes_completed.min(genotypes_scanned),
-        genotypes_scanned,
-        matched_variants.len() as u64,
-        "exact allele matches found",
-        report_started,
-        scan_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "clinvar",
+            status: "Finished checking profile variants against local ClinVar records",
+            current: genotypes_completed.min(genotypes_scanned),
+            total: genotypes_scanned,
+            matches: matched_variants.len() as u64,
+            matches_label: "exact allele matches found",
+            report_started,
+            phase_started: scan_started,
+        },
     );
 
     let sort_started = Instant::now();
     notify_report_progress(
         on_progress,
-        sample_id,
-        "finalizing",
-        "Sorting exact ClinVar matches for the report",
-        0,
-        0,
-        matched_variants.len() as u64,
-        "exact allele matches found",
-        report_started,
-        sort_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "finalizing",
+            status: "Sorting exact ClinVar matches for the report",
+            current: 0,
+            total: 0,
+            matches: matched_variants.len() as u64,
+            matches_label: "exact allele matches found",
+            report_started,
+            phase_started: sort_started,
+        },
     );
     let relevance_rank = |value: &str| match value {
         RELEVANCE_MAY_BE_RELEVANT => 0,
@@ -2573,15 +2585,17 @@ where
     let initial_phase_started = report_started;
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "preparing",
-        "Opening the local profile and checking report resources",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        initial_phase_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "preparing",
+            status: "Opening the local profile and checking report resources",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: initial_phase_started,
+        },
     );
 
     let import_provenance = conn
@@ -2621,15 +2635,17 @@ where
         if orientation_is_unstated(&provenance.diagnostics.allele_orientation) {
             notify_report_progress(
                 &mut on_progress,
-                sample_id,
-                "preparing",
-                "Verifying DNA strand orientation against ClinVar reference alleles",
-                0,
-                0,
-                0,
-                "",
-                report_started,
-                Instant::now(),
+                ReportProgressUpdate {
+                    sample_id,
+                    phase: "preparing",
+                    status: "Verifying DNA strand orientation against ClinVar reference alleles",
+                    current: 0,
+                    total: 0,
+                    matches: 0,
+                    matches_label: "",
+                    report_started,
+                    phase_started: Instant::now(),
+                },
             );
             verify_unstated_import_orientation(conn, sample_id, provenance);
         }
@@ -2680,15 +2696,17 @@ where
     let preparing_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "preparing",
-        "Resolving curated marker IDs against this profile",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        preparing_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "preparing",
+            status: "Resolving curated marker IDs against this profile",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: preparing_started,
+        },
     );
 
     // 1. Collect all rsIDs and genes to query in a single batch
@@ -2716,15 +2734,17 @@ where
     let call_lookup_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "preparing",
-        "Looking up profile calls for curated markers",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        call_lookup_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "preparing",
+            status: "Looking up profile calls for curated markers",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: call_lookup_started,
+        },
     );
     let user_variants = crate::db::query_by_rsids(conn, sample_id, &query_rsids)
         .map_err(|e| format!("Database query error: {}", e))?;
@@ -2833,15 +2853,17 @@ where
     let enrichment_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "preparing",
-        "Loading local reference annotations",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        enrichment_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "preparing",
+            status: "Loading local reference annotations",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: enrichment_started,
+        },
     );
     let enrichment_map = fetch_local_enrichment(conn, &rsids);
     let current_gnomad_release = conn
@@ -2878,15 +2900,17 @@ where
     let marker_phase_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "markers",
-        "Evaluating curated marker assertions",
-        0,
-        total_marker_assertions,
-        0,
-        "profile calls found",
-        report_started,
-        marker_phase_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "markers",
+            status: "Evaluating curated marker assertions",
+            current: 0,
+            total: total_marker_assertions,
+            matches: 0,
+            matches_label: "profile calls found",
+            report_started,
+            phase_started: marker_phase_started,
+        },
     );
     let mut marker_assertions_checked = 0u64;
     let mut marker_calls_found = 0u64;
@@ -3510,20 +3534,22 @@ where
             }
             let now = Instant::now();
             if marker_assertions_checked == total_marker_assertions
-                || marker_assertions_checked % 25 == 0
+                || marker_assertions_checked.is_multiple_of(25)
                 || now.duration_since(last_marker_progress_at).as_millis() >= 250
             {
                 notify_report_progress(
                     &mut on_progress,
-                    sample_id,
-                    "markers",
-                    "Evaluating curated marker assertions",
-                    marker_assertions_checked,
-                    total_marker_assertions,
-                    marker_calls_found,
-                    "profile calls found",
-                    report_started,
-                    marker_phase_started,
+                    ReportProgressUpdate {
+                        sample_id,
+                        phase: "markers",
+                        status: "Evaluating curated marker assertions",
+                        current: marker_assertions_checked,
+                        total: total_marker_assertions,
+                        matches: marker_calls_found,
+                        matches_label: "profile calls found",
+                        report_started,
+                        phase_started: marker_phase_started,
+                    },
                 );
                 last_marker_progress_at = now;
             }
@@ -3576,15 +3602,17 @@ where
     let scan_check_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "preparing",
-        "Checking local ClinVar indexes for genome-wide matching",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        scan_check_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "preparing",
+            status: "Checking local ClinVar indexes for genome-wide matching",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: scan_check_started,
+        },
     );
     let genomewide_clinvar = match fetch_genomewide_clinvar_discovery_with_progress(
         conn,
@@ -3606,15 +3634,17 @@ where
     let finalizing_started = Instant::now();
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "finalizing",
-        "Finishing and formatting the report",
-        0,
-        0,
-        0,
-        "",
-        report_started,
-        finalizing_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "finalizing",
+            status: "Finishing and formatting the report",
+            current: 0,
+            total: 0,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: finalizing_started,
+        },
     );
     let generated_report = GeneratedReport {
         schema_version: "2.0.0".to_string(),
@@ -3637,15 +3667,17 @@ where
     };
     notify_report_progress(
         &mut on_progress,
-        sample_id,
-        "finalizing",
-        "Report is ready",
-        1,
-        1,
-        0,
-        "",
-        report_started,
-        finalizing_started,
+        ReportProgressUpdate {
+            sample_id,
+            phase: "finalizing",
+            status: "Report is ready",
+            current: 1,
+            total: 1,
+            matches: 0,
+            matches_label: "",
+            report_started,
+            phase_started: finalizing_started,
+        },
     );
     Ok(generated_report)
 }

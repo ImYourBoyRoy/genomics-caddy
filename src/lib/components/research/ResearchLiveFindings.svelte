@@ -43,7 +43,7 @@
   function bucketHint(bucket: string): string {
     switch (bucket) {
       case "clinical_review":
-        return "Potentially clinically relevant evidence surfaced; treat as a review queue item, not a diagnosis.";
+        return "Potentially clinically relevant evidence surfaced; review it first.";
       case "wellness_relevant":
         return "Likely useful for personal research or habit/lifestyle context after source review.";
       case "interpretable_research":

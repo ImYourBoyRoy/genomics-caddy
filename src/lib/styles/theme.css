@@ -30,6 +30,7 @@ Responsibilities:
   --border-strong: rgba(255, 255, 255, 0.16);
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
+  --text-muted: #8e97a6;
   --focus-ring: #5eead4;
   --tooltip-bg: #202332;
   --tooltip-border: rgba(148, 163, 184, 0.35);
@@ -202,6 +203,7 @@ Responsibilities:
   --border-strong: rgba(15, 23, 42, 0.18);
   --text-primary: #0f172a;
   --text-secondary: #475569;
+  --text-muted: #526077;
   --focus-ring: #0f766e;
   --tooltip-bg: #172033;
   --tooltip-border: #475569;
@@ -354,6 +356,7 @@ Responsibilities:
     --border-strong: rgba(15, 23, 42, 0.18);
     --text-primary: #0f172a;
     --text-secondary: #475569;
+    --text-muted: #526077;
     --focus-ring: #0f766e;
     --tooltip-bg: #172033;
     --tooltip-border: #475569;
@@ -625,6 +628,7 @@ h1, h2, h3, h4, h5, h6 {
   --border-strong: rgba(191, 219, 254, 0.34);
   --text-primary: #eef2ff;
   --text-secondary: #aebbd0;
+  --text-muted: #98a6bc;
   --accent: #2dd4bf;
   --focus-ring: #7dd3fc;
   --success: #34d399;
@@ -1850,10 +1854,11 @@ h1, h2, h3, h4, h5, h6 {
   color: inherit;
 }
 
-.import-quality-banner {
-  background: var(--status-warning-bg);
-  border-color: var(--status-warning-border);
-  color: var(--status-warning-text);
+.report-coverage-note {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 
 .catalog-warnings-banner li + li {
@@ -5313,6 +5318,7 @@ h1, h2, h3, h4, h5, h6 {
     --border-strong: #94a3b8;
     --text-primary: #111827;
     --text-secondary: #475569;
+    --text-muted: #526077;
     --accent: #0f766e;
     --accent-hover: #115e59;
     --focus-ring: #0f766e;

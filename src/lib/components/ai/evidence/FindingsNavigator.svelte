@@ -156,10 +156,6 @@
     </div>
   </div>
 
-  <p class="fn-disclaimer">
-    Research and educational context only — not medical advice. Clinical view emphasizes
-    annotated signals; confirm with primary literature and qualified professionals before clinical use.
-  </p>
 
   <div class="fn-layout">
     <aside class="fn-sidebar">

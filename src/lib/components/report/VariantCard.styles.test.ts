@@ -34,8 +34,9 @@ describe('VariantCard enrichment surface', () => {
     expect(source).toContain('simpleCopy.signal');
     expect(source).toContain('simpleCopy.why_it_matters');
     expect(source).toContain('simpleCopy.review_action');
-    expect(source).toContain('simpleCopy.evidence_label');
+    expect(source).not.toContain('simpleCopy.evidence_label');
     expect(source).toContain('class="simple-next-step"');
+    expect(source).toContain('benefitsFromContext && onOpenContext');
   });
 
   it('keeps technical gene identifiers out of the Simple card heading', () => {

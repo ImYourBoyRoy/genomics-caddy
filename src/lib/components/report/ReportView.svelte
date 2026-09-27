@@ -28,6 +28,11 @@
   } from '../../utils/reportAudienceExport';
   import { buildAiReviewJson, buildReportBundleFiles, reportBundleFilename } from '../../utils/reportBundleExport';
   import { buildCanonicalFindingGroups } from '../../utils/findingIdentity';
+  import {
+    computeReportOverviewStats,
+    reportFocusLinkIds,
+    type ReportFocus,
+  } from '../../utils/reportOverview';
   import { getRuntimeAppVersion } from '../../utils/appVersion';
 
   /*
@@ -57,6 +62,7 @@
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     onOpenDiscovery?: () => void;
     onOpenHelp?: () => void;
+    onOpenContext?: () => void;
   }
 
   let {
@@ -74,10 +80,12 @@
     onNavigateToVariant,
     onOpenDiscovery,
     onOpenHelp,
+    onOpenContext,
   }: Props = $props();
 
   let showBenign = $state(false);
-  let severityFilter = $state<"all" | "higher_concern" | "priority">("all");
+  let severityFilter = $state<ReportFocus>("all");
+  let quickFiltersEl = $state<HTMLElement | null>(null);
   let findingSearch = $state("");
   let sectionFilter = $state("all");
   let tierFilter = $state<string>("all");
@@ -294,17 +302,13 @@
       ...section,
       markers: section.markers.filter((marker) => marker.severity_class !== 'benign' && marker.severity_class !== 'no_data'),
     })) ?? [];
-    const signals = buildCanonicalFindingGroups({ sections });
+    const overview = generatedReport ? computeReportOverviewStats(generatedReport) : null;
     return {
-      all: signals.length,
-      higherConcern: signals.filter((signal) =>
-        signal.severityClasses.some((severity) => severity === 'high_risk' || severity === 'confirmation_required'),
-      ).length,
-      priority: signals.filter((signal) =>
-        signal.severityClasses.some((severity) =>
-          severity === 'high_risk' || severity === 'moderate_risk' || severity === 'confirmation_required',
-        ),
-      ).length,
+      all: buildCanonicalFindingGroups({ sections }).length,
+      priority: overview?.priority ?? 0,
+      higherConcern: overview?.higherConcern ?? 0,
+      context: overview?.context ?? 0,
+      protective: overview?.protective ?? 0,
     };
   });
 
@@ -325,6 +329,16 @@
     return searchable.includes(query);
   }
 
+  async function focusFindings(focus: ReportFocus) {
+    findingSearch = '';
+    sectionFilter = 'all';
+    severityFilter = focus;
+    await tick();
+    for (const sec of filteredSections) setSectionCollapsed(sec.name, false);
+    await tick();
+    quickFiltersEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function clearReportFilters() {
     findingSearch = '';
     sectionFilter = 'all';
@@ -334,22 +348,16 @@
     sortBy = 'default';
   }
 
+  let focusLinkIds = $derived(
+    generatedReport && severityFilter !== 'all' ? reportFocusLinkIds(generatedReport, severityFilter) : null,
+  );
+
   let filteredSourceSections = $derived(
     generatedReport?.sections.map(sec => {
       let markers = sec.markers.filter(m => {
         if (!showBenign && (m.severity_class === "benign" || m.severity_class === "no_data")) return false;
         if (tierFilter === "ab" && !m.evidence_tier.startsWith("A") && !m.evidence_tier.startsWith("B")) return false;
-        if (severityFilter === "higher_concern" &&
-            m.severity_class !== "high_risk" &&
-            m.severity_class !== "confirmation_required") {
-          return false;
-        }
-        if (severityFilter === "priority" &&
-            m.severity_class !== "high_risk" &&
-            m.severity_class !== "moderate_risk" &&
-            m.severity_class !== "confirmation_required") {
-          return false;
-        }
+        if (focusLinkIds && !focusLinkIds.has(m.link_id)) return false;
         if (!matchesFindingSearch(m, sec.name)) return false;
         return true;
       });
@@ -538,6 +546,8 @@
     {foundMarkersCount}
     {totalMarkersChecked}
     presentationMode={presentationMode}
+    activeFocus={severityFilter}
+    onSelectFocus={focusFindings}
   />
 
   <ReportExportActions
@@ -615,20 +625,11 @@
   {/if}
 
   {#if generatedReport.import_provenance && generatedReport.import_provenance.liftover_unmapped_rows > 0}
-    <details class="catalog-warnings-banner import-quality-banner" aria-label="Imported profile coordinate coverage">
-      <summary>
-        <span>Profile coordinate coverage</span>
-        <span class="catalog-warnings-count">
-          {generatedReport.import_provenance.liftover_unmapped_rows.toLocaleString()} records need build mapping
-        </span>
-      </summary>
-      <p>
-        {generatedReport.import_provenance.liftover_mapped_rows.toLocaleString()} of
-        {generatedReport.import_provenance.diagnostics.accepted_rows.toLocaleString()} accepted records have GRCh38 coordinates.
-        The remaining {generatedReport.import_provenance.liftover_unmapped_rows.toLocaleString()} records remain in the local profile,
-        but build-specific reference lookups may not include them until a compatible mapping is available.
-      </p>
-    </details>
+    <p class="report-coverage-note">
+      {generatedReport.import_provenance.liftover_unmapped_rows.toLocaleString()} of
+      {generatedReport.import_provenance.diagnostics.accepted_rows.toLocaleString()} imported records have no GRCh38 position
+      and are skipped by build-specific database lookups.
+    </p>
   {/if}
 
   <details class="report-chrome-details report-legend-details">
@@ -692,7 +693,7 @@
       </div>
     </div>
 
-    <div class="quick-finding-filters" aria-label="Find and filter report entries">
+    <div class="quick-finding-filters" aria-label="Find and filter report entries" bind:this={quickFiltersEl}>
       <label class="quick-search-label">
         <span>Find a gene, marker, or condition</span>
         <input type="search" bind:value={findingSearch} placeholder="Search this report" aria-label="Search report genes, markers, conditions, and health areas" />
@@ -709,13 +710,18 @@
           <button type="button" class:quick-filter-active={severityFilter === 'priority'} aria-pressed={severityFilter === 'priority'} onclick={() => severityFilter = 'priority'}>
             Review first <span>{quickFilterCounts.priority}</span>
           </button>
+          <button type="button" class:quick-filter-active={severityFilter === 'context'} aria-pressed={severityFilter === 'context'} onclick={() => severityFilter = 'context'}>
+            Context signals <span>{quickFilterCounts.context}</span>
+          </button>
+          <button type="button" class:quick-filter-active={severityFilter === 'protective'} aria-pressed={severityFilter === 'protective'} onclick={() => severityFilter = 'protective'}>
+            Potentially favorable <span>{quickFilterCounts.protective}</span>
+          </button>
         </div>
       </div>
       <p class="quick-filter-result" role="status" aria-live="polite">
         Showing {visibleMarkerCount.toLocaleString()} {presentationMode === 'simple'
           ? (visibleMarkerCount === 1 ? 'finding card' : 'finding cards')
           : (visibleMarkerCount === 1 ? 'entry' : 'entries')}.
-        <span>Filter counts are unique DNA signals; detailed views may show one signal in more than one health area.</span>
       </p>
       {#if findingSearch || sectionFilter !== 'all' || severityFilter !== 'all' || tierFilter !== 'all' || showBenign || sortBy !== 'default'}
         <button type="button" class="clear-report-filters" onclick={clearReportFilters}>Clear filters</button>
@@ -785,6 +791,7 @@
         showClinicalExtraColumns={showClinicalExtraColumns}
         collapsed={collapsedSections[section.name]}
         onCollapsedChange={(isCollapsed) => setSectionCollapsed(section.name, isCollapsed)}
+        {onOpenContext}
       />
     {/each}
   </div>
@@ -909,7 +916,6 @@
     font-size: 0.75rem;
   }
 
-  .quick-filter-result span { opacity: 0.85; }
 
   .clear-report-filters {
     grid-column: 2;

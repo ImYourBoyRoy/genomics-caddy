@@ -8,6 +8,7 @@
   } from '../../utils/profileContext';
   import { cycleDiaryAppliesToContext } from '../../utils/cycleDiary';
   import { reproductiveContextOptionIsSuggestedForGeneticSex } from '../../utils/reproductiveContext';
+  import { formatDisplaySex } from '../../utils/uiLabels';
 
   interface Props {
     selectedSample: GenomeSample;
@@ -21,12 +22,13 @@
     onOpenContext,
   }: Props = $props();
 
+  let suggestionSex = $derived(formatDisplaySex(selectedSample.genetic_sex, profileContext.reproductiveAnatomy));
   let contextOptions = $derived(cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown'));
   let suggestedContextOptions = $derived(contextOptions.filter((option) =>
-    reproductiveContextOptionIsSuggestedForGeneticSex(option.id, selectedSample.genetic_sex),
+    reproductiveContextOptionIsSuggestedForGeneticSex(option.id, suggestionSex),
   ));
   let otherContextOptions = $derived(contextOptions.filter((option) =>
-    !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, selectedSample.genetic_sex),
+    !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, suggestionSex),
   ));
   let diaryAvailable = $derived(cycleDiaryAppliesToContext(profileContext.selectedReproductiveContext));
 

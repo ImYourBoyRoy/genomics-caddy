@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatGeneticSexLabel, normalizeUiLabel } from './uiLabels';
+import { formatDisplaySex, formatGeneticSexLabel, normalizeUiLabel } from './uiLabels';
 
 describe('UI label normalization', () => {
   it('treats emoji and punctuation as presentation details', () => {
@@ -19,5 +19,14 @@ describe('UI label normalization', () => {
     expect(formatGeneticSexLabel('Uncertain (limited sex-chromosome calls)')).toBe('Inconclusive');
     expect(formatGeneticSexLabel('Inconclusive (mixed X/Y chromosome calls)')).toBe('Inconclusive');
     expect(formatGeneticSexLabel('XX chromosome pattern; no Y calls observed')).toBe('Unknown');
+  });
+
+  it('shows Male, Female, or Unknown with user-stated anatomy taking priority', () => {
+    expect(formatDisplaySex('Female-like (XX chromosome pattern)', '')).toBe('Female');
+    expect(formatDisplaySex('Male-like (XY chromosome pattern)', '')).toBe('Male');
+    expect(formatDisplaySex('Inconclusive (mixed X/Y chromosome calls)', '')).toBe('Unknown');
+    expect(formatDisplaySex('Inconclusive (mixed X/Y chromosome calls)', 'female')).toBe('Female');
+    expect(formatDisplaySex('Female-like (XX chromosome pattern)', 'male')).toBe('Male');
+    expect(formatDisplaySex('Male-like (XY chromosome pattern)', 'other')).toBe('Unknown');
   });
 });

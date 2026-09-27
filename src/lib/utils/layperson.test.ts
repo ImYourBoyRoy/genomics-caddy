@@ -181,7 +181,7 @@ describe('plain-English claim framing', () => {
     expect(getCompactSimpleMeaning({
       simpleImpact: 'Heart rhythm research context',
       simpleMeaning: 'This marker has been associated with cardiac conduction, but it does not diagnose an arrhythmia.',
-    })).toBe('This marker has been associated with cardiac conduction');
+    })).toBe('This marker has been associated with cardiac conduction.');
   });
 
   it('keeps the dashboard action reason to one plain-language sentence', () => {
@@ -200,15 +200,13 @@ describe('plain-English claim framing', () => {
     expect(getCompactSimpleMeaning(translation)).toBe('Research pathway context');
   });
 
-  it('keeps domain-specific measurement limits visible', () => {
+  it('drops measurement-limit caveats from the visible Simple meaning', () => {
     const translation = {
       simpleImpact: 'Steroid-signaling research context',
       simpleMeaning: 'This marker is studied in steroid signaling. It does not measure current estrogen.',
     };
 
-    expect(getCompactSimpleMeaning(translation)).toBe(
-      'This marker is studied in steroid signaling. It does not measure current estrogen.',
-    );
+    expect(getCompactSimpleMeaning(translation)).toBe('This marker is studied in steroid signaling.');
   });
 
   it('keeps technical gene names out of the primary Simple finding title', () => {
@@ -241,6 +239,51 @@ describe('plain-English claim framing', () => {
 
     expect(copy.plain_title).toBe('Higher susceptibility — Blood sugar and metabolism');
     expect(copy.direction_label).toBe('Higher susceptibility');
+  });
+
+  it('strips trailing caveat clauses from authored Simple signals', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        gene: 'TCF7L2',
+        variant_name: 'TCF7L2 glucose association marker',
+        impact: 'Higher glucose susceptibility research signal',
+        evidence_tier: 'B_replicated_common_marker',
+        effect_direction: 'risk',
+        clinical_confirmation_required: false,
+        severity_class: 'moderate_risk',
+        confirm_with: [],
+      },
+      {
+        simpleImpact: 'Blood sugar and metabolism research context',
+        simpleMeaning: 'This marker has been studied in glucose and insulin-related traits.',
+        signal: 'This is a well-studied common association with type 2 diabetes risk, but it is not a diagnosis or a personal probability estimate.',
+      },
+    );
+
+    expect(copy.signal).toBe('This is a well-studied common association with type 2 diabetes risk.');
+  });
+
+  it('does not relabel a trait marker as medication processing because of a PharmGKB enrichment', () => {
+    const copy = getSimpleFindingCopy(
+      {
+        gene: 'TCF7L2',
+        variant_name: 'TCF7L2 glucose association marker',
+        impact: 'Higher glucose susceptibility research signal',
+        evidence_tier: 'B_replicated_common_marker',
+        effect_direction: 'risk',
+        clinical_confirmation_required: false,
+        severity_class: 'moderate_risk',
+        confirm_with: [],
+        pharmgkb: { drug: 'metformin', phenotype: 'drug dose response', evidence_level: '3' } as never,
+      },
+      {
+        simpleImpact: 'Blood sugar and metabolism research context',
+        simpleMeaning: 'This marker has been studied in glucose and insulin-related traits.',
+        plainTitle: 'Blood sugar and metabolism research context',
+      },
+    );
+
+    expect(copy.plain_title).toBe('Higher susceptibility — Blood sugar and metabolism');
   });
 
   it('keeps the technical word marker out of Simple titles', () => {

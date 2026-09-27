@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EvaluatedMarker, GeneratedReport } from '../types/genomics';
-import { computeReportOverviewStats } from './reportOverview';
+import { computeReportOverviewStats, reportFocusLinkIds, severityMatchesReportFocus } from './reportOverview';
 
 function marker(overrides: Partial<EvaluatedMarker>): EvaluatedMarker {
   return {
@@ -126,5 +126,26 @@ describe('report overview statistics', () => {
     expect(stats.priority).toBe(0);
     expect(stats.protective).toBe(0);
     expect(stats.unassessed).toBe(0);
+  });
+
+  it('matches overview tile focus to the same severity buckets as the counts', () => {
+    expect(severityMatchesReportFocus('moderate_risk', 'priority')).toBe(true);
+    expect(severityMatchesReportFocus('moderate_risk', 'higher_concern')).toBe(false);
+    expect(severityMatchesReportFocus('confirmation_required', 'higher_concern')).toBe(true);
+    expect(severityMatchesReportFocus('trait', 'context')).toBe(true);
+    expect(severityMatchesReportFocus('protective', 'protective')).toBe(true);
+    expect(severityMatchesReportFocus('benign', 'context')).toBe(false);
+    expect(severityMatchesReportFocus('benign', 'all')).toBe(true);
+  });
+
+  it('lists exactly the loci counted by an overview tile when one locus spans buckets', () => {
+    const sharedPriority = marker({ link_id: 'a:shared', rsid: 'rs-shared', severity_class: 'moderate_risk' });
+    const sharedContext = marker({ link_id: 'b:shared', rsid: 'rs-shared', severity_class: 'trait' });
+    const contextOnly = marker({ link_id: 'c:context', rsid: 'rs-context', severity_class: 'context_dependent', effect_direction: 'context_dependent' });
+    const fixture = report([sharedPriority, sharedContext, contextOnly]);
+
+    expect(computeReportOverviewStats(fixture).context).toBe(1);
+    expect([...reportFocusLinkIds(fixture, 'context')]).toEqual(['c:context']);
+    expect([...reportFocusLinkIds(fixture, 'priority')]).toEqual(['a:shared']);
   });
 });

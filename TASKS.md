@@ -2,21 +2,13 @@
 
 ## Report overhaul (user feedback 2026-09-26)
 
-Disease links shipped first (strand verification, ClinVar consensus gating,
-may-be-relevant / carrier / disputed grouping). Remaining, in order:
+Shipped: disease links (strand verification, ClinVar consensus gating,
+grouped results); copy cleanup in report and AI/clinician exports; themed
+report controls (root cause: Tauri CSP nonce blocked Svelte runtime style
+injection, now emitted as CSS files in production builds); small coverage
+note; "Lifestyle-linked" plus add-context prompts; clickable overview tiles;
+Male / Female / Unknown sex with a user-supplied anatomy prompt. Remaining:
 
-- Copy cleanup: one report-level scope statement; remove repeated "not a
-  diagnosis / not a personal risk estimate" prose from report sections and
-  AI/clinician exports (keep structured `do_not_claim`/`confirm_with` fields);
-  hide sections that render only caveats with no findings.
-- UI polish: theme the Focus chips, Clear filters, Filters & ordering, and
-  reading-mode buttons; replace the orange coverage banner with a small note;
-  relabel "Context-dependent" as a targeted "Add context to refine" prompt.
-- Overview drill-down: make Review first / Higher-priority / Context signals /
-  Potentially favorable tiles open a list filtered to that group.
-- Sex and anatomy: show Male / Female / Unknown; for Unknown, prompt for
-  user-supplied reproductive anatomy; a clearly labelled Change button for all
-  profiles. Anatomy is never inferred from DNA.
 - Dependencies: once 24 h have passed (after 2026-09-27T23:00Z), bump Tauri
   plugins (opener 2.6.0, process 2.4.0, updater 2.13.0) together on npm and
   Cargo, and drop the `@tauri-apps/*@2.12.0` age exclusions.

@@ -5,14 +5,18 @@
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
+// Production builds must emit component CSS as files: Tauri adds a nonce to the
+// bundled CSP `style-src`, which makes browsers ignore 'unsafe-inline' and drop
+// the <style> tags Svelte injects at runtime. The dev server keeps injection
+// because Vite 8 + vite-plugin-svelte can race virtual `?svelte&type=style`
+// CSS loads and log "failed to load virtual css module".
+const isProductionBuild = process.argv.includes("build");
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
-  // Inject component <style> into JS instead of virtual `?svelte&type=style&lang.css`
-  // modules. Vite 8 + vite-plugin-svelte can race those virtual CSS loads and log
-  // "failed to load virtual css module" (often serving JS for the CSS URL).
   vitePlugin: {
-    emitCss: false,
+    emitCss: isProductionBuild,
   },
   kit: {
     adapter: adapter({

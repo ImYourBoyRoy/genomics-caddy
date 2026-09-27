@@ -33,13 +33,13 @@ describe('evidence tier display', () => {
 
   it('loads direction and severity display semantics from the evidence policy resource', () => {
     expect(getDirectionInfo('context_dependent')).toEqual(expect.objectContaining({
-      label: 'Context-Dependent',
-      plainLabel: 'Depends on context',
+      label: 'Lifestyle-linked',
+      plainLabel: 'Add context to refine',
       colorClass: 'direction-context_dependent',
     }));
     expect(getSeverityInfo('confirmation_required')).toEqual(expect.objectContaining({
       label: 'Clinical confirmation needed',
-      plainLabel: 'Needs clinical lab test to verify',
+      plainLabel: 'Confirm with a clinical test',
       legendLabel: 'Needs Confirmation',
       cssClass: 'signal-confirm',
     }));

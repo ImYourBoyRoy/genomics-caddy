@@ -51,9 +51,9 @@
       <details class="help-topic">
         <summary><span class="help-topic-number">02</span><span><strong>Understanding a finding</strong><small>What a DNA match can—and cannot—tell you.</small></span></summary>
         <div class="help-topic-body">
-          <p>A finding is a research-backed connection between a DNA marker and a health topic. It is a clue to discuss or investigate, not a diagnosis or a measurement of your current health.</p>
+          <p>A finding is a research-backed connection between a DNA marker and a health topic. It is a clue to discuss or investigate.</p>
           <ul>
-            <li><strong>Higher concern / priority:</strong> a result the report suggests reviewing first. It is not a personal disease probability.</li>
+            <li><strong>Higher concern / priority:</strong> a result the report suggests reviewing first.</li>
             <li><strong>Evidence strength:</strong> how well the association is supported in research; it is separate from how strongly a result applies to you.</li>
             <li><strong>Uncalled / no data:</strong> the file did not provide a usable call for that marker. The result is unknown.</li>
             <li><strong>Clinical confirmation:</strong> some findings need a separate clinical test before they can guide care.</li>

@@ -54,7 +54,7 @@
   import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
   import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
   import { installDesktopContextMenu } from "$lib/utils/desktopContextMenu";
-  import { formatGeneticSexLabel } from "$lib/utils/uiLabels";
+  import { formatDisplaySex, formatGeneticSexLabel } from "$lib/utils/uiLabels";
   import {
     hasSeenReproductiveContextPrompt,
     markReproductiveContextPromptSeen,
@@ -71,7 +71,9 @@
   import {
     EMPTY_PROFILE_CONTEXT,
     loadProfileContext,
+    saveProfileContext,
     type ProfileContext,
+    type ReproductiveAnatomy,
   } from "$lib/utils/profileContext";
   import {
     importPhaseForProgress,
@@ -320,43 +322,58 @@
     expandDatabases: () => void;
   } | null>(null);
 
-  const CHROMOSOME_CONTEXT_DIALOG_TITLE = "DNA-derived chromosome pattern";
-  const CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN = "open-context";
+  const SEX_DIALOG_TITLE = "Sex";
+  const ANATOMY_CHOICES: readonly ReproductiveAnatomy[] = ["female", "male", "other"];
+  const USE_DNA_CHOICE = "use-dna";
 
-  function chromosomeContextDialogMessage(sample: GenomeSample): string {
-    const label = formatGeneticSexLabel(sample.genetic_sex);
-    if (label === "Inconclusive") {
-      return "This profile has an inconclusive DNA-derived chromosome pattern because the available consumer-array calls are limited or internally inconsistent. This is not a diagnosis and does not determine gender identity, anatomy, fertility, or hormone status.\n\nWould you like to choose an optional reproductive or hormone context to tailor the report? That context is user-provided and will not change the DNA result.";
-    }
-    return `The DNA-derived chromosome pattern is ${label}. It is a routing hint, not gender identity, anatomy, fertility, hormone status, or a diagnosis.\n\nWould you like to review the optional reproductive or hormone context for this profile?`;
+  let headerDisplaySex = $derived(
+    formatDisplaySex(selectedSample?.genetic_sex, profileContext.reproductiveAnatomy),
+  );
+  let headerSexIsUserSet = $derived(profileContext.reproductiveAnatomy !== "");
+
+  function sexDialogMessage(sample: GenomeSample): string {
+    const pattern = formatGeneticSexLabel(sample.genetic_sex);
+    const dnaLine = pattern === "Female-like" || pattern === "Male-like"
+      ? `DNA shows a ${pattern.replace("-like", "").toLowerCase()} chromosome pattern.`
+      : "DNA could not determine a clear chromosome pattern.";
+    return `${dnaLine}\n\nWhich reproductive organs does your body have by default? This tailors reproductive and hormone sections.`;
+  }
+
+  function saveReproductiveAnatomy(sample: GenomeSample, anatomy: ReproductiveAnatomy): void {
+    const next = { ...loadProfileContext(sample.id), reproductiveAnatomy: anatomy };
+    saveProfileContext(sample.id, next);
+    if (selectedSample?.id === sample.id) profileContext = loadProfileContext(sample.id);
   }
 
   function openChromosomeContextDialog(sample: GenomeSample): void {
     markReproductiveContextPromptSeen(sample.id);
+    const current = loadProfileContext(sample.id).reproductiveAnatomy;
     dialogStore.choice(
-      chromosomeContextDialogMessage(sample),
+      sexDialogMessage(sample),
       [
-        {
-          id: CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN,
-          label: "Open context settings",
-          variant: "accent",
-        },
-        { id: "keep-report", label: "Keep report as-is", variant: "secondary" },
+        { id: "female", label: "Female organs", variant: current === "female" ? "accent" : "secondary" },
+        { id: "male", label: "Male organs", variant: current === "male" ? "accent" : "secondary" },
+        { id: "other", label: "Other / prefer not to say", variant: current === "other" ? "accent" : "secondary" },
+        { id: USE_DNA_CHOICE, label: "Use DNA result", variant: current === "" ? "accent" : "secondary" },
       ],
       (choice) => {
-        if (choice === CHROMOSOME_CONTEXT_DIALOG_CHOICE_OPEN) selectTab("context");
+        if (choice === USE_DNA_CHOICE) saveReproductiveAnatomy(sample, "");
+        else if (ANATOMY_CHOICES.includes(choice as ReproductiveAnatomy)) {
+          saveReproductiveAnatomy(sample, choice as ReproductiveAnatomy);
+        }
       },
-      CHROMOSOME_CONTEXT_DIALOG_TITLE,
+      SEX_DIALOG_TITLE,
     );
   }
 
   function maybeOfferInconclusiveContext(sample: GenomeSample, reportReady: boolean): void {
+    const saved = loadProfileContext(sample.id);
     if (
       !reportReady ||
-      formatGeneticSexLabel(sample.genetic_sex) !== "Inconclusive" ||
+      formatDisplaySex(sample.genetic_sex, saved.reproductiveAnatomy) !== "Unknown" ||
+      saved.reproductiveAnatomy !== "" ||
       hasSeenReproductiveContextPrompt(sample.id) ||
-      dialogStore.state.show ||
-      loadProfileContext(sample.id).selectedReproductiveContext
+      dialogStore.state.show
     ) return;
 
     markReproductiveContextPromptSeen(sample.id);
@@ -915,17 +932,23 @@
           <div class="content-header-top">
             <div class="profile-summary">
               <h2>Profile: {selectedSample.name}</h2>
-              <button
-                type="button"
-                class="pill chromosome-pattern-trigger"
-                title="Review chromosome pattern and optional reproductive context"
-                aria-haspopup="dialog"
-                onclick={() => {
-                  if (selectedSample) openChromosomeContextDialog(selectedSample);
-                }}
-              >
-                Chromosome pattern: {formatGeneticSexLabel(selectedSample.genetic_sex)}
-              </button>
+              <div class="sex-summary">
+                <span class="sex-summary-value">
+                  Sex: <strong>{headerDisplaySex}</strong>
+                  {#if headerSexIsUserSet}<span class="sex-summary-source">set by you</span>{/if}
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm sex-change-btn"
+                  aria-haspopup="dialog"
+                  aria-label="Change sex and reproductive organs"
+                  onclick={() => {
+                    if (selectedSample) openChromosomeContextDialog(selectedSample);
+                  }}
+                >
+                  ✎ Change
+                </button>
+              </div>
             </div>
             <div class="tabs" role="tablist" aria-label="Primary views">
               {#each PRIMARY_TABS as tab (tab.id)}
@@ -1016,6 +1039,7 @@
                 onNavigateToVariant={navigateToVariant}
                 onOpenDiscovery={() => selectTab("discovery")}
                 onOpenHelp={() => selectTab("help")}
+                onOpenContext={() => selectTab("context")}
               />
             {:else}
               <div class="tab-loading-state" role="status">{deferredPanelStatus("report", "Trait Report")}</div>
@@ -1170,20 +1194,21 @@
 <GlobalDialogs />
 
 <style>
-  .chromosome-pattern-trigger {
-    border: 1px solid var(--border-color);
+  .sex-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--text-secondary);
-    font: inherit;
-    cursor: pointer;
   }
 
-  .chromosome-pattern-trigger:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+  .sex-summary-value strong {
+    color: var(--text-primary);
   }
 
-  .chromosome-pattern-trigger:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+  .sex-summary-source {
+    margin-left: 0.35rem;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    opacity: 0.8;
   }
 </style>

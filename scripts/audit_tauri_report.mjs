@@ -205,7 +205,6 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     for (const [key, label] of [
       ["titleCount", "title"],
       ["signalCount", "signal"],
-      ["whyItMattersCount", "why-it-matters"],
       ["reviewActionCount", "review-action"],
       ["evidenceCount", "evidence"],
       ["detailsCount", "Details"],
@@ -213,6 +212,11 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     ]) {
       assert(contract[key] === contract.cardCount, `Simple cards are missing a ${label} contract surface`);
     }
+    // Why-it-matters is omitted when it would repeat the card signal.
+    assert(
+      contract.whyItMattersCount > 0 && contract.whyItMattersCount <= contract.cardCount,
+      "Simple cards are missing a why-it-matters contract surface",
+    );
     // Follow-up is intentionally a section-level surface, not a repeated
     // per-card block. One section can cover many cards, and sections with no
     // concrete confirm_with route correctly have no follow-up line.

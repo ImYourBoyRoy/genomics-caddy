@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/samples/SampleList.svelte -->
 <script lang="ts">
   import type { GenomeSample } from '../../types/genomics';
-  import { formatGeneticSexLabel } from '../../utils/uiLabels';
+  import { formatDisplaySex } from '../../utils/uiLabels';
 
   /*
   Module Docstring:
@@ -36,12 +36,8 @@
   }: Props = $props();
 
   function sexSymbol(value: string): string {
-    const label = formatGeneticSexLabel(value);
-    return label === 'Female-like' ? '♀' : label === 'Male-like' ? '♂' : '•';
-  }
-
-  function sexSymbolLabel(value: string): string {
-    return `${formatGeneticSexLabel(value)} profile`;
+    const label = formatDisplaySex(value, '');
+    return label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•';
   }
 </script>
 
@@ -62,8 +58,8 @@
               type="button"
               class="sample-sex-indicator"
               disabled={disabled}
-              aria-label={`Open chromosome context for ${s.name}: ${sexSymbolLabel(s.genetic_sex)}`}
-              title={disabled ? disabledReason : `Review chromosome pattern for ${s.name}`}
+              aria-label={`Change sex for ${s.name}: ${formatDisplaySex(s.genetic_sex, '')}`}
+              title={disabled ? disabledReason : `Change sex for ${s.name}`}
               onclick={() => onOpenChromosomeContext(s)}
             >
               <span class="sample-sex-symbol">{sexSymbol(s.genetic_sex)}</span>

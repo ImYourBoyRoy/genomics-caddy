@@ -82,12 +82,12 @@ describe('sidebar status theme tokens', () => {
     expect(sampleList).toContain('class="sample-name-text"');
     expect(sampleList).toContain('class="sample-sex-symbol"');
     expect(sampleList).toContain('class="sample-sex-indicator"');
-    expect(sampleList).toContain('Open chromosome context for');
+    expect(sampleList).toContain('Change sex for');
     expect(sampleList).toContain('aria-label={`Delete profile ${s.name}`}');
     expect(sampleList).toContain('title={disabled ? disabledReason');
     expect(sampleList).toContain('<svg viewBox="0 0 20 20"');
     expect(sampleList).not.toContain('🗑️');
-    expect(sampleList).toContain("label === 'Female-like' ? '♀' : label === 'Male-like' ? '♂' : '•'");
+    expect(sampleList).toContain("label === 'Female' ? '♀' : label === 'Male' ? '♂' : '•'");
     expect(sampleList).not.toContain('Tooltip');
     expect(sampleList).not.toContain('sample-scope-help');
 

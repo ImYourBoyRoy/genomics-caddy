@@ -53,7 +53,7 @@
             
             <div class="right-meta">
               {#if rec.similarity !== null}
-                <Tooltip label="Concept match" description="Calculated cosine similarity of the embedded evidence text; it helps organize results and is not a clinical probability.">
+                <Tooltip label="Concept match" description="How closely this evidence text matches your question (vector similarity).">
                   <span class="match-badge vector">
                     🤖 {(rec.similarity * 100).toFixed(0)}% concept match
                   </span>

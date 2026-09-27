@@ -154,7 +154,7 @@ export function userFindingFromEvidenceCard(card: EvidenceCard): UserFacingFindi
   const suggestedNextSteps = nextSteps(card, impact);
   const safetyBoundary =
     impact === "clinical_review"
-      ? "Clinical review item — this app does not diagnose or recommend treatment."
+      ? "Clinical review item — discuss with your clinician."
       : "Research and education only — verify against primary sources and real-world phenotype.";
 
   return {

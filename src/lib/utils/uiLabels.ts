@@ -25,3 +25,22 @@ export function formatGeneticSexLabel(value: string | null | undefined): string 
   if (/^unknown\b/i.test(label)) return 'Unknown';
   return 'Unknown';
 }
+
+export type DisplaySex = 'Female' | 'Male' | 'Unknown';
+
+/**
+ * Header label: the user's stated reproductive anatomy wins; otherwise the
+ * DNA chromosome pattern. Inconclusive and "other" both show as Unknown.
+ */
+export function formatDisplaySex(
+  geneticSex: string | null | undefined,
+  reproductiveAnatomy: string | null | undefined,
+): DisplaySex {
+  if (reproductiveAnatomy === 'female') return 'Female';
+  if (reproductiveAnatomy === 'male') return 'Male';
+  if (reproductiveAnatomy === 'other') return 'Unknown';
+  const pattern = formatGeneticSexLabel(geneticSex);
+  if (pattern === 'Female-like') return 'Female';
+  if (pattern === 'Male-like') return 'Male';
+  return 'Unknown';
+}

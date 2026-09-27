@@ -181,16 +181,21 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   or genotype-based neurotransmitter supplement/medication recommendations.
 - Keeps food, gut, supplement, medication, menopause, and postpartum prompts
   conditional on context *you* enter
-- Uses conservative chromosome-pattern labels only as routing hints; mixed or
-  limited X/Y evidence stays inconclusive and does not diagnose mosaicism or
-  chimerism
+- Shows sex as **Male**, **Female**, or **Unknown** from conservative X/Y
+  evidence; when the DNA result is Unknown the app asks which reproductive
+  organs your body has by default, and a **Change** button lets you set or
+  reset this for any profile (anatomy is never inferred from DNA)
 - Keeps fibroid prompts tied to clinical history, imaging, symptoms, and goals;
   five selected common GWAS loci are shown only as separate research
   associations—not a personal risk score—and cannot diagnose fibroids or
   predict recurrence or IUD response
 - Prioritizes clinical follow-ups and expands deeper lists only when needed
 - Adds quick report search and concern filters, with a compact Clinical view
-  that reveals extra fields only when requested
+  that reveals extra fields only when requested; click a Report overview tile
+  (Review first, Higher-priority, Context signals, Potentially favorable) to
+  filter the findings to that group
+- Lifestyle-linked findings offer an "Add diet, medications, or habits" button
+  that opens Context, rather than asking you to interpret them unaided
 - Includes a top-level Help & app info hub with an app version/update check
 - Optional local [Ollama chat](docs/ai-chat/README.md)
 - Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`

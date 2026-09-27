@@ -42,9 +42,15 @@ export interface ProfileExportPreferences {
   includeRawGenotypesInAi: boolean;
 }
 
+/** User-supplied reproductive anatomy; DNA never sets this. */
+export type ReproductiveAnatomy = '' | 'female' | 'male' | 'other';
+
+const REPRODUCTIVE_ANATOMY_VALUES: readonly ReproductiveAnatomy[] = ['female', 'male', 'other'];
+
 export interface ProfileContext {
   version: number;
   selectedReproductiveContext: string;
+  reproductiveAnatomy: ReproductiveAnatomy;
   notes: ProfileContextNotes;
   safety: PersonalSafetyContext;
   exportPreferences: ProfileExportPreferences;
@@ -57,6 +63,7 @@ export interface LegacyAiProfileImport extends Partial<ProfileContextNotes> {
 export const EMPTY_PROFILE_CONTEXT: ProfileContext = {
   version: PROFILE_CONTEXT_VERSION,
   selectedReproductiveContext: '',
+  reproductiveAnatomy: '',
   notes: {
     goals: '',
     challenges: '',
@@ -102,6 +109,9 @@ export function normalizeProfileContext(value: unknown): ProfileContext {
   return {
     version: PROFILE_CONTEXT_VERSION,
     selectedReproductiveContext: clean(source.selectedReproductiveContext, 120),
+    reproductiveAnatomy: REPRODUCTIVE_ANATOMY_VALUES.includes(source.reproductiveAnatomy as ReproductiveAnatomy)
+      ? source.reproductiveAnatomy as ReproductiveAnatomy
+      : '',
     notes: normalizeNotes(source.notes),
     safety: source.safety
       ? normalizePersonalSafetyContext(source.safety)

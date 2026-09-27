@@ -27,6 +27,14 @@
     event.stopPropagation();
   }
 
+  function focusDialogOnOpen(node: HTMLElement) {
+    const returnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    node.focus();
+    return () => {
+      if (returnFocusEl?.isConnected) returnFocusEl.focus();
+    };
+  }
+
   function choiceClass(variant: string | undefined): string {
     if (variant === 'danger') return 'btn btn-danger';
     if (variant === 'secondary') return 'btn btn-secondary';
@@ -38,6 +46,7 @@
   <div class="modal-backdrop dialog-backdrop" onclick={() => dismissDialog(dialogStore.state.type !== 'alert')} role="presentation">
     <div
       class="modal-content dialog-content"
+      {@attach focusDialogOnOpen}
       onclick={(e) => e.stopPropagation()}
       onkeydown={handleDialogKeydown}
       role="alertdialog"

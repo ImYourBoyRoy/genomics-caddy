@@ -17,7 +17,8 @@ describe('ReportHeader summary', () => {
     expect(source).toContain('<div class="simple-report-overview" aria-label="Report overview">');
     expect(source).toContain('<span class="quality-kicker">Report overview</span>');
     expect(source).toContain('highlighted');
-    expect(source).toContain('class="report-stat-grid" aria-label="Report overview statistics"');
+    expect(source).toContain('class="report-stat-grid" role="group" aria-label="Report overview statistics');
+    expect(source).toContain("onclick={() => onSelectFocus?.('context')}");
     expect(source).toContain('Review first');
     expect(source).toContain('Higher-priority');
     expect(source).toContain('Context signals');

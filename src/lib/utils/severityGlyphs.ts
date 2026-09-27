@@ -46,7 +46,7 @@ export function severityShortLabel(severityClass: string): string {
     case "trait":
       return "Trait";
     case "context_dependent":
-      return "Context-dependent";
+      return "Lifestyle-linked";
     case "low_risk":
       return "Preliminary signal";
     case "no_data":

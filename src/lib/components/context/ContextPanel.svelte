@@ -16,6 +16,7 @@
     type PersonalSafetyContext,
   } from '../../utils/personalSafetyContext';
   import { reproductiveContextOptionIsSuggestedForGeneticSex } from '../../utils/reproductiveContext';
+  import { formatDisplaySex } from '../../utils/uiLabels';
   import { formatGeneticSexLabel } from '../../utils/uiLabels';
   import '$lib/styles/components/context-panel.css';
 
@@ -63,12 +64,13 @@
   ];
 
   let legacyContext = $state(loadUnassignedLegacyAiProfile());
+  let suggestionSex = $derived(formatDisplaySex(selectedSample.genetic_sex, profileContext.reproductiveAnatomy));
   let contextOptions = $derived(cycleSupport.context_options.filter((option) => option.id !== 'none_or_unknown'));
   let suggestedContextOptions = $derived(contextOptions.filter((option) =>
-    reproductiveContextOptionIsSuggestedForGeneticSex(option.id, selectedSample.genetic_sex),
+    reproductiveContextOptionIsSuggestedForGeneticSex(option.id, suggestionSex),
   ));
   let otherContextOptions = $derived(contextOptions.filter((option) =>
-    !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, selectedSample.genetic_sex),
+    !reproductiveContextOptionIsSuggestedForGeneticSex(option.id, suggestionSex),
   ));
   let hasContent = $derived(profileContextHasContent(profileContext));
 

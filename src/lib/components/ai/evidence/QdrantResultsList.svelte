@@ -54,13 +54,13 @@
             </div>
 
             <div class="right-meta">
-              <Tooltip label="Concept match" description="Calculated cosine similarity score from Qdrant vector search; it helps organize research results and is not a clinical probability.">
+              <Tooltip label="Concept match" description="How closely this research text matches your question (vector similarity).">
                 <span class="match-badge vector">
                   🤖 {(rec.score * 100).toFixed(0)}% concept match
                 </span>
               </Tooltip>
               {#if rec.significance_score > 0}
-                <Tooltip label="Research significance" description="A local organization signal based on available ClinVar and GWAS counts; it is not a disease probability.">
+                <Tooltip label="Research significance" description="Ranks results by available ClinVar and GWAS evidence.">
                   <span class="match-badge keyword">
                     ⭐ Significance: {rec.significance_score.toFixed(2)}
                   </span>

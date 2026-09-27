@@ -227,7 +227,7 @@ function findingDirection(marker: Partial<SimpleFindingMarkerContext>, translati
   // Medication markers without an authored functional direction must not be
   // mislabeled as a general disease-susceptibility signal simply because the
   // resource uses effect_direction="risk" for clinical safety routing.
-  if (isMedicationFinding(marker, text)) return 'unknown';
+  if (isMedicationFinding(marker, translation)) return 'unknown';
 
   switch (marker.effect_direction) {
     case 'risk': return 'risk';
@@ -255,11 +255,12 @@ function simpleTopicTitle(marker: Partial<SimpleFindingMarkerContext>, translati
   return topic.length > 86 ? `${topic.slice(0, 83).replace(/\s+\S*$/, '').trim()}…` : topic;
 }
 
-function isMedicationFinding(marker: Partial<SimpleFindingMarkerContext>, text: string): boolean {
+// A PharmGKB enrichment alone does not make a marker a medication finding:
+// PharmGKB annotates many trait and disease SNPs as well.
+function isMedicationFinding(marker: Partial<SimpleFindingMarkerContext>, translation?: LaypersonTranslation): boolean {
+  const curatedText = findingText({ ...marker, pharmgkb: undefined, pharmgkb_annotations: undefined }, translation);
   return marker.variant_type === 'pharmacogenomic_snp'
-    || Boolean(marker.pharmgkb)
-    || (marker.pharmgkb_annotations?.length || 0) > 0
-    || /\b(?:clinical\s+PGx|medication|drug|dose|haplotype|star[- ]allele|HLA[-*]|hypersensitivity|warfarin|statin|clopidogrel|thiopurine|tacrolimus)\b/i.test(text);
+    || /\b(?:clinical\s+PGx|medication|drug|dose|haplotype|star[- ]allele|HLA[-*]|hypersensitivity|warfarin|statin|clopidogrel|thiopurine|tacrolimus)\b/i.test(curatedText);
 }
 
 export function getSimpleDirectionLabel(
@@ -280,9 +281,9 @@ export function getSimpleDirectionLabel(
     case 'sensitivity': return 'Possible sensitivity signal';
     case 'risk': return 'Higher susceptibility';
     case 'protective': return 'Protective-leaning';
-    case 'context': return 'Context-dependent';
+    case 'context': return 'Lifestyle-linked';
     case 'trait': return 'Trait-associated';
-    default: return isMedicationFinding(marker, text) ? 'Direction incomplete' : 'Direction not established';
+    default: return isMedicationFinding(marker, translation) ? 'Direction incomplete' : 'Direction not established';
   }
 }
 
@@ -351,11 +352,11 @@ export function getTransparentSimpleFindingTitle(
     return 'Fluoropyrimidines — response direction incomplete';
   }
 
-  if (!drug && direction === 'sensitivity' && isMedicationFinding(marker, text)) {
+  if (!drug && direction === 'sensitivity' && isMedicationFinding(marker, translation)) {
     return `${marker.gene?.trim() || 'Medication safety'} — possible sensitivity signal`;
   }
 
-  if (isMedicationFinding(marker, text)) {
+  if (isMedicationFinding(marker, translation)) {
     if (direction === 'reduced') return `${drug || 'Medicine processing'} — reduced-function component`;
     if (direction === 'increased') return `${drug || 'Medicine processing'} — increased-function component`;
     return 'Medication processing — direction incomplete from this result';
@@ -365,7 +366,7 @@ export function getTransparentSimpleFindingTitle(
   switch (direction) {
     case 'risk': return `Higher susceptibility — ${topic}`;
     case 'protective': return `Protective-leaning — ${topic}`;
-    case 'context': return `Context-dependent — ${topic}`;
+    case 'context': return `Lifestyle-linked — ${topic}`;
     case 'trait': return `Trait-associated — ${topic}`;
     default: return topic;
   }
@@ -488,10 +489,10 @@ export function getSimpleFindingCopy(
     : /warfarin/i.test(text) && direction === 'higher'
       ? 'This marker is associated with a higher warfarin dose requirement; the complete gene set, clinical factors, and INR determine the dose.'
       : null;
-  const medicationMeaning = !warfarinMeaning && isMedicationFinding(marker, text)
+  const medicationMeaning = !warfarinMeaning && isMedicationFinding(marker, translation)
     ? authoredMedicationSignal(marker, translation, text) || medicationSignal(marker, text, direction, drugLabelForFinding(text))
     : null;
-  const authoredSignal = translation.signal?.trim() || sentence || plainTitle;
+  const authoredSignal = (translation.signal?.trim() && compactSimpleText(translation.signal, '')) || sentence || plainTitle;
   const signal = warfarinMeaning
     ? warfarinMeaning
     : medicationMeaning || (direction_label !== 'Direction incomplete' && /response context|medication processing|medication safety|one part of how/i.test(authoredSignal)
@@ -553,6 +554,8 @@ function medicationSignal(
 
 const GENERIC_GUARDRAIL_PATTERNS = [
   /\bdoes not (?:diagnose|prove)\b/i,
+  /\b(?:does not|do not|cannot|can't) (?:measure|establish|determine|define|set|predict|guarantee|confirm|diagnose)\b/i,
+  /\b(?:is|are) (?:probabilistic|not deterministic)\b/i,
   /\bdoes not predict whether you have (?:a )?condition\b/i,
   /\bnot (?:a|an) (?:diagnosis|treatment|prescription)\b/i,
   /\b(?:requires|needs?) (?:a|an|the)?\s*(?:doctor|clinician|clinical|medical-grade|healthcare)\b.*\bbefore\b/i,
@@ -640,13 +643,14 @@ function compactGuardrailSentence(sentence: string): string {
   const compactClauses = clauses
     .map((clause) => {
       if (!isGenericGuardrail(clause)) return clause;
-      const boundary = clause.search(/\b(?:does not diagnose|cannot diagnose|does not prove|does not establish|is not a diagnosis|is not an? treatment|is not an? prescription)\b/i);
+      const boundary = clause.search(/\b(?:(?:it|this (?:marker|result|variant)) )?(?:does not|do not|cannot|can't) (?:diagnose|prove|establish|measure|determine|define|set|predict|guarantee|confirm)\b|\bis not an? (?:diagnosis|treatment|prescription)\b/i);
       // Keep a useful association clause when the generic boundary is only a
       // trailing clause. A sentence made entirely of a boundary is removed.
       if (boundary > 24) {
         return clause
           .slice(0, boundary)
           .replace(/(?:,\s*|;\s*|\s+)(?:but|and)\s+(?:it|this\s+(?:marker|result))\s*$/i, '')
+          .replace(/(?:,\s*|;\s*|\s+)(?:but|and)\s*$/i, '')
           .replace(/[\s,;:]+$/, '')
           .trim();
       }
@@ -654,7 +658,9 @@ function compactGuardrailSentence(sentence: string): string {
     })
     .filter(Boolean);
 
-  return compactClauses.join('; ').trim();
+  const compact = compactClauses.join('; ').trim();
+  const terminal = sentence.trim().match(/[.!?]$/)?.[0];
+  return compact && terminal && !/[.!?]$/.test(compact) ? `${compact}${terminal}` : compact;
 }
 
 /**

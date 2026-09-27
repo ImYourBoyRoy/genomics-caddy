@@ -360,7 +360,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
         <div>
           <span class="section-kicker lab-kicker">Tests to discuss</span>
           <h3 id="lab-spotlight-title">Suggested lab &amp; screening follow-ups</h3>
-          <p>DNA-linked tests grouped for clinician discussion — not automatic orders.</p>
+          <p>DNA-linked tests to bring up with your clinician.</p>
         </div>
         <a class="lab-spotlight-jump" href="#lab-followups-card">Full lab list →</a>
       </div>
@@ -378,57 +378,37 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     </section>
   {/if}
 
-  {#if hasNeuropsychSection}
+  {#if hasNeuropsychSection && brainMoodCatalogAssociations.length > 0}
     <section class="brain-mood-context summary-card card" aria-labelledby="brain-mood-context-title">
       <div class="brain-mood-context-header">
         <div>
           <span class="section-kicker">Brain, mood &amp; attention</span>
-          <h3 id="brain-mood-context-title">Start with what you’re experiencing</h3>
-          <p>Common DNA markers do not diagnose ADHD, depression, or anxiety, measure neurotransmitter levels, or show which treatment will help.</p>
+          <h3 id="brain-mood-context-title">Published research at your loci</h3>
+          <p>Population studies reporting brain, mood, or attention links at markers in this report.</p>
         </div>
-        <span class="brain-mood-context-badge">No psychiatric score calculated</span>
+        <span class="brain-mood-context-badge">{brainMoodCatalogAssociations.length} links</span>
       </div>
 
       <div class="brain-mood-context-grid">
-        <div>
-          <h4>Useful context to bring to an assessment</h4>
-          <ul>
-            <li>When symptoms began, how often they occur, and their effect on sleep, work, school, relationships, and daily tasks.</li>
-            <li>For attention concerns, include childhood history and whether difficulties appear in more than one setting.</li>
-            <li>Review sleep, medications, supplements, caffeine or other substances, and relevant health conditions with a clinician.</li>
-          </ul>
-          <p class="brain-mood-context-care">A dopamine-pathway SNP is not evidence of low dopamine or a reason to take a “dopamine booster.” Choose medication or supplements with symptom, safety, and clinician context.</p>
-        </div>
+        <ul class="brain-mood-research-list">
+          {#each brainMoodCatalogAssociations.slice(0, 5) as association (association.id)}
+            <li>
+              <span>{association.label}</span>
+              {#if association.source_urls[0]}
+                <a href={association.source_urls[0]} target="_blank" rel="noopener noreferrer">Open study</a>
+              {/if}
+            </li>
+          {/each}
+        </ul>
 
         <div class="brain-mood-context-links">
-          <h4>Trusted assessment guides</h4>
+          <h4>If you have symptoms</h4>
           {#each brainMoodAssessmentGuides as guide (guide.label)}
             <a href={guide.url} target="_blank" rel="noopener noreferrer">{guide.label}</a>
           {/each}
-          <p>If you or someone else may be in immediate danger, contact local emergency support. In the U.S., call or text 988.</p>
+          <p>In immediate danger? Contact local emergency support; in the U.S., call or text 988.</p>
         </div>
       </div>
-
-      <p class="brain-mood-pgs-note"><a href={sourceRegistry.sources.pgs_catalog.url} target="_blank" rel="noopener noreferrer">PGS Catalog</a> lists published score models; it is not a personal result, and this app does not calculate a psychiatric score.</p>
-
-      {#if brainMoodCatalogAssociations.length > 0}
-        <details class="brain-mood-research-links">
-          <summary>Published brain &amp; mood research links ({brainMoodCatalogAssociations.length})</summary>
-          <p>These are population GWAS associations reported at loci shown in this report. The local catalog does not align study effect alleles to your result or estimate your personal risk. No link here confirms or rules out a condition.</p>
-          <ul>
-            {#each brainMoodCatalogAssociations.slice(0, 5) as association (association.id)}
-              <li>
-                <span>{association.label}</span>
-                {#if association.source_urls[0]}
-                  <a href={association.source_urls[0]} target="_blank" rel="noopener noreferrer">Open study</a>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        </details>
-      {:else}
-        <p class="brain-mood-no-links">No brain or mood GWAS links were present for the reported loci in the installed local catalog. That does not rule out a condition or replace symptom-based care.</p>
-      {/if}
     </section>
   {/if}
 
@@ -506,9 +486,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
         </span>
         <span class="catalog-associations-count">{plan.catalogAssociations.length} links</span>
       </summary>
-      <p class="catalog-associations-intro">
-        These are database relationships, not diagnoses or personal risk estimates. Variant, locus, and gene-level links are labeled separately.
-      </p>
       <ul class="catalog-associations-list">
         {#each (showAllCatalogAssociations ? plan.catalogAssociations : plan.catalogAssociations.slice(0, 6)) as association (association.id)}
           <li class="catalog-association-row">
@@ -1943,9 +1920,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .brain-mood-context-header p,
-  .brain-mood-context-grid p,
-  .brain-mood-research-links p,
-  .brain-mood-no-links {
+  .brain-mood-context-grid p {
     margin: 0.35rem 0 0;
     color: var(--text-secondary);
     font-size: 0.72rem;
@@ -1975,8 +1950,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     font-size: 0.76rem;
   }
 
-  .brain-mood-context-grid ul,
-  .brain-mood-research-links ul {
+  .brain-mood-context-grid ul {
     display: grid;
     gap: 0.3rem;
     margin: 0.35rem 0 0;
@@ -1984,14 +1958,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     color: var(--text-secondary);
     font-size: 0.7rem;
     line-height: 1.42;
-  }
-
-  .brain-mood-context-care {
-    padding: 0.45rem 0.55rem;
-    border-left: 2px solid var(--status-warning-border);
-    border-radius: 0 0.4rem 0.4rem 0;
-    background: var(--status-warning-bg);
-    color: var(--text-primary) !important;
   }
 
   .brain-mood-context-links {
@@ -2005,7 +1971,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .brain-mood-context-links a,
-  .brain-mood-research-links a {
+  .brain-mood-research-list a {
     color: var(--status-info-text);
     font-size: 0.7rem;
     font-weight: 700;
@@ -2017,39 +1983,11 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     font-size: 0.66rem;
   }
 
-  .brain-mood-research-links {
-    margin-top: 0.7rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-  }
-
-  .brain-mood-research-links summary {
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: var(--status-info-text);
-    font-weight: 700;
-  }
-
-  .brain-mood-research-links li {
+  .brain-mood-research-list li {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem 0.65rem;
     align-items: baseline;
-  }
-
-  .brain-mood-pgs-note {
-    padding-top: 0.4rem;
-    border-top: 1px solid var(--border-color);
-  }
-
-  .brain-mood-no-links {
-    margin-top: 0.65rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid var(--border-color);
   }
 
   .catalog-associations {
@@ -2084,8 +2022,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     line-height: 1.3;
   }
 
-  .catalog-associations-hint,
-  .catalog-associations-intro {
+  .catalog-associations-hint {
     color: var(--text-secondary);
     font-size: 0.72rem;
     line-height: 1.4;
@@ -2105,8 +2042,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     padding-bottom: 0.65rem;
     border-bottom: 1px solid var(--border-color);
   }
-
-  .catalog-associations-intro { margin: 0.6rem 0 0.25rem; }
 
   .catalog-associations-list {
     display: grid;

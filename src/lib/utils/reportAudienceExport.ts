@@ -19,7 +19,7 @@ import {
   type ConditionEvidenceSummary,
 } from './conditionEvidence';
 import { getLaypersonTranslation, getSimpleFindingCopy } from './layperson';
-import { formatGeneticSexLabel } from './uiLabels';
+import { formatDisplaySex } from './uiLabels';
 import {
   clinicalStateLabel,
   inheritanceModelLabel,
@@ -139,9 +139,9 @@ function nextStepFor(marker: EvaluatedMarker): string {
     return `Discuss the measured follow-up listed in the report: ${marker.confirm_with.join('; ')}.`;
   }
   if (marker.effect_direction === 'context_dependent') {
-    return 'Review this alongside symptoms, medications, diet, and other health context; DNA alone cannot determine its effect.';
+    return 'Add symptoms, medications, and diet to the profile context to refine this result.';
   }
-  return 'Use this as a discussion prompt and review it with personal history rather than treating it as a diagnosis.';
+  return 'Review alongside personal and family history.';
 }
 
 function uncertaintyFor(marker: EvaluatedMarker): string {
@@ -152,9 +152,9 @@ function uncertaintyFor(marker: EvaluatedMarker): string {
     return 'The interpretation is blocked until the call or allele orientation is verified.';
   }
   if (marker.clinical_confirmation_required || marker.severity_class === 'confirmation_required') {
-    return 'This consumer-array result is not sufficient for a clinical conclusion; confirmation may be needed.';
+    return 'Consumer-array call; confirm with a clinical test before acting on it.';
   }
-  return 'This is an association or pathway context, not a diagnosis, current measurement, or guaranteed outcome.';
+  return '';
 }
 
 function findingFor(
@@ -264,7 +264,7 @@ function renderPersonalContext(options: ReportExportOptions): string {
   return [
     '## Explicit personal context',
     '',
-    'The following information was supplied by the profile owner. It is not genetic evidence and should not be treated as a diagnosis or medication instruction.',
+    'Self-reported by the profile owner.',
     '',
     ...lines,
   ].join('\n');
@@ -325,7 +325,7 @@ function renderCatalogAssociations(report: GeneratedReport): string {
   return [
     '## Catalog-linked conditions, traits & medication responses',
     '',
-    'Each link names its source and scope. ClinVar variant assertions, GWAS locus–trait statistics, ClinGen gene–disease validity, and pharmacogenomic response annotations are different evidence types; none by itself establishes a diagnosis, personal risk, or medication recommendation.',
+    'Each link names its source and scope: ClinVar variant assertions, GWAS locus–trait statistics, ClinGen gene–disease validity, and pharmacogenomic response annotations are different evidence types.',
     '',
     ...associations.slice(0, 30).flatMap((association) => [
       `### ${association.label}`,
@@ -408,7 +408,7 @@ function renderConditionCoverage(report: GeneratedReport): string {
   const lines = [
     '## Condition coverage',
     '',
-    'These counts describe registered condition routes with at least one represented component. They are coverage metadata, not disease probabilities or negative results. The complete zero-coverage registry remains in the JSON handoff.',
+    'Counts show registered condition routes with at least one represented component; the full zero-coverage registry is in the JSON handoff.',
     '',
   ];
   if (summaries.length === 0) {
@@ -468,7 +468,7 @@ function renderTechnicalFinding(finding: ExportFinding, index: number): string {
     `- Technical interpretation: ${finding.technicalInterpretation}`,
     `- Claim boundary: ${finding.claimBoundary}`,
     `- Next helpful step: ${finding.nextStep}`,
-    `- Uncertainty: ${finding.uncertainty}`,
+    ...(finding.uncertainty ? [`- Uncertainty: ${finding.uncertainty}`] : []),
     `- Reference IDs: ${finding.referenceIds.join(', ') || 'None recorded'}`,
   ].join('\n');
 }
@@ -686,9 +686,9 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
       options.audience === 'clinician' ? '# Clinician Handoff — Genomics Report' : '# AI Review — Genomics Report',
     '',
     `- Profile: ${clean(options.sample.name)}`,
-    `- Chromosome pattern: ${formatGeneticSexLabel(options.sample.genetic_sex)}`,
+    `- Sex (DNA): ${formatDisplaySex(options.sample.genetic_sex, '')}`,
     `- Report generated: ${generatedAt}`,
-    '- Data source: local consumer-array interpretation; not a clinical laboratory report',
+    '- Data source: consumer DNA array, analyzed locally',
     '',
     PRIVACY_WARNING,
   ];
@@ -696,10 +696,6 @@ export function buildReportAudienceMarkdown(options: ReportExportOptions): strin
   if (options.audience === 'personal') {
     return [
       ...header,
-      '',
-      '## How to use this report',
-      '',
-      'These are plain-language research prompts. They do not diagnose a condition, measure current hormone levels, or tell you to start, stop, or change a medication or supplement.',
       '',
       renderPersonalContext(options),
       '',

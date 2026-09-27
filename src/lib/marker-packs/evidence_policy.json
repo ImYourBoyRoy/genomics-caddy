@@ -115,9 +115,9 @@
         "color_class": "direction-protective"
       },
       "context_dependent": {
-        "label": "Context-Dependent",
-        "plain_label": "Depends on context",
-        "description": "The effect of this variant depends on other factors like diet, medication, or other genes.",
+        "label": "Lifestyle-linked",
+        "plain_label": "Add context to refine",
+        "description": "The effect changes with diet, medications, or other genes. Add those in the Context tab to refine this result.",
         "color_class": "direction-context_dependent"
       },
       "trait": {
@@ -154,7 +154,7 @@
         "plain_label": "Stronger association detected",
         "legend_label": "Stronger association (2 copies)",
         "legend_description": "Both copies match the researched association allele. Discuss with a healthcare provider if relevant.",
-        "description": "Both copies match the allele used by this pack's association rule. This is not a diagnosis or a personal disease probability."
+        "description": "Both copies match the allele used by this pack's association rule."
       },
       "moderate_risk": {
         "css_class": "signal-moderate-risk",
@@ -164,7 +164,7 @@
         "plain_label": "Possible association detected",
         "legend_label": "Possible association (1 copy)",
         "legend_description": "One copy matches the association allele. Effect is usually smaller.",
-        "description": "One copy matches the allele used by this pack's association rule. Effects are usually smaller than two copies and remain context-dependent."
+        "description": "One copy matches the allele used by this pack's association rule. Effects are usually smaller than with two copies."
       },
       "low_risk": {
         "css_class": "signal-low-risk",
@@ -200,18 +200,18 @@
         "css_class": "signal-context",
         "emoji": "🟣",
         "glyph": "~",
-        "label": "Context-dependent variant",
-        "plain_label": "Depends on diet & lifestyle",
-        "legend_label": "Context-Dependent",
-        "legend_description": "The effect depends on other factors like diet, medications, or lifestyle.",
-        "description": "This variant's effect depends on other factors like medications, diet, or environment."
+        "label": "Lifestyle-linked variant",
+        "plain_label": "Add context to refine",
+        "legend_label": "Lifestyle-linked",
+        "legend_description": "The effect changes with diet, medications, or habits. Add them in the Context tab to refine the report.",
+        "description": "The effect changes with diet, medications, or habits. Add them in the Context tab to refine this result."
       },
       "confirmation_required": {
         "css_class": "signal-confirm",
         "emoji": "⚠️",
         "glyph": "C",
         "label": "Clinical confirmation needed",
-        "plain_label": "Needs clinical lab test to verify",
+        "plain_label": "Confirm with a clinical test",
         "legend_label": "Needs Confirmation",
         "legend_description": "Consumer DNA chips can report false positives. A clinical lab test is required.",
         "description": "Consumer DNA tests can produce false positives on rare variants. A clinical lab test is needed to confirm."

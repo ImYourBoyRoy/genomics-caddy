@@ -52,13 +52,13 @@ describe('clinical handoff export', () => {
     expect(markdown).toContain('Active ingredient(s) exactly as labeled');
     expect(markdown).toContain('norethindrone 0.35 mg');
     expect(markdown).toContain('possible adenomyosis');
-    expect(markdown).toContain('does not establish a diagnosis, hormone level');
+    expect(markdown).not.toContain('does not establish a diagnosis');
     expect(markdown).toContain('Daily cycle and symptom diary (self-reported)');
     expect(markdown).toContain('needs quiet');
-    expect(markdown).toContain('missing entries are not symptom-free days');
+    expect(markdown).toContain('Missing diary days are unrecorded, not symptom-free.');
   });
 
-  it('keeps the exported chromosome-pattern label concise when stored data uses a legacy description', () => {
+  it('exports sex as Male, Female, or Unknown when stored data uses a legacy description', () => {
     const markdown = buildClinicalHandoffMarkdown(
       [],
       { name: 'Example', genetic_sex: 'Male-like (XY chromosome pattern)' } as never,
@@ -69,8 +69,8 @@ describe('clinical handoff export', () => {
       { sections: [] },
     );
 
-    expect(markdown).toContain('* **Chromosome pattern:** Male-like');
-    expect(markdown).not.toContain('* **Sex:**');
+    expect(markdown).toContain('* **Sex (DNA):** Male');
+    expect(markdown).not.toContain('Male-like');
   });
 
   it('always includes raw genotype calls in the legacy clinician handoff path', () => {

@@ -113,7 +113,7 @@ describe('AI marker payload claim boundaries', () => {
     expect(payload.source_names).toEqual(['Example source']);
     expect(payload.layperson_summary?.simple_impact).toBe('Genetic research signal');
     expect(payload.layperson_summary?.simple_meaning).toContain('biological pathway signal');
-    expect(payload.layperson_summary?.direction).toBe('Context-dependent');
+    expect(payload.layperson_summary?.direction).toBe('Lifestyle-linked');
     expect(payload.layperson_summary?.review_action).toBe('Review the related clinical test route.');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('does not predict whether you have a condition');
     expect(payload.layperson_summary?.simple_meaning).not.toContain('This is an association context.');

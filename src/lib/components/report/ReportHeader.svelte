@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/report/ReportHeader.svelte -->
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
-  import { computeReportOverviewStats, type ReportOverviewStats } from '../../utils/reportOverview';
+  import { computeReportOverviewStats, type ReportFocus, type ReportOverviewStats } from '../../utils/reportOverview';
 
   /*
   Module Docstring:
@@ -20,13 +20,17 @@
     foundMarkersCount: number;
     totalMarkersChecked: number;
     presentationMode?: "simple" | "clinical" | "compare";
+    activeFocus?: ReportFocus;
+    onSelectFocus?: (focus: ReportFocus) => void;
   }
 
   let {
     generatedReport,
     foundMarkersCount,
     totalMarkersChecked,
-    presentationMode = "simple"
+    presentationMode = "simple",
+    activeFocus = "all",
+    onSelectFocus,
   }: Props = $props();
 
   let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
@@ -82,24 +86,24 @@
         <h3>Your DNA overview</h3>
         <p>The most useful DNA signals found in this profile.</p>
       </div>
-      <div class="report-stat-grid" aria-label="Report overview statistics">
-        <div class="report-stat report-stat-priority">
+      <div class="report-stat-grid" role="group" aria-label="Report overview statistics — select one to list those findings">
+        <button type="button" class="report-stat report-stat-priority" class:report-stat-active={activeFocus === 'priority'} aria-pressed={activeFocus === 'priority'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('priority')}>
           <strong>{reviewQueueCount.toLocaleString()}</strong>
           <span>Review first</span>
           <small>top {reviewQueueCount.toLocaleString()} of {reportStats.priority.toLocaleString()} reviewable signals</small>
-        </div>
-        <div class="report-stat report-stat-high">
+        </button>
+        <button type="button" class="report-stat report-stat-high" class:report-stat-active={activeFocus === 'higher_concern'} aria-pressed={activeFocus === 'higher_concern'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('higher_concern')}>
           <strong>{reportStats.higherConcern.toLocaleString()}</strong>
           <span>Higher-priority</span>
-        </div>
-        <div class="report-stat report-stat-context">
+        </button>
+        <button type="button" class="report-stat report-stat-context" class:report-stat-active={activeFocus === 'context'} aria-pressed={activeFocus === 'context'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('context')}>
           <strong>{reportStats.context.toLocaleString()}</strong>
           <span>Context signals</span>
-        </div>
-        <div class="report-stat report-stat-protective">
+        </button>
+        <button type="button" class="report-stat report-stat-protective" class:report-stat-active={activeFocus === 'protective'} aria-pressed={activeFocus === 'protective'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('protective')}>
           <strong>{reportStats.protective.toLocaleString()}</strong>
           <span>Potentially favorable</span>
-        </div>
+        </button>
       </div>
       <details class="technical-score-details simple-overview-coverage">
         <summary>
@@ -138,7 +142,7 @@
       <details class="technical-score-details">
         <summary>Technical coverage metric</summary>
         <p>
-          The curated association match rate is {overallScore.toFixed(1)}%. It is a research-association coverage metric—not a disease probability, diagnosis, or measure of health.
+          The curated association match rate is {overallScore.toFixed(1)}%. It measures how many curated associations matched.
         </p>
       </details>
     </div>
@@ -230,6 +234,26 @@
     border-left: 3px solid var(--border-strong);
     border-radius: 0.55rem;
     background: var(--surface-subtle);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+
+  .report-stat:disabled {
+    cursor: default;
+  }
+
+  .report-stat:not(:disabled):hover,
+  .report-stat.report-stat-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .report-stat:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .report-stat strong {
@@ -246,7 +270,7 @@
   }
 
   .report-stat small {
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-size: 0.58rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
@@ -275,7 +299,7 @@
   }
 
   .overview-coverage-label small {
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-size: 0.62rem;
     font-weight: 500;
   }

@@ -27,7 +27,7 @@ export const CATALOG_PRESETS: CatalogPresetOption[] = [
     id: "clinical",
     individualLabel: "Clinical literature signals",
     clinicalLabel: "Clinical actionability",
-    description: "Variants with stronger clinical annotation or pharmacogenomic context — review, not diagnosis.",
+    description: "Variants with stronger clinical annotation or pharmacogenomic context.",
   },
   {
     id: "gwas",

@@ -33,6 +33,7 @@
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
     relatedMarkerCount?: number;
     showSharedInterpretationNote?: boolean;
+    onOpenContext?: () => void;
   }
 
   let {
@@ -43,6 +44,7 @@
     onNavigateToVariant,
     relatedMarkerCount = 1,
     showSharedInterpretationNote = false,
+    onOpenContext,
   }: Props = $props();
 
   let effectCount = $derived(getEffectCount(marker));
@@ -52,6 +54,13 @@
   let simpleCopy = $derived(getSimpleFindingCopy(marker, laypersonTranslation));
   let simpleFindingTitle = $derived(simpleCopy.plain_title || getSimpleFindingTitle(laypersonTranslation.simpleImpact));
   let findingSemantics = $derived(normalizeFindingSemantics(marker));
+  let showSimpleDirection = $derived(
+    simpleCopy.direction_label !== ''
+      && !simpleFindingTitle.toLowerCase().includes(simpleCopy.direction_label.toLowerCase()),
+  );
+  let benefitsFromContext = $derived(
+    marker.severity_class === 'context_dependent' || marker.effect_direction === 'context_dependent',
+  );
   let hasCallableGenotype = $derived(isCallableGenotype(marker.user_genotype));
   let callabilityState = $derived(
     marker.callability_state || callabilityStateForResult(marker.variant_type, marker.assertion_status),
@@ -146,11 +155,13 @@
         <ContextSummary contextTags={marker.context_tags} scope={marker.sex_scope} maxVisible={1} />
       {/if}
       {#if viewMode === 'simple'}
-        <span class="marker-severity-label simple-severity-label">
+        <span class="marker-severity-label simple-severity-label" title={severity.plainLabel}>
           <span class="severity-glyph" aria-hidden="true">{severity.glyph}</span>
-          {severity.plainLabel}
+          <span class="visually-hidden">{severity.plainLabel}</span>
         </span>
-        <span class="simple-direction-label">{simpleCopy.direction_label}</span>
+        {#if showSimpleDirection}
+          <span class="simple-direction-label">{simpleCopy.direction_label}</span>
+        {/if}
         {#if relatedMarkerCount > 1}
           <span class="related-finding-count">{relatedMarkerCount} related DNA findings</span>
         {/if}
@@ -239,7 +250,7 @@
             {/if}
           {/if}
           {#if marker.population_rarity && marker.population_af != null}
-            <Tooltip label="gnomAD allele frequency" description="Population frequency context from the local gnomAD cache; this is not a personal disease probability.">
+            <Tooltip label="gnomAD allele frequency" description="How common this allele is in the gnomAD population database.">
               <span class="population-chip">
                 🌍 {marker.population_rarity} ({formatAf(marker.population_af)})
               </span>
@@ -271,7 +282,7 @@
 
       {#if viewMode === 'simple' && marker.population_rarity && marker.population_af != null}
         <div class="enrichment-row simple-population-row">
-          <Tooltip label="gnomAD allele frequency" description="Population frequency context from the local gnomAD cache; this is not a personal disease probability.">
+          <Tooltip label="gnomAD allele frequency" description="How common this allele is in the gnomAD population database.">
             <span class="population-chip">
               🌍 gnomAD: {marker.population_rarity} ({formatAf(marker.population_af)})
             </span>
@@ -299,15 +310,21 @@
             <span class="simple-copy-label">Signal</span>
             <span class="layperson-text">{simpleCopy.signal}</span>
           </div>
-          <div class="simple-copy-field">
-            <span class="simple-copy-label">Why it matters</span>
-            <span class="layperson-text">{simpleCopy.why_it_matters}</span>
-          </div>
-          <span class="simple-copy-evidence">{simpleCopy.evidence_label}</span>
+          {#if simpleCopy.why_it_matters && simpleCopy.why_it_matters !== simpleCopy.signal}
+            <div class="simple-copy-field">
+              <span class="simple-copy-label">Why it matters</span>
+              <span class="layperson-text">{simpleCopy.why_it_matters}</span>
+            </div>
+          {/if}
           <div class="simple-next-step">
-            <strong>Review</strong>
+            <strong>Next step</strong>
             <span>{simpleCopy.review_action}</span>
           </div>
+          {#if benefitsFromContext && onOpenContext}
+            <button type="button" class="btn btn-secondary btn-sm simple-add-context" onclick={() => onOpenContext?.()}>
+              Add diet, medications, or habits to refine this
+            </button>
+          {/if}
         </div>
         {#if callabilityState !== 'callable'}
           <div class="simple-callability-note" role="note">
@@ -416,6 +433,12 @@
 </article>
 
 <style>
+  .simple-add-context {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 0.35rem;
+  }
+
   .research-explore-link {
     background: transparent;
     border: none;

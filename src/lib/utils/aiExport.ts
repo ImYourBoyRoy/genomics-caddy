@@ -4,7 +4,7 @@ import { parseThinking } from "./chatParser";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { populatedCycleDiaryFields } from "./cycleDiary";
 import { populatedReproductiveIntake } from "./reproductiveIntake";
-import { formatGeneticSexLabel } from "./uiLabels";
+import { formatDisplaySex } from "./uiLabels";
 import {
   clinicalStateLabel,
   inheritanceModelLabel,
@@ -24,7 +24,7 @@ export function buildStandardMarkdown(
 ): string {
   let md = `# Genomics Caddy AI - Consultation Export\n`;
   md += `*Sample Name:* ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `*Chromosome pattern:* ${selectedSample ? formatGeneticSexLabel(selectedSample.genetic_sex) : "Unknown"}\n`;
+  md += `*Sex (DNA):* ${formatDisplaySex(selectedSample?.genetic_sex, "")}\n`;
   md += `*Date:* ${new Date().toLocaleString()}\n`;
   md += `*Model:* ${selectedModel}\n\n`;
   md += `---\n\n`;
@@ -84,7 +84,7 @@ export function buildClinicalHandoffMarkdown(
   let md = `# Genomics Caddy AI - Clinical Handoff & Biohacking Summary\n`;
   md += `## Patient & Metadata\n`;
   md += `* **Patient Name:** ${selectedSample ? selectedSample.name : "N/A"}\n`;
-  md += `* **Chromosome pattern:** ${selectedSample ? formatGeneticSexLabel(selectedSample.genetic_sex) : "Unknown"}\n`;
+  md += `* **Sex (DNA):** ${formatDisplaySex(selectedSample?.genetic_sex, "")}\n`;
   md += `* **Date of Report:** ${new Date().toLocaleString()}\n`;
   md += `* **Inference Model:** ${selectedModel}\n\n`;
   md += `---\n\n`;
@@ -102,7 +102,7 @@ export function buildClinicalHandoffMarkdown(
     md += `* **Coordinate system:** ${diagnostics.coordinate_system}\n`;
     md += `* **Allele orientation:** ${diagnostics.allele_orientation}\n`;
     md += `* **Liftover:** ${provenance.liftover_mapped_rows} mapped; ${provenance.liftover_unmapped_rows} unmapped\n\n`;
-    md += `*${aiPromptPolicy.export_disclosures.import_provenance_notice}\n\n`;
+    md += `*${aiPromptPolicy.export_disclosures.import_provenance_notice}*\n\n`;
   }
 
   md += `## 👤 Biohacking & Health Profile (Self-Reported)\n`;
@@ -133,7 +133,6 @@ export function buildClinicalHandoffMarkdown(
       md += `* **Ethical profiles:** ${dietaryProfile.ethical_preference_profiles.join("; ") || "None recorded"}\n`;
       md += `* **Medical diet profiles:** ${dietaryProfile.medical_diet_profiles.join("; ") || "None recorded"}\n`;
       md += `* **Food / nutrition goals:** ${dietaryProfile.goals.join("; ") || "None recorded"}\n`;
-      md += `*Food requirements are explicit profile context, not genetic evidence; allergy and clinician-directed restrictions take priority.*\n`;
     }
     const reproductiveIntake = populatedReproductiveIntake(personalSafetyContext.reproductiveIntake);
     if (reproductiveIntake.length > 0) {
@@ -141,7 +140,6 @@ export function buildClinicalHandoffMarkdown(
       for (const { field, value } of reproductiveIntake) {
         md += `* **${field.label}:** ${value}\n`;
       }
-      md += `*This context is not genetic evidence and does not establish a diagnosis, hormone level, medication composition, or treatment recommendation.*\n`;
     }
     if (personalSafetyContext.cycleDiary && personalSafetyContext.cycleDiary.length > 0) {
       md += `### Daily cycle and symptom diary (self-reported)\n`;
@@ -151,9 +149,9 @@ export function buildClinicalHandoffMarkdown(
           if (field.id !== 'entry_date') md += `* **${field.label}:** ${value}\n`;
         }
       }
-      md += `*Diary entries are observations only; missing entries are not symptom-free days and do not establish hormone levels or a diagnosis.*\n`;
+      md += `*Missing diary days are unrecorded, not symptom-free.*\n`;
     }
-    md += `*This context is not genetic evidence and does not establish a diagnosis or medication recommendation.*\n\n`;
+    md += `\n`;
   }
   md += `---\n\n`;
 

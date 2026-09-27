@@ -117,7 +117,7 @@
                 <code class="rsid">{item.rsid}</code>
                 {#if item.gene}<span class="gene">{item.gene}</span>{/if}
                 {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
-                <Tooltip label="Research index score" description="This local ranking signal helps organize research items. It is not a disease probability or a health score.">
+                <Tooltip label="Research index score" description="Orders research items by how much supporting evidence they have.">
                   <span class="score">Rank {Math.round(item.significance_score * 100)}%</span>
                 </Tooltip>
               </div>

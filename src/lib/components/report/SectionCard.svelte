@@ -38,6 +38,7 @@
     showClinicalExtraColumns?: boolean;
     collapsed?: boolean;
     onCollapsedChange?: (collapsed: boolean) => void;
+    onOpenContext?: () => void;
   }
 
   let {
@@ -50,6 +51,7 @@
     showClinicalExtraColumns = false,
     collapsed = $bindable(),
     onCollapsedChange,
+    onOpenContext,
   }: Props = $props();
 
   // If collapsed is undefined, we default to true (collapsed by default)
@@ -167,6 +169,79 @@
       {/if}
     </div>
   </div>
+
+  <div
+    id={sectionBodyId}
+    class="section-body-target"
+    aria-hidden={isCollapsed ? 'true' : undefined}
+    inert={isCollapsed}
+  >
+    {#if !isCollapsed}
+      <div class="section-body" transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
+        <!-- Direction-aware breakdown pills -->
+        <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
+          {#if viewMode === 'simple'}
+            <span class="summary-line">
+              {simpleCountParts.join(' · ')}{#if noDataCount > 0}{simpleCountParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
+            </span>
+          {:else}
+            {#each countParts as part}
+              <span class="summary-pill">{part}</span>
+            {/each}
+            {#if noDataCount > 0}
+              <span class="summary-pill coverage-note">{noDataCount} not called</span>
+            {/if}
+          {/if}
+        </div>
+
+        {#if viewMode === 'compare' && sharedInterpretations.length > 0}
+          <details class="section-shared-context">
+            <summary>Shared pathway context ({sharedInterpretations.length})</summary>
+            <div class="section-shared-context-body">
+              <p>Repeated family explanations are shown once; each card keeps its own result and direction.</p>
+              <ul>
+                {#each sharedInterpretations as item (item.key)}
+                  <li><strong>{item.count} findings:</strong> {item.text}</li>
+                {/each}
+              </ul>
+            </div>
+          </details>
+        {/if}
+
+        {#if viewMode === 'clinical'}
+          <ClinicalFindingsTable
+            markers={section.markers}
+            showExtraColumns={showClinicalExtraColumns}
+            {onExploreResearch}
+            {highlightRsid}
+            {onNavigateToVariant}
+          />
+        {:else}
+          <div class="markers-grid">
+            {#each section.markers as marker}
+              <VariantCard
+                {marker}
+                {viewMode}
+                {onExploreResearch}
+                {highlightRsid}
+                {onNavigateToVariant}
+                relatedMarkerCount={simpleRelatedMarkerCounts[marker.link_id]}
+                {onOpenContext}
+                showSharedInterpretationNote={viewMode === 'compare' && sharedInterpretationKeys.has(normalizeSharedInterpretation(marker.interpretation))}
+              />
+            {/each}
+          </div>
+          {#if sectionFollowUp}
+            <div class="section-follow-up" role="note">
+              <span class="section-follow-up-label">Useful follow-up</span>
+              <span>{sectionFollowUp}</span>
+            </div>
+          {/if}
+        {/if}
+      </div>
+    {/if}
+  </div>
+</div>
 
 <style>
   .section-header {
@@ -394,75 +469,3 @@
     }
   }
 </style>
-
-  <div
-    id={sectionBodyId}
-    class="section-body-target"
-    aria-hidden={isCollapsed ? 'true' : undefined}
-    inert={isCollapsed}
-  >
-    {#if !isCollapsed}
-      <div class="section-body" transition:slide={{ duration: reduceMotion ? 0 : 200 }}>
-        <!-- Direction-aware breakdown pills -->
-        <div class="section-summary-pills" class:simple-summary={viewMode === 'simple'} aria-label="Section finding summary">
-          {#if viewMode === 'simple'}
-            <span class="summary-line">
-              {simpleCountParts.join(' · ')}{#if noDataCount > 0}{simpleCountParts.length > 0 ? ' · ' : ''}{noDataCount} not called{/if}
-            </span>
-          {:else}
-            {#each countParts as part}
-              <span class="summary-pill">{part}</span>
-            {/each}
-            {#if noDataCount > 0}
-              <span class="summary-pill coverage-note">{noDataCount} not called</span>
-            {/if}
-          {/if}
-        </div>
-
-        {#if viewMode === 'compare' && sharedInterpretations.length > 0}
-          <details class="section-shared-context">
-            <summary>Shared pathway context ({sharedInterpretations.length})</summary>
-            <div class="section-shared-context-body">
-              <p>Repeated family explanations are shown once; each card keeps its own result and direction.</p>
-              <ul>
-                {#each sharedInterpretations as item (item.key)}
-                  <li><strong>{item.count} findings:</strong> {item.text}</li>
-                {/each}
-              </ul>
-            </div>
-          </details>
-        {/if}
-
-        {#if viewMode === 'clinical'}
-          <ClinicalFindingsTable
-            markers={section.markers}
-            showExtraColumns={showClinicalExtraColumns}
-            {onExploreResearch}
-            {highlightRsid}
-            {onNavigateToVariant}
-          />
-        {:else}
-          <div class="markers-grid">
-            {#each section.markers as marker}
-              <VariantCard
-                {marker}
-                {viewMode}
-                {onExploreResearch}
-                {highlightRsid}
-                {onNavigateToVariant}
-                relatedMarkerCount={simpleRelatedMarkerCounts[marker.link_id]}
-                showSharedInterpretationNote={viewMode === 'compare' && sharedInterpretationKeys.has(normalizeSharedInterpretation(marker.interpretation))}
-              />
-            {/each}
-          </div>
-          {#if sectionFollowUp}
-            <div class="section-follow-up" role="note">
-              <span class="section-follow-up-label">Useful follow-up</span>
-              <span>{sectionFollowUp}</span>
-            </div>
-          {/if}
-        {/if}
-      </div>
-    {/if}
-  </div>
-</div>

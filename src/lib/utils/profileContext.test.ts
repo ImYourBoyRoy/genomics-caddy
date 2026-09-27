@@ -67,6 +67,13 @@ describe('profile context workspace', () => {
     expect(loadProfileContext(11).notes.goals).not.toBe(loadProfileContext(12).notes.goals);
   });
 
+  it('persists user-stated reproductive anatomy and rejects unknown values', () => {
+    saveProfileContext(21, context({ reproductiveAnatomy: 'female' }));
+    expect(loadProfileContext(21).reproductiveAnatomy).toBe('female');
+    saveProfileContext(22, { ...context({}), reproductiveAnatomy: 'guessed' as never });
+    expect(loadProfileContext(22).reproductiveAnatomy).toBe('');
+  });
+
   it('reads legacy profile-scoped context without deleting it', () => {
     localStorage.setItem(reproductiveContextStorageKey(21), 'cyclic_mood_symptoms');
     localStorage.setItem(personalSafetyContextStorageKey(21)!, JSON.stringify({

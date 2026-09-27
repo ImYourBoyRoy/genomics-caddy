@@ -94,9 +94,9 @@ describe('audience-specific report exports', () => {
     });
 
     expect(output).toContain('# Personal Simple Genomics Report');
-    expect(output).toContain('- Chromosome pattern: Female-like');
+    expect(output).toContain('- Sex (DNA): Female');
     expect(output).toContain('What this might mean: A biological pathway signal is present.');
-    expect(output).toContain('- Direction: Context-dependent');
+    expect(output).toContain('- Direction: Lifestyle-linked');
     expect(output).not.toContain('SYNTHETIC_CALL');
     expect(output).not.toContain('Technical impact text');
     expect(output).not.toContain('Clinical interpretation text');

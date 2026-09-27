@@ -3705,7 +3705,7 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
                 let dir_str = match link.effect_direction {
                     EffectDirection::Risk => "Risk",
                     EffectDirection::Protective => "Protective",
-                    EffectDirection::ContextDependent => "Context-dependent",
+                    EffectDirection::ContextDependent => "Lifestyle-linked",
                     EffectDirection::Trait => "Trait",
                     EffectDirection::Unknown => "Unknown",
                     EffectDirection::NotApplicable => "Not applicable",

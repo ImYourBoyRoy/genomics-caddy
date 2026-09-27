@@ -17,8 +17,8 @@
   Module Docstring:
   Purpose: Card representing a thematic section of the genetic report.
   Responsibilities:
-  - Display category title and either a risk-only percent score OR a
-    descriptive plain-language summary (for sections like cancer/PGx).
+  - Display category title and either a risk-associated copy ratio OR a
+    descriptive plain-language summary. The ratio is not disease probability.
   - Show direction-aware tallied counts so users see the breakdown.
   - Render a controlled collapse/expand surface for the parent report.
   Key Inputs: section (EvaluatedSection).
@@ -91,8 +91,7 @@
   );
   let showActiveCount = $derived(activeCount > 0 && activeCount < section.markers.length);
   let noDataCount = $derived(section.summary.no_data_count ?? 0);
-  let notEvaluatedCount = $derived(section.summary.not_evaluated_count ?? 0);
-  let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount - notEvaluatedCount));
+  let callableCount = $derived(Math.max(0, section.summary.total_markers - noDataCount));
   let coveragePercent = $derived(
     section.summary.total_markers > 0
       ? Math.round((callableCount / section.summary.total_markers) * 100)
@@ -136,11 +135,11 @@
       </h4>
       {#if viewMode !== 'simple'}
         <Tooltip
-          label="DNA call coverage"
-          description="A missing or uncalled marker is unknown, not evidence of low risk."
+          label="DNA calls present"
+          description="Counts report markers with a DNA call, even when the call cannot be interpreted. This is not the percentage of your whole genome. A missing call is unknown."
         >
           <span class="pill coverage-pill">
-            DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
+            Calls present: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)
           </span>
         </Tooltip>
       {/if}
@@ -148,12 +147,23 @@
 
     <div class="section-score-area">
       {#if showPercent && viewMode !== 'simple'}
-        <span class="sec-score">
-          Association match rate: {section.section_signal_score.toFixed(1)}%
-        </span>
-        <span class="sec-score-hint">
-          (curated association markers only)
-        </span>
+        <Tooltip
+          label="What this percentage counts"
+          description="This is the share of possible risk-associated DNA copies found among scorable curated markers in this section. It is not your chance of developing a condition. Missing, unverified, and clinically confirm-first markers are excluded."
+          interactiveChildren
+        >
+          <button class="sec-score-explainer" type="button">
+            <span>Risk-associated copies: {section.summary.risk_effect_count} of {section.summary.risk_possible} possible ({section.section_signal_score.toFixed(0)}%)</span>
+            <span aria-hidden="true">ⓘ</span>
+          </button>
+        </Tooltip>
+      {:else if section.summary.risk_score_suppressed_for_confirmation}
+        <Tooltip
+          label="Clinical confirmation needed"
+          description="This section contains a risk-direction marker that should only be interpreted after a clinical test. No percentage is shown."
+        >
+          <span class="sec-score-badge badge-warning">Confirm risk markers first</span>
+        </Tooltip>
       {:else if section.summary.all_require_confirmation}
         <Tooltip label="Clinical validation required" description="High-stakes clinical variants require medical-grade confirmation before assigning risk estimates.">
           <span class="sec-score-badge badge-warning">{viewMode === 'simple' ? 'Confirm first' : '⚠️ Clinical validation required'}</span>
@@ -371,6 +381,37 @@
     letter-spacing: 0.01em;
     box-shadow: 0 2px 8px var(--shadow-subtle);
     border: 1px solid transparent;
+  }
+
+  .sec-score-explainer {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    max-width: 100%;
+    padding: 0.2rem 0;
+    border: 0;
+    border-bottom: 1px dotted var(--text-secondary);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 650;
+    line-height: 1.4;
+    text-align: right;
+    overflow-wrap: anywhere;
+    cursor: help;
+  }
+
+  .sec-score-explainer:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 0.2rem;
+  }
+
+  .sec-score-explainer > span:last-child {
+    flex: 0 0 auto;
+    color: var(--status-info-text);
   }
 
   .badge-warning {

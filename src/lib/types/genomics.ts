@@ -359,6 +359,7 @@ export interface SectionSummary {
   confirmation_required_count: number;
   total_markers: number;
   show_percent_score: boolean;
+  risk_score_suppressed_for_confirmation?: boolean;
   all_require_confirmation: boolean;
   active_marker_count: number;
   active_risk_marker_count: number;
@@ -384,6 +385,8 @@ export interface NormalizedReport {
   title: string;
   description: string;
   overall_signal_score: number;
+  overall_risk_effect_count?: number;
+  overall_risk_possible?: number;
   variants: Record<string, CanonicalVariant>;
   user_calls: Record<string, UserCall>;
   category_links: Record<string, VariantCategoryLink>;
@@ -485,6 +488,8 @@ export interface GeneratedReport {
   title: string;
   description: string;
   overall_signal_score: number;
+  overall_risk_effect_count?: number;
+  overall_risk_possible?: number;
   variants: Record<string, CanonicalVariant>;
   user_calls: Record<string, UserCall>;
   category_links: Record<string, VariantCategoryLink>;

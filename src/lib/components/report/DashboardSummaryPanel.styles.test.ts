@@ -30,6 +30,15 @@ describe('DashboardSummaryPanel semantic styling', () => {
     }
   });
 
+  it('separates broader research links from condition-specific ClinVar lab records', () => {
+    expect(source).toContain('Other database links for curated markers');
+    expect(source).toContain('These links come from curated research references.');
+    expect(source).toContain('may not identify a lab report for the exact condition');
+    expect(source).toContain('.catalog-associations-summary::after');
+    expect(source).toContain(".catalog-associations[open] > .catalog-associations-summary::after { content: '▾'; }");
+    expect(source).toContain('.catalog-associations-summary:focus-visible');
+  });
+
   it('keeps repeated guidance boundaries compact and keeps personal context out of the report', () => {
     expect(source).toContain('Food choices linked to the pathways found in this profile.');
     expect(source).toContain('Options linked to the pathways found in this profile.');
@@ -365,8 +374,8 @@ describe('DashboardSummaryPanel semantic styling', () => {
 
   it('keeps database-linked conditions discoverable without adding a wall of cards or chips', () => {
     expect(source).toContain('<details class="catalog-associations summary-card card">');
-    expect(source).toContain('Catalog-linked conditions, traits &amp; responses');
-    expect(source).toContain('plan.catalogAssociations.slice(0, 6)');
+    expect(source).toContain('Other database links for curated markers');
+    expect(source).toContain('readableCatalogAssociations.slice(0, 6)');
     expect(source).toContain('association.association_is');
     expect(source).toContain('association.association_scope');
     expect(source).toContain('Exact allele match not verified');

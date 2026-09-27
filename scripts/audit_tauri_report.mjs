@@ -630,25 +630,49 @@ async function assertRecommendationPresentation(initialMetrics) {
 async function assertProfileSexMarker(geneticSex) {
   const sex = String(geneticSex || "");
   const expectedSymbol = /^Female\b/i.test(sex) ? "♀" : /^Male\b/i.test(sex) ? "♂" : null;
-  if (expectedSymbol) {
-    const result = await request("/ui/queryText", {
-      method: "POST",
-      body: JSON.stringify({ text: expectedSymbol }),
-    });
-    assert(result?.ok === true && result.count > 0, `Active Profiles is missing the ${expectedSymbol} sex symbol`);
+  const initial = await request("/ui/snapshot");
+  const mobileDrawerRequired =
+    initial.layout?.viewportWidth <= 720 && initial.layout?.sidebarWidth === 0;
+  let mobileDrawerOpened = false;
+
+  if (mobileDrawerRequired) {
+    await clickText("Data controls");
+    mobileDrawerOpened = true;
+    await waitForSnapshot(
+      (snapshot) => (snapshot.layout?.sidebarWidth ?? 0) > 0,
+      "mobile data controls drawer",
+    );
   }
 
-  const legacyIcon = await request("/ui/queryText", {
-    method: "POST",
-    body: JSON.stringify({ text: "👤" }),
-  });
-  assert(legacyIcon?.ok === true && legacyIcon.count === 0, "Active Profiles still uses the generic person icon");
+  try {
+    if (expectedSymbol) {
+      const result = await request("/ui/queryText", {
+        method: "POST",
+        body: JSON.stringify({ text: expectedSymbol }),
+      });
+      assert(result?.ok === true && result.count > 0, `Active Profiles is missing the ${expectedSymbol} sex symbol`);
+    }
 
-  const profileHelp = await request("/ui/queryText", {
-    method: "POST",
-    body: JSON.stringify({ text: "Sex estimate from DNA" }),
-  });
-  assert(profileHelp?.ok === true && profileHelp.count === 0, "Active Profiles still exposes the delayed sex-estimate tooltip");
+    const legacyIcon = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text: "👤" }),
+    });
+    assert(legacyIcon?.ok === true && legacyIcon.count === 0, "Active Profiles still uses the generic person icon");
+
+    const profileHelp = await request("/ui/queryText", {
+      method: "POST",
+      body: JSON.stringify({ text: "Sex estimate from DNA" }),
+    });
+    assert(profileHelp?.ok === true && profileHelp.count === 0, "Active Profiles still exposes the delayed sex-estimate tooltip");
+  } finally {
+    if (mobileDrawerOpened) {
+      await clickText("Close data");
+      await waitForSnapshot(
+        (snapshot) => snapshot.layout?.sidebarWidth === 0,
+        "closed mobile data controls drawer",
+      );
+    }
+  }
 }
 
 async function ensurePopulatedSection() {
@@ -737,7 +761,7 @@ async function assertCatalogAssociationPanel() {
   assert(snapshot.catalogAssociationRowCount > 0, "Catalog association panel has no linked rows");
   const opened = await request("/ui/clickText", {
     method: "POST",
-    body: JSON.stringify({ text: "Catalog-linked conditions, traits & responses" }),
+    body: JSON.stringify({ text: "Other database links for curated markers" }),
   });
   assert(opened?.ok === true, "Could not expand the catalog association panel");
   snapshot = await waitForSnapshot(
@@ -749,7 +773,7 @@ async function assertCatalogAssociationPanel() {
 
   const closed = await request("/ui/clickText", {
     method: "POST",
-    body: JSON.stringify({ text: "Catalog-linked conditions, traits & responses" }),
+    body: JSON.stringify({ text: "Other database links for curated markers" }),
   });
   assert(closed?.ok === true, "Could not collapse the catalog association panel");
   snapshot = await waitForSnapshot(
@@ -762,16 +786,16 @@ async function assertCatalogAssociationPanel() {
 async function assertGenomeWideDiseasePanel() {
   const heading = await request("/ui/queryText", {
     method: "POST",
-    body: JSON.stringify({ text: "Potential disease associations" }),
+    body: JSON.stringify({ text: "Condition links found at your DNA markers" }),
   });
   assert(heading?.ok === true && heading.count === 1, "Report is missing its single genome-wide disease discovery section");
 
   const opened = await request("/ui/clickText", {
     method: "POST",
-    body: JSON.stringify({ text: "Potential disease associations" }),
+    body: JSON.stringify({ text: "Condition links found at your DNA markers" }),
   });
   assert(opened?.ok === true, "Could not expand genome-wide disease discovery");
-  const sectionTitles = ["May be relevant to you", "Carrier (one copy)", "Disputed or unclear"];
+  const sectionTitles = ["May be relevant", "One-copy carrier pattern", "Unclear or mixed evidence"];
   let relevanceSections = 0;
   for (const text of sectionTitles) {
     const found = await request("/ui/queryText", { method: "POST", body: JSON.stringify({ text }) });
@@ -787,7 +811,7 @@ async function assertGenomeWideDiseasePanel() {
 
   const closed = await request("/ui/clickText", {
     method: "POST",
-    body: JSON.stringify({ text: "Potential disease associations" }),
+    body: JSON.stringify({ text: "Condition links found at your DNA markers" }),
   });
   assert(closed?.ok === true, "Could not collapse genome-wide disease discovery");
   snapshot = await request("/ui/snapshot");

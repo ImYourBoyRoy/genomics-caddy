@@ -36,15 +36,15 @@ import {
 } from './reportReferences';
 import { dedupeWarnings, classifyWarnings } from './warningTaxonomy';
 import {
-  copyCountLabel,
   groupGenomeWideConditionAssociations,
   sectionConditionGroupsByRelevance,
 } from './genomewideConditionDiscovery';
+import { yourCopiesLabel } from './plainConditionCopy';
 
 const RELEVANCE_EXPORT_LABELS: Record<string, string> = {
-  may_be_relevant: 'May be relevant (copy count fits inheritance)',
-  carrier: 'Carrier (one copy, recessive or X-linked)',
-  unclear: 'Disputed or unclear (conflicting ClinVar submissions, uncurated inheritance, or risk factor)',
+  may_be_relevant: 'May be relevant (the copy count fits an inherited pattern)',
+  carrier: 'One-copy carrier pattern',
+  unclear: 'Unclear or mixed evidence',
 };
 import aiPromptPolicy from '../marker-packs/ai_prompt_policy.json';
 import {
@@ -363,9 +363,9 @@ function renderGenomewideConditionDiscovery(report: GeneratedReport): string {
   const groups = sectionConditionGroupsByRelevance(groupGenomeWideConditionAssociations(discovery.associations))
     .flatMap((section) => section.groups);
   const header = [
-    '## Potential disease associations from full-genome ClinVar scan',
+    '## ClinVar condition records matched to DNA markers',
     '',
-    'Exact allele matches to reviewed ClinVar condition submissions (somatic/oncogenic and benign-consensus variants excluded). May-be-relevant and carrier groups require a variant-wide pathogenic consensus plus ClinGen inheritance. Rare pathogenic array calls need clinical confirmation.',
+    'Each entry is one condition at one exact DNA marker. These are lab-submitted database records, not diagnoses. Variant-wide classifications may be broader than the named condition. Somatic/oncogenic and benign-consensus variants are excluded; rare array calls require clinical confirmation.',
     '',
   ];
   if (!discovery.local_index_ready) {
@@ -380,22 +380,22 @@ function renderGenomewideConditionDiscovery(report: GeneratedReport): string {
   return [
     ...header,
     `- Exact matched variants: ${discovery.exact_variant_count}`,
-    `- Matched condition labels: ${groups.length}`,
-    `- Allele/build handling: ${clean(discovery.allele_orientation)}`,
-    '',
+      `- Matched marker-and-condition entries: ${groups.length}`,
+      `- Allele/build handling: ${clean(discovery.allele_orientation)}`,
+      '',
     ...groups.slice(0, 40).flatMap((group) => [
-      `### ${clean(group.condition)}`,
+      `### ${clean(group.condition)} — ${clean(group.rsid)}${group.geneSymbol ? ` (${clean(group.geneSymbol)} gene)` : ''}`,
       `- Relevance: ${RELEVANCE_EXPORT_LABELS[group.relevance] ?? 'Unclear'}`,
-      `- Copies: ${copyCountLabel(group.maxCopies)}; inheritance: ${group.inheritance.length ? group.inheritance.map((mode) => clean(mode)).join(' / ') : 'not curated'}`,
-      `- Topic: ${clean(group.categoryLabel)}; matched variants: ${group.variantCount}`,
-      ...(group.conflicts ? ['- ClinVar submitters disagree about this variant.'] : []),
+      `- Copies: ${yourCopiesLabel(group.copyCount)}; inheritance: ${group.inheritance.length ? group.inheritance.map((mode) => clean(mode)).join(' / ') : 'not consistently listed'}`,
+      `- Record type: ${group.associationKind === 'risk_factor' ? 'risk factor' : group.associationKind === 'mixed' ? 'mixed condition and risk-factor records' : 'condition link'}`,
+      ...(group.variantSummaryConflict ? ['- ClinVar reports conflicting submissions in its overall variant summary; those submissions may not be about this exact condition.'] : []),
       ...group.assertions.slice(0, 5).map((assertion) =>
-        `- ${clean(assertion.rsid)}${assertion.gene_symbol ? ` (${clean(assertion.gene_symbol)})` : ''}: ${clean(assertion.clinical_significance)}; variant-wide summary ${clean(assertion.variant_summary_clinical_significance)}; ${clean(assertion.review_status)}; ${clean(assertion.origin_status)}; [${clean(assertion.scv_accession)}](${clean(assertion.source_url)})`
+        `- Lab report ${clean(assertion.scv_accession)}: ${clean(assertion.clinical_significance)}; ${clean(assertion.review_status)}; variant-wide summary (not condition-specific): ${clean(assertion.variant_summary_clinical_significance)}; ${clean(assertion.origin_status)}; [Open ClinVar record](${clean(assertion.source_url)})`
       ),
-      ...(group.assertions.length > 5 ? [`- ${group.assertions.length - 5} additional SCV submissions are retained in the JSON report.`] : []),
+      ...(group.assertions.length > 5 ? [`- ${group.assertions.length - 5} additional lab reports are included in the structured report JSON.`] : []),
       '',
     ]),
-    ...(groups.length > 40 ? [`${groups.length - 40} additional condition labels are retained in the JSON report.`] : []),
+    ...(groups.length > 40 ? [`${groups.length - 40} additional marker-and-condition entries are included in the structured report JSON.`] : []),
     ...(discovery.omitted_association_count > 0
       ? [`The source association list was capped; ${discovery.omitted_association_count} matching submissions were omitted from this report payload.`]
       : []),

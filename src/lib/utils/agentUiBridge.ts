@@ -199,7 +199,7 @@ export interface AgentUiSnapshot {
   catalogAssociationPanelPresent: boolean;
   catalogAssociationPanelExpanded: boolean;
   catalogAssociationRowCount: number;
-  matchedAlleleLabelPresent: boolean;
+  riskAssociatedCopiesLabelPresent: boolean;
   dietaryAlignmentPresent: boolean;
   dualExportButtonsPresent: boolean;
   urgentBadgeCount: number;
@@ -1060,7 +1060,7 @@ export function installAgentUiBridge(controllers: AgentUiControllers): () => voi
         catalogAssociationPanelPresent: catalogAssociationPanel !== null,
         catalogAssociationPanelExpanded: catalogAssociationPanel?.open ?? false,
         catalogAssociationRowCount: catalogAssociationPanel?.querySelectorAll('.catalog-association-row').length ?? 0,
-        matchedAlleleLabelPresent: !!document.body.innerText.match(/Matched alleles/i),
+        riskAssociatedCopiesLabelPresent: !!document.body.innerText.match(/Risk-associated copies:/i),
         dietaryAlignmentPresent: !!document.body.innerText.match(/Dietary Alignment/i),
         dualExportButtonsPresent:
           !!document.body.innerText.match(/Export curated report JSON/i) &&

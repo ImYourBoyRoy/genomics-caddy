@@ -5,6 +5,7 @@ import allergySensitivityCatalog from '../../marker-packs/allergy_sensitivity_ca
 import sourceRegistry from '../../marker-packs/source_registry.json';
 import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
 import { catalogAssociationsForTopic, conditionDiagnosticCapabilityLabel, type CatalogAssociationSummary, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
+import { catalogKindLabel, catalogLabelIsReadable, catalogPlainSummary, cleanConditionName } from '../../utils/plainConditionCopy';
 import GenomeWideConditionDiscovery from './GenomeWideConditionDiscovery.svelte';
 import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
 import type { PresentationMode } from '../../utils/presentationPreferences';
@@ -52,6 +53,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   let expandedLabReasons = $state<Record<string, boolean>>({});
   let labRequestCopied = $state(false);
   let showAllCatalogAssociations = $state(false);
+  let readableCatalogAssociations = $derived(plan.catalogAssociations.filter(catalogLabelIsReadable));
 
   function dashboardCollapseStorageKey(profileId: number): string {
     // v3: labs + review queue open by default; prior keys forced everything closed.
@@ -476,45 +478,43 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     <GenomeWideConditionDiscovery discovery={report.genomewide_clinvar} />
   {/if}
 
-  {#if plan.catalogAssociations.length > 0}
+  {#if readableCatalogAssociations.length > 0}
     <details class="catalog-associations summary-card card">
       <summary class="catalog-associations-summary">
         <span class="catalog-associations-heading">
-          <span class="section-kicker">Reference databases</span>
-          <span class="catalog-associations-title">Catalog-linked conditions, traits &amp; responses</span>
-          <span class="catalog-associations-hint">Links to reported markers; allele matching is shown when verifiable</span>
+          <span class="section-kicker">Public databases</span>
+          <span class="catalog-associations-title">Other database links for curated markers</span>
+          <span class="catalog-associations-hint">Broader condition, trait, and medicine-response references</span>
         </span>
-        <span class="catalog-associations-count">{plan.catalogAssociations.length} links</span>
+        <span class="catalog-associations-count">{readableCatalogAssociations.length} links</span>
       </summary>
+      <p class="catalog-associations-explainer">
+        These links come from curated research references. Some describe a gene or DNA position broadly and may not identify a lab report for the exact condition.
+      </p>
       <ul class="catalog-associations-list">
-        {#each (showAllCatalogAssociations ? plan.catalogAssociations : plan.catalogAssociations.slice(0, 6)) as association (association.id)}
+        {#each (showAllCatalogAssociations ? readableCatalogAssociations : readableCatalogAssociations.slice(0, 6)) as association (association.id)}
           <li class="catalog-association-row">
             <div class="catalog-association-top">
-              <h4>{association.label}</h4>
-              <span class="catalog-association-kind">{association.relationship_label}</span>
+              <h4>{cleanConditionName(association.label) ?? association.label}</h4>
+              <span class="catalog-association-kind">{catalogKindLabel(association.association_is)}</span>
             </div>
-            <p class="catalog-association-copy">{association.evidence_summary}</p>
-            <div class="catalog-association-meta">
-              <span>{association.source_type}</span>
-              <span>{association.marker_count} {association.marker_count === 1 ? 'marker' : 'markers'}</span>
-              {#if association.clinical_significance}<span>{association.clinical_significance}</span>{/if}
-              {#if association.review_statuses?.length}<span>Review: {association.review_statuses.join(' · ')}</span>{/if}
-              {#if association.allele_match}<span>{catalogAlleleMatchLabel(association.allele_match)}</span>{/if}
-              {#if association.classification}<span>{association.source_type === 'ClinPGx' ? `Evidence ${association.classification}` : association.classification}</span>{/if}
-              {#if association.best_p_value != null}<span>p={association.best_p_value.toExponential(1)}</span>{/if}
-            </div>
+            <p class="catalog-association-copy">{catalogPlainSummary(association)}</p>
             <details class="catalog-association-details">
-              <summary>Genes, markers &amp; source records</summary>
+              <summary>Source details</summary>
               <div>
+                <span>{association.source_type} · {association.marker_count} {association.marker_count === 1 ? 'marker' : 'markers'}</span>
                 <span>Genes: {association.genes.join(' · ') || 'Not recorded'}</span>
                 <span>Markers: {association.rsids.join(' · ') || 'Not recorded'}</span>
-                <span>Relationship: <code>{association.association_is}</code> ({association.association_scope}-level)</span>
-                {#if association.condition_specific_assertion_available === false}
-                  <span>Condition-specific ClinVar RCV assertion: not retained in this local variant summary</span>
-                {/if}
-                {#if association.record_ids.length}<span>Record IDs: {association.record_ids.join(' · ')}</span>{/if}
-                {#if association.rcv_accessions?.length}<span>RCV accessions on the variant-summary row (not mapped per condition): {association.rcv_accessions.join(' · ')}</span>{/if}
+                {#if association.clinical_significance}<span>Classification: {association.clinical_significance}</span>{/if}
+                {#if association.review_statuses?.length}<span>Review: {association.review_statuses.join(' · ')}</span>{/if}
+                {#if association.allele_match}<span>{catalogAlleleMatchLabel(association.allele_match)}</span>{/if}
+                {#if association.classification}<span>{association.source_type === 'ClinPGx' ? `Evidence ${association.classification}` : association.classification}</span>{/if}
+                {#if association.best_p_value != null}<span>p={association.best_p_value.toExponential(1)}</span>{/if}
                 {#if association.inheritance_models?.length}<span>Inheritance: {association.inheritance_models.join(' · ')}</span>{/if}
+                <span>Relationship: <code>{association.association_is}</code> ({association.association_scope}-level)</span>
+                <span>{association.evidence_summary}</span>
+                {#if association.record_ids.length}<span>Record IDs: {association.record_ids.join(' · ')}</span>{/if}
+                {#if association.rcv_accessions?.length}<span>RCV accessions: {association.rcv_accessions.join(' · ')}</span>{/if}
                 {#if association.study_accessions?.length}<span>Studies: {association.study_accessions.join(' · ')}</span>{/if}
                 {#each association.source_urls.slice(0, 2) as url (url)}
                   <a href={url} target="_blank" rel="noopener noreferrer">Open {association.source_type} record</a>
@@ -529,9 +529,9 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
           </li>
         {/each}
       </ul>
-      {#if plan.catalogAssociations.length > 6}
+      {#if readableCatalogAssociations.length > 6}
         <button class="catalog-associations-more" type="button" onclick={() => (showAllCatalogAssociations = !showAllCatalogAssociations)}>
-          {showAllCatalogAssociations ? 'Show fewer links' : `Show all ${plan.catalogAssociations.length} links`}
+          {showAllCatalogAssociations ? 'Show fewer links' : `Show all ${readableCatalogAssociations.length} links`}
         </button>
       {/if}
     </details>
@@ -2008,6 +2008,20 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
   .catalog-associations-summary::-webkit-details-marker { display: none; }
+  .catalog-associations-summary::after {
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    content: '▸';
+    font-size: 1.15rem;
+  }
+  .catalog-associations[open] > .catalog-associations-summary::after { content: '▾'; }
+  .catalog-associations-summary:focus-visible,
+  .catalog-association-details summary:focus-visible,
+  .catalog-associations-more:focus-visible {
+    outline: 2px solid var(--status-info-text);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
 
   .catalog-associations-heading {
     display: grid;
@@ -2017,15 +2031,15 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   .catalog-associations-title {
     color: var(--text-primary);
-    font-size: 0.94rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.3;
   }
 
   .catalog-associations-hint {
     color: var(--text-secondary);
-    font-size: 0.72rem;
-    line-height: 1.4;
+    font-size: 0.82rem;
+    line-height: 1.5;
   }
 
   .catalog-associations-count {
@@ -2034,13 +2048,20 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     border: 1px solid var(--border-color);
     border-radius: 999px;
     color: var(--text-secondary);
-    font-size: 0.66rem;
+    font-size: 0.76rem;
     font-weight: 700;
   }
 
   .catalog-associations[open] > .catalog-associations-summary {
     padding-bottom: 0.65rem;
     border-bottom: 1px solid var(--border-color);
+  }
+
+  .catalog-associations-explainer {
+    margin: 0.65rem 0 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    line-height: 1.5;
   }
 
   .catalog-associations-list {
@@ -2070,48 +2091,34 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   .catalog-association-top h4 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 0.84rem;
+    font-size: 0.94rem;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
 
   .catalog-association-kind {
     color: var(--status-info-text);
-    font-size: 0.67rem;
+    font-size: 0.78rem;
     font-weight: 700;
   }
 
   .catalog-association-copy {
     margin: 0;
     color: var(--text-secondary);
-    font-size: 0.72rem;
-    line-height: 1.42;
-  }
-
-  .catalog-association-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-
-  .catalog-association-meta span {
-    max-width: 100%;
-    color: var(--text-secondary);
-    font-size: 0.66rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
+    font-size: 0.84rem;
+    line-height: 1.5;
   }
 
   .catalog-association-details {
     color: var(--text-secondary);
-    font-size: 0.68rem;
+    font-size: 0.8rem;
   }
 
   .catalog-association-details summary,
   .catalog-associations-more {
     cursor: pointer;
     color: var(--status-info-text);
-    font-size: 0.68rem;
+    font-size: 0.8rem;
     font-weight: 700;
   }
 

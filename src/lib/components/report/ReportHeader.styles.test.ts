@@ -23,7 +23,11 @@ describe('ReportHeader summary', () => {
     expect(source).toContain('Higher-priority');
     expect(source).toContain('Context signals');
     expect(source).toContain('Potentially favorable');
-    expect(source).toContain('<span>DNA coverage</span>');
+    expect(source).toContain('<span>Markers with a DNA result</span>');
+    expect(source).toContain('of {totalMarkersChecked.toLocaleString()} report markers');
+    expect(source).toContain('share of markers used in this report');
+    expect(source).toContain('not the percentage of your whole genome that was read');
+    expect(source).toContain('Share of report markers with a usable DNA result');
     expect(source).toContain('role="progressbar"');
     expect(source).toContain('class="overview-coverage-meter"');
     expect(source).toContain('coveragePercent');
@@ -31,6 +35,7 @@ describe('ReportHeader summary', () => {
     expect(source).toContain('box-sizing: border-box;');
     expect(source).not.toContain('Markers Checked');
     expect(source).not.toContain('curated SNPs found');
+    expect(source).not.toContain('curated association match rate');
   });
 
   it('uses plain-language aggregate summary text in Simple mode', () => {

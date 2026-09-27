@@ -161,11 +161,11 @@ describe('audience-specific report exports', () => {
       includeRawGenotypes: false,
     });
 
-    expect(output).toContain('Potential disease associations from full-genome ClinVar scan');
+    expect(output).toContain('ClinVar condition records matched to DNA markers');
     expect(output).toContain('Synthetic condition');
-    expect(output).toContain('- Relevance: Carrier (one copy, recessive or X-linked)');
-    expect(output).toContain('- Copies: One copy; inheritance: Autosomal recessive');
-    expect(output).not.toContain('not diagnoses');
+    expect(output).toContain('- Relevance: One-copy carrier pattern');
+    expect(output).toContain('- Copies: 1 copy at this marker; inheritance: Autosomal recessive');
+    expect(output).toContain('not diagnoses');
     expect(output).toContain('Origin not specified');
     expect(output).not.toContain('A/G');
   });

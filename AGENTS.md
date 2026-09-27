@@ -102,6 +102,10 @@ from the user-only runtime endpoint file (or `GENOMICS_AGENT_UI_URL` if that URL
 is loopback). Do not use `localhost` or guess port 17321. The debug bridge
 requires a session token for `/ui/*`; use
 `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` only for disposable debug QA.
+To exercise the narrow responsive layout, run
+`GENOMICS_TAURI_AUDIT_WIDTH=640 GENOMICS_TAURI_AUDIT_HEIGHT=720 pnpm run audit:tauri-ui`;
+the audit opens and closes **Data controls** before checking sidebar profile
+labels when the mobile layout hides the sidebar.
 Stop `tauri:dev` before running `pnpm test`, `pnpm run check`, or
 `pnpm run build`, since SvelteKit sync/build output can trigger transient
 HMR/IPC reloads in the live window. Restart Tauri afterward for the native UI

@@ -162,17 +162,25 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   import automatically, while skipped rows, warnings, or profile replacement
   require review
 - Scores curated marker packs into Simple, Clinical, and Compare reports
-- Adds a compact, expandable index of ClinVar condition labels, GWAS traits,
-  ClinGen gene–disease validity, and pharmacogenomic response links, with each
-  relationship’s evidence scope kept explicit
-- Scans all imported calls locally against ClinVar variant and condition-specific
-  submission indexes and lists linked conditions in three groups: **May be
-  relevant to you** (variant-wide pathogenic consensus and a copy count that
-  fits ClinGen inheritance), **Carrier (one copy)** for recessive/X-linked
-  conditions, and **Disputed or unclear**. Variants ClinVar calls benign overall
-  and somatic/oncogenic records are excluded. When a vendor header does not
-  state the strand, it is verified by comparing strand-unambiguous calls with
-  ClinVar reference alleles before any matching.
+- Adds a compact, expandable index of broader ClinVar, GWAS, ClinGen, and
+  pharmacogenomic references. It labels these separately from condition-specific
+  ClinVar lab reports because some links describe a gene or marker broadly.
+- Scans imported calls locally against ClinVar variant and condition-specific
+  submission indexes. Each result is one condition at one exact DNA marker, so
+  copy counts and inheritance are not combined across different variants.
+  The report groups matches into **May be relevant**, **One-copy carrier
+  pattern**, and **Unclear or mixed evidence**. It keeps unnamed lab records
+  separate, shows all lab reports on demand, and identifies variant-wide
+  conflicts as broader than any one condition. These database matches are not
+  diagnoses. Variants ClinVar calls benign overall and somatic/oncogenic records
+  are excluded. When a vendor header does not state the strand, it is verified
+  by comparing strand-unambiguous calls with ClinVar reference alleles before
+  any matching.
+- Labels report DNA-call percentages as the share of curated marker checks with
+  a call, not whole-genome coverage. Clinical-mode risk percentages show the
+  share of possible risk-associated copies found among scorable curated markers;
+  they are not disease probabilities, and sections with clinical-confirm-first
+  risk markers do not show a percentage.
 - Keeps POTS/dysautonomia as symptom and clinician-evaluation context in the
   AI/clinician exports; it does not score a consumer-DNA POTS risk model.
 - Adds symptom-led Brain, Mood & Attention support with research links and

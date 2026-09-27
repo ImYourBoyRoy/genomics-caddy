@@ -106,7 +106,6 @@
                   <div><dt>rsID</dt><dd>{item.rsid}</dd></div>
                   {#if item.gene}<div><dt>Gene</dt><dd>{item.gene}</dd></div>{/if}
                   {#if item.user_genotype}<div><dt>DNA call</dt><dd>{item.user_genotype}</dd></div>{/if}
-                  <div><dt>Research index</dt><dd>{Math.round(item.significance_score * 100)}%</dd></div>
                   {#if item.trait_categories.length > 0}
                     <div><dt>Categories</dt><dd>{item.trait_categories.map((cat) => cat.replace(/_/g, " ")).join(', ')}</dd></div>
                   {/if}
@@ -117,8 +116,8 @@
                 <code class="rsid">{item.rsid}</code>
                 {#if item.gene}<span class="gene">{item.gene}</span>{/if}
                 {#if item.user_genotype}<span class="gt">{item.user_genotype}</span>{/if}
-                <Tooltip label="Research index score" description="Orders research items by how much supporting evidence they have.">
-                  <span class="score">Rank {Math.round(item.significance_score * 100)}%</span>
+                <Tooltip label="Research priority score" description="A normalized 0-to-1 sorting score built from research-index signals. It helps order these items; it is not a percentage or a personal disease-risk estimate.">
+                  <span class="score">Priority {item.significance_score.toFixed(2)} / 1.00</span>
                 </Tooltip>
               </div>
               <p class="trait">{item.trait_summary}</p>

@@ -111,18 +111,24 @@ vendor header's strand statement is used when present (including "forward (+)
 strand" wording); otherwise at least 200 strand-unambiguous calls must agree
 with ClinVar's reference alleles at 98% or more.
 
-Matches are grouped as **May be relevant to you**, **Carrier (one copy)**, or
-**Disputed or unclear**. The first two require ClinVar's variant-wide summary to
-be Pathogenic or Likely pathogenic without conflicts, plus Definitive, Strong,
-or Moderate ClinGen inheritance for the gene: dominant conditions with one copy,
-or recessive/X-linked conditions with two copies (one copy on X for XY-pattern
-profiles), are "may be relevant"; one copy of a recessive or X-linked variant is
-"carrier". Conflicting, drug-response, uncertain, protective, low-penetrance,
-and risk-factor records stay "disputed or unclear". Variants whose variant-wide
-summary is benign are dropped, as are records with explicit somatic/oncogenic
-labels. Only the copy count (one or two) is serialized, never the bases. GWAS rows remain locus–trait statistics, ClinGen
-entries gene-level disease-validity context, and ClinPGx entries medication
-response annotations.
+Matches are shown as one **condition at one exact DNA marker** and grouped as
+**May be relevant**, **One-copy carrier pattern**, or **Unclear or mixed
+evidence**. Copy counts and inheritance are never combined across different
+markers. If lab records for the same exact marker and condition disagree on the
+copy count or relevance, the count is left unresolved and the entry is shown as
+unclear. A ClinVar variant-wide conflict is identified as broader than the
+condition-specific lab reports. Unnamed lab records stay separate rather than
+being merged into an invented condition. The first two groups require ClinVar's
+variant-wide summary to be Pathogenic or Likely pathogenic without conflicts,
+plus Definitive, Strong, or Moderate ClinGen inheritance for the gene: dominant
+conditions with one copy, or recessive/X-linked conditions with two copies (one
+copy on X for XY-pattern profiles), are "may be relevant"; one copy of a
+recessive or X-linked variant is a "carrier pattern". Uncertain, protective,
+low-penetrance, and risk-factor-only records stay unclear. Variants whose
+variant-wide summary is benign are dropped, as are records with explicit
+somatic/oncogenic labels. Only copy counts are serialized, never allele bases.
+GWAS rows remain locus–trait statistics, ClinGen entries gene-level
+disease-validity context, and ClinPGx entries medication-response annotations.
 
 When the Neurotransmitter & Mood Resiliency pack is present, a **Brain, mood &
 attention** panel organizes symptom history, daily impact, sleep/medication

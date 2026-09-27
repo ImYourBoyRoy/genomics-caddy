@@ -1286,6 +1286,7 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('ApoB'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('statin'))).toBe(true);
     expect(plan.medication.rules.some((item) => item.includes('raw DNA'))).toBe(true);
+    expect(plan.medication.rules.join(' ').toLowerCase()).toContain('do not start, stop, or change');
   });
 
   it('routes thyroid pathway markers to measured thyroid follow-up', () => {
@@ -1299,7 +1300,8 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name === 'Free T4')).toBe(true);
     expect(plan.diet.avoid.join(' ')).not.toContain('High-dose iodine');
     expect(plan.advancedGuidance.join(' ')).toContain('High-dose iodine');
-    expect(plan.medication.rules.some((item) => item.includes('levothyroxine'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('Thyroid medicine'))).toBe(true);
+    expect(plan.medication.rules.join(' ').toLowerCase()).toContain('do not start, stop, or change a dose');
   });
 
   it('routes sleep markers to symptom tracking and sleep-apnea evaluation', () => {
@@ -1312,7 +1314,8 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('Sleep study'))).toBe(true);
     expect(plan.diet.favor.join(' ')).not.toContain('consistent sleep opportunity');
     expect(plan.advancedGuidance.join(' ')).toContain('consistent sleep opportunity');
-    expect(plan.medication.rules.some((item) => item.includes('chronotype'))).toBe(true);
+    expect(plan.medication.rules.some((item) => item.includes('Sleep medicines'))).toBe(true);
+    expect(plan.medication.rules.join(' ').toLowerCase()).toContain('do not use a chronotype or sleep snp');
   });
 
   it('keeps food-allergy actionability exposure-led rather than genotype-led', () => {
@@ -1325,7 +1328,8 @@ describe('actionability engine safety policy', () => {
     expect(plan.labTests.some((test) => test.name.includes('Allergist-directed'))).toBe(true);
     expect(plan.diet.avoid.join(' ')).not.toContain('Permanent food elimination');
     expect(plan.advancedGuidance.join(' ')).toContain('Permanent food elimination');
-    expect(plan.medication.rules.some((item) => item.includes('AOC1'))).toBe(true);
+    expect(plan.medication.rules.join(' ').toLowerCase()).toContain('an allergist can test you');
+    expect(plan.medication.rules.join(' ').toLowerCase()).toContain('do not use dna to diagnose allergy');
   });
 
   it('builds a categorized allergy map with linked DNA meaning and exposure examples', () => {

@@ -182,7 +182,7 @@ describe('report bundle export', () => {
     const markdown = files.find((file) => file.filename === 'report.md')!.content;
     const dna = JSON.parse(files.find((file) => file.filename === 'dna_analysis.json')!.content);
 
-    expect(markdown).toContain('Potential disease associations from full-genome ClinVar scan');
+    expect(markdown).toContain('ClinVar condition records matched to DNA markers');
     expect(markdown).toContain('Synthetic inherited condition');
     expect(dna.genomewide_clinvar_discovery.associations[0].scv_accession).toBe('SCV000000001.1');
     expect(JSON.stringify(dna.genomewide_clinvar_discovery)).not.toContain('A/G');

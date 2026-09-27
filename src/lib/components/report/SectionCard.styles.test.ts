@@ -24,9 +24,13 @@ describe('SectionCard semantic status styling', () => {
 
   it('keeps Simple section status concise without duplicating DNA coverage', () => {
     expect(source).toContain('{#if viewMode !== \'simple\'}');
-    expect(source).toContain('DNA calls: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)');
+    expect(source).toContain('Calls present: {callableCount}/{section.summary.total_markers} ({coveragePercent}%)');
     expect(source).not.toContain('<span class="sec-score-descriptive">Association context</span>');
     expect(source).toContain("{viewMode === 'simple' ? 'Confirm first' : '⚠️ Clinical validation required'}");
+    expect(source).toContain('Risk-associated copies: {section.summary.risk_effect_count} of {section.summary.risk_possible} possible');
+    expect(source).toContain('What this percentage counts');
+    expect(source).toContain('not your chance of developing a condition');
+    expect(source).toContain('risk_score_suppressed_for_confirmation');
   });
 
   it('compresses Simple section summaries and avoids repeating uncalled counts', () => {

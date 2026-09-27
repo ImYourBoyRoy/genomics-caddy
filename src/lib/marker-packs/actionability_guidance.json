@@ -1453,7 +1453,7 @@
         "Using a genotype as a substitute for measured lipids and global cardiovascular-risk assessment"
       ],
       "medication_context": [
-        "Do not start, stop, or change a statin, PCSK9 medicine, aspirin, or other cardiovascular therapy from raw DNA; review measured Lp(a), ApoB, LDL-C, medical history, and clinician guidance."
+        "Heart medicine: do not start, stop, or change a statin, PCSK9 medicine, aspirin, or other treatment from DNA; discuss measured Lp(a), ApoB, LDL-C, and your history with your clinician."
       ],
       "lab_tests": [
         {
@@ -1524,7 +1524,7 @@
         }
       ],
       "medication_context": [
-        "Do not start, stop, or change levothyroxine or another thyroid medicine from a common SNP; review symptoms, exact medication, TSH, free T4, and clinician assessment together."
+        "Thyroid medicine: do not start, stop, or change a dose based on a common SNP; use symptoms, TSH, free T4, and clinician guidance."
       ],
       "notes": "Common thyroid-pathway markers are hypothesis prompts only. Thyroid function, autoimmunity, pregnancy/postpartum context, iodine and selenium exposure, and medication response require phenotype and clinical testing.",
       "sources": [
@@ -1561,7 +1561,7 @@
         }
       ],
       "medication_context": [
-        "Do not use a chronotype or sleep-duration SNP to justify sedatives, stimulants, or a medication change; review sleep symptoms, substances, medicines, and clinician assessment."
+        "Sleep medicines: do not use a chronotype or sleep SNP to start, stop, or change sedatives or stimulants; review symptoms and current medicines with a clinician."
       ],
       "notes": "Common sleep markers may provide small chronotype or sleep-duration context. They do not diagnose insomnia, sleep apnea, natural short sleep, or a treatment response.",
       "sources": [
@@ -1602,7 +1602,7 @@
         }
       ],
       "medication_context": [
-        "Do not use an AOC1, HNMT, or immune SNP to label a food allergy or to change antihistamine, asthma, or emergency medicines; use an allergist-directed plan when indicated."
+        "An allergist can test you and set up the right medicines and emergency plan. Do not use DNA to diagnose allergy or change antihistamine, asthma, or emergency medicines."
       ],
       "notes": "Food allergy, intolerance, histamine symptoms, eczema, and asthma are different clinical questions. DNA can provide limited pathway context but cannot identify a safe food, diagnose allergy, or rule out anaphylaxis.",
       "sources": [
@@ -2435,7 +2435,7 @@
         "Long-term restrictive diets, probiotics, digestive enzymes, or detox products as treatment based only on DNA"
       ],
       "supplements": [
-        "Do not use an IBD marker to choose iron, B12, vitamin D, calcium, or another supplement; review measured deficiencies, possible malabsorption, kidney or liver status, and medicines with a clinician or pharmacist"
+        "Do not use an IBD marker to choose iron, B12, vitamin D, calcium, or another supplement; review measured levels, absorption, and interactions with a clinician or pharmacist."
       ],
       "lab_tests": [
         {
@@ -2457,7 +2457,7 @@
       ],
       "medication_context": [
         "Review frequent NSAID use and every current medicine with a clinician if GI symptoms or bleeding occur; a genotype does not establish NSAID safety.",
-        "Do not self-treat, stop, or change prescribed digestive or immune medicines from raw DNA; persistent diarrhea, blood, weight loss, fever, nocturnal symptoms, anemia, or significant pain warrants clinical evaluation."
+        "Do not start, stop, or change prescribed digestive or immune medicines from raw DNA; persistent diarrhea, blood, weight loss, fever, night-time symptoms, anemia, or significant pain warrants care."
       ],
       "notes": "IBD susceptibility is polygenic and interacts with immune, microbiome, environmental, and clinical factors. The NOD2, ATG16L1, IL23R, FCGR2A, and IL10 markers are hypothesis prompts only; blood, stool, endoscopy or imaging, and a clinician's differential diagnosis lead.",
       "sources": [

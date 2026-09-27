@@ -250,9 +250,9 @@
             {/if}
           {/if}
           {#if marker.population_rarity && marker.population_af != null}
-            <Tooltip label="gnomAD allele frequency" description="How common this allele is in the gnomAD population database.">
+            <Tooltip label="gnomAD population frequency" description="How often this allele appears in the gnomAD reference population. This is not the chance it will cause a condition or your personal risk.">
               <span class="population-chip">
-                🌍 {marker.population_rarity} ({formatAf(marker.population_af)})
+                🌍 {marker.population_rarity}; frequency {formatAf(marker.population_af)}
               </span>
             </Tooltip>
           {/if}
@@ -282,9 +282,9 @@
 
       {#if viewMode === 'simple' && marker.population_rarity && marker.population_af != null}
         <div class="enrichment-row simple-population-row">
-          <Tooltip label="gnomAD allele frequency" description="How common this allele is in the gnomAD population database.">
+          <Tooltip label="gnomAD population frequency" description="How often this allele appears in the gnomAD reference population. This is not the chance it will cause a condition or your personal risk.">
             <span class="population-chip">
-              🌍 gnomAD: {marker.population_rarity} ({formatAf(marker.population_af)})
+              🌍 gnomAD: {marker.population_rarity}; frequency {formatAf(marker.population_af)}
             </span>
           </Tooltip>
         </div>

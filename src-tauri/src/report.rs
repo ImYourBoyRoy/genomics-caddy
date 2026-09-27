@@ -665,7 +665,9 @@ pub struct VariantEnrichment {
 /// Direction-aware summary statistics for a report section.
 #[derive(Debug, Serialize, Clone)]
 pub struct SectionSummary {
+    /// Matched effect-allele copies among scorable risk-direction markers.
     pub risk_effect_count: u16,
+    /// Possible copies among scorable risk-direction markers (two per marker).
     pub risk_possible: u16,
     pub protective_effect_count: u16,
     pub protective_possible: u16,
@@ -676,6 +678,8 @@ pub struct SectionSummary {
     pub confirmation_required_count: u16,
     pub total_markers: u16,
     pub show_percent_score: bool,
+    /// At least one risk-direction marker in this section requires clinical confirmation.
+    pub risk_score_suppressed_for_confirmation: bool,
     pub all_require_confirmation: bool,
     pub active_marker_count: u16,
     pub active_risk_marker_count: u16,
@@ -703,6 +707,9 @@ pub struct GeneratedReport {
     pub title: String,
     pub description: String,
     pub overall_signal_score: f64,
+    /// Deduplicated across curated risk-direction marker assertions.
+    pub overall_risk_effect_count: u16,
+    pub overall_risk_possible: u16,
     pub variants: HashMap<String, CanonicalVariant>,
     pub user_calls: HashMap<String, UserCall>,
     pub category_links: HashMap<String, VariantCategoryLink>,
@@ -2862,7 +2869,7 @@ where
     let mut evaluated_sections = Vec::new();
     let mut total_risk_possible: u16 = 0;
     let mut total_risk_effects: u16 = 0;
-    let mut evaluated_rsids = std::collections::HashSet::new();
+    let mut evaluated_risk_markers = std::collections::HashSet::new();
     let total_marker_assertions = template
         .sections
         .iter()
@@ -2900,6 +2907,8 @@ where
         let mut not_evaluated_count: u16 = 0;
         let mut confirmation_required_count: u16 = 0;
         let mut all_require_confirmation = true;
+        let mut risk_score_suppressed_for_confirmation = false;
+        let mut evaluated_section_risk_markers = std::collections::HashSet::new();
 
         let mut active_marker_count: u16 = 0;
         let mut active_risk_marker_count: u16 = 0;
@@ -2910,6 +2919,12 @@ where
         let mut benign_modifier_count: u16 = 0;
 
         for m in &sec.markers {
+            if matches!(&m.effect_direction, EffectDirection::Risk)
+                && m.clinical_confirmation_required == Some(true)
+            {
+                risk_score_suppressed_for_confirmation = true;
+            }
+
             // Build/insert CanonicalVariant
             variants_map.entry(m.rsid.clone()).or_insert_with(|| {
                 let mut chromosome = m.strand.clone();
@@ -3118,17 +3133,25 @@ where
                         false,
                     );
 
+                    if matches!(&m.effect_direction, EffectDirection::Risk) {
+                        if m.clinical_confirmation_required != Some(true) {
+                            let marker_key = format!("{}:{}", m.rsid, eff_allele);
+                            if evaluated_section_risk_markers.insert(marker_key.clone()) {
+                                risk_possible += 2;
+                                risk_effect_count += count as u16;
+                                if evaluated_risk_markers.insert(marker_key) {
+                                    total_risk_possible += 2;
+                                    total_risk_effects += count as u16;
+                                }
+                            }
+                        }
+                    }
+
                     if count == 0 {
                         benign_modifier_count += 1;
                     } else {
                         match m.effect_direction {
                             EffectDirection::Risk => {
-                                risk_possible += 2;
-                                risk_effect_count += count as u16;
-                                if evaluated_rsids.insert(m.rsid.clone()) {
-                                    total_risk_possible += 2;
-                                    total_risk_effects += count as u16;
-                                }
                                 active_risk_marker_count += 1;
                             }
                             EffectDirection::Protective => {
@@ -3506,7 +3529,7 @@ where
             }
         }
 
-        let show_percent_score = !all_require_confirmation && risk_possible > 0;
+        let show_percent_score = !risk_score_suppressed_for_confirmation && risk_possible > 0;
         let section_signal_score = if risk_possible > 0 {
             (risk_effect_count as f64 / risk_possible as f64) * 100.0
         } else {
@@ -3525,6 +3548,7 @@ where
             confirmation_required_count,
             total_markers: sec.markers.len() as u16,
             show_percent_score,
+            risk_score_suppressed_for_confirmation,
             all_require_confirmation,
             active_marker_count,
             active_risk_marker_count,
@@ -3599,6 +3623,8 @@ where
         title: template.title.clone(),
         description: template.description.clone(),
         overall_signal_score,
+        overall_risk_effect_count: total_risk_effects,
+        overall_risk_possible: total_risk_possible,
         variants: variants_map,
         user_calls: user_calls_map,
         category_links: category_links_map,
@@ -3661,10 +3687,14 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
         ));
     }
     md.push_str(&format!(
-        "**Matched allele load**: {:.1}%\n\n",
-        report.overall_signal_score
+        "**Scorable risk-associated copies**: {} of {} possible",
+        report.overall_risk_effect_count, report.overall_risk_possible
     ));
-    md.push_str("> *Share of association-direction alleles among curated pack markers. Not a disease probability. Protective/trait markers are tallied separately.*\n\n");
+    if report.overall_risk_possible > 0 {
+        md.push_str(&format!(" ({:.0}%)", report.overall_signal_score));
+    }
+    md.push_str("\n\n");
+    md.push_str("> *This percentage is the share of possible copies at curated risk-direction markers that matched. It is not a chance of having a disease. Markers requiring clinical confirmation, missing calls, and unverified calls are excluded.*\n\n");
     md.push_str("---\n\n");
 
     for sec in &report.sections {
@@ -3672,16 +3702,20 @@ pub fn render_markdown(report: &GeneratedReport) -> String {
 
         if sec.summary.show_percent_score {
             md.push_str(&format!(
-                "*Matched alleles*: {:.1}%\n\n",
+                "*Scorable risk-associated copies*: {} of {} possible ({:.0}%)\n\n",
+                sec.summary.risk_effect_count,
+                sec.summary.risk_possible,
                 sec.section_signal_score
             ));
+        } else if sec.summary.risk_score_suppressed_for_confirmation {
+            md.push_str("*No percentage shown — this section includes a risk marker that requires clinical confirmation.*\n\n");
         } else {
-            md.push_str("*Score suppressed — clinical confirmation required for all markers in this section.*\n\n");
+            md.push_str("*No scorable risk-marker calls in this section.*\n\n");
         }
 
         let s = &sec.summary;
         md.push_str(&format!(
-            "Summary: {} markers | {} association alleles/{} possible | {} protective | {} trait | {} context-dependent | {} no-data | {} not-evaluated | {} confirmation-required\n\n",
+            "Summary: {} markers | {} risk-associated copies/{} possible scorable copies | {} protective | {} trait | {} context-dependent | {} no-data | {} not-evaluated | {} confirmation-required\n\n",
             s.total_markers, s.risk_effect_count, s.risk_possible,
             s.protective_effect_count, s.trait_count,
             s.context_dependent_count, s.no_data_count, s.not_evaluated_count,
@@ -3775,6 +3809,103 @@ mod tests {
         )
         .unwrap();
         conn
+    }
+
+    fn score_test_risk_marker(
+        rsid: &str,
+        clinical_confirmation_required: Option<bool>,
+    ) -> MarkerDefinition {
+        MarkerDefinition {
+            rsid: rsid.to_string(),
+            gene: "GENE1".to_string(),
+            variant_name: Some("Synthetic risk marker".to_string()),
+            effect_allele: "G".to_string(),
+            impact: "Research context".to_string(),
+            evidence_tier: "B_test".to_string(),
+            interpretation: "Synthetic test marker".to_string(),
+            do_not_claim: vec![],
+            confirm_with: vec![],
+            effect_direction: EffectDirection::Risk,
+            raw_dna_limitation: None,
+            clinical_confirmation_required,
+            sex_scope: None,
+            context_tags: None,
+            sources: None,
+            variant_type: Some("snp".to_string()),
+            expected_plus_alleles: Some(vec!["A".to_string(), "G".to_string()]),
+            strand: None,
+            source_build: Some("GRCh38".to_string()),
+            hgvs: None,
+            allele_orientation_verified: Some(true),
+            orientation_source: Some("synthetic test".to_string()),
+            interpretation_blocked_if_unverified: Some(false),
+            clinical_semantics: None,
+        }
+    }
+
+    fn insert_test_genotype(conn: &Connection, rsid: &str, allele1: &str, allele2: &str) {
+        conn.execute(
+            "INSERT INTO genotypes (sample_id, rsid, chromosome, position_grch37, position_grch38, allele1, allele2)
+             VALUES (1, ?1, '1', 100, 200, ?2, ?3)",
+            rusqlite::params![rsid, allele1, allele2],
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn risk_copy_percentage_counts_zero_copy_sites_and_excludes_confirm_first_markers() {
+        let conn = setup_test_db();
+        insert_test_genotype(&conn, "rsZero", "A", "A");
+        insert_test_genotype(&conn, "rsOne", "A", "G");
+        insert_test_genotype(&conn, "rsClinical", "G", "G");
+        let template = ReportTemplate {
+            title: "Risk copy score test".to_string(),
+            description: "Synthetic test".to_string(),
+            sections: vec![SectionDefinition {
+                name: "Risk markers".to_string(),
+                markers: vec![
+                    score_test_risk_marker("rsZero", None),
+                    score_test_risk_marker("rsOne", None),
+                    score_test_risk_marker("rsClinical", Some(true)),
+                ],
+            }],
+        };
+
+        let report = generate_report(&conn, 1, &template).unwrap();
+        let summary = &report.sections[0].summary;
+
+        assert_eq!(summary.risk_effect_count, 1);
+        assert_eq!(summary.risk_possible, 4);
+        assert_eq!(report.overall_risk_effect_count, 1);
+        assert_eq!(report.overall_risk_possible, 4);
+        assert_eq!(report.overall_signal_score, 25.0);
+        assert!(summary.risk_score_suppressed_for_confirmation);
+        assert!(!summary.show_percent_score);
+    }
+
+    #[test]
+    fn unverified_risk_marker_calls_are_not_in_the_copy_percentage() {
+        let conn = setup_test_db();
+        insert_test_genotype(&conn, "rsUnverified", "A", "G");
+        let mut marker = score_test_risk_marker("rsUnverified", None);
+        marker.expected_plus_alleles = None;
+        marker.interpretation_blocked_if_unverified = Some(true);
+        let template = ReportTemplate {
+            title: "Unverified risk copy score test".to_string(),
+            description: "Synthetic test".to_string(),
+            sections: vec![SectionDefinition {
+                name: "Risk markers".to_string(),
+                markers: vec![marker],
+            }],
+        };
+
+        let report = generate_report(&conn, 1, &template).unwrap();
+
+        assert_eq!(report.sections[0].summary.risk_effect_count, 0);
+        assert_eq!(report.sections[0].summary.risk_possible, 0);
+        assert!(!report.sections[0].summary.show_percent_score);
+        assert_eq!(report.overall_risk_effect_count, 0);
+        assert_eq!(report.overall_risk_possible, 0);
     }
 
     #[test]

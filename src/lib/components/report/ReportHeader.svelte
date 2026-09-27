@@ -7,12 +7,12 @@
   Module Docstring:
   Purpose: Report header dashboard presenting summary statistics.
   Responsibilities:
-  - Display progress gauge with the risk-direction-only signal score.
+  - Display how many curated report marker checks have a DNA call.
   - Add explanatory subtitle so users understand what the score represents.
   - Summarize basic user biological statistics.
   Key Inputs: generatedReport, foundMarkersCount, totalMarkersChecked.
   Key Outputs: Visual report header element.
-  Operational Notes: Score reflects risk-direction markers only. Protective/trait excluded.
+  Operational Notes: Coverage is for curated report markers, not the whole genome.
   */
 
   interface Props {
@@ -33,14 +33,12 @@
     onSelectFocus,
   }: Props = $props();
 
-  let overallScore = $derived(generatedReport.overall_signal_score ?? 0);
-
   let reportStats = $derived<ReportOverviewStats>(computeReportOverviewStats(generatedReport));
   let reviewQueueCount = $derived(Math.min(reportStats.priority, 9));
   let coveragePercent = $derived(
     totalMarkersChecked > 0
       ? Math.min(100, Math.max(0, Math.round((foundMarkersCount / totalMarkersChecked) * 100)))
-      : 0,
+      : null,
   );
 
   function computeSummaryLine(stats: ReportOverviewStats, mode: "simple" | "clinical" | "compare"): string {
@@ -108,30 +106,41 @@
       <details class="technical-score-details simple-overview-coverage">
         <summary>
           <span class="overview-coverage-label">
-            <span>DNA coverage</span>
-            <small>{foundMarkersCount.toLocaleString()} / {totalMarkersChecked.toLocaleString()} called</small>
+            <span>Markers with a DNA result</span>
+            <small>{#if totalMarkersChecked > 0}{foundMarkersCount.toLocaleString()} of {totalMarkersChecked.toLocaleString()} report markers{:else}No report markers available{/if}</small>
           </span>
-          <strong>{coveragePercent}%</strong>
+          <strong title="Share of report markers with a usable DNA result. This is not the percentage of your whole genome that was read.">
+            {coveragePercent === null ? '—' : `${coveragePercent}%`}
+          </strong>
         </summary>
-        <div
-          class="overview-coverage-meter"
-          role="progressbar"
-          aria-label="DNA marker coverage"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow={coveragePercent}
-        >
-          <span style={`width: ${coveragePercent}%`}></span>
-        </div>
-        <p>{foundMarkersCount.toLocaleString()} of {totalMarkersChecked.toLocaleString()} curated markers called. Uncalled markers remain unknown.</p>
+        {#if coveragePercent !== null}
+          <div
+            class="overview-coverage-meter"
+            role="progressbar"
+            aria-label="Curated report marker call coverage"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={coveragePercent}
+          >
+            <span style={`width: ${coveragePercent}%`}></span>
+          </div>
+          <p>This is the share of markers used in this report that have a usable DNA result. It is not the percentage of your whole genome that was read. A marker without a result is unknown.</p>
+        {:else}
+          <p>No curated report markers were available to check.</p>
+        {/if}
       </details>
     </div>
   {:else}
     <div class="report-quality-summary" aria-label="Report data quality summary">
-      <span class="quality-kicker">DNA coverage</span>
-      <strong>{foundMarkersCount.toLocaleString()} / {totalMarkersChecked.toLocaleString()}</strong>
-      <span>markers called</span>
-      <span class="quality-note">Uncalled = unknown</span>
+      <span class="quality-kicker">Curated DNA marker calls</span>
+      {#if totalMarkersChecked > 0}
+        <strong>{foundMarkersCount.toLocaleString()} / {totalMarkersChecked.toLocaleString()}</strong>
+        <span>usable calls / marker checks</span>
+        <span class="quality-note">A missing call is unknown</span>
+      {:else}
+        <strong>—</strong>
+        <span>No curated marker checks available</span>
+      {/if}
     </div>
     <div class="report-desc">
       <div class="header-title-row">
@@ -139,12 +148,6 @@
       </div>
       <p>{generatedReport.description}</p>
       <span class="overall-summary" aria-label="Report finding summary">{summaryLine}</span>
-      <details class="technical-score-details">
-        <summary>Technical coverage metric</summary>
-        <p>
-          The curated association match rate is {overallScore.toFixed(1)}%. It measures how many curated associations matched.
-        </p>
-      </details>
     </div>
   {/if}
 </div>
@@ -212,7 +215,7 @@
   .simple-overview-intro p {
     margin: 0.35rem 0 0;
     color: var(--text-secondary);
-    font-size: 0.75rem;
+    font-size: 0.88rem;
     line-height: 1.35;
   }
 
@@ -264,14 +267,14 @@
 
   .report-stat span {
     color: var(--text-secondary);
-    font-size: 0.64rem;
+    font-size: 0.75rem;
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
 
   .report-stat small {
     color: var(--text-secondary);
-    font-size: 0.58rem;
+    font-size: 0.68rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
   }
@@ -300,7 +303,7 @@
 
   .overview-coverage-label small {
     color: var(--text-secondary);
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     font-weight: 500;
   }
 
@@ -344,13 +347,13 @@
 
   .report-quality-summary > span:not(.quality-kicker) {
     color: var(--text-secondary);
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     line-height: 1.35;
   }
 
   .quality-kicker {
     color: var(--text-primary);
-    font-size: 0.68rem;
+    font-size: 0.74rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -384,7 +387,7 @@
     max-width: 100%;
     margin-top: 0.5rem;
     color: var(--text-secondary);
-    font-size: 0.74rem;
+    font-size: 0.84rem;
     font-weight: 600;
     line-height: 1.4;
     overflow-wrap: anywhere;

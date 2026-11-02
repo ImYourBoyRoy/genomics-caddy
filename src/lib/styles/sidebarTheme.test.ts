@@ -1,9 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const source = readFileSync(new URL('./components/sidebar.css', import.meta.url), 'utf8');
+// Sidebar presentation is split by domain; the token/contract checks span all of it.
+const source = [
+  'sidebar.css',
+  'sidebar-progress.css',
+  'reference-data-panel.css',
+  'reference-data-updates.css',
+].map((name) => readFileSync(new URL(`./components/${name}`, import.meta.url), 'utf8')).join('\n');
 const theme = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 const sidebarComponent = readFileSync(new URL('../components/sidebar/Sidebar.svelte', import.meta.url), 'utf8');
+const settingsDialog = readFileSync(new URL('../components/settings/SettingsDialog.svelte', import.meta.url), 'utf8');
 const sampleList = readFileSync(new URL('../components/samples/SampleList.svelte', import.meta.url), 'utf8');
 const progressTrack = readFileSync(new URL('../components/sidebar/ProgressTrack.svelte', import.meta.url), 'utf8');
 
@@ -118,18 +125,21 @@ describe('sidebar status theme tokens', () => {
     expect(theme).toContain('background-color: var(--sidebar-surface);');
   });
 
-  it('keeps the advanced Connections launch surface compact', () => {
-    expect(source).toContain('.connections-launch-card.card');
-    expect(source).toContain('.connections-launch-copy');
-    expect(source).toContain('.connections-launch-actions');
-    expect(sidebarComponent).toContain('class="connections-launch-card card"');
-    expect(sidebarComponent).toContain('Open Connections');
+  it('moves Connections, Library, Theme, and Liftover into the Settings dialog', () => {
+    expect(sidebarComponent).not.toContain('connections-launch-card');
+    expect(sidebarComponent).not.toContain('<LibraryPanel');
+    expect(sidebarComponent).not.toContain('<ThemeToggle');
+    expect(sidebarComponent).toContain('<SettingsDialog');
+    expect(sidebarComponent).toContain('sidebar-settings-button');
+    expect(settingsDialog).toContain('Open Connections');
+    expect(settingsDialog).toContain('<ThemeToggle />');
+    expect(settingsDialog).toContain('<LibraryPanel />');
+    expect(settingsDialog).toContain('showModal()');
   });
 
   it('gives the desktop sidebar enough width for its action groups', () => {
     expect(theme).toContain('--sidebar-width: 320px;');
     expect(theme).toContain('--sidebar-width: 280px;');
-    expect(source).toContain('.connections-launch-actions');
     expect(sidebarComponent).toContain('catalogs are processed in order while SQLite is occupied');
     expect(sidebarComponent).not.toContain('downloads can still run in parallel');
   });
@@ -138,7 +148,7 @@ describe('sidebar status theme tokens', () => {
     const profileWorkspace = sidebarComponent.indexOf('class="sidebar-profile-workspace"');
     const profileList = sidebarComponent.indexOf('<SampleList');
     const importPanel = sidebarComponent.indexOf('<GenomeImportPanel');
-    const toolsBoundary = sidebarComponent.indexOf('>App tools</span>');
+    const toolsBoundary = sidebarComponent.indexOf('class="sidebar-footer no-print"');
 
     expect(profileWorkspace).toBeGreaterThan(-1);
     expect(profileList).toBeGreaterThan(profileWorkspace);

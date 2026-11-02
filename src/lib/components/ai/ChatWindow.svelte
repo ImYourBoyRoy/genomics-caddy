@@ -8,6 +8,10 @@
   import { dialogStore } from '../../utils/dialogState.svelte';
   import type { QdrantHit, EvidenceCard } from '../../types/research';
   import type { VariantNavTarget } from '../../constants/traitCategories';
+  import { classifyOllamaEndpoint } from '../../utils/ollamaSettings';
+  import type { ChatProvider } from '../../utils/chatProvider';
+  import { chatgptOpenUsage } from '../../api/chatgpt';
+  import '$lib/styles/components/chat-window.css';
 
   interface Props {
     messages: { role: "user" | "assistant" | "system"; content: string; fullContent?: string; images?: string[] }[];
@@ -30,17 +34,19 @@
     useVectorResearch?: boolean;
     onOpenEvidence?: (query: string) => void;
     onNavigateToVariant?: (rsid: string, target: VariantNavTarget) => void;
-    
+
     // Actions/Handlers
     sendPrompt: (customPrompt?: string) => void;
     stopGeneration: () => void;
     clearHistory: () => void;
     editMessage: (index: number) => void;
     deleteMessage: (index: number) => void;
-    
+
     copiedMsgId: number | null;
     copyToClipboard: (text: string, index: number) => void;
     selectedModel: string;
+    ollamaUrl?: string;
+    chatProvider?: ChatProvider;
   }
 
   let {
@@ -56,16 +62,18 @@
     selectedSample,
     showHistorySidebar = $bindable(),
     showSettingsDrawer = $bindable(),
-    
+
     sendPrompt,
     stopGeneration,
     clearHistory,
     editMessage,
     deleteMessage,
-    
+
     copiedMsgId = $bindable(null),
     copyToClipboard,
     selectedModel,
+    ollamaUrl = "",
+    chatProvider = "ollama",
     vectorHits = [],
     vectorEvidenceCards = [],
     vectorIndexBrief = "",
@@ -75,6 +83,19 @@
     onOpenEvidence,
     onNavigateToVariant,
   }: Props = $props();
+
+  let usingChatGpt = $derived(chatProvider === 'chatgpt');
+  let endpointScope = $derived(usingChatGpt ? 'remote' : classifyOllamaEndpoint(ollamaUrl));
+  let endpointHost = $derived.by(() => {
+    if (usingChatGpt) return 'OpenAI (ChatGPT plan)';
+    try { return new URL(ollamaUrl.trim()).host; } catch { return ""; }
+  });
+  let scopeLabel = $derived(
+    usingChatGpt ? 'ChatGPT plan · cloud'
+      : endpointScope === 'local' ? 'On this device'
+      : endpointScope === 'remote' ? `Remote · ${endpointHost || 'custom host'}`
+      : 'Not connected'
+  );
 
   // Internal local state
   let chatBox = $state<HTMLElement | null>(null);
@@ -133,48 +154,64 @@
 </script>
 
 <section class="ai-chat-area">
-  <div class="chat-header">
+  <header class="chat-header">
     <div class="chat-title-info">
-      <button 
+      <button
         type="button"
-        class="btn btn-secondary btn-sm toggle-sidebar-btn" 
+        class="chat-icon-btn toggle-sidebar-btn"
         onclick={() => showHistorySidebar = !showHistorySidebar}
         class:drawer-open={showHistorySidebar}
         aria-label="Toggle history sidebar"
-        style="margin-right: 8px;"
+        aria-pressed={showHistorySidebar}
       >
-        📂
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <rect x="2" y="3" width="12" height="10" rx="2" />
+          <path d="M6 3v10" />
+        </svg>
       </button>
-      <h3>Private AI Consultation</h3>
-      <span class="badge success">🔒 Privacy Secured: Local Only</span>
+      <div class="chat-title-stack">
+        <h3>Ask your DNA</h3>
+        <button
+          type="button"
+          class="chat-scope-pill"
+          data-scope={endpointScope}
+          aria-label={`AI endpoint: ${scopeLabel}. Open connection settings`}
+          onclick={() => showSettingsDrawer = true}
+        >
+          <span class="chat-scope-dot" aria-hidden="true"></span>{scopeLabel}
+        </button>
+      </div>
     </div>
-    
+
     <div class="chat-header-actions">
       {#if messages.length > 0}
-        <button class="btn btn-secondary btn-sm" onclick={() => sendPrompt("TRIGGER_EXPORT_MODAL")}>
-          📥 Export Chat
+        <button type="button" class="btn btn-secondary chat-header-btn" onclick={() => sendPrompt("TRIGGER_EXPORT_MODAL")}>
+          📥 Export
         </button>
       {/if}
-      <button 
-        class="btn btn-secondary btn-sm"
+      <button
+        type="button"
+        class="btn btn-secondary chat-header-btn"
         onclick={() => sendPrompt("TRIGGER_CONTEXT_INSPECTOR")}
         disabled={!selectedSample}
       >
         🔍 Context
       </button>
-      <button 
-        class="btn btn-secondary btn-sm toggle-settings-btn" 
+      <button
+        type="button"
+        class="btn btn-secondary chat-header-btn toggle-settings-btn"
         onclick={() => showSettingsDrawer = !showSettingsDrawer}
         class:drawer-open={showSettingsDrawer}
+        aria-pressed={showSettingsDrawer}
       >
-        ⚙️ Settings
+        ⚙️ Model
       </button>
     </div>
-  </div>
+  </header>
 
   <!-- Chat Display Scrollable -->
-  <div 
-    class="chat-box" 
+  <div
+    class="chat-box"
     bind:this={chatBox}
     class:dragging-active={isDragging}
     ondragover={handleDragOver}
@@ -192,9 +229,15 @@
     {/if}
 
     {#if messages.length === 0}
-      <WelcomeChat />
+      <WelcomeChat
+        questions={dynamicCuratedQuestions}
+        scope={endpointScope}
+        host={endpointHost}
+        {sendPrompt}
+        onOpenConnection={() => showSettingsDrawer = true}
+      />
     {:else}
-      <ChatMessages 
+      <ChatMessages
         {messages}
         {isChatting}
         {copiedMsgId}
@@ -221,9 +264,9 @@
   />
 
   <!-- Curated Helpers -->
-  {#if !isChatting}
+  {#if !isChatting && messages.length > 0}
     <div class="curated-questions-bar">
-      {#each dynamicCuratedQuestions as q}
+      {#each dynamicCuratedQuestions as q (q.label)}
         <button class="curated-btn" onclick={() => sendPrompt(q.text)}>
           {q.label}
         </button>
@@ -231,8 +274,16 @@
     </div>
   {/if}
 
+  {#if usingChatGpt}
+    <div class="chat-plan-strip" role="note">
+      <span class="chat-plan-strip-dot" aria-hidden="true"></span>
+      <span>Using your ChatGPT plan</span>
+      <button type="button" class="chat-plan-strip-link" onclick={() => void chatgptOpenUsage()}>Manage usage</button>
+    </div>
+  {/if}
+
   <!-- Chat Action Input Area -->
-  <ChatInput 
+  <ChatInput
     bind:promptText
     bind:attachedImages
     bind:imageInput
@@ -247,130 +298,3 @@
     {removeAttachedImage}
   />
 </section>
-
-<style>
-  .ai-chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.01);
-    min-width: 0;
-    height: 100%;
-    box-sizing: border-box;
-  }
-
-  .chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 18px;
-    background: rgba(0, 0, 0, 0.15);
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .chat-title-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .chat-title-info h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .chat-header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .btn-sm {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
-
-  .toggle-settings-btn.drawer-open, .toggle-sidebar-btn.drawer-open {
-    background: rgba(88, 80, 236, 0.2);
-    border-color: var(--accent);
-    color: var(--text-primary);
-  }
-
-  .chat-box {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    background: radial-gradient(circle at bottom, rgba(18, 20, 32, 0.4), transparent);
-    position: relative;
-  }
-
-  .chat-box.dragging-active {
-    border: 2px dashed var(--accent);
-    background: rgba(88, 80, 236, 0.04) !important;
-  }
-
-  .drag-drop-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(10, 11, 18, 0.85);
-    backdrop-filter: blur(4px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .drag-drop-overlay-box {
-    border: 2px dashed var(--accent);
-    background: rgba(88, 80, 236, 0.1);
-    color: #a5b4fc;
-    font-weight: 500;
-    padding: 24px 32px;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Curated Prompts Bar */
-  .curated-questions-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px 20px;
-    background: rgba(0, 0, 0, 0.1);
-    border-top: 1px solid var(--border-color);
-  }
-
-  .curated-btn {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 6px 12px;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .curated-btn:hover {
-    background: rgba(88, 80, 236, 0.1);
-    border-color: rgba(88, 80, 236, 0.4);
-    color: var(--text-primary);
-  }
-
-</style>

@@ -265,6 +265,27 @@ describe('condition-level evidence aggregation', () => {
     expect(summary?.plain_meaning).not.toContain('probability');
   });
 
+  it('routes BPD GWAS loci through the named condition layer and its symptom resource', () => {
+    const summary = buildConditionEvidenceSummaries(report([marker({
+      rsid: 'rs2143288',
+      link_id: 'test:bpd:rs2143288',
+      gene: 'LINC00970/ATP1B1',
+      evidence_tier: 'D_research_only',
+      effect_direction: 'context_dependent',
+    })])).find((item) => item.id === 'bpd_symptom_research_context');
+
+    expect(summary).toMatchObject({
+      label: 'Borderline personality symptom-pattern research context',
+      signal_type: 'research_context',
+      diagnostic_capability: 'clinical_evaluation_required',
+      relative_signal: 'limited',
+      matched_indicator_count: 1,
+      symptom_context_resource: 'bpd_symptom_context',
+    });
+    expect(summary?.plain_meaning).toContain('may be relevant to experiencing');
+    expect(summary?.plain_meaning).not.toContain('diagnosis');
+  });
+
   it('collapses duplicate pack rows before counting indicators', () => {
     const summary = buildConditionEvidenceSummaries(report([
       marker({ rsid: 'rs2234693', link_id: 'test:pmdd:one' }),

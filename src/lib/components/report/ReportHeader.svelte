@@ -1,6 +1,7 @@
 <!-- ./src/lib/components/report/ReportHeader.svelte -->
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
+  import AnimatedNumber from '../common/loading/AnimatedNumber.svelte';
   import { computeReportOverviewStats, type ReportFocus, type ReportOverviewStats } from '../../utils/reportOverview';
 
   /*
@@ -82,24 +83,23 @@
           </span>
         </div>
         <h3>Your DNA overview</h3>
-        <p>The most useful DNA signals found in this profile.</p>
       </div>
       <div class="report-stat-grid" role="group" aria-label="Report overview statistics — select one to list those findings">
         <button type="button" class="report-stat report-stat-priority" class:report-stat-active={activeFocus === 'priority'} aria-pressed={activeFocus === 'priority'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('priority')}>
-          <strong>{reviewQueueCount.toLocaleString()}</strong>
+          <strong><AnimatedNumber value={reviewQueueCount} /></strong>
           <span>Review first</span>
           <small>top {reviewQueueCount.toLocaleString()} of {reportStats.priority.toLocaleString()} reviewable signals</small>
         </button>
         <button type="button" class="report-stat report-stat-high" class:report-stat-active={activeFocus === 'higher_concern'} aria-pressed={activeFocus === 'higher_concern'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('higher_concern')}>
-          <strong>{reportStats.higherConcern.toLocaleString()}</strong>
+          <strong><AnimatedNumber value={reportStats.higherConcern} /></strong>
           <span>Higher-priority</span>
         </button>
         <button type="button" class="report-stat report-stat-context" class:report-stat-active={activeFocus === 'context'} aria-pressed={activeFocus === 'context'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('context')}>
-          <strong>{reportStats.context.toLocaleString()}</strong>
+          <strong><AnimatedNumber value={reportStats.context} /></strong>
           <span>Context signals</span>
         </button>
         <button type="button" class="report-stat report-stat-protective" class:report-stat-active={activeFocus === 'protective'} aria-pressed={activeFocus === 'protective'} disabled={!onSelectFocus} onclick={() => onSelectFocus?.('protective')}>
-          <strong>{reportStats.protective.toLocaleString()}</strong>
+          <strong><AnimatedNumber value={reportStats.protective} /></strong>
           <span>Potentially favorable</span>
         </button>
       </div>
@@ -210,13 +210,6 @@
     flex: 0 0 auto;
     border-radius: 50%;
     background: var(--status-warning-border);
-  }
-
-  .simple-overview-intro p {
-    margin: 0.35rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.35;
   }
 
   .report-stat-grid {
@@ -439,15 +432,18 @@
 
   @media (min-width: 721px) and (max-width: 1200px) {
     .simple-report-overview {
-      grid-template-columns: minmax(12rem, 0.9fr) minmax(0, 1.8fr);
+      grid-template-columns: minmax(0, 1fr) minmax(11rem, 16rem);
     }
 
     .simple-overview-coverage {
       grid-column: 2;
+      grid-row: 1;
     }
 
     .report-stat-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-column: 1 / -1;
+      grid-row: 2;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 </style>

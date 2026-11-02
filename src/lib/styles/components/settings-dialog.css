@@ -1,0 +1,123 @@
+/* ./src/lib/styles/components/settings-dialog.css
+ * App settings modal (appearance, assembly, connections, library folder).
+ * Opens with a short opacity/transform rise; backdrop fades. Tokens only.
+ */
+
+.settings-dialog {
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: min(46rem, calc(100vh - 2rem));
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 1rem;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.settings-dialog[open] {
+  animation: gc-rise var(--motion-slow, 560ms) var(--motion-ease-out, ease-out) both;
+}
+
+.settings-dialog::backdrop {
+  background: rgba(4, 8, 18, 0.62);
+  animation: gc-fade var(--motion-base, 260ms) var(--motion-ease-out, ease-out) both;
+}
+
+.settings-dialog-surface {
+  display: grid;
+  max-height: inherit;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.settings-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.15rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-dialog-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-dialog-close {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.settings-dialog-close:hover,
+.settings-dialog-close:focus-visible {
+  border-color: var(--border-strong);
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+}
+
+.settings-dialog-body {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1rem 1.15rem;
+  overflow-y: auto;
+}
+
+.settings-section {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.settings-section h3 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.settings-row p {
+  flex: 1 1 12rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.settings-dialog-footer {
+  padding: 0.6rem 1.15rem 0.85rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted, var(--text-secondary));
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-dialog[open],
+  .settings-dialog::backdrop {
+    animation: none;
+  }
+}
+
+/* The section heading already says "Library folder". */
+.settings-dialog .library-panel-copy strong {
+  display: none;
+}

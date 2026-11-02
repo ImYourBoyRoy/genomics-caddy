@@ -232,9 +232,9 @@
       <div class="atlas-progress-track">
         <div
           class="atlas-progress-fill"
-          style="width: {progressPercent > 0 ? progressPercent + '%' : '100%'}; animation: {progressPercent > 0
+          style="width: {progressPercent > 0 ? progressPercent + '%' : '40%'}; animation: {progressPercent > 0
             ? 'none'
-            : 'indeterminate 1.4s ease infinite'};"
+            : 'gc-slide-indeterminate 1.4s ease-in-out infinite'};"
         ></div>
       </div>
       <div class="atlas-progress-meta">

@@ -192,7 +192,6 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('reportOverviewWidth: number | null;');
     expect(source).toContain('dashboardGuidanceWidth: number | null;');
     expect(source).toContain('dashboardGuidanceCardMaxWidth: number | null;');
-    expect(source).toContain('connectionsLaunchHeight: number | null;');
     expect(source).toContain('liftoverStatusHeight: number | null;');
     expect(source).toContain('markerGridWidth: number | null;');
     expect(source).toContain('markerGridColumnGap: number | null;');
@@ -200,14 +199,12 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('markerCardMaxWidth: number | null;');
     expect(source).toContain('expandedSectionNames: string[];');
     expect(source).toContain('clinicalProvenanceCount: number;');
-    expect(source).toContain('themeControlInSidebarFooter: boolean;');
-    expect(source).toContain('libraryControlInSidebarFooter: boolean;');
-    expect(source).toContain('themeModeOptionCount: number;');
+    expect(source).toContain('settingsButtonInSidebarFooter: boolean;');
     expect(source).toContain('topToolbarPresent: boolean;');
     expect(source).toContain('themeMenuOpen: boolean;');
     expect(source).toContain('appContextMenuInstalled: boolean;');
-    expect(source).toContain("document.querySelector<HTMLElement>('.action-queue-list')");
-    expect(source).toContain("document.querySelectorAll<HTMLElement>('.action-queue-item')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.review-list')");
+    expect(source).toContain("document.querySelectorAll<HTMLElement>('.review-row')");
     expect(source).toContain('item.dataset.priority');
     expect(source).toContain('item.dataset.concern');
     expect(source).toContain("document.querySelectorAll<HTMLElement>('.samples-card .sample-name-text')");
@@ -215,9 +212,7 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("document.querySelector<HTMLElement>('.action-queue')");
     expect(source).toContain(".report-header[data-presentation-mode=\"simple\"]");
     expect(source).toContain("document.querySelector<HTMLElement>('.grid-layout')");
-    expect(source).toContain("document.querySelector('.sidebar-footer .theme-toggle') !== null");
-    expect(source).toContain("document.querySelector('.sidebar-footer .library-panel') !== null");
-    expect(source).toContain("document.querySelectorAll('.sidebar-footer [data-theme-mode]').length");
+    expect(source).toContain("document.querySelector('.sidebar-footer .sidebar-settings-button') !== null");
     expect(source).toContain("document.querySelector('.focus-toolbar') !== null");
     expect(source).toContain("document.querySelector('.theme-options') !== null");
     expect(source).toContain("document.documentElement.dataset.contextMenu === 'genomics-caddy'");
@@ -228,12 +223,11 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain('markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null');
     expect(source).toContain('getGridColumnGap(markerGrid)');
     expect(source).toContain("getWidthBounds('.marker-card')");
-    expect(source).toContain("getWidthBounds('.action-queue-item')");
+    expect(source).toContain("getWidthBounds('.review-row')");
     expect(source).toContain("getWidthBounds('.grid-layout .summary-card')");
     expect(source).toContain("document.querySelectorAll<HTMLButtonElement>('.section-toggle[aria-expanded=\"true\"]')");
     expect(source).toContain('expandedSectionNames,');
     expect(source).toContain("clinicalProvenanceCount: document.querySelectorAll('.clinical-provenance').length");
-    expect(source).toContain('connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null');
     expect(source).toContain('liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null');
   });
 
@@ -244,12 +238,10 @@ describe('agent UI bridge visibility boundary', () => {
     expect(source).toContain("'reloading'");
     expect(source).toContain('resourceUpdatePhase: collectResourceUpdatePhase(),');
     expect(source).toContain('function collectResourceStatus()');
-    expect(source).toContain("statusPill?.classList.contains('resource-status-current')");
-    expect(source).toContain("statusPill?.classList.contains('resource-status-error')");
-    expect(source).toContain("statusPill?.classList.contains('resource-status-incomplete')");
-    expect(source).toContain("statusToggle.querySelector('.update-pill, .missing-pill')");
+    expect(source).toContain("document.querySelector<HTMLElement>('.sidebar-settings-button')?.dataset.resourceStatus");
     expect(source).toContain('resourceStatus: collectResourceStatus(),');
     expect(source).not.toContain('statusPill.textContent');
+    expect(source).not.toContain('.data-updates-toggle');
   });
 
   it('exposes only aggregate visibility metrics for catalog associations', () => {

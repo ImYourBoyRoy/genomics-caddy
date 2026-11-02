@@ -399,12 +399,21 @@ describe('support resource context', () => {
 
     expect(prompt?.questions.join(' ')).toContain('earlier in life');
     expect(prompt?.confirmations.join(' ')).toContain('DNA markers do not establish ADHD');
+    expect(prompt?.questions.join(' ')).toContain('asexuality');
+    expect(context.bpd_symptom_context.display.title).toBe('Potential BPD-adjacent symptom patterns');
+    expect(context.bpd_symptom_context.display.summary).toContain('may be relevant to experiencing specific patterns');
+    expect(context.bpd_symptom_context.domains.some((domain) => domain.id === 'sexual_behavior_context')).toBe(true);
+    expect(context.condition_integrations.conditions).toContainEqual(expect.objectContaining({
+      id: 'bpd_symptom_research_context',
+      symptom_context_resource: 'bpd_symptom_context',
+    }));
     expect(context.condition_integrations.conditions.some((condition) => condition.id === 'adhd_attention_research_context')).toBe(true);
     expect(context.condition_integrations.policy.prs).toContain('This app does not calculate PRS values');
     expect(context.food_safety.source_registry.pgs_catalog).toBeDefined();
     expect(context.food_safety.source_registry.nimh_adhd_adults).toBeDefined();
     expect(context.food_safety.source_registry.nimh_depression).toBeDefined();
     expect(context.food_safety.source_registry.nimh_generalized_anxiety).toBeDefined();
+    expect(context.food_safety.source_registry.bpd_gwas_2026).toBeDefined();
     expect(context.actionability_policy.safety_notes?.some((note) =>
       note.includes('Do not recommend dopamine-, serotonin-, or acetylcholine-targeting supplements'),
     )).toBe(true);

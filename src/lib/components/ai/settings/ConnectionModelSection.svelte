@@ -9,8 +9,13 @@
   } from "../../../api/tauri";
   import { isReasoningModel, isModelVisionCapable } from "../../../utils/aiPrompt";
   import { OLLAMA_URL_PLACEHOLDER, ollamaRawDataDisclosure } from "../../../utils/ollamaSettings";
+  import type { ChatProvider } from "../../../utils/chatProvider";
+  import ChatGptConnectionCard from "./ChatGptConnectionCard.svelte";
+  import "$lib/styles/components/chatgpt-connection.css";
 
   interface Props {
+    chatProvider?: ChatProvider;
+    onChatProviderChange?: (provider: ChatProvider) => void;
     ollamaUrl: string;
     ollamaToken: string;
     selectedModel: string;
@@ -26,6 +31,8 @@
   }
 
   let {
+    chatProvider = "ollama",
+    onChatProviderChange,
     ollamaUrl = $bindable(),
     ollamaToken = $bindable(),
     selectedModel = $bindable(),
@@ -73,7 +80,7 @@
   }
 
   async function refreshActiveModels() {
-    if (!ollamaUrl.trim()) return;
+    if (chatProvider !== "ollama" || !ollamaUrl.trim()) return;
     isPollingActive = true;
     try {
       const [res, report] = await Promise.all([
@@ -95,7 +102,7 @@
   }
 
   $effect(() => {
-    if (ollamaUrl) {
+    if (ollamaUrl && chatProvider === "ollama") {
       refreshActiveModels();
     }
   });
@@ -109,6 +116,18 @@
 <details class="settings-details-group" open>
   <summary class="settings-details-summary">🔌 Connection &amp; Model</summary>
   <div class="settings-details-content">
+    <div class="provider-switch" role="radiogroup" aria-label="AI provider">
+      <button type="button" role="radio" aria-checked={chatProvider === "ollama"} onclick={() => onChatProviderChange?.("ollama")}>
+        Local / Ollama
+      </button>
+      <button type="button" role="radio" aria-checked={chatProvider === "chatgpt"} onclick={() => onChatProviderChange?.("chatgpt")}>
+        ChatGPT plan
+      </button>
+    </div>
+
+    {#if chatProvider === "chatgpt"}
+      <ChatGptConnectionCard onConnected={scanModels} onDisconnected={() => onChatProviderChange?.("ollama")} />
+    {:else}
     <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px; line-height: 1.4;">
       Prefer <strong>Advanced → Connections</strong> for full Ollama/Qdrant setup, host posture, and GPU vs CPU model ranking.
     </p>
@@ -124,12 +143,13 @@
     <button class="btn btn-secondary w-full" onclick={scanModels} disabled={isScanning || !ollamaUrl.trim()}>
       {isScanning ? "Scanning..." : "🔌 Connect & Poll Models"}
     </button>
+    {/if}
 
     {#if scanError}
       <div class="error-msg">{scanError}</div>
     {/if}
 
-    {#if host}
+    {#if host && chatProvider === "ollama"}
       <div class="telemetry-box mt-2">
         <div class="telemetry-header">
           <span class="telemetry-title">Host posture: {host.posture}</span>
@@ -195,6 +215,7 @@
         {/if}
       </div>
 
+      {#if chatProvider === "ollama"}
       <div class="telemetry-box mt-2">
         <div class="telemetry-header">
           <span class="telemetry-title">VRAM &amp; Active Models Telemetry</span>
@@ -247,6 +268,7 @@
           {/if}
         </div>
       </details>
+      {/if}
     {/if}
   </div>
 </details>

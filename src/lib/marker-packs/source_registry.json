@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
-  "version": "2.8.0",
-  "last_updated": "2026-09-25",
+  "version": "2.9.0",
+  "last_updated": "2026-10-29",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -122,6 +122,126 @@
       "evidence_type": "U.S. government clinical information",
       "conflict_of_interest": "U.S. National Institute of Mental Health public health resource",
       "notes": "Use for symptom-history and care-navigation prompts about persistent, difficult-to-control worry, associated symptoms, and functional impact. This is not a DNA diagnostic rule."
+    },
+    "bpd_gwas_2026": {
+      "name": "Genome-wide association analyses of borderline personality disorder",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed genome-wide association study",
+      "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+      "notes": "The 2026 study reported 11 BPD-associated loci in large European-ancestry cohorts. Use only as population research context: no single locus is a functional BPD marker, symptom-specific prediction, diagnosis, or personal polygenic score."
+    },
+    "bpd_neurobiology_review_2024": {
+      "name": "Neurobiology of borderline personality disorder: a 2024 review",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39476273/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed neurobiology review",
+      "conflict_of_interest": "Peer-reviewed research review; not a clinical validation of a consumer DNA test",
+      "notes": "Use for broad frontolimbic, default-mode, emotion-regulation, and self-referential research context. Neuroimaging findings do not become consumer-SNP findings and do not establish a disorder."
+    },
+    "bpd_hormone_review_2024": {
+      "name": "Hormones and borderline personality disorder: a 2024 review",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38051369/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed hormone and symptom-timing review",
+      "conflict_of_interest": "Peer-reviewed research review; symptom timing remains phenotype and clinical context",
+      "notes": "Use to ask about cycle or hormone-change timing when relevant. Evidence is limited and does not measure current hormone levels or make a DNA-based BPD inference."
+    },
+    "bpd_sexuality_2024": {
+      "name": "Sexuality, dissociation, and borderline personality disorder",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38500169/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed clinical symptom study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use only for optional self-report questions about distressing or unsafe sexual-behavior changes and dissociation. The study does not support inferring sexual behavior or orientation from DNA, and asexuality is not a symptom."
+    },
+    "bpd_impulsivity_2023": {
+      "name": "Emotion dysregulation and multidimensional impulsivity in borderline personality disorder",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37832740/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed clinical symptom study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use to organize self-reported urgency, sensation seeking, and emotion-linked impulsivity. It does not turn a pathway marker into a disorder or personal behavior prediction."
+    },
+    "bpd_oxytocin_review_2024": {
+      "name": "Oxytocin and borderline personality disorder: a 2024 review",
+      "url": "https://doi.org/10.3389/fpsyt.2024.1439615",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed narrative review",
+      "conflict_of_interest": "Peer-reviewed research review; treatment and biomarker utility remain uncertain",
+      "notes": "Use for cautious social-bonding, stress, early-environment, and oxytocin-pathway context. Do not infer oxytocin levels, attachment style, empathy, or treatment response from a consumer SNP."
+    },
+    "bpd_interpersonal_affect_2010": {
+      "name": "Affect dysregulation in individuals with borderline personality disorder: persistence and interpersonal triggers",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/20954051/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed interpersonal affect study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use to organize symptom history about negative affect that persists across interpersonal events and reactivity to perceived rejection or disapproval. It does not explain an individual event or convert pathway findings into a disorder."
+    },
+    "bpd_reactive_anger_2021": {
+      "name": "Don't Make Me Angry: Frustration-Induced Anger and Its Link to Aggression in Women With Borderline Personality Disorder",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34122197/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed reactive anger study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use for optional questions about frustration-triggered, reactive anger and recovery. The findings do not predict aggression from a DNA marker or justify a behavioral label."
+    },
+    "bpd_rejection_aggression_2017": {
+      "name": "Borderline personality disorder symptoms and aggression: A within-person process model",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28383936/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed within-person symptom process study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use to ask whether perceived rejection is followed by anger, negative affect, urges, or behavior during specific episodes. The model is not a personal risk score and does not establish why an episode occurred."
+    },
+    "bpd_cycle_premenstrual_2018": {
+      "name": "Perimenstrual exacerbation of symptoms in borderline personality disorder: evidence from multilevel models and the Carolina Premenstrual Assessment Scoring System",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/29804553/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed prospective cycle-symptom study",
+      "conflict_of_interest": "Peer-reviewed clinical research; small sample and not a genetic association study",
+      "notes": "Use for cycle-timing questions. The small prospective study found symptom worsening around the midluteal and perimenstrual phases in many participants with BPD, while no participant met PMDD criteria; it does not measure a user's current hormones or establish a diagnosis."
+    },
+    "bpd_cycle_aggression_2020": {
+      "name": "Differential effects of the menstrual cycle on reactive and proactive aggression in borderline personality disorder",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31957896/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed cycle and behavior study",
+      "conflict_of_interest": "Peer-reviewed clinical research; not a genetic association study",
+      "notes": "Use only to prompt careful prospective timing of reactive anger or aggression-related symptoms. It does not turn menstrual timing or a DNA pathway into a behavior prediction."
+    },
+    "premenstrual_exacerbation_review_2022": {
+      "name": "Premenstrual exacerbation of mental health disorders: a systematic review of prospective studies",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/35867164/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed systematic review",
+      "conflict_of_interest": "Peer-reviewed systematic review; prospective evidence is heterogeneous across conditions",
+      "notes": "Use to distinguish premenstrual exacerbation of an existing pattern from a cycle-specific syndrome and to favor prospective daily symptom tracking."
+    },
+    "premenstrual_exacerbation_review_2024": {
+      "name": "Understanding premenstrual exacerbation: navigating the intersection of the menstrual cycle and psychiatric illnesses",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39176230/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed clinical review",
+      "conflict_of_interest": "Peer-reviewed clinical review; premenstrual exacerbation remains underdefined",
+      "notes": "Use for symptom-history and formulation prompts about an existing psychiatric pattern that worsens premenstrually. It is not a biomarker rule and does not replace prospective assessment."
+    },
+    "cycle_informed_care_2026": {
+      "name": "Gold-standard evidence and best practice guidance for menstrual cycle-informed clinical care: An overview for clinicians",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/42162940/",
+      "accessed": "2026-10-29",
+      "evidence_type": "Peer-reviewed clinical overview",
+      "conflict_of_interest": "Peer-reviewed clinical guidance overview; review current clinical guidance when using clinically",
+      "notes": "Use to support cycle-informed assessment, prospective daily tracking across at least two cycles, and explicit comparison of PMDD and premenstrual exacerbation."
+    },
+    "apa_sexual_minority_guidance": {
+      "name": "APA guidance on psychological practice with sexual minority persons",
+      "url": "https://www.apa.org/about/policy/psychological-sexual-minority-persons.pdf",
+      "accessed": "2026-10-29",
+      "evidence_type": "Professional psychology policy and practice guidance",
+      "conflict_of_interest": "Professional association guidance",
+      "notes": "Use to keep sexual orientation, including asexuality, separate from symptom interpretation and genetic inference. Orientation is not a disorder or a DNA finding."
     },
     "acog_premenstrual_disorders": {
       "name": "ACOG Clinical Practice Guideline: Management of Premenstrual Disorders",

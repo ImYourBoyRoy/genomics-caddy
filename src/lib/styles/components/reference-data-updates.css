@@ -1,0 +1,244 @@
+/* ./src/lib/styles/components/reference-data-updates.css
+ * Settings > Data & updates: status pills, update-state callout, newer-version
+ * list, and bulk sync progress.
+ */
+
+.update-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning-text);
+  white-space: nowrap;
+}
+
+.resource-status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
+  color: var(--status-info-text);
+  white-space: nowrap;
+}
+
+.resource-status-pill.resource-status-current {
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
+}
+
+.resource-status-pill.resource-status-error {
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-strong-text);
+}
+
+.resource-status-pill.resource-status-incomplete {
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+  color: var(--status-warning-text);
+}
+
+.missing-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-strong-text);
+  white-space: nowrap;
+}
+
+.db-attention-banner {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  padding: 0.45rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--status-warning-border);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.resource-update-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border-color));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.resource-update-state-error {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.resource-update-state-attention {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+}
+
+.resource-update-state-ready {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--success) 9%, transparent);
+}
+
+.resource-update-state-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.resource-update-state-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.resource-update-state-error .resource-update-state-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
+.resource-update-state-attention .resource-update-state-dot {
+  background: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
+.resource-update-state-ready .resource-update-state-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 16%, transparent);
+}
+
+.resource-update-state-message,
+.resource-update-state-time {
+  color: var(--text-secondary);
+}
+
+.resource-local-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+}
+
+.resource-local-summary strong {
+  color: var(--text-primary);
+}
+
+.resource-update-state-time {
+  font-size: 0.68rem;
+}
+
+.update-hint {
+  margin-top: 0.45rem;
+  color: var(--status-warning-text);
+}
+
+.updates-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.updates-named-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.updates-named-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 6px;
+  background: var(--report-result-bg);
+  border: 1px solid var(--status-warning-border);
+}
+
+.update-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.update-item-kind,
+.update-item-msg {
+  font-size: 0.62rem;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+
+.updates-all-btn {
+  width: 100%;
+  font-size: 0.72rem;
+  padding: 6px 10px;
+}
+
+.update-footnote {
+  font-size: 0.62rem;
+  opacity: 0.8;
+  line-height: 1.35;
+}
+
+.bulk-sync-panel {
+  margin-top: 0.45rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--status-success-border);
+  background: var(--status-success-bg);
+}
+
+.bulk-sync-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  opacity: 0.8;
+  margin-top: 0.15rem;
+  font-family: var(--font-mono), monospace;
+}
+
+.bulk-sync-summary {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  opacity: 0.85;
+  line-height: 1.35;
+}

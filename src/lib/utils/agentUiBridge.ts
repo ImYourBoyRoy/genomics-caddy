@@ -36,7 +36,6 @@ export interface AgentUiLayoutMetrics {
   mobileDataControlsTogglePresent: boolean;
   profileNameCount: number;
   profileNameMinWidth: number | null;
-  connectionsLaunchHeight: number | null;
   liftoverStatusHeight: number | null;
   markerGridWidth: number | null;
   markerGridColumnGap: number | null;
@@ -67,9 +66,7 @@ export interface AgentUiLayoutMetrics {
   reportOverviewWidth: number | null;
   dashboardGuidanceWidth: number | null;
   dashboardGuidanceCardMaxWidth: number | null;
-  themeControlInSidebarFooter: boolean;
-  libraryControlInSidebarFooter: boolean;
-  themeModeOptionCount: number;
+  settingsButtonInSidebarFooter: boolean;
   topToolbarPresent: boolean;
   themeMenuOpen: boolean;
   appContextMenuInstalled: boolean;
@@ -400,7 +397,6 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const mainContent = document.querySelector<HTMLElement>('.main-content');
   const sidebar = document.querySelector<HTMLElement>('.sidebar');
   const mobileSidebarToggle = document.querySelector<HTMLElement>('.mobile-sidebar-toggle');
-  const connectionsLaunch = document.querySelector<HTMLElement>('.connections-launch-card');
   const liftoverStatus = document.querySelector<HTMLElement>('.liftover-status-card');
   const markerGrid = document.querySelector<HTMLElement>('.markers-grid');
   const focusControl = document.querySelector<HTMLElement>('.focus-restore-toggle');
@@ -411,7 +407,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const profileNameWidths = Array.from(
     document.querySelectorAll<HTMLElement>('.samples-card .sample-name-text'),
   ).map((name) => Math.round(name.getBoundingClientRect().width));
-  const actionQueue = document.querySelector<HTMLElement>('.action-queue-list');
+  const actionQueue = document.querySelector<HTMLElement>('.review-list');
   const firstContent = document.querySelector<HTMLElement>('.main-content > *');
   const focusRect = focusControl?.getBoundingClientRect();
   const sidebarFocusRect = sidebarFocusControl?.getBoundingClientRect();
@@ -419,8 +415,8 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
   const sidebarRect = sidebar?.getBoundingClientRect();
   const brandRects = sidebarBrandParts.map((part) => part.getBoundingClientRect());
   const markerCardWidths = getWidthBounds('.marker-card');
-  const actionQueueItemWidths = getWidthBounds('.action-queue-item');
-  const actionQueueItems = Array.from(document.querySelectorAll<HTMLElement>('.action-queue-item'));
+  const actionQueueItemWidths = getWidthBounds('.review-row');
+  const actionQueueItems = Array.from(document.querySelectorAll<HTMLElement>('.review-row'));
   const actionQueueShell = document.querySelector<HTMLElement>('.action-queue');
   const reportOverview = document.querySelector<HTMLElement>('.report-header[data-presentation-mode="simple"]');
   const dashboardGuidance = document.querySelector<HTMLElement>('.grid-layout');
@@ -459,7 +455,6 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
       && mobileSidebarToggle.getBoundingClientRect().height > 0,
     profileNameCount: profileNameWidths.length,
     profileNameMinWidth: profileNameWidths.length ? Math.min(...profileNameWidths) : null,
-    connectionsLaunchHeight: connectionsLaunch ? Math.round(connectionsLaunch.getBoundingClientRect().height) : null,
     liftoverStatusHeight: liftoverStatus ? Math.round(liftoverStatus.getBoundingClientRect().height) : null,
     markerGridWidth: markerGrid ? Math.round(markerGrid.getBoundingClientRect().width) : null,
     markerGridColumnGap: getGridColumnGap(markerGrid),
@@ -495,9 +490,7 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
     reportOverviewWidth: reportOverview ? Math.round(reportOverview.getBoundingClientRect().width) : null,
     dashboardGuidanceWidth: dashboardGuidance ? Math.round(dashboardGuidance.getBoundingClientRect().width) : null,
     dashboardGuidanceCardMaxWidth: dashboardGuidanceCardWidths.max,
-    themeControlInSidebarFooter: document.querySelector('.sidebar-footer .theme-toggle') !== null,
-    libraryControlInSidebarFooter: document.querySelector('.sidebar-footer .library-panel') !== null,
-    themeModeOptionCount: document.querySelectorAll('.sidebar-footer [data-theme-mode]').length,
+    settingsButtonInSidebarFooter: document.querySelector('.sidebar-footer .sidebar-settings-button') !== null,
     topToolbarPresent: document.querySelector('.focus-toolbar') !== null,
     themeMenuOpen: document.querySelector('.theme-options') !== null,
     appContextMenuInstalled: document.documentElement.dataset.contextMenu === 'genomics-caddy',
@@ -506,15 +499,10 @@ function collectLayoutMetrics(): AgentUiLayoutMetrics {
 }
 
 function collectResourceStatus(): AgentUiSnapshot['resourceStatus'] {
-  const statusToggle = document.querySelector<HTMLElement>('.data-updates-toggle');
-  if (!statusToggle) return null;
-  const statusPill = statusToggle.querySelector<HTMLElement>('.resource-status-pill');
-  if (statusPill?.classList.contains('resource-status-current')) return 'current';
-  if (statusPill?.classList.contains('resource-status-error')) return 'error';
-  if (statusPill?.classList.contains('resource-status-incomplete')) return 'attention';
-  if (statusPill) return 'checking';
-  if (statusToggle.querySelector('.update-pill, .missing-pill')) return 'attention';
-  return null;
+  const status = document.querySelector<HTMLElement>('.sidebar-settings-button')?.dataset.resourceStatus;
+  return status === 'current' || status === 'error' || status === 'attention' || status === 'checking'
+    ? status
+    : null;
 }
 
 function collectResourceUpdatePhase(): AgentUiSnapshot['resourceUpdatePhase'] {

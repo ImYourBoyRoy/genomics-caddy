@@ -1,9 +1,11 @@
 <!-- ./src/lib/components/common/bootstrap/BootstrapOverlay.svelte -->
 <script lang="ts">
-  import type { AppBootstrapStatus, GenomeImportPreview } from "../../../types/genomics";
+  import type { AppBootstrapStatus, GenomeImportPreview, ReportGenerationProgress } from "../../../types/genomics";
   import type { BootstrapPhase } from "./bootstrapPhases";
   import type { ImportPhase, ImportStepId } from "../../../utils/importProgress";
+  import type { ResourceSyncTelemetry } from "../../../utils/resourceSyncTelemetry";
   import AppBootstrapScreen from "../AppBootstrapScreen.svelte";
+  import { fade } from "svelte/transition";
 
   interface Props {
     phase: BootstrapPhase;
@@ -17,6 +19,8 @@
     importProfileName?: string;
     importFailedStep?: ImportStepId | null;
     showWorkspaceAction?: boolean;
+    reportProgress?: ReportGenerationProgress | null;
+    resourceSync?: ResourceSyncTelemetry | null;
     workspaceActionLabel?: string;
     onContinue?: () => void;
   }
@@ -33,6 +37,8 @@
     importProfileName = "",
     importFailedStep = null,
     showWorkspaceAction = false,
+    reportProgress = null,
+    resourceSync = null,
     workspaceActionLabel = "",
     onContinue,
   }: Props = $props();
@@ -40,6 +46,7 @@
 
 <div
   class="bootstrap-overlay"
+  out:fade|global={{ duration: 360 }}
   role="dialog"
   aria-modal={showWorkspaceAction ? "false" : "true"}
   aria-busy={phase !== "ready" && phase !== "error"}
@@ -64,6 +71,8 @@
     {importProfileName}
     {importFailedStep}
     {showWorkspaceAction}
+    {reportProgress}
+    {resourceSync}
     {workspaceActionLabel}
     {onContinue}
   />

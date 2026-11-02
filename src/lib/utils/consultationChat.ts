@@ -5,7 +5,6 @@
 
 import { listen } from "@tauri-apps/api/event";
 import {
-  streamOllamaChat,
   showOllamaModel,
   searchAssociationsHybrid,
   getEvidenceCorpusSummary,
@@ -28,6 +27,7 @@ import { stripThinkingTokens } from "./chatParser";
 import { LAYPERSON_MAP } from "./layperson";
 import aiPromptPolicy from "../marker-packs/ai_prompt_policy.json";
 import { renderPromptTemplate } from "./promptTemplates";
+import { streamChatCompletion, type ChatProvider } from "./chatProvider";
 import {
   newOllamaStreamId,
   subscribeOllamaStream,
@@ -41,6 +41,7 @@ export interface ConsultationTurnInput {
   assistantIndex: number;
   ollamaUrl: string;
   ollamaToken: string;
+  chatProvider?: ChatProvider;
   selectedModel: string;
   temperature: number;
   maxTokens: number;
@@ -101,6 +102,7 @@ export async function runConsultationTurn(
     assistantIndex,
     ollamaUrl,
     ollamaToken,
+    chatProvider = "ollama",
     selectedModel,
     temperature,
     maxTokens,
@@ -218,10 +220,10 @@ export async function runConsultationTurn(
       stopMain = null;
     });
 
-    await streamOllamaChat(
+    await streamChatCompletion(
+      chatProvider,
       mainStreamId,
-      ollamaUrl,
-      ollamaToken || undefined,
+      { url: ollamaUrl, token: ollamaToken || undefined },
       selectedModel,
       payloadMessages,
       temperature,
@@ -248,7 +250,10 @@ export async function runConsultationTurn(
   let stopReview: (() => void) | null = null;
 
   try {
-    const reviewDetails = await showOllamaModel(ollamaUrl, ollamaToken || undefined, reviewModel).catch(() => null);
+    const reviewDetails =
+      chatProvider === "ollama"
+        ? await showOllamaModel(ollamaUrl, ollamaToken || undefined, reviewModel).catch(() => null)
+        : null;
     const reviewCtx = reviewDetails ? getContextWindow(reviewDetails.model_info) : 4096;
     const reviewLimit = outputTokenLimit(reviewModel, reviewCtx, maxTokens, false);
 
@@ -273,10 +278,10 @@ export async function runConsultationTurn(
     });
 
     let reviewTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    const reviewPromise = streamOllamaChat(
+    const reviewPromise = streamChatCompletion(
+      chatProvider,
       reviewStreamId,
-      ollamaUrl,
-      ollamaToken || undefined,
+      { url: ollamaUrl, token: ollamaToken || undefined },
       reviewModel,
       [{ role: "user", content: reviewPrompt }],
       0.0,

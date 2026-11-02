@@ -257,7 +257,16 @@
 }
 
 .fn-empty {
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 32px 24px;
   text-align: center;
-  opacity: 0.8;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.fn-empty strong {
+  color: var(--text-primary);
 }

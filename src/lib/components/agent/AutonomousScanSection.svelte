@@ -460,7 +460,7 @@ Operational Notes: Stays well under the 500-line limit. Scoped styles. Svelte 5 
     background: rgba(255, 255, 255, 0.04);
   }
   .category-tag-btn.active {
-    background: rgba(88, 80, 236, 0.15);
+    background: rgba(20, 184, 166, 0.15);
     border-color: var(--accent);
     color: var(--text-primary);
   }

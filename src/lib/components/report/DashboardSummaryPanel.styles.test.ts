@@ -39,6 +39,19 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).toContain('.catalog-associations-summary:focus-visible');
   });
 
+  it('shows BPD-adjacent symptom context as a matched-pathway crosswalk', () => {
+    expect(source).toContain('buildBpdSymptomContext(report)');
+    expect(source).toContain('bpdSymptomContext.display.title');
+    expect(source).toContain('bpdSymptomContext.display.pathway_title');
+    expect(source).toContain('bpdSymptomContext.display.boundary');
+    expect(source).toContain('bpdConditionEvidence');
+    expect(source).toContain('BPD_SYMPTOM_RESEARCH_CONTEXT_ID');
+    expect(source).toContain('Pathway context only:');
+    expect(source).toContain('bpdResearchSources');
+    expect(styleBlock).toContain('.bpd-symptom-context-match-note');
+    expect(styleBlock).toContain('.bpd-symptom-context-grid');
+  });
+
   it('keeps repeated guidance boundaries compact and keeps personal context out of the report', () => {
     expect(source).toContain('Food choices linked to the pathways found in this profile.');
     expect(source).toContain('Options linked to the pathways found in this profile.');
@@ -52,8 +65,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(source).not.toContain('Planning prompts for training and recovery — not activity clearance.');
     expect(source).not.toContain('Compare this with current medications and past responses.');
     expect(source).not.toContain('Grouped by priority for clinician discussion.');
-    expect(source).toContain('The most actionable DNA-linked signals in this report.');
-    expect(source).toContain('{Math.min(plan.topFindings.length, 9)} shown');
     expect(source).not.toContain('A genotype match is not a permanent food restriction;');
     expect(source).not.toContain('This selection is self-reported, stored per DNA profile, and is never inferred');
     expect(source).not.toContain('Every supplement item is a discussion prompt, not a prescription.');
@@ -152,13 +163,9 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('keeps repeated action steps concise instead of repeating warning copy', () => {
-    expect(source).toContain('getSimpleFindingCopy');
-    expect(source).toContain('return getSimpleFindingCopy(marker, translation).review_action;');
-    expect(source).toContain('<strong class="action-queue-next-label">Next</strong>');
+    expect(source).toContain('<ReviewFirstList');
     expect(source).not.toContain('<strong>Next helpful step:</strong>');
     expect(source).not.toContain('Ask a qualified clinician whether medical-grade confirmation');
-    expect(source).toContain('copy.signal, copy.why_it_matters');
-    expect(source).toContain('data-priority={item.rank}');
   });
 
   it('keeps collapsible guidance titles as real headings outside button descendants', () => {
@@ -210,8 +217,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
   });
 
   it('visually segregates marker association references from narrative copy', () => {
-    expect(source).toContain('action-queue-marker-ref');
-    expect(styleBlock).toContain('.action-queue-marker-ref');
     expect(styleBlock).toContain('var(--report-marker-ref-text)');
     expect(styleBlock).toContain('var(--report-marker-ref-bg)');
     expect(theme).toContain('--report-marker-ref-text: #e7c27d;');
@@ -246,17 +251,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(styleBlock).toContain('.guidance-flow {');
     expect(styleBlock).toContain('.guidance-group {');
     expect(styleBlock).toContain('scroll-margin-top:');
-  });
-
-  it('uses two priority-board columns at laptop widths to protect card readability', () => {
-    expect(theme).toContain('@media screen and (min-width: 1201px) and (max-width: 1400px)');
-    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-list {\n    grid-template-columns: repeat(2, minmax(0, 1fr));');
-  });
-
-  it('uses a single priority-board column and wrapping guidance links on narrow desktop', () => {
-    expect(theme).toContain('@media screen and (min-width: 721px) and (max-width: 1100px)');
-    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-list {\n    grid-template-columns: 1fr;');
-    expect(theme).toContain('overflow-wrap: anywhere;');
   });
 
   it('uses the wide desktop surface for clinical follow-up without forcing a single long stack', () => {
@@ -339,27 +333,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
     expect(labCard).toContain('max-width: 100%;');
   });
 
-  it('uses a full-width three-column priority queue on wide desktop', () => {
-    const actionQueueCard = styleBlock.match(/\.action-queue \{[\s\S]*?\n  \}/)?.[0] ?? '';
-    const actionQueue = styleBlock.match(/\.action-queue-list \{[\s\S]*?\n  \}/)?.[0] ?? '';
-
-    expect(actionQueueCard).toContain('width: min(100%, var(--report-dashboard-surface-width));');
-    expect(actionQueueCard).toContain('margin-inline: auto;');
-    expect(actionQueue).toContain('width: 100%;');
-    expect(actionQueue).toContain('margin-inline: auto;');
-    expect(actionQueue).toContain('box-sizing: border-box;');
-    expect(source).toContain('<div class="action-queue-list">');
-    expect(source).toContain('{#each column as item (item.finding.finding_id)}');
-    expect(actionQueue).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
-    expect(source).toContain('action-queue-column');
-    expect(source).toContain('columnIndex * 3 + rowIndex + 1');
-    expect(source).toContain('data-concern={priorityTone(item.finding)}');
-    expect(styleBlock).toContain('.action-queue-item[data-concern="high"]');
-    expect(styleBlock).toContain('.action-queue-item[data-concern="moderate"]');
-    expect(styleBlock).toContain('.action-queue-item[data-concern="low"]');
-    expect(source).not.toContain('action-queue-priority');
-  });
-
   it('shows condition-level DNA evidence as a compact, count-based review surface', () => {
     const conditionGrid = styleBlock.match(/\.condition-evidence-grid \{[\s\S]*?\n  \}/)?.[0] ?? '';
 
@@ -411,7 +384,6 @@ describe('DashboardSummaryPanel semantic styling', () => {
 
   it('keeps the native fallback composition bounded and visibly grouped', () => {
     expect(theme).toContain('.main-content .report-header');
-    expect(theme).toContain('.main-content .dashboard-v2 .action-queue-item');
     expect(theme).toContain('.main-content .dashboard-v2 .condition-evidence-item');
     expect(theme).toContain('.main-content .sections-container .marker-card');
     expect(theme).toContain('width: min(100%, var(--report-dashboard-surface-width));');

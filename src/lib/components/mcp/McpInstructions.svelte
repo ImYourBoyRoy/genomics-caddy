@@ -274,8 +274,8 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(88, 80, 236, 0.2);
-    border: 1px solid rgba(88, 80, 236, 0.4);
+    background: rgba(20, 184, 166, 0.2);
+    border: 1px solid rgba(20, 184, 166, 0.4);
     color: #ffffff;
     padding: 4px 8px;
     border-radius: 4px;
@@ -349,8 +349,8 @@
   }
 
   .info-alert {
-    background: rgba(88, 80, 236, 0.1);
-    border: 1px solid rgba(88, 80, 236, 0.2);
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.2);
     padding: 10px 14px;
     border-radius: 6px;
     font-size: 0.78rem;

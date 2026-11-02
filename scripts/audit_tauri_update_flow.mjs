@@ -176,7 +176,7 @@ async function waitForAvailable() {
         if (snapshot?.resourceUpdatePhase === "available") return snapshot;
         if (snapshot?.resourceUpdatePhase === "error" && Date.now() >= nextRetryAt) {
           if (!panelOpened) {
-            await clickText("Data & updates");
+            await clickText("Open settings");
             panelOpened = true;
           }
           const retry = await queryText("Retry");
@@ -235,8 +235,9 @@ async function runDesktopUpdateFlow(simulateFailure) {
     phases.add(available.resourceUpdatePhase);
     assert(available.resourceStatus !== "error", "Fixture resource probe failed before update action");
 
+    // Data & updates now lives in the Settings dialog.
     const openUpdatePanel = await queryText("Force re-download existing files");
-    if (openUpdatePanel?.count === 0) await clickText("Data & updates");
+    if (openUpdatePanel?.count === 0) await clickText("Open settings");
     await waitFor(
       async () => {
         const result = await queryText("Update chain");

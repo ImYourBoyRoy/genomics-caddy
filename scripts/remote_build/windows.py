@@ -19,6 +19,7 @@ Inputs:
 from __future__ import annotations
 
 from remote_build.config import Settings, get_settings
+from remote_build.cache import RemoteCachePolicy, cache_environment_exports
 from remote_build.upgrade.host import host_bash
 
 from pathlib import Path
@@ -48,6 +49,7 @@ fi
 export PNPM_HOME="${{PNPM_HOME:-$HOME/.local/share/pnpm}}"
 
 REMOTE_DIR='{remote_dir}'
+{cache_exports}
 cd "$REMOTE_DIR"
 
 echo ""
@@ -91,6 +93,14 @@ def build_cross(
 ) -> None:
     """Run the Windows x86_64 cross-compile build on the Ubuntu builder host."""
     s = settings or get_settings()
+    root = remote_dir.rstrip("/")
+    cache_policy = RemoteCachePolicy(
+        project="dna_tools",
+        target_dir=f"{root}/src-tauri/target",
+        scope_root=f"{root}/src-tauri",
+        project_root=root,
+    )
+    cache_exports = cache_environment_exports(cache_policy)
     clean_step = (
         "cargo clean --manifest-path src-tauri/Cargo.toml && echo '[WIN] cargo clean done'"
         if clean
@@ -106,6 +116,7 @@ def build_cross(
 
     script = _with_sign_env(_BUILD_SCRIPT.format(
         remote_dir=remote_dir,
+        cache_exports=cache_exports,
         clean_step=clean_step,
         bundle_arg=bundle_arg,
     ))

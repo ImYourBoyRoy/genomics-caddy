@@ -118,11 +118,11 @@ describe('shared theme controls', () => {
       ).toBeGreaterThanOrEqual(4.5);
       expect(
         contrastRatio(hexToken(block, '--action-accent-bg'), hexToken(block, '--action-accent-text')),
-        `${name} blue action foreground`,
+        `${name} primary action foreground`,
       ).toBeGreaterThanOrEqual(4.5);
       expect(
         contrastRatio(hexToken(block, '--action-accent-hover-bg'), hexToken(block, '--action-accent-text')),
-        `${name} blue hover foreground`,
+        `${name} primary action hover foreground`,
       ).toBeGreaterThanOrEqual(4.5);
     }
   });

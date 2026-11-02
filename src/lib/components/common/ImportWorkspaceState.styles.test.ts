@@ -44,7 +44,9 @@ describe('DNA import review workspace', () => {
   it('keeps the review screen and its progress design in the native static stylesheet', () => {
     expect(themeSource).toContain('.main-content .import-workspace-state');
     expect(themeSource).toContain('.main-content .import-workspace-actions');
-    expect(themeSource).toContain('.main-content .import-step-timeline');
+    expect(workspaceSource).toContain('<PipelineStepList');
+    expect(workspaceSource).toContain('<PipelineProgressBar');
+    expect(workspaceSource).toContain('<LoadingTelemetryStrip');
     expect(themeSource).toContain('.main-content .import-workspace-record-summary');
     expect(pageSource).toContain('{#if isImportPreparing || isImporting || importPhase === "awaiting-confirmation"}');
   });

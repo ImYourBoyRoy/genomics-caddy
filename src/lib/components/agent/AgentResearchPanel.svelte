@@ -65,6 +65,7 @@
       ? generatedReport.sections
           .flatMap(s => s.markers || [])
           .filter(m => isCallableGenotype(m.user_genotype))
+          .filter((m, i, all) => all.findIndex(o => o.rsid === m.rsid) === i)
           .sort((a, b) => {
             const getRank = (sc: string) =>
               sc === "high_risk" ? 0 : sc === "moderate_risk" ? 1 : 2;
@@ -192,7 +193,7 @@
       const critiquePrompt = buildCritiquePrompt(mainRsid, localResult, ncbiData, pubmedArticles, trials, drugs);
       critiqueText = await callOllamaNonStreamed(critiquePrompt);
       const critiqueObj = parseJsonSafely(critiqueText);
-      const critiqueMsg = critiqueObj 
+      const critiqueMsg = critiqueObj
         ? `Audited strand warning: ${critiqueObj.strandWarning}. Identified gaps: ${critiqueObj.missingGaps?.join(", ") || "none"}`
         : "Completed validation critique audit";
       advanceStep(4, "success", critiqueMsg);
@@ -303,12 +304,13 @@
     <div class="setup-grid">
       <!-- Left Config Card -->
       <div class="setup-config card">
-        <h3>🕵️ Configure Genomics Research Agent</h3>
+        <span class="agent-eyebrow">Research agent</span>
+        <h3>Investigate a variant, gene, or topic</h3>
         <p class="card-hint">
           Research variants, genes, or health topics dynamically. The agent will check SQLite, search ClinVar, PubMed, and ClinicalTrials before synthesizing a Personal Research Report.
         </p>
 
-        <form onsubmit={(e) => { e.preventDefault(); runAgent(); }} style="display: flex; flex-direction: column; gap: 16px;">
+        <form class="agent-form" onsubmit={(e) => { e.preventDefault(); runAgent(); }}>
           <!-- Target selector -->
           <div class="input-row">
             <label for="query-type-selector">Query Target Type</label>
@@ -344,21 +346,22 @@
             {/if}
           </div>
 
-          <p style="font-size: 0.65rem; color: var(--text-secondary); margin: 0 0 12px; line-height: 1.35;">
+          <p class="agent-fine-print">
             NCBI API key (optional) is configured in AI Settings → Advanced → Vector Research.
           </p>
 
           <button class="btn btn-primary w-full" type="submit" disabled={isScanning || !queryText.trim()}>
-            🕵️ Start Agentic Research
+            Start research
           </button>
         </form>
       </div>
 
       <!-- Right Quick Launch Card -->
       <div class="setup-quick-launch card">
-        <h3>🧬 Quick Launch Report Findings</h3>
+        <span class="agent-eyebrow">From your report</span>
+        <h3>Start from a finding</h3>
         <p class="card-hint">
-          Click any active marker found in your Trait Report to launch a complete agentic research investigation.
+          Pick a marker from your trait report to launch a full investigation.
         </p>
 
         {#if quickFindings.length === 0}

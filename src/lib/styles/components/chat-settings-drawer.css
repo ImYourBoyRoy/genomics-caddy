@@ -1,0 +1,64 @@
+/* ./src/lib/styles/components/chat-settings-drawer.css
+ * Ask AI right drawer shell and the shared accordion used by every settings section.
+ */
+
+.settings-drawer {
+  flex: 0 0 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 12px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-color);
+  background: var(--surface-inset);
+  animation: gc-fade var(--motion-base) var(--motion-ease-out) backwards;
+}
+
+.settings-drawer .drawer-inner { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+
+.settings-details-group {
+  margin-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface-card);
+  transition: border-color var(--motion-fast) ease;
+}
+
+.settings-details-group[open] { border-color: var(--border-strong); }
+
+.settings-details-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 14px;
+  list-style: none;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  background: var(--surface-subtle);
+}
+
+.settings-details-summary::-webkit-details-marker { display: none; }
+.settings-details-summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+.settings-details-summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform var(--motion-fast) ease;
+}
+
+.settings-details-group[open] > .settings-details-summary::after { transform: rotate(45deg); }
+
+.settings-details-content { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-drawer { animation: none; }
+}

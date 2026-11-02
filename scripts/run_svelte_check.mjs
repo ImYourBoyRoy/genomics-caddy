@@ -9,12 +9,14 @@ How to run: pnpm run check  (wired in package.json)
 */
 
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(scriptDir, "..");
 const preload = path.join(scriptDir, "preload-typescript6-for-svelte.cjs");
+const require = createRequire(path.join(repoRoot, "package.json"));
 
 const forwarded = process.argv.slice(2);
 const watch = forwarded.includes("--watch");
@@ -30,8 +32,17 @@ function run(cmd, args) {
     },
     shell: false,
   });
+  if (result.error) {
+    console.error(`Failed to run ${cmd}: ${result.error.message}`);
+    process.exit(1);
+  }
   if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
 }
 
-run("npx", ["svelte-kit", "sync"]);
-run("npx", ["svelte-check", "--tsconfig", "./tsconfig.json", ...forwarded.filter((a) => a !== "--watch"), ...(watch ? ["--watch"] : [])]);
+// Invoke the package entry points through Node directly. This keeps the
+// wrapper shell-free and works on Windows, where npm's `npx.cmd` shim cannot
+// be spawned reliably with `shell:false`.
+const svelteKit = path.join(path.dirname(require.resolve("@sveltejs/kit/package.json")), "svelte-kit.js");
+const svelteCheck = path.join(path.dirname(require.resolve("svelte-check/package.json")), "bin", "svelte-check");
+run(process.execPath, [svelteKit, "sync"]);
+run(process.execPath, [svelteCheck, "--tsconfig", "./tsconfig.json", ...forwarded.filter((a) => a !== "--watch"), ...(watch ? ["--watch"] : [])]);

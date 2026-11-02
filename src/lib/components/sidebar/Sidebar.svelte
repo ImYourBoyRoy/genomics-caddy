@@ -28,20 +28,27 @@ import { onMount, onDestroy } from 'svelte';
   import Tooltip from '../common/Tooltip.svelte';
   import DownloadProgressDetails from './DownloadProgressDetails.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
-  import LibraryPanel from './LibraryPanel.svelte';
-  import ThemeToggle from '../common/ThemeToggle.svelte';
+  import SettingsDialog from '../settings/SettingsDialog.svelte';
   import { appUpdateState } from '../../utils/appUpdateState';
   import { formatTransferEta, updateDownloadProgress, type DownloadProgressSample } from '../../utils/offlineDownloadProgress';
+  import {
+    emptyResourceSync,
+    reduceResourceSync,
+    type ResourceSyncEvent,
+    type ResourceSyncTelemetry,
+  } from '../../utils/resourceSyncTelemetry';
   import '$lib/styles/components/sidebar.css';
+  import '$lib/styles/components/sidebar-progress.css';
+  import '$lib/styles/components/reference-data-panel.css';
+  import '$lib/styles/components/reference-data-updates.css';
   import '$lib/styles/components/library-panel.css';
 
   /*
   Module Docstring:
-  Purpose: Sidebar panel container aggregating assembly settings, file import, profiles, and reference DB downloader.
+  Purpose: Sidebar container for profiles and import; owns assembly and reference-DB sync state rendered in Settings.
   Responsibilities:
   - Render branding header.
-  - Render Liftover assembly status and download button.
-  - Render collapsible Reference Databases pane with:
+  - Provide the Liftover and Reference Databases snippets rendered inside the Settings dialog:
       • Per-asset download progress bars showing % and MB/s.
       • Smart button labels: Download / Update (force) / Re-sync.
       • Force-redownload checkbox that persists while expanded.
@@ -66,11 +73,8 @@ import { onMount, onDestroy } from 'svelte';
     selectedSample: GenomeSample | null;
     report: GeneratedReport | null;
     sweepRunning?: boolean;
-    /** Expand the Reference Databases panel (e.g. from main CTA). */
-    expandDatabases?: boolean;
     onReady?: (api: {
       syncAllMissing: () => Promise<void>;
-      expandDatabases: () => void;
     }) => void;
     onOfflineStatusChange?: (status: OfflineUpdateCheck | null, fresh: boolean) => void;
     onDownloadChain: () => void;
@@ -82,7 +86,11 @@ import { onMount, onDestroy } from 'svelte';
     onOpenConnections?: () => void;
     onResourcesUpdated?: () => void | Promise<void>;
     /** Report welcome-screen catalog sync progress to the detailed loader. */
-    onResourceSyncStateChange?: (state: { active: boolean; message: string }) => void;
+    onResourceSyncStateChange?: (state: {
+      active: boolean;
+      message: string;
+      telemetry?: ResourceSyncTelemetry | null;
+    }) => void;
     runtimeAvailable?: boolean;
   }
 
@@ -101,7 +109,6 @@ import { onMount, onDestroy } from 'svelte';
     selectedSample,
     report = null,
     sweepRunning = false,
-    expandDatabases = false,
     onReady,
     onOfflineStatusChange,
     onDownloadChain,
@@ -122,7 +129,6 @@ import { onMount, onDestroy } from 'svelte';
   /** Latest bulk Sync All status line (from `__bulk__` or active asset phases). */
   let bulkSyncMessage = $state('');
   let bulkActiveAssetId = $state<string | null>(null);
-  let isPanelCollapsed = $state(true);
   let forceRedownload = $state(false);
   let syncErrors = $state<Record<string, string>>({});
   let syncMessages = $state<Record<string, string>>({});
@@ -158,6 +164,18 @@ import { onMount, onDestroy } from 'svelte';
   let updateRetry = $state<UpdateRetryTarget | null>(null);
   let lastSuccessfulUpdateAt = $state<number | null>(null);
   let resourceSyncOverlayActive = false;
+  let resourceSyncTelemetry: ResourceSyncTelemetry = emptyResourceSync();
+
+  /** Fold one backend event into the overlay's structured telemetry. */
+  function pushResourceSyncEvent(event: ResourceSyncEvent): void {
+    if (!resourceSyncOverlayActive) return;
+    resourceSyncTelemetry = reduceResourceSync(resourceSyncTelemetry, event);
+    onResourceSyncStateChange?.({
+      active: true,
+      message: resourceSyncTelemetry.message,
+      telemetry: resourceSyncTelemetry,
+    });
+  }
   // Do not present the previous probe's update flags while a new authoritative
   // status check is running or has failed.
   let offlineStatusFresh = $state(false);
@@ -202,12 +220,6 @@ import { onMount, onDestroy } from 'svelte';
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
-
-  $effect(() => {
-    if (expandDatabases) {
-      isPanelCollapsed = false;
-    }
-  });
 
   // Derive active report rsids
   let reportRsids = $derived(
@@ -382,8 +394,13 @@ import { onMount, onDestroy } from 'svelte';
     let failureRetry: UpdateRetryTarget | null = null;
     syncingAll = true;
     resourceSyncOverlayActive = showOverlay;
+    resourceSyncTelemetry = emptyResourceSync();
     if (showOverlay) {
-      onResourceSyncStateChange?.({ active: true, message: 'Syncing missing reference resources…' });
+      onResourceSyncStateChange?.({
+        active: true,
+        message: 'Syncing missing reference resources…',
+        telemetry: resourceSyncTelemetry,
+      });
     }
     setUpdateState('downloading', 'Syncing missing resources…');
     bulkSyncMessage = 'Sync All Missing · starting…';
@@ -438,7 +455,7 @@ import { onMount, onDestroy } from 'svelte';
       syncingAll = false;
       if (resourceSyncOverlayActive) {
         resourceSyncOverlayActive = false;
-        onResourceSyncStateChange?.({ active: false, message: '' });
+        onResourceSyncStateChange?.({ active: false, message: '', telemetry: null });
       }
       bulkSyncMessage = '';
       bulkActiveAssetId = null;
@@ -456,7 +473,6 @@ import { onMount, onDestroy } from 'svelte';
 
   /** Public entry for main-dashboard CTA. */
   function startSyncAllMissing(): Promise<void> {
-    isPanelCollapsed = false;
     return runSyncAllMissing({ showOverlay: true });
   }
 
@@ -465,9 +481,6 @@ import { onMount, onDestroy } from 'svelte';
 
     onReady?.({
       syncAllMissing: startSyncAllMissing,
-      expandDatabases: () => {
-        isPanelCollapsed = false;
-      },
     });
 
     void loadSettingsAndStatus();
@@ -493,10 +506,16 @@ import { onMount, onDestroy } from 'svelte';
       if (syncingAll || updatingAllOutdated) {
         bulkActiveAssetId = asset_id;
         bulkSyncMessage = `Downloading ${label}…`;
-        if (resourceSyncOverlayActive) {
-          onResourceSyncStateChange?.({ active: true, message: `Downloading ${label}…` });
-        }
       }
+      pushResourceSyncEvent({
+        type: 'download',
+        assetId: asset_id,
+        label,
+        bytesDone: bytes_downloaded,
+        totalBytes: total_bytes,
+        resumedBytes: resumed_bytes,
+        at: Date.now(),
+      });
     });
 
     unlistenImport = await listen<ImportProgressInfo & { asset_id: string }>(
@@ -516,11 +535,17 @@ import { onMount, onDestroy } from 'svelte';
           bulkActiveAssetId = asset_id;
           if (payload.message) {
             bulkSyncMessage = payload.message;
-            if (resourceSyncOverlayActive) {
-              onResourceSyncStateChange?.({ active: true, message: payload.message });
-            }
           }
         }
+        pushResourceSyncEvent({
+          type: 'import',
+          assetId: asset_id,
+          rowsProcessed: payload.rows_processed,
+          rowsPerSecond: payload.rows_per_second,
+          percent: payload.percent,
+          etaSeconds: payload.eta_seconds,
+          message: payload.message,
+        });
       }
     );
 
@@ -530,21 +555,32 @@ import { onMount, onDestroy } from 'svelte';
       step: number;
       total_steps: number;
       message: string;
+      label?: string | null;
+      state?: string | null;
+      tier?: number | null;
+      asset_count?: number | null;
     }>('offline:sync_phase', (event) => {
-      const { asset_id, phase, step, total_steps, message } = event.payload;
+      const { asset_id, phase, step, total_steps, message, label, state, tier, asset_count } = event.payload;
       syncPhase = {
         ...syncPhase,
         [asset_id]: { phase, step, total_steps, message },
       };
       if (syncingAll || updatingAllOutdated) {
         bulkSyncMessage = message;
-        if (resourceSyncOverlayActive) {
-          onResourceSyncStateChange?.({ active: true, message });
-        }
         if (asset_id !== '__bulk__' && phase !== 'skip') {
           bulkActiveAssetId = asset_id;
         }
       }
+      pushResourceSyncEvent({
+        type: 'phase',
+        assetId: asset_id,
+        label,
+        phase,
+        state,
+        message,
+        tier,
+        assetCount: asset_count,
+      });
     });
   });
 
@@ -830,7 +866,6 @@ import { onMount, onDestroy } from 'svelte';
     const items = listOfflineUpdates(offlineStatusFresh ? offlineStatus : null);
     if (items.length === 0) return;
     updatingAllOutdated = true;
-    isPanelCollapsed = false;
     let failed = false;
     try {
       for (const item of items) {
@@ -935,7 +970,559 @@ import { onMount, onDestroy } from 'svelte';
 
   // Only block the same asset or bulk sync — allow parallel downloads of other DBs.
   let bulkBusy = $derived(syncingAll || updatingAllOutdated);
+  let settingsOpen = $state(false);
+  // Surface blockers that affect report quality (assembly, missing or outdated catalogs)
+  // on the footer button so the sidebar stays quiet while Settings holds the details.
+  let settingsNeedsAttention = $derived(
+    !isChainDownloaded || liftoverUpdateAvailable || needsAttention,
+  );
+  /** Coarse resource status for the footer button (also read by the agent UI bridge). */
+  let resourceStatusCategory = $derived.by(() => {
+    if (collapsedStatusLabel === 'Current') return 'current';
+    if (collapsedStatusLabel === 'Update issue') return 'error';
+    if (collapsedStatusLabel === 'Remote check incomplete' || needsAttention) return 'attention';
+    return 'checking';
+  });
 </script>
+
+{#snippet liftoverSetting()}
+  <div class="chain-status-card card liftover-status-card" class:liftover-needs-action={!isChainDownloaded || liftoverUpdateAvailable}>
+    <div class="liftover-status-copy">
+      <strong>Liftover assembly</strong>
+      {#if isChainDownloaded}
+        <span class="badge success">🟢 GRCh38 Active</span>
+      {:else}
+        <span class="badge warning">⚠️ GRCh37 Only</span>
+      {/if}
+    </div>
+    <div class="liftover-status-actions">
+      <Tooltip
+        label="Liftover assembly"
+        description="The chain maps imported GRCh37 coordinates to GRCh38 for report context; it does not change your genotype calls."
+      >
+        <span class="info-icon" aria-label="Explain liftover assembly">ⓘ</span>
+      </Tooltip>
+      {#if !isChainDownloaded}
+        <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
+          {isDownloadingChain ? 'Downloading…' : 'Download chain'}
+        </button>
+      {/if}
+      {#if liftoverUpdateAvailable}
+        <Tooltip
+          label="Liftover update"
+          description="A newer UCSC GRCh37→GRCh38 chain is available. The current local chain remains available until the update finishes."
+        >
+          <span class="badge warning">Update available</span>
+        </Tooltip>
+        <button
+          type="button"
+          class="btn btn-warning btn-sm"
+          disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
+          onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
+        >
+          {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update chain'}
+        </button>
+      {/if}
+    </div>
+  </div>
+{/snippet}
+
+{#snippet referenceDataSetting()}
+  <div class="data-updates-card">
+    <div class="data-updates-heading">
+      <span class="data-updates-subtitle">Reference catalogs used for local annotations, and their status.</span>
+      {#if collapsedStatusLabel}
+        <span
+          class="resource-status-pill"
+          class:resource-status-current={collapsedStatusLabel === 'Current'}
+          class:resource-status-incomplete={collapsedStatusLabel === 'Remote check incomplete'}
+          class:resource-status-error={collapsedStatusLabel === 'Update issue'}
+          aria-label={`Reference data status: ${collapsedStatusLabel}`}
+          aria-live="polite"
+        >{collapsedStatusLabel}</span>
+      {/if}
+      {#if missingPrimaryCount > 0}
+        <span
+          class="missing-pill"
+          aria-label="{[
+            notDownloadedPrimary.length ? `${notDownloadedPrimary.join(', ')} not downloaded` : '',
+            notIndexedPrimary.length ? `${notIndexedPrimary.join(', ')} downloaded but not indexed` : '',
+          ].filter(Boolean).join(' · ')}"
+        >{missingPrimaryCount} need attention</span>
+      {/if}
+      {#if updatesAvailable > 0}
+        <span
+          class="update-pill"
+          aria-label={updateBadgeTitle || `${updatesAvailable} newer remote version(s) available`}
+        >
+          {updatesAvailable} newer
+          {#if pendingUpdates.length === 1}
+            · {pendingUpdates[0].label}
+          {/if}
+        </span>
+      {/if}
+    </div>
+
+  <div id="data-updates-panel" class="data-updates-body">
+
+    {#if updatePhase !== 'idle'}
+      <div class="resource-update-state" class:resource-update-state-attention={updatePhase === 'attention'} class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
+        <div class="resource-update-state-heading">
+          <span class="resource-update-state-dot" aria-hidden="true"></span>
+          <strong>{updatePhase === 'attention' && updateRetry?.kind === 'status' ? 'Remote check incomplete' : updatePhaseLabel(updatePhase)}</strong>
+        </div>
+        {#if updateMessage}
+          <div class="resource-update-state-message">{updateMessage}</div>
+        {/if}
+        {#if offlineStatus}
+          <div class="resource-local-summary">
+            <div><strong>Local catalogs:</strong> {localPrimarySummary.present}/{localPrimarySummary.total} available · {localPrimarySummary.indexed}/{localPrimarySummary.total} indexed.</div>
+            <div>Imported DNA profiles and remote freshness are checked separately.</div>
+          </div>
+        {/if}
+        {#if (updatePhase === 'attention' || updatePhase === 'error') && updateRetry}
+          <button
+            type="button"
+            class="btn btn-secondary btn-xs resource-update-retry"
+            disabled={isCheckingStatus || syncingAll || updatingAllOutdated || Object.values(syncingAsset).some(Boolean)}
+            onclick={handleRetryUpdate}
+          >
+            {isCheckingStatus ? 'Retrying…' : 'Retry'}
+          </button>
+        {/if}
+        {#if lastSuccessfulUpdateAt}
+          <div class="resource-update-state-time">Last successful update: {new Date(lastSuccessfulUpdateAt).toLocaleString()}</div>
+        {/if}
+      </div>
+    {/if}
+
+    {#if needsAttention || importingAny}
+      <div class="db-attention-banner">
+        {#if importingAny}
+          <div>Import in progress — catalogs are processed in order while SQLite is occupied.</div>
+        {/if}
+        {#if notDownloadedPrimary.length > 0}
+          <div><strong>Not downloaded:</strong> {notDownloadedPrimary.join(', ')}.</div>
+        {/if}
+        {#if notIndexedPrimary.length > 0}
+          <div><strong>Downloaded but not indexed:</strong> {notIndexedPrimary.join(', ')} — use Re-sync (or wait if import is already running).</div>
+        {/if}
+        {#if pendingUpdates.length > 0}
+          <div class="updates-panel">
+            <div>
+              <strong>{pendingUpdates.length} newer remote file{pendingUpdates.length === 1 ? '' : 's'}</strong>
+              {#if primaryUpdatesAvailable === 0}
+                — supporting asset(s) only (not GWAS/ClinVar/PharmGKB/dbSNP)
+              {:else if primaryUpdatesAvailable < pendingUpdates.length}
+                — {primaryUpdatesAvailable} primary · {pendingUpdates.length - primaryUpdatesAvailable} supporting
+              {/if}
+            </div>
+            <ul class="updates-named-list">
+              {#each pendingUpdates as u (u.asset_id)}
+                <li>
+                  <div class="update-item-meta">
+                    <strong>{u.label}</strong>
+                    <span class="update-item-kind">
+                      Tier {u.tier} · {u.primary ? 'primary catalog' : 'supporting asset'}
+                      {#if u.display_size}
+                        · {u.display_size}
+                      {/if}
+                    </span>
+                    {#if u.message}
+                      <span class="update-item-msg">{u.message}</span>
+                    {/if}
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-xs"
+                    aria-label={`Update ${u.label}`}
+                    disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
+                    onclick={() => handleSyncAsset(u.asset_id, forceRedownload)}
+                  >
+                    {syncingAsset[u.asset_id] ? 'Updating…' : 'Update'}
+                  </button>
+                </li>
+              {/each}
+            </ul>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm updates-all-btn"
+              disabled={bulkBusy || updatingAllOutdated || Object.values(syncingAsset).some(Boolean) || sweepRunning || !runtimeAvailable}
+              onclick={handleUpdateAllOutdated}
+            >
+              {updatingAllOutdated ? 'Updating all…' : `Update all ${pendingUpdates.length} outdated`}
+            </button>
+            <div class="update-footnote">
+              Update downloads the newer remote file then re-imports. Re-sync only re-imports the local file you already have.
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Custom Directory Row -->
+    <div class="dir-setting">
+      <span class="setting-label">Download Location</span>
+      <div class="setting-row">
+        <input
+          type="text"
+          placeholder="Default App Directory"
+          value={customDir || ''}
+          readonly
+          aria-label="Download location"
+          class="download-location-input"
+        />
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm compact-sidebar-button"
+          onclick={handleBrowseDir}
+        >
+          Browse
+        </button>
+      </div>
+      {#if customDir}
+        <button
+          type="button"
+          onclick={handleResetDir}
+          class="reset-dir-btn"
+        >
+          Reset to Default
+        </button>
+      {/if}
+    </div>
+
+    <!-- Force re-download checkbox -->
+    <label class="force-redownload-label">
+      <input type="checkbox" bind:checked={forceRedownload} />
+      Force re-download existing files
+    </label>
+
+    <hr class="sidebar-rule" />
+
+    <!-- Sync All Missing -->
+    <button
+      type="button"
+      class="btn btn-primary btn-sm full-width-sidebar-button"
+      onclick={handleSyncAllMissing}
+      disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning || !runtimeAvailable}
+    >
+      {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
+    </button>
+
+    {#if syncingAll}
+      <div class="bulk-sync-panel" role="status" aria-live="polite">
+        <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="var(--status-success-text)" />
+        {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
+          {@const prog = downloadProgress[bulkActiveAssetId]}
+          <DownloadProgressDetails progress={prog} compact label="Bulk download" />
+        {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
+          {@const imp = importProgress[bulkActiveAssetId]}
+          <ProgressTrack percent={imp.percent ?? -1} variant="indexing" spaced label="Bulk indexing progress" />
+          <div class="bulk-sync-meta bulk-sync-meta-indexing">
+            <span>{imp.percent != null && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
+            {#if imp.eta_seconds != null}
+              <span>{imp.eta_seconds}s remaining</span>
+            {/if}
+          </div>
+        {:else if bulkActiveAssetId && syncPhase[bulkActiveAssetId]?.phase === 'download'}
+          <ProgressTrack variant="preparing" spaced label="Preparing bulk download" />
+          <div class="progress-preparing">Connecting to source · checking saved partial data…</div>
+        {/if}
+      </div>
+    {/if}
+
+    {#if syncMessages.__all__ && !syncingAll}
+      <div class="bulk-sync-summary">{syncMessages.__all__}</div>
+    {/if}
+
+    {#if importingAny}
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm full-width-sidebar-button"
+        onclick={handleCancelImport}
+      >
+        ⏹ Cancel import
+      </button>
+    {/if}
+
+    {#if syncErrors.__all__}
+      <div class="sync-error-block">
+        <strong>⚠️ Sync errors:</strong>
+        <pre class="sidebar-error-detail">{syncErrors.__all__}</pre>
+      </div>
+    {/if}
+
+    <hr class="sidebar-rule" />
+
+    <!-- Individual Databases list -->
+    <div class="db-list">
+      {#each DB_DEFS as db (db.assetId)}
+        {@const btnState = assetButtonState(db.tierNum, db.assetId)}
+        {@const prog = downloadProgress[db.assetId]}
+        {@const phase = syncPhase[db.assetId]}
+        {@const isActive = assetIsShowingProgress(db.assetId)}
+        <div class="db-item-wrap">
+          <div class="db-item">
+            <div class="db-item-meta">
+              <span class="db-item-title">
+                <strong>{db.label}</strong>
+                {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, findAsset(db.tierNum, db.assetId)) || companionNeedsUpdate(db)}
+                  <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
+                    <span class="update-pill">update</span>
+                  </Tooltip>
+                {/if}
+                <Tooltip label={db.label} description={assetTooltip(db)}>
+                  <span class="info-icon">ⓘ</span>
+                </Tooltip>
+              </span>
+              <span class="db-item-status">
+                {getAssetStatusLine(db.tierNum, db.assetId)}
+              </span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-xs db-action-button"
+              aria-label={`${btnState.label} ${db.label}`}
+              class:btn-primary={btnState.variant === 'primary'}
+              class:btn-secondary={btnState.variant === 'secondary'}
+              class:btn-warning={btnState.variant === 'warning'}
+              onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
+              disabled={!!syncingAsset[db.assetId] || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || !runtimeAvailable}
+            >
+              {btnState.label}
+            </button>
+          </div>
+
+          <!-- Per-asset progress bar (shown while downloading or importing) -->
+          {#if isActive}
+            {#if prog && !importProgress[db.assetId]}
+              <DownloadProgressDetails progress={prog} label={`${db.label} download`} />
+            {:else if importProgress[db.assetId]}
+              {@const imp = importProgress[db.assetId]}
+              <ProgressTrack percent={imp.percent ?? -1} variant="indexing" label={`${db.label} indexing progress`} />
+              <div class="progress-meta progress-meta-indexing">
+                <span>{imp.percent != null && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
+                {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
+                  <span>{imp.eta_seconds}s remaining</span>
+                {/if}
+              </div>
+              <div class="import-status-line">
+                <span class="import-dot"></span>
+                <span>{imp.message}</span>
+              </div>
+            {:else if phase?.phase === 'download'}
+              <ProgressTrack variant="preparing" label={`${db.label} download connection`} />
+              <div class="progress-preparing">Connecting to source · checking whether a saved download can resume…</div>
+            {:else}
+              <ProgressTrack variant="preparing" label={`${db.label} import preparation`} />
+              <div class="progress-preparing">
+                Preparing import (no download needed)…
+              </div>
+            {/if}
+          {/if}
+
+          {#if 'companions' in db}
+            <ul class="db-companions">
+              {#each db.companions as c (c.assetId)}
+                {@const companion = findAssetById(c.assetId)}
+                {@const cBusy = assetIsShowingProgress(c.assetId)}
+                <li class="db-companion">
+                  <div class="db-companion-meta">
+                    <span class="db-companion-label">
+                      {c.label}
+                      {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
+                        <Tooltip label="Update available" description="A newer supporting file is available on the server.">
+                          <span class="update-pill">update</span>
+                        </Tooltip>
+                      {/if}
+                    </span>
+                    <span class="db-companion-status">
+                      {#if !companion}
+                        Checking…
+                      {:else if cBusy}
+                        {syncPhase[c.assetId]?.message || importProgress[c.assetId]?.message || 'Updating…'}
+                      {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
+                        Update available · {companion.display_size || companion.message}
+                      {:else if companion.row_count > 0}
+                        {companion.row_count.toLocaleString()} rows
+                      {:else if companion.local_present}
+                        On disk · not indexed
+                      {:else}
+                        Not downloaded
+                      {/if}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-xs"
+                    aria-label={`${hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
+                    class:btn-warning={hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
+                    class:btn-secondary={!hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) && !forceRedownload}
+                    disabled={cBusy || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
+                    onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
+                  >
+                    {#if cBusy}
+                      …
+                    {:else if !companion?.local_present}
+                      Download
+                    {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
+                      Update
+                    {:else}
+                      Re-sync
+                    {/if}
+                  </button>
+                </li>
+                {#if cBusy && (downloadProgress[c.assetId] || importProgress[c.assetId])}
+                  <li class="db-companion-progress">
+                    {#if downloadProgress[c.assetId] && !importProgress[c.assetId]}
+                      {@const cprog = downloadProgress[c.assetId]}
+                      <ProgressTrack percent={cprog.percent} label={`${c.label} download progress`} />
+                    {:else if importProgress[c.assetId]}
+                      {@const cimp = importProgress[c.assetId]}
+                      <ProgressTrack percent={cimp.percent ?? -1} variant="indexing" label={`${c.label} indexing progress`} />
+                    {/if}
+                  </li>
+                {/if}
+              {/each}
+            </ul>
+          {/if}
+
+          <!-- Per-asset error display -->
+          {#if syncErrors[db.assetId]}
+            <div class="sync-error-block asset-feedback">
+              <strong>⚠️ Error:</strong>
+              <span>{syncErrors[db.assetId]}</span>
+            </div>
+          {/if}
+
+          <!-- Per-asset success message -->
+          {#if syncMessages[db.assetId] && !isActive}
+            <div class="sync-ok-block asset-feedback">
+              <span>✅ {syncMessages[db.assetId].split('\n')[0]}</span>
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
+
+    {#if referenceDetails}
+      <div class="ref-status-details">
+        <div class="ref-status-heading">
+          Catalog readiness
+        </div>
+
+        <div class="status-group">
+          <div class="status-group-title">ClinVar</div>
+          <div class="status-group-grid">
+            <span>Status:</span>
+            <strong class:status-ready={referenceDetails.clinvar_indexed_rows > 0} class:status-pending={referenceDetails.clinvar_indexed_rows === 0 && referenceDetails.clinvar_raw_found} class:status-missing={referenceDetails.clinvar_indexed_rows === 0 && !referenceDetails.clinvar_raw_found}>
+              {#if referenceDetails.clinvar_indexed_rows > 0}
+                Ready · {referenceDetails.clinvar_indexed_rows.toLocaleString()} rows
+              {:else if referenceDetails.clinvar_raw_found}
+                Downloaded · not indexed
+              {:else}
+                Not downloaded
+              {/if}
+            </strong>
+            {#if report}
+              <span>Hits in current report:</span>
+              <strong class:status-hit-active={referenceDetails.clinvar_rsid_hits > 0} class:status-hit-empty={referenceDetails.clinvar_rsid_hits === 0}>
+                {referenceDetails.clinvar_rsid_hits.toLocaleString()}
+              </strong>
+            {/if}
+            {#if referenceDetails.clinvar_last_indexed}
+              <span>Last indexed:</span>
+              <strong>{new Date(referenceDetails.clinvar_last_indexed * 1000).toLocaleDateString()}</strong>
+            {/if}
+          </div>
+          {#if referenceDetails.clinvar_raw_found && referenceDetails.clinvar_indexed_rows === 0}
+            <div class="status-warn">Raw ClinVar file is on disk but SQLite has 0 rows — use Re-sync to import (Update only if a newer remote file exists).</div>
+          {/if}
+        </div>
+
+        <div class="status-group status-group-spaced">
+          <div class="status-group-title">dbSNP (rsID merge map)</div>
+          <div class="status-group-grid">
+            <span>Status:</span>
+            <strong class:status-ready={referenceDetails.dbsnp_merge_mappings_indexed > 0} class:status-pending={referenceDetails.dbsnp_merge_mappings_indexed === 0 && referenceDetails.dbsnp_merged_raw_found} class:status-missing={referenceDetails.dbsnp_merge_mappings_indexed === 0 && !referenceDetails.dbsnp_merged_raw_found}>
+              {#if referenceDetails.dbsnp_merge_mappings_indexed > 0}
+                Ready · {referenceDetails.dbsnp_merge_mappings_indexed.toLocaleString()} mappings
+              {:else if referenceDetails.dbsnp_merged_raw_found}
+                Downloaded · not indexed
+              {:else}
+                Not downloaded
+              {/if}
+            </strong>
+            {#if report}
+              <span>rsIDs remapped in report:</span>
+              <strong class:status-hit-active={referenceDetails.dbsnp_rsids_normalized > 0} class:status-hit-empty={referenceDetails.dbsnp_rsids_normalized === 0}>
+                {referenceDetails.dbsnp_rsids_normalized.toLocaleString()}
+              </strong>
+            {/if}
+          </div>
+          {#if referenceDetails.dbsnp_merged_raw_found && referenceDetails.dbsnp_merge_mappings_indexed === 0}
+            <div class="status-warn">Archive on disk but 0 merge mappings indexed — import still needed (large job).</div>
+          {/if}
+          <div class="status-note">Offline dbSNP here is the NCBI <em>refsnp-merged</em> + withdrawn catalog (rsID merge map + dates/citations). Alleles, placements, and AF live in the huge per-chromosome <em>refsnp-chr*.json</em> files — we do not ingest those yet. Report AF chips use the local gnomAD cache when present (not this merge DB).</div>
+        </div>
+
+        <div class="status-group status-group-more-spaced">
+          <div class="status-group-title">gnomAD allele frequencies</div>
+          <div class="status-group-grid">
+            <span>Status:</span>
+            <strong class:status-ready={gnomadReadiness?.ready === true && gnomadReadiness.frequency_cache_ready} class:status-pending={gnomadReadiness?.ready === true && !gnomadReadiness.frequency_cache_ready} class:status-missing={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) === 0}>
+              {#if gnomadReadiness?.ready && gnomadReadiness.frequency_cache_ready}
+                Ready · gnomAD {gnomadReadiness.release} · {gnomadReadiness.frequency_cache_rows.toLocaleString()} frequency rows
+              {:else if gnomadReadiness?.ready}
+                Indexes ready · gnomAD {gnomadReadiness.release} · frequency cache needs refresh
+              {:else if gnomadReadiness}
+                {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes · {gnomadReadiness.summary}
+              {:else}
+                Checking…
+              {/if}
+            </strong>
+          </div>
+          <div class="status-note">Indexes and allele-frequency rows are reported separately. {gnomadReadiness?.frequency_cache_summary || ''} Remote gnomAD follows the newest compatible public release when available; local/pinned sources stay unchanged.</div>
+          {#if gnomadReadiness?.ready && selectedSample && reportRsids.length > 0}
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm download-gnomad-button"
+              disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
+              onclick={handleRefreshGnomadFrequencyCache}
+            >
+              {gnomadBusy ? 'Refreshing frequencies…' : 'Refresh report frequencies'}
+            </button>
+          {/if}
+          {#if gnomadReadiness && !gnomadReadiness.ready}
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm download-gnomad-button"
+              disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
+              onclick={handleDownloadGnomadIndexes}
+            >
+              {gnomadBusy ? 'Downloading…' : 'Download gnomAD indexes'}
+            </button>
+          {/if}
+          {#if gnomadHint}
+            <div class="status-note">{gnomadHint}</div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+  </div>
+
+  </div>
+{/snippet}
+
+<SettingsDialog
+  bind:open={settingsOpen}
+  {runtimeAvailable}
+  version={$appUpdateState.currentVersion || ''}
+  liftover={liftoverSetting}
+  referenceData={referenceDataSetting}
+  {onOpenConnections}
+/>
 
 <aside id="data-sidebar" class="sidebar" aria-label="Profile and data controls">
   <div class="sidebar-scroll">
@@ -980,574 +1567,22 @@ import { onMount, onDestroy } from 'svelte';
     />
   </div>
 
-  <div class="sidebar-tools-heading" aria-hidden="true">
-    <span>App tools</span>
   </div>
 
-  {#if onOpenConnections}
-    <div class="connections-launch-card card">
-      <div class="connections-launch-copy">
-        <strong>Connections</strong>
-        <span>Ollama + vector databases</span>
-      </div>
-      <div class="connections-launch-actions">
-        <Tooltip
-          label="Connections"
-          description="Set Ollama and vector database endpoints, monitor health, and manage model settings under Advanced."
-        >
-          <span class="info-icon" aria-label="Explain Connections">ⓘ</span>
-        </Tooltip>
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => onOpenConnections?.()} disabled={!runtimeAvailable}>
-          Open Connections
-        </button>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Chain status stays compact when healthy; attention states keep their action visible. -->
-  <div class="chain-status-card card liftover-status-card" class:liftover-needs-action={!isChainDownloaded || liftoverUpdateAvailable}>
-    <div class="liftover-status-copy">
-      <strong>Liftover assembly</strong>
-      {#if isChainDownloaded}
-        <span class="badge success">🟢 GRCh38 Active</span>
-      {:else}
-        <span class="badge warning">⚠️ GRCh37 Only</span>
-      {/if}
-    </div>
-    <div class="liftover-status-actions">
-      <Tooltip
-        label="Liftover assembly"
-        description="The chain maps imported GRCh37 coordinates to GRCh38 for report context; it does not change your genotype calls."
-      >
-        <span class="info-icon" aria-label="Explain liftover assembly">ⓘ</span>
-      </Tooltip>
-      {#if !isChainDownloaded}
-        <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={isDownloadingChain || sweepRunning || !runtimeAvailable}>
-          {isDownloadingChain ? 'Downloading…' : 'Download chain'}
-        </button>
-      {/if}
-      {#if liftoverUpdateAvailable}
-        <Tooltip
-          label="Liftover update"
-          description="A newer UCSC GRCh37→GRCh38 chain is available. The current local chain remains available until the update finishes."
-        >
-          <span class="badge warning">Update available</span>
-        </Tooltip>
-        <button
-          type="button"
-          class="btn btn-warning btn-sm"
-          disabled={!!syncingAsset['liftover_chain'] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
-          onclick={() => handleSyncAsset('liftover_chain', forceRedownload)}
-        >
-          {syncingAsset['liftover_chain'] ? 'Updating…' : 'Update chain'}
-        </button>
-      {/if}
-    </div>
-  </div>
-
-  <!-- Data and updates disclosure -->
-  <div class="chain-status-card card">
+  <div class="sidebar-footer no-print" role="toolbar" aria-label="Settings and version">
     <button
       type="button"
-      class="data-updates-toggle"
+      class="btn btn-secondary btn-sm sidebar-settings-button"
+      aria-haspopup="dialog"
+      data-resource-status={resourceStatusCategory}
       data-resource-update-phase={updatePhase}
-      onclick={() => isPanelCollapsed = !isPanelCollapsed}
-      aria-expanded={!isPanelCollapsed}
-      aria-controls={isPanelCollapsed ? undefined : "data-updates-panel"}
+      aria-label={settingsNeedsAttention ? 'Open settings — genome assembly or reference data needs attention' : 'Open settings'}
+      onclick={() => (settingsOpen = true)}
     >
-      <span class="data-updates-heading">
-        <strong id="data-updates-title">Data &amp; updates</strong>
-        <span class="data-updates-subtitle">Reference catalogs and local status</span>
-        {#if collapsedStatusLabel}
-          <span
-            class="resource-status-pill"
-            class:resource-status-current={collapsedStatusLabel === 'Current'}
-            class:resource-status-incomplete={collapsedStatusLabel === 'Remote check incomplete'}
-            class:resource-status-error={collapsedStatusLabel === 'Update issue'}
-            aria-label={`Reference data status: ${collapsedStatusLabel}`}
-            aria-live="polite"
-          >{collapsedStatusLabel}</span>
-        {/if}
-        {#if missingPrimaryCount > 0}
-          <span
-            class="missing-pill"
-            aria-label="{[
-              notDownloadedPrimary.length ? `${notDownloadedPrimary.join(', ')} not downloaded` : '',
-              notIndexedPrimary.length ? `${notIndexedPrimary.join(', ')} downloaded but not indexed` : '',
-            ].filter(Boolean).join(' · ')}"
-          >{missingPrimaryCount} need attention</span>
-        {/if}
-        {#if updatesAvailable > 0}
-          <span
-            class="update-pill"
-            aria-label={updateBadgeTitle || `${updatesAvailable} newer remote version(s) available`}
-          >
-            {updatesAvailable} newer
-            {#if pendingUpdates.length === 1}
-              · {pendingUpdates[0].label}
-            {/if}
-          </span>
-        {/if}
-      </span>
-      <span class="data-updates-caret" aria-hidden="true">{isPanelCollapsed ? '▶' : '▼'}</span>
+      <span aria-hidden="true">⚙</span>
+      <span>Settings</span>
+      {#if settingsNeedsAttention}<span class="sidebar-settings-dot" aria-hidden="true"></span>{/if}
     </button>
-
-    {#if !isPanelCollapsed}
-      <div id="data-updates-panel" class="data-updates-body" role="region" aria-labelledby="data-updates-title">
-
-        {#if updatePhase !== 'idle'}
-          <div class="resource-update-state" class:resource-update-state-attention={updatePhase === 'attention'} class:resource-update-state-error={updatePhase === 'error'} class:resource-update-state-ready={updatePhase === 'ready' || updatePhase === 'installed'} role="status" aria-live="polite">
-            <div class="resource-update-state-heading">
-              <span class="resource-update-state-dot" aria-hidden="true"></span>
-              <strong>{updatePhase === 'attention' && updateRetry?.kind === 'status' ? 'Remote check incomplete' : updatePhaseLabel(updatePhase)}</strong>
-            </div>
-            {#if updateMessage}
-              <div class="resource-update-state-message">{updateMessage}</div>
-            {/if}
-            {#if offlineStatus}
-              <div class="resource-local-summary">
-                <div><strong>Local catalogs:</strong> {localPrimarySummary.present}/{localPrimarySummary.total} available · {localPrimarySummary.indexed}/{localPrimarySummary.total} indexed.</div>
-                <div>Imported DNA profiles and remote freshness are checked separately.</div>
-              </div>
-            {/if}
-            {#if (updatePhase === 'attention' || updatePhase === 'error') && updateRetry}
-              <button
-                type="button"
-                class="btn btn-secondary btn-xs resource-update-retry"
-                disabled={isCheckingStatus || syncingAll || updatingAllOutdated || Object.values(syncingAsset).some(Boolean)}
-                onclick={handleRetryUpdate}
-              >
-                {isCheckingStatus ? 'Retrying…' : 'Retry'}
-              </button>
-            {/if}
-            {#if lastSuccessfulUpdateAt}
-              <div class="resource-update-state-time">Last successful update: {new Date(lastSuccessfulUpdateAt).toLocaleString()}</div>
-            {/if}
-          </div>
-        {/if}
-
-        {#if needsAttention || importingAny}
-          <div class="db-attention-banner">
-            {#if importingAny}
-              <div>Import in progress — catalogs are processed in order while SQLite is occupied.</div>
-            {/if}
-            {#if notDownloadedPrimary.length > 0}
-              <div><strong>Not downloaded:</strong> {notDownloadedPrimary.join(', ')}.</div>
-            {/if}
-            {#if notIndexedPrimary.length > 0}
-              <div><strong>Downloaded but not indexed:</strong> {notIndexedPrimary.join(', ')} — use Re-sync (or wait if import is already running).</div>
-            {/if}
-            {#if pendingUpdates.length > 0}
-              <div class="updates-panel">
-                <div>
-                  <strong>{pendingUpdates.length} newer remote file{pendingUpdates.length === 1 ? '' : 's'}</strong>
-                  {#if primaryUpdatesAvailable === 0}
-                    — supporting asset(s) only (not GWAS/ClinVar/PharmGKB/dbSNP)
-                  {:else if primaryUpdatesAvailable < pendingUpdates.length}
-                    — {primaryUpdatesAvailable} primary · {pendingUpdates.length - primaryUpdatesAvailable} supporting
-                  {/if}
-                </div>
-                <ul class="updates-named-list">
-                  {#each pendingUpdates as u (u.asset_id)}
-                    <li>
-                      <div class="update-item-meta">
-                        <strong>{u.label}</strong>
-                        <span class="update-item-kind">
-                          Tier {u.tier} · {u.primary ? 'primary catalog' : 'supporting asset'}
-                          {#if u.display_size}
-                            · {u.display_size}
-                          {/if}
-                        </span>
-                        {#if u.message}
-                          <span class="update-item-msg">{u.message}</span>
-                        {/if}
-                      </div>
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-xs"
-                        aria-label={`Update ${u.label}`}
-                        disabled={!!syncingAsset[u.asset_id] || bulkBusy || sweepRunning || updatingAllOutdated || !runtimeAvailable}
-                        onclick={() => handleSyncAsset(u.asset_id, forceRedownload)}
-                      >
-                        {syncingAsset[u.asset_id] ? 'Updating…' : 'Update'}
-                      </button>
-                    </li>
-                  {/each}
-                </ul>
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm updates-all-btn"
-                  disabled={bulkBusy || updatingAllOutdated || Object.values(syncingAsset).some(Boolean) || sweepRunning || !runtimeAvailable}
-                  onclick={handleUpdateAllOutdated}
-                >
-                  {updatingAllOutdated ? 'Updating all…' : `Update all ${pendingUpdates.length} outdated`}
-                </button>
-                <div class="update-footnote">
-                  Update downloads the newer remote file then re-imports. Re-sync only re-imports the local file you already have.
-                </div>
-              </div>
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Custom Directory Row -->
-        <div class="dir-setting">
-          <span class="setting-label">Download Location</span>
-          <div class="setting-row">
-            <input
-              type="text"
-              placeholder="Default App Directory"
-              value={customDir || ''}
-              readonly
-              aria-label="Download location"
-              class="download-location-input"
-            />
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm compact-sidebar-button"
-              onclick={handleBrowseDir}
-            >
-              Browse
-            </button>
-          </div>
-          {#if customDir}
-            <button
-              type="button"
-              onclick={handleResetDir}
-              class="reset-dir-btn"
-            >
-              Reset to Default
-            </button>
-          {/if}
-        </div>
-
-        <!-- Force re-download checkbox -->
-        <label class="force-redownload-label">
-          <input type="checkbox" bind:checked={forceRedownload} />
-          Force re-download existing files
-        </label>
-
-        <hr class="sidebar-rule" />
-
-        <!-- Sync All Missing -->
-        <button
-          type="button"
-          class="btn btn-primary btn-sm full-width-sidebar-button"
-          onclick={handleSyncAllMissing}
-          disabled={bulkBusy || Object.values(syncingAsset).some(Boolean) || !offlineStatus || sweepRunning || !runtimeAvailable}
-        >
-          {syncingAll ? '⏳ Syncing All…' : '⬇️ Sync All Missing'}
-        </button>
-
-        {#if syncingAll}
-          <div class="bulk-sync-panel" role="status" aria-live="polite">
-            <ActivityPulse message={bulkSyncMessage || 'Sync All Missing · working…'} accent="var(--status-success-text)" />
-            {#if bulkActiveAssetId && downloadProgress[bulkActiveAssetId]}
-              {@const prog = downloadProgress[bulkActiveAssetId]}
-              <DownloadProgressDetails progress={prog} compact label="Bulk download" />
-            {:else if bulkActiveAssetId && importProgress[bulkActiveAssetId]}
-              {@const imp = importProgress[bulkActiveAssetId]}
-              <ProgressTrack percent={imp.percent ?? -1} variant="indexing" spaced label="Bulk indexing progress" />
-              <div class="bulk-sync-meta bulk-sync-meta-indexing">
-                <span>{imp.percent != null && imp.percent >= 0 ? `${imp.percent}%` : 'indexing…'}</span>
-                {#if imp.eta_seconds != null}
-                  <span>{imp.eta_seconds}s remaining</span>
-                {/if}
-              </div>
-            {:else if bulkActiveAssetId && syncPhase[bulkActiveAssetId]?.phase === 'download'}
-              <ProgressTrack variant="preparing" spaced label="Preparing bulk download" />
-              <div class="progress-preparing">Connecting to source · checking saved partial data…</div>
-            {/if}
-          </div>
-        {/if}
-
-        {#if syncMessages.__all__ && !syncingAll}
-          <div class="bulk-sync-summary">{syncMessages.__all__}</div>
-        {/if}
-
-        {#if importingAny}
-          <button
-            type="button"
-            class="btn btn-secondary btn-sm full-width-sidebar-button"
-            onclick={handleCancelImport}
-          >
-            ⏹ Cancel import
-          </button>
-        {/if}
-
-        {#if syncErrors.__all__}
-          <div class="sync-error-block">
-            <strong>⚠️ Sync errors:</strong>
-            <pre class="sidebar-error-detail">{syncErrors.__all__}</pre>
-          </div>
-        {/if}
-
-        <hr class="sidebar-rule" />
-
-        <!-- Individual Databases list -->
-        <div class="db-list">
-          {#each DB_DEFS as db}
-            {@const btnState = assetButtonState(db.tierNum, db.assetId)}
-            {@const prog = downloadProgress[db.assetId]}
-            {@const phase = syncPhase[db.assetId]}
-            {@const isActive = assetIsShowingProgress(db.assetId)}
-            <div class="db-item-wrap">
-              <div class="db-item">
-                <div class="db-item-meta">
-                  <span class="db-item-title">
-                    <strong>{db.label}</strong>
-                    {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, findAsset(db.tierNum, db.assetId)) || companionNeedsUpdate(db)}
-                      <Tooltip label="Update available" description="A newer file is available on the server for this catalog or one of its supporting files.">
-                        <span class="update-pill">update</span>
-                      </Tooltip>
-                    {/if}
-                    <Tooltip label={db.label} description={assetTooltip(db)}>
-                      <span class="info-icon">ⓘ</span>
-                    </Tooltip>
-                  </span>
-                  <span class="db-item-status">
-                    {getAssetStatusLine(db.tierNum, db.assetId)}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-xs db-action-button"
-                  aria-label={`${btnState.label} ${db.label}`}
-                  class:btn-primary={btnState.variant === 'primary'}
-                  class:btn-secondary={btnState.variant === 'secondary'}
-                  class:btn-warning={btnState.variant === 'warning'}
-                  onclick={() => handleSyncAsset(db.assetId, btnState.isForce || forceRedownload)}
-                  disabled={!!syncingAsset[db.assetId] || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || !runtimeAvailable}
-                >
-                  {btnState.label}
-                </button>
-              </div>
-
-              <!-- Per-asset progress bar (shown while downloading or importing) -->
-              {#if isActive}
-                {#if prog && !importProgress[db.assetId]}
-                  <DownloadProgressDetails progress={prog} label={`${db.label} download`} />
-                {:else if importProgress[db.assetId]}
-                  {@const imp = importProgress[db.assetId]}
-                  <ProgressTrack percent={imp.percent ?? -1} variant="indexing" label={`${db.label} indexing progress`} />
-                  <div class="progress-meta progress-meta-indexing">
-                    <span>{imp.percent != null && imp.percent >= 0 ? imp.percent + '%' : 'indexing…'}</span>
-                    {#if imp.eta_seconds !== undefined && imp.eta_seconds !== null}
-                      <span>{imp.eta_seconds}s remaining</span>
-                    {/if}
-                  </div>
-                  <div class="import-status-line">
-                    <span class="import-dot"></span>
-                    <span>{imp.message}</span>
-                  </div>
-                {:else if phase?.phase === 'download'}
-                  <ProgressTrack variant="preparing" label={`${db.label} download connection`} />
-                  <div class="progress-preparing">Connecting to source · checking whether a saved download can resume…</div>
-                {:else}
-                  <ProgressTrack variant="preparing" label={`${db.label} import preparation`} />
-                  <div class="progress-preparing">
-                    Preparing import (no download needed)…
-                  </div>
-                {/if}
-              {/if}
-
-              {#if 'companions' in db}
-                <ul class="db-companions">
-                  {#each db.companions as c (c.assetId)}
-                    {@const companion = findAssetById(c.assetId)}
-                    {@const cBusy = assetIsShowingProgress(c.assetId)}
-                    <li class="db-companion">
-                      <div class="db-companion-meta">
-                        <span class="db-companion-label">
-                          {c.label}
-                          {#if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
-                            <Tooltip label="Update available" description="A newer supporting file is available on the server.">
-                              <span class="update-pill">update</span>
-                            </Tooltip>
-                          {/if}
-                        </span>
-                        <span class="db-companion-status">
-                          {#if !companion}
-                            Checking…
-                          {:else if cBusy}
-                            {syncPhase[c.assetId]?.message || importProgress[c.assetId]?.message || 'Updating…'}
-                          {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion)}
-                            Update available · {companion.display_size || companion.message}
-                          {:else if companion.row_count > 0}
-                            {companion.row_count.toLocaleString()} rows
-                          {:else if companion.local_present}
-                            On disk · not indexed
-                          {:else}
-                            Not downloaded
-                          {/if}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        class="btn btn-xs"
-                        aria-label={`${hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload ? 'Update' : !companion?.local_present ? 'Download' : 'Re-sync'} ${c.label}`}
-                        class:btn-warning={hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
-                        class:btn-secondary={!hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) && !forceRedownload}
-                        disabled={cBusy || bulkBusy || isCheckingStatus || !offlineStatus || sweepRunning || updatingAllOutdated || !runtimeAvailable}
-                        onclick={() => handleSyncAsset(c.assetId, forceRedownload)}
-                      >
-                        {#if cBusy}
-                          …
-                        {:else if !companion?.local_present}
-                          Download
-                        {:else if hasFreshProvenOfflineUpdate(offlineStatusFresh, companion) || forceRedownload}
-                          Update
-                        {:else}
-                          Re-sync
-                        {/if}
-                      </button>
-                    </li>
-                    {#if cBusy && (downloadProgress[c.assetId] || importProgress[c.assetId])}
-                      <li class="db-companion-progress">
-                        {#if downloadProgress[c.assetId] && !importProgress[c.assetId]}
-                          {@const cprog = downloadProgress[c.assetId]}
-                          <ProgressTrack percent={cprog.percent} label={`${c.label} download progress`} />
-                        {:else if importProgress[c.assetId]}
-                          {@const cimp = importProgress[c.assetId]}
-                          <ProgressTrack percent={cimp.percent ?? -1} variant="indexing" label={`${c.label} indexing progress`} />
-                        {/if}
-                      </li>
-                    {/if}
-                  {/each}
-                </ul>
-              {/if}
-
-              <!-- Per-asset error display -->
-              {#if syncErrors[db.assetId]}
-                <div class="sync-error-block asset-feedback">
-                  <strong>⚠️ Error:</strong>
-                  <span>{syncErrors[db.assetId]}</span>
-                </div>
-              {/if}
-
-              <!-- Per-asset success message -->
-              {#if syncMessages[db.assetId] && !isActive}
-                <div class="sync-ok-block asset-feedback">
-                  <span>✅ {syncMessages[db.assetId].split('\n')[0]}</span>
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-
-        {#if referenceDetails}
-          <div class="ref-status-details">
-            <div class="ref-status-heading">
-              Catalog readiness
-            </div>
-
-            <div class="status-group">
-              <div class="status-group-title">ClinVar</div>
-              <div class="status-group-grid">
-                <span>Status:</span>
-                <strong class:status-ready={referenceDetails.clinvar_indexed_rows > 0} class:status-pending={referenceDetails.clinvar_indexed_rows === 0 && referenceDetails.clinvar_raw_found} class:status-missing={referenceDetails.clinvar_indexed_rows === 0 && !referenceDetails.clinvar_raw_found}>
-                  {#if referenceDetails.clinvar_indexed_rows > 0}
-                    Ready · {referenceDetails.clinvar_indexed_rows.toLocaleString()} rows
-                  {:else if referenceDetails.clinvar_raw_found}
-                    Downloaded · not indexed
-                  {:else}
-                    Not downloaded
-                  {/if}
-                </strong>
-                {#if report}
-                  <span>Hits in current report:</span>
-                  <strong class:status-hit-active={referenceDetails.clinvar_rsid_hits > 0} class:status-hit-empty={referenceDetails.clinvar_rsid_hits === 0}>
-                    {referenceDetails.clinvar_rsid_hits.toLocaleString()}
-                  </strong>
-                {/if}
-                {#if referenceDetails.clinvar_last_indexed}
-                  <span>Last indexed:</span>
-                  <strong>{new Date(referenceDetails.clinvar_last_indexed * 1000).toLocaleDateString()}</strong>
-                {/if}
-              </div>
-              {#if referenceDetails.clinvar_raw_found && referenceDetails.clinvar_indexed_rows === 0}
-                <div class="status-warn">Raw ClinVar file is on disk but SQLite has 0 rows — use Re-sync to import (Update only if a newer remote file exists).</div>
-              {/if}
-            </div>
-
-            <div class="status-group status-group-spaced">
-              <div class="status-group-title">dbSNP (rsID merge map)</div>
-              <div class="status-group-grid">
-                <span>Status:</span>
-                <strong class:status-ready={referenceDetails.dbsnp_merge_mappings_indexed > 0} class:status-pending={referenceDetails.dbsnp_merge_mappings_indexed === 0 && referenceDetails.dbsnp_merged_raw_found} class:status-missing={referenceDetails.dbsnp_merge_mappings_indexed === 0 && !referenceDetails.dbsnp_merged_raw_found}>
-                  {#if referenceDetails.dbsnp_merge_mappings_indexed > 0}
-                    Ready · {referenceDetails.dbsnp_merge_mappings_indexed.toLocaleString()} mappings
-                  {:else if referenceDetails.dbsnp_merged_raw_found}
-                    Downloaded · not indexed
-                  {:else}
-                    Not downloaded
-                  {/if}
-                </strong>
-                {#if report}
-                  <span>rsIDs remapped in report:</span>
-                  <strong class:status-hit-active={referenceDetails.dbsnp_rsids_normalized > 0} class:status-hit-empty={referenceDetails.dbsnp_rsids_normalized === 0}>
-                    {referenceDetails.dbsnp_rsids_normalized.toLocaleString()}
-                  </strong>
-                {/if}
-              </div>
-              {#if referenceDetails.dbsnp_merged_raw_found && referenceDetails.dbsnp_merge_mappings_indexed === 0}
-                <div class="status-warn">Archive on disk but 0 merge mappings indexed — import still needed (large job).</div>
-              {/if}
-              <div class="status-note">Offline dbSNP here is the NCBI <em>refsnp-merged</em> + withdrawn catalog (rsID merge map + dates/citations). Alleles, placements, and AF live in the huge per-chromosome <em>refsnp-chr*.json</em> files — we do not ingest those yet. Report AF chips use the local gnomAD cache when present (not this merge DB).</div>
-            </div>
-
-            <div class="status-group status-group-more-spaced">
-              <div class="status-group-title">gnomAD allele frequencies</div>
-              <div class="status-group-grid">
-                <span>Status:</span>
-                <strong class:status-ready={gnomadReadiness?.ready === true && gnomadReadiness.frequency_cache_ready} class:status-pending={gnomadReadiness?.ready === true && !gnomadReadiness.frequency_cache_ready} class:status-missing={gnomadReadiness?.ready !== true && (gnomadReadiness?.indexes_cached ?? 0) === 0}>
-                  {#if gnomadReadiness?.ready && gnomadReadiness.frequency_cache_ready}
-                    Ready · gnomAD {gnomadReadiness.release} · {gnomadReadiness.frequency_cache_rows.toLocaleString()} frequency rows
-                  {:else if gnomadReadiness?.ready}
-                    Indexes ready · gnomAD {gnomadReadiness.release} · frequency cache needs refresh
-                  {:else if gnomadReadiness}
-                    {gnomadReadiness.indexes_cached}/{gnomadReadiness.indexes_expected} indexes · {gnomadReadiness.summary}
-                  {:else}
-                    Checking…
-                  {/if}
-                </strong>
-              </div>
-              <div class="status-note">Indexes and allele-frequency rows are reported separately. {gnomadReadiness?.frequency_cache_summary || ''} Remote gnomAD follows the newest compatible public release when available; local/pinned sources stay unchanged.</div>
-              {#if gnomadReadiness?.ready && selectedSample && reportRsids.length > 0}
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm download-gnomad-button"
-                  disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
-                  onclick={handleRefreshGnomadFrequencyCache}
-                >
-                  {gnomadBusy ? 'Refreshing frequencies…' : 'Refresh report frequencies'}
-                </button>
-              {/if}
-              {#if gnomadReadiness && !gnomadReadiness.ready}
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm download-gnomad-button"
-                  disabled={gnomadBusy || sweepRunning || !runtimeAvailable}
-                  onclick={handleDownloadGnomadIndexes}
-                >
-                  {gnomadBusy ? 'Downloading…' : 'Download gnomAD indexes'}
-                </button>
-              {/if}
-              {#if gnomadHint}
-                <div class="status-note">{gnomadHint}</div>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-      </div>
-    {/if}
-  </div>
-  </div>
-
-  <div class="sidebar-footer no-print" role="toolbar" aria-label="Library and appearance">
-    <LibraryPanel />
-    <ThemeToggle />
     <div class="sidebar-footer-meta" aria-label="Application version">
       <span class="sidebar-app-version">{$appUpdateState.currentVersion || 'Preview build'}</span>
     </div>

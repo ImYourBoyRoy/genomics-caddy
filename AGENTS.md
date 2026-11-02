@@ -11,10 +11,22 @@ session notes live in `MEMORY.md` and must stay untracked.
 Raw DNA fixtures and local app data are private; do not print genotype values,
 copy them into logs, or commit secrets.
 
+The Server_Manager WinServer guest now provides a separate native Windows
+compilation lane. This proves source/dependency/build compatibility only; it
+does not establish native UI launch, accessibility, installer signing, or
+release acceptance. Do not generalize the existing Linux evidence to those
+surfaces.
+
 Generated release staging under repository-root `builds/` and `App/` is local
 output and must remain untracked. Ignore app databases and SQLite sidecars in
 any `App/Data/` tree. The curated runtime mirror at
 `src-tauri/App/Data/marker-packs/` is source-managed and must remain tracked.
+
+Remote Linux and Windows builds use the sibling `Remote_Build` toolkit's
+`remote_build.cache` policy. This project declares only its exact
+`src-tauri/target` and protected checkout; do not replace that with a global
+Cargo, `/dev/shm`, or checkout-wide purge. The macOS guest retains its
+platform-specific artifact-preserving cleanup.
 
 ## Resource workflow
 
@@ -88,7 +100,10 @@ AI and clinician technical handoffs always include the exact raw calls used by
 their findings; the deprecated profile export toggles must not be reintroduced
 as suppression controls. Connected AI Chat includes raw calls for the findings
 selected by its persisted context mode and must disclose the destination when
-the Ollama endpoint is remote. Session context mode is persisted with chat
+the Ollama endpoint is remote or when the ChatGPT plan provider is selected
+(OpenAI `api.openai.com`). ChatGPT uses browser OAuth + PKCE with no client
+secret and no API key; tokens stay in the OS credential manager and never
+enter the webview. Do not invent ChatGPT env secrets for release. Session context mode is persisted with chat
 history so reopening a session cannot silently change its genotype scope.
 
 GRCh37 and explicit GRCh38 imports are supported under the parser's

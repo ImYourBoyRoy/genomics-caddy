@@ -95,7 +95,7 @@
 
   .search-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(88, 80, 236, 0.15);
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.15);
   }
 
   .clear-input-btn {

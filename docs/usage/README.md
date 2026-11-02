@@ -6,10 +6,10 @@ It is not a medical guide.
 ## Reference catalogs
 
 Signed GitHub builds do not ship ClinVar, dbSNP, GWAS, PharmGKB, or the
-liftover chain. After you install, open **Data & updates** in the left
-sidebar and run **Sync All Missing**. Wait until those catalogs are
+liftover chain. After you install, open **Settings** (left sidebar footer) →
+**Data & updates** and run **Sync All Missing**. Wait until those catalogs are
 downloaded **and indexed**. For typical AncestryDNA / 23andMe GRCh37
-files, also use **Liftover assembly** → **Download chain**. Marker packs
+files, also use **Settings** → **Genome assembly** → **Download chain**. Marker packs
 that ship with the app are not a substitute for these databases. The current
 ClinVar variant and submission-summary downloads together are about 846 MB
 compressed; their local indexes require extra disk space. Transfer estimates
@@ -184,7 +184,8 @@ Use **Share this report** under the report header.
 Clinician and AI bundles also carry import provenance, claim boundaries, and
 a privacy note. Share them only with the intended clinician, counselor, or
 AI endpoint. Connected Chat includes raw calls for whatever finding scope
-that session saved; a remote Ollama URL is disclosed in the UI.
+that session saved; a remote Ollama URL or ChatGPT / OpenAI destination is
+disclosed in the UI.
 
 Audience ZIP bundles contain `report.md`, `dna_analysis.json`, `context.json`,
 `diary.csv`, `manifest.json`, and `PRIVACY.txt`.
@@ -203,4 +204,4 @@ UI removes its `samples/<id>/` folder.
 ## Related
 
 - MCP for agents: [../mcp/README.md](../mcp/README.md)
-- Local AI chat: [../ai-chat/README.md](../ai-chat/README.md)
+- Connected AI chat (Ollama or ChatGPT plan): [../ai-chat/README.md](../ai-chat/README.md)

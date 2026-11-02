@@ -33,6 +33,7 @@
   import BootstrapOverlay from "$lib/components/common/bootstrap/BootstrapOverlay.svelte";
   import {
     DB_TICKER_MESSAGES,
+    PHASE_ORDER,
     type BootstrapPhase,
   } from "$lib/components/common/bootstrap/bootstrapPhases";
   import { dialogStore } from "$lib/utils/dialogState.svelte";
@@ -63,10 +64,12 @@
 
   // Stylesheet imports
   import "$lib/styles/theme.css";
+  import "$lib/styles/motion.css";
   import "$lib/styles/print.css";
   import "$lib/styles/components/context-panel.css";
 
   import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "$lib/types/genomics";
+  import type { ResourceSyncTelemetry } from "$lib/utils/resourceSyncTelemetry";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
   import {
     EMPTY_PROFILE_CONTEXT,
@@ -103,6 +106,7 @@
   let bootstrapStatus = $state<AppBootstrapStatus | null>(null);
   let runtimeAvailable = $state(true);
   let isResourceSyncing = $state(false);
+  let resourceSyncTelemetry = $state.raw<ResourceSyncTelemetry | null>(null);
   let resourceSyncOverlayDismissed = $state(false);
   let isImportPreparing = $state(false);
   let importPhase = $state<ImportPhase>("idle");
@@ -114,7 +118,7 @@
   let importOverlayDismissed = $state(false);
   let isChainDownloaded = $state(false);
   let isDownloadingChain = $state(false);
-  
+
   let isImporting = $state(false);
   let progressPercent = $state(0);
   let progressStatus = $state("");
@@ -151,29 +155,47 @@
   let importOverlayPhase = $derived(bootstrapPhaseForImport(importPhase));
   let importOverlayProgress = $derived({ percentage: progressPercent, status: progressStatus });
 
-  let activeTab = $state("report"); // report | context | diary | map | discovery | help | legal | browser | mcp | agent | research | ai | connections
-  const ADVANCED_TAB_KEY = "genomics_caddy_last_advanced_tab";
+  let pendingReportJump = $state("");
+  let activeTab = $state("report"); // report | plan | context | diary | map | discovery | help | legal | browser | mcp | agent | research | ai | connections
+const NAV_LAST_TAB_PREFIX = "genomics_caddy_last_tab_";
 
-  const PRIMARY_TABS = [
-    { id: "report", label: "Trait Report" },
-    { id: "context", label: "Context" },
-    { id: "diary", label: "Diary" },
-    { id: "map", label: "Chromosome Map" },
-    { id: "discovery", label: "Discovery" },
-    { id: "help", label: "Help" },
+  /** Five task-first destinations plus a quiet "More"; every tab id stays routable. */
+  const NAV_GROUPS = [
+    { id: "report", label: "Report", tabs: [{ id: "report", label: "Trait Report" }] },
+    { id: "plan", label: "Plan", tabs: [{ id: "plan", label: "Plan" }] },
+    { id: "ai", label: "Ask AI", tabs: [{ id: "ai", label: "AI Consultation" }] },
+    {
+      id: "explore",
+      label: "Explore",
+      tabs: [
+        { id: "discovery", label: "Discovery" },
+        { id: "map", label: "Chromosome Map" },
+        { id: "browser", label: "Raw Browser" },
+        { id: "research", label: "Vector Research" },
+        { id: "agent", label: "Research Agent" },
+      ],
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      tabs: [
+        { id: "context", label: "Context" },
+        { id: "diary", label: "Diary" },
+      ],
+    },
+    {
+      id: "more",
+      label: "More",
+      tabs: [
+        { id: "help", label: "Help" },
+        { id: "connections", label: "Connections" },
+        { id: "mcp", label: "MCP Integration" },
+        { id: "legal", label: "Legal & Privacy" },
+      ],
+    },
   ] as const;
 
-  const ADVANCED_TABS = [
-    { id: "connections", label: "Connections" },
-    { id: "browser", label: "Raw Browser" },
-    { id: "mcp", label: "MCP Integration" },
-    { id: "agent", label: "Research Agent" },
-    { id: "research", label: "Vector Research" },
-    { id: "ai", label: "AI Consultation" },
-    { id: "legal", label: "Legal & Privacy" },
-  ] as const;
-
-  let advancedActive = $derived(ADVANCED_TABS.some((t) => t.id === activeTab));
+  let activeGroup = $derived(NAV_GROUPS.find((g) => g.tabs.some((t) => t.id === activeTab)));
 
   type DeferredPanel = Component<Record<string, unknown>>;
   let deferredPanels = $state<Record<string, DeferredPanel>>({});
@@ -184,6 +206,7 @@
     if (deferredPanels[tab] || deferredPanelLoading === tab) return;
     const deferredTabs = new Set([
       "report",
+      "plan",
       "context",
       "diary",
       "map",
@@ -205,6 +228,7 @@
       const module = await (async () => {
         switch (tab) {
           case "report": return import("$lib/components/report/ReportView.svelte");
+          case "plan": return import("$lib/components/report/PlanView.svelte");
           case "context": return import("$lib/components/context/ContextPanel.svelte");
           case "diary": return import("$lib/components/context/DiaryPanel.svelte");
           case "map": return import("$lib/components/genome/GenomeMap.svelte");
@@ -246,11 +270,12 @@
     profileContext = loadProfileContext(selectedSample?.id);
   });
 
-  function selectTab(tab: string) {
+function selectTab(tab: string) {
     activeTab = tab;
-    if (ADVANCED_TABS.some((t) => t.id === tab)) {
+    const group = NAV_GROUPS.find((g) => g.tabs.some((t) => t.id === tab));
+    if (group && group.tabs.length > 1) {
       try {
-        localStorage.setItem(ADVANCED_TAB_KEY, tab);
+        localStorage.setItem(`${NAV_LAST_TAB_PREFIX}${group.id}`, tab);
       } catch {
         /* ignore */
       }
@@ -269,19 +294,32 @@
     }
   }
 
-  function openAdvancedArea() {
-    if (advancedActive) return;
-    try {
-      const last = localStorage.getItem(ADVANCED_TAB_KEY);
-      if (last && ADVANCED_TABS.some((t) => t.id === last)) {
-        selectTab(last);
-        return;
+  function openGroup(group: (typeof NAV_GROUPS)[number]) {
+    if (activeGroup?.id === group.id) return;
+    let target: string = group.tabs[0].id;
+    if (group.tabs.length > 1) {
+      try {
+        const last = localStorage.getItem(`${NAV_LAST_TAB_PREFIX}${group.id}`);
+        if (last && group.tabs.some((t) => t.id === last)) target = last;
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
     }
-    selectTab(ADVANCED_TABS[0].id);
+    selectTab(target);
   }
+
+  function onGroupKeydown(e: KeyboardEvent) {
+    const i = NAV_GROUPS.findIndex((g) => g.id === activeGroup?.id);
+    if (i < 0) return;
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      openGroup(NAV_GROUPS[(i + 1) % NAV_GROUPS.length]);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      openGroup(NAV_GROUPS[(i - 1 + NAV_GROUPS.length) % NAV_GROUPS.length]);
+    }
+  }
+
 
   let generatedReport = $state<GeneratedReport | null>(null);
   let rawReport = $state<NormalizedReport | null>(null);
@@ -290,6 +328,10 @@
   let reportProgressSampleId = $state<number | null>(null);
   let reportError = $state("");
   let reportRequestGeneration = 0;
+  // While the startup report is generating, show the backend's live status instead of a static line.
+  let overlayMessage = $derived(
+    bootstrapPhase === "report" && reportProgress?.status ? reportProgress.status : bootstrapMessage,
+  );
 
   let searchRsid = $state("");
   let browseChr = $state("1");
@@ -307,19 +349,17 @@
   let aiOnlyActiveFindings = $state(true);
   let aiTemperature = $state(0.0);
   let researchJob = $state<import("$lib/types/research").ResearchJob | null>(null);
-  
+
   let aiInitialSearchQuery = $state("");
   let aiActiveView = $state<"chat" | "evidence">("chat");
 
   let highlightRsid = $state("");
   let mapFocusRsid = $state("");
   let activeSampleId = $state<number | null>(null);
-  let expandDatabases = $state(false);
   let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
   let offlineStatusFreshForWelcome = $state(false);
   let sidebarApi = $state<{
     syncAllMissing: () => Promise<void>;
-    expandDatabases: () => void;
   } | null>(null);
 
   const SEX_DIALOG_TITLE = "Sex";
@@ -393,19 +433,9 @@
   }
 
   function handleWelcomeDownloadDatabases() {
-    expandDatabases = true;
-    sidebarApi?.expandDatabases();
+    // Progress is shown by the startup overlay; Settings stays closed.
     sidebarApi?.syncAllMissing();
   }
-
-  $effect(() => {
-    if (expandDatabases) {
-      const t = setTimeout(() => {
-        expandDatabases = false;
-      }, 500);
-      return () => clearTimeout(t);
-    }
-  });
 
   function handleExploreResearch(rsid: string) {
     aiInitialSearchQuery = rsid;
@@ -414,6 +444,20 @@
   }
 
   function navigateToVariant(rsid: string, target: VariantNavTarget) {
+    if (target === "report") {
+      // Route through the same mount-safe jump used by Plan "View proof" so the
+      // report can expand the section and scroll once its cards exist.
+      const normalized = rsid.trim().toLowerCase();
+      const linkId = generatedReport?.sections
+        .flatMap((section) => section.markers)
+        .find((marker) => marker.rsid.toLowerCase() === normalized)?.link_id;
+      if (linkId) {
+        highlightRsid = normalized;
+        pendingReportJump = linkId;
+        activeTab = "report";
+        return;
+      }
+    }
     goToVariant(rsid, target, {
       getSelectedSample: () => selectedSample,
       setState: (patch) => {
@@ -590,6 +634,9 @@
 
     const { pendingSample } = await runPageBootstrap({
       onPhase: (phase, message) => {
+        // Startup progress only moves forward; a late ticker or event must never
+        // rewind the checklist to an earlier step.
+        if (phase !== "error" && PHASE_ORDER.indexOf(phase) < PHASE_ORDER.indexOf(bootstrapPhase)) return;
         bootstrapPhase = phase;
         bootstrapMessage = message;
       },
@@ -658,6 +705,12 @@
       warmReportFn: (id) => warmReport(id),
     });
     maybeOfferInconclusiveContext(sample, generatedReport != null);
+  }
+
+  /** Sidebar clicks on the already-open profile must not restart report generation. */
+  async function selectSampleFromList(sample: GenomeSample): Promise<void> {
+    if (selectedSample?.id === sample.id && (generatedReport || isGeneratingReport)) return;
+    await selectSample(sample);
   }
 
   async function openSampleChromosomeContext(sample: GenomeSample): Promise<void> {
@@ -830,7 +883,9 @@
 {:else if showBootstrapOverlay}
   <BootstrapOverlay
     phase={bootstrapPhase}
-    message={bootstrapMessage}
+    message={overlayMessage}
+    reportProgress={reportProgress}
+    resourceSync={resourceSyncTelemetry}
     status={bootstrapStatus}
     error={bootstrapError}
     mode={isResourceSyncing ? "resources" : "startup"}
@@ -859,7 +914,6 @@
       report={generatedReport}
       {runtimeAvailable}
       sweepRunning={researchJob?.status === "running" && researchJob.loop_active !== false}
-      {expandDatabases}
       onReady={(api) => {
         sidebarApi = api;
       }}
@@ -870,15 +924,16 @@
       onDownloadChain={downloadChain}
       onBrowseFile={browseFile}
       onImportGenome={importGenome}
-      onSelectSample={selectSample}
+      onSelectSample={selectSampleFromList}
       onOpenChromosomeContext={openSampleChromosomeContext}
       onDeleteSample={deleteSample}
       onOpenConnections={() => selectTab("connections")}
       onResourcesUpdated={async () => {
         await reloadReport();
       }}
-      onResourceSyncStateChange={({ active, message }) => {
+      onResourceSyncStateChange={({ active, message, telemetry }) => {
         isResourceSyncing = active;
+        resourceSyncTelemetry = active ? (telemetry ?? null) : null;
         if (active) {
           resourceSyncOverlayDismissed = false;
           bootstrapPhase = "stats";
@@ -950,48 +1005,41 @@
                 </button>
               </div>
             </div>
-            <div class="tabs" role="tablist" aria-label="Primary views">
-              {#each PRIMARY_TABS as tab (tab.id)}
+<div class="tabs" role="tablist" aria-label="Primary views">
+              {#each NAV_GROUPS as group (group.id)}
+                {@const single = group.tabs.length === 1}
+                {@const groupActive = activeGroup?.id === group.id}
                 <button
                   type="button"
                   class="tab-btn"
-                  class:active={activeTab === tab.id}
+                  class:active={groupActive}
                   role="tab"
-                  id="tab-{tab.id}"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls="panel-{tab.id}"
-                  tabindex={activeTab === tab.id ? 0 : -1}
-                  onclick={() => selectTab(tab.id)}
-                  onkeydown={(e) => onTabKeydown(e, PRIMARY_TABS.map((t) => t.id))}
+                  id={single ? `tab-${group.tabs[0].id}` : `group-${group.id}`}
+                  aria-selected={groupActive}
+                  aria-controls={single ? `panel-${group.tabs[0].id}` : groupActive ? "nav-subtabs" : undefined}
+                  tabindex={groupActive ? 0 : -1}
+                  onclick={() => openGroup(group)}
+                  onkeydown={onGroupKeydown}
                 >
-                  {tab.label}
+                  {group.label}
+                  {#if group.id === "explore" && researchJob?.status === "running" && researchJob.loop_active !== false}
+                    <span class="tab-status-pill running">{researchJob.enriched_count}/{researchJob.total_markers}</span>
+                  {:else if group.id === "explore" && (researchJob?.status === "paused" || researchJob?.status === "running")}
+                    <span class="tab-status-pill paused">{researchJob.status === "paused" ? "paused" : "interrupted"}</span>
+                  {/if}
                 </button>
               {/each}
-
-              <div class="tabs-advanced">
-                <button
-                  type="button"
-                  class="tab-btn tab-btn-advanced"
-                  class:active={advancedActive}
-                  aria-expanded={advancedActive}
-                  aria-controls={advancedActive ? "advanced-subtabs" : undefined}
-                  onclick={openAdvancedArea}
-                >
-                  Advanced
-                  <span class="tabs-advanced-caret" aria-hidden="true">{advancedActive ? '▴' : '▾'}</span>
-                </button>
-              </div>
             </div>
           </div>
 
-          {#if advancedActive}
+          {#if activeGroup && activeGroup.tabs.length > 1}
             <div
               class="tabs-advanced-strip"
-              id="advanced-subtabs"
+              id="nav-subtabs"
               role="tablist"
-              aria-label="Advanced views"
+              aria-label="{activeGroup.label} views"
             >
-              {#each ADVANCED_TABS as tab (tab.id)}
+              {#each activeGroup.tabs as tab (tab.id)}
                 <button
                   type="button"
                   class="tabs-advanced-chip"
@@ -1002,7 +1050,7 @@
                   aria-controls="panel-{tab.id}"
                   tabindex={activeTab === tab.id ? 0 : -1}
                   onclick={() => selectTab(tab.id)}
-                  onkeydown={(e) => onTabKeydown(e, ADVANCED_TABS.map((t) => t.id))}
+                  onkeydown={(e) => onTabKeydown(e, activeGroup.tabs.map((t) => t.id))}
                 >
                   {tab.label}
                   {#if tab.id === "research"}
@@ -1040,9 +1088,27 @@
                 onOpenDiscovery={() => selectTab("discovery")}
                 onOpenHelp={() => selectTab("help")}
                 onOpenContext={() => selectTab("context")}
+                onOpenPlan={() => selectTab("plan")}
+                jumpToLinkId={pendingReportJump}
+                onJumpHandled={() => (pendingReportJump = "")}
               />
             {:else}
               <div class="tab-loading-state" role="status">{deferredPanelStatus("report", "Trait Report")}</div>
+            {/if}
+          {:else if activeTab === "plan"}
+            {#if deferredPanels.plan}
+              {@const PlanPanel = deferredPanels.plan}
+              <PlanPanel
+                {generatedReport}
+                {isGeneratingReport}
+                onViewProof={(linkId: string) => {
+                  pendingReportJump = linkId;
+                  selectTab("report");
+                }}
+                onOpenReport={() => selectTab("report")}
+              />
+            {:else}
+              <div class="tab-loading-state" role="status">{deferredPanelStatus("plan", "Plan")}</div>
             {/if}
           {:else if activeTab === "context"}
             {#if deferredPanels.context}
@@ -1184,7 +1250,7 @@
       {/if}
       {#if selectedSample !== null}
         <footer class="app-reference-note" role="note">
-          For reference only. Discuss findings and health decisions with a qualified healthcare professional.
+          DNA associations are possibilities, not diagnoses. Use them to decide what to test, and review health decisions with a qualified healthcare professional.
         </footer>
       {/if}
     </main>

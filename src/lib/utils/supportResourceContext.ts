@@ -12,6 +12,7 @@
 import actionabilityGuidance from '../marker-packs/actionability_guidance.json';
 import activityGuardrails from '../marker-packs/activity_guardrails.json';
 import allergySensitivityCatalog from '../marker-packs/allergy_sensitivity_catalog.json';
+import bpdSymptomContext from '../marker-packs/bpd_symptom_context.json';
 import callabilityRules from '../marker-packs/callability_rules.json';
 import cycleSupport from '../marker-packs/cycle_support_guidance.json';
 import consultationModes from '../marker-packs/consultation_modes.json';
@@ -76,6 +77,7 @@ export interface SupportResourceContext {
     source_registry: Record<string, unknown>;
   };
   phenotype_prompts: typeof phenotypePrompts.domains;
+  bpd_symptom_context: typeof bpdSymptomContext;
   lab_overlays: Array<Record<string, unknown>>;
   inflammation_support: typeof inflammationSupportGuidance;
   actionability_policy: {
@@ -359,6 +361,7 @@ export function buildSupportResourceContext({
     ...supportSourceIds(selectedPackIds, relevantCycleDomains),
     ...relevantCycleEvidenceLayers.flatMap((layer) => layer.sources || []),
     ...relevantPgxGenes.flatMap((gene) => gene.sources || []),
+    ...(selectedPackIds.has('neuropsych') ? bpdSymptomContext.sources : []),
     ...(selectedPackIds.has('allergy_atopy_mast_cell') || selectedPackIds.has('pgx')
       ? allergySensitivityCatalog.source_ids
       : []),
@@ -393,6 +396,10 @@ export function buildSupportResourceContext({
       source_registry: selectedSourceRecords,
     },
     phenotype_prompts: phenotype,
+    bpd_symptom_context: selectedPackIds.has('neuropsych') ? bpdSymptomContext : {
+      ...bpdSymptomContext,
+      domains: [],
+    },
     lab_overlays: overlays,
     inflammation_support: inflammationSupportGuidance,
     actionability_policy: {

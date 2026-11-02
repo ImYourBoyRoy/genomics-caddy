@@ -183,7 +183,7 @@
           </button>
         {/each}
       {:else}
-        <p class="fn-empty">No trait buckets yet.</p>
+        <p class="fn-empty">Trait categories appear once the local evidence library is indexed.</p>
       {/if}
     </aside>
 
@@ -254,7 +254,16 @@
       {:else if error}
         <div class="fn-empty">{error}</div>
       {:else if cards.length === 0}
-        <div class="fn-empty">No variants match these filters. Try a broader preset or lower quality threshold.</div>
+        <div class="fn-empty">
+          <strong>Nothing to show yet</strong>
+          <span>
+            {#if !summary?.trait_buckets?.length}
+              The local evidence library has not been indexed. Sync reference data from Settings, then reopen this view.
+            {:else}
+              No variants match these filters. Try a broader preset or lower the quality threshold.
+            {/if}
+          </span>
+        </div>
       {:else}
         <div class="fn-table-wrap">
           <table class="fn-table">

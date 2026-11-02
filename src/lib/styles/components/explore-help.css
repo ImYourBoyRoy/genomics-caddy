@@ -1,0 +1,37 @@
+/* ./src/lib/styles/components/explore-help.css
+ * Collapsible "how to read this" notes on Explore surfaces. Closed by default so
+ * the working controls stay above the fold; opens to the panel's own insight styling.
+ */
+
+details.explore-help > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+details.explore-help > summary::-webkit-details-marker { display: none; }
+
+details.explore-help > summary strong { margin: 0; }
+
+details.explore-help > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform var(--motion-fast) ease;
+}
+
+details.explore-help[open] > summary::after { transform: rotate(45deg); }
+details.explore-help[open] > summary { margin-bottom: 0.4rem; }
+
+details.explore-help > summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  details.explore-help > summary::after { transition: none; }
+}

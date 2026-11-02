@@ -34,6 +34,9 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
   // can still leave the webview visually unchanged while IPC/configuration
   // work is pending. Keep the last visible DB checkpoint moving until the
   // authoritative status arrives; real backend events continue to replace it.
+  // The ticker belongs to the database phase only: once real status arrives it
+  // is stopped, otherwise it would drag the visible phase back to "db" while
+  // the report is still generating (the startup screen appeared to restart).
   let tickerIdx = 0;
   const ticker = setInterval(() => {
     tickerIdx = (tickerIdx + 1) % DB_TICKER_MESSAGES.length;
@@ -49,6 +52,7 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
     await yieldToUi();
     const [status, paths] = await Promise.all([getAppBootstrap(), getAppPaths()]);
 
+    clearInterval(ticker);
     callbacks.onStatus(status);
     callbacks.onPaths(paths);
     callbacks.onChainPresent(status.chain_present);
@@ -59,18 +63,17 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
       `Indexed ${status.genotype_count.toLocaleString()} genotypes across your local database`
     );
     await yieldToUi();
-    await bootstrapSleep(450);
+    await bootstrapSleep(300);
 
     if (status.sample_count > 0) {
       pendingSample = status.samples[0];
       callbacks.onPhase("profile", `Loading profile: ${pendingSample.name}…`);
       await yieldToUi();
-      await bootstrapSleep(400);
+      await bootstrapSleep(180);
 
       callbacks.onPhase("report", "Analyzing genetic markers…");
       await yieldToUi();
       await callbacks.warmReport(pendingSample.id);
-      await bootstrapSleep(350);
     }
 
     callbacks.onPhase(
@@ -78,7 +81,7 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
       status.sample_count > 0 ? "All systems ready — welcome back." : "Ready — import a genome to begin."
     );
     await yieldToUi();
-    await bootstrapSleep(700);
+    await bootstrapSleep(520);
   } catch (e: unknown) {
     clearInterval(ticker);
     const message = e instanceof Error ? e.message : String(e);

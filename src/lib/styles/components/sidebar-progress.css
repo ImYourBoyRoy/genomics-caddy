@@ -1,0 +1,85 @@
+/* ./src/lib/styles/components/sidebar-progress.css
+ * Progress track/fill, indexing and import status lines shared by the profile
+ * import card and the reference-data panel.
+ */
+
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+  color: var(--text-secondary);
+  font-size: 0.6rem;
+}
+
+.progress-meta-indexing,
+.bulk-sync-meta-indexing,
+.import-status-line {
+  color: var(--status-accent-text);
+}
+
+.progress-meta-indexing {
+  font-family: var(--font-mono), monospace;
+}
+
+.progress-track-spaced {
+  margin-top: 0.4rem;
+}
+
+.progress-track-indexing {
+  background: var(--status-accent-bg);
+}
+
+.progress-track-preparing {
+  margin-top: 0.25rem;
+}
+
+.progress-fill-indexing {
+  background: linear-gradient(90deg, var(--accent), var(--report-accent-muted));
+}
+
+.progress-fill-indeterminate {
+  width: 40%;
+  animation: gc-slide-indeterminate 1.4s var(--motion-ease-in-out, ease-in-out) infinite;
+}
+
+.progress-preparing {
+  margin-top: 0.1rem;
+  color: var(--text-secondary);
+  font-size: 0.6rem;
+}
+
+.import-status-line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+}
+
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--control-group-bg);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.progress-fill {
+  width: var(--progress-width, 100%);
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--report-accent-muted));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.import-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px var(--accent);
+  animation: gc-pulse-dot 1.2s ease-in-out infinite;
+}

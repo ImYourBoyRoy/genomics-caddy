@@ -86,8 +86,8 @@
   }
 
   .context-pill {
-    background: rgba(88, 80, 236, 0.1);
-    border: 1px solid rgba(88, 80, 236, 0.25);
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.25);
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 0.72rem;

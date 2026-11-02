@@ -2,7 +2,7 @@
 //! Replace local imported profiles with the committed synthetic demo fixture.
 //!
 //! How to run:
-//! `cargo run -p genomics-caddy-dev-bins --bin seed_demo_profile -- [data-dir]`
+//! `cargo run -p genomics-caddy-dev-bins --bin seed_demo_profile -- [data-dir] [fixture-path] [profile-name]`
 //!
 //! Inputs: `src-tauri/testdata/synthetic_demo_ancestry_grch37.csv` and the
 //! resolved Genomics Caddy data directory (arg, `GENOMICS_DATA_DIR`, or the
@@ -54,7 +54,9 @@ fn main() -> Result<(), String> {
         .nth(1)
         .map(PathBuf::from)
         .unwrap_or_else(|| tauri_app_lib::paths::resolve_data_dir_info().path);
-    let fixture = repo_fixture();
+    // Optional operator-owned overrides: `[data-dir] [fixture-path] [profile-name]`.
+    let fixture = env::args().nth(2).map(PathBuf::from).unwrap_or_else(repo_fixture);
+    let profile_name = env::args().nth(3).unwrap_or_else(|| PROFILE_NAME.to_string());
     if !fixture.is_file() {
         return Err(format!(
             "missing {}; run node ./scripts/generate_synthetic_demo_fixture.mjs",
@@ -99,7 +101,7 @@ fn main() -> Result<(), String> {
     let sample_id = tauri_app_lib::db::import_raw_genome(
         &mut conn,
         &data_dir,
-        PROFILE_NAME,
+        &profile_name,
         &records,
         liftover.as_ref(),
         None,

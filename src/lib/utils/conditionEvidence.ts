@@ -69,6 +69,8 @@ export interface ConditionEvidenceSummary {
   matched_marker_link_ids: string[];
   reference_ids: string[];
   source_ids: string[];
+  /** Optional detailed symptom-context resource linked by the condition registry. */
+  symptom_context_resource?: string;
   /** True when this summary came from an authored clinical condition label. */
   authored_condition: boolean;
   /** Present for authored clinical annotations; omitted for registry summaries. */
@@ -107,6 +109,7 @@ export interface ConditionCoverageSummary {
   status: ConditionCoverageStatus;
   clinical_route: string;
   source_ids: string[];
+  symptom_context_resource?: string;
 }
 
 export interface ConditionCoverageGap {
@@ -178,6 +181,7 @@ interface ConditionDefinition {
   diagnostic_capability: ConditionDiagnosticCapability;
   max_relative_signal: Exclude<ConditionRelativeSignal, 'insufficient'>;
   marker_ids: string[];
+  symptom_context_resource?: string;
   plain_meaning: string;
   clinical_route: string;
   sources: string[];
@@ -687,6 +691,7 @@ function summaryFromDefinition(
     matched_marker_link_ids: links,
     reference_ids: refs,
     source_ids: [...definition.sources],
+    ...(definition.symptom_context_resource ? { symptom_context_resource: definition.symptom_context_resource } : {}),
     authored_condition: false,
   };
 }
@@ -860,6 +865,7 @@ export function buildConditionCoverageSummaries(
       status,
       clinical_route: definition.clinical_route,
       source_ids: [...definition.sources],
+      ...(definition.symptom_context_resource ? { symptom_context_resource: definition.symptom_context_resource } : {}),
     };
   });
 }

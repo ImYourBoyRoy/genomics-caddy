@@ -3385,6 +3385,380 @@
           "notes": "Reviews COMT, BDNF, FKBP5 and environment interactions, while highlighting heterogeneity and replication limits."
         }
       ]
+    },
+    {
+      "rsid": "rs2143288",
+      "gene": "LINC00970/LOC101928596/ATP1B1/NME7",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "G",
+      "impact": "Population-level BPD GWAS locus; functional mapping unresolved",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9970854",
+      "gene": "LINC01680",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "G",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs12466671",
+      "gene": "UNMAPPED_LOCUS",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "A",
+      "impact": "Population-level BPD GWAS locus; gene mapping unresolved",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs6549383",
+      "gene": "FOXP1",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "T",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs2135029",
+      "gene": "SGCD",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "A",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4727799",
+      "gene": "FOXP2",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "T",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs10953781",
+      "gene": "UNMAPPED_LOCUS",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "C",
+      "impact": "Population-level BPD GWAS locus; gene mapping unresolved",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs73581580",
+      "gene": "NRARP/EXD3/NOXA1",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "G",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7304862",
+      "gene": "MYO1H/KCTD10/UBE3B/MMAB/MVK",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "G",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs7210027",
+      "gene": "BPTF/C17orf58/KPNA2/LINC00674",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "T",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
+    },
+    {
+      "rsid": "rs5944622",
+      "gene": "PDK3/PCYT1B/PCYT1B-AS1/POLA1",
+      "variant_name": "2026 BPD GWAS lead locus",
+      "effect_allele": "T",
+      "impact": "Population-level BPD GWAS locus; nearby gene mapping",
+      "evidence_tier": "D_research_only",
+      "interpretation": "A 2026 genome-wide association study reported this common locus among 11 BPD-associated loci in large research cohorts. It is a population-level association, not a functional BPD marker or a symptom-specific signal.",
+      "do_not_claim": [
+        "borderline personality disorder diagnosis",
+        "BPD or other psychiatric risk score",
+        "current dopamine, serotonin, cortisol, estrogen, or progesterone level",
+        "emotion, impulsivity, dissociation, or sexual behavior prediction"
+      ],
+      "confirm_with": [
+        "lived symptom pattern and functional impact",
+        "sleep, stress or trauma, medication, substance, and medical context",
+        "clinician-led assessment when symptoms are persistent or impairing"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer array may not contain this locus or may report it on a different strand or build. The study effect allele does not create a personal score; this app calculates no BPD polygenic score.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Genome-wide association analyses of borderline personality disorder",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/42477112/",
+          "accessed": "2026-10-29",
+          "evidence_type": "Peer-reviewed genome-wide association study",
+          "conflict_of_interest": "Peer-reviewed research publication; not a clinical validation of a consumer DNA test",
+          "notes": "Lead locus from the 2026 BPD GWAS; use as research-only population context."
+        }
+      ]
     }
   ]
 }

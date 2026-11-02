@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite dev",
+    "loading-lab": "vite dev --port 5199 --host 127.0.0.1 --open http://127.0.0.1:5199/__loading-lab?s=res-download",
     "build": "node ./scripts/run_tsc.mjs --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "node ./scripts/run_tsc.mjs --noEmit",

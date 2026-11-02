@@ -69,6 +69,7 @@ mod agent_ui;
 mod agent_ui_capture;
 mod agent_ui_endpoint;
 pub mod app_log;
+pub mod chatgpt;
 pub mod config;
 pub mod db;
 pub mod db_crypto;
@@ -2228,6 +2229,13 @@ pub fn run() {
             delete_ollama_model,
             probe_vector_provider,
             stream_ollama_chat,
+            chatgpt::chatgpt_status,
+            chatgpt::chatgpt_sign_in,
+            chatgpt::chatgpt_cancel_sign_in,
+            chatgpt::chatgpt_sign_out,
+            chatgpt::chatgpt_open_usage,
+            chatgpt::chatgpt_list_models,
+            chatgpt::stream_chatgpt_chat,
             cancel_ollama_stream,
             show_ollama_model,
             get_active_ollama_models,

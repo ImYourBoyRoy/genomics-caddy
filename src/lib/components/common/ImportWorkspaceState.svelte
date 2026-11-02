@@ -1,7 +1,13 @@
 <!-- ./src/lib/components/common/ImportWorkspaceState.svelte -->
 <script lang="ts">
   import type { GenomeImportPreview } from "$lib/types/genomics";
-  import ImportStepTimeline from "./bootstrap/ImportStepTimeline.svelte";
+  import { untrack } from "svelte";
+  import { buildImportSteps, stepStates } from "./bootstrap/bootstrapPipeline";
+  import LoadingTelemetryStrip from "./loading/LoadingTelemetryStrip.svelte";
+  import PipelineProgressBar from "./loading/PipelineProgressBar.svelte";
+  import PipelineStepList from "./loading/PipelineStepList.svelte";
+  import type { PipelineSegment } from "./loading/pipelineTypes";
+  import { PipelineClock } from "$lib/utils/pipelineClock.svelte";
   import type { ImportPhase, ImportStepId } from "$lib/utils/importProgress";
 
   interface Props {
@@ -29,6 +35,64 @@
     onCancelImport,
     onContinueToReport,
   }: Props = $props();
+
+  // Timing starts when real work begins, not while the user reads the preview.
+  const clock = new PipelineClock();
+  let clockRunning = $state(false);
+
+  $effect(() => {
+    if (phase === "awaiting-confirmation" || phase === "idle") return;
+    untrack(() => {
+      if (!clockRunning) {
+        clockRunning = true;
+        clock.reset();
+        clock.start();
+      }
+    });
+  });
+
+  $effect(() => {
+    if (phase === "ready" || phase === "error") clock.freeze();
+  });
+
+  $effect(() => () => clock.stop());
+
+  let steps = $derived(buildImportSteps({ phase, failedStep, status, clock }));
+
+  $effect(() => {
+    if (clockRunning) clock.sync(stepStates(steps));
+  });
+
+  let importStartOffsetMs = $state<number | null>(null);
+  $effect(() => {
+    if (!clockRunning || percentage <= 0) return;
+    untrack(() => {
+      if (importStartOffsetMs === null) importStartOffsetMs = clock.elapsedMs;
+    });
+  });
+
+  $effect(() => {
+    if (!clockRunning || phase === "ready" || phase === "error" || percentage <= 0 || percentage >= 100) {
+      clock.observeEta("settled", null);
+      return;
+    }
+    clock.observeEta("import", {
+      fraction: percentage / 100,
+      elapsedMs: clock.elapsedMs - (importStartOffsetMs ?? 0),
+    });
+  });
+
+  let isFinished = $derived(phase === "ready");
+  let isFailed = $derived(phase === "error");
+  let focusIndex = $derived(Math.max(0, steps.findIndex((step) => step.state === "active" || step.state === "error")));
+  let segments = $derived.by<PipelineSegment[]>(() => [
+    {
+      id: "import",
+      state: isFailed ? "error" : isFinished ? "done" : "active",
+      accent: isFailed ? "var(--danger)" : (steps[focusIndex]?.accent ?? "var(--accent)"),
+      fraction: (isFinished ? 100 : clampedPercentage) / 100,
+    },
+  ]);
 
   let isCheckingPreview = $derived(phase === "preview");
   let isAwaitingConfirmation = $derived(phase === "awaiting-confirmation");
@@ -89,17 +153,25 @@
     </div>
   {:else}
     <div class="import-workspace-progress" aria-label="DNA import progress">
-      <div class="import-workspace-progress-track">
-        <div class="import-workspace-progress-fill" style="width: {clampedPercentage}%"></div>
-      </div>
-      <div class="import-workspace-progress-meta">
-        <span>{`${clampedPercentage}% complete`}</span>
-        <span>{profileName || "New profile"}</span>
-      </div>
+      <PipelineProgressBar
+        {segments}
+        percent={isFinished ? 100 : clampedPercentage}
+        label="DNA import progress"
+        caption={profileName || "New profile"}
+      />
+      <LoadingTelemetryStrip
+        elapsedMs={clockRunning ? clock.elapsedMs : 0}
+        stepIndex={isFinished ? steps.length : focusIndex + 1}
+        stepCount={steps.length}
+        stepLabel={isFinished ? "All steps complete" : (steps[focusIndex]?.label ?? "")}
+        etaSeconds={clock.eta}
+        status={isFailed ? "error" : isFinished ? "done" : "running"}
+        etaCaption="left to import"
+      />
     </div>
   {/if}
 
-  <ImportStepTimeline phase={phase} failedStep={failedStep} />
+  <PipelineStepList {steps} ariaLabel="DNA import steps" />
 
   {#if preview}
     <div class="import-workspace-details">
@@ -311,30 +383,8 @@
     margin-top: 1rem;
   }
 
-  .import-workspace-progress-track {
-    height: 0.35rem;
-    overflow: hidden;
-    border-radius: 999px;
-    background: var(--surface-subtle);
-  }
 
-  .import-workspace-progress-fill {
-    height: 100%;
-    min-width: 0.35rem;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--accent), var(--success));
-    transition: width 0.35s ease;
-  }
 
-  .import-workspace-progress-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 0.35rem;
-    color: var(--text-secondary);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.68rem;
-  }
 
   .import-workspace-details {
     margin-top: 0.25rem;

@@ -60,6 +60,35 @@ fn import_mutex() -> &'static AsyncMutex<()> {
 /// Sync phases are download (1) then import (2). There is no separate finalize step.
 const SYNC_TOTAL_STEPS: u8 = 2;
 
+/// Payload for `offline:sync_phase`. `extra` object keys (for example `tier`,
+/// `asset_count`, `state`) are merged in so the loading UI can show real
+/// structure without parsing the human-readable message.
+fn sync_phase_payload(
+    asset_id: &str,
+    phase: &str,
+    step: u8,
+    message: &str,
+    extra: serde_json::Value,
+) -> serde_json::Value {
+    let label = OfflineAssetId::from_str_id(asset_id)
+        .and_then(asset_def)
+        .map(|def| def.label);
+    let mut payload = serde_json::json!({
+        "asset_id": asset_id,
+        "label": label,
+        "phase": phase,
+        "step": step,
+        "total_steps": SYNC_TOTAL_STEPS,
+        "message": message,
+    });
+    if let (Some(target), Some(extra)) = (payload.as_object_mut(), extra.as_object()) {
+        for (key, value) in extra {
+            target.insert(key.clone(), value.clone());
+        }
+    }
+    payload
+}
+
 fn emit_sync_phase(
     app: Option<&AppHandle>,
     asset_id: &str,
@@ -67,16 +96,21 @@ fn emit_sync_phase(
     step: u8,
     message: &str,
 ) {
+    emit_sync_phase_with(app, asset_id, phase, step, message, serde_json::Value::Null);
+}
+
+fn emit_sync_phase_with(
+    app: Option<&AppHandle>,
+    asset_id: &str,
+    phase: &str,
+    step: u8,
+    message: &str,
+    extra: serde_json::Value,
+) {
     if let Some(handle) = app {
         let _ = handle.emit(
             "offline:sync_phase",
-            serde_json::json!({
-                "asset_id": asset_id,
-                "phase": phase,
-                "step": step,
-                "total_steps": SYNC_TOTAL_STEPS,
-                "message": message,
-            }),
+            sync_phase_payload(asset_id, phase, step, message, extra),
         );
     }
 }
@@ -727,12 +761,13 @@ pub async fn sync_offline_assets_subset(
     let budget = tier_budget_bytes(tier);
     let mut pending_imports: Vec<OfflineAssetId> = Vec::new();
 
-    emit_sync_phase(
+    emit_sync_phase_with(
         app,
         "__bulk__",
         "bulk",
         1,
         &format!("Sync · preparing tier {tier} ({} asset(s))…", asset_ids.len()),
+        serde_json::json!({ "tier": tier, "asset_count": asset_ids.len() }),
     );
 
     for id in asset_ids {
@@ -800,7 +835,7 @@ pub async fn sync_offline_assets_subset(
                                 .push(format!("{} already up to date", def.label));
                             continue;
                         }
-                        emit_sync_phase(
+                        emit_sync_phase_with(
                             app,
                             def.id.as_str(),
                             "import",
@@ -809,6 +844,7 @@ pub async fn sync_offline_assets_subset(
                                 "Step 2/2 · Indexing local {}…",
                                 def.label
                             ),
+                            serde_json::json!({ "state": "queued" }),
                         );
                         pending_imports.push(def.id);
                         continue;
@@ -1035,12 +1071,13 @@ pub async fn sync_offline_assets_subset(
                         .messages
                         .push(format!("{} already built", def.label));
                 } else {
-                    emit_sync_phase(
+                    emit_sync_phase_with(
                         app,
                         def.id.as_str(),
                         "import",
                         2,
                         &format!("Building {}…", def.label),
+                        serde_json::json!({ "state": "queued" }),
                     );
                     pending_imports.push(def.id);
                 }
@@ -1065,7 +1102,14 @@ pub async fn sync_offline_assets_subset(
                 "Step 2/2 · Queued for import ({idx} of {import_queue_len} ahead) — downloads finished; waiting for SQLite slot…"
             )
         };
-        emit_sync_phase(app, id.as_str(), "import", 2, &waiting);
+        emit_sync_phase_with(
+            app,
+            id.as_str(),
+            "import",
+            2,
+            &waiting,
+            serde_json::json!({ "state": "queued" }),
+        );
     }
     let import_out = tauri::async_runtime::spawn_blocking(move || {
         import_assets_sync(
@@ -1140,13 +1184,13 @@ fn import_assets_sync(
                 };
                 let _ = handle.emit(
                     "offline:sync_phase",
-                    serde_json::json!({
-                        "asset_id": id.as_str(),
-                        "phase": "import",
-                        "step": 2,
-                        "total_steps": 2,
-                        "message": msg,
-                    }),
+                    sync_phase_payload(
+                        id.as_str(),
+                        "import",
+                        2,
+                        &msg,
+                        serde_json::json!({ "state": "running", "index": idx, "count": ids.len() }),
+                    ),
                 );
             }
             match import_asset_sync(conn, data_dir, db_path, *id, sample_id, app.as_ref()) {
@@ -1466,6 +1510,30 @@ mod tests {
             std::process::id(),
             NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ))
+    }
+
+    #[test]
+    fn sync_phase_payload_carries_label_and_structured_extras() {
+        let payload = sync_phase_payload(
+            "gwas_catalog",
+            "import",
+            2,
+            "Step 2/2 · Indexing",
+            serde_json::json!({ "state": "queued", "tier": 1 }),
+        );
+        assert_eq!(payload["asset_id"], "gwas_catalog");
+        assert_eq!(payload["phase"], "import");
+        assert_eq!(payload["total_steps"], 2);
+        assert_eq!(payload["state"], "queued");
+        assert_eq!(payload["tier"], 1);
+        assert!(payload["label"].is_string());
+    }
+
+    #[test]
+    fn sync_phase_payload_without_extras_or_known_asset_stays_minimal() {
+        let payload = sync_phase_payload("__bulk__", "bulk", 1, "scan", serde_json::Value::Null);
+        assert!(payload["label"].is_null());
+        assert!(payload.get("state").is_none());
     }
 
     #[test]

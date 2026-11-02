@@ -14,6 +14,7 @@ import {
 } from "./aiPrompt";
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { runConsultationTurn } from "./consultationChat";
+import type { ChatProvider } from "./chatProvider";
 
 export interface SendConsultationPromptParams {
   customPrompt?: string;
@@ -26,6 +27,7 @@ export interface SendConsultationPromptParams {
   messages: ChatMessage[];
   ollamaUrl: string;
   ollamaToken: string;
+  chatProvider?: ChatProvider;
   temperature: number;
   maxTokens: number;
   extendedThinking: boolean;
@@ -78,7 +80,11 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
   const text = params.customPrompt || params.promptText.trim();
   if (!text || params.isChatting || !params.selectedSample) return;
   if (!params.selectedModel) {
-    params.alert("Please configure a connection and select an LLM model.");
+    params.alert(
+      params.chatProvider === "chatgpt"
+        ? "Sign in with ChatGPT, enable plan usage, then pick a model."
+        : "Please configure a connection and select an LLM model.",
+    );
     return;
   }
   if (!params.generatedReport) {
@@ -117,6 +123,7 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
         assistantIndex,
         ollamaUrl: params.ollamaUrl,
         ollamaToken: params.ollamaToken,
+        chatProvider: params.chatProvider,
         selectedModel: params.selectedModel,
         temperature: params.temperature,
         maxTokens: params.maxTokens,

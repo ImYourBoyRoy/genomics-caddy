@@ -1,0 +1,188 @@
+/* ./src/lib/styles/components/plan-view.css */
+/*
+Purpose: Layout for the "Your plan" tab (header, domain filter chips, per-domain
+action lists). Domain tags and polarity marks live in finding-rows.css.
+Tokens only: colors come from theme.css semantic variables.
+*/
+
+.plan-view {
+  display: flex;
+  width: min(100%, var(--report-dashboard-surface-width));
+  margin-inline: auto;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plan-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.plan-header p {
+  margin: 0.3rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.plan-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.plan-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plan-filter:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.plan-filter:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.plan-filter[aria-pressed="true"] {
+  border-color: var(--status-accent-soft-border);
+  background: var(--status-accent-bg);
+  color: var(--text-primary);
+}
+
+.plan-filter-count {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.plan-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+}
+
+.plan-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plan-section-head h3 { margin: 0; }
+
+.plan-section-head p {
+  margin: 0.3rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.plan-items {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-item {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.plan-item:first-child { border-top: 0; }
+
+.plan-item-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.plan-item-text {
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.plan-item-detail {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.plan-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.plan-item .polarity-mark { padding-top: 0.15rem; }
+.plan-item[data-polarity="avoid"] .polarity-mark { color: var(--status-danger-strong-text); }
+.plan-item[data-polarity="discuss"] .polarity-mark { color: var(--status-warning-text); }
+
+.plan-proof-link,
+.plan-more {
+  min-height: 2rem;
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.plan-more { align-self: flex-start; }
+.plan-proof-link:hover,
+.plan-more:hover { background: var(--surface-subtle); text-decoration: underline; }
+.plan-proof-link:focus-visible,
+.plan-more:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+.plan-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.7rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .plan-item { grid-template-columns: minmax(0, 1fr); gap: 0.3rem; }
+  .plan-header { flex-direction: column; }
+}

@@ -245,6 +245,7 @@ const supportContracts = {
   ai_prompt_policy: { arrays: ['default_instructions', 'payload_rules', 'forbidden_actions'], objects: ['safety_review_prompt'] },
   activity_guardrails: { arrays: ['principles', 'stop_and_escalate', 'domains', 'sources'] },
   allergy_sensitivity_catalog: { arrays: ['dna_contexts', 'clinical_safety_routes', 'exposure_checklists', 'source_ids'], objects: ['display'] },
+  bpd_symptom_context: { arrays: ['domains', 'differential_context', 'safety', 'sources'], objects: ['display'] },
   callability_rules: { arrays: ['rules'], objects: ['variant_type_registry'] },
   condition_integrations: { arrays: ['conditions'], objects: ['policy'] },
   consultation_modes: { arrays: ['modes'] },
@@ -794,6 +795,18 @@ for (const [resourceId, contract] of Object.entries(supportContracts)) {
       }
       if (conditionIds.has(condition.id)) errors.push(`${location}: duplicate id ${condition.id}`);
       conditionIds.add(condition.id);
+      if (condition.symptom_context_resource !== undefined) {
+        if (typeof condition.symptom_context_resource !== 'string' || condition.symptom_context_resource.trim() === '') {
+          errors.push(`${location}: symptom_context_resource must be a non-empty string when present`);
+        } else if (!Object.prototype.hasOwnProperty.call(supportContracts, condition.symptom_context_resource)) {
+          errors.push(`${location}: symptom_context_resource references unknown support resource ${condition.symptom_context_resource}`);
+        } else {
+          const symptomResource = readJson(path.join(sourceDir, `${condition.symptom_context_resource}.json`));
+          if (symptomResource?.type !== 'symptom_context_resource') {
+            errors.push(`${location}: symptom_context_resource must reference a symptom_context_resource document`);
+          }
+        }
+      }
       if (!allowedSignalTypes.has(condition.signal_type)) errors.push(`${location}: invalid signal_type ${condition.signal_type}`);
       if (!allowedCapabilities.has(condition.diagnostic_capability)) errors.push(`${location}: invalid diagnostic_capability ${condition.diagnostic_capability}`);
       if (!allowedRelativeSignals.has(condition.max_relative_signal)) errors.push(`${location}: invalid max_relative_signal ${condition.max_relative_signal}`);

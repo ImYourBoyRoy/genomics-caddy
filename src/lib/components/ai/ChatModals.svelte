@@ -195,7 +195,7 @@
     overflow-y: auto;
     font-family: monospace;
     font-size: 0.8rem;
-    color: #a5b4fc;
+    color: var(--accent-bright);
     line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-all;
@@ -255,8 +255,8 @@
   }
 
   .btn-export-option:hover {
-    background: rgba(88, 80, 236, 0.08);
-    border-color: rgba(88, 80, 236, 0.35);
+    background: rgba(20, 184, 166, 0.08);
+    border-color: rgba(20, 184, 166, 0.35);
   }
 
   .export-option-icon {

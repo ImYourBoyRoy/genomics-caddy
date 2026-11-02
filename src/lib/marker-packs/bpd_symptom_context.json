@@ -1,0 +1,131 @@
+{
+  "name": "BPD-adjacent symptom context",
+  "version": "1.1.0",
+  "last_updated": "2026-10-29",
+  "type": "symptom_context_resource",
+  "purpose": "Connect matched neuropsych and hormone-pathway context to user-reported symptom domains studied in borderline personality disorder research without inferring a disorder, current chemistry, behavior, or orientation.",
+  "display": {
+    "kicker": "Potential symptom patterns",
+    "title": "Potential BPD-adjacent symptom patterns",
+    "pathway_kicker": "Transdiagnostic pathway context",
+    "pathway_title": "Potential emotion-regulation and mood symptom patterns",
+    "summary": "Your matched DNA findings may be relevant to experiencing specific patterns studied in BPD research: intense or rapidly shifting emotions, rejection sensitivity, impulsivity or reward urgency, depressive or empty states, dissociation, and—in some people—cycle-linked changes. Use these as symptoms to compare against your lived experience, timing, and function; the same patterns occur with many other conditions and physiological or environmental factors.",
+    "boundary": "This is a potential symptom-pattern signal, not a BPD result. DNA does not establish current neurotransmitter or hormone levels or infer sexual behavior or orientation. Asexuality, low desire, and other orientations are not symptoms to explain away.",
+    "compare_intro": "If any pattern fits your experience, record onset, duration, triggers, functional impact, sleep, medication or substance changes, stress or trauma context, and cycle or hormone timing when relevant. That information is more useful for next-step care than a DNA marker alone."
+  },
+  "domains": [
+    {
+      "id": "emotion_regulation",
+      "label": "Emotion intensity and rapid shifts",
+      "summary": "Your matched serotonin, catecholamine, stress-response, neuroplasticity, or steroid-receptor findings may be relevant to experiencing intense or rapidly shifting emotions or difficulty settling after stress. This is a potential symptom pattern to compare, not a prediction.",
+      "prompts": [
+        "Have emotions become unusually intense, rapidly shifting, or hard to settle after interpersonal stress?",
+        "How long do the shifts last, what tends to trigger them, and what helps them settle?"
+      ],
+      "marker_genes": ["HTR2A", "HTR1A", "SLC6A4", "TPH2", "MAOA", "COMT", "FKBP5", "NR3C1", "BDNF", "ESR1", "PGR"]
+    },
+    {
+      "id": "social_threat_attachment",
+      "label": "Rejection sensitivity and social stress",
+      "summary": "Your matched oxytocin, vasopressin, HPA-axis, or serotonin findings may be relevant to experiencing heightened rejection or abandonment sensitivity, relationship-uncertainty distress, anger, or shutdown. Compare this across relationships and settings rather than treating it as a fixed trait.",
+      "prompts": [
+        "Do perceived rejection, abandonment, or relationship uncertainty trigger disproportionate distress, anger, shutdown, or rapid changes in closeness?",
+        "Are these reactions specific to certain relationships or situations, or present across settings?"
+      ],
+      "marker_genes": ["OXTR", "AVPR1A", "AVPR1B", "FKBP5", "CRHR1", "HTR2A"]
+    },
+    {
+      "id": "interpersonal_anger_recovery",
+      "label": "Interpersonal anger escalation and recovery",
+      "summary": "Your matched social-threat, stress-response, and emotion-regulation pathway findings may be relevant to experiencing rapid anger escalation after conflict, perceived criticism or rejection, repeated re-engagement, and later remorse or a return toward baseline. The same pattern has many possible causes, and DNA cannot explain a particular event.",
+      "prompts": [
+        "During conflict, does anger escalate into shouting, repeated re-engagement, or difficulty disengaging, then settle within hours or days?",
+        "Afterward, is there remorse or recognition of the other person's perspective, and does this recur with particular relationships, sleep loss, cycle phases, medication or substance changes, or other stressors?"
+      ],
+      "marker_genes": ["OXTR", "AVPR1A", "AVPR1B", "FKBP5", "CRHR1", "HTR2A", "SLC6A4", "MAOA", "COMT", "BDNF", "ESR1", "PGR"]
+    },
+    {
+      "id": "impulsivity_reward",
+      "label": "Impulsivity, reward, and urgency",
+      "summary": "Your matched dopamine, norepinephrine, opioid, adenosine, or GABA pathway findings may be relevant to experiencing reward urgency or acting before thinking during distress or activation. They do not identify spending, substance use, sex, aggression, or any other specific behavior.",
+      "prompts": [
+        "When distressed or highly activated, do you act before thinking, chase stimulation or reward, spend, use substances, drive unsafely, or take other risks?",
+        "Does the behavior follow negative emotion, unusually elevated energy, sleep loss, social pressure, or a medication or substance change?"
+      ],
+      "marker_genes": ["COMT", "DRD1", "DRD2", "DRD3", "DRD4", "SLC6A3", "DBH", "OPRM1", "FAAH", "GABRA2", "ADORA2A"]
+    },
+    {
+      "id": "dissociation_mood_overlap",
+      "label": "Depressive, empty, or unreal-feeling states",
+      "summary": "Your matched neuroplasticity, monoamine, inflammation, calcium-signaling, or stress findings may be relevant to experiencing low mood, emptiness, shutdown, depersonalization, or derealization. These patterns are nonspecific and need symptom history, sleep review, and medical context rather than DNA interpretation alone.",
+      "prompts": [
+        "Do you experience persistent low mood, emptiness, shutdown, depersonalization, derealization, or feeling unreal or disconnected?",
+        "Are there distinct episodes with very little need for sleep, unusually elevated energy, or loss of reality testing?"
+      ],
+      "marker_genes": ["BDNF", "SLC6A4", "HTR1A", "TPH2", "FKBP5", "CRP", "IL1B", "CACNA1C", "ANK3"]
+    },
+    {
+      "id": "hormone_cycle_context",
+      "label": "Cycle- or hormone-linked symptom shifts",
+      "summary": "Your matched steroid-receptor and related pathway findings may be relevant to noticing cycle- or hormone-timed symptom shifts in some people. Clinicians compare premenstrual exacerbation (a baseline symptom pattern that worsens before bleeding) with a mostly cycle-specific pattern that improves after bleeding begins, such as a PMDD assessment route. DNA cannot measure current estrogen, progesterone, testosterone, cortisol, or other hormone levels or distinguish these patterns.",
+      "prompts": [
+        "If relevant to your body and treatment, do mood, irritability, anger, impulsivity, sleep, or dissociation changes track a cycle phase, hormone medication change, or other endocrine event?",
+        "Record daily mood, irritability, anger, impulsivity, sleep, and function across at least two or three cycles, marking bleeding start and return toward baseline.",
+        "Is there a baseline symptom pattern between cycles that worsens premenstrually, or are symptoms mostly confined to the premenstrual window? Include current medication, hormone treatment, and substance context."
+      ],
+      "marker_genes": ["ESR1", "PGR", "COMT", "FAAH"]
+    },
+    {
+      "id": "sexual_behavior_context",
+      "label": "Distressing or unsafe sexual-behavior changes",
+      "summary": "Increased sexual drive or hypersexual behavior, decreased desire, or dissociation during sex can be symptom-context questions when they are distressing or unsafe. Clinical research examines these patterns in some BPD samples, but this domain is not inferred from your DNA. Asexuality, low desire, and sexual orientation are not symptoms to infer or correct.",
+      "prompts": [
+        "Only if you want to explore a distressing or unsafe change: has there been a sudden increase or decrease in desire, impulsive sex, difficulty setting boundaries, or dissociation during sex?",
+        "If so, what were the timing, consent and safety concerns, sleep, mood, trauma or dissociation, medications, substances, and consequences?"
+      ],
+      "marker_genes": [],
+      "always_show_if_context": true
+    },
+    {
+      "id": "recent_bpd_gwas_loci",
+      "label": "Recent BPD GWAS loci (research only)",
+      "summary": "A match to one of the 2026 BPD GWAS loci may provide a research link to the broader symptom patterns above. The study emphasized polygenic, transdiagnostic biology: no single variant predicts which symptoms you will experience, and the app calculates no BPD polygenic score.",
+      "prompts": [
+        "Treat this as a research link only; compare symptoms, history, sleep, stress, medication or substance context, and functional impact separately."
+      ],
+      "marker_genes": [],
+      "marker_rsids": ["rs2143288", "rs9970854", "rs12466671", "rs6549383", "rs2135029", "rs4727799", "rs10953781", "rs73581580", "rs7304862", "rs7210027", "rs5944622"]
+    }
+  ],
+  "differential_context": [
+    "depression or anxiety",
+    "PTSD and other trauma-related symptoms",
+    "ADHD or neurodevelopmental differences",
+    "bipolar-spectrum episodes or sleep-loss effects",
+    "premenstrual exacerbation of a baseline condition versus a cycle-specific PMDD pattern",
+    "medication, caffeine, alcohol, or other substance effects",
+    "thyroid, endocrine, neurologic, inflammatory, or other medical factors",
+    "relationship, safety, and environmental context"
+  ],
+  "safety": [
+    "Self-harm thoughts, suicidal thoughts, immediate danger, or loss of reality testing need urgent local support rather than DNA interpretation.",
+    "Sexual behavior prompts are optional and should be used only when the person wants help with distress, consent, boundaries, or safety; never use them to judge orientation."
+  ],
+  "sources": [
+    "bpd_gwas_2026",
+    "bpd_neurobiology_review_2024",
+    "bpd_hormone_review_2024",
+    "bpd_sexuality_2024",
+    "bpd_impulsivity_2023",
+    "bpd_oxytocin_review_2024",
+    "bpd_interpersonal_affect_2010",
+    "bpd_reactive_anger_2021",
+    "bpd_rejection_aggression_2017",
+    "bpd_cycle_premenstrual_2018",
+    "bpd_cycle_aggression_2020",
+    "premenstrual_exacerbation_review_2022",
+    "premenstrual_exacerbation_review_2024",
+    "cycle_informed_care_2026",
+    "apa_sexual_minority_guidance"
+  ]
+}

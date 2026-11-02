@@ -6,6 +6,9 @@
  */
 
 .report-loading-state {
+  display: flex;
+  align-items: stretch;
+  gap: 1.4rem;
   margin-bottom: 1rem;
   max-width: min(100%, 44rem);
   padding: 1.15rem 1.25rem 1.3rem;
@@ -14,6 +17,11 @@
   background:
     radial-gradient(ellipse 70% 50% at 0% 0%, var(--accent-soft), transparent 55%),
     var(--surface-subtle);
+}
+
+.report-loading-body {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .report-loading-state h3 {
@@ -102,5 +110,12 @@
 
   .report-loading-progress.determinate span {
     transition: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .report-loading-state {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

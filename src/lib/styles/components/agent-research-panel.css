@@ -92,7 +92,7 @@
 }
 
 .finding-shortcut-btn:hover {
-  background: rgba(88, 80, 236, 0.05);
+  background: rgba(20, 184, 166, 0.05);
   border-color: var(--accent);
   transform: translateY(-2px);
 }
@@ -111,7 +111,7 @@
 
 .shortcut-header .gene {
   font-size: 0.72rem;
-  color: var(--accent);
+  color: var(--accent-bright);
 }
 
 .shortcut-body {
@@ -160,5 +160,60 @@
 @media (max-width: 900px) {
   .setup-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.agent-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  margin-bottom: 4px;
+}
+
+.setup-config h3,
+.setup-quick-launch h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.agent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agent-fine-print {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.setup-config,
+.setup-quick-launch {
+  animation: gc-rise var(--motion-slow) both;
+}
+
+.finding-shortcut-btn {
+  transition:
+    transform var(--motion-fast),
+    border-color var(--motion-fast),
+    background-color var(--motion-fast);
+}
+
+.finding-shortcut-btn:hover,
+.finding-shortcut-btn:focus-visible {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-config,
+  .setup-quick-launch {
+    animation: none;
   }
 }

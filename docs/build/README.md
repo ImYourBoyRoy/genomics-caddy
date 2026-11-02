@@ -15,6 +15,13 @@ Windows:
 pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\purge_and_build.ps1
 ```
 
+The current agent-facing Windows build lane is driven from the sibling
+Server_Manager project. Its `run-dna-build.ps1` wrapper invokes package entry
+points through `node.exe` directly; keep that behavior because Windows
+PowerShell shims such as `npx.ps1` cannot be spawned by Node with
+`shell:false`. A successful Windows compile still needs separate native UI,
+accessibility, installer-signing, and release-artifact verification.
+
 Linux / macOS:
 
 ```bash
@@ -110,6 +117,23 @@ Cross-compile from a configured builder:
 pnpm run build:remote:all
 python scripts/build.py --target all --create-bundle
 ```
+
+### Remote build-cache lifecycle
+
+The remote build adapter uses the shared sibling
+`Remote_Build/remote_build/cache.py` policy. Linux and Windows builds set
+`CARGO_INCREMENTAL=0`, use the persistent builder sccache path with a 10 GiB
+cap, and perform a guarded 40 GiB high-water check against the exact
+`src-tauri/target` directory after artifacts are collected. A failed build
+retains its target for diagnosis. The macOS guest uses the same incremental
+setting and its existing platform-local cleanup; it is not the Ubuntu host
+cache.
+
+The shared guard refuses symlinks, unexpected realpaths, active compilers, and
+target working-directory or open-file references. It never removes `App/Data`,
+the project checkout, the persistent sccache directory, or a global cache
+parent. Do not substitute `cargo clean` or a global `/dev/shm` purge for this
+project-scoped lifecycle.
 
 Headless enrichment worker and optional static UI: [../../docker/README.md](../../docker/README.md).
 

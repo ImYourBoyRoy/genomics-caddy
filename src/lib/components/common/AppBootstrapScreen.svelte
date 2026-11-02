@@ -1,15 +1,53 @@
 <!-- ./src/lib/components/common/AppBootstrapScreen.svelte -->
 <script lang="ts">
-  import type { AppBootstrapStatus } from "../../types/genomics";
-  import type { GenomeImportPreview } from "../../types/genomics";
-  import { PHASE_ORDER, type BootstrapPhase } from "./bootstrap/bootstrapPhases";
+  /*
+  Purpose: Full-screen startup / reference-sync / DNA-import loading surface.
+  Shows one calm panel: headline, overall segmented progress, an
+  elapsed / step / remaining readout, and a live step list where the active step
+  narrates what is happening right now and finished steps report how long they
+  took. The DNA helix sits behind it on the right.
+  Inputs: phase + message (startup), reportProgress (backend report events),
+  import* props (DNA import), mode.
+  Outputs: markup only; the clock and step math live in utils/pipelineClock and
+  bootstrap/bootstrapPipeline so they stay testable.
+  */
+  import { untrack } from "svelte";
+  import type {
+    AppBootstrapStatus,
+    GenomeImportPreview,
+    ReportGenerationProgress,
+  } from "../../types/genomics";
+  import {
+    BOOTSTRAP_STEPS,
+    describeDbProgress,
+    stepState,
+    type BootstrapPhase,
+    type DbProgress,
+  } from "./bootstrap/bootstrapPhases";
+  import {
+    buildImportSteps,
+    buildResourceSteps,
+    buildStartupSteps,
+    reportEtaSample,
+    resourceFocus,
+    stepStates,
+  } from "./bootstrap/bootstrapPipeline";
   import BootstrapHelixBackdrop from "./bootstrap/BootstrapHelixBackdrop.svelte";
   import BootstrapPhaseOrb from "./bootstrap/BootstrapPhaseOrb.svelte";
-  import BootstrapActivityPulse from "./bootstrap/BootstrapActivityPulse.svelte";
-  import BootstrapStepTimeline from "./bootstrap/BootstrapStepTimeline.svelte";
-  import ImportStepTimeline from "./bootstrap/ImportStepTimeline.svelte";
   import BootstrapStatReveal from "./bootstrap/BootstrapStatReveal.svelte";
-  import type { ImportPhase, ImportStepId } from "../../utils/importProgress";
+  import LoadingTelemetryStrip from "./loading/LoadingTelemetryStrip.svelte";
+  import PipelineProgressBar from "./loading/PipelineProgressBar.svelte";
+  import PipelineStepList from "./loading/PipelineStepList.svelte";
+  import {
+    overallPercent,
+    segmentsFromSteps,
+    type PipelineSegment,
+    type PipelineStep,
+  } from "./loading/pipelineTypes";
+  import { IMPORT_STEPS, importStepState, type ImportPhase, type ImportStepId } from "../../utils/importProgress";
+  import { parseMessageProgress } from "../../utils/loadingTelemetry";
+  import { PipelineClock } from "../../utils/pipelineClock.svelte";
+  import type { ResourceSyncTelemetry } from "../../utils/resourceSyncTelemetry";
   import "../../styles/bootstrap-animations.css";
 
   export type { BootstrapPhase };
@@ -26,6 +64,10 @@
     importProfileName?: string;
     importFailedStep?: ImportStepId | null;
     showWorkspaceAction?: boolean;
+    /** Live backend report progress while the startup report step runs. */
+    reportProgress?: ReportGenerationProgress | null;
+    /** Structured reference-sync telemetry (bytes, rows, tier/asset counts). */
+    resourceSync?: ResourceSyncTelemetry | null;
     workspaceActionLabel?: string;
     onContinue?: () => void;
   }
@@ -42,6 +84,8 @@
     importProfileName = "",
     importFailedStep = null,
     showWorkspaceAction = false,
+    reportProgress = null,
+    resourceSync = null,
     workspaceActionLabel = "",
     onContinue,
   }: Props = $props();
@@ -49,16 +93,41 @@
   let isError = $derived(phase === "error");
   let isReady = $derived(phase === "ready");
 
-  function importVisualPhase(value: ImportPhase): BootstrapPhase {
-    if (value === "error") return "error";
-    if (value === "ready") return "ready";
-    if (value === "report") return "report";
-    if (value === "profile") return "profile";
-    if (value === "liftover" || value === "ingesting" || value === "indexing") return "profile";
-    return "stats";
-  }
+  const NO_TIMINGS = { durationMs: () => null, stepElapsedMs: () => null };
 
-  let activityPhase = $derived(mode === "import" ? importVisualPhase(importPhase) : phase);
+  // Startup is timed from webview launch (honest total); other modes from mount.
+  const clock = new PipelineClock(
+    untrack(() => (mode === "startup" ? Date.now() - performance.now() : Date.now())),
+  );
+
+  $effect(() => {
+    clock.start();
+    return () => clock.stop();
+  });
+
+  // Remember where startup was when it failed so the right step shows the error.
+  let lastLivePhase = $state<BootstrapPhase>("db");
+  $effect(() => {
+    if (phase !== "error") lastLivePhase = phase;
+  });
+
+  // Database sub-steps only ever move forward, even if the idle ticker re-fires.
+  let dbProgress = $state<DbProgress | null>(null);
+  $effect(() => {
+    if (mode !== "startup" || phase !== "db") return;
+    const next = describeDbProgress(message);
+    if (!next) return;
+    untrack(() => {
+      if (!dbProgress || next.index >= dbProgress.index) dbProgress = next;
+    });
+  });
+
+  let importPercent = $derived(
+    isReady && mode === "import"
+      ? 100
+      : Math.max(0, Math.min(100, Math.round(importProgress?.percentage ?? 0))),
+  );
+
   let activityMessage = $derived(
     mode === "import"
       ? isError
@@ -68,133 +137,152 @@
         ? error || "Startup failed"
         : message,
   );
-  let importPercent = $derived(
-    Math.max(0, Math.min(100, Math.round(importProgress?.percentage ?? 0))),
-  );
 
-  let startTime = $state(Date.now());
-  let elapsedSeconds = $state(0);
+  // Step states drive the clock (durations); they must not depend on the clock.
+  let stateMap = $derived.by(() => {
+    if (mode === "import") {
+      return Object.fromEntries(
+        IMPORT_STEPS.map((step) => [step.id, importStepState(importPhase, step.id, importFailedStep)]),
+      );
+    }
+    if (mode === "resources") {
+      // Same builder as the visible list, minus timings, so the clock never feeds itself.
+      return stepStates(buildResourceSteps({ message, clock: NO_TIMINGS, telemetry: resourceSync }));
+    }
+    const failed = isError ? lastLivePhase : null;
+    return Object.fromEntries(BOOTSTRAP_STEPS.map((step) => [step.id, stepState(phase, step.id, failed)]));
+  });
 
   $effect(() => {
-    if (phase === "ready" || phase === "error") return;
-    elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-    const timer = setInterval(() => {
-      elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-    }, 1000);
-    return () => clearInterval(timer);
+    clock.sync(stateMap);
   });
 
-  /** Optional (n of m) progress from status messages, with a live estimate. */
-  interface ProgressEstimate {
-    percent: number;
-    etaSeconds: number | null;
-    current: number;
-    total: number;
-  }
-
-  let progressInfo = $derived.by<ProgressEstimate | null>(() => {
-    if (!message) return null;
-    const match = message.match(/\((\d+)\s+of\s+(\d+)\)/);
-    if (!match) return null;
-    const current = parseInt(match[1], 10);
-    const total = parseInt(match[2], 10);
-    if (isNaN(current) || isNaN(total) || total <= 0) return null;
-
-    const percent = Math.min(100, Math.round((current / total) * 100));
-    let etaSeconds: number | null = null;
-    if (current > 0 && elapsedSeconds > 0) {
-      const secondsPerItem = elapsedSeconds / current;
-      etaSeconds = Math.round((total - current) * secondsPerItem);
+  $effect(() => {
+    if (isReady || isError || (mode === "import" && (importPhase === "ready" || importPhase === "error"))) {
+      clock.freeze();
     }
-    return { percent, etaSeconds, current, total };
   });
 
-  let importEtaSeconds = $derived.by<number | null>(() => {
-    if (mode !== "import" || importPercent <= 0 || elapsedSeconds <= 0 || importPercent >= 100) return null;
-    return Math.max(0, Math.round((elapsedSeconds * (100 - importPercent)) / importPercent));
+  let steps = $derived.by<PipelineStep[]>(() => {
+    if (mode === "import") {
+      return buildImportSteps({
+        phase: importPhase,
+        failedStep: importFailedStep,
+        status: activityMessage,
+        clock,
+      });
+    }
+    if (mode === "resources") return buildResourceSteps({ message, clock, telemetry: resourceSync });
+    return buildStartupSteps({
+      phase,
+      failedPhase: isError ? lastLivePhase : null,
+      message,
+      error: error || "",
+      dbProgress,
+      reportProgress,
+      clock,
+    });
   });
 
-  function formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  }
-
-  function formatEta(seconds: number | null): string {
-    if (seconds === null) return "estimating…";
-    if (seconds <= 0) return "finishing…";
-    if (seconds < 60) return `${seconds}s remaining`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s remaining`;
-  }
-
-  interface SubStep {
-    label: string;
-    state: "pending" | "active" | "done";
-    details?: string;
-  }
-
-  let dbSubSteps = $derived.by<SubStep[]>(() => {
-    const steps: SubStep[] = [
-      { label: "Connect to database", state: "pending" },
-      { label: "Apply schema migrations", state: "pending" },
-      { label: "Migrate reference schema mappings", state: "pending" },
-      { label: "Seed evidence library packs", state: "pending" },
-      { label: "Normalize rsIDs & optimize indexes", state: "pending" }
-    ];
-
-    if (phase === "error") {
-      steps[0].state = "error" as any;
-      return steps;
+  let segments = $derived.by<PipelineSegment[]>(() => {
+    if (mode === "import") {
+      const state = isError ? "error" : isReady ? "done" : "active";
+      const accent = state === "error" ? "#f87171" : steps[Math.max(0, steps.findIndex((s) => s.state === "active"))]?.accent ?? "#2dd4bf";
+      return [{ id: "import", state, accent, fraction: importPercent / 100 }];
     }
-
-    const msg = message || "";
-
-    if (msg.includes("Connecting to local database")) {
-      steps[0].state = "active";
-    } else if (msg.includes("Applying schema migrations")) {
-      steps[0].state = "done";
-      steps[1].state = "active";
-    } else if (msg.includes("Migrating reference schema mappings") || msg.includes("Migrating reference database table")) {
-      steps[0].state = "done";
-      steps[1].state = "done";
-      steps[2].state = "active";
-      if (msg.includes("table")) {
-        steps[2].details = msg.replace("Migrating reference database table: ", "");
-      }
-    } else if (msg.includes("Seeding evidence library")) {
-      steps[0].state = "done";
-      steps[1].state = "done";
-      steps[2].state = "done";
-      steps[3].state = "active";
-      steps[3].details = msg.replace("Seeding evidence library: ", "");
-    } else if (msg.includes("Normalizing rsIDs") || msg.includes("Vacuuming") || msg.includes("Syncing GWAS")) {
-      steps[0].state = "done";
-      steps[1].state = "done";
-      steps[2].state = "done";
-      steps[3].state = "done";
-      steps[4].state = "active";
-      if (msg.includes("GWAS")) {
-        steps[4].details = "Syncing GWAS reference catalog…";
-      } else if (msg.includes("Vacuuming")) {
-        steps[4].details = "Vacuuming user database…";
-      } else {
-        steps[4].details = "Normalizing rsIDs…";
-      }
-    } else if (phase === "db") {
-      steps[0].state = "active";
+    if (mode === "resources") {
+      // Only the live operation has honest progress; unknown amounts sweep.
+      const live = steps.find((step) => step.state === "active");
+      return [
+        {
+          id: "resources",
+          state: "active",
+          accent: live?.accent ?? "#2dd4bf",
+          fraction: typeof live?.fraction === "number" ? live.fraction : null,
+        },
+      ];
     }
-
-    // If we've passed the db phase, they are all done
-    const currentPhaseIdx = PHASE_ORDER.indexOf(phase);
-    const dbPhaseIdx = PHASE_ORDER.indexOf("db");
-    if (currentPhaseIdx > dbPhaseIdx) {
-      for (const s of steps) s.state = "done";
-    }
-
-    return steps;
+    return segmentsFromSteps(steps);
   });
+
+  let percent = $derived.by<number | null>(() => {
+    if (mode === "import") return importPercent;
+    if (mode === "resources") {
+      const fraction = segments[0]?.fraction;
+      return typeof fraction === "number" ? Math.round(fraction * 100) : null;
+    }
+    if (isReady) return 100;
+    return overallPercent(steps);
+  });
+
+  let determinate = $derived(percent !== null);
+  let resourceView = $derived(resourceFocus(resourceSync, steps));
+
+  let activeIndex = $derived(steps.findIndex((step) => step.state === "active"));
+  let errorIndex = $derived(steps.findIndex((step) => step.state === "error"));
+  let focusIndex = $derived(activeIndex >= 0 ? activeIndex : errorIndex >= 0 ? errorIndex : 0);
+  let finished = $derived(isReady || (mode === "import" && importPhase === "ready"));
+  let failed = $derived(isError || (mode === "import" && importPhase === "error"));
+  let stepIndex = $derived(
+    mode === "resources" ? resourceView.stepIndex : finished ? steps.length : focusIndex + 1,
+  );
+  let stepLabel = $derived(
+    mode === "resources"
+      ? resourceView.stepLabel
+      : mode === "import" && segments.length === 1 && !finished && activeIndex < 0
+        ? "Waiting for confirmation"
+        : finished
+        ? "All steps complete"
+        : (steps[focusIndex]?.label ?? ""),
+  );
+
+  // Import ETA is measured from the moment real percentages start arriving.
+  let importStartOffsetMs = $state<number | null>(null);
+  $effect(() => {
+    if (mode !== "import" || importPercent <= 0) return;
+    untrack(() => {
+      if (importStartOffsetMs === null) importStartOffsetMs = clock.elapsedMs;
+    });
+  });
+
+  $effect(() => {
+    if (finished || failed) {
+      clock.observeEta("settled", null);
+      return;
+    }
+    if (mode === "import") {
+      const measured = importStartOffsetMs === null ? 0 : clock.elapsedMs - importStartOffsetMs;
+      clock.observeEta(
+        "import",
+        importPercent > 0 && importPercent < 100
+          ? { fraction: importPercent / 100, elapsedMs: measured }
+          : null,
+      );
+      return;
+    }
+    if (mode === "resources") {
+      // Download/index ETAs come straight from the backend counters (resume-aware).
+      clock.observeEta("resources", null);
+      return;
+    }
+    const sample = phase === "report" ? reportEtaSample(reportProgress) : null;
+    clock.observeEta(`startup:${phase}:${reportProgress?.phase ?? ""}`, sample);
+  });
+
+  let etaCaption = $derived(
+    mode === "import" ? "left to import" : mode === "resources" ? resourceView.etaCaption : "left in this scan",
+  );
+  let etaSeconds = $derived(mode === "resources" ? resourceView.etaSeconds : clock.eta);
+  let barCaption = $derived(
+    mode === "import"
+      ? "Import progress"
+      : mode === "resources"
+        ? (steps.find((step) => step.state === "active")?.label ?? "Reference sync")
+        : "Startup progress",
+  );
+  let stepListLabel = $derived(
+    mode === "import" ? "DNA import steps" : mode === "resources" ? "Reference sync steps" : "Startup steps",
+  );
 </script>
 
 <div
@@ -240,7 +328,7 @@
           ? "The import stopped safely. No incomplete profile was left behind; return to the workspace to retry."
           : "Check the database path and try restarting the app."}
       {:else if mode === "resources"}
-        Downloading and indexing local catalogs — this may take a while for large references.
+        Downloading and indexing local catalogs — this may take a while for large references.{#if resourceSync?.skipped}{" "}{resourceSync.skipped} already up to date.{/if}
       {:else if mode === "import"}
         Reading the file locally, normalizing coordinates, and preparing the selected profile.
       {:else if status?.sample_count === 0}
@@ -250,114 +338,71 @@
       {/if}
     </p>
 
-    <BootstrapActivityPulse
-      phase={activityPhase}
-      message={activityMessage}
-      isError={isError || (mode === "import" && importPhase === "error")}
-    />
+    <div class="loading-telemetry" role="group" aria-label={barCaption} aria-busy={!finished && !failed}>
+      <PipelineProgressBar {segments} {percent} caption={barCaption} label={barCaption} {determinate} />
+      <LoadingTelemetryStrip
+        elapsedMs={clock.elapsedMs}
+        {stepIndex}
+        stepCount={mode === "resources" ? resourceView.stepCount : steps.length}
+        stepTitle={mode === "resources" ? resourceView.stepTitle : "Step"}
+        {stepLabel}
+        {etaSeconds}
+        etaUnknown={mode === "resources" && resourceView.etaUnknown}
+        status={failed ? "error" : finished ? "done" : "running"}
+        {etaCaption}
+      />
+    </div>
 
-    {#if mode === "import"}
-      <div class="inner-progress-container bootstrap-motion" aria-label="DNA import progress" aria-live="polite">
-        <div class="inner-progress-bar">
-          <div class="inner-progress-fill" style="width: {importPercent}%"></div>
-        </div>
-        <div class="inner-progress-stats">
-          <span>{importPercent}% complete</span>
-          <span>⏱️ {formatTime(elapsedSeconds)} elapsed · {formatEta(importEtaSeconds)}</span>
-        </div>
-      </div>
-    {:else if progressInfo}
-      <div class="inner-progress-container bootstrap-motion" aria-label="Task progress">
-        <div class="inner-progress-bar">
-          <div class="inner-progress-fill" style="width: {progressInfo.percent}%"></div>
-        </div>
-        <div class="inner-progress-stats">
-          <span>{progressInfo.percent}% ({progressInfo.current}/{progressInfo.total})</span>
-          <span>⏱️ {formatTime(elapsedSeconds)} elapsed · {formatEta(progressInfo.etaSeconds)}</span>
-        </div>
-      </div>
-    {:else if phase !== "ready" && phase !== "error" && elapsedSeconds > 0}
-      <div class="inner-progress-stats elapsed-status bootstrap-motion">
-        <span>⏱️ {formatTime(elapsedSeconds)} elapsed</span>
-      </div>
-    {/if}
+    <div class="loading-steps">
+      <PipelineStepList {steps} ariaLabel={stepListLabel} />
+    </div>
 
-    {#if mode === "import"}
-      <ImportStepTimeline phase={importPhase} failedStep={importFailedStep} />
-
-      {#if importPreview}
-        <div class="import-details bootstrap-motion" aria-label="DNA import details">
-          <div class="import-details-heading">
-            <span>Import details</span>
-            <span class="import-local-badge">On-device</span>
+    {#if mode === "import" && importPreview}
+      <div class="import-details bootstrap-motion" aria-label="DNA import details">
+        <div class="import-details-heading">
+          <span>Import details</span>
+          <span class="import-local-badge">On-device</span>
+        </div>
+        <dl class="import-details-grid">
+          <div>
+            <dt>Profile</dt>
+            <dd>{importProfileName || "New profile"}</dd>
           </div>
-          <dl class="import-details-grid">
-            <div>
-              <dt>Profile</dt>
-              <dd>{importProfileName || "New profile"}</dd>
-            </div>
-            <div>
-              <dt>Source</dt>
-              <dd title={importPreview.source_file_name}>{importPreview.source_file_name}</dd>
-            </div>
-            <div>
-              <dt>Format</dt>
-              <dd>{importPreview.diagnostics.vendor} · {importPreview.diagnostics.delimiter}</dd>
-            </div>
-            <div>
-              <dt>Records</dt>
-              <dd>
-                {importPreview.diagnostics.accepted_rows.toLocaleString()} /
-                {importPreview.diagnostics.total_rows.toLocaleString()} accepted
-              </dd>
-            </div>
-            <div>
-              <dt>Source build</dt>
-              <dd>{importPreview.diagnostics.source_build}</dd>
-            </div>
-            <div>
-              <dt>Liftover</dt>
-              <dd>{importPreview.liftover_available ? "Available" : "Not installed"}</dd>
-            </div>
-          </dl>
-          {#if importPreview.diagnostics.malformed_rows > 0 || importPreview.diagnostics.duplicate_rows > 0 || importPreview.diagnostics.warnings.length > 0}
-            <p class="import-details-note">
-              {importPreview.diagnostics.malformed_rows.toLocaleString()} malformed ·
-              {importPreview.diagnostics.duplicate_rows.toLocaleString()} duplicates ·
-              {importPreview.diagnostics.warnings.length.toLocaleString()} warnings were recorded in the preview.
-            </p>
-          {/if}
-        </div>
-      {/if}
-    {:else}
-      {#if phase === "db" || (PHASE_ORDER.indexOf(phase) >= PHASE_ORDER.indexOf("db") && phase !== "ready")}
-        <div class="substep-checklist">
-          {#each dbSubSteps as step}
-            <div class="substep-item step-{step.state}">
-              <span class="substep-check">
-                {#if step.state === "done"}
-                  ✓
-                {:else if step.state === "active"}
-                  ⏳
-                {:else}
-                  ○
-                {/if}
-              </span>
-              <span class="substep-label">
-                {step.label}
-                {#if step.details}
-                  <span class="substep-details">{step.details}</span>
-                {/if}
-              </span>
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      <BootstrapStepTimeline {phase} />
+          <div>
+            <dt>Source</dt>
+            <dd title={importPreview.source_file_name}>{importPreview.source_file_name}</dd>
+          </div>
+          <div>
+            <dt>Format</dt>
+            <dd>{importPreview.diagnostics.vendor} · {importPreview.diagnostics.delimiter}</dd>
+          </div>
+          <div>
+            <dt>Records</dt>
+            <dd>
+              {importPreview.diagnostics.accepted_rows.toLocaleString()} /
+              {importPreview.diagnostics.total_rows.toLocaleString()} accepted
+            </dd>
+          </div>
+          <div>
+            <dt>Source build</dt>
+            <dd>{importPreview.diagnostics.source_build}</dd>
+          </div>
+          <div>
+            <dt>Liftover</dt>
+            <dd>{importPreview.liftover_available ? "Available" : "Not installed"}</dd>
+          </div>
+        </dl>
+        {#if importPreview.diagnostics.malformed_rows > 0 || importPreview.diagnostics.duplicate_rows > 0 || importPreview.diagnostics.warnings.length > 0}
+          <p class="import-details-note">
+            {importPreview.diagnostics.malformed_rows.toLocaleString()} malformed ·
+            {importPreview.diagnostics.duplicate_rows.toLocaleString()} duplicates ·
+            {importPreview.diagnostics.warnings.length.toLocaleString()} warnings were recorded in the preview.
+          </p>
+        {/if}
+      </div>
     {/if}
 
-    {#if status && !isError && mode !== "import"}
+    {#if status && !isError && mode === "startup"}
       <BootstrapStatReveal {status} {phase} />
     {/if}
 
@@ -436,111 +481,6 @@
     text-align: center;
   }
 
-  .inner-progress-container {
-    align-self: stretch;
-    width: 100%;
-    max-width: none;
-    margin: 0.85rem 0 0.35rem;
-    opacity: 1;
-    animation: none;
-  }
-
-  .inner-progress-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 0.35rem;
-  }
-
-  .inner-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), #818cf8);
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  .inner-progress-stats {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    font-family: var(--font-mono), monospace;
-  }
-
-  .elapsed-status {
-    justify-content: center;
-    width: auto;
-    margin: -0.25rem auto 1rem;
-  }
-
-  .substep-checklist {
-    align-self: stretch;
-    width: 100%;
-    max-width: none;
-    margin: 0.75rem 0 1rem;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: left;
-    box-sizing: border-box;
-    opacity: 1;
-    animation: none;
-  }
-
-  .substep-item {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
-  }
-
-  .substep-item.step-pending {
-    color: var(--text-secondary);
-    opacity: 0.4;
-  }
-
-  .substep-item.step-active {
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  .substep-item.step-done {
-    color: var(--success);
-  }
-
-  .substep-check {
-    font-family: var(--font-mono), monospace;
-    font-size: 0.8rem;
-    width: 1rem;
-    text-align: center;
-  }
-
-  .substep-label {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .substep-details {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    opacity: 0.75;
-    margin-top: 0.05rem;
-    font-family: var(--font-mono), monospace;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
   .import-details {
     align-self: stretch;
     width: 100%;
@@ -617,6 +557,21 @@
     color: var(--text-secondary);
     font-size: 0.65rem;
     line-height: 1.4;
+  }
+
+  .loading-telemetry {
+    display: flex;
+    align-self: stretch;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 100%;
+    margin-top: 1.1rem;
+  }
+
+  .loading-steps {
+    align-self: stretch;
+    width: 100%;
+    margin: 0.9rem 0 0.3rem;
   }
 
   .workspace-action {

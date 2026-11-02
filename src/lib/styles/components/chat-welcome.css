@@ -1,0 +1,156 @@
+/* ./src/lib/styles/components/chat-welcome.css
+ * Ask AI empty state: hero, privacy line and suggested-question cards.
+ */
+
+.welcome-chat {
+  margin: auto;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  animation: gc-rise var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.welcome-mark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  color: var(--accent-bright);
+  background: radial-gradient(circle at 30% 20%, var(--accent-soft), transparent 70%), var(--surface-subtle);
+  border: 1px solid var(--accent-border);
+}
+
+.welcome-mark svg { width: 34px; height: 34px; }
+
+.welcome-chat h3 {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.welcome-lede {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.welcome-privacy {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+  margin: 2px 0 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  background: var(--surface-subtle);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.welcome-privacy-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 0.45em;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.welcome-privacy[data-scope='local'] { color: var(--status-success-text); border-color: var(--status-success-border); background: var(--status-success-bg); }
+.welcome-privacy[data-scope='local'] .welcome-privacy-dot { background: var(--success); }
+.welcome-privacy[data-scope='remote'] { color: var(--status-warning-text); border-color: var(--status-warning-border); background: var(--status-warning-bg); }
+.welcome-privacy[data-scope='remote'] .welcome-privacy-dot { background: var(--warning); }
+
+.welcome-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-bright);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.welcome-link:focus-visible,
+.welcome-prompt-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.welcome-prompt-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.welcome-prompt-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, background-color var(--motion-fast) ease;
+  animation: gc-rise var(--motion-slow) var(--motion-ease-out) backwards;
+  animation-delay: calc(var(--motion-stagger) * (var(--i, 0) + 2));
+}
+
+.welcome-prompt-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.welcome-prompt-glyph {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--surface-inset);
+  font-size: 1rem;
+}
+
+.welcome-prompt-arrow {
+  color: var(--text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.welcome-prompt-card:hover .welcome-prompt-arrow {
+  color: var(--accent-bright);
+  transform: translateX(3px);
+}
+
+.welcome-hint {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-chat,
+  .welcome-prompt-card { animation: none; }
+  .welcome-prompt-card,
+  .welcome-prompt-arrow { transition: none; }
+  .welcome-prompt-card:hover { transform: none; }
+}

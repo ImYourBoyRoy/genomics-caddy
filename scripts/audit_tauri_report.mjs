@@ -92,9 +92,7 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       "Focus Report control has no visual separation from the first content block",
     );
   }
-  assert(layout.themeControlInSidebarFooter === true, "Theme control is not in the sidebar footer");
-  assert(layout.libraryControlInSidebarFooter === true, "Library folder control is not in the sidebar footer");
-  assert(layout.themeModeOptionCount === 3, "Sidebar theme control does not expose Auto, Light, and Dark choices");
+  assert(layout.settingsButtonInSidebarFooter === true, "Settings button is not in the sidebar footer");
   assert(layout.topToolbarPresent === false, "Redundant top report toolbar is still present");
   assert(layout.themeMenuOpen === false, "Theme control still exposes a popover menu");
   assert(layout.appContextMenuInstalled === true, "Application context menu is not installed in the desktop app");
@@ -131,11 +129,6 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       "Simple report overview is not using the available desktop banner width",
     );
   }
-  if (expectedMode === "simple" && layout.viewportWidth > 1400 && layout.actionQueueColumnCount !== null) {
-    assert(layout.actionQueueColumnCount === 3, "Simple action queue is not using the three-column desktop layout");
-  } else if (expectedMode === "simple" && layout.viewportWidth > 1100 && layout.actionQueueColumnCount !== null) {
-    assert(layout.actionQueueColumnCount === 2, "Simple action queue is not using the two-column desktop layout");
-  }
   if (layout.actionQueueWidth !== null && layout.mainContentWidth !== null) {
     assert(layout.actionQueueWidth < layout.mainContentWidth, "Action queue still stretches across the full report pane");
   }
@@ -153,9 +146,6 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
       layout.dashboardGuidanceCardMaxWidth <= layout.dashboardGuidanceWidth + 1,
       "Dashboard guidance card exceeds its measured guidance surface",
     );
-  }
-  if (layout.connectionsLaunchHeight !== null) {
-    assert(layout.connectionsLaunchHeight <= 72, "Advanced Connections launch surface is too tall for the default sidebar");
   }
   if (layout.liftoverStatusHeight !== null) {
     assert(layout.liftoverStatusHeight <= 72, "Healthy Liftover status surface is too tall for the default sidebar");
@@ -238,7 +228,6 @@ function validateDesktopSnapshot(snapshot, expectedMode) {
     cardWidth: layout.markerCardMaxWidth,
     simpleCardContract: snapshot.simpleCardContract,
     warningMetrics: snapshot.warningMetrics,
-    connectionsHeight: layout.connectionsLaunchHeight,
     liftoverHeight: layout.liftoverStatusHeight,
   };
 }
@@ -249,7 +238,7 @@ function validateResourceStatus(snapshot) {
       snapshot.resourceStatus === "current" ||
       snapshot.resourceStatus === "attention" ||
       snapshot.resourceStatus === "error",
-    "Collapsed Data & updates row did not expose a settled or in-progress status category",
+    "Settings button did not expose a settled or in-progress status category",
   );
   return snapshot.resourceStatus;
 }
@@ -891,16 +880,22 @@ async function main() {
     assert(ready.layout.mobileDataControlsTogglePresent, "Mobile data-controls launcher disappeared after report checks");
   }
 
+  // Theme lives in the Settings dialog now; the dialog itself is part of each contrast probe.
+  if (ready.layout.viewportWidth <= 720) await clickText("Data controls");
+  await clickText("Open settings");
+  await waitForSnapshot(() => true, "the Settings dialog");
   await selectTheme("Light mode", "light");
   const lightContrast = await probeContrast("light");
   await selectTheme("Dark mode", "dark");
   const darkContrast = await probeContrast("dark");
   await selectTheme("System default", "system");
   const systemContrast = await probeContrast("system");
+  await clickText("Close settings");
+  if (ready.layout.viewportWidth <= 720) await clickText("Close data");
 
   console.log("PASS: Tauri desktop report audit");
   console.log(`  viewport=${ready.layout.viewportWidth}x${ready.layout.viewportHeight}; requested_viewport=${requestedViewportWidth || "current"}x${requestedViewportHeight || "current"}; sex=${restored.sex}; modes=simple,clinical,compare; simple_columns=${modes.simple.columns ?? "n/a"}; compare_columns=${modes.compare.columns ?? "n/a"}`);
-  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; overview=${ready.layout.reportOverviewWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; action_queue_columns=${ready.layout.actionQueueColumnCount ?? "n/a"}; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; profiles=${ready.layout.profileNameCount}; profile_name_min_width=${ready.layout.profileNameMinWidth ?? "n/a"}px; connections=${modes.simple.connectionsHeight ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; sidebar_hide_top=${ready.layout.sidebarFocusControlTop ?? "n/a"}px; sidebar_hide_edge_gap=${ready.layout.sidebarFocusControlRightGap ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; medication_surface=clean; public_copy=clean`);
+  console.log(`  simple_cards=${modes.simple.markerCards}; simple_grid=${modes.simple.gridWidth ?? "n/a"}px; card_max=${modes.simple.cardWidth ?? "n/a"}px; overview=${ready.layout.reportOverviewWidth ?? "n/a"}px; action_queue=${ready.layout.actionQueueWidth ?? "n/a"}px; action_queue_shell=${ready.layout.actionQueueShellWidth ?? "n/a"}px; action_queue_columns=${ready.layout.actionQueueColumnCount ?? "n/a"}; guidance_grid=${ready.layout.dashboardGuidanceWidth ?? "n/a"}px; profiles=${ready.layout.profileNameCount}; profile_name_min_width=${ready.layout.profileNameMinWidth ?? "n/a"}px; liftover=${modes.simple.liftoverHeight ?? "n/a"}px; sidebar_hide_top=${ready.layout.sidebarFocusControlTop ?? "n/a"}px; sidebar_hide_edge_gap=${ready.layout.sidebarFocusControlRightGap ?? "n/a"}px; clinical_tables=${modes.clinical.clinicalTables}; compare_cards=${modes.compare.markerCards}; medication_surface=clean; public_copy=clean`);
   const simpleContract = modes.simple.simpleCardContract;
   console.log(`  simple_contract=${simpleContract?.cardCount ?? "n/a"}; title=${simpleContract?.titleCount ?? "n/a"}; signal=${simpleContract?.signalCount ?? "n/a"}; why_it_matters=${simpleContract?.whyItMattersCount ?? "n/a"}; review_action=${simpleContract?.reviewActionCount ?? "n/a"}; evidence=${simpleContract?.evidenceCount ?? "n/a"}; section_follow_up=${simpleContract?.sectionFollowUpCount ?? "n/a"}; details=${simpleContract?.detailsCount ?? "n/a"}; technical=${simpleContract?.technicalDataCount ?? "n/a"}`);
   console.log(`  recommendations=food:${recommendationMetrics.foodTileCount};supplements:${recommendationMetrics.supplementTileCount};food_columns:${recommendationMetrics.foodGridColumnCount ?? "n/a"};supplement_columns:${recommendationMetrics.supplementGridColumnCount ?? "n/a"};bounded_overflow:${recommendationMetrics.tileOverflowCount};reading_order:${recommendationMetrics.readingOrderValid};genes=warm:${recommendationMetrics.geneToneWarmAmber ?? "n/a"},quieter:${recommendationMetrics.geneTextQuieterThanInstruction};themed_actions:${recommendationMetrics.themedActionCount}/${recommendationMetrics.actionCount}`);

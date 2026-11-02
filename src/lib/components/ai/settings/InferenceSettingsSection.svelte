@@ -153,11 +153,11 @@
 
   .slider-value {
     font-size: 0.8rem;
-    background: rgba(88, 80, 236, 0.15);
-    color: #a5b4fc;
+    background: rgba(20, 184, 166, 0.15);
+    color: var(--accent-bright);
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(88, 80, 236, 0.3);
+    border: 1px solid rgba(20, 184, 166, 0.3);
     font-weight: 600;
   }
 
@@ -201,9 +201,9 @@
 
   .thinking-mode-active-info {
     font-size: 0.72rem;
-    background: rgba(88, 80, 236, 0.1);
-    border: 1px solid rgba(88, 80, 236, 0.25);
-    color: #a5b4fc;
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    color: var(--accent-bright);
     padding: 8px 10px;
     border-radius: 6px;
     line-height: 1.4;

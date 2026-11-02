@@ -15,6 +15,7 @@
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
   import LocalReferenceBrowser from "./LocalReferenceBrowser.svelte";
   import "$lib/styles/components/variant-browser.css";
+  import "$lib/styles/components/explore-help.css";
 
   interface Props {
     selectedSample: GenomeSample | null;
@@ -86,14 +87,14 @@
     <span class="vb-privacy">Local SQLite · no upload</span>
   </header>
 
-  <aside class="vb-insight" aria-labelledby="vb-insight-title">
-    <strong id="vb-insight-title">When to use this</strong>
+  <details class="vb-insight explore-help">
+    <summary><strong>When to use this</strong></summary>
     <p>
       Prefer <em>Trait Report</em> for curated pack findings and <em>Discovery</em> for ranked
       catalog associations. Use this browser when you need the raw genotype row or to page through a
       downloaded reference table.
     </p>
-  </aside>
+  </details>
 
   <div class="vb-subtabs" role="tablist" aria-label="Browser mode">
     <button

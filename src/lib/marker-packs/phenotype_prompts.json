@@ -478,13 +478,17 @@
         "neuropsych markers",
         "attention or executive-function markers",
         "mood or stress-response markers",
-        "sensory or neurodevelopmental context"
+        "sensory or neurodevelopmental context",
+        "emotion regulation, rejection sensitivity, or impulsivity context",
+        "dissociation or BPD-adjacent symptom context"
       ],
       "questions": [
         "Which attention, mood, anxiety, sleep, or sensory concerns are present; when did they begin; how often do they occur; and how do they affect daily life?",
         "For attention concerns, were similar patterns present earlier in life and across settings such as school, home, work, or relationships? Records or observations from someone who knew you earlier can help a clinician assess the history.",
+        "For emotion-regulation concerns, are there rapid or intense shifts, rejection or abandonment triggers, impulsive urges, emptiness, shutdown, depersonalization, or derealization? Record duration, triggers, relationship and functional impact rather than treating a DNA marker as an explanation.",
         "For mood or anxiety concerns, what is the duration and pattern, what changes the symptoms, and are there distinct episodes of unusually high energy or reduced need for sleep?",
-        "How do sleep quality, stress, pain, medications, supplements, caffeine or other substances, and current medical conditions affect the symptoms?",
+        "If relevant and wanted, have there been distressing or unsafe changes in sexual desire, sexual behavior, boundaries, or dissociation during sex? Treat this as self-reported clinical context only; sexual orientation, including asexuality, is not a symptom or DNA finding.",
+        "How do sleep quality, stress or trauma context, pain, medications, supplements, caffeine or other substances, cycle or hormone changes, and current medical conditions affect the symptoms?",
         "What supports or treatments have helped or caused problems, and what goals would you like help with?"
       ],
       "red_flags": [
@@ -494,15 +498,22 @@
         "rapidly worsening symptoms after starting or stopping a medication"
       ],
       "confirmations": [
-        "clinician-led history and appropriate standardized assessments; DNA markers do not establish ADHD, depression, or anxiety",
+        "clinician-led history and appropriate standardized assessments; DNA markers do not establish ADHD, depression, anxiety, BPD, or another psychiatric condition",
         "developmental, educational, work, and relationship context for attention concerns, including symptoms across settings",
-        "review of sleep, thyroid and other relevant medical factors, medication effects, and substance use when indicated",
-        "shared treatment planning based on symptoms, history, preferences, and safety rather than a common SNP or inferred neurotransmitter level",
+        "review of sleep, trauma or relationship context, thyroid and other relevant medical factors, medication effects, hormone or cycle timing, and substance use when indicated",
+        "shared treatment planning based on symptoms, history, preferences, and safety rather than a common SNP or inferred neurotransmitter or hormone level",
         "urgent mental-health or neurologic care when red flags are present"
       ],
       "sources": [
         "gwas_catalog",
         "pgs_catalog",
+        "bpd_gwas_2026",
+        "bpd_neurobiology_review_2024",
+        "bpd_hormone_review_2024",
+        "bpd_sexuality_2024",
+        "bpd_impulsivity_2023",
+        "bpd_oxytocin_review_2024",
+        "apa_sexual_minority_guidance",
         "nimh_adhd_adults",
         "nimh_depression",
         "nimh_generalized_anxiety",

@@ -15,8 +15,13 @@ describe('Sidebar update-state ordering', () => {
     expect(sidebarSource).not.toContain('if (companion?.update_available)');
   });
 
-  it('does not advertise a missing collapsed data panel as an aria-controls target', () => {
-    expect(sidebarSource).toContain('aria-controls={isPanelCollapsed ? undefined : "data-updates-panel"}');
+  it('renders Data & updates inside the Settings dialog instead of the sidebar body', () => {
+    expect(sidebarSource).toContain('{#snippet referenceDataSetting()}');
+    expect(sidebarSource).toContain('referenceData={referenceDataSetting}');
+    expect(sidebarSource).not.toContain('isPanelCollapsed');
+    expect(sidebarSource).not.toContain('data-updates-toggle');
+    expect(sidebarSource).toContain('data-resource-status={resourceStatusCategory}');
+    expect(sidebarSource).toContain('data-resource-update-phase={updatePhase}');
   });
 
   it('ignores stale status probes and waits for one final bulk-update refresh', () => {

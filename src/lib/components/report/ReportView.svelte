@@ -63,6 +63,10 @@
     onOpenDiscovery?: () => void;
     onOpenHelp?: () => void;
     onOpenContext?: () => void;
+    onOpenPlan?: () => void;
+    /** Link id to reveal once the report is mounted (set by the Plan tab's "View proof"). */
+    jumpToLinkId?: string;
+    onJumpHandled?: () => void;
   }
 
   let {
@@ -81,6 +85,9 @@
     onOpenDiscovery,
     onOpenHelp,
     onOpenContext,
+    onOpenPlan,
+    jumpToLinkId = "",
+    onJumpHandled,
   }: Props = $props();
 
   let showBenign = $state(false);
@@ -213,6 +220,13 @@
         collapsedSections = initial;
       }
     });
+  });
+
+  $effect(() => {
+    const target = jumpToLinkId;
+    if (!target || !generatedReport) return;
+    untrack(() => handleJumpToMarker(target));
+    onJumpHandled?.();
   });
 
   function expandAll() {
@@ -572,6 +586,7 @@
       onJumpToMarker={handleJumpToMarker}
       onJumpToMarkers={handleJumpToMarkers}
       onJumpToSection={handleJumpToSection}
+      {onOpenPlan}
       />
   {/if}
 

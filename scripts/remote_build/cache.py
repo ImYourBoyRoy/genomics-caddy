@@ -24,6 +24,7 @@ Outputs / side effects:
 from __future__ import annotations
 
 from remote_build.config import Settings, get_settings
+from remote_build.cache import RemoteCachePolicy, maintain_remote_cache
 from remote_build.upgrade.host import host_bash
 from remote_build.ssh import vm_ssh
 
@@ -142,6 +143,17 @@ def _subdirs_bash() -> str:
     return " ".join(f'"{s}"' for s in _PURGEABLE_SUBDIRS)
 
 
+def _host_target_policy(remote_dir: str) -> RemoteCachePolicy:
+    """Declare DNA's exact host target for the shared guarded high-water check."""
+    root = remote_dir.rstrip("/")
+    return RemoteCachePolicy(
+        project="dna_tools",
+        target_dir=f"{root}/src-tauri/target",
+        scope_root=f"{root}/src-tauri",
+        project_root=root,
+    )
+
+
 def purge_macos(
     guest_dir: str,
     remote_dir: str,
@@ -195,6 +207,18 @@ def purge_linux(
     )
     host_bash(script, settings=s, check=True, timeout=300)
     purge_host_staging(remote_dir, settings=s)
+    result = maintain_remote_cache(
+        _host_target_policy(remote_dir),
+        force=False,
+        reason="DNA_Tools post-build high-water check",
+        settings=s,
+        timeout=300,
+    )
+    if result.returncode != 0:
+        print(
+            "[CACHE WARN] Shared host target guard did not complete; "
+            "the DNA target was retained."
+        )
     print("[CACHE] Linux purge complete.")
 
 

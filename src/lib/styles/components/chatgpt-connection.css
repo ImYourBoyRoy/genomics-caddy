@@ -1,0 +1,117 @@
+/* ./src/lib/styles/components/chatgpt-connection.css
+   "Continue with ChatGPT" connection card and the provider switch in Ask AI settings. */
+
+.provider-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  margin: 0 0 var(--space-3, 12px);
+  background: var(--surface-inset, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+}
+
+.provider-switch button {
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-md, 8px) - 2px);
+  cursor: pointer;
+  transition: background var(--motion-fast, 120ms) ease, color var(--motion-fast, 120ms) ease;
+}
+
+.provider-switch button[aria-checked='true'] {
+  color: var(--accent-bright);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.provider-switch button:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 1px;
+}
+
+.gpt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-raised, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+}
+
+.gpt-card[data-state='connected'] { border-color: var(--accent-border); }
+.gpt-card[data-state='limited'] { border-color: var(--status-warning-border); }
+
+.gpt-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gpt-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gpt-copy strong {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.gpt-copy span {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.gpt-dot,
+.gpt-pulse {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+}
+
+.gpt-card[data-state='limited'] .gpt-dot { background: var(--warning); }
+
+.gpt-pulse { animation: gc-pulse-dot 1.4s ease-in-out infinite; }
+
+.gpt-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.gpt-actions .btn { flex: 1; }
+
+.gpt-disclosure {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.gpt-error {
+  padding: 6px 8px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-pulse { animation: none; }
+  .provider-switch button { transition: none; }
+}

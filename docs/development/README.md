@@ -62,6 +62,7 @@ and leave a lockfile.
 | --- | --- |
 | `pnpm run tauri:dev` | Desktop app (real DNA import) |
 | `pnpm run dev` | Vite preview only; no Tauri import |
+| `pnpm run loading-lab` | Dev-only scripted loader states at `/__loading-lab` (no DNA, no downloads) |
 | `pnpm run mcp` | Headless MCP (see [../mcp/README.md](../mcp/README.md)) |
 | `pnpm test` | Frontend tests |
 | `pnpm run check` | Svelte / TypeScript |
@@ -87,10 +88,26 @@ port). `pnpm run audit:tauri-ui` reads the same 0600 runtime endpoint file.
 Do not set `GENOMICS_AGENT_UI_ALLOW_UNAUTHENTICATED=1` except for disposable
 local QA.
 
+### Loading lab (scripted overlays)
+
+For loader animation and telemetry without DNA files or multi‑GB downloads:
+
+```bash
+pnpm run loading-lab
+# → http://127.0.0.1:5199/__loading-lab?s=res-download
+```
+
+Scenarios (`s=`): `res-scan`, `res-download`, `res-index`, `startup`,
+`import`. Source: `src/lib/dev/loadingLabScenarios.ts`. The route is
+gated by `import.meta.env.DEV` so production / release builds show a
+closed gate instead of fixtures. Prefer this before a full
+`tauri-ui-visual-capture` pass when only the overlay design is in scope.
+
 ## `.env`
 
 Copy `.env.example` → `.env`. UI-saved Connections override `.env`. Never
-commit `.env`. Details: [../ai-chat/README.md](../ai-chat/README.md).
+commit `.env`. ChatGPT plan sign-in needs no env vars and no API key —
+details: [../ai-chat/README.md](../ai-chat/README.md).
 
 ## Layout (agents)
 

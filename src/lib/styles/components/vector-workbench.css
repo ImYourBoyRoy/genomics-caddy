@@ -714,12 +714,3 @@
 .viewer-loading {
   padding: 0.75rem;
 }
-
-@keyframes indeterminate {
-  0% {
-    transform: translateX(-60%);
-  }
-  100% {
-    transform: translateX(160%);
-  }
-}

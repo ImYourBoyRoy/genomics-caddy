@@ -22,7 +22,9 @@ describe('desktop bootstrap screen', () => {
     expect(screenSource).toContain('background: #0c1220;');
     expect(screenSource).toContain('animation: none;');
     expect(screenSource).toContain('style="opacity:1;visibility:visible;color:#eef2ff;background:#0c1220;"');
-    expect(screenSource).toContain('<BootstrapActivityPulse');
+    expect(screenSource).toContain('<PipelineStepList');
+    expect(screenSource).toContain('<LoadingTelemetryStrip');
+    expect(screenSource).toContain('<PipelineProgressBar');
     expect(screenSource).not.toContain('class="live-status"');
     expect(screenSource).not.toContain('backdrop-filter:');
     expect(screenSource).not.toContain('animation: bootstrap-fade-up');
@@ -36,17 +38,17 @@ describe('desktop bootstrap screen', () => {
     expect(screenSource).toContain('class="bootstrap-helix-slot"');
     expect(screenSource).toContain('place-items: center;');
     expect(helixSource).toContain('class="helix-anchor"');
-    expect(helixSource).toContain('class="helix-stage"');
+    expect(helixSource).toContain('<SequencingHelix percentage={helixPercent} />');
     expect(helixSource).toContain('right: clamp(1.5rem, 7vw, 8rem);');
     expect(helixSource).toContain('width: min(34vw, 28rem);');
-    expect(helixSource).toContain('animation: bootstrap-helix-drift 9s ease-in-out infinite;');
+    expect(helixSource).toContain('--helix-period: 6s;');
   });
 
   it('keeps startup status text visible with inline styles instead of a second overlay card', () => {
     expect(overlaySource).not.toContain('bootstrap-status-strip');
     expect(overlaySource).not.toContain('hideHeadline={true}');
     expect(screenSource).toContain('Starting Genomics Caddy');
-    expect(screenSource).toContain('message={activityMessage}');
+    expect(screenSource).toContain('activityMessage');
   });
 
   it('ships a static first-paint loader layout for native WebKit', () => {
@@ -58,7 +60,6 @@ describe('desktop bootstrap screen', () => {
     expect(themeSource).toContain('.bootstrap-overlay .helix-anchor');
     expect(themeSource).toContain('right: clamp(1.5rem, 7vw, 8rem);');
     expect(themeSource).toContain('width: min(34vw, 28rem);');
-    expect(themeSource).toContain('animation: bootstrap-helix-drift 9s ease-in-out infinite;');
   });
 
   it('keeps the loader reachable when display scaling reduces the CSS viewport height', () => {
@@ -67,7 +68,7 @@ describe('desktop bootstrap screen', () => {
     expect(themeSource).toContain('@media screen and (max-height: 800px)');
     expect(themeSource).toContain('place-items: start center;');
     expect(screenSource).toContain('overflow: visible;');
-    expect(screenSource).toContain('flex-wrap: wrap;');
+    expect(screenSource).toContain('@media (max-width: 720px)');
   });
 
   it('keeps DNA import confirmation inside the waterfall until cancel or confirm', () => {
@@ -87,11 +88,14 @@ describe('desktop bootstrap screen', () => {
   it('keeps startup checkpoints visible while the native database status is loading', () => {
     expect(bootstrapSource).toContain('const ticker = setInterval');
     expect(bootstrapSource).toContain('callbacks.onPhase("db", DB_TICKER_MESSAGES[tickerIdx]);');
-    expect(bootstrapSource).toContain('await bootstrapSleep(450);');
-    expect(bootstrapSource).toContain('await bootstrapSleep(700);');
-    expect(screenSource).toContain('let elapsedSeconds = $state(0);');
-    expect(screenSource).toContain('setInterval(() =>');
-    expect(screenSource).toContain('formatEta(progressInfo.etaSeconds)');
+    // The ticker only belongs to the db phase; it must stop before real status lands
+    // or it rewinds the checklist to step one while the report generates.
+    expect(bootstrapSource.indexOf('clearInterval(ticker);')).toBeLessThan(bootstrapSource.indexOf('callbacks.onStatus(status);'));
+    expect(readFileSync(resolve(process.cwd(), 'src/routes/+page.svelte'), 'utf8')).toContain('PHASE_ORDER.indexOf(phase) < PHASE_ORDER.indexOf(bootstrapPhase)');
+    expect(screenSource).toContain('new PipelineClock(');
+    expect(screenSource).toContain('clock.observeEta(');
+    expect(screenSource).toContain('mode === "resources" ? resourceView.etaSeconds : clock.eta');
+    expect(overlaySource).toContain('{resourceSync}');
     expect(screenSource).toContain('import a genome whenever you’re ready.');
     expect(bootstrapSource).toContain('Ready — import a genome to begin.');
   });
@@ -121,7 +125,7 @@ describe('desktop bootstrap screen', () => {
     expect(importSource).toContain('importPhase: "report"');
     expect(importSource).toContain('importPhase: "ready"');
     expect(screenSource).toContain('mode === "import"');
-    expect(screenSource).toContain('<ImportStepTimeline');
+    expect(screenSource).toContain('buildImportSteps(');
     expect(overlaySource).toContain('mode === "import"');
   });
 

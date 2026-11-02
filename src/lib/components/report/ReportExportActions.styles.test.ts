@@ -17,11 +17,13 @@ describe('report export actions', () => {
 
   it('keeps technical and secondary exports behind More', () => {
     const moreIndex = source.indexOf('<details class="report-export-more">');
+    const clinicianIndex = source.indexOf('Clinician handoff');
     const aiBundleIndex = source.indexOf('AI review bundle');
     const technicalIndex = source.indexOf('Curated pack JSON');
     expect(moreIndex).toBeGreaterThan(-1);
-    expect(aiBundleIndex).toBeGreaterThan(-1);
-    expect(aiBundleIndex).toBeLessThan(moreIndex);
+    expect(clinicianIndex).toBeGreaterThan(-1);
+    expect(clinicianIndex).toBeLessThan(moreIndex);
+    expect(aiBundleIndex).toBeGreaterThan(moreIndex);
     expect(technicalIndex).toBeGreaterThan(moreIndex);
     expect(source).toContain('<summary>More</summary>');
   });

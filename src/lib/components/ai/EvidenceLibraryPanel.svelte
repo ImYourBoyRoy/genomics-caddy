@@ -270,15 +270,15 @@
         📂
       </button>
       <h3>Local Evidence Library</h3>
-      <span class="badge info">Browse · Filter · Export</span>
     </div>
 
     <div class="panel-header-actions">
-      <div class="library-mode-toggle">
+      <div class="library-mode-toggle" role="group" aria-label="Evidence view">
         <button
           type="button"
           class="btn btn-secondary btn-sm"
           class:drawer-open={libraryMode === "browse"}
+          aria-pressed={libraryMode === "browse"}
           onclick={() => (libraryMode = "browse")}
         >
           Findings Navigator
@@ -287,6 +287,7 @@
           type="button"
           class="btn btn-secondary btn-sm"
           class:drawer-open={libraryMode === "search"}
+          aria-pressed={libraryMode === "search"}
           onclick={() => (libraryMode = "search")}
         >
           Search &amp; tools

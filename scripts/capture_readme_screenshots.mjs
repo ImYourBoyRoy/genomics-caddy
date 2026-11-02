@@ -9,7 +9,7 @@
  * Outputs: `docs/images/readme-*-dark.png`, `readme-*-light.png`, and
  *          `readme-*.webp` (animated dark→light). Aggregate logs only.
  * Notes: Waits out the 2500ms theme veil before capture. Keeps the data
- *        sidebar visible (import, profiles, Data & updates). Aborts if
+ *        sidebar visible (import, profiles, Settings > Data & updates). Aborts if
  *        home-directory or LAN-looking text is on screen. Never prints
  *        genotype values, profile names, or image payloads.
  */
@@ -81,13 +81,14 @@ async function applyTheme(shortLabel) {
   await setSidebarVisible(true);
 }
 
+/** Data & updates lives in the Settings dialog; open or close it. */
 async function ensureDataUpdatesExpanded(wantOpen) {
   const sync = await ui("queryText", { text: "Sync All Missing" });
   const open = Number(sync?.count) > 0;
   if (wantOpen === open) return;
-  const clicked = await ui("clickText", { text: "Data & updates" });
+  const clicked = await ui("clickText", { text: wantOpen ? "Open settings" : "Close settings" });
   if (clicked?.ok === false) {
-    throw new Error("could not toggle Data & updates");
+    throw new Error("could not toggle the Settings dialog");
   }
   await sleep(500);
 }

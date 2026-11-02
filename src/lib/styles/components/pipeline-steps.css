@@ -1,0 +1,333 @@
+/* ./src/lib/styles/components/pipeline-steps.css
+ * Pipeline step list used by startup, reference sync, and DNA import.
+ *
+ * Each row: [node] label ........ chip, with a live detail line that expands
+ * under the active row only. The expand uses grid-template-rows so the list
+ * height stays steady while the active row moves. Every step brings its own
+ * color through --step-accent. Only transform/opacity loop; reduced motion
+ * freezes them (bottom of file).
+ */
+
+.ps-list {
+  --lt-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.ps-step {
+  --node: 24px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--node) minmax(0, 1fr);
+  column-gap: 0.8rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.45rem;
+  border-radius: 12px;
+  transition: background-color 320ms var(--lt-ease);
+}
+
+.ps-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--step-accent) 13%, transparent),
+    transparent 88%
+  );
+}
+
+/* --- Rail between nodes --------------------------------------------------- */
+
+.ps-rail {
+  position: absolute;
+  top: calc(0.2rem + 2px + var(--node) + 2px);
+  bottom: -0.2rem;
+  left: calc(0.45rem + var(--node) / 2 - 1px);
+  width: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+}
+
+.ps-last .ps-rail {
+  display: none;
+}
+
+.ps-rail-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--step-accent);
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 520ms var(--lt-ease);
+}
+
+.ps-done .ps-rail-fill {
+  transform: scaleY(1);
+}
+
+.ps-rail-flow {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 45%;
+  background: linear-gradient(180deg, transparent, var(--step-accent), transparent);
+  transform: translateY(-110%);
+  animation: ps-flow 1.5s linear infinite;
+}
+
+/* --- State node ----------------------------------------------------------- */
+
+.ps-node {
+  z-index: 1;
+  width: var(--node);
+  height: var(--node);
+  margin-top: 2px;
+}
+
+.ps-node svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ps-node-ring {
+  stroke: color-mix(in srgb, var(--text-primary) 24%, transparent);
+  stroke-width: 1.5;
+  transition: stroke 300ms var(--lt-ease);
+}
+
+.ps-active .ps-node-ring {
+  stroke: color-mix(in srgb, var(--step-accent) 28%, transparent);
+}
+
+.ps-done .ps-node-ring,
+.ps-error .ps-node-ring {
+  stroke: color-mix(in srgb, var(--step-accent) 70%, transparent);
+}
+
+.ps-node-fill {
+  fill: color-mix(in srgb, var(--step-accent) 20%, transparent);
+  stroke: none;
+}
+
+.ps-node-arc {
+  stroke: var(--step-accent);
+  stroke-dasharray: 15 39;
+  stroke-width: 2.4;
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: ps-spin 1s linear infinite;
+}
+
+.ps-node-core {
+  fill: var(--step-accent);
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ps-core 1.4s ease-in-out infinite;
+}
+
+.ps-node-check,
+.ps-node-cross {
+  stroke: var(--step-accent);
+  stroke-width: 2.2;
+}
+
+.ps-node-check {
+  stroke-dasharray: 14;
+  animation: ps-draw 460ms 80ms var(--lt-ease) backwards;
+}
+
+.ps-error {
+  --step-accent: var(--danger);
+}
+
+/* --- Label, chips, detail ------------------------------------------------- */
+
+.ps-body {
+  min-width: 0;
+  padding: 3px 0 2px;
+}
+
+.ps-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--node);
+}
+
+.ps-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: color-mix(in srgb, var(--text-secondary) 72%, transparent);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.3;
+  transition: color 300ms var(--lt-ease);
+}
+
+.ps-active .ps-label {
+  color: var(--text-primary);
+}
+
+.ps-done .ps-label {
+  color: color-mix(in srgb, var(--text-primary) 82%, transparent);
+}
+
+.ps-error .ps-label {
+  color: var(--status-danger-strong-text, var(--danger));
+}
+
+.ps-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ps-meta {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ps-chip {
+  flex: 0 0 auto;
+  min-width: 3.4em;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--step-accent) 38%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--step-accent) 11%, transparent);
+  color: var(--step-accent);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.ps-chip-done {
+  color: color-mix(in srgb, var(--step-accent) 75%, var(--text-primary));
+}
+
+.ps-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--lt-ease);
+}
+
+.ps-reveal.ps-open {
+  grid-template-rows: 1fr;
+}
+
+.ps-reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ps-detail {
+  min-height: 1.3em;
+  margin: 0.1rem 0 0.45rem;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-error .ps-detail {
+  color: var(--status-danger-strong-text, var(--danger));
+  white-space: normal;
+}
+
+.ps-mini {
+  position: relative;
+  display: block;
+  height: 3px;
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+}
+
+.ps-mini i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--step-accent);
+  transform: scaleX(var(--mini-fill, 0));
+  transform-origin: left center;
+  transition: transform 600ms var(--lt-ease);
+}
+
+.ps-mini-indeterminate i {
+  inset: 0 auto 0 0;
+  width: 34%;
+  transform: none;
+  transition: none;
+  animation: lt-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes ps-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ps-core {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes ps-draw {
+  from {
+    stroke-dashoffset: 14;
+  }
+}
+
+@keyframes ps-flow {
+  to {
+    transform: translateY(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-node-arc,
+  .ps-node-core,
+  .ps-node-check,
+  .ps-rail-flow,
+  .ps-mini-indeterminate i {
+    animation: none;
+  }
+
+  .ps-rail-flow {
+    display: none;
+  }
+
+  .ps-rail-fill,
+  .ps-mini i,
+  .ps-reveal,
+  .ps-step {
+    transition: none;
+  }
+}

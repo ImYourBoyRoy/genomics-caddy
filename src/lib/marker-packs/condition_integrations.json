@@ -1,13 +1,14 @@
 {
   "name": "condition_integrations",
-  "version": "1.2.0",
-  "last_updated": "2026-09-25",
+  "version": "1.3.0",
+  "last_updated": "2026-10-29",
   "purpose": "Condition-level evidence groupings for displaying matched DNA indicators as potential health patterns without converting marker counts into probabilities or diagnoses.",
   "policy": {
     "counting": "Count unique curated marker IDs with a verified call and a non-zero reported effect. Cross-pack copies of one rsID count once within a condition.",
     "denominator": "The denominator is the number of indicator IDs curated for the condition, not a disease probability denominator.",
     "prs": "This app does not calculate PRS values. GWAS Catalog rows are population locus–trait associations, and PGS Catalog entries are model metadata rather than personal results. Any future score requires model-specific validation, ancestry-aware performance review, source-build and allele harmonization, and adequate genotype coverage.",
     "diagnostic_language": "A clinical-variant route may be shown when a marker is explicitly authored as clinically actionable, but a consumer-array call remains unconfirmed until an appropriate clinical test verifies it.",
+    "symptom_context": "A condition may link a separate symptom_context_resource for named potential symptom patterns and comparison prompts. Those patterns are phenotype context to compare with lived experience, not evidence that current symptoms are present.",
     "coverage_gaps": [
       {
         "id": "pots",
@@ -177,6 +178,19 @@
       "plain_meaning": "These common GWAS loci have been studied in bipolar-spectrum research, but they are weak, non-specific signals and do not identify bipolar disorder.",
       "clinical_route": "Use symptoms over time, sleep and energy changes, medication history, family history, and a clinician's assessment.",
       "sources": ["gwas_catalog", "pgs_catalog", "hpo"]
+    },
+    {
+      "id": "bpd_symptom_research_context",
+      "label": "Borderline personality symptom-pattern research context",
+      "category": "mood_and_stress",
+      "signal_type": "research_context",
+      "diagnostic_capability": "clinical_evaluation_required",
+      "max_relative_signal": "limited",
+      "marker_ids": ["rs2143288", "rs9970854", "rs12466671", "rs6549383", "rs2135029", "rs4727799", "rs10953781", "rs73581580", "rs7304862", "rs7210027", "rs5944622"],
+      "symptom_context_resource": "bpd_symptom_context",
+      "plain_meaning": "Your matched loci from the 2026 BPD genome-wide study may be relevant to experiencing emotion intensity or rapid shifts, rejection sensitivity, impulsivity or reward urgency, depressive or empty states, dissociation, and—in some people—cycle-linked changes. This is population research context, not an individual BPD result, symptom prediction, current neurotransmitter or hormone measurement, or polygenic score.",
+      "clinical_route": "Compare symptom onset, duration, triggers, sleep and energy, relationship or trauma context, cycle or hormone timing, medications or substances, and functional impact with a clinician. Seek urgent local support for immediate danger, self-harm or suicidal thoughts, or loss of reality testing.",
+      "sources": ["bpd_gwas_2026", "bpd_neurobiology_review_2024", "bpd_hormone_review_2024", "bpd_impulsivity_2023", "bpd_sexuality_2024", "bpd_oxytocin_review_2024", "apa_sexual_minority_guidance"]
     },
     {
       "id": "hereditary_breast_ovarian_cancer_clinical_route",

@@ -1,7 +1,8 @@
 <!-- ./src/lib/components/common/bootstrap/BootstrapHelixBackdrop.svelte -->
 <script lang="ts">
   import type { BootstrapPhase } from "./bootstrapPhases";
-  import { PHASE_ACCENT } from "./bootstrapPhases";
+  import { PHASE_ACCENT, PHASE_ORDER } from "./bootstrapPhases";
+  import SequencingHelix from "../loading/SequencingHelix.svelte";
 
   interface Props {
     phase: BootstrapPhase;
@@ -19,14 +20,12 @@
     dy: `${-28 - (i % 16)}px`,
   }));
 
-  const rungs = Array.from({ length: 14 }, (_, i) => ({
-    i,
-    x1: 120 + Math.sin(i * 0.9) * 80,
-    y1: 20 + i * 36,
-    x2: 280 - Math.sin(i * 0.9) * 80,
-    y2: 20 + i * 36,
-    delay: i * 0.12,
-  }));
+  // Startup phases light the strand from the top; an error leaves it dark.
+  let helixPercent = $derived.by(() => {
+    if (phase === "error") return 0;
+    const index = PHASE_ORDER.indexOf(phase);
+    return Math.round(((index + (phase === "ready" ? 0 : 0.5)) / (PHASE_ORDER.length - 1)) * 100);
+  });
 </script>
 
 <div
@@ -37,84 +36,7 @@
   <div class="mesh-glow"></div>
 
   <div class="helix-anchor">
-    <div class="helix-stage">
-      <svg class="helix-svg" viewBox="0 0 400 520" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <linearGradient id="strand-a" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="var(--phase-accent)" stop-opacity="0.05" />
-          <stop offset="50%" stop-color="var(--phase-accent)" stop-opacity="0.55" />
-          <stop offset="100%" stop-color="var(--phase-accent)" stop-opacity="0.05" />
-        </linearGradient>
-        <linearGradient id="strand-b" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="var(--success)" stop-opacity="0.04" />
-          <stop offset="50%" stop-color="var(--success)" stop-opacity="0.4" />
-          <stop offset="100%" stop-color="var(--success)" stop-opacity="0.04" />
-        </linearGradient>
-      </defs>
-
-      <path
-        class="strand strand-a"
-        d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
-        fill="none"
-        stroke="url(#strand-a)"
-        stroke-width="16"
-        opacity="0.15"
-      />
-      <path
-        class="strand strand-a"
-        d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
-        fill="none"
-        stroke="url(#strand-a)"
-        stroke-width="7"
-        opacity="0.45"
-      />
-      <path
-        class="strand strand-a"
-        d="M 120 0 Q 220 65 120 130 Q 20 195 120 260 Q 220 325 120 390 Q 20 455 120 520"
-        fill="none"
-        stroke="url(#strand-a)"
-        stroke-width="2"
-      />
-
-      <path
-        class="strand strand-b"
-        d="M 280 0 Q 180 65 280 130 Q 380 195 280 260 Q 180 325 280 390 Q 380 455 280 520"
-        fill="none"
-        stroke="url(#strand-b)"
-        stroke-width="16"
-        opacity="0.12"
-      />
-      <path
-        class="strand strand-b"
-        d="M 280 0 Q 180 65 280 130 Q 380 195 280 260 Q 180 325 280 390 Q 380 455 280 520"
-        fill="none"
-        stroke="url(#strand-b)"
-        stroke-width="7"
-        opacity="0.35"
-      />
-      <path
-        class="strand strand-b"
-        d="M 280 0 Q 180 65 280 130 Q 380 195 280 260 Q 180 325 280 390 Q 380 455 280 520"
-        fill="none"
-        stroke="url(#strand-b)"
-        stroke-width="2"
-      />
-
-      {#each rungs as rung}
-        <line
-          class="rung"
-          style="animation-delay: {rung.delay}s"
-          x1={rung.x1}
-          y1={rung.y1}
-          x2={rung.x2}
-          y2={rung.y2}
-          stroke="var(--phase-accent)"
-          stroke-opacity="0.22"
-          stroke-width="1"
-        />
-      {/each}
-    </svg>
-    </div>
+    <SequencingHelix percentage={helixPercent} />
   </div>
 
   {#each particles as p}
@@ -157,30 +79,18 @@
     width: min(34vw, 28rem);
     height: min(70vh, 34rem);
     transform: translateY(-50%);
-    opacity: 0.42;
+    opacity: 0.75;
   }
 
-  .helix-stage {
-    width: 100%;
+  .helix-anchor :global(.sequencing-helix) {
+    --helix-width: clamp(9rem, 22vw, 15rem);
+    --helix-amp: calc(var(--helix-width) * 0.42);
+    --helix-node: clamp(0.6rem, 1.3vw, 0.95rem);
+    --helix-period: 6s;
+    --accent: var(--phase-accent);
+    width: var(--helix-width);
     height: 100%;
-    animation: bootstrap-helix-drift 9s ease-in-out infinite;
-  }
-
-  .helix-svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  .strand {
-    stroke-linecap: round;
-  }
-
-  .strand-a {
-    animation: bootstrap-helix-drift 7s ease-in-out infinite reverse;
-  }
-
-  .rung {
-    opacity: 0.35;
+    margin-inline: auto;
   }
 
   .particle {

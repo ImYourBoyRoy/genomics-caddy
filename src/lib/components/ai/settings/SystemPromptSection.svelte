@@ -35,7 +35,7 @@
   .instructions-textarea {
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border-color);
-    color: #a5b4fc;
+    color: var(--accent-bright);
     padding: 8px;
     border-radius: 6px;
     font-size: 0.76rem;

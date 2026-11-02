@@ -1,5 +1,7 @@
 <!-- ./src/lib/components/ai/ChatSettingsDrawer.svelte -->
 <script lang="ts">
+  import "$lib/styles/components/chat-settings-drawer.css";
+  import type { ChatProvider } from "../../utils/chatProvider";
   import ConnectionModelSection from "./settings/ConnectionModelSection.svelte";
   import InferenceSettingsSection from "./settings/InferenceSettingsSection.svelte";
   import GenomicContextSection from "./settings/GenomicContextSection.svelte";
@@ -25,6 +27,8 @@
   }
 
   interface Props {
+    chatProvider?: ChatProvider;
+    onChatProviderChange?: (provider: ChatProvider) => void;
     ollamaUrl: string;
     ollamaToken: string;
     selectedModel: string;
@@ -63,6 +67,8 @@
   }
 
   let {
+    chatProvider = "ollama",
+    onChatProviderChange,
     ollamaUrl = $bindable(),
     ollamaToken = $bindable(),
     selectedModel = $bindable(),
@@ -103,9 +109,11 @@
 
 <aside class="settings-drawer">
   <div class="drawer-inner">
-    
+
     <!-- SECTION 1: Connection & Model -->
     <ConnectionModelSection
+      {chatProvider}
+      {onChatProviderChange}
       bind:ollamaUrl
       bind:ollamaToken
       bind:selectedModel
@@ -172,74 +180,3 @@
     {/if}
   </div>
 </aside>
-
-<style>
-  .settings-drawer {
-    flex: 0 0 288px;
-    display: flex;
-    flex-direction: column;
-    background: rgba(10, 11, 20, 0.45);
-    border-left: 1px solid var(--border-color);
-    box-sizing: border-box;
-    height: 100%;
-    overflow-y: auto;
-    padding: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .drawer-inner {
-    width: 264px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  /* Shared accordion styles — applied to child sections via :global */
-  :global(.settings-details-group) {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.01);
-    margin-bottom: 8px;
-    overflow: hidden;
-  }
-
-  :global(.settings-details-group[open]) {
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  :global(.settings-details-summary) {
-    padding: 10px 12px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    cursor: pointer;
-    user-select: none;
-    background: rgba(0, 0, 0, 0.15);
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  :global(.settings-details-summary::-webkit-details-marker) {
-    display: none;
-  }
-
-  :global(.settings-details-summary::after) {
-    content: "▶";
-    font-size: 0.65rem;
-    transition: transform 0.2s;
-    opacity: 0.7;
-  }
-
-  :global(.settings-details-group[open] > .settings-details-summary::after) {
-    transform: rotate(90deg);
-  }
-
-  :global(.settings-details-content) {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-</style>

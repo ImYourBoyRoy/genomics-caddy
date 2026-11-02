@@ -19,7 +19,7 @@ describe('genome-wide disease discovery presentation', () => {
     expect(source).toContain('copyCountLabel(assertion.alt_allele_copies)');
     expect(source).toContain('this is not a measure of how much of your whole genome was read');
     expect(source).toContain('Each item links one condition to one marker.');
-    expect(source).toContain('ClinVar condition links ({summaryCounts}). These links are not diagnoses.');
+    expect(source).toContain('ClinVar condition links ({summaryCounts}).');
     expect(source).toContain('DNA marker {group.rsid}');
     expect(source).toContain('yourCopiesLabel(group.copyCount)');
     expect(source).toContain('DNA variant copy count');

@@ -34,9 +34,7 @@
 
 <section class="report-export-strip card no-print" aria-labelledby="report-export-title">
   <div class="report-export-intro">
-    <span class="quality-kicker">Share this report</span>
-    <h3 id="report-export-title">Save a useful copy</h3>
-    <p>Local-only. AI and clinician handoffs include raw genotype calls; choose Personal or PDF for a summary-oriented copy.</p>
+    <h3 id="report-export-title">Export</h3>
   </div>
 
   <div class="report-export-primary" aria-label="Common report exports">
@@ -52,13 +50,13 @@
     <button type="button" class="btn btn-secondary btn-sm" onclick={onPrintReport} disabled={isPreparingPrint}>
       {isPreparingPrint ? 'Preparing PDF…' : 'PDF'}
     </button>
-    <button type="button" class="btn btn-secondary btn-sm" onclick={() => onExportAudience('ai')} disabled={Boolean(audienceExportBusy)}>
-      {audienceExportBusy === 'ai' ? 'Saving…' : 'AI review bundle'}
-    </button>
 
     <details class="report-export-more">
       <summary>More</summary>
       <div class="report-export-more-menu">
+        <button type="button" class="btn btn-secondary btn-sm" onclick={() => onExportAudience('ai')} disabled={Boolean(audienceExportBusy)}>
+          {audienceExportBusy === 'ai' ? 'Saving…' : 'AI review bundle'}
+        </button>
         <button type="button" class="btn btn-secondary btn-sm" onclick={onExportCuratedJson}>
           Curated pack JSON
         </button>
@@ -68,6 +66,8 @@
       </div>
     </details>
   </div>
+
+  <p class="report-export-note">Local-only. AI and clinician handoffs include raw genotype calls; Personal and PDF are summaries.</p>
 
   {#if hasStatus}
     <div class="report-export-status" role="status">
@@ -80,12 +80,12 @@
 <style>
   .report-export-strip {
     display: grid;
-    grid-template-columns: minmax(15rem, 1fr) minmax(0, auto);
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: 1rem 1.5rem;
+    gap: 0.35rem 1rem;
     width: min(100%, var(--report-dashboard-surface-width));
-    margin: 0.7rem auto 0.9rem;
-    padding: 0.7rem 0.85rem;
+    margin: 0.5rem auto 0.6rem;
+    padding: 0.45rem 0.75rem;
     box-sizing: border-box;
     border-color: var(--border-strong);
     background: var(--surface-subtle);
@@ -96,15 +96,16 @@
   }
 
   .report-export-intro h3 {
-    margin: 0.15rem 0 0;
+    margin: 0;
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
-  .report-export-intro p {
-    margin: 0.2rem 0 0;
+  .report-export-note {
+    grid-column: 1 / -1;
+    margin: 0;
     color: var(--text-secondary);
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     line-height: 1.35;
   }
 

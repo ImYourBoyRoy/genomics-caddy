@@ -5,8 +5,8 @@ Uses Genomics Caddy theme variables from theme.css (--accent, --success, etc.).
 */
 
 :root {
-  --bootstrap-glow: rgba(88, 80, 236, 0.42);
-  --bootstrap-glow-soft: rgba(88, 80, 236, 0.12);
+  --bootstrap-glow: rgba(20, 184, 166, 0.42);
+  --bootstrap-glow-soft: rgba(20, 184, 166, 0.12);
   --bootstrap-glow-success: rgba(16, 185, 129, 0.38);
   --bootstrap-glow-error: rgba(239, 68, 68, 0.35);
   --bootstrap-shimmer: rgba(255, 255, 255, 0.06);

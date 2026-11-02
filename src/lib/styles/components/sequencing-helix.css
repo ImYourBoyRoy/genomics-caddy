@@ -1,0 +1,136 @@
+/* ./src/lib/styles/components/sequencing-helix.css
+ * Rotating double helix loader.
+ *
+ * Each row is one base pair seen at a different phase of the twist: the two
+ * nodes trade places along x (-cos θ), scale/dim with depth (sin θ) and the
+ * rung length follows |cos θ|. True sine motion comes from half-period
+ * `alternate` animations with an ease-in-out-sine curve, so there are no
+ * piecewise-linear kinks. Only translate/scale/opacity animate, which keeps the
+ * strand on the compositor (smooth even without GPU raster). Rows are
+ * phase-shifted with a negative delay so the strand reads as one continuous
+ * spiral. Colors are tokens only.
+ */
+
+.sequencing-helix {
+  --helix-width: 5.4rem;
+  --helix-amp: 2.25rem;
+  --helix-period: 3.2s;
+  --helix-row-gap: 0.17;
+  display: flex;
+  width: var(--helix-width);
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  min-height: 11rem;
+  padding: 0.2rem 0;
+}
+
+.helix-row {
+  position: relative;
+  width: var(--helix-width);
+  height: var(--helix-row-height, 0.5rem);
+  flex: 0 0 auto;
+  --pair-color: var(--text-muted);
+}
+
+.helix-row.read {
+  --pair-color: var(--accent);
+}
+
+.helix-node,
+.helix-rung {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.helix-node {
+  --helix-sine: cubic-bezier(0.37, 0, 0.63, 1);
+  --helix-row-phase: calc(var(--i) * var(--helix-row-gap) * -1s);
+  width: var(--helix-node, 0.56rem);
+  height: var(--helix-node, 0.56rem);
+  margin: calc(var(--helix-node, 0.56rem) / -2) 0 0 calc(var(--helix-node, 0.56rem) / -2);
+  border-radius: 50%;
+  background: var(--pair-color);
+  transition: background var(--motion-base, 260ms) var(--motion-ease-out, ease-out);
+  animation:
+    gc-helix-sway calc(var(--helix-period) / 2) var(--helix-sine) infinite alternate,
+    gc-helix-depth calc(var(--helix-period) / 2) var(--helix-sine) infinite alternate;
+  animation-delay:
+    var(--helix-row-phase),
+    calc(var(--helix-row-phase) - var(--helix-period) / 4);
+  will-change: translate, scale, opacity;
+}
+
+/* The glow lives on a pseudo-element so it can fade with opacity instead of
+   animating box-shadow (a main-thread paint on every frame). */
+.helix-node::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0.55rem var(--accent);
+  opacity: 0;
+  transition: opacity var(--motion-slow, 420ms) var(--motion-ease-out, ease-out);
+}
+
+.helix-row.read .helix-node::after {
+  opacity: 1;
+}
+
+.helix-node-b {
+  background: color-mix(in srgb, var(--pair-color) 55%, var(--success));
+  animation-direction: alternate-reverse;
+}
+
+.helix-rung {
+  width: calc(var(--helix-amp) * 2);
+  height: 1px;
+  margin: 0 0 0 calc(var(--helix-amp) * -1);
+  background: var(--pair-color);
+  opacity: 0.55;
+  animation: gc-helix-rung calc(var(--helix-period) / 4) cubic-bezier(0.12, 0, 0.39, 0) infinite alternate;
+  animation-delay: calc(var(--i) * var(--helix-row-gap) * -1s);
+  will-change: scale;
+}
+
+/* Unknown total: a soft band of light travels down the strand. */
+.sequencing-helix.scanning .helix-node::after {
+  animation: gc-helix-scan 2.6s var(--motion-ease-in-out, ease-in-out) infinite;
+  animation-delay: calc(var(--i) * 0.09s);
+}
+
+@keyframes gc-helix-sway {
+  from { translate: calc(var(--helix-amp) * -1) 0; }
+  to   { translate: var(--helix-amp) 0; }
+}
+
+@keyframes gc-helix-depth {
+  from { scale: 0.65; opacity: 0.35; }
+  to   { scale: 1.35; opacity: 1; }
+}
+
+@keyframes gc-helix-rung {
+  from { scale: 1 1; }
+  to   { scale: 0.04 1; }
+}
+
+@keyframes gc-helix-scan {
+  0%, 55%, 100% { opacity: 0; }
+  22% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .helix-node,
+  .helix-rung,
+  .sequencing-helix.scanning .helix-node::after {
+    animation: none;
+    will-change: auto;
+  }
+
+  .helix-node-a { translate: calc(var(--helix-amp) * -1) 0; }
+  .helix-node-b { translate: var(--helix-amp) 0; }
+}

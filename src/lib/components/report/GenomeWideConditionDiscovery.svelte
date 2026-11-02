@@ -49,7 +49,7 @@
         {#if !discovery.local_index_ready}
           ClinVar condition data is not downloaded yet
         {:else if conditionGroups.length > 0}
-          {conditionGroups.length.toLocaleString()} ClinVar condition links ({summaryCounts}). These links are not diagnoses.
+          {conditionGroups.length.toLocaleString()} ClinVar condition links ({summaryCounts}).
         {:else}
           No condition matches found
         {/if}
@@ -63,7 +63,7 @@
   <div class="genomewide-discovery-body">
     {#if !discovery.local_index_ready}
       <p class="genomewide-discovery-status">
-        Download the ClinVar variant summary and submission summary in Data &amp; updates to see linked conditions.
+        Download the ClinVar variant summary and submission summary in Settings → Data &amp; updates to see linked conditions.
       </p>
     {:else if discovery.allele_orientation.startsWith('Unverified')}
       <p class="genomewide-discovery-status">

@@ -8,6 +8,7 @@
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
   import Tooltip from "../common/Tooltip.svelte";
   import "$lib/styles/components/genome-map.css";
+  import "$lib/styles/components/explore-help.css";
 
   /*
   Purpose: Live database-backed chromosome visualization with interactive zoom, overlays, and comparison views.
@@ -315,18 +316,18 @@
   </p>
 
   <div class="map-chrome">
-    <aside class="map-pin-insight" aria-labelledby="map-pin-insight-title">
-      <div class="map-pin-insight-head">
+    <details class="map-pin-insight explore-help">
+      <summary class="map-pin-insight-head">
         <span class="map-pin-insight-mark" aria-hidden="true">C</span>
-        <strong id="map-pin-insight-title">What pins are for</strong>
-      </div>
+        <strong>What pins are for</strong>
+      </summary>
       <p>
         Letter badges mark variants already in your Trait Report or vector discovery, placed at their
-        GRCh38 coordinates. They are <em>not</em> a diagnosis — use them to jump into the report.
+        GRCh38 coordinates. Use them to jump into the report.
         <strong>C</strong> = confirm clinically, <strong>!</strong> = stronger association,
         <strong>?</strong> = possible, <strong>V</strong> = vector find.
       </p>
-    </aside>
+    </details>
 
     {#if !isLoading && !error && attentionPins.length > 0}
       <section class="map-attention" aria-labelledby="map-attention-title">

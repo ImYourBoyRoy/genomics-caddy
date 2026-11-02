@@ -1,0 +1,195 @@
+/* ./src/lib/styles/motion.css
+ * Shared motion system for the main workspace.
+ *
+ * One set of timing tokens and entrance keyframes so the app moves with a
+ * single character: quick, decelerating reveals that resolve data into place.
+ *
+ * Safety rules:
+ * - Entrances use fill-mode `backwards` only. After the animation ends (or if
+ *   it can never run) the element is in its natural, fully visible state.
+ * - Everything is disabled by the global prefers-reduced-motion block in
+ *   theme.css; the rules here also opt out explicitly.
+ */
+
+:root {
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --motion-fast: 140ms;
+  --motion-base: 260ms;
+  --motion-slow: 560ms;
+  --motion-stagger: 55ms;
+  --motion-rise: 0.55rem;
+}
+
+@keyframes gc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-rise));
+  }
+}
+
+@keyframes gc-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes gc-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes gc-grow-y {
+  from {
+    transform: scaleY(0.15);
+    opacity: 0.4;
+  }
+}
+
+/* Looping keyframes are compositor-only (transform/opacity) so they keep moving
+ * while the main thread is busy importing or indexing. Do not add box-shadow,
+ * width, or filter here; guarded by motion.styles.test.ts. */
+
+/* Indeterminate bar: give the fill `width: 40%`; it crosses the whole track. */
+@keyframes gc-slide-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@keyframes gc-pulse-dot {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes gc-edge-glow {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-soft);
+  }
+  40% {
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* --- Tab / panel entrance: each top-level block rises in, lightly staggered. */
+.main-content .tab-content > * {
+  animation: gc-rise var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.main-content .tab-content > :nth-child(2) { animation-delay: calc(var(--motion-stagger) * 1); }
+.main-content .tab-content > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.main-content .tab-content > :nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.main-content .tab-content > :nth-child(5) { animation-delay: calc(var(--motion-stagger) * 4); }
+.main-content .tab-content > :nth-child(n + 6) { animation-delay: calc(var(--motion-stagger) * 5); }
+
+/* --- Report overview: stat cards resolve one after another, meter fills. */
+.main-content .report-stat {
+  animation: gc-rise var(--motion-slow) var(--motion-ease-out) backwards;
+  transition:
+    transform var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-fast) ease,
+    background var(--motion-fast) ease;
+}
+
+.main-content .report-stat strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.main-content .report-stat:nth-child(1) { animation-delay: 120ms; }
+.main-content .report-stat:nth-child(2) { animation-delay: 190ms; }
+.main-content .report-stat:nth-child(3) { animation-delay: 260ms; }
+.main-content .report-stat:nth-child(4) { animation-delay: 330ms; }
+
+.main-content .report-stat:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.main-content .report-stat-active {
+  animation: gc-edge-glow 900ms var(--motion-ease-out) 1;
+}
+
+.main-content .overview-coverage-meter > span {
+  transform-origin: left center;
+  animation: gc-grow-x 1100ms var(--motion-ease-out) 350ms backwards;
+}
+
+/* --- Review-first rows: cascade in, details unfold, evidence meter fills. */
+.main-content .review-row {
+  animation: gc-rise var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.main-content .review-row:nth-child(2) { animation-delay: calc(var(--motion-stagger) * 1); }
+.main-content .review-row:nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.main-content .review-row:nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.main-content .review-row:nth-child(5) { animation-delay: calc(var(--motion-stagger) * 4); }
+.main-content .review-row:nth-child(n + 6) { animation-delay: calc(var(--motion-stagger) * 5); }
+
+.main-content .review-detail {
+  animation: gc-rise var(--motion-base) var(--motion-ease-out) backwards;
+}
+
+.main-content .review-row-head {
+  transition: background var(--motion-fast) ease;
+}
+
+.main-content .evidence-meter-segment {
+  transform-origin: bottom center;
+}
+
+.main-content .evidence-meter-segment[data-on="true"] {
+  animation: gc-grow-y 420ms var(--motion-ease-out) backwards;
+}
+
+.main-content .evidence-meter-segment:nth-child(1) { animation-delay: 380ms; }
+.main-content .evidence-meter-segment:nth-child(2) { animation-delay: 450ms; }
+.main-content .evidence-meter-segment:nth-child(3) { animation-delay: 520ms; }
+.main-content .evidence-meter-segment:nth-child(4) { animation-delay: 590ms; }
+
+/* --- Controls: tactile press feedback. */
+.main-content .btn:not(:disabled):active,
+.tab-btn:active,
+.tabs-advanced-chip:active {
+  transform: scale(0.97);
+}
+
+.tab-btn,
+.tabs-advanced-chip {
+  transition:
+    transform var(--motion-fast) var(--motion-ease-out),
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-content .tab-content > *,
+  .main-content .report-stat,
+  .main-content .report-stat-active,
+  .main-content .overview-coverage-meter > span,
+  .main-content .review-row,
+  .main-content .review-detail,
+  .main-content .evidence-meter-segment[data-on="true"] {
+    animation: none;
+  }
+
+  .main-content .report-stat:not(:disabled):hover,
+  .main-content .btn:not(:disabled):active,
+  .tab-btn:active,
+  .tabs-advanced-chip:active {
+    transform: none;
+  }
+}

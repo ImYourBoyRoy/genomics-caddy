@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ReportGenerationProgress } from '$lib/types/genomics';
+  import SequencingHelix from '$lib/components/common/loading/SequencingHelix.svelte';
   import '$lib/styles/components/report-loading.css';
 
   interface Props {
@@ -61,6 +62,8 @@
   aria-busy="true"
   aria-labelledby="report-loading-title"
 >
+  <SequencingHelix {percentage} />
+  <div class="report-loading-body">
   <p class="report-kicker">Trait report</p>
   <h3 id="report-loading-title">Preparing {sampleName}'s report</h3>
   <p class="report-loading-lead" role="status" aria-live="polite">
@@ -100,4 +103,5 @@
   {:else}
     <p class="report-loading-note">Your DNA stays on this computer.</p>
   {/if}
+  </div>
 </section>

@@ -253,7 +253,7 @@ Operational Notes: Stays under the 500-line limit. Scoped styles.
     background: rgba(255, 255, 255, 0.02);
   }
   .variant-item-label.selected {
-    background: rgba(88, 80, 236, 0.04);
+    background: rgba(20, 184, 166, 0.04);
   }
   .variant-item-label input[type="checkbox"] {
     margin-top: 3px;

@@ -164,7 +164,7 @@
   }
 
   .result-card:hover {
-    border-color: rgba(88, 80, 236, 0.3);
+    border-color: rgba(20, 184, 166, 0.3);
     background: rgba(255, 255, 255, 0.03);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   }
@@ -179,8 +179,8 @@
 
   .marker-badge {
     display: inline-flex;
-    background: rgba(88, 80, 236, 0.12);
-    border: 1px solid rgba(88, 80, 236, 0.25);
+    background: rgba(20, 184, 166, 0.12);
+    border: 1px solid rgba(20, 184, 166, 0.25);
     border-radius: 6px;
     overflow: hidden;
     font-family: monospace;
@@ -188,14 +188,14 @@
   }
 
   .marker-badge .gene-name {
-    background: rgba(88, 80, 236, 0.15);
-    color: #a5b4fc;
+    background: rgba(20, 184, 166, 0.15);
+    color: var(--accent-bright);
     padding: 3px 8px;
     font-weight: 600;
   }
 
   .marker-badge .rsid {
-    color: #c7d2fe;
+    color: var(--accent-bright);
     padding: 3px 8px;
   }
 
@@ -251,14 +251,14 @@
   }
 
   .citation-link {
-    color: #818cf8;
+    color: var(--accent-bright);
     text-decoration: none;
     transition: color 0.15s;
     font-weight: 500;
   }
 
   .citation-link:hover {
-    color: #a5b4fc;
+    color: var(--accent-bright);
     text-decoration: underline;
   }
 
@@ -321,7 +321,7 @@
   .intro-logo {
     font-size: 3rem;
     margin-bottom: 16px;
-    background: radial-gradient(circle, rgba(88, 80, 236, 0.2), transparent 70%);
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.2), transparent 70%);
     padding: 10px;
   }
 

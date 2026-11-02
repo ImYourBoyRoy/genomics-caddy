@@ -1,0 +1,326 @@
+/* ./src/lib/styles/components/finding-rows.css */
+/*
+Purpose: Shared styling for compact finding rows, domain tags, polarity marks,
+and the evidence meter. Used by ReviewFirstList and PlanView.
+Tokens only: colors come from theme.css semantic variables.
+*/
+
+.review-first {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: min(100%, var(--report-dashboard-surface-width));
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 1rem 1.1rem;
+  border-color: var(--status-accent-soft-border);
+  background: var(--surface-raised);
+}
+
+.review-first-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.review-first-kicker {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-first-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.review-first-header p {
+  max-width: 44rem;
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.review-first-count {
+  flex: none;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.review-group-count {
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  font-size: 0.64rem;
+  letter-spacing: 0;
+}
+
+.review-group-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-color);
+  border-radius: 0.7rem;
+  background: var(--surface-card);
+  overflow: hidden;
+}
+
+.review-row {
+  border-left: 3px solid var(--status-caution-border);
+}
+
+.review-row + .review-row { border-top: 1px solid var(--border-color); }
+.review-row[data-concern="high"] { border-left-color: var(--status-danger-border); }
+.review-row[data-concern="moderate"] { border-left-color: var(--status-warning-border); }
+
+.review-row-head {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr) auto auto 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-row-head:hover { background: var(--surface-subtle); }
+.review-row-head:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+.review-rank {
+  display: inline-flex;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--status-accent-soft-border);
+  border-radius: 50%;
+  background: var(--status-accent-bg);
+  color: var(--status-accent-soft-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.review-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.review-title {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.review-direction {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.domain-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--tag-border, var(--border-color));
+  border-radius: 999px;
+  background: var(--tag-bg, var(--surface-subtle));
+  color: var(--tag-text, var(--text-secondary));
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.domain-tag[data-domain="tests"] { --tag-bg: var(--status-info-bg); --tag-text: var(--status-info-text); --tag-border: var(--status-info-border); }
+.domain-tag[data-domain="medicines"] { --tag-bg: var(--status-warning-bg); --tag-text: var(--status-warning-text); --tag-border: var(--status-warning-border); }
+.domain-tag[data-domain="conditions"] { --tag-bg: var(--status-accent-bg); --tag-text: var(--status-accent-text); --tag-border: var(--status-accent-border); }
+.domain-tag[data-domain="diet"] { --tag-bg: var(--status-success-bg); --tag-text: var(--status-success-text); --tag-border: var(--status-success-border); }
+.domain-tag[data-domain="exercise"] { --tag-bg: var(--status-caution-bg); --tag-text: var(--status-caution-text); --tag-border: var(--status-caution-border); }
+.domain-tag[data-domain="supplements"] { --tag-bg: var(--status-accent-soft-bg); --tag-text: var(--status-accent-soft-text); --tag-border: var(--status-accent-soft-border); }
+
+.evidence-meter {
+  display: inline-flex;
+  gap: 0.14rem;
+}
+
+.evidence-meter-segment {
+  width: 0.5rem;
+  height: 0.9rem;
+  border-radius: 0.12rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-color);
+}
+
+.evidence-meter-segment[data-on="true"] {
+  border-color: var(--status-success-border);
+  background: var(--status-success-text);
+}
+
+.review-chevron {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.review-row[data-open="true"] .review-chevron { transform: rotate(-135deg); }
+
+.review-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.2rem 0.9rem 0.9rem 3.2rem;
+}
+
+.review-detail p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.review-next {
+  padding: 0.45rem 0.6rem;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 0.4rem 0.4rem 0;
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+}
+
+.review-points h5 {
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.review-points-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.review-points-row {
+  display: grid;
+  grid-template-columns: 6.2rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.review-points-row dt,
+.review-points-row dd { margin: 0; }
+
+.review-points-row ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-points-row li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.polarity-mark {
+  flex: none;
+  min-width: 3.4rem;
+  color: var(--status-success-text);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+li[data-polarity="avoid"] > .polarity-mark { color: var(--status-danger-strong-text); }
+li[data-polarity="discuss"] > .polarity-mark { color: var(--status-warning-text); }
+
+.review-more {
+  display: inline-block;
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.review-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.review-row-actions .jump-btn { min-height: 2rem; padding-inline: 0; }
+
+.review-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .review-row-head { grid-template-columns: 1.7rem minmax(0, 1fr) 1rem; }
+  .review-tags,
+  .evidence-meter { display: none; }
+  .review-detail { padding-left: 1rem; }
+  .review-points-row { grid-template-columns: minmax(0, 1fr); }
+}

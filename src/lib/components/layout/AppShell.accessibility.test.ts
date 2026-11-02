@@ -33,17 +33,17 @@ describe('responsive data-sidebar access', () => {
     expect(theme).toContain('min-height: 44px;');
   });
 
-  it('keeps the hide control at the sidebar edge and appearance controls in the footer', () => {
+  it('keeps the hide control at the sidebar edge and the Settings entry in the footer', () => {
     expect(appShell).toContain('<div class="app-shell-stack">');
     expect(appShell).toContain('<AppUpdateHost />');
     expect(appShell).toContain('<div class="main-slot">');
     expect(appShell).toContain('<div class="sidebar-region">');
-    expect(sidebar).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Library and appearance">');
+    expect(sidebar).toContain('<div class="sidebar-footer no-print" role="toolbar" aria-label="Settings and version">');
     expect(appShell).toContain('class="sidebar-focus-toggle"');
     expect(appShell).toContain('aria-label="Hide data sidebar"');
     expect(appShell).toContain('class="focus-restore-toggle no-print"');
-    expect(sidebar).toContain('<ThemeToggle />');
-    expect(sidebar).toContain('<LibraryPanel />');
+    expect(sidebar).toContain('<SettingsDialog');
+    expect(sidebar).toContain('sidebar-settings-button');
     expect(appShell).not.toContain('class="focus-toolbar');
     expect(theme).toContain('.sidebar-region {');
     expect(theme).toContain('.sidebar-footer {');

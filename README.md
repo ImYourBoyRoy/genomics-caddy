@@ -7,8 +7,8 @@
 <p align="center">
   <strong>Local-first desktop DNA explorer.</strong><br>
   Import AncestryDNA or 23andMe SNP files, read Simple-first trait and
-  pharmacogenomics reports on this machine, and optionally use Ollama or the
-  built-in MCP server. Nothing is uploaded to us.
+  pharmacogenomics reports on this machine, and optionally use local Ollama,
+  your ChatGPT plan, or the built-in MCP server. Nothing is uploaded to us.
 </p>
 
 <p align="center">
@@ -110,7 +110,7 @@ app after it starts.
    Report preparation shows its current step, completed marker or genome-scan
    counts, and exact match counts. It also shows elapsed time and an estimate
    for the active scan after enough progress has been measured.
-2. Left sidebar → **Data & updates** → **Sync All Missing** to install the
+2. Left sidebar footer → **Settings** → **Data & updates** → **Sync All Missing** to install the
    public catalogs used for database-backed annotations and full-genome
    discovery. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions show as
    downloaded **and indexed** before relying on those catalog-backed results.
@@ -153,7 +153,7 @@ DNA.
 | Linux `.deb` / `.rpm` | `~/.local/share/Genomics Caddy/Data` |
 | macOS DMG | `Data/` next to the `.app` |
 
-Change it from the sidebar **Library** row. To wipe a portable copy, use
+Change it from **Settings → Library folder** (sidebar footer). To wipe a portable copy, use
 **Erase** there, or delete the folder that contains the app and `Data/`.
 
 ## What it does
@@ -187,6 +187,18 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
   trusted assessment guides for ADHD, depression, and anxiety; common variants
   do not diagnose these conditions, and the app calculates no psychiatric PRS
   or genotype-based neurotransmitter supplement/medication recommendations.
+- Adds a BPD-adjacent symptom-context crosswalk over the existing neuropsych and
+  hormone pathways, including potential symptom patterns involving emotion
+  regulation, rejection sensitivity, interpersonal anger escalation and recovery,
+  impulsivity/reward, dissociation or low mood, and cycle-linked changes. It
+  distinguishes a baseline symptom pattern that worsens premenstrually from a
+  mostly cycle-specific PMDD assessment route and includes optional distressing
+  sexual-behavior context.
+  BPD is also registered in the named condition-evidence layer as limited
+  population research context, while the detailed crosswalk remains separate.
+  It does not infer BPD, current
+  neurotransmitter or hormone levels, sexual behavior, or sexual orientation;
+  asexuality is kept outside symptom interpretation.
 - Keeps food, gut, supplement, medication, menopause, and postpartum prompts
   conditional on context *you* enter
 - Shows sex as **Male**, **Female**, or **Unknown** from conservative X/Y
@@ -205,7 +217,7 @@ Change it from the sidebar **Library** row. To wipe a portable copy, use
 - Lifestyle-linked findings offer an "Add diet, medications, or habits" button
   that opens Context, rather than asking you to interpret them unaided
 - Includes a top-level Help & app info hub with an app version/update check
-- Optional local [Ollama chat](docs/ai-chat/README.md)
+- Optional [Ollama or ChatGPT plan chat](docs/ai-chat/README.md)
 - Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`
 
 Screenshots above use a **synthetic** example genome, not a real person’s DNA.
@@ -217,7 +229,7 @@ Simple mode is the public-safe view (no raw calls on the cards).
 | :--- | :--- |
 | Import DNA, read reports, export | [Usage](docs/usage/README.md) |
 | Wire Claude / Cursor / another agent | [MCP](docs/mcp/README.md) |
-| Connect Ollama or vector research | [AI chat](docs/ai-chat/README.md) |
+| Connect Ollama, ChatGPT plan, or vector research | [AI chat](docs/ai-chat/README.md) |
 | Build from source or ship a signed update | [Build](docs/build/README.md) |
 | Clone the repo, tests, lock-free install | [Development](docs/development/README.md) |
 | Build a `.deb` / `.rpm` or extra OS package | [Compile instructions](compile_instructions.md) |

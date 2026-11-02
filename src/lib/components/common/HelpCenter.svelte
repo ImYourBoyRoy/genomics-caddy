@@ -72,7 +72,7 @@
       <details class="help-topic">
         <summary><span class="help-topic-number">04</span><span><strong>Reference catalogs &amp; updates</strong><small>Two separate kinds of updates.</small></span></summary>
         <div class="help-topic-body">
-          <p><strong>Data &amp; updates</strong> in the left panel checks and downloads public research catalogs used for local annotations. Large catalog downloads can take time; the app reports download and indexing progress.</p>
+          <p><strong>Settings → Data &amp; updates</strong> (button at the bottom of the left panel) checks and downloads public research catalogs used for local annotations. Large catalog downloads can take time; the app reports download and indexing progress.</p>
           <p><strong>Check app updates</strong> below checks signed Genomics Caddy releases. Updating the app does not update the catalogs, and updating catalogs does not replace the app.</p>
         </div>
       </details>
@@ -118,7 +118,7 @@
         {#if !$appUpdateState.isDesktop}
           <p class="app-update-note">Version and signed update checks are available in the installed desktop app.</p>
         {/if}
-        <p class="app-update-note">This does not check research catalogs. Manage those separately under <strong>Data &amp; updates</strong>.</p>
+        <p class="app-update-note">This does not check research catalogs. Manage those separately under <strong>Settings → Data &amp; updates</strong>.</p>
       </section>
 
       <section class="about-card" aria-labelledby="about-title">

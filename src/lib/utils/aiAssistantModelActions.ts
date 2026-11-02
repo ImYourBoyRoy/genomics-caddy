@@ -10,7 +10,34 @@ import {
   getContextWindow,
   isModelVisionCapable,
 } from "./aiPrompt";
+import { chatgptListModels, chatgptStatus } from "../api/chatgpt";
 import { persistOllamaUrl } from "./ollamaSettings";
+import type { ChatProvider } from "./chatProvider";
+
+/** Models available to the connected ChatGPT account (plan usage route). */
+export async function scanChatGptModels(
+  currentModel: string,
+): Promise<{ models: string[]; selectedModel: string; scanError: string }> {
+  try {
+    const connection = await chatgptStatus();
+    if (!connection.connected || !connection.sharing) {
+      // Not an error: the settings card prompts for sign-in.
+      return { models: [], selectedModel: "", scanError: "" };
+    }
+    const models = (await chatgptListModels()).map((m) => m.slug);
+    return {
+      models,
+      selectedModel: models.includes(currentModel) ? currentModel : (models[0] ?? ""),
+      scanError: models.length ? "" : "No models are available for this ChatGPT connection.",
+    };
+  } catch (err: unknown) {
+    return {
+      models: [],
+      selectedModel: "",
+      scanError: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
 
 export async function scanChatModels(
   ollamaUrl: string,
@@ -48,6 +75,7 @@ export async function loadOllamaModelDetails(
   ollamaUrl: string,
   ollamaToken: string,
   selectedModel: string,
+  provider: ChatProvider = "ollama",
 ): Promise<{
   modelDetails: unknown;
   isVisionCapable: boolean;
@@ -55,6 +83,10 @@ export async function loadOllamaModelDetails(
 }> {
   if (!selectedModel) {
     return { modelDetails: null, isVisionCapable: false, contextWindow: 4096 };
+  }
+  if (provider === "chatgpt") {
+    // Hosted models: no local model card, images accepted by the Responses route.
+    return { modelDetails: null, isVisionCapable: true, contextWindow: 4096 };
   }
   try {
     const details = await showOllamaModel(ollamaUrl, ollamaToken || undefined, selectedModel);

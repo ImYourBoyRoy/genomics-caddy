@@ -50,7 +50,7 @@ describe('ReportView Help Guide surface', () => {
 
   it('keeps app releases distinct from reference-catalog updates and includes requested about links', () => {
     expect(helpSource).toContain('Check for app updates');
-    expect(helpSource).toContain('Manage those separately under <strong>Data &amp; updates</strong>');
+    expect(helpSource).toContain('Manage those separately under <strong>Settings → Data &amp; updates</strong>');
     expect(helpSource).toContain('https://imyourboyroy.com');
     expect(helpSource).toContain('https://github.com/imyourboyroy');
     expect(helpSource).toContain('https://venmo.com/itsyourboyroy');

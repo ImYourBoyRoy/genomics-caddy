@@ -19,6 +19,7 @@
   } from "$lib/api/tauri";
   import type { GenomeSample } from "$lib/types/genomics";
   import "$lib/styles/components/discovery-panel.css";
+  import "$lib/styles/components/explore-help.css";
 
   interface Props {
     selectedSample: GenomeSample;
@@ -183,8 +184,7 @@
       <p class="discovery-lead">
         Ranked ClinVar, GWAS, and PharmGKB hits in
         <strong>{selectedSample.name}</strong>. Default view is
-        <em>beyond curated packs</em> — candidates worth reviewing for new pack entries. Educational
-        only; not a clinical report.
+        <em>beyond curated packs</em> — candidates worth reviewing for new pack entries.
       </p>
     </div>
 
@@ -212,15 +212,15 @@
     {/if}
   </header>
 
-  <aside class="discovery-insight" aria-labelledby="discovery-insight-title">
-    <strong id="discovery-insight-title">How to read this</strong>
+  <details class="discovery-insight explore-help">
+    <summary><strong>How to read this</strong></summary>
     <p>
       <span class="insight-tag beyond">Beyond</span> means the variant is not already covered by your
       curated marker packs.
       <span class="insight-tag pack">In pack</span> means it already appears in Trait Report packs.
       Open a row to inspect it in the variant browser.
     </p>
-  </aside>
+  </details>
 
   <div class="discovery-toolbar">
     <div class="discovery-source-seg" role="group" aria-label="Catalog source">

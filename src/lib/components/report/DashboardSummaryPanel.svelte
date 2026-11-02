@@ -6,7 +6,9 @@ import sourceRegistry from '../../marker-packs/source_registry.json';
 import { buildLabRequestListText, deriveActionablePlan, type ActionablePlan, type LabTest } from '../../utils/actionabilityEngine';
 import { catalogAssociationsForTopic, conditionDiagnosticCapabilityLabel, type CatalogAssociationSummary, type ConditionEvidenceSummary } from '../../utils/conditionEvidence';
 import { catalogKindLabel, catalogLabelIsReadable, catalogPlainSummary, cleanConditionName } from '../../utils/plainConditionCopy';
+import { BPD_SYMPTOM_RESEARCH_CONTEXT_ID, buildBpdSymptomContext } from '../../utils/bpdSymptomContext';
 import GenomeWideConditionDiscovery from './GenomeWideConditionDiscovery.svelte';
+  import ReviewFirstList from './ReviewFirstList.svelte';
 import { getCompactGuidanceText, getCompactSupplementName, getCompactSupplementReason, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
 import type { PresentationMode } from '../../utils/presentationPreferences';
 
@@ -16,6 +18,7 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     onJumpToMarker?: (linkId: string) => void;
     onJumpToMarkers?: (linkIds: string[]) => void;
     onJumpToSection?: (sectionName: string) => void;
+    onOpenPlan?: () => void;
     presentationMode?: PresentationMode;
   }
 
@@ -25,16 +28,26 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     onJumpToMarker,
     onJumpToMarkers,
     onJumpToSection,
+    onOpenPlan,
     presentationMode = 'simple',
   }: Props = $props();
 
   let plan = $derived<ActionablePlan>(deriveActionablePlan(report));
   let hasNeuropsychSection = $derived(report.sections.some((section) => section.name === 'Neurotransmitter & Mood Resiliency'));
   let brainMoodCatalogAssociations = $derived(catalogAssociationsForTopic(plan.catalogAssociations, 'neuropsych'));
+  let bpdSymptomContext = $derived(buildBpdSymptomContext(report));
+  let bpdConditionEvidence = $derived(plan.conditionEvidence.find((summary) => summary.id === BPD_SYMPTOM_RESEARCH_CONTEXT_ID));
+  let otherConditionEvidence = $derived(plan.conditionEvidence.filter((summary) => summary.id !== BPD_SYMPTOM_RESEARCH_CONTEXT_ID));
   const brainMoodAssessmentGuides = [
     { label: 'NIMH: ADHD in adults', url: sourceRegistry.sources.nimh_adhd_adults.url },
     { label: 'NIMH: Depression', url: sourceRegistry.sources.nimh_depression.url },
     { label: 'NIMH: Generalized anxiety disorder', url: sourceRegistry.sources.nimh_generalized_anxiety.url },
+  ];
+  const bpdResearchSources = [
+    { label: '2026 BPD genome-wide study', url: sourceRegistry.sources.bpd_gwas_2026.url },
+    { label: '2024 BPD neurobiology review', url: sourceRegistry.sources.bpd_neurobiology_review_2024.url },
+    { label: '2024 hormone and BPD review', url: sourceRegistry.sources.bpd_hormone_review_2024.url },
+    { label: 'APA sexual-minority guidance', url: sourceRegistry.sources.apa_sexual_minority_guidance.url },
   ];
 
   // Fresh profile defaults keep Review-first + lab follow-ups open; other
@@ -98,50 +111,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
   }
 
 
-  function markerForFinding(finding: ActionablePlan['topFindings'][number]) {
-    for (const section of report.sections || []) {
-      const marker = section.markers.find((candidate) => candidate.link_id === finding.link_id);
-      if (marker) return marker;
-    }
-    return undefined;
-  }
-
-  function findingMeaning(finding: ActionablePlan['topFindings'][number]): string {
-    const marker = markerForFinding(finding);
-    if (!marker) return 'A DNA-linked finding is available to review in the right personal context.';
-    const copy = getSimpleFindingCopy(marker, getLaypersonTranslation(marker));
-    return [copy.signal, copy.why_it_matters].filter(Boolean).join(' ');
-  }
-
-  function findingTitle(finding: ActionablePlan['topFindings'][number]): string {
-    if (finding.plain_title) return finding.plain_title;
-    const marker = markerForFinding(finding);
-    return marker
-      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).plain_title
-      : 'Research finding';
-  }
-
-  function findingDirection(finding: ActionablePlan['topFindings'][number]): string {
-    if (finding.direction_label) return finding.direction_label;
-    const marker = markerForFinding(finding);
-    return marker
-      ? getSimpleFindingCopy(marker, getLaypersonTranslation(marker)).direction_label
-      : 'Direction incomplete';
-  }
-
-  function findingNextStep(finding: ActionablePlan['topFindings'][number]): string {
-    const marker = markerForFinding(finding);
-    if (!marker) return 'Review the detailed finding for personal relevance.';
-    const translation = getLaypersonTranslation(marker);
-    return getSimpleFindingCopy(marker, translation).review_action;
-  }
-
-  function priorityTone(finding: ActionablePlan['topFindings'][number]): 'high' | 'moderate' | 'low' {
-    if (finding.priority_tone === 'danger') return 'high';
-    if (finding.priority_tone === 'warning') return 'moderate';
-    return 'low';
-  }
-
   function conditionTone(summary: ConditionEvidenceSummary): 'high' | 'moderate' | 'low' {
     if (summary.relative_signal === 'higher') return 'high';
     if (summary.relative_signal === 'moderate') return 'moderate';
@@ -164,6 +133,13 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     if (summary.matched_marker_link_ids.length === 0) return;
     onJumpToMarkers?.(summary.matched_marker_link_ids);
     if (!onJumpToMarkers) onJumpToMarker?.(summary.matched_marker_link_ids[0]);
+  }
+
+  function viewBpdContextMarkers(linkIds: readonly string[]): void {
+    const markerIds = linkIds.filter(Boolean);
+    if (markerIds.length === 0) return;
+    onJumpToMarkers?.(markerIds);
+    if (!onJumpToMarkers) onJumpToMarker?.(markerIds[0]);
   }
 
   function catalogAlleleMatchLabel(value: CatalogAssociationSummary['allele_match']): string {
@@ -286,75 +262,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     plan.medicationPathways.length > 0,
   );
   let hasClinicalGuidance = $derived(hasMedicationGuidance || plan.labTests.length > 0);
-  let priorityColumns = $derived(
-    Array.from({ length: Math.min(3, Math.ceil(Math.min(plan.topFindings.length, 9) / 3)) }, (_, columnIndex) =>
-      plan.topFindings.slice(columnIndex * 3, columnIndex * 3 + 3).map((finding, rowIndex) => ({
-        finding,
-        rank: columnIndex * 3 + rowIndex + 1,
-      })),
-    ),
-  );
 </script>
 
 <div class="dashboard-v2">
-  <section class="action-queue summary-card card" aria-labelledby="action-queue-title">
-    <div class="action-queue-header">
-      <div>
-        <span class="section-kicker">Start here</span>
-        <h3 id="action-queue-title">Review first</h3>
-        <p>The most actionable DNA-linked signals in this report.</p>
-      </div>
-      <span class="action-queue-count">{Math.min(plan.topFindings.length, 9)} shown</span>
-    </div>
-
-    {#if plan.topFindings.length > 0}
-      <div class="action-queue-list">
-        {#each priorityColumns as column, columnIndex}
-          <div class="action-queue-column" data-column={columnIndex + 1}>
-            {#each column as item (item.finding.finding_id)}
-              <article class="action-queue-item" data-priority={item.rank} data-concern={priorityTone(item.finding)}>
-                <span class="action-queue-rank" aria-label={`Priority ${item.rank}`}>{item.rank}</span>
-                <div class="action-queue-item-content">
-                  <div class="action-queue-item-top">
-                    <div>
-                      <h4>{findingTitle(item.finding)}</h4>
-                      <span class="action-queue-context">{item.finding.section_name}</span>
-                    </div>
-                    <span class="action-queue-concern {priorityTone(item.finding)}">
-                      <span class="concern-dot" aria-hidden="true"></span>
-                      {item.finding.priority_reason}
-                    </span>
-                  </div>
-                  <div class="action-queue-signal-row">
-                    <span class="action-queue-signal">DNA-linked</span>
-                    <span class="action-queue-direction">{findingDirection(item.finding)}</span>
-                    {#if item.finding.related_marker_count && item.finding.related_marker_count > 1}
-                      <span class="action-queue-marker-ref">{item.finding.related_marker_count} related markers</span>
-                    {/if}
-                    {#if item.finding.rsid}
-                      <span class="action-queue-marker-ref" title="Marker association reference">{item.finding.rsid}{item.finding.gene ? ` · ${item.finding.gene}` : ''}</span>
-                    {/if}
-                  </div>
-                  <p>{findingMeaning(item.finding)}</p>
-                  <div class="action-queue-next"><strong class="action-queue-next-label">Next</strong> {findingNextStep(item.finding)}</div>
-                  {#if onJumpToMarker}
-                    <button class="btn btn-xs btn-link jump-btn" type="button" onclick={() => onJumpToMarker?.(item.finding.link_id)}>
-                      View DNA finding →
-                    </button>
-                  {/if}
-                </div>
-              </article>
-            {/each}
-          </div>
-        {/each}
-      </div>
-    {:else}
-      <div class="action-queue-empty">
-        <strong>No immediate genetic follow-up prompts were generated.</strong>
-        <span>Use routine care and selected personal context to guide follow-up.</span>
-      </div>
-    {/if}
-  </section>
+  <ReviewFirstList {report} {plan} {onJumpToMarker} {onOpenPlan} />
 
   {#if plan.labTests.length > 0}
     <section class="lab-spotlight summary-card card" aria-labelledby="lab-spotlight-title">
@@ -414,7 +325,55 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     </section>
   {/if}
 
-  {#if plan.conditionEvidence.length > 0}
+  {#if hasNeuropsychSection && bpdSymptomContext.hasPathwayContext}
+    <section class="bpd-symptom-context summary-card card" aria-labelledby="bpd-symptom-context-title">
+      <div class="bpd-symptom-context-header">
+        <div>
+          <span class="section-kicker">{bpdSymptomContext.hasBpdLocusContext ? bpdSymptomContext.display.kicker : bpdSymptomContext.display.pathway_kicker}</span>
+          <h3 id="bpd-symptom-context-title">{bpdSymptomContext.hasBpdLocusContext ? bpdSymptomContext.display.title : bpdSymptomContext.display.pathway_title}</h3>
+          <p>{bpdSymptomContext.display.summary}</p>
+        </div>
+        <span class="bpd-symptom-context-badge">{bpdSymptomContext.matchedDomainCount} potential symptom domains</span>
+      </div>
+
+      <div class="bpd-symptom-context-match-note">
+        {#if bpdConditionEvidence}
+          <strong>Named research context:</strong> {conditionCountLabel(bpdConditionEvidence)} · {bpdConditionEvidence.relative_signal_label}.
+        {:else}
+          <strong>Pathway context only:</strong> no BPD-specific GWAS-locus match is being claimed; these patterns are transdiagnostic and can occur with many neurological, physiological, medical, or life-context factors.
+        {/if}
+      </div>
+
+      <div class="bpd-symptom-context-grid">
+        {#each bpdSymptomContext.domains as domain (domain.id)}
+          <article class="bpd-symptom-context-item">
+            <h4>{domain.label}</h4>
+            <p>{domain.summary}</p>
+            <p class="bpd-symptom-context-prompt"><strong>Compare with your experience:</strong> {domain.prompts.join(' ')}</p>
+            {#if (onJumpToMarkers || onJumpToMarker) && domain.matchedMarkerLinkIds.length > 0}
+              <button class="btn btn-xs btn-link" type="button" onclick={() => viewBpdContextMarkers(domain.matchedMarkerLinkIds)}>
+                View matched DNA →
+              </button>
+            {/if}
+          </article>
+        {/each}
+      </div>
+
+      <div class="bpd-symptom-context-boundary">
+        <p>{bpdSymptomContext.display.boundary}</p>
+        <p>{bpdSymptomContext.display.compare_intro}</p>
+      </div>
+
+      <div class="bpd-symptom-context-sources">
+        <h4>Research context</h4>
+        {#each bpdResearchSources as source (source.label)}
+          <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  {#if otherConditionEvidence.length > 0}
     <section class="condition-evidence summary-card card" aria-labelledby="condition-evidence-title">
       <div class="condition-evidence-header">
         <div>
@@ -422,10 +381,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
           <h3 id="condition-evidence-title">Potential health patterns</h3>
           <p>DNA indicators grouped around health questions worth investigating.</p>
         </div>
-        <span class="condition-evidence-count">{plan.conditionEvidence.length} shown</span>
+        <span class="condition-evidence-count">{otherConditionEvidence.length} shown</span>
       </div>
       <div class="condition-evidence-grid">
-        {#each plan.conditionEvidence as summary (summary.id)}
+        {#each otherConditionEvidence as summary (summary.id)}
           <article class="condition-evidence-item" data-signal={conditionTone(summary)}>
             <div class="condition-evidence-item-top">
               <h4>{summary.label}</h4>
@@ -1393,250 +1352,12 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     font-size: 0.8rem;
   }
 
-  .action-queue {
-    border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
-    background: var(--surface-raised);
-    width: min(100%, var(--report-dashboard-surface-width));
-    margin-inline: auto;
-  }
-
-  .action-queue-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .section-kicker {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: var(--accent);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .action-queue-header h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 1.15rem;
-  }
-
-  .action-queue-header p {
-    max-width: 46rem;
-    margin: 0.3rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    line-height: 1.45;
-  }
-
-  .action-queue-count {
-    flex: 0 0 auto;
-    padding: 0.35rem 0.55rem;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-    font-weight: 700;
-  }
-
-  .action-queue-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem;
-    width: 100%;
-    margin-inline: auto;
-    padding-top: 0.75rem;
-    box-sizing: border-box;
-  }
-
-  .action-queue-column {
-    display: grid;
-    align-content: start;
-    gap: 0.65rem;
-    min-width: 0;
-  }
-
-  .action-queue-item {
-    display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr);
-    align-items: start;
-    gap: 0.7rem;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid var(--border-color);
-    border-left: 3px solid var(--accent);
-    border-radius: 0.65rem;
-    background: var(--surface-subtle);
-  }
-
-  .action-queue-item[data-concern="high"] {
-    border-left-color: var(--status-danger-border);
-  }
-
-  .action-queue-item[data-concern="moderate"] {
-    border-left-color: var(--status-warning-border);
-  }
-
-  .action-queue-item[data-concern="low"] {
-    border-left-color: var(--status-caution-border);
-  }
-
-  .action-queue-rank {
-    display: inline-flex;
-    width: 2.1rem;
-    height: 2.1rem;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--status-accent-soft-border);
-    border-radius: 50%;
-    background: var(--status-accent-bg);
-    color: var(--status-accent-soft-text);
-    font-size: 0.85rem;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  .action-queue-item-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-
-  .action-queue-item-top {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .action-queue-concern {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 0.3rem;
-    color: var(--text-secondary);
-    font-size: 0.62rem;
-    font-weight: 700;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  .action-queue-concern.high { color: var(--status-danger-strong-text); }
-  .action-queue-concern.moderate { color: var(--status-warning-text); }
-  .action-queue-concern.low { color: var(--status-caution-text); }
-
   .concern-dot {
     display: inline-block;
     width: 0.48rem;
     height: 0.48rem;
     border-radius: 50%;
     background: currentColor;
-  }
-
-  .action-queue-item h4 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    line-height: 1.3;
-  }
-
-  .action-queue-context {
-    display: block;
-    margin-top: 0.2rem;
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-  }
-
-  .action-queue-direction {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    padding: 0.15rem 0.4rem;
-    border: 1px solid var(--status-accent-soft-border);
-    border-radius: 999px;
-    color: var(--status-accent-soft-text);
-    font-size: 0.64rem;
-    font-weight: 700;
-    line-height: 1.25;
-  }
-
-  .action-queue-signal-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem 0.55rem;
-    margin-top: 0.15rem;
-  }
-
-  .action-queue-signal {
-    color: var(--report-dna-signal-text);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .action-queue-marker-ref {
-    color: var(--report-marker-ref-text);
-    font-family: var(--font-mono), ui-monospace, monospace;
-    font-size: 0.68rem;
-    font-weight: 600;
-    line-height: 1.35;
-    letter-spacing: 0.01em;
-    padding: 0.12rem 0.4rem;
-    border-radius: 0.35rem;
-    background: var(--report-marker-ref-bg);
-  }
-
-  .action-queue-item-content > p {
-    max-width: none;
-    margin: 0.35rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.76rem;
-    line-height: 1.45;
-  }
-
-  .action-queue-next {
-    align-self: stretch;
-    max-width: none;
-    margin-top: 0.2rem;
-    padding: 0.45rem 0.55rem;
-    border-left: 2px solid var(--accent);
-    border-radius: 0 0.4rem 0.4rem 0;
-    background: var(--surface-card);
-    color: var(--text-primary);
-    font-size: 0.7rem;
-    line-height: 1.35;
-  }
-
-  .action-queue-next strong {
-    margin-right: 0.25rem;
-    color: var(--text-primary);
-  }
-
-  .action-queue-item .jump-btn {
-    margin-top: 0.1rem;
-    padding-inline: 0;
-    grid-column: 2;
-    justify-self: start;
-  }
-
-  .action-queue-empty {
-    display: grid;
-    gap: 0.35rem;
-    padding-top: 1rem;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    line-height: 1.45;
-  }
-
-  .action-queue-empty strong {
-    color: var(--text-primary);
   }
 
   .lab-spotlight {
@@ -3500,6 +3221,122 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
     margin-top: 0.65rem;
   }
 
+  .bpd-symptom-context {
+    width: min(100%, var(--report-dashboard-surface-width));
+    margin-inline: auto;
+    padding: 0.85rem 1rem;
+    border-color: color-mix(in srgb, var(--status-warning-border) 48%, var(--border-color));
+    background: var(--surface-raised);
+  }
+
+  .bpd-symptom-context-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .bpd-symptom-context-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+  }
+
+  .bpd-symptom-context-header p,
+  .bpd-symptom-context-item p,
+  .bpd-symptom-context-boundary p {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.48;
+  }
+
+  .bpd-symptom-context-match-note {
+    margin-top: 0.7rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .bpd-symptom-context-match-note strong {
+    color: var(--text-primary);
+  }
+
+  .bpd-symptom-context-badge {
+    flex: 0 0 auto;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--status-warning-border);
+    border-radius: 999px;
+    color: var(--status-warning-text);
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+
+  .bpd-symptom-context-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+  }
+
+  .bpd-symptom-context-item {
+    min-width: 0;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.45rem;
+    background: var(--surface-card);
+  }
+
+  .bpd-symptom-context-item h4,
+  .bpd-symptom-context-sources h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.76rem;
+  }
+
+  .bpd-symptom-context-item .bpd-symptom-context-prompt {
+    margin-top: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  .bpd-symptom-context-item .btn {
+    margin-top: 0.45rem;
+    padding-inline: 0;
+  }
+
+  .bpd-symptom-context-boundary {
+    margin-top: 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-left: 2px solid var(--status-warning-border);
+    background: var(--surface-subtle);
+  }
+
+  .bpd-symptom-context-boundary p:first-child {
+    margin-top: 0;
+    color: var(--text-primary);
+  }
+
+  .bpd-symptom-context-sources {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.7rem;
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .bpd-symptom-context-sources a {
+    color: var(--status-info-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
   .activity-stop-compact {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -3531,10 +3368,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
     .clinical-guidance-grid {
       grid-template-columns: 1fr;
-    }
-
-    .action-queue-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .action-row {
@@ -3573,6 +3406,10 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
       grid-template-columns: 1fr;
     }
 
+    .bpd-symptom-context-grid {
+      grid-template-columns: 1fr;
+    }
+
     .brain-mood-context-links {
       padding-left: 0;
       padding-top: 0.6rem;
@@ -3583,10 +3420,6 @@ import type { PresentationMode } from '../../utils/presentationPreferences';
 
   @media (min-width: 1101px) and (max-width: 1400px) {
     .guidance-index-links {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .action-queue-list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }

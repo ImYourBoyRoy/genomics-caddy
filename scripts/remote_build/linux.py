@@ -23,6 +23,7 @@ Outputs / side effects:
 from __future__ import annotations
 
 from remote_build.config import Settings, get_settings
+from remote_build.cache import RemoteCachePolicy, cache_environment_exports
 from remote_build.upgrade.host import host_bash
 
 from pathlib import Path
@@ -52,6 +53,7 @@ fi
 export PNPM_HOME="${{PNPM_HOME:-$HOME/.local/share/pnpm}}"
 
 GUEST_DIR='{guest_dir}'
+{cache_exports}
 cd "$GUEST_DIR"
 
 echo ""
@@ -89,6 +91,14 @@ def build(
 ) -> None:
     """Run the Linux x86_64 build on the Ubuntu builder host."""
     s = settings or get_settings()
+    root = guest_dir.rstrip("/")
+    cache_policy = RemoteCachePolicy(
+        project="dna_tools",
+        target_dir=f"{root}/src-tauri/target",
+        scope_root=f"{root}/src-tauri",
+        project_root=root,
+    )
+    cache_exports = cache_environment_exports(cache_policy)
     clean_step = (
         "cargo clean --manifest-path src-tauri/Cargo.toml && echo '[LINUX] cargo clean done'"
         if clean
@@ -106,6 +116,7 @@ def build(
 
     script = _with_sign_env(_BUILD_SCRIPT.format(
         guest_dir=guest_dir,
+        cache_exports=cache_exports,
         clean_step=clean_step,
         bundle_arg=bundle_arg,
     ))

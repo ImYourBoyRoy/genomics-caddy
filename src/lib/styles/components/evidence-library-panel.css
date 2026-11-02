@@ -10,8 +10,10 @@
 
   .panel-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 10px 12px;
     padding: 12px 18px;
     background: var(--surface-inset);
     border-bottom: 1px solid var(--border-color);
@@ -41,8 +43,23 @@
 
   .library-mode-toggle {
     display: flex;
-    gap: 6px;
+    gap: 2px;
     margin-right: 8px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--surface-inset);
+  }
+
+  .library-mode-toggle .btn {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .library-mode-toggle .btn.drawer-open {
+    border-color: var(--accent-border);
+    background: var(--accent-soft);
+    color: var(--accent-bright);
   }
 
   .btn-sm {
@@ -53,9 +70,9 @@
   }
 
   .toggle-sidebar-btn.drawer-open, .toggle-settings-btn.drawer-open {
-    background: rgba(88, 80, 236, 0.2);
-    border-color: var(--accent);
-    color: var(--text-primary);
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+    color: var(--accent-bright);
   }
 
   .panel-content-scroll {
@@ -100,7 +117,7 @@
 
   .search-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(88, 80, 236, 0.15);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   .clear-input-btn {
@@ -257,7 +274,7 @@
   }
 
   .result-card:hover {
-    border-color: rgba(88, 80, 236, 0.3);
+    border-color: rgba(20, 184, 166, 0.3);
     background: var(--surface-subtle);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   }
@@ -272,8 +289,8 @@
 
   .marker-badge {
     display: inline-flex;
-    background: rgba(88, 80, 236, 0.12);
-    border: 1px solid rgba(88, 80, 236, 0.25);
+    background: rgba(20, 184, 166, 0.12);
+    border: 1px solid rgba(20, 184, 166, 0.25);
     border-radius: 6px;
     overflow: hidden;
     font-family: monospace;
@@ -281,14 +298,14 @@
   }
 
   .marker-badge .gene-name {
-    background: rgba(88, 80, 236, 0.15);
-    color: #a5b4fc;
+    background: rgba(20, 184, 166, 0.15);
+    color: var(--accent-bright);
     padding: 3px 8px;
     font-weight: 600;
   }
 
   .marker-badge .rsid {
-    color: #c7d2fe;
+    color: var(--accent-bright);
     padding: 3px 8px;
   }
 
@@ -344,14 +361,14 @@
   }
 
   .citation-link {
-    color: #818cf8;
+    color: var(--accent-bright);
     text-decoration: none;
     transition: color 0.15s;
     font-weight: 500;
   }
 
   .citation-link:hover {
-    color: #a5b4fc;
+    color: var(--accent-bright);
     text-decoration: underline;
   }
 
@@ -372,11 +389,11 @@
   .glow-spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(88, 80, 236, 0.1);
+    border: 3px solid rgba(20, 184, 166, 0.1);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin-anim 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    box-shadow: 0 0 10px rgba(88, 80, 236, 0.2);
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
     margin-bottom: 16px;
   }
 
@@ -444,7 +461,7 @@
   .intro-logo {
     font-size: 3rem;
     margin-bottom: 16px;
-    background: radial-gradient(circle, rgba(88, 80, 236, 0.2), transparent 70%);
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.2), transparent 70%);
     padding: 10px;
   }
 

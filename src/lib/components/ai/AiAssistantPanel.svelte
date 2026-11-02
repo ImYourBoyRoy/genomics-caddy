@@ -14,7 +14,8 @@
     saveConsultationSessionTitle,
     deleteConsultationSession,
   } from "../../utils/aiAssistantSessionActions";
-  import { loadOllamaModelDetails, scanChatModels } from "../../utils/aiAssistantModelActions";
+  import { loadOllamaModelDetails, scanChatGptModels, scanChatModels } from "../../utils/aiAssistantModelActions";
+  import { loadChatProvider, saveChatProvider, type ChatProvider } from "../../utils/chatProvider";
   import {
     loadAiAssistantPreferences,
     persistAiAssistantPreferences,
@@ -76,7 +77,7 @@
 
   let maxTokens = $state(2048);
   let extendedThinking = $state(false);
-  let showSettingsDrawer = $state(true);
+  let showSettingsDrawer = $state(false);
   let showHistorySidebar = $state(true);
 
   let showThinkingProcess = $state(true);
@@ -185,9 +186,24 @@
     });
   }
 
+  let chatProvider = $state<ChatProvider>(loadChatProvider());
+
+  async function setChatProvider(next: ChatProvider) {
+    if (next === chatProvider) return;
+    chatProvider = next;
+    saveChatProvider(next);
+    models = [];
+    selectedModel = "";
+    scanError = "";
+    await scanModels();
+  }
+
   async function scanModels() {
     isScanning = true;
-    const result = await scanChatModels(ollamaUrl, ollamaToken, selectedModel);
+    const result =
+      chatProvider === "chatgpt"
+        ? await scanChatGptModels(selectedModel)
+        : await scanChatModels(ollamaUrl, ollamaToken, selectedModel);
     models = result.models;
     selectedModel = result.selectedModel;
     scanError = result.scanError;
@@ -195,7 +211,7 @@
   }
 
   async function loadModelDetails() {
-    const details = await loadOllamaModelDetails(ollamaUrl, ollamaToken, selectedModel);
+    const details = await loadOllamaModelDetails(ollamaUrl, ollamaToken, selectedModel, chatProvider);
     modelDetails = details.modelDetails;
     isVisionCapable = details.isVisionCapable;
     contextWindow = details.contextWindow;
@@ -214,6 +230,7 @@
       messages,
       ollamaUrl,
       ollamaToken,
+      chatProvider,
       temperature,
       maxTokens,
       extendedThinking,
@@ -415,7 +432,7 @@
     showHistorySidebar={showHistorySidebar}
     bind:activeView={activeView}
   />
-  
+
   {#if activeView === "chat"}
     <ChatWindow
       bind:messages={messages}
@@ -438,6 +455,8 @@
       editMessage={editMessage}
       deleteMessage={deleteMessage}
       selectedModel={selectedModel}
+      ollamaUrl={ollamaUrl}
+      {chatProvider}
       vectorHits={lastVectorHits}
       vectorEvidenceCards={lastVectorEvidenceCards}
       vectorIndexBrief={lastVectorIndexBrief}
@@ -463,6 +482,8 @@
       <ChatSettingsDrawer
       bind:ollamaUrl={ollamaUrl}
       bind:ollamaToken={ollamaToken}
+      {chatProvider}
+      onChatProviderChange={setChatProvider}
       bind:selectedModel={selectedModel}
       models={models}
       isScanning={isScanning}

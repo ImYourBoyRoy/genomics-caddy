@@ -83,7 +83,7 @@ Operational Notes: Adheres to Svelte 5 runes and strictly stays under the 500-li
     gap: 6px;
   }
   .finding-shortcut-btn:hover {
-    background: rgba(88, 80, 236, 0.05);
+    background: rgba(20, 184, 166, 0.05);
     border-color: var(--accent);
     transform: translateY(-2px);
   }

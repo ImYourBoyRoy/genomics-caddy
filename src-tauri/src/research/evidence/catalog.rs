@@ -20,8 +20,8 @@ fn order_clause(sort: Option<&str>) -> &'static str {
 
 fn score_having(preset: &str) -> Option<(&'static str, f64)> {
     match preset {
-        "clinical" => Some(("cs >= ?", 0.25)),
-        "actionable" => Some(("ws >= ?", 0.25)),
+        "clinical" => Some(("cs", 0.25)),
+        "actionable" => Some(("ws", 0.25)),
         _ => None,
     }
 }
@@ -83,15 +83,16 @@ fn build_catalog_sql(
     }
 
     let where_sql = where_parts.join(" AND ");
-    let having = score_having(&p.preset);
-    let having_sql = having
-        .map(|(clause, _)| format!(" HAVING {clause}"))
-        .unwrap_or_default();
+    // Every placeholder is numbered: mixing bare `?` with `?N` makes SQLite
+    // reuse an index and the bind count no longer matches the statement.
+    let mut having_sql = String::new();
+    if let Some((column, floor)) = score_having(&p.preset) {
+        having_sql = format!(" HAVING {column} >= ?{n}");
+        binds.push(Value::Real(floor));
+        n += 1;
+    }
 
     if count_only {
-        if let Some((_, floor)) = having {
-            binds.push(Value::Real(floor));
-        }
         let sql = format!(
             "SELECT COUNT(*) FROM (
                 SELECT rsid,
@@ -105,9 +106,6 @@ fn build_catalog_sql(
         return Ok((sql, binds));
     }
 
-    if let Some((_, floor)) = having {
-        binds.push(Value::Real(floor));
-    }
     let limit_idx = n;
     binds.push(Value::Integer(p.limit.clamp(5, 100) as i64));
     n += 1;
@@ -207,4 +205,61 @@ pub async fn browse_catalog(
         offset,
         limit,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn conn() -> Connection {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "CREATE TABLE association_facts (
+                sample_id INTEGER, rsid TEXT, trait_category TEXT,
+                data_quality_score REAL, association_type TEXT,
+                personal_direction TEXT, mapped_gene_symbol TEXT,
+                wellness_actionability_score REAL, clinical_actionability_score REAL
+            );
+            INSERT INTO association_facts VALUES
+              (1, 'rs1', 'sleep', 0.9, 'gwas_top_association', NULL, 'GENEA', 0.8, 0.1),
+              (1, 'rs2', 'sleep', 0.5, 'clinvar', 'unknown', 'GENEB', 0.1, 0.7);",
+        )
+        .expect("schema");
+        conn
+    }
+
+    fn params(preset: &str) -> BrowseAssociationsParams {
+        BrowseAssociationsParams {
+            sample_id: 1,
+            preset: preset.to_string(),
+            trait_category: Some("sleep".to_string()),
+            limit: 25,
+            offset: 0,
+            sort: None,
+            min_data_quality: Some(0.25),
+            direction_filter: Some("unknown".to_string()),
+            text_filter: Some("rs".to_string()),
+        }
+    }
+
+    #[test]
+    fn every_preset_binds_exactly_the_placeholders_it_uses() {
+        let conn = conn();
+        for preset in ["actionable", "clinical", "gwas", "unknown", "all"] {
+            let p = params(preset);
+            list_catalog_rsids(&conn, &p).unwrap_or_else(|e| panic!("list {preset}: {e}"));
+            count_catalog_rsids(&conn, &p).unwrap_or_else(|e| panic!("count {preset}: {e}"));
+        }
+    }
+
+    #[test]
+    fn score_floor_filters_without_shifting_limit_or_offset() {
+        let conn = conn();
+        let mut p = params("actionable");
+        p.direction_filter = None;
+        p.text_filter = None;
+        p.min_data_quality = None;
+        assert_eq!(list_catalog_rsids(&conn, &p).unwrap(), vec!["rs1".to_string()]);
+        assert_eq!(count_catalog_rsids(&conn, &p).unwrap(), 1);
+    }
 }

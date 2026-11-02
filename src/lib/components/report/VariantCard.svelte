@@ -204,7 +204,7 @@
         {/if}
         {#if marker.do_not_claim.length > 0}
           <ul class="claim-limit-list">
-            {#each marker.do_not_claim as item}
+            {#each marker.do_not_claim as item, i (i)}
               <li>{item}</li>
             {/each}
           </ul>
@@ -306,16 +306,12 @@
 
       {#if viewMode === 'simple'}
         <div class="simple-finding-summary">
-          <div class="simple-copy-field simple-copy-signal">
-            <span class="simple-copy-label">Signal</span>
-            <span class="layperson-text">{simpleCopy.signal}</span>
-          </div>
-          {#if simpleCopy.why_it_matters && simpleCopy.why_it_matters !== simpleCopy.signal}
-            <div class="simple-copy-field">
-              <span class="simple-copy-label">Why it matters</span>
-              <span class="layperson-text">{simpleCopy.why_it_matters}</span>
-            </div>
-          {/if}
+          <p class="simple-finding-text">
+            <span class="simple-copy-field simple-copy-signal layperson-text">{simpleCopy.signal}</span>
+            {#if simpleCopy.why_it_matters && simpleCopy.why_it_matters !== simpleCopy.signal}
+              <span class="simple-copy-field layperson-text"> {simpleCopy.why_it_matters}</span>
+            {/if}
+          </p>
           <div class="simple-next-step">
             <strong>Next step</strong>
             <span>{simpleCopy.review_action}</span>
@@ -326,6 +322,9 @@
             </button>
           {/if}
         </div>
+        {#if hasCallableGenotype}
+          <ConfirmWithList confirmWith={marker.confirm_with} />
+        {/if}
         {#if callabilityState !== 'callable'}
           <div class="simple-callability-note" role="note">
             <strong>Evaluation status</strong>
@@ -374,9 +373,6 @@
                 </div>
               {/if}
             </dl>
-            {#if hasCallableGenotype}
-              <ConfirmWithList confirmWith={marker.confirm_with} />
-            {/if}
           </details>
             {#if hasCallableGenotype}
             <SourcesList sources={marker.sources} dbSources={marker.db_enriched_sources} />
@@ -388,16 +384,7 @@
           {#if viewMode === "clinical"}
             <span class="clinical-text">{marker.impact}</span>
           {:else}
-            <div class="dual-explanations">
-              <div class="dual-row layperson-box">
-                <span class="dual-tag layperson-tag">🌱 Simple:</span>
-                <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
-              </div>
-              <div class="dual-row clinical-box">
-                <span class="dual-tag clinical-tag">🏥 Medical:</span>
-                <span class="clinical-text">{marker.impact}</span>
-              </div>
-            </div>
+            <span class="layperson-text">{laypersonTranslation.simpleImpact}</span>
           {/if}
         </div>
 
@@ -406,22 +393,20 @@
           {#if viewMode === "clinical"}
             <span class="clinical-text">{marker.interpretation}</span>
           {:else}
-            <div class="dual-explanations">
-              <div class="dual-row layperson-box">
-                <span class="dual-tag layperson-tag">🌱 Simple:</span>
-                <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
-              </div>
-              <div class="dual-row clinical-box">
-                <span class="dual-tag clinical-tag">🏥 Medical:</span>
-                {#if showSharedInterpretationNote}
-                  <span class="clinical-text">Shared pathway context is shown once above.</span>
-                {:else}
-                  <span class="clinical-text">{marker.interpretation}</span>
-                {/if}
-              </div>
-            </div>
+            <span class="layperson-text">{laypersonTranslation.simpleMeaning}</span>
           {/if}
         </div>
+
+        {#if viewMode !== "clinical"}
+          <details class="clinical-wording">
+            <summary>Clinical wording</summary>
+            <p class="clinical-text"><strong>Gene:</strong> {marker.impact}</p>
+            <p class="clinical-text">
+              <strong>Result:</strong>
+              {showSharedInterpretationNote ? "Shared pathway context is shown once above." : marker.interpretation}
+            </p>
+          </details>
+        {/if}
 
         {#if hasCallableGenotype}
           <ConfirmWithList confirmWith={marker.confirm_with} />
@@ -674,23 +659,25 @@
   .gwas-count { opacity: 0.7; font-size: 0.7rem; margin-left: 0.3rem; }
 
   .simple-finding-summary {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.55rem 1rem;
-    padding: 0.15rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
     color: var(--text-primary);
     font-size: 0.82rem;
-    line-height: 1.45;
+    line-height: 1.5;
   }
 
   .simple-copy-field {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.18rem;
+    display: inline;
   }
 
-  .simple-copy-label,
+  .simple-finding-text {
+    margin: 0;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+
   .simple-copy-evidence,
   .simple-direction-label {
     color: var(--status-accent-text);
@@ -698,10 +685,6 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-  }
-
-  .simple-copy-field .layperson-text {
-    color: var(--text-secondary);
   }
 
   .simple-copy-evidence {
@@ -726,12 +709,7 @@
   .simple-next-step {
     display: flex;
     min-width: 0;
-    grid-column: 1 / -1;
-    gap: 0.35rem;
-    padding: 0.48rem 0.6rem;
-    border-left: 2px solid var(--status-success-border);
-    border-radius: 0.25rem;
-    background: var(--status-success-bg);
+    gap: 0.4rem;
     color: var(--text-secondary);
   }
 
@@ -748,18 +726,35 @@
   .simple-callability-note {
     display: flex;
     min-width: 0;
-    grid-column: 1 / -1;
-    gap: 0.35rem;
-    padding: 0.48rem 0.6rem;
-    border-left: 2px solid var(--status-warning-border);
-    border-radius: 0.25rem;
-    background: var(--status-warning-bg);
+    gap: 0.4rem;
     color: var(--text-secondary);
+    font-size: 0.76rem;
   }
 
   .simple-callability-note strong {
     flex: 0 0 auto;
     color: var(--status-warning-text);
+  }
+
+  .clinical-wording {
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+  }
+
+  .clinical-wording summary {
+    width: fit-content;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .clinical-wording summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+
+  .clinical-wording p {
+    margin: 0.35rem 0 0;
   }
 
   .simple-callability-note span {
@@ -904,15 +899,5 @@
 
   :global(.simple-card-disclosures > .marker-sources-details[open] summary) {
     margin-bottom: 0.6rem;
-  }
-
-  @media (max-width: 760px) {
-    .simple-finding-summary {
-      grid-template-columns: 1fr;
-    }
-
-    .simple-next-step {
-      grid-column: auto;
-    }
   }
 </style>

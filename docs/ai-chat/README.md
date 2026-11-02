@@ -127,3 +127,11 @@ control) and retry after the plan window resets.
 
 **Switching accounts.** Disconnect first, then sign in again. The app
 rejects a different ChatGPT subject than the saved connection.
+
+**`string_above_max_length` / instructions too long.** OpenAI caps the
+Responses API `instructions` field at 1,048,576 characters. Genomics Caddy
+keeps the short rule text in `instructions` and moves `[JSON CONTEXT]` into
+the chat `input`. It also emits compact JSON for ChatGPT, refuses to send
+Developer raw JSON’s full `raw_report`, and trims heavy support/catalog
+blobs or finding counts until the context fits. Prefer **Active findings**
+over **Developer raw JSON** / **Full selected packs** for ChatGPT.

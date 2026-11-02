@@ -105,7 +105,7 @@ type AiPromptHelper = typeof aiPromptHelpers.helpers[number];
 
 const AI_PROMPT_HELPERS = aiPromptHelpers.helpers as AiPromptHelper[];
 
-interface PromptBuildParams {
+export interface PromptBuildParams {
   selectedSample: GenomeSample;
   generatedReport: GeneratedReport;
   selectedPacks: Record<string, boolean>;
@@ -119,6 +119,12 @@ interface PromptBuildParams {
   laypersonMap: Record<string, { simpleImpact: string; simpleMeaning: string }>;
   qdrantHits?: QdrantHit[];
   vectorSearchMeta?: VectorSearchMeta;
+  /** JSON pretty-print indent; `null` emits compact JSON (needed for ChatGPT size limits). Default 2. */
+  jsonIndent?: number | null;
+  /** Cap included findings after filtering (highest effect_count first). */
+  maxFindings?: number | null;
+  /** Drop bulky support/catalog/coverage blobs when fitting a cloud token budget. */
+  omitHeavyContext?: boolean;
 }
 
 /**
@@ -190,6 +196,9 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
     personalSafetyContext,
     qdrantHits = [],
     vectorSearchMeta,
+    jsonIndent = 2,
+    maxFindings = null,
+    omitHeavyContext = false,
   } = params;
 
   const todayStr = new Date().toDateString();
@@ -243,6 +252,34 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         return { pack_id: pack?.id, section_name: sec.name, findings };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null);
+
+    if (typeof maxFindings === "number" && maxFindings >= 0) {
+      const ranked = sectionsData
+        .flatMap((section) =>
+          section.findings.map((finding: ReturnType<typeof buildMarkerPayload>) => ({
+            section,
+            finding,
+            effect: finding.effect_count ?? 0,
+          })),
+        )
+        .sort((a, b) => b.effect - a.effect)
+        .slice(0, maxFindings);
+      const bySection = new Map<string, typeof sectionsData[number]>();
+      for (const row of ranked) {
+        const key = String(row.section.pack_id ?? row.section.section_name);
+        const existing = bySection.get(key);
+        if (existing) {
+          existing.findings.push(row.finding);
+        } else {
+          bySection.set(key, {
+            pack_id: row.section.pack_id,
+            section_name: row.section.section_name,
+            findings: [row.finding],
+          });
+        }
+      }
+      sectionsData = [...bySection.values()];
+    }
   }
 
   const supportPackIds = contextMode === "developer_raw_json"
@@ -291,12 +328,14 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
         import_provenance: generatedReport.import_provenance ?? null,
         profile: userProfile.injectProfile ? userProfile : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
-        condition_evidence: conditionEvidence,
-        catalog_associations: catalogAssociations,
-        condition_coverage: conditionCoverage,
-        condition_coverage_gaps: conditionCoverageGaps,
-        raw_report: generatedReport,
-        support_resources: supportResources
+        condition_evidence: omitHeavyContext ? undefined : conditionEvidence,
+        catalog_associations: omitHeavyContext ? undefined : catalogAssociations,
+        condition_coverage: omitHeavyContext ? undefined : conditionCoverage,
+        condition_coverage_gaps: omitHeavyContext ? undefined : conditionCoverageGaps,
+        // Full raw reports routinely exceed ChatGPT's instructions cap; keep
+        // them for local Ollama developer mode only.
+        raw_report: omitHeavyContext ? undefined : generatedReport,
+        support_resources: omitHeavyContext ? undefined : supportResources
       }
     };
   } else {
@@ -335,13 +374,19 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
           supportiveTests: userProfile.supportiveTests.trim() || undefined
         } : undefined,
         personal_safety_context: sharedPersonalSafetyContext,
-        condition_evidence: conditionEvidence,
-        catalog_associations: catalogAssociations,
-        condition_coverage: conditionCoverage,
-        condition_coverage_gaps: conditionCoverageGaps,
-        sections: sectionsData
+        condition_evidence: omitHeavyContext ? undefined : conditionEvidence,
+        catalog_associations: omitHeavyContext ? undefined : catalogAssociations,
+        condition_coverage: omitHeavyContext ? undefined : conditionCoverage,
+        condition_coverage_gaps: omitHeavyContext ? undefined : conditionCoverageGaps,
+        sections: sectionsData,
+        context_budget: omitHeavyContext || maxFindings != null
+          ? {
+              omit_heavy_context: omitHeavyContext || undefined,
+              max_findings: maxFindings ?? undefined,
+            }
+          : undefined,
       },
-      support_resources: supportResources,
+      support_resources: omitHeavyContext ? undefined : supportResources,
       rules: aiPromptPolicy.payload_rules,
       forbidden_actions: aiPromptPolicy.forbidden_actions,
       vector_research: buildVectorResearchBlock(qdrantHits, vectorSearchMeta ?? {
@@ -358,6 +403,10 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
 ${modeInfo.instructions}`;
   const conditionInstructions = `[CONDITION EVIDENCE]
 ${aiPromptPolicy.condition_evidence_instructions}`;
+  const jsonText =
+    jsonIndent === null || jsonIndent === undefined
+      ? JSON.stringify(payloadContext)
+      : JSON.stringify(payloadContext, null, jsonIndent);
 
   return `[SYSTEM INSTRUCTIONS]
 - Today's Date: ${todayStr} (${aiPromptPolicy.date_warning})
@@ -368,7 +417,7 @@ ${specialtyInstructions}
 ${conditionInstructions}
 
 [JSON CONTEXT]
-${JSON.stringify(payloadContext, null, 2)}`;
+${jsonText}`;
 }
 
 // ---------------------------------------------------------------------------

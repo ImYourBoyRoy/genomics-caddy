@@ -28,6 +28,7 @@ import { LAYPERSON_MAP } from "./layperson";
 import aiPromptPolicy from "../marker-packs/ai_prompt_policy.json";
 import { renderPromptTemplate } from "./promptTemplates";
 import { streamChatCompletion, type ChatProvider } from "./chatProvider";
+import { buildChatGptSystemPrompt } from "./chatGptPrompt";
 import {
   newOllamaStreamId,
   subscribeOllamaStream,
@@ -171,7 +172,7 @@ export async function runConsultationTurn(
     return msgObj;
   });
 
-  const systemPromptWithRag = buildSystemPrompt({
+  const promptParams = {
     selectedSample,
     generatedReport,
     selectedPacks,
@@ -190,7 +191,20 @@ export async function runConsultationTurn(
       error: vectorSearchError || undefined,
       indexBrief: indexBrief || undefined,
     },
-  });
+  };
+  // ChatGPT's Responses API caps `instructions` at 1MB; local Ollama does not.
+  const systemPromptWithRag =
+    chatProvider === "chatgpt"
+      ? (() => {
+          const fitted = buildChatGptSystemPrompt(promptParams);
+          if (fitted.warnings.length) {
+            console.warn("[ChatGPT context]", fitted.warnings.join(" "));
+          }
+          return fitted.warnings.length
+            ? `${fitted.prompt}\n\n[CONTEXT BUDGET NOTES]\n- ${fitted.warnings.join("\n- ")}`
+            : fitted.prompt;
+        })()
+      : buildSystemPrompt(promptParams);
 
   const payloadMessages: ChatMessage[] = [
     { role: "system", content: systemPromptWithRag },

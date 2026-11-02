@@ -680,9 +680,48 @@ fn describe_error_code(status: u16, code: &str, detail: &str) -> String {
     message
 }
 
+/// OpenAI Responses API hard cap on the `instructions` field.
+const INSTRUCTIONS_MAX_CHARS: usize = 1_048_576;
+const JSON_CONTEXT_MARKER: &str = "[JSON CONTEXT]";
+
+/// Split a Genomics Caddy system prompt so genomic JSON is not stuffed into
+/// `instructions` (1MB cap). Rules stay in instructions; `[JSON CONTEXT]…`
+/// becomes a leading reference user message in `input`.
+fn split_system_for_responses(system: &str) -> (String, Option<String>) {
+    if let Some(idx) = system.find(JSON_CONTEXT_MARKER) {
+        let instructions = system[..idx].trim_end().to_string();
+        let context = system[idx..].trim().to_string();
+        (
+            instructions,
+            if context.is_empty() {
+                None
+            } else {
+                Some(context)
+            },
+        )
+    } else {
+        (system.to_string(), None)
+    }
+}
+
+fn clamp_instructions(instructions: String) -> Result<String, String> {
+    let len = instructions.chars().count();
+    if len <= INSTRUCTIONS_MAX_CHARS {
+        return Ok(instructions);
+    }
+    Err(format!(
+        "ChatGPT instructions are {len} characters; OpenAI allows at most {INSTRUCTIONS_MAX_CHARS}. \
+Switch Genomic Data Context away from Developer raw JSON / Full selected packs, \
+or reduce selected packs, then try again."
+    ))
+}
+
 /// Convert Ollama-style chat messages into a Responses API body fragment.
-fn build_input(messages: &[serde_json::Value]) -> (String, Vec<serde_json::Value>) {
+fn build_input(
+    messages: &[serde_json::Value],
+) -> Result<(String, Vec<serde_json::Value>), String> {
     let mut instructions: Vec<String> = Vec::new();
+    let mut context_blocks: Vec<String> = Vec::new();
     let mut input: Vec<serde_json::Value> = Vec::new();
     for m in messages {
         let role = m.get("role").and_then(|r| r.as_str()).unwrap_or("user");
@@ -692,8 +731,15 @@ fn build_input(messages: &[serde_json::Value]) -> (String, Vec<serde_json::Value
             .unwrap_or_default()
             .to_string();
         if role == "system" {
-            if !text.trim().is_empty() {
-                instructions.push(text);
+            if text.trim().is_empty() {
+                continue;
+            }
+            let (instr, ctx) = split_system_for_responses(&text);
+            if !instr.trim().is_empty() {
+                instructions.push(instr);
+            }
+            if let Some(ctx) = ctx {
+                context_blocks.push(ctx);
             }
             continue;
         }
@@ -718,7 +764,20 @@ fn build_input(messages: &[serde_json::Value]) -> (String, Vec<serde_json::Value
             input.push(serde_json::json!({ "role": role, "content": text }));
         }
     }
-    (instructions.join("\n\n"), input)
+
+    let mut final_input = Vec::with_capacity(context_blocks.len() + input.len());
+    for ctx in context_blocks {
+        final_input.push(serde_json::json!({
+            "role": "user",
+            "content": format!(
+                "Reference genomic context for this consultation (not a user question):\n\n{ctx}"
+            ),
+        }));
+    }
+    final_input.extend(input);
+
+    let joined = clamp_instructions(instructions.join("\n\n"))?;
+    Ok((joined, final_input))
 }
 
 #[tauri::command]
@@ -733,7 +792,7 @@ pub async fn stream_chatgpt_chat(
     let chunk_event = stream_control::ollama_chunk_event(&stream_id);
     let done_event = stream_control::ollama_done_event(&stream_id);
 
-    let (instructions, input) = build_input(&messages);
+    let (instructions, input) = build_input(&messages)?;
     let mut body = serde_json::json!({
         "model": model,
         "input": input,
@@ -882,11 +941,38 @@ mod tests {
             serde_json::json!({ "role": "user", "content": "hi", "images": ["AAAA"] }),
             serde_json::json!({ "role": "assistant", "content": "hello" }),
         ];
-        let (instructions, input) = build_input(&messages);
+        let (instructions, input) = build_input(&messages).unwrap();
         assert_eq!(instructions, "be careful");
         assert_eq!(input.len(), 2);
         assert_eq!(input[0]["content"][1]["type"], "input_image");
         assert_eq!(input[1]["role"], "assistant");
+    }
+
+    #[test]
+    fn json_context_moves_out_of_instructions_into_input() {
+        let system = "[SYSTEM INSTRUCTIONS]\nrules here\n\n[JSON CONTEXT]\n{\"sections\":[]}";
+        let messages = vec![
+            serde_json::json!({ "role": "system", "content": system }),
+            serde_json::json!({ "role": "user", "content": "explain MTHFR" }),
+        ];
+        let (instructions, input) = build_input(&messages).unwrap();
+        assert!(instructions.contains("rules here"));
+        assert!(!instructions.contains("[JSON CONTEXT]"));
+        assert!(instructions.chars().count() < 1_000);
+        assert_eq!(input.len(), 2);
+        assert!(input[0]["content"]
+            .as_str()
+            .unwrap()
+            .contains("[JSON CONTEXT]"));
+        assert_eq!(input[1]["content"], "explain MTHFR");
+    }
+
+    #[test]
+    fn oversized_instructions_without_json_marker_fail_closed() {
+        let huge = "x".repeat(INSTRUCTIONS_MAX_CHARS + 10);
+        let messages = vec![serde_json::json!({ "role": "system", "content": huge })];
+        let err = build_input(&messages).unwrap_err();
+        assert!(err.contains("OpenAI allows at most"));
     }
 
     #[test]

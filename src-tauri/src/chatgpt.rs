@@ -682,12 +682,24 @@ fn describe_error_code(status: u16, code: &str, detail: &str) -> String {
 
 /// OpenAI Responses API hard cap on the `instructions` field.
 const INSTRUCTIONS_MAX_CHARS: usize = 1_048_576;
+/// Legacy marker from pre-packer prompts; still peeled out of instructions if present.
 const JSON_CONTEXT_MARKER: &str = "[JSON CONTEXT]";
 
-/// Split a Genomics Caddy system prompt so genomic JSON is not stuffed into
-/// `instructions` (1MB cap). Rules stay in instructions; `[JSON CONTEXT]…`
-/// becomes a leading reference user message in `input`.
-fn split_system_for_responses(system: &str) -> (String, Option<String>) {
+fn clamp_instructions(instructions: String) -> Result<String, String> {
+    let len = instructions.chars().count();
+    if len <= INSTRUCTIONS_MAX_CHARS {
+        return Ok(instructions);
+    }
+    Err(format!(
+        "ChatGPT instructions are {len} characters; OpenAI allows at most {INSTRUCTIONS_MAX_CHARS}. \
+The consultation packer keeps policy in instructions and genomic JSON in input messages — \
+retry after updating, or reduce selected packs / switch context mode."
+    ))
+}
+
+/// Peel a legacy `[JSON CONTEXT]` blob out of a system message if present.
+/// Modern packs already send tiny instructions + separate session/turn user messages.
+fn peel_legacy_json_context(system: &str) -> (String, Option<String>) {
     if let Some(idx) = system.find(JSON_CONTEXT_MARKER) {
         let instructions = system[..idx].trim_end().to_string();
         let context = system[idx..].trim().to_string();
@@ -704,24 +716,13 @@ fn split_system_for_responses(system: &str) -> (String, Option<String>) {
     }
 }
 
-fn clamp_instructions(instructions: String) -> Result<String, String> {
-    let len = instructions.chars().count();
-    if len <= INSTRUCTIONS_MAX_CHARS {
-        return Ok(instructions);
-    }
-    Err(format!(
-        "ChatGPT instructions are {len} characters; OpenAI allows at most {INSTRUCTIONS_MAX_CHARS}. \
-Switch Genomic Data Context away from Developer raw JSON / Full selected packs, \
-or reduce selected packs, then try again."
-    ))
-}
-
 /// Convert Ollama-style chat messages into a Responses API body fragment.
+/// System → `instructions` (fail-closed if over the OpenAI cap). Session/turn
+/// context and chat history stay in `input` in send order.
 fn build_input(
     messages: &[serde_json::Value],
 ) -> Result<(String, Vec<serde_json::Value>), String> {
     let mut instructions: Vec<String> = Vec::new();
-    let mut context_blocks: Vec<String> = Vec::new();
     let mut input: Vec<serde_json::Value> = Vec::new();
     for m in messages {
         let role = m.get("role").and_then(|r| r.as_str()).unwrap_or("user");
@@ -734,12 +735,17 @@ fn build_input(
             if text.trim().is_empty() {
                 continue;
             }
-            let (instr, ctx) = split_system_for_responses(&text);
+            let (instr, legacy_ctx) = peel_legacy_json_context(&text);
             if !instr.trim().is_empty() {
                 instructions.push(instr);
             }
-            if let Some(ctx) = ctx {
-                context_blocks.push(ctx);
+            if let Some(ctx) = legacy_ctx {
+                input.push(serde_json::json!({
+                    "role": "user",
+                    "content": format!(
+                        "Reference genomic context for this consultation (not a user question):\n\n{ctx}"
+                    ),
+                }));
             }
             continue;
         }
@@ -765,19 +771,8 @@ fn build_input(
         }
     }
 
-    let mut final_input = Vec::with_capacity(context_blocks.len() + input.len());
-    for ctx in context_blocks {
-        final_input.push(serde_json::json!({
-            "role": "user",
-            "content": format!(
-                "Reference genomic context for this consultation (not a user question):\n\n{ctx}"
-            ),
-        }));
-    }
-    final_input.extend(input);
-
     let joined = clamp_instructions(instructions.join("\n\n"))?;
-    Ok((joined, final_input))
+    Ok((joined, input))
 }
 
 #[tauri::command]
@@ -949,7 +944,7 @@ mod tests {
     }
 
     #[test]
-    fn json_context_moves_out_of_instructions_into_input() {
+    fn legacy_json_context_moves_out_of_instructions_into_input() {
         let system = "[SYSTEM INSTRUCTIONS]\nrules here\n\n[JSON CONTEXT]\n{\"sections\":[]}";
         let messages = vec![
             serde_json::json!({ "role": "system", "content": system }),
@@ -968,7 +963,32 @@ mod tests {
     }
 
     #[test]
-    fn oversized_instructions_without_json_marker_fail_closed() {
+    fn packed_session_and_turn_stay_in_input_not_instructions() {
+        let messages = vec![
+            serde_json::json!({ "role": "system", "content": "[SYSTEM INSTRUCTIONS]\nbe careful" }),
+            serde_json::json!({
+                "role": "user",
+                "content": "Reference session context for this consultation (not a user question):\n\n[SESSION CONTEXT]\n{\"sample\":\"x\"}"
+            }),
+            serde_json::json!({
+                "role": "user",
+                "content": "Reference turn context for this consultation (not a user question):\n\n[TURN CONTEXT]\n{\"sections\":[]}"
+            }),
+            serde_json::json!({ "role": "user", "content": "explain MTHFR" }),
+        ];
+        let (instructions, input) = build_input(&messages).unwrap();
+        assert!(instructions.contains("be careful"));
+        assert!(!instructions.contains("[SESSION CONTEXT]"));
+        assert!(!instructions.contains("[TURN CONTEXT]"));
+        assert!(instructions.chars().count() < 1_000);
+        assert_eq!(input.len(), 3);
+        assert!(input[0]["content"].as_str().unwrap().contains("[SESSION CONTEXT]"));
+        assert!(input[1]["content"].as_str().unwrap().contains("[TURN CONTEXT]"));
+        assert_eq!(input[2]["content"], "explain MTHFR");
+    }
+
+    #[test]
+    fn oversized_instructions_fail_closed() {
         let huge = "x".repeat(INSTRUCTIONS_MAX_CHARS + 10);
         let messages = vec![serde_json::json!({ "role": "system", "content": huge })];
         let err = build_input(&messages).unwrap_err();

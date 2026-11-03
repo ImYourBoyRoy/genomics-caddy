@@ -26,11 +26,16 @@
   import { dialogStore } from "../../utils/dialogState.svelte";
   import { ConsultationSessionStore } from "../../utils/consultationSession.svelte";
   import {
-    type UserBiohackingProfile, type ContextStats, type ActiveCategories,
-    DEFAULT_INSTRUCTIONS, buildSystemPrompt, calculateContextStats,
+    type UserBiohackingProfile,
+    DEFAULT_INSTRUCTIONS, calculateContextStats,
     getActiveCategories, getDynamicQuestions, isReasoningModel as checkReasoningModel,
     type AiContextMode, type ConsultationMode
   } from "../../utils/aiPrompt";
+  import {
+    buildConsultationPack,
+    formatBudgetNotice,
+    type ContextBudgetReport,
+  } from "../../utils/consultationContextPack";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
   import type { ProfileContext } from '../../utils/profileContext';
   import "$lib/styles/components/ai-assistant-panel.css";
@@ -105,6 +110,9 @@
   let models = $state<string[]>([]);
   let showPromptInspector = $state(false);
   let showExportModal = $state(false);
+  let contextBudgetNotice = $state("");
+  let contextBudgetReport = $state<ContextBudgetReport | null>(null);
+  let contextInspectorText = $state("");
 
   let unlistenChunk: (() => void) | null = null;
   let unlistenDone: (() => void) | null = null;
@@ -262,6 +270,9 @@
         if (patch.lastVectorError !== undefined) lastVectorError = patch.lastVectorError;
         if (patch.sessionPromptTokens !== undefined) sessionPromptTokens = patch.sessionPromptTokens;
         if (patch.sessionResponseTokens !== undefined) sessionResponseTokens = patch.sessionResponseTokens;
+        if (patch.contextBudgetNotice !== undefined) contextBudgetNotice = patch.contextBudgetNotice;
+        if (patch.contextBudgetReport !== undefined) contextBudgetReport = patch.contextBudgetReport;
+        if (patch.contextInspectorText !== undefined) contextInspectorText = patch.contextInspectorText;
       },
       getSessionPromptTokens: () => sessionPromptTokens,
       getSessionResponseTokens: () => sessionResponseTokens,
@@ -356,8 +367,45 @@
 
   $effect(() => { if (checkReasoningModel(selectedModel) && !extendedThinking) extendedThinking = true; });
 
-  let currentSystemPrompt = $derived((selectedSample && generatedReport) ? buildSystemPrompt({ selectedSample, generatedReport, selectedPacks, onlyActiveFindings, contextMode, consultationMode, userProfile: promptProfile, reproductiveContext: profileContext.selectedReproductiveContext, personalSafetyContext: profileContext.safety, systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS, laypersonMap: LAYPERSON_MAP }) : "No sample or report loaded.");
-  let contextStats = $derived(generatedReport ? calculateContextStats(generatedReport, selectedPacks, contextMode) : { included: 0, total: 0 });
+  let previewContextPack = $derived.by(() => {
+    if (!selectedSample || !generatedReport) return null;
+    return buildConsultationPack({
+      provider: chatProvider,
+      askText: promptText.trim() || "(preview — type an ask to rank findings)",
+      selectedSample,
+      generatedReport,
+      selectedPacks,
+      contextMode,
+      consultationMode,
+      userProfile: promptProfile,
+      reproductiveContext: profileContext.selectedReproductiveContext,
+      personalSafetyContext: profileContext.safety,
+      systemInstructions: systemInstructions || DEFAULT_INSTRUCTIONS,
+      laypersonMap: LAYPERSON_MAP,
+      history: messages.filter((m) => m.role === "user" || m.role === "assistant"),
+      contextWindow,
+    });
+  });
+  let liveBudgetReport = $derived(contextBudgetReport ?? previewContextPack?.report ?? null);
+  let currentSystemPrompt = $derived(
+    contextInspectorText
+      || previewContextPack?.inspectorText
+      || "No sample or report loaded.",
+  );
+  let contextStats = $derived.by(() => {
+    if (liveBudgetReport) {
+      return {
+        included: liveBudgetReport.sentFindings,
+        total: liveBudgetReport.poolSize,
+        estimatedTokens: liveBudgetReport.estimatedTokens.total,
+        notices: liveBudgetReport.notices,
+        dropCounts: liveBudgetReport.dropCounts,
+        budgetNotice: formatBudgetNotice(liveBudgetReport),
+      };
+    }
+    if (generatedReport) return calculateContextStats(generatedReport, selectedPacks, contextMode);
+    return { included: 0, total: 0 };
+  });
   let activeCategories = $derived(generatedReport ? getActiveCategories(generatedReport, selectedPacks) : {});
   let dynamicCuratedQuestions = $derived(getDynamicQuestions(activeCategories));
 
@@ -457,6 +505,7 @@
       selectedModel={selectedModel}
       ollamaUrl={ollamaUrl}
       {chatProvider}
+      contextBudgetNotice={contextBudgetNotice || (liveBudgetReport ? formatBudgetNotice(liveBudgetReport) : "")}
       vectorHits={lastVectorHits}
       vectorEvidenceCards={lastVectorEvidenceCards}
       vectorIndexBrief={lastVectorIndexBrief}

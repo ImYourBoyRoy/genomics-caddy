@@ -14,7 +14,6 @@ import type { EvidenceCard, QdrantHit, VectorResearchDiagnostics } from "../type
 import type { GenomeSample, GeneratedReport } from "../types/genomics";
 import { evidenceCardsToQdrantHits } from "./qdrantRag";
 import {
-  buildSystemPrompt,
   DEFAULT_INSTRUCTIONS,
   getContextWindow,
   isReasoningModel as checkReasoningModel,
@@ -28,7 +27,12 @@ import { LAYPERSON_MAP } from "./layperson";
 import aiPromptPolicy from "../marker-packs/ai_prompt_policy.json";
 import { renderPromptTemplate } from "./promptTemplates";
 import { streamChatCompletion, type ChatProvider } from "./chatProvider";
-import { buildChatGptSystemPrompt } from "./chatGptPrompt";
+import {
+  buildConsultationPack,
+  formatBudgetNotice,
+  toProviderMessages,
+  type ContextBudgetReport,
+} from "./consultationContextPack";
 import {
   newOllamaStreamId,
   subscribeOllamaStream,
@@ -75,6 +79,12 @@ export interface ConsultationTurnCallbacks {
   onChattingDone: () => void;
   registerMainListeners: (stop: () => void) => void;
   registerReviewListeners: (stop: () => void) => void;
+  /** Fired once per turn with pool vs sent budget honesty. */
+  onContextBudget?: (payload: {
+    report: ContextBudgetReport;
+    notice: string;
+    inspectorText: string;
+  }) => void;
 }
 
 function outputTokenLimit(
@@ -163,7 +173,9 @@ export async function runConsultationTurn(
     callbacks.onVectorResult([], text);
   }
 
-  const chatHistory: ChatMessage[] = messages.slice(0, -1).map((m) => {
+  // messages = [...prior, currentUserAsk, emptyAssistant]
+  const askMessage = messages[assistantIndex - 1];
+  const priorHistory: ChatMessage[] = messages.slice(0, Math.max(0, assistantIndex - 1)).map((m) => {
     const msgObj: ChatMessage = {
       role: m.role,
       content: m.fullContent || m.content,
@@ -172,11 +184,14 @@ export async function runConsultationTurn(
     return msgObj;
   });
 
-  const promptParams = {
+  void onlyActiveFindings; // retained on the turn input for session persistence / UI
+
+  const pack = buildConsultationPack({
+    askText: text,
+    askImages: askMessage?.images,
     selectedSample,
     generatedReport,
     selectedPacks,
-    onlyActiveFindings,
     contextMode,
     consultationMode,
     userProfile,
@@ -191,25 +206,21 @@ export async function runConsultationTurn(
       error: vectorSearchError || undefined,
       indexBrief: indexBrief || undefined,
     },
-  };
-  // ChatGPT's Responses API caps `instructions` at 1MB; local Ollama does not.
-  const systemPromptWithRag =
-    chatProvider === "chatgpt"
-      ? (() => {
-          const fitted = buildChatGptSystemPrompt(promptParams);
-          if (fitted.warnings.length) {
-            console.warn("[ChatGPT context]", fitted.warnings.join(" "));
-          }
-          return fitted.warnings.length
-            ? `${fitted.prompt}\n\n[CONTEXT BUDGET NOTES]\n- ${fitted.warnings.join("\n- ")}`
-            : fitted.prompt;
-        })()
-      : buildSystemPrompt(promptParams);
+    history: priorHistory,
+    provider: chatProvider,
+    contextWindow,
+  });
+  const budgetNotice = formatBudgetNotice(pack.report);
+  callbacks.onContextBudget?.({
+    report: pack.report,
+    notice: budgetNotice,
+    inspectorText: pack.inspectorText,
+  });
+  if (pack.report.notices.length) {
+    console.info("[consultation context]", budgetNotice);
+  }
 
-  const payloadMessages: ChatMessage[] = [
-    { role: "system", content: systemPromptWithRag },
-    ...chatHistory,
-  ];
+  const payloadMessages: ChatMessage[] = toProviderMessages(pack);
   let currentMessages = [...messages];
 
   const mainStreamId = newOllamaStreamId();

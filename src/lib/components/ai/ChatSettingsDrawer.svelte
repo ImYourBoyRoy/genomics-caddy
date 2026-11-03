@@ -47,7 +47,14 @@
     sessionTotalTokens: number;
     selectedPacks: Record<string, boolean>;
     onlyActiveFindings: boolean;
-    contextStats: { included: number; total: number };
+    contextStats: {
+      included: number;
+      total: number;
+      estimatedTokens?: number;
+      notices?: string[];
+      dropCounts?: Partial<Record<string, number>>;
+      budgetNotice?: string;
+    };
     userProfile: UserBiohackingProfile;
     profileContext: ProfileContext;
     onOpenContext?: () => void;

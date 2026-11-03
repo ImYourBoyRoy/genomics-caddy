@@ -4,9 +4,9 @@ Inventory of **non-gitignored** toolkit files (git-tracked plus local
 untracked files that are not ignored). Local-only paths are omitted:
 `MEMORY.md`, raw DNA, reports, `.env`, `App/`, `builds/`, and other gitignored data.
 
-- Files: **762**
-- Total size: **25.4 MB** (26,629,172 bytes)
-- Text lines (non-binary): **296,021**
+- Files: **761**
+- Total size: **25.4 MB** (26,674,713 bytes)
+- Text lines (non-binary): **297,303**
 - Directories: **76**
 
 Sizes are on-disk bytes. Line counts are newline-based. Binary icons show `—`.
@@ -14,7 +14,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 ## Directories
 
-- [`(repository root)`](#repository-root) — 19 files, 150.4 KB
+- [`(repository root)`](#repository-root) — 19 files, 150.3 KB
 - [`.cursor/skills/connections-vector-providers`](#.cursor-skills-connections-vector-providers) — 2 files, 7.2 KB
 - [`.cursor/skills/linux-portable-ui-refresh`](#.cursor-skills-linux-portable-ui-refresh) — 1 files, 4.1 KB
 - [`.cursor/skills/tauri-ui-visual-capture`](#.cursor-skills-tauri-ui-visual-capture) — 1 files, 2.8 KB
@@ -23,7 +23,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`.vscode`](#.vscode) — 2 files, 168 B
 - [`docker`](#docker) — 4 files, 5.9 KB
 - [`docs`](#docs) — 1 files, 1.4 KB
-- [`docs/ai-chat`](#docs-ai-chat) — 1 files, 5.1 KB
+- [`docs/ai-chat`](#docs-ai-chat) — 1 files, 6.5 KB
 - [`docs/build`](#docs-build) — 1 files, 6.2 KB
 - [`docs/development`](#docs-development) — 1 files, 5.7 KB
 - [`docs/images`](#docs-images) — 7 files, 1.5 MB
@@ -31,7 +31,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`docs/superpowers/specs`](#docs-superpowers-specs) — 1 files, 5.6 KB
 - [`docs/usage`](#docs-usage) — 1 files, 11.3 KB
 - [`reference_files`](#reference_files) — 3 files, 7.4 MB
-- [`scripts`](#scripts) — 49 files, 453.7 KB
+- [`scripts`](#scripts) — 49 files, 453.8 KB
 - [`scripts/lib`](#scripts-lib) — 6 files, 23.7 KB
 - [`scripts/remote_build`](#scripts-remote_build) — 11 files, 61.8 KB
 - [`src`](#src) — 1 files, 817 B
@@ -50,7 +50,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src-tauri/icons/android/values`](#src-tauri-icons-android-values) — 1 files, 115 B
 - [`src-tauri/icons/ios`](#src-tauri-icons-ios) — 18 files, 1.4 MB
 - [`src-tauri/linux`](#src-tauri-linux) — 2 files, 949 B
-- [`src-tauri/src`](#src-tauri-src) — 24 files, 796.0 KB
+- [`src-tauri/src`](#src-tauri-src) — 24 files, 800.5 KB
 - [`src-tauri/src/offline`](#src-tauri-src-offline) — 17 files, 279.1 KB
 - [`src-tauri/src/research`](#src-tauri-src-research) — 25 files, 399.5 KB
 - [`src-tauri/src/research/evidence`](#src-tauri-src-research-evidence) — 22 files, 234.0 KB
@@ -60,11 +60,11 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src-tauri/windows`](#src-tauri-windows) — 1 files, 2.0 KB
 - [`src/lib/api`](#src-lib-api) — 2 files, 35.9 KB
 - [`src/lib/components/agent`](#src-lib-components-agent) — 7 files, 65.8 KB
-- [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 105.5 KB
+- [`src/lib/components/ai`](#src-lib-components-ai) — 16 files, 107.5 KB
 - [`src/lib/components/ai/evidence`](#src-lib-components-ai-evidence) — 20 files, 103.5 KB
-- [`src/lib/components/ai/settings`](#src-lib-components-ai-settings) — 9 files, 64.5 KB
+- [`src/lib/components/ai/settings`](#src-lib-components-ai-settings) — 9 files, 66.2 KB
 - [`src/lib/components/common`](#src-lib-components-common) — 17 files, 102.0 KB
-- [`src/lib/components/common/bootstrap`](#src-lib-components-common-bootstrap) — 10 files, 27.5 KB
+- [`src/lib/components/common/bootstrap`](#src-lib-components-common-bootstrap) — 7 files, 27.5 KB
 - [`src/lib/components/common/loading`](#src-lib-components-common-loading) — 9 files, 18.4 KB
 - [`src/lib/components/context`](#src-lib-components-context) — 3 files, 23.0 KB
 - [`src/lib/components/discovery`](#src-lib-components-discovery) — 1 files, 12.4 KB
@@ -84,9 +84,9 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 - [`src/lib/marker-packs`](#src-lib-marker-packs) — 54 files, 3.2 MB
 - [`src/lib/research`](#src-lib-research) — 4 files, 13.8 KB
 - [`src/lib/styles`](#src-lib-styles) — 10 files, 175.2 KB
-- [`src/lib/styles/components`](#src-lib-styles-components) — 42 files, 226.8 KB
+- [`src/lib/styles/components`](#src-lib-styles-components) — 42 files, 227.1 KB
 - [`src/lib/types`](#src-lib-types) — 4 files, 46.7 KB
-- [`src/lib/utils`](#src-lib-utils) — 142 files, 1016.3 KB
+- [`src/lib/utils`](#src-lib-utils) — 144 files, 1.0 MB
 - [`src/routes`](#src-routes) — 2 files, 47.6 KB
 - [`src/routes/__loading-lab`](#src-routes-__loading-lab) — 2 files, 3.1 KB
 - [`static`](#static) — 5 files, 353.0 KB
@@ -99,7 +99,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `.gitignore` | 1.9 KB | 102 | Ignore rules for DNA, reports, builds, env, and local memory. |
 | `.npmrc` | 258 B | 5 | pnpm peer-dependency compatibility settings. |
 | `AGENTS.md` | 7.6 KB | 138 | Repo-local agent rules: packs, privacy, and validation gates. |
-| `ARCHITECTURE.md` | 88.4 KB | 1,234 | Non-gitignored file map with sizes, line counts, and one-line roles. |
+| `ARCHITECTURE.md` | 88.3 KB | 1,233 | Non-gitignored file map with sizes, line counts, and one-line roles. |
 | `CITATION.cff` | 1.1 KB | 37 | Citation File Format 1.2 so GitHub shows Cite this repository. |
 | `compile_instructions.md` | 3.1 KB | 97 | Tracked file `compile_instructions.md`. |
 | `LICENSE` | 4.5 KB | 133 | Tracked file `LICENSE`. |
@@ -173,7 +173,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `README.md` | 5.1 KB | 129 | Ollama, vector connections, chat, and evidence workbench. |
+| `README.md` | 6.5 KB | 154 | Ollama, vector connections, chat, and evidence workbench. |
 
 ## `docs/build`
 
@@ -246,7 +246,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `capture_readme_screenshots.mjs` | 7.6 KB | 223 | Capture README gallery frames (dark + light) and a looping WebP. |
 | `clean_deep.mjs` | 4.8 KB | 125 | Remove project-local, rebuildable frontend and Tauri artifacts. |
 | `content_quality_metrics.mjs` | 30.7 KB | 744 | Privacy-safe content-quality metrics for curated genomic resources. |
-| `generate_architecture.py` | 20.6 KB | 477 | Regenerate ARCHITECTURE.md from the non-gitignored tree. |
+| `generate_architecture.py` | 20.8 KB | 480 | Regenerate ARCHITECTURE.md from the non-gitignored tree. |
 | `generate_synthetic_demo_fixture.mjs` | 4.5 KB | 123 | Build a parser-valid AncestryDNA-format fixture from curated pack rsIDs so docs screenshots can use a genome that is not a real person. |
 | `Inspect-GenomicsRefs.ps1` | 20.2 KB | 664 | requires -Version 7.0. |
 | `install_linux_desktop.sh` | 4.8 KB | 173 | Install FreeDesktop .desktop entry + hicolor icons so Genomics Caddy shows the DNA logo in the GNOME/Ubuntu dock (Wayland) instead of a generic gear. |
@@ -486,7 +486,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `agent_ui_capture.rs` | 2.9 KB | 77 | Capture the visible Genomics Caddy webview to PNG for local README/QA. |
 | `agent_ui_endpoint.rs` | 9.7 KB | 273 | Discover and advertise the local agent-UI HTTP bridge securely. |
 | `app_log.rs` | 1.9 KB | 63 | Provide robust file logging for the Genomics Caddy application. |
-| `chatgpt.rs` | 33.3 KB | 924 | "Continue with ChatGPT" for the Ask AI consultation chat, using the open-source ChatGPT plan-usage flow (OAuth 2.0 authorization code + PKCE + OIDC against auth.openai.com, then…. |
+| `chatgpt.rs` | 37.8 KB | 1,030 | "Continue with ChatGPT" for the Ask AI consultation chat, using the open-source ChatGPT plan-usage flow (OAuth 2.0 authorization code + PKCE + OIDC against auth.openai.com, then…. |
 | `config.rs` | 34.0 KB | 1,030 | Application configuration, .env loading, and secure secret storage. |
 | `db.rs` | 128.6 KB | 3,598 | Database management (SQLite) for storing standard genomes and clinical reference data. |
 | `db_crypto.rs` | 3.9 KB | 110 | Legacy sealed-DB cleanup only (encryption removed). |
@@ -654,14 +654,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
 | `AccessibleActions.test.ts` | 1.1 KB | 34 | Tests for `AccessibleActions`. |
-| `AiAssistantPanel.svelte` | 22.1 KB | 529 | Svelte UI component `AiAssistantPanel`. |
+| `AiAssistantPanel.svelte` | 23.7 KB | 578 | Svelte UI component `AiAssistantPanel`. |
 | `BiohackingProfileSection.svelte` | 2.6 KB | 55 | Svelte UI component `BiohackingProfileSection`. |
 | `ChatInput.svelte` | 2.9 KB | 98 | Svelte UI component `ChatInput`. |
 | `ChatMessages.svelte` | 5.5 KB | 156 | Svelte UI component `ChatMessages`. |
 | `ChatModals.svelte` | 7.5 KB | 286 | Svelte UI component `ChatModals`. |
-| `ChatSettingsDrawer.svelte` | 5.4 KB | 182 | Svelte UI component `ChatSettingsDrawer`. |
+| `ChatSettingsDrawer.svelte` | 5.5 KB | 189 | Svelte UI component `ChatSettingsDrawer`. |
 | `ChatSidebar.svelte` | 4.8 KB | 140 | Svelte UI component `ChatSidebar`. |
-| `ChatWindow.svelte` | 9.6 KB | 300 | Svelte UI component `ChatWindow`. |
+| `ChatWindow.svelte` | 9.9 KB | 307 | Svelte UI component `ChatWindow`. |
 | `CycleDiaryEditor.svelte` | 8.5 KB | 311 | Svelte UI component `CycleDiaryEditor`. |
 | `EvidenceLibraryPanel.svelte` | 14.4 KB | 440 | Svelte UI component `EvidenceLibraryPanel`. |
 | `ReproductiveContextEditor.svelte` | 6.4 KB | 219 | Svelte UI component `ReproductiveContextEditor`. |
@@ -703,7 +703,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `AdvancedSettingsSection.tooltip.test.ts` | 1.3 KB | 27 | Tests for `AdvancedSettingsSection.tooltip`. |
 | `ChatGptConnectionCard.svelte` | 3.4 KB | 110 | Svelte UI component `ChatGptConnectionCard`. |
 | `ConnectionModelSection.svelte` | 15.8 KB | 517 | Svelte UI component `ConnectionModelSection`. |
-| `GenomicContextSection.svelte` | 2.9 KB | 115 | Svelte UI component `GenomicContextSection`. |
+| `GenomicContextSection.svelte` | 4.6 KB | 167 | Svelte UI component `GenomicContextSection`. |
 | `InferenceSettingsSection.svelte` | 9.4 KB | 286 | Svelte UI component `InferenceSettingsSection`. |
 | `QdrantResearchSettingsDetails.svelte` | 8.5 KB | 216 | Svelte UI component `QdrantResearchSettingsDetails`. |
 | `SystemPromptSection.svelte` | 1.4 KB | 55 | Svelte UI component `SystemPromptSection`. |
@@ -735,7 +735,6 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 
 | File | Size | Lines | Role |
 | --- | ---: | ---: | --- |
-| `BootstrapActivityPulse.svelte` | 0 B | 0 | Svelte UI component `BootstrapActivityPulse`. |
 | `bootstrapCountUp.ts` | 1.1 KB | 43 | Eased count-up helper for bootstrap stat cards. |
 | `BootstrapHelixBackdrop.svelte` | 2.9 KB | 114 | Svelte UI component `BootstrapHelixBackdrop`. |
 | `BootstrapOverlay.svelte` | 3.7 KB | 119 | Svelte UI component `BootstrapOverlay`. |
@@ -743,8 +742,6 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `bootstrapPhases.ts` | 4.1 KB | 137 | Bootstrap phase metadata, step labels, and in-flight ticker copy. |
 | `bootstrapPipeline.ts` | 10.1 KB | 282 | Pure builders that turn raw startup / import state into the PipelineStep view-model drawn by PipelineStepList. |
 | `BootstrapStatReveal.svelte` | 3.3 KB | 123 | Svelte UI component `BootstrapStatReveal`. |
-| `BootstrapStepTimeline.svelte` | 0 B | 0 | Svelte UI component `BootstrapStepTimeline`. |
-| `ImportStepTimeline.svelte` | 0 B | 0 | Svelte UI component `ImportStepTimeline`. |
 
 ## `src/lib/components/common/loading`
 
@@ -1017,7 +1014,7 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `chat-settings-drawer.css` | 1.8 KB | 64 | Ask AI right drawer shell and the shared accordion used by every settings section. |
 | `chat-sidebar.css` | 5.0 KB | 108 | Ask AI left rail: segmented Consults/Evidence switch and the session list. |
 | `chat-welcome.css` | 3.8 KB | 156 | Ask AI empty state: hero, privacy line and suggested-question cards. |
-| `chat-window.css` | 8.6 KB | 360 | Ask AI conversation surface: header, scope pill, scroll area, prompt rail and composer. |
+| `chat-window.css` | 9.0 KB | 371 | Ask AI conversation surface: header, scope pill, scroll area, prompt rail and composer. |
 | `chatgpt-connection.css` | 2.5 KB | 117 | "Continue with ChatGPT" connection card and the provider switch in Ask AI settings. |
 | `connections-panel.css` | 8.2 KB | 450 | Advanced → Connections: Ollama + vector DB setup, host probe, model ops. |
 | `context-panel.css` | 4.4 KB | 254 | Profile Context workspace — stacked field chrome that survives WebKitGTK first paint (do not keep these rules in a Svelte scoped <style> block). |
@@ -1075,14 +1072,14 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `aiAssistantExportActions.ts` | 2.6 KB | 82 | Clipboard copy and markdown export actions for the AI consultation export modal. |
 | `aiAssistantModelActions.ts` | 3.5 KB | 105 | Ollama model scan and detail loading for AiAssistantPanel. |
 | `aiAssistantPreferences.ts` | 2.6 KB | 61 | Load persisted AI consultation UI preferences from localStorage. |
-| `aiAssistantSendActions.ts` | 7.1 KB | 204 | Consultation prompt send/stop actions for AiAssistantPanel. |
+| `aiAssistantSendActions.ts` | 7.5 KB | 215 | Consultation prompt send/stop actions for AiAssistantPanel. |
 | `aiAssistantSessionActions.test.ts` | 2.0 KB | 62 | Tests for `aiAssistantSessionActions`. |
 | `aiAssistantSessionActions.ts` | 2.5 KB | 73 | Consultation session load/create/delete actions for AiAssistantPanel. |
 | `aiAssistantVectorDiagnostics.ts` | 927 B | 29 | Vector research diagnostics loader for AiAssistantPanel. |
 | `aiExport.test.ts` | 3.3 KB | 95 | Tests for `aiExport`. |
 | `aiExport.ts` | 10.6 KB | 213 | Frontend logic `aiExport`. |
 | `aiPrompt.test.ts` | 12.6 KB | 308 | Tests for `aiPrompt`. |
-| `aiPrompt.ts` | 23.0 KB | 647 | Frontend logic `aiPrompt`. |
+| `aiPrompt.ts` | 25.3 KB | 700 | Frontend logic `aiPrompt`. |
 | `appUpdateState.ts` | 653 B | 25 | Frontend logic `appUpdateState`. |
 | `appVersion.test.ts` | 1.2 KB | 35 | Tests for `appVersion`. |
 | `appVersion.ts` | 825 B | 22 | Frontend fallback used by preview builds and report exports outside Tauri. |
@@ -1096,14 +1093,16 @@ Use `docs/` for how to run the app. Regenerate with `python3 ./scripts/generate_
 | `catalogCategoryRouting.ts` | 3.6 KB | 107 | Dynamic routing for the research discovery catalog. |
 | `chatParser.test.ts` | 1.9 KB | 52 | Tests for `chatParser`. |
 | `chatParser.ts` | 8.3 KB | 238 | Frontend logic `chatParser`. |
-| `chatProvider.test.ts` | 2.3 KB | 74 | Provider routing and disclosure tests for Ask AI. |
+| `chatProvider.test.ts` | 2.5 KB | 91 | Provider routing and disclosure tests for Ask AI. |
 | `chatProvider.ts` | 2.0 KB | 49 | Which backend answers Ask AI consultations: a local/remote Ollama endpoint or the user's ChatGPT plan. |
 | `chatSession.ts` | 1.6 KB | 60 | Consultation Chat Session Serialization & Persistence Helpers. |
 | `clinicalPresentation.test.ts` | 850 B | 21 | Tests for `clinicalPresentation`. |
 | `clinicalPresentation.ts` | 734 B | 17 | Keep the structured Clinical table actionable without making long follow-up lists widen or dominate a row. |
 | `conditionEvidence.test.ts` | 16.7 KB | 455 | Tests for `conditionEvidence`. |
 | `conditionEvidence.ts` | 37.5 KB | 893 | Frontend logic `conditionEvidence`. |
-| `consultationChat.ts` | 9.7 KB | 314 | Ollama consultation streaming: RAG retrieval, primary response, optional safety review. |
+| `consultationChat.ts` | 10.5 KB | 339 | Ollama consultation streaming: RAG retrieval, primary response, optional safety review. |
+| `consultationContextPack.test.ts` | 7.8 KB | 218 | Ask-scoped consultation context packer tests. |
+| `consultationContextPack.ts` | 22.9 KB | 699 | Unified ask-scoped consultation context packer for Ollama and ChatGPT. |
 | `consultationSession.svelte.ts` | 3.6 KB | 92 | Manage active and historical chat sessions reactively. |
 | `contentQualityAudit.test.ts` | 8.1 KB | 213 | Tests for `contentQualityAudit`. |
 | `contextIndicators.test.ts` | 1.5 KB | 38 | Tests for `contextIndicators`. |

@@ -1,11 +1,19 @@
 <!-- ./src/lib/components/ai/settings/GenomicContextSection.svelte -->
 <script lang="ts">
   import { markerPacksStore } from "../../../utils/markerPacksState.svelte";
+  import type { ContextDropReason } from "../../../utils/consultationContextPack";
 
   interface Props {
     selectedPacks: Record<string, boolean>;
     onlyActiveFindings: boolean;
-    contextStats: { included: number; total: number };
+    contextStats: {
+      included: number;
+      total: number;
+      estimatedTokens?: number;
+      notices?: string[];
+      dropCounts?: Partial<Record<ContextDropReason, number>>;
+      budgetNotice?: string;
+    };
   }
 
   let {
@@ -13,6 +21,18 @@
     onlyActiveFindings = $bindable(),
     contextStats
   }: Props = $props();
+
+  let dropSummary = $derived.by(() => {
+    const drops = contextStats.dropCounts;
+    if (!drops) return "";
+    const parts: string[] = [];
+    if (drops.mode_filter) parts.push(`${drops.mode_filter} mode-filtered`);
+    if (drops.budget) parts.push(`${drops.budget} budget`);
+    if (drops.low_rank) parts.push(`${drops.low_rank} lower-rank`);
+    if (drops.history_trim) parts.push(`${drops.history_trim} history`);
+    if (drops.mode_remap) parts.push("mode remapped");
+    return parts.join(" · ");
+  });
 </script>
 
 <details class="settings-details-group">
@@ -20,7 +40,7 @@
   <div class="settings-details-content">
     <p class="card-hint">Select which marker packs the model is allowed to read:</p>
     <div class="packs-list scrollable">
-      {#each markerPacksStore.manifest.packs as pack}
+      {#each markerPacksStore.manifest.packs as pack (pack.id)}
         <label class="pack-checkbox-label">
           <input type="checkbox" bind:checked={selectedPacks[pack.id]} />
           <span>{pack.label}</span>
@@ -34,10 +54,26 @@
     </label>
     
     <div class="context-pill mt-2">
-      📊 Sending <strong>{contextStats.included}</strong> of <strong>{contextStats.total}</strong> found variants to AI
+      📊 Pool <strong>{contextStats.total}</strong> · sending <strong>{contextStats.included}</strong>
+      {#if contextStats.estimatedTokens != null}
+        · ~<strong>{contextStats.estimatedTokens.toLocaleString()}</strong> tokens
+      {/if}
     </div>
+    {#if contextStats.budgetNotice}
+      <p class="context-budget-line" role="status">{contextStats.budgetNotice}</p>
+    {/if}
+    {#if dropSummary}
+      <p class="context-drop-line">Drops: {dropSummary}</p>
+    {/if}
+    {#if contextStats.notices?.length}
+      <ul class="context-notice-list">
+        {#each contextStats.notices as notice, i (i)}
+          <li>{notice}</li>
+        {/each}
+      </ul>
+    {/if}
     <p class="raw-data-note" role="note">
-      🔒 Raw genotype calls are always included for the findings sent to AI. Review the endpoint disclosure in Connection &amp; Model before connecting to a remote host.
+      🔒 Raw genotype calls are always included for the findings sent to AI. Context mode sets the candidate pool; ask-scoped ranking and provider budgets choose what is actually sent. Review the endpoint disclosure in Connection &amp; Model before connecting to a remote host.
     </p>
   </div>
 </details>
@@ -98,6 +134,22 @@
 
   .context-pill strong {
     color: var(--text-primary);
+  }
+
+  .context-budget-line,
+  .context-drop-line {
+    margin: 6px 0 0;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  .context-notice-list {
+    margin: 6px 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.7rem;
+    color: var(--warning, #d4a017);
+    line-height: 1.35;
   }
 
   .card-hint {

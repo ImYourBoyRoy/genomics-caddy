@@ -124,9 +124,12 @@ def list_files() -> list[str]:
     for rel in tracked + extra:
         if rel in SKIP or rel in seen:
             continue
+        # Skip index entries deleted in the working tree (unstaged removals).
+        if not (ROOT / rel).exists():
+            continue
         seen.add(rel)
         files.append(rel)
-    if "ARCHITECTURE.md" not in seen:
+    if "ARCHITECTURE.md" not in seen and (ROOT / "ARCHITECTURE.md").exists():
         files.append("ARCHITECTURE.md")
     return sorted(files)
 

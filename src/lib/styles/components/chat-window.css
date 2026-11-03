@@ -151,6 +151,17 @@
   position: relative;
 }
 
+.ai-chat-area .context-budget-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent-bright, #14b8a6) 35%, transparent);
+  background: color-mix(in srgb, var(--accent-bright, #14b8a6) 12%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .ai-chat-area .chat-box.dragging-active {
   outline: 2px dashed var(--accent-bright);
   outline-offset: -8px;

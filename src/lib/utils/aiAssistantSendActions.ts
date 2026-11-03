@@ -15,6 +15,7 @@ import {
 import type { PersonalSafetyContext } from "./personalSafetyContext";
 import { runConsultationTurn } from "./consultationChat";
 import type { ChatProvider } from "./chatProvider";
+import type { ContextBudgetReport } from "./consultationContextPack";
 
 export interface SendConsultationPromptParams {
   customPrompt?: string;
@@ -59,6 +60,9 @@ export interface SendConsultationPromptParams {
     lastVectorError?: string;
     sessionPromptTokens?: number;
     sessionResponseTokens?: number;
+    contextBudgetNotice?: string;
+    contextBudgetReport?: ContextBudgetReport | null;
+    contextInspectorText?: string;
   }) => void;
   getSessionPromptTokens: () => number;
   getSessionResponseTokens: () => number;
@@ -165,6 +169,13 @@ export async function sendConsultationPrompt(params: SendConsultationPromptParam
         onChattingDone: () => params.onState({ isChatting: false }),
         registerMainListeners: params.registerMainListener,
         registerReviewListeners: params.registerReviewListener,
+        onContextBudget: ({ report, notice, inspectorText }) => {
+          params.onState({
+            contextBudgetNotice: notice,
+            contextBudgetReport: report,
+            contextInspectorText: inspectorText,
+          });
+        },
       },
     );
     if (!(params.twoModelReview && params.reviewModel)) {

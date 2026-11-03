@@ -72,17 +72,34 @@ signing still uses only `TAURI_SIGNING_PRIVATE_KEY` and
 ## Connected Chat
 
 Chat history is isolated per DNA profile. Session context mode (which
-findings go to the model) is saved with that session and restored when you
-reopen it. The selected provider (Ollama vs ChatGPT) is remembered in
-local storage for the next Ask AI session.
+findings enter the **candidate pool**) is saved with that session and
+restored when you reopen it. The selected provider (Ollama vs ChatGPT) is
+remembered in local storage for the next Ask AI session.
+
+Both providers use the same ask-scoped consultation context packer
+(`consultationContextPack.ts`):
+
+1. **Pool** — context mode + selected packs decide which findings are eligible.
+2. **Rank** — the current ask (plus vector RAG hits when enabled) scores the pool.
+3. **Budget** — provider budgets greedily keep highest-scoring whole findings;
+   findings are never mid-truncated. ChatGPT uses a smaller turn/history budget
+   than Ollama; Ollama can also scale from the model context window.
+4. **Layout** — cache-stable message order: static policy instructions →
+   session block → turn block (ranked findings + vector research) → trimmed
+   history → current ask. Genomic JSON is never stuffed into ChatGPT
+   `instructions`.
+
+The Ask AI context inspector and Genomic Data Context panel show pool size
+vs findings sent, estimated tokens, and notices when the packer remaps
+Developer raw JSON or trims history.
 
 The model is instructed not to invent genes, variants, or conditions that
 are not in the loaded genomic JSON. Default generation uses `temperature 0`
 on Ollama; the ChatGPT plan route rejects temperature / max-output knobs
 and uses the hosted model defaults.
 
-Pack filters and “active findings only” shrink the payload; they do not
-strip genotype calls from the findings that are sent.
+Pack filters and “active findings only” shrink the **pool**; they do not
+strip genotype calls from the findings that are actually sent.
 
 Specialty modes (General, PGx, nutrients, metabolic, sleep, brain/mood,
 connective tissue, thyroid, cardiovascular, hormone/reproductive) change
@@ -129,9 +146,9 @@ control) and retry after the plan window resets.
 rejects a different ChatGPT subject than the saved connection.
 
 **`string_above_max_length` / instructions too long.** OpenAI caps the
-Responses API `instructions` field at 1,048,576 characters. Genomics Caddy
-keeps the short rule text in `instructions` and moves `[JSON CONTEXT]` into
-the chat `input`. It also emits compact JSON for ChatGPT, refuses to send
-Developer raw JSON’s full `raw_report`, and trims heavy support/catalog
-blobs or finding counts until the context fits. Prefer **Active findings**
-over **Developer raw JSON** / **Full selected packs** for ChatGPT.
+Responses API `instructions` field at 1,048,576 characters. The packer keeps
+only static policy / specialty text in `instructions` and puts session +
+turn context in Responses `input`. ChatGPT never receives Developer raw
+JSON’s full `raw_report` (it remaps to ranked active findings with a visible
+notice). Prefer **Active findings** for ChatGPT; use **Developer raw JSON**
+only on local Ollama when the raw report fits the local budget.

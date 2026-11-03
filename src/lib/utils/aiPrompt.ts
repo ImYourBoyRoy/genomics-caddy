@@ -128,6 +128,87 @@ export interface PromptBuildParams {
 }
 
 /**
+ * Whether a section/pack belongs in the context-mode candidate pool.
+ * `active_findings` and `developer_raw_json` scan all packs; other modes
+ * require the pack to be selected.
+ */
+export function sectionInCandidatePool(
+  contextMode: AiContextMode,
+  isPackSelected: boolean,
+): boolean {
+  if (contextMode === "active_findings" || contextMode === "developer_raw_json") return true;
+  return isPackSelected;
+}
+
+/** Mode filter for a callable genotype already known to be present. */
+export function markerMatchesContextMode(
+  m: EvaluatedMarker,
+  contextMode: AiContextMode,
+): boolean {
+  switch (contextMode) {
+    case "active_findings":
+    case "selected_pack_active":
+    case "evidence_audit":
+      return (m.effect_count ?? 0) > 0;
+    case "active_context_dependent":
+      return (m.effect_count ?? 0) > 0 || m.severity_class === "context_dependent";
+    case "full_selected":
+    case "developer_raw_json":
+      return true;
+    case "clinical_checklist":
+      return (
+        m.clinical_confirmation_required === true ||
+        m.severity_class === "confirmation_required" ||
+        m.severity_class === "high_risk" ||
+        m.severity_class === "moderate_risk"
+      );
+    default:
+      return true;
+  }
+}
+
+export type MarkerPayload = ReturnType<typeof buildMarkerPayload>;
+
+export interface CandidateFinding {
+  pack_id?: string;
+  section_name: string;
+  marker: EvaluatedMarker;
+  payload: MarkerPayload;
+}
+
+/**
+ * Build the context-mode candidate pool (before ask-scoped ranking / budgets).
+ * Shared by `buildSystemPrompt`, `calculateContextStats`, and the consultation packer.
+ */
+export function buildCandidatePool(
+  generatedReport: GeneratedReport,
+  selectedPacks: Record<string, boolean>,
+  contextMode: AiContextMode,
+  laypersonMap: Record<string, LaypersonTranslation> = {},
+): CandidateFinding[] {
+  const pool: CandidateFinding[] = [];
+  for (const sec of generatedReport.sections ?? []) {
+    const pack = markerPacksStore.manifest.packs.find(
+      (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name,
+    );
+    const isPackSelected = pack ? selectedPacks[pack.id] === true : false;
+    if (!sectionInCandidatePool(contextMode, isPackSelected)) continue;
+
+    for (const m of sec.markers ?? []) {
+      if (m.severity_class === "no_data" || !isCallableGenotype(m.user_genotype)) continue;
+      if (!markerMatchesContextMode(m, contextMode)) continue;
+      pool.push({
+        pack_id: pack?.id,
+        section_name: sec.name,
+        marker: m,
+        payload: buildMarkerPayload(m, laypersonMap),
+      });
+    }
+  }
+  return pool;
+}
+
+/**
  * Build a slim variant payload for a single marker to include in context JSON.
  */
 export function buildMarkerPayload(
@@ -205,81 +286,35 @@ export function buildSystemPrompt(params: PromptBuildParams): string {
   const sharedReproductiveContext = userProfile.injectProfile ? reproductiveContext : undefined;
   const sharedPersonalSafetyContext = userProfile.injectProfile ? personalSafetyContext : undefined;
 
-  // --- Genomic JSON Context ---
-  let sectionsData: any[] = [];
+  // --- Genomic JSON Context (candidate pool, optionally capped) ---
+  let pool =
+    contextMode === "developer_raw_json"
+      ? []
+      : buildCandidatePool(generatedReport, selectedPacks, contextMode, laypersonMap);
 
+  if (typeof maxFindings === "number" && maxFindings >= 0 && pool.length > maxFindings) {
+    pool = [...pool]
+      .sort((a, b) => (b.payload.effect_count ?? 0) - (a.payload.effect_count ?? 0))
+      .slice(0, maxFindings);
+  }
+
+  let sectionsData: Array<{ pack_id?: string; section_name: string; findings: MarkerPayload[] }> = [];
   if (contextMode !== "developer_raw_json") {
-    sectionsData = generatedReport.sections
-      .map((sec) => {
-        const pack = markerPacksStore.manifest.packs.find(
-          (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name
-        );
-        
-        const isPackSelected = pack ? selectedPacks[pack.id] : false;
-        
-        // Skip pack if it's not selected and we are NOT in global active findings mode
-        if (contextMode !== "active_findings" && !isPackSelected) {
-          return null;
-        }
-
-        const filteredMarkers = sec.markers.filter((m) => {
-          const isMissing = m.severity_class === "no_data" || !isCallableGenotype(m.user_genotype);
-          if (isMissing) return false;
-
-          switch (contextMode) {
-            case "active_findings":
-            case "selected_pack_active":
-              return (m.effect_count ?? 0) > 0;
-            case "active_context_dependent":
-              return (m.effect_count ?? 0) > 0 || m.severity_class === "context_dependent";
-            case "full_selected":
-              return true;
-            case "clinical_checklist":
-              return m.clinical_confirmation_required === true || 
-                     m.severity_class === "confirmation_required" ||
-                     m.severity_class === "high_risk" ||
-                     m.severity_class === "moderate_risk";
-            case "evidence_audit":
-              return (m.effect_count ?? 0) > 0;
-            default:
-              return true;
-          }
+    const bySection = new Map<string, { pack_id?: string; section_name: string; findings: MarkerPayload[] }>();
+    for (const row of pool) {
+      const key = String(row.pack_id ?? row.section_name);
+      const existing = bySection.get(key);
+      if (existing) {
+        existing.findings.push(row.payload);
+      } else {
+        bySection.set(key, {
+          pack_id: row.pack_id,
+          section_name: row.section_name,
+          findings: [row.payload],
         });
-
-        if (filteredMarkers.length === 0) return null;
-
-        const findings = filteredMarkers.map((m) => buildMarkerPayload(m, laypersonMap));
-        return { pack_id: pack?.id, section_name: sec.name, findings };
-      })
-      .filter((s): s is NonNullable<typeof s> => s !== null);
-
-    if (typeof maxFindings === "number" && maxFindings >= 0) {
-      const ranked = sectionsData
-        .flatMap((section) =>
-          section.findings.map((finding: ReturnType<typeof buildMarkerPayload>) => ({
-            section,
-            finding,
-            effect: finding.effect_count ?? 0,
-          })),
-        )
-        .sort((a, b) => b.effect - a.effect)
-        .slice(0, maxFindings);
-      const bySection = new Map<string, typeof sectionsData[number]>();
-      for (const row of ranked) {
-        const key = String(row.section.pack_id ?? row.section.section_name);
-        const existing = bySection.get(key);
-        if (existing) {
-          existing.findings.push(row.finding);
-        } else {
-          bySection.set(key, {
-            pack_id: row.section.pack_id,
-            section_name: row.section.section_name,
-            findings: [row.finding],
-          });
-        }
       }
-      sectionsData = [...bySection.values()];
     }
+    sectionsData = [...bySection.values()];
   }
 
   const supportPackIds = contextMode === "developer_raw_json"
@@ -429,49 +464,18 @@ export function calculateContextStats(
   selectedPacks: Record<string, boolean>,
   contextMode: AiContextMode
 ): ContextStats {
-  let included = 0;
   let total = 0;
-
-  for (const sec of generatedReport.sections) {
+  for (const sec of generatedReport.sections ?? []) {
     const pack = markerPacksStore.manifest.packs.find(
-      (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name
+      (p) => p.label === sec.name || markerPacksStore.packs[p.id]?.name === sec.name,
     );
-    const isPackSelected = pack ? selectedPacks[pack.id] : false;
-    
-    // active_findings scans all packs, others only selected packs
-    if (contextMode !== "active_findings" && !isPackSelected) continue;
-
-    for (const m of sec.markers) {
-      const isFound = isCallableGenotype(m.user_genotype);
-      if (isFound) {
-        total++;
-        switch (contextMode) {
-          case "active_findings":
-          case "selected_pack_active":
-          case "evidence_audit":
-            if ((m.effect_count ?? 0) > 0) included++;
-            break;
-          case "active_context_dependent":
-            if ((m.effect_count ?? 0) > 0 || m.severity_class === "context_dependent") included++;
-            break;
-          case "full_selected":
-            included++;
-            break;
-          case "clinical_checklist":
-            if (m.clinical_confirmation_required === true || 
-                m.severity_class === "confirmation_required" ||
-                m.severity_class === "high_risk" ||
-                m.severity_class === "moderate_risk") {
-              included++;
-            }
-            break;
-          case "developer_raw_json":
-            included++;
-            break;
-        }
-      }
+    const isPackSelected = pack ? selectedPacks[pack.id] === true : false;
+    if (!sectionInCandidatePool(contextMode, isPackSelected)) continue;
+    for (const m of sec.markers ?? []) {
+      if (isCallableGenotype(m.user_genotype)) total++;
     }
   }
+  const included = buildCandidatePool(generatedReport, selectedPacks, contextMode).length;
   return { included, total };
 }
 

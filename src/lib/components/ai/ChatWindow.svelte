@@ -47,6 +47,8 @@
     selectedModel: string;
     ollamaUrl?: string;
     chatProvider?: ChatProvider;
+    /** One-line honesty about pool vs sent / remap / history trim for the last turn. */
+    contextBudgetNotice?: string;
   }
 
   let {
@@ -74,6 +76,7 @@
     selectedModel,
     ollamaUrl = "",
     chatProvider = "ollama",
+    contextBudgetNotice = "",
     vectorHits = [],
     vectorEvidenceCards = [],
     vectorIndexBrief = "",
@@ -226,6 +229,10 @@
           <span>📥 Drop image files here to attach (normalized dynamically)</span>
         </div>
       </div>
+    {/if}
+
+    {#if contextBudgetNotice}
+      <p class="context-budget-notice" role="status">{contextBudgetNotice}</p>
     {/if}
 
     {#if messages.length === 0}

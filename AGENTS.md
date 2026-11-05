@@ -141,6 +141,11 @@ remaining coverage limits explicitly. Update `README.md` for externally
 visible behavior. After file-layout changes, regenerate `ARCHITECTURE.md`.
 Write a concise handoff to local `MEMORY.md` after meaningful work.
 GitHub pull requests and `master` pushes must pass `.github/workflows/ci.yml`.
+The Windows downloader contract compiles Rust unit tests with the Common
+Controls v6 manifest required by Tauri-linked test executables. Keep those
+linker flags scoped to the Windows CI test step; do not add them to the app
+build script. Cargo's `rustc-link-arg-tests` applies to integration-test
+targets, not in-module unit tests.
 Tagged `v*` publishes reuse that gate, then draft signed desktop installers
 and `latest.json` for in-app updates. Never commit the updater private key;
 GitHub secrets `TAURI_SIGNING_PRIVATE_KEY` and

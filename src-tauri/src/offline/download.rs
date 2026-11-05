@@ -762,9 +762,8 @@ mod tests {
             .expect("set fixture listener nonblocking");
         thread::spawn(move || {
             let deadline = std::time::Instant::now() + Duration::from_secs(10);
-            let mut get_attempts = 0u8;
-            let mut requests = 0u8;
-            while requests < 7 && std::time::Instant::now() < deadline {
+            let mut retry_sidecar_served = false;
+            while !retry_sidecar_served && std::time::Instant::now() < deadline {
                 let (mut stream, _) = match listener.accept() {
                     Ok(connection) => connection,
                     Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
@@ -773,7 +772,6 @@ mod tests {
                     }
                     Err(_) => break,
                 };
-                requests += 1;
                 stream
                     .set_read_timeout(Some(Duration::from_secs(2)))
                     .expect("set fixture read timeout");
@@ -788,6 +786,7 @@ mod tests {
                     .any(|line| line.to_ascii_lowercase().starts_with("range:"));
                 if path.ends_with(".md5") {
                     write_fixture_response(&mut stream, "404 Not Found", &[], "");
+                    retry_sidecar_served = path == "/retry.bin.md5";
                 } else if method == "HEAD" {
                     write_fixture_head_response(
                         &mut stream,
@@ -800,22 +799,20 @@ mod tests {
                         b"h",
                         "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
                     );
-                } else if method == "GET" {
-                    get_attempts += 1;
-                    if get_attempts == 1 {
-                        write_fixture_response(&mut stream, "503 Service Unavailable", &[], "");
-                    } else {
-                        write_fixture_response(
-                            &mut stream,
-                            "200 OK",
-                            b"hello",
-                            "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
-                        );
-                    }
+                } else if method == "GET" && path == "/initial.bin" {
+                    write_fixture_response(&mut stream, "503 Service Unavailable", &[], "");
+                } else if method == "GET" && path == "/retry.bin" {
+                    write_fixture_response(
+                        &mut stream,
+                        "200 OK",
+                        b"hello",
+                        "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
                 } else {
                     write_fixture_response(&mut stream, "405 Method Not Allowed", &[], "");
                 }
             }
+            assert!(retry_sidecar_served, "fixture server timed out before retry completed");
         })
     }
 
@@ -1133,9 +1130,10 @@ mod tests {
         let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind fixture server");
         let address = listener.local_addr().expect("read fixture address");
         let server = spawn_retry_fixture_server(listener);
-        let url = format!("http://{address}/fixture.bin");
+        let first_url = format!("http://{address}/initial.bin");
+        let retry_url = format!("http://{address}/retry.bin");
 
-        let first_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {}).await;
+        let first_attempt = download_to_path(&first_url, &destination, 1024, |_, _, _| {}).await;
         assert!(first_attempt.is_err());
         assert_eq!(
             std::fs::read(&destination).expect("read preserved file"),
@@ -1143,7 +1141,7 @@ mod tests {
         );
         assert!(!part_path.exists());
 
-        let second_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {})
+        let second_attempt = download_to_path(&retry_url, &destination, 1024, |_, _, _| {})
             .await
             .expect("retry fixture download");
         assert_eq!(second_attempt.0, 5);

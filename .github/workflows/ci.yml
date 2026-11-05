@@ -47,7 +47,25 @@ jobs:
         run: pnpm run build
 
       - name: Run downloader contract tests
+        if: runner.os != 'Windows'
         run: cargo test --manifest-path src-tauri/Cargo.toml --lib offline::download::tests
+
+      - name: Run downloader contract tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $manifest = Join-Path $env:RUNNER_TEMP 'windows-test.manifest'
+          @'
+          <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+            <dependency>
+              <dependentAssembly>
+                <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*" />
+              </dependentAssembly>
+            </dependency>
+          </assembly>
+          '@ | Set-Content -LiteralPath $manifest -NoNewline -Encoding utf8NoBOM
+          $env:RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:$manifest"
+          cargo test --manifest-path src-tauri/Cargo.toml --lib offline::download::tests
 
   validate:
     name: Validate

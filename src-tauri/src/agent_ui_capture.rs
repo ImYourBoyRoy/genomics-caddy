@@ -9,15 +9,7 @@ does not block capture. Other OS builds return a clear unsupported error.
 */
 
 use std::time::Duration;
-use tauri::AppHandle;
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 
 const CAPTURE_TIMEOUT: Duration = Duration::from_secs(20);
 

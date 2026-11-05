@@ -115,6 +115,10 @@
       "raw_dna_limitation": "This is a CYP2C19 allele component only. Complete star-allele/diplotype interpretation requires the clinical inputs described in pgx_diplotype_guidance.json.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI dbSNP rs12248560 GRCh38.p14 forward alleles; T is the CYP2C19*17 defining allele",
       "sources": [
         {
           "name": "CPIC Guideline for CYP2C19 and SSRIs",
@@ -146,6 +150,10 @@
       "raw_dna_limitation": "This is a CYP2C19 allele component only. Complete star-allele/diplotype interpretation requires the clinical inputs described in pgx_diplotype_guidance.json.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["G", "A"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI dbSNP rs4244285 GRCh38.p14 forward alleles; A is the CYP2C19*2 defining allele",
       "sources": [
         {
           "name": "CPIC Guideline for CYP2C19 and Clopidogrel",
@@ -177,6 +185,10 @@
       "raw_dna_limitation": "This is a CYP2C19 allele component only. Complete star-allele/diplotype interpretation requires the clinical inputs described in pgx_diplotype_guidance.json.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["G", "A"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CYP2C19 c.636G>A allele nomenclature and GRCh38 forward orientation",
       "sources": [
         {
           "name": "CPIC Guideline for CYP2C19 and Clopidogrel",

@@ -121,6 +121,19 @@
   opacity: 0.85;
 }
 
+.welcome-data-note {
+  width: min(100%, 38rem);
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.65rem;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
 .welcome-aside-row {
   display: flex;
   flex-wrap: wrap;

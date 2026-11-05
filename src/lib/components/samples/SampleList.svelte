@@ -20,6 +20,8 @@
     selectedSample: GenomeSample | null;
     disabled?: boolean;
     disabledReason?: string;
+    selectionDisabled?: boolean;
+    selectionDisabledReason?: string;
     onSelectSample: (sample: GenomeSample) => void;
     onOpenChromosomeContext: (sample: GenomeSample) => void;
     onDeleteSample: (id: number) => void;
@@ -30,6 +32,8 @@
     selectedSample,
     disabled = false,
     disabledReason = 'Profile actions are temporarily unavailable.',
+    selectionDisabled = false,
+    selectionDisabledReason = disabledReason,
     onSelectSample,
     onOpenChromosomeContext,
     onDeleteSample
@@ -46,20 +50,22 @@
   <p class="samples-card-hint">Select a genome to view its report.</p>
   {#if disabled}
     <p class="samples-actions-note" role="status">{disabledReason}</p>
+  {:else if selectionDisabled}
+    <p class="samples-actions-note" role="status">{selectionDisabledReason} You can still remove an existing profile.</p>
   {/if}
   {#if samples.length === 0}
     <p class="empty-hint">No genomes imported yet.</p>
   {:else}
     <ul class="sample-list">
       {#each samples as s}
-        <li class="sample-item" class:active={selectedSample && selectedSample.id === s.id} class:disabled={disabled}>
+        <li class="sample-item" class:active={selectedSample && selectedSample.id === s.id} class:disabled={disabled || selectionDisabled}>
           <div class="sample-name-wrap">
             <button
               type="button"
               class="sample-sex-indicator"
-              disabled={disabled}
+              disabled={disabled || selectionDisabled}
               aria-label={`Change sex for ${s.name}: ${formatDisplaySex(s.genetic_sex, '')}`}
-              title={disabled ? disabledReason : `Change sex for ${s.name}`}
+              title={disabled ? disabledReason : selectionDisabled ? selectionDisabledReason : `Change sex for ${s.name}`}
               onclick={() => onOpenChromosomeContext(s)}
             >
               <span class="sample-sex-symbol">{sexSymbol(s.genetic_sex)}</span>
@@ -67,8 +73,9 @@
             <button
               type="button"
               class="sample-name"
-              disabled={disabled}
+              disabled={disabled || selectionDisabled}
               aria-current={selectedSample?.id === s.id ? 'true' : undefined}
+              title={selectionDisabled ? selectionDisabledReason : undefined}
               onclick={() => onSelectSample(s)}
             >
               <span class="sample-name-text">{s.name}</span>

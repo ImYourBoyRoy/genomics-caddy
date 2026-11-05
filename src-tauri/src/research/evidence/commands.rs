@@ -32,6 +32,13 @@ async fn load_qdrant(app: &AppHandle) -> Result<super::super::QdrantConfig, Stri
     db_runtime::with_connection(get_db_path(app), config::load_qdrant_config).await
 }
 
+fn require_liftover(app: &AppHandle) -> Result<(), String> {
+    let data_dir = crate::get_data_dir(app);
+    let db_path = get_db_path(app);
+    drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn search_associations_hybrid(
     app: AppHandle,
@@ -66,6 +73,7 @@ pub async fn get_quality_dashboard(
     app: AppHandle,
     sample_id: i64,
 ) -> Result<QualityDashboard, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     let enrichment_status = {
@@ -88,6 +96,7 @@ pub async fn build_trait_clusters_cmd(
     min_data_quality: Option<f32>,
     limit: Option<u32>,
 ) -> Result<Vec<TraitClusterSummary>, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
@@ -111,6 +120,7 @@ pub async fn export_evidence_packet_cmd(
     cluster_id: Option<String>,
     association_ids: Option<Vec<String>>,
 ) -> Result<EvidencePacket, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     export_evidence_packet(
@@ -173,6 +183,7 @@ pub async fn get_variant_evidence_card(
     sample_id: i64,
     rsid: String,
 ) -> Result<Option<EvidenceCard>, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let payload = super::super::qdrant::find_point_payload_by_rsid(
         &cfg.url,
@@ -191,6 +202,7 @@ pub async fn backfill_evidence_payloads_cmd(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<BackfillResult, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     backfill_evidence_payloads(&db_path, sample_id, &cfg, limit.unwrap_or(500).min(5000)).await
@@ -203,6 +215,7 @@ pub async fn reembed_stale_vectors_cmd(
     ollama_url: String,
     limit: Option<u32>,
 ) -> Result<ReembedResult, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     reembed_stale_vectors(
@@ -221,6 +234,7 @@ pub fn get_actionability_matrix(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<Vec<ActionabilityPoint>, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     list_actionability_points(&conn, sample_id, limit.unwrap_or(400).min(1000))
@@ -231,6 +245,7 @@ pub fn get_chromosome_trait_overlay(
     app: AppHandle,
     sample_id: i64,
 ) -> Result<Vec<ChromosomeTraitBand>, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     chromosome_trait_overlay(&conn, sample_id)
@@ -242,6 +257,7 @@ pub fn get_pathway_flow_rows(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<Vec<PathwayFlowRow>, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     let conn = crate::db::connect(db_path).map_err(|e| e.to_string())?;
     list_pathway_flow_rows(&conn, sample_id, limit.unwrap_or(80).min(300))
@@ -253,6 +269,7 @@ pub async fn build_vector_atlas_cmd(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<VectorAtlasResult, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     build_vector_atlas(
@@ -271,6 +288,7 @@ pub async fn get_vector_atlas_cached(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<Vec<super::atlas::AtlasPoint>, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
@@ -319,6 +337,7 @@ pub async fn get_evidence_corpus_summary(
     enrichment_enriched: Option<u64>,
     enrichment_total: Option<u64>,
 ) -> Result<EvidenceCorpusSummary, String> {
+    require_liftover(&app)?;
     let cfg = load_qdrant(&app).await?;
     let db_path = get_db_path(&app);
     build_evidence_corpus_summary(

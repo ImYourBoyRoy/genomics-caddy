@@ -262,29 +262,30 @@ async function run() {
     assert(Number.isInteger(sampleId) && sampleId > 0, "MCP audit requires an imported sample");
 
     if (fixtureAudit) {
-      const sync = toolPayload(
+      const blockedIndex = toolPayload(
         await requestWithTimeout("tools/call", withAuth({
           name: "sync_offline_asset",
           arguments: { asset_id: "tier2_variant_locus", sample_id: sampleId },
         })),
-        "sync_offline_asset",
+        "sync_offline_asset before liftover",
       );
-      assert(Array.isArray(sync?.assets_synced), "MCP fixture sync omitted assets_synced");
+      assert(Array.isArray(blockedIndex?.assets_synced), "MCP fixture blocked sync omitted assets_synced");
       assert(
-        sync.assets_synced.includes("tier2_variant_locus"),
-        "MCP fixture sync did not import Tier 2 resource",
-      );
-      assert(
-        sync?.final_status && typeof sync.final_status === "object",
-        "MCP fixture sync omitted final_status",
+        !blockedIndex.assets_synced.includes("tier2_variant_locus"),
+        "MCP fixture built the DNA-derived variant index before liftover was installed",
       );
       assert(
-        Number.isInteger(sync.final_status.total_updates_available),
-        "MCP fixture final_status omitted update count",
+        blockedIndex.messages?.some((message) =>
+          typeof message === "string" && message.includes("Install the liftover chain before analyzing profile data")),
+        "MCP fixture did not explain why variant indexing was blocked before liftover",
       );
       assert(
-        !Object.prototype.hasOwnProperty.call(sync, "genotype"),
-        "MCP fixture sync exposed genotype data",
+        blockedIndex?.final_status && typeof blockedIndex.final_status === "object",
+        "MCP fixture blocked sync omitted final_status",
+      );
+      assert(
+        !Object.prototype.hasOwnProperty.call(blockedIndex, "genotype"),
+        "MCP fixture blocked sync exposed genotype data",
       );
 
       const downloadedSync = toolPayload(
@@ -315,6 +316,27 @@ async function run() {
       assert(
         !Object.prototype.hasOwnProperty.call(downloadedSync, "genotype"),
         "MCP fixture download exposed genotype data",
+      );
+
+      const indexed = toolPayload(
+        await requestWithTimeout("tools/call", withAuth({
+          name: "sync_offline_asset",
+          arguments: { asset_id: "tier2_variant_locus", sample_id: sampleId },
+        })),
+        "sync_offline_asset after liftover",
+      );
+      assert(Array.isArray(indexed?.assets_synced), "MCP fixture index sync omitted assets_synced");
+      assert(
+        indexed.assets_synced.includes("tier2_variant_locus"),
+        "MCP fixture did not build the Tier 2 resource after liftover installation",
+      );
+      assert(
+        indexed?.final_status && typeof indexed.final_status === "object",
+        "MCP fixture index sync omitted final_status",
+      );
+      assert(
+        !Object.prototype.hasOwnProperty.call(indexed, "genotype"),
+        "MCP fixture index sync exposed genotype data",
       );
     }
 

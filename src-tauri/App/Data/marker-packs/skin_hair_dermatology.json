@@ -8,20 +8,24 @@
       "effect_allele": "N/A",
       "impact": "Prevents dermatology overcalling",
       "evidence_tier": "A_clinical_guardrail",
-      "interpretation": "Skin, hair, pigmentation, acne, psoriasis, eczema, and scarring phenotypes require visual exam and exposure context. DNA can inform risk context only.",
+      "interpretation": "DNA can provide limited risk context for some skin traits, but it cannot identify a makeup, skincare, or fragrance allergen or predict an individual product reaction. Acne caused by pore-clogging products (acne cosmetica), allergic contact dermatitis, irritation, and rosacea flares are different problems; assess symptoms and exposures. Alcohol-related flushing after drinking is separate from irritation after a topical product. Patch testing by a clinician can help identify allergic contact dermatitis.",
       "do_not_claim": [
         "skin disease diagnosis",
         "melanoma diagnosis",
-        "hair-loss certainty"
+        "hair-loss certainty",
+        "a specific cosmetic or skincare allergy",
+        "topical alcohol sensitivity or alcohol-caused acne",
+        "product-triggered rosacea or acne from genotype"
       ],
       "confirm_with": [
         "dermatology exam",
         "skin phenotype",
         "family history",
-        "sun exposure history"
+        "sun exposure and product exposure history",
+        "clinician-directed patch testing when contact allergy is suspected"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "raw_dna_limitation": "Consumer DNA cannot identify the ingredient causing an individual rash, irritation, acne cosmetica, or rosacea flare. Product history and symptoms matter; suspected allergic contact dermatitis may need clinician-directed patch testing.",
       "clinical_confirmation_required": true,
       "variant_type": "guardrail",
       "sources": [
@@ -40,6 +44,30 @@
           "evidence_type": "Curated GWAS Catalog",
           "conflict_of_interest": "Public academic/NIH-EBI resource",
           "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "FDA: Allergens in Cosmetics",
+          "url": "https://www.fda.gov/cosmetics/cosmetic-ingredients/allergens-cosmetics",
+          "accessed": "2026-11-04",
+          "evidence_type": "Regulatory consumer guidance",
+          "conflict_of_interest": "United States Food and Drug Administration",
+          "notes": "Cosmetic allergy may cause allergic contact dermatitis; clinicians may use patch testing. Irritation can occur without allergy."
+        },
+        {
+          "name": "American Academy of Dermatology: Makeup and acne",
+          "url": "https://www.aad.org/public/diseases/acne/causes/makeup",
+          "accessed": "2026-11-04",
+          "evidence_type": "Dermatology clinical guidance",
+          "conflict_of_interest": "Professional dermatology organization",
+          "notes": "Some makeup and hair or skincare products can contribute to acne cosmetica; use symptom and product history rather than genotype to investigate."
+        },
+        {
+          "name": "American Academy of Dermatology: Rosacea triggers",
+          "url": "https://www.aad.org/public/diseases/rosacea/triggers/find",
+          "accessed": "2026-11-04",
+          "evidence_type": "Dermatology clinical guidance",
+          "conflict_of_interest": "Professional dermatology organization",
+          "notes": "Alcohol, some cosmetics, and some skin or hair products can trigger flares in some people with rosacea; triggers differ by person."
         }
       ]
     },
@@ -65,6 +93,10 @@
       "raw_dna_limitation": "Pigmentation, skin inflammation, acne, scarring and hair traits are strongly affected by ancestry, hormones, UV exposure, skincare, infections, and medications.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
+      "source_build": "GRCh37",
+      "expected_plus_alleles": ["C", "A", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "Ensembl GRCh37 Variation record for rs174594 (strand +1; C/A/T); Teder-Laving et al. report C as risk and A as protective at chr11:61619829.",
       "sources": [
         {
           "name": "NHGRI-EBI GWAS Catalog",
@@ -1063,6 +1095,56 @@
           "evidence_type": "Curated GWAS Catalog",
           "conflict_of_interest": "Public academic/NIH-EBI resource",
           "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs174594",
+      "gene": "FADS2",
+      "variant_name": "Acne susceptibility GWAS locus",
+      "effect_allele": "C",
+      "impact": "Small-effect acne susceptibility research",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "A 2024 meta-analysis reported a small group-level association between the C allele at rs174594 and acne vulgaris (odds ratio 1.08). This one marker does not predict whether a person will develop acne, its severity, or how they will respond to makeup, skincare, diet, alcohol, or treatment.",
+      "do_not_claim": [
+        "acne diagnosis",
+        "acne severity prediction",
+        "makeup or skincare product reaction",
+        "topical alcohol sensitivity",
+        "diet or treatment response"
+      ],
+      "confirm_with": [
+        "current skin symptoms and product history",
+        "dermatology assessment when needed"
+      ],
+      "effect_direction": "risk",
+      "raw_dna_limitation": "The reported odds ratio is small and comes from a European-ancestry meta-analysis. A single common marker is not a personal risk score and does not explain product-triggered acne or allergy.",
+      "clinical_confirmation_required": false,
+      "variant_type": "snp",
+      "sources": [
+        {
+          "name": "Teder-Laving et al. Genome-wide meta-analysis identifies novel loci conferring risk of acne vulgaris",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36922633/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Genome-wide meta-analysis",
+          "conflict_of_interest": "Peer-reviewed population association study",
+          "notes": "The study reported rs174594 at chr11:61619829 GRCh37, risk allele C, OR 1.08 (95% CI 1.06–1.10), in 34,422 acne cases and 364,991 controls across three European-ancestry cohorts. This is a small population-level association."
+        },
+        {
+          "name": "Ensembl Variation, rs174594 GRCh37 mapping",
+          "url": "https://grch37.ensembl.org/Homo_sapiens/Variation/Explore?v=rs174594",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant identity and plus-strand allele record",
+          "conflict_of_interest": "Ensembl genome reference resource",
+          "notes": "The GRCh37 mapping is on the forward strand with allele string C/A/T. The report counts the study-reported C risk allele; this marker does not predict a personal acne outcome or product reaction."
+        },
+        {
+          "name": "American Academy of Dermatology: Makeup and acne",
+          "url": "https://www.aad.org/public/diseases/acne/causes/makeup",
+          "accessed": "2026-11-04",
+          "evidence_type": "Dermatology clinical guidance",
+          "conflict_of_interest": "Professional dermatology organization",
+          "notes": "Makeup or other products may cause acne cosmetica; this is an exposure and symptom question, not something this genotype can identify."
         }
       ]
     },

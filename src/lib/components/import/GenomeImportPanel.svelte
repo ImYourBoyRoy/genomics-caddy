@@ -25,8 +25,11 @@
     importError: string;
     importSuccess: string;
     disabled?: boolean;
+    isChainDownloaded: boolean;
+    isDownloadingChain: boolean;
     onBrowseFile: () => void;
     onImportGenome: (e: Event) => void;
+    onDownloadChain: () => void;
   }
 
   let {
@@ -39,13 +42,27 @@
     importError,
     importSuccess,
     disabled = false,
+    isChainDownloaded,
+    isDownloadingChain,
     onBrowseFile,
-    onImportGenome
+    onImportGenome,
+    onDownloadChain,
   }: Props = $props();
+
+  let importDisabled = $derived(disabled || !isChainDownloaded);
 </script>
 
 <div class="import-card card">
   <h3>Add DNA profile</h3>
+  {#if !isChainDownloaded}
+    <div class="import-chain-required" role="note">
+      <strong>Install the coordinate map first</strong>
+      <p>DNA files stay untouched until this required reference is installed.</p>
+      <button type="button" class="btn btn-primary btn-sm" onclick={onDownloadChain} disabled={disabled || isDownloadingChain}>
+        {isDownloadingChain ? 'Installing…' : 'Install coordinate map'}
+      </button>
+    </div>
+  {/if}
   <p class="import-card-hint">Import a local .txt, .csv, .tsv, or .zip DNA export. Existing profile names require replacement confirmation; use a new name to keep both profiles.</p>
   <form onsubmit={onImportGenome}>
     <div class="form-group">
@@ -57,16 +74,16 @@
           interactiveChildren={true}
           interactiveClickBehavior="dismiss"
         >
-          <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={disabled || isImportPreparing || isImporting} aria-label={filePath || 'No genome file selected'} />
+          <input id="file-path" type="text" placeholder="Select txt/zip file..." bind:value={filePath} readonly disabled={importDisabled || isImportPreparing || isImporting} aria-label={filePath || 'No genome file selected'} />
         </Tooltip>
-        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={disabled || isImportPreparing || isImporting}>Browse...</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick={onBrowseFile} disabled={importDisabled || isImportPreparing || isImporting}>Browse...</button>
       </div>
     </div>
     <div class="form-group">
       <label for="sample-name">Profile name</label>
-      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} disabled={disabled || isImportPreparing || isImporting} />
+      <input id="sample-name" type="text" placeholder="My Genome" bind:value={sampleNameInput} disabled={importDisabled || isImportPreparing || isImporting} />
     </div>
-    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting || isImportPreparing || disabled}>
+    <button type="submit" class="btn btn-accent btn-block" disabled={isImporting || isImportPreparing || importDisabled}>
       {isImportPreparing ? "Checking file…" : isImporting ? "Processing…" : "Import Genome"}
     </button>
 

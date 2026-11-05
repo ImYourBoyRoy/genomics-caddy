@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { GeneratedReport } from '../../types/genomics';
   import AnimatedNumber from '../common/loading/AnimatedNumber.svelte';
+  import Tooltip from '../common/Tooltip.svelte';
   import { computeReportOverviewStats, type ReportFocus, type ReportOverviewStats } from '../../utils/reportOverview';
 
   /*
@@ -109,8 +110,17 @@
             <span>Markers with a DNA result</span>
             <small>{#if totalMarkersChecked > 0}{foundMarkersCount.toLocaleString()} of {totalMarkersChecked.toLocaleString()} report markers{:else}No report markers available{/if}</small>
           </span>
-          <strong title="Share of report markers with a usable DNA result. This is not the percentage of your whole genome that was read.">
+          <strong>
             {coveragePercent === null ? '—' : `${coveragePercent}%`}
+            <Tooltip
+              label="What does this percentage mean?"
+              description="This is the share of curated report markers with a usable DNA result. It is not the share of your whole genome that was read or the chance of a disease. Missing results are unknown."
+              interactiveChildren
+            >
+              <button type="button" class="coverage-info-button" aria-label="Explain marker coverage percentage">
+                <span aria-hidden="true">ⓘ</span>
+              </button>
+            </Tooltip>
           </strong>
         </summary>
         {#if coveragePercent !== null}
@@ -304,6 +314,28 @@
     color: var(--accent);
     font-size: 1.2rem;
     line-height: 1;
+  }
+
+  .coverage-info-button {
+    display: inline-grid;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-left: 0.18rem;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--status-accent-border);
+    border-radius: 50%;
+    background: var(--status-accent-bg);
+    color: var(--status-accent-text);
+    font: inherit;
+    font-size: 0.72rem;
+    vertical-align: 0.1em;
+    cursor: help;
+  }
+
+  .coverage-info-button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .overview-coverage-meter {

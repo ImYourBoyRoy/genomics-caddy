@@ -2,13 +2,12 @@
  * Rotating double helix loader.
  *
  * Each row is one base pair seen at a different phase of the twist: the two
- * nodes trade places along x (-cos θ), scale/dim with depth (sin θ) and the
- * rung length follows |cos θ|. True sine motion comes from half-period
- * `alternate` animations with an ease-in-out-sine curve, so there are no
- * piecewise-linear kinks. Only translate/scale/opacity animate, which keeps the
- * strand on the compositor (smooth even without GPU raster). Rows are
- * phase-shifted with a negative delay so the strand reads as one continuous
- * spiral. Colors are tokens only.
+ * nodes trade places along x, change size/opacity with depth, and the rung
+ * length follows the twist. Each node uses one standard transform/opacity
+ * animation. The second strand shares that timeline with a half-cycle offset,
+ * avoiding independent reverse animations and unnecessary forced layers in
+ * WebKit. Rows are phase-shifted with a negative delay so the strand reads as
+ * one continuous spiral. Colors are tokens only.
  */
 
 .sequencing-helix {
@@ -55,13 +54,8 @@
   border-radius: 50%;
   background: var(--pair-color);
   transition: background var(--motion-base, 260ms) var(--motion-ease-out, ease-out);
-  animation:
-    gc-helix-sway calc(var(--helix-period) / 2) var(--helix-sine) infinite alternate,
-    gc-helix-depth calc(var(--helix-period) / 2) var(--helix-sine) infinite alternate;
-  animation-delay:
-    var(--helix-row-phase),
-    calc(var(--helix-row-phase) - var(--helix-period) / 4);
-  will-change: translate, scale, opacity;
+  animation: gc-helix-path var(--helix-period) linear infinite;
+  animation-delay: var(--helix-row-phase);
 }
 
 /* The glow lives on a pseudo-element so it can fade with opacity instead of
@@ -83,7 +77,7 @@
 
 .helix-node-b {
   background: color-mix(in srgb, var(--pair-color) 55%, var(--success));
-  animation-direction: alternate-reverse;
+  animation-delay: calc(var(--helix-row-phase) - var(--helix-period) / 2);
 }
 
 .helix-rung {
@@ -94,7 +88,6 @@
   opacity: 0.55;
   animation: gc-helix-rung calc(var(--helix-period) / 4) cubic-bezier(0.12, 0, 0.39, 0) infinite alternate;
   animation-delay: calc(var(--i) * var(--helix-row-gap) * -1s);
-  will-change: scale;
 }
 
 /* Unknown total: a soft band of light travels down the strand. */
@@ -103,19 +96,36 @@
   animation-delay: calc(var(--i) * 0.09s);
 }
 
-@keyframes gc-helix-sway {
-  from { translate: calc(var(--helix-amp) * -1) 0; }
-  to   { translate: var(--helix-amp) 0; }
-}
-
-@keyframes gc-helix-depth {
-  from { scale: 0.65; opacity: 0.35; }
-  to   { scale: 1.35; opacity: 1; }
+@keyframes gc-helix-path {
+  0% {
+    transform: translateX(calc(var(--helix-amp) * -1)) scale(0.95);
+    opacity: 0.72;
+    animation-timing-function: var(--helix-sine);
+  }
+  25% {
+    transform: translateX(0) scale(1.35);
+    opacity: 1;
+    animation-timing-function: var(--helix-sine);
+  }
+  50% {
+    transform: translateX(var(--helix-amp)) scale(0.95);
+    opacity: 0.72;
+    animation-timing-function: var(--helix-sine);
+  }
+  75% {
+    transform: translateX(0) scale(0.65);
+    opacity: 0.35;
+    animation-timing-function: var(--helix-sine);
+  }
+  100% {
+    transform: translateX(calc(var(--helix-amp) * -1)) scale(0.95);
+    opacity: 0.72;
+  }
 }
 
 @keyframes gc-helix-rung {
-  from { scale: 1 1; }
-  to   { scale: 0.04 1; }
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0.04); }
 }
 
 @keyframes gc-helix-scan {
@@ -131,6 +141,7 @@
     will-change: auto;
   }
 
-  .helix-node-a { translate: calc(var(--helix-amp) * -1) 0; }
-  .helix-node-b { translate: var(--helix-amp) 0; }
+  .helix-node-a { transform: translateX(calc(var(--helix-amp) * -1)) scale(0.95); }
+  .helix-node-b { transform: translateX(var(--helix-amp)) scale(0.95); }
+  .helix-rung { transform: scaleX(0.7); }
 }

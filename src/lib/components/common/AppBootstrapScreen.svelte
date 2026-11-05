@@ -339,7 +339,16 @@
     </p>
 
     <div class="loading-telemetry" role="group" aria-label={barCaption} aria-busy={!finished && !failed}>
-      <PipelineProgressBar {segments} {percent} caption={barCaption} label={barCaption} {determinate} />
+      <PipelineProgressBar
+        {segments}
+        {percent}
+        caption={barCaption}
+        label={barCaption}
+        explanation={mode === "startup"
+          ? "An estimate across the four startup steps. The active step below shows marker-check progress; this is not the percentage of your whole DNA that was scanned."
+          : ""}
+        {determinate}
+      />
       <LoadingTelemetryStrip
         elapsedMs={clock.elapsedMs}
         {stepIndex}

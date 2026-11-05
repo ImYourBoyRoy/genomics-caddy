@@ -116,8 +116,18 @@
     {
       "id": "digestive_gut_microbiome",
       "label": "Digestive & gut",
-      "query_hint": "digestive gut microbiome celiac crohn inflammatory bowel",
-      "keywords": ["digestive", "gut", "microbiome", "celiac", "crohn", "ulcerative colitis", "inflammatory bowel", "ibd", "bowel", "lactose", "reflux"],
+      "query_hint": "digestive gut microbiome celiac crohn ulcerative colitis IBS sucrase isomaltase sucrose intolerance reflux PPI stomach acid FUT2 secretor norovirus H pylori gallstones ulcers drinking alcohol alcohol metabolism alcohol flush",
+      "keywords": [
+        "digestive", "gut", "microbiome", "celiac", "crohn", "ulcerative colitis",
+        "inflammatory bowel", "ibd", "bowel", "lactose", "reflux", "ibs",
+        "irritable bowel syndrome", "GERD", "acid reflux", "sucrase", "isomaltase",
+        "sucrase-isomaltase", "sucrase-isomaltase deficiency", "sucrose intolerance",
+        "sucrose malabsorption", "sugar digestion", "starch digestion",
+        "proton pump inhibitor", "PPI", "stomach acid", "acid suppression",
+        "FUT2", "secretor status", "nonsecretor", "norovirus", "viral gastroenteritis",
+        "mucosal glycan", "H. pylori", "gallstone", "gallbladder", "duodenal ulcer",
+        "drinking alcohol", "alcohol metabolism", "alcohol flush", "ALDH2"
+      ],
       "packs": ["digestive_gut_microbiome"],
       "modes": ["general"]
     },
@@ -156,8 +166,8 @@
     {
       "id": "skin_hair_dermatology",
       "label": "Skin & hair",
-      "query_hint": "skin hair melanoma eczema psoriasis alopecia pigmentation",
-      "keywords": ["skin", "dermatology", "melanoma", "pigmentation", "eczema", "psoriasis", "alopecia", "hair", "mole", "dermatitis"],
+      "query_hint": "skin hair acne makeup skincare cosmetic allergy contact dermatitis rosacea product irritation alcohol based skincare melanoma eczema psoriasis alopecia pigmentation",
+      "keywords": ["skin", "dermatology", "melanoma", "pigmentation", "eczema", "psoriasis", "alopecia", "hair", "mole", "dermatitis", "acne", "acne cosmetica", "makeup", "make-up", "cosmetic", "cosmetics", "skincare", "skin care", "rosacea", "contact dermatitis", "allergic contact dermatitis", "cosmetic allergy", "fragrance sensitivity", "topical alcohol", "alcohol based skincare", "skin irritation"],
       "packs": ["skin_hair_dermatology"],
       "modes": ["general"]
     },

@@ -29,6 +29,7 @@ pub async fn get_variant_evidence(
 ) -> Result<VariantEvidence, String> {
     let db_path = get_db_path(&app);
     let app_data = crate::get_data_dir(&app);
+    drop(crate::load_required_liftover_engine(&app_data, &db_path)?);
 
     let effective_key = if ncbi_api_key.as_ref().is_some_and(|k| !k.trim().is_empty()) {
         ncbi_api_key
@@ -86,7 +87,9 @@ pub async fn get_discovered_findings_summary(
     sample_id: i64,
 ) -> Result<Vec<db::DiscoveredFindingSummary>, String> {
     let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         db::get_discovered_findings_summary(&conn, sample_id)
     })
@@ -100,7 +103,11 @@ pub async fn get_db_discovered_findings(
     sample_id: i64,
 ) -> Result<Vec<VariantEvidence>, String> {
     let db_path = get_db_path(&app);
-    tauri::async_runtime::spawn_blocking(move || load_discovered_findings(&db_path, sample_id))
+    let data_dir = get_data_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
+        load_discovered_findings(&db_path, sample_id)
+    })
         .await
         .map_err(|e| format!("Findings load worker failed: {}", e))?
 }
@@ -121,7 +128,9 @@ pub async fn export_discovered_findings(
 ) -> Result<usize, String> {
     config::validate_export_path(&export_path)?;
     let db_path = get_db_path(&app);
+    let data_dir = get_data_dir(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         let findings = load_discovered_findings(&db_path, sample_id)?;
         append_discovered_findings_to_path(Path::new(&export_path), findings.clone())?;
         Ok(findings.len())

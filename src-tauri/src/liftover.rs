@@ -366,11 +366,16 @@ fn normalize_chr(chr: &str) -> String {
 mod tests {
     use super::*;
     use std::io::Write;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_CHAIN_FIXTURE_ID: AtomicU64 = AtomicU64::new(0);
 
     fn engine(chain: &str) -> LiftoverEngine {
+        let fixture_id = NEXT_CHAIN_FIXTURE_ID.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!(
-            "genomics_caddy_chain_test_{}_{}",
+            "genomics_caddy_chain_test_{}_{}_{}",
             std::process::id(),
+            fixture_id,
             chain.len()
         ));
         let mut file = File::create(&path).expect("create chain fixture");

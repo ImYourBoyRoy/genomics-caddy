@@ -531,16 +531,18 @@ where
         ));
     }
 
-    // Atomic rename — only now is the file visible at the final path.
+    // Verify the temporary file before replacing a previously good catalog.
+    // A corrupt new download must never remove the last working copy.
+    if let Err(e) = verify_remote_md5(url, &part_path).await {
+        let _ = std::fs::remove_file(&part_path);
+        let _ = std::fs::remove_file(&metadata_path);
+        return Err(format!("MD5 checksum verification failed: {e}"));
+    }
+
+    // Atomic rename — only now is the validated file visible at the final path.
     std::fs::rename(&part_path, dest)
         .map_err(|e| format!("Failed to finalize download (rename failed): {e}"))?;
     let _ = std::fs::remove_file(&metadata_path);
-
-    // Verify MD5 checksum if MD5 file exists on server
-    if let Err(e) = verify_remote_md5(url, dest).await {
-        let _ = std::fs::remove_file(dest);
-        return Err(format!("MD5 checksum verification failed: {e}"));
-    }
 
     Ok((bytes_written, head))
 }
@@ -760,9 +762,8 @@ mod tests {
             .expect("set fixture listener nonblocking");
         thread::spawn(move || {
             let deadline = std::time::Instant::now() + Duration::from_secs(10);
-            let mut get_attempts = 0u8;
-            let mut requests = 0u8;
-            while requests < 7 && std::time::Instant::now() < deadline {
+            let mut retry_sidecar_served = false;
+            while !retry_sidecar_served && std::time::Instant::now() < deadline {
                 let (mut stream, _) = match listener.accept() {
                     Ok(connection) => connection,
                     Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
@@ -771,7 +772,6 @@ mod tests {
                     }
                     Err(_) => break,
                 };
-                requests += 1;
                 stream
                     .set_read_timeout(Some(Duration::from_secs(2)))
                     .expect("set fixture read timeout");
@@ -786,6 +786,7 @@ mod tests {
                     .any(|line| line.to_ascii_lowercase().starts_with("range:"));
                 if path.ends_with(".md5") {
                     write_fixture_response(&mut stream, "404 Not Found", &[], "");
+                    retry_sidecar_served = path == "/retry.bin.md5";
                 } else if method == "HEAD" {
                     write_fixture_head_response(
                         &mut stream,
@@ -798,22 +799,20 @@ mod tests {
                         b"h",
                         "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
                     );
-                } else if method == "GET" {
-                    get_attempts += 1;
-                    if get_attempts == 1 {
-                        write_fixture_response(&mut stream, "503 Service Unavailable", &[], "");
-                    } else {
-                        write_fixture_response(
-                            &mut stream,
-                            "200 OK",
-                            b"hello",
-                            "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
-                        );
-                    }
+                } else if method == "GET" && path == "/initial.bin" {
+                    write_fixture_response(&mut stream, "503 Service Unavailable", &[], "");
+                } else if method == "GET" && path == "/retry.bin" {
+                    write_fixture_response(
+                        &mut stream,
+                        "200 OK",
+                        b"hello",
+                        "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
                 } else {
                     write_fixture_response(&mut stream, "405 Method Not Allowed", &[], "");
                 }
             }
+            assert!(retry_sidecar_served, "fixture server timed out before retry completed");
         })
     }
 
@@ -904,6 +903,53 @@ mod tests {
                         b"hello",
                         "ETag: \"fixture-v1\"\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
                     );
+                }
+            }
+        })
+    }
+
+    fn spawn_checksum_mismatch_fixture_server(listener: TcpListener) -> thread::JoinHandle<()> {
+        thread::spawn(move || {
+            // A HEAD that omits any validator can trigger a bounded range
+            // probe before the full GET and checksum-sidecar request.
+            for _ in 0..4 {
+                let (mut stream, _) = listener.accept().expect("accept checksum fixture request");
+                let request = read_request(&mut stream).expect("read checksum fixture request");
+                let method = request.split_whitespace().next().unwrap_or_default();
+                let path = request.split_whitespace().nth(1).unwrap_or_default();
+                if method == "HEAD" && path == "/fixture.bin" {
+                    write_fixture_head_response(
+                        &mut stream,
+                        "ETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else if method == "GET"
+                    && path == "/fixture.bin"
+                    && request.lines().any(|line| {
+                        line.eq_ignore_ascii_case("range: bytes=0-0")
+                    })
+                {
+                    write_fixture_response(
+                        &mut stream,
+                        "206 Partial Content",
+                        b"h",
+                        "Content-Range: bytes 0-0/5\r\nETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else if method == "GET" && path == "/fixture.bin.md5" {
+                    write_fixture_response(
+                        &mut stream,
+                        "200 OK",
+                        b"00000000000000000000000000000000  fixture.bin\n",
+                        "",
+                    );
+                } else if method == "GET" && path == "/fixture.bin" {
+                    write_fixture_response(
+                        &mut stream,
+                        "200 OK",
+                        b"hello",
+                        "ETag: \"fixture-v1\"\r\nLast-Modified: Sat, 11 Jul 2026 21:00:00 GMT\r\nContent-Disposition: attachment; filename=fixture.bin\r\n",
+                    );
+                } else {
+                    panic!("unexpected checksum fixture request: {method} {path}");
                 }
             }
         })
@@ -1084,9 +1130,10 @@ mod tests {
         let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind fixture server");
         let address = listener.local_addr().expect("read fixture address");
         let server = spawn_retry_fixture_server(listener);
-        let url = format!("http://{address}/fixture.bin");
+        let first_url = format!("http://{address}/initial.bin");
+        let retry_url = format!("http://{address}/retry.bin");
 
-        let first_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {}).await;
+        let first_attempt = download_to_path(&first_url, &destination, 1024, |_, _, _| {}).await;
         assert!(first_attempt.is_err());
         assert_eq!(
             std::fs::read(&destination).expect("read preserved file"),
@@ -1094,7 +1141,7 @@ mod tests {
         );
         assert!(!part_path.exists());
 
-        let second_attempt = download_to_path(&url, &destination, 1024, |_, _, _| {})
+        let second_attempt = download_to_path(&retry_url, &destination, 1024, |_, _, _| {})
             .await
             .expect("retry fixture download");
         assert_eq!(second_attempt.0, 5);
@@ -1106,6 +1153,35 @@ mod tests {
 
         server.join().expect("join fixture server");
         std::fs::remove_dir_all(&directory).expect("remove fixture directory");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn checksum_failure_preserves_known_good_file() {
+        let directory = fixture_directory("download_checksum_failure");
+        std::fs::create_dir_all(&directory).expect("create checksum fixture directory");
+        let destination = directory.join("fixture.bin");
+        let part_path = directory.join("fixture.bin.part");
+        let metadata_path = directory.join("fixture.bin.part.meta");
+        std::fs::write(&destination, b"known-good").expect("write known-good file");
+
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind checksum fixture server");
+        let address = listener.local_addr().expect("read checksum fixture address");
+        let server = spawn_checksum_mismatch_fixture_server(listener);
+        let url = format!("http://{address}/fixture.bin");
+
+        let error = download_to_path(&url, &destination, 1024, |_, _, _| {})
+            .await
+            .expect_err("checksum mismatch must reject replacement");
+        assert!(error.contains("MD5 checksum verification failed"));
+        assert_eq!(
+            std::fs::read(&destination).expect("read preserved known-good file"),
+            b"known-good"
+        );
+        assert!(!part_path.exists());
+        assert!(!metadata_path.exists());
+
+        server.join().expect("join checksum fixture server");
+        std::fs::remove_dir_all(&directory).expect("remove checksum fixture directory");
     }
 
     #[tokio::test(flavor = "current_thread")]

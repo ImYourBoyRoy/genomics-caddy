@@ -8,6 +8,7 @@
   Outputs: a single progressbar; fills animate transform only (compositor).
   */
   import type { PipelineSegment } from "./pipelineTypes";
+  import Tooltip from "../Tooltip.svelte";
   import "../../../styles/components/loading-telemetry.css";
 
   interface Props {
@@ -15,15 +16,25 @@
     percent: number | null;
     label: string;
     caption?: string;
+    explanation?: string;
     determinate?: boolean;
   }
 
-  let { segments, percent, label, caption = "", determinate = true }: Props = $props();
+  let { segments, percent, label, caption = "", explanation = "", determinate = true }: Props = $props();
 </script>
 
 <div class="lt-progress">
   <div class="lt-progress-head">
-    <span class="lt-progress-caption">{caption || label}</span>
+    <span class="lt-progress-caption-wrap">
+      <span class="lt-progress-caption">{caption || label}</span>
+      {#if explanation}
+        <Tooltip label={label} description={explanation} placement="top" interactiveChildren>
+          <button type="button" class="lt-progress-info" aria-label={`Explain ${label.toLowerCase()}`}>
+            <span aria-hidden="true">i</span>
+          </button>
+        </Tooltip>
+      {/if}
+    </span>
     <span class="lt-progress-percent">
       {#if percent === null}<small>working</small>{:else}{percent}<small>%</small>{/if}
     </span>

@@ -25,6 +25,8 @@ describe('desktop bootstrap screen', () => {
     expect(screenSource).toContain('<PipelineStepList');
     expect(screenSource).toContain('<LoadingTelemetryStrip');
     expect(screenSource).toContain('<PipelineProgressBar');
+    expect(screenSource).toContain('estimate across the four startup steps');
+    expect(screenSource).toContain('not the percentage of your whole DNA that was scanned');
     expect(screenSource).not.toContain('class="live-status"');
     expect(screenSource).not.toContain('backdrop-filter:');
     expect(screenSource).not.toContain('animation: bootstrap-fade-up');

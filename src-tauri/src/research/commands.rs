@@ -126,7 +126,9 @@ pub async fn preview_research_scope(
     scope: ResearchScopeConfig,
 ) -> Result<ResearchScopePreview, String> {
     let db_path = get_db_path(&app);
+    let data_dir = get_data_dir(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         super::preview_research_scope(&db_path, sample_id, &scope)
     })
     .await
@@ -234,6 +236,7 @@ pub async fn start_research_job(
     force_reenrich: Option<bool>,
 ) -> Result<(), String> {
     let db_path = get_db_path(&app);
+    drop(crate::load_required_liftover_engine(&get_data_dir(&app), &db_path)?);
     let existing = tauri::async_runtime::spawn_blocking({
         let db_path = db_path.clone();
         move || super::get_research_job_from_db(&db_path, sample_id)
@@ -332,6 +335,7 @@ pub async fn resume_research_job(
     ollama_url: String,
 ) -> Result<(), String> {
     let db_path = get_db_path(&app);
+    drop(crate::load_required_liftover_engine(&get_data_dir(&app), &db_path)?);
     let existing = tauri::async_runtime::spawn_blocking({
         let db_path = db_path.clone();
         move || super::get_research_job_from_db(&db_path, sample_id)
@@ -412,6 +416,12 @@ pub async fn search_qdrant_evidence(
     limit: Option<u32>,
     trait_category: Option<String>,
 ) -> Result<Vec<QdrantHit>, String> {
+    if sample_id.is_some() {
+        drop(crate::load_required_liftover_engine(
+            &get_data_dir(&app),
+            &get_db_path(&app),
+        )?);
+    }
     let cfg = load_config(&app).await?;
     let vector =
         super::embed::embed_query_cached(&query, &ollama_url, &cfg.embedding_model).await?;
@@ -436,6 +446,10 @@ pub async fn search_qdrant_trait_discovery(
     limit: Option<u32>,
     ollama_url: String,
 ) -> Result<Vec<QdrantHit>, String> {
+    drop(crate::load_required_liftover_engine(
+        &get_data_dir(&app),
+        &get_db_path(&app),
+    )?);
     let cfg = load_config(&app).await?;
     let lim = limit.unwrap_or(50).min(100);
     let category = trait_category.filter(|c| !c.trim().is_empty());
@@ -483,7 +497,9 @@ pub async fn get_vector_promoted_findings(
     sample_id: i64,
 ) -> Result<Vec<crate::db::VectorPromotedFinding>, String> {
     let db_path = get_db_path(&app);
+    let data_dir = get_data_dir(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         let conn = crate::db::connect_sample_from_registry_path(&db_path, sample_id)
             .map_err(|e| e.to_string())?;
         crate::db::get_vector_promoted_findings(&conn, sample_id)
@@ -497,6 +513,12 @@ pub async fn get_vector_research_diagnostics(
     app: AppHandle,
     sample_id: Option<i64>,
 ) -> Result<VectorResearchDiagnostics, String> {
+    if sample_id.is_some() {
+        drop(crate::load_required_liftover_engine(
+            &get_data_dir(&app),
+            &get_db_path(&app),
+        )?);
+    }
     let cfg = load_config(&app).await?;
     let db_path = get_db_path(&app);
     let sid = sample_id;
@@ -607,6 +629,10 @@ pub async fn get_recent_finding_previews(
     sample_id: i64,
     limit: Option<u32>,
 ) -> Result<Vec<ResearchFindingPreview>, String> {
+    drop(crate::load_required_liftover_engine(
+        &get_data_dir(&app),
+        &get_db_path(&app),
+    )?);
     let cfg = load_config(&app).await?;
     let db_path = get_db_path(&app);
     let lim = limit.unwrap_or(12).clamp(1, 24) as usize;
@@ -719,6 +745,10 @@ pub async fn browse_vector_store(
     offset: Option<serde_json::Value>,
     rsid: Option<String>,
 ) -> Result<super::vector_store::VectorBrowsePage, String> {
+    drop(crate::load_required_liftover_engine(
+        &get_data_dir(&app),
+        &get_db_path(&app),
+    )?);
     let cfg = load_config(&app).await?;
     super::vector_store::browse_sample_points(
         &cfg,
@@ -739,6 +769,10 @@ pub async fn export_pack_draft_from_vectors(
     ollama_url: String,
     min_score: Option<f32>,
 ) -> Result<super::pack_draft::PackDraftExportResult, String> {
+    drop(crate::load_required_liftover_engine(
+        &get_data_dir(&app),
+        &get_db_path(&app),
+    )?);
     let cfg = load_config(&app).await?;
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);

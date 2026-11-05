@@ -27,7 +27,10 @@ describe('ReportHeader summary', () => {
     expect(source).toContain('of {totalMarkersChecked.toLocaleString()} report markers');
     expect(source).toContain('share of markers used in this report');
     expect(source).toContain('not the percentage of your whole genome that was read');
-    expect(source).toContain('Share of report markers with a usable DNA result');
+    expect(source).toContain('label="What does this percentage mean?"');
+    expect(source).toContain('share of curated report markers with a usable DNA result');
+    expect(source).toContain('not the share of your whole genome that was read or the chance of a disease');
+    expect(source).toContain('aria-label="Explain marker coverage percentage"');
     expect(source).toContain('role="progressbar"');
     expect(source).toContain('class="overview-coverage-meter"');
     expect(source).toContain('coveragePercent');

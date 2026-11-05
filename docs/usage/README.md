@@ -6,15 +6,21 @@ It is not a medical guide.
 ## Reference catalogs
 
 Signed GitHub builds do not ship ClinVar, dbSNP, GWAS, PharmGKB, or the
-liftover chain. After you install, open **Settings** (left sidebar footer) →
-**Data & updates** and run **Sync All Missing**. Wait until those catalogs are
-downloaded **and indexed**. For typical AncestryDNA / 23andMe GRCh37
-files, also use **Settings** → **Genome assembly** → **Download chain**. Marker packs
-that ship with the app are not a substitute for these databases. The current
-ClinVar variant and submission-summary downloads together are about 846 MB
-compressed; their local indexes require extra disk space. Transfer estimates
-use reported file size and observed speed; indexing reports processed rows and
-does not invent a byte-based ETA for decompressed data.
+liftover chain. Install the coordinate map from the welcome screen or **Settings**
+(left sidebar footer) → **Data & updates** → **Liftover assembly** before any DNA
+file is checked or analyzed. The app validates the chain, not just its presence.
+
+Download public reference catalogs from the welcome screen or **Settings** →
+**Data & updates** → **Sync All Missing**. Catalog downloads can run before a
+profile is imported; wait until each catalog is downloaded **and indexed**
+before relying on its results. The current ClinVar variant and submission
+summary downloads together are about 865 MB compressed; their local indexes
+require extra disk space. Transfer estimates use reported file size and
+observed speed; indexing reports processed rows and does not invent a
+byte-based ETA for decompressed data.
+
+If a profile was imported before the coordinate map was installed, reimport its
+source file afterward when you need mapped genomic positions.
 
 ## Limits
 

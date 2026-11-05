@@ -2,12 +2,13 @@
 // ./scripts/verify_vite_css_load.mjs
 /**
  * Purpose: Fail if Vite emits "failed to load virtual css module" for our Svelte components.
- * How to run: `pnpm run verify:css` (starts a temporary Vite dev server on :1420 — must be free).
+ * How to run: `pnpm run verify:css` (starts a temporary Vite dev server on an available loopback port).
  * Inputs: none.
  * Outputs: exit 0 on clean load; exit 1 with matching log lines on failure.
  */
 
 import { spawn } from "node:child_process";
+import { createServer } from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
 import { createWriteStream } from "node:fs";
 import { readdir, readFile, rm } from "node:fs/promises";
@@ -16,7 +17,24 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const logPath = path.join(root, "tmp-vite-css-verify.log");
-const port = 1420;
+
+async function findAvailablePort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    await new Promise((resolve) => server.close(resolve));
+    throw new Error("Could not reserve a temporary loopback port for Vite");
+  }
+  const port = address.port;
+  await new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+  return port;
+}
 
 async function listSvelteFiles(dir) {
   const out = [];
@@ -29,12 +47,12 @@ async function listSvelteFiles(dir) {
   return out;
 }
 
-async function waitForServer(timeoutMs = 60000) {
+async function waitForServer(port, timeoutMs = 60000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
       const res = await fetch(`http://127.0.0.1:${port}/`);
-      if (res.status) return;
+      if (res.ok) return;
     } catch {
       /* retry */
     }
@@ -44,6 +62,7 @@ async function waitForServer(timeoutMs = 60000) {
 }
 
 async function main() {
+  const port = await findAvailablePort();
   await rm(path.join(root, "node_modules/.vite"), { recursive: true, force: true });
   await rm(logPath, { force: true });
 
@@ -72,8 +91,9 @@ async function main() {
     env: {
       ...process.env,
       FORCE_COLOR: "0",
-      // vite.config uses TAURI_DEV_HOST; bind IPv4 so CI fetch(127.0.0.1) works.
+      // vite.config uses both values; bind IPv4 and avoid Tauri's fixed 1420 port.
       TAURI_DEV_HOST: "127.0.0.1",
+      GENOMICS_VITE_PORT: String(port),
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -82,8 +102,7 @@ async function main() {
 
   let failed = false;
   try {
-    await waitForServer();
-    await fetch(`http://127.0.0.1:${port}/`);
+    await waitForServer(port);
 
     // Parallel load (reproduces Vite 8 virtual-CSS races when emitCss is external).
     await Promise.all(
@@ -97,7 +116,8 @@ async function main() {
         await Promise.all(
           styleUrls.map(async (u) => {
             const url = u.startsWith("http") ? u : `http://127.0.0.1:${port}${u}`;
-            await fetch(url);
+            const styleResponse = await fetch(url);
+            if (!styleResponse.ok) throw new Error(`HTTP ${styleResponse.status} for ${u}`);
           })
         );
       })

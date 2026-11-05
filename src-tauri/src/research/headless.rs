@@ -25,6 +25,7 @@ pub async fn run_headless_sweep(args: HeadlessSweepArgs) -> Result<(), String> {
     let data_dir = paths::resolve_data_dir();
     paths::ensure_data_layout(&data_dir).map_err(|e| e.to_string())?;
     let db_path = paths::db_path(&data_dir);
+    drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
 
     let conn = crate::db::connect(&db_path).map_err(|e| e.to_string())?;
     config::install_research_debug_logging(&conn);

@@ -13,11 +13,19 @@ use crate::db_runtime;
 use crate::{get_data_dir, get_db_path};
 use tauri::AppHandle;
 
+fn require_liftover(app: &AppHandle) -> Result<(), String> {
+    let data_dir = get_data_dir(app);
+    let db_path = get_db_path(app);
+    drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn get_gnomad_context_cmd(
     app: AppHandle,
     request: GnomadLookupRequest,
 ) -> Result<GnomadContext, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     let data_dir = get_data_dir(&app);
     Ok(get_gnomad_context(&db_path, &data_dir, request).await)
@@ -28,6 +36,7 @@ pub async fn batch_enrich_gnomad_context_cmd(
     app: AppHandle,
     request: GnomadBatchRequest,
 ) -> Result<serde_json::Value, String> {
+    require_liftover(&app)?;
     let db_path = get_db_path(&app);
     let data_dir = get_data_dir(&app);
     let (progress, results) = batch_enrich_gnomad_context(&db_path, &data_dir, request).await;
@@ -80,6 +89,7 @@ pub async fn refresh_gnomad_frequency_cache_cmd(
     sample_id: i64,
     rsids: Vec<String>,
 ) -> Result<GnomadBatchProgress, String> {
+    require_liftover(&app)?;
     let candidates: Vec<String> = rsids
         .into_iter()
         .map(|rsid| rsid.trim().to_string())

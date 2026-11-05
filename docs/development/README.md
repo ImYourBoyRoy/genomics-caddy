@@ -20,7 +20,8 @@ changing the repo. Everyday installs come from GitHub Releases, not
 
 Pull requests and pushes to `master` run `.github/workflows/ci.yml`
 (packs, resource/marker audits, tests, `check`, frontend build, Clippy).
-That same job is required before a tagged desktop publish.
+The same workflow also runs downloader contract fixtures on Windows and
+macOS. Those jobs are required before a tagged desktop publish.
 
 ```bash
 git tag v0.2.5
@@ -108,6 +109,17 @@ closed gate instead of fixtures. Prefer this before a full
 Copy `.env.example` → `.env`. UI-saved Connections override `.env`. Never
 commit `.env`. ChatGPT plan sign-in needs no env vars and no API key —
 details: [../ai-chat/README.md](../ai-chat/README.md).
+
+Cursor machine-local MCP settings such as `.cursor/mcp.json` are ignored; the
+reusable skill files under `.cursor/skills/` remain tracked. Before publishing,
+inspect the staged diff and repository history for credentials. Local `.env`
+settings are intentionally excluded from Git.
+
+`scripts/purge_git_secrets.ps1` is a read-only preview by default. Its
+`-Execute` mode requires a clean worktree, an installed `git-filter-repo`, and
+typed confirmation before rewriting local history. Back up the repository
+first. It never pushes or changes remote state; inspect all refs and
+collaborators before any later publication.
 
 ## Layout (agents)
 

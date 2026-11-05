@@ -1,15 +1,28 @@
 // ./src/lib/utils/primaryCatalogs.ts
 /*
-Purpose: Shared definition of the four primary reference catalogs shown in the UI.
-Used by EmptyState / sidebar messaging so "missing" counts match what users see.
+Purpose: Shared catalog ID lists for compact attention messaging and full sync status.
+Used by the welcome and sidebar UI so "missing" counts match what users see.
 */
 
-/** Sidebar primary download rows (bundles count as one catalog each). */
+/** The smaller set surfaced in the sidebar's catalog attention summary. */
 export const PRIMARY_CATALOG_IDS = [
   'gwas_catalog',
   'clinvar_variant_summary',
   'pharmgkb_clinical_variants',
   'dbsnp_merged_json',
+] as const;
+
+/** Public reference files available from Sync All Missing (liftover is separate). */
+export const REFERENCE_CATALOG_IDS = [
+  'gwas_catalog',
+  'clinvar_variant_summary',
+  'clinvar_submission_summary',
+  'pharmgkb_clinical_variants',
+  'pharmgkb_genes',
+  'clingen_gene_validity',
+  'mane_select_summary',
+  'dbsnp_merged_json',
+  'dbsnp_withdrawn_json',
 ] as const;
 
 export type PrimaryCatalogId = (typeof PRIMARY_CATALOG_IDS)[number];

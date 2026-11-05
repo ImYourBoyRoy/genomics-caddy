@@ -71,14 +71,22 @@ export async function runPageBootstrap(callbacks: BootstrapCallbacks): Promise<B
       await yieldToUi();
       await bootstrapSleep(180);
 
-      callbacks.onPhase("report", "Analyzing genetic markers…");
-      await yieldToUi();
-      await callbacks.warmReport(pendingSample.id);
+      if (status.chain_present) {
+        callbacks.onPhase("report", "Analyzing genetic markers…");
+        await yieldToUi();
+        await callbacks.warmReport(pendingSample.id);
+      }
     }
 
     callbacks.onPhase(
       "ready",
-      status.sample_count > 0 ? "All systems ready — welcome back." : "Ready — import a genome to begin."
+      status.sample_count > 0
+        ? status.chain_present
+          ? "All systems ready — welcome back."
+          : "Install the liftover chain before opening or analyzing a profile."
+        : status.chain_present
+          ? "Ready — import a genome to begin."
+          : "Install the liftover chain before importing DNA."
     );
     await yieldToUi();
     await bootstrapSleep(520);

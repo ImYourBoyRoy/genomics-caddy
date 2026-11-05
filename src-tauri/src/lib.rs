@@ -111,8 +111,25 @@ pub(crate) fn get_db_path(app: &AppHandle) -> PathBuf {
     paths::db_path(&get_data_dir(app))
 }
 
-fn get_chain_path(app: &AppHandle) -> PathBuf {
-    offline::liftover_chain_path(&get_data_dir(app), &get_db_path(app))
+/// Load and validate the required coordinate chain before any profile is
+/// imported or interpreted. A file-presence check alone cannot reject a
+/// truncated or malformed download.
+pub(crate) fn load_required_liftover_engine(
+    data_dir: &Path,
+    db_path: &Path,
+) -> Result<liftover::LiftoverEngine, String> {
+    let chain_path = offline::liftover_chain_path(data_dir, db_path);
+    if !chain_path.is_file() {
+        return Err(
+            "Install the GRCh37-to-GRCh38 liftover chain before importing or analyzing DNA. Open Data controls and choose Download chain."
+                .to_string(),
+        );
+    }
+    liftover::LiftoverEngine::new(&chain_path).map_err(|error| {
+        format!(
+            "The liftover chain is present but invalid. Download it again before importing or analyzing DNA. Details: {error}"
+        )
+    })
 }
 
 #[derive(Debug, serde::Serialize, Clone)]
@@ -171,6 +188,7 @@ async fn inspect_genome(app: AppHandle, file_path: String) -> Result<GenomeImpor
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(load_required_liftover_engine(&data_dir, &db_path)?);
         let source_path = Path::new(&file_path);
         let source_file_sha256_before = sha256_file(source_path)?;
         let parsed = parser::parse_dna_file_with_metadata(&file_path, |_| {})?;
@@ -185,7 +203,7 @@ async fn inspect_genome(app: AppHandle, file_path: String) -> Result<GenomeImpor
             source_file_name: source_file_name(source_path),
             source_file_sha256,
             diagnostics: parsed.diagnostics,
-            liftover_available: offline::liftover_chain_path(&data_dir, &db_path).is_file(),
+            liftover_available: true,
         })
     })
     .await
@@ -296,7 +314,9 @@ async fn get_app_bootstrap(app: AppHandle) -> Result<db::AppBootstrapStatus, Str
     tauri::async_runtime::spawn_blocking(move || {
         let conn =
             db::open_user_db_with_progress(&db_path, Some(&app)).map_err(|e| e.to_string())?;
-        db::get_bootstrap_status(&conn, &data_dir)
+        let mut status = db::get_bootstrap_status(&conn, &data_dir)?;
+        status.chain_present = load_required_liftover_engine(&data_dir, &db_path).is_ok();
+        Ok(status)
     })
     .await
     .map_err(|e| format!("Bootstrap worker failed: {}", e))?
@@ -779,6 +799,9 @@ async fn import_genome(
     config::validate_import_path(&file_path)?;
     let app_handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
+        let data_dir = get_data_dir(&app_handle);
+        let db_path = paths::db_path(&data_dir);
+        let liftover_engine = load_required_liftover_engine(&data_dir, &db_path)?;
         let source_path = Path::new(&file_path);
         let source_file_sha256 = sha256_file(source_path)?;
         if source_file_sha256 != expected_source_file_sha256 {
@@ -839,25 +862,6 @@ async fn import_genome(
             )
             .ok();
 
-        let data_dir = get_data_dir(&app_handle);
-        let db_path = paths::db_path(&data_dir);
-        let chain_path = offline::liftover_chain_path(&data_dir, &db_path);
-        let liftover_engine = if chain_path.exists() {
-            match liftover::LiftoverEngine::new(&chain_path) {
-                Ok(engine) => Some(engine),
-                Err(e) => {
-                    eprintln!("Failed to initialize liftover engine: {}", e);
-                    None
-                }
-            }
-        } else {
-            println!(
-                "No liftover chain found at {:?}. Importing without GRCh38 coordinates.",
-                chain_path
-            );
-            None
-        };
-
         let mut conn = db::open_user_db(&db_path).map_err(|e| e.to_string())?;
 
         let app_clone = app_handle.clone();
@@ -866,7 +870,7 @@ async fn import_genome(
             &data_dir,
             &sample_name,
             &parsed.records,
-            liftover_engine.as_ref(),
+            Some(&liftover_engine),
             replace_existing_sample_id,
             Some(provenance),
             move |pct, status| {
@@ -944,7 +948,9 @@ async fn query_rsids(
     rsids: Vec<String>,
 ) -> Result<Vec<DbSnpRecord>, String> {
     let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(load_required_liftover_engine(&data_dir, &db_path)?);
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         db::query_by_rsids(&conn, sample_id, &rsids).map_err(|e| e.to_string())
     })
@@ -961,7 +967,9 @@ async fn query_region(
     end: u64,
 ) -> Result<Vec<DbSnpRecord>, String> {
     let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(load_required_liftover_engine(&data_dir, &db_path)?);
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         db::query_region(&conn, sample_id, &chromosome, start, end).map_err(|e| e.to_string())
     })
@@ -1003,6 +1011,9 @@ async fn generate_report(
         app_log::log("CMD_GENERATE_REPORT", &format!("Validation failed: {}", e));
         return Err(e.clone());
     }
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    drop(load_required_liftover_engine(&data_dir, &db_path)?);
     app.emit(
         "report-progress",
         report::ReportProgress {
@@ -1018,12 +1029,10 @@ async fn generate_report(
         },
     )
     .ok();
-    let data_dir = get_data_dir(&app);
     // Resolve an auto-managed gnomAD release before the synchronous report
     // worker reads its cache, so report metadata cannot lag behind the
     // release selected by the runtime lookup paths. Failure is best-effort:
     // the local report remains available when the public listing is offline.
-    let db_path = get_db_path(&app);
     let _ = research::gnomad::load_effective_gnomad_config(&db_path, &data_dir).await;
     let progress_app = app.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
@@ -1059,7 +1068,9 @@ async fn get_chromosome_counts(
     sample_id: i64,
 ) -> Result<std::collections::HashMap<String, i64>, String> {
     let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(load_required_liftover_engine(&data_dir, &db_path)?);
         let conn = db::connect_sample(&data_dir, sample_id).map_err(|e| e.to_string())?;
         db::get_chromosome_counts(&conn, sample_id).map_err(|e| e.to_string())
     })
@@ -1069,8 +1080,9 @@ async fn get_chromosome_counts(
 
 #[tauri::command]
 async fn check_chain_status(app: AppHandle) -> Result<bool, String> {
-    let chain_path = get_chain_path(&app);
-    Ok(chain_path.exists())
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    Ok(load_required_liftover_engine(&data_dir, &db_path).is_ok())
 }
 
 #[tauri::command]
@@ -1087,6 +1099,7 @@ async fn download_chain_file(app: AppHandle) -> Result<(), String> {
     )
     .await?;
     if result.errors.is_empty() {
+        drop(load_required_liftover_engine(&data_dir, &db_path)?);
         Ok(())
     } else {
         Err(result.errors.join("; "))
@@ -2349,4 +2362,48 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod liftover_prerequisite_tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_FIXTURE_ID: AtomicU64 = AtomicU64::new(0);
+
+    fn fixture_root() -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "genomics_caddy_liftover_prerequisite_{}_{}",
+            std::process::id(),
+            NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed)
+        ))
+    }
+
+    #[test]
+    fn required_liftover_rejects_missing_chain() {
+        let data_dir = fixture_root();
+        std::fs::create_dir_all(&data_dir).expect("create liftover fixture directory");
+        let db_path = data_dir.join("registry.sqlite");
+
+        let error = load_required_liftover_engine(&data_dir, &db_path)
+            .expect_err("missing chain must block DNA analysis");
+        assert!(error.contains("before importing or analyzing DNA"));
+
+        std::fs::remove_dir_all(&data_dir).expect("remove liftover fixture directory");
+    }
+
+    #[test]
+    fn required_liftover_rejects_malformed_chain_file() {
+        let data_dir = fixture_root();
+        std::fs::create_dir_all(&data_dir).expect("create liftover fixture directory");
+        let db_path = data_dir.join("registry.sqlite");
+        let chain_path = offline::liftover_chain_path(&data_dir, &db_path);
+        std::fs::write(&chain_path, b"not a valid UCSC chain").expect("write invalid chain");
+
+        let error = load_required_liftover_engine(&data_dir, &db_path)
+            .expect_err("malformed chain must block DNA analysis");
+        assert!(error.contains("present but invalid"));
+
+        std::fs::remove_dir_all(&data_dir).expect("remove liftover fixture directory");
+    }
 }

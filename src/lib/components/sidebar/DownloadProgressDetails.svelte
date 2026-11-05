@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DownloadProgressSample } from '../../utils/offlineDownloadProgress';
   import { formatTransferEta, formatTransferSize } from '../../utils/offlineDownloadProgress';
+  import Tooltip from '../common/Tooltip.svelte';
   import ProgressTrack from './ProgressTrack.svelte';
 
   interface Props {
@@ -36,7 +37,19 @@
         {formatTransferSize(progress.bytesDone)} received
       {/if}
     </span>
-    <span>{progress.percent >= 0 ? `${progress.percent}%` : 'Size unknown'}</span>
+    <Tooltip
+      label="Download percentage"
+      description="This is the share of the known file size received so far. It includes safely resumed bytes, but speed and time estimates use only the current transfer. A finished download may still need verification and indexing. If the total size is unknown, no percentage is shown."
+      interactiveChildren
+    >
+      <button
+        type="button"
+        class="download-progress-percent"
+        aria-label={progress.percent >= 0 ? `Explain ${progress.percent}% downloaded` : 'Explain unknown download size'}
+      >
+        {progress.percent >= 0 ? `${progress.percent}%` : 'Size unknown'}<span class="download-progress-info" aria-hidden="true">ⓘ</span>
+      </button>
+    </Tooltip>
   </div>
   <div class="download-progress-line download-progress-estimate">
     <span>{transferRate}</span>
@@ -84,6 +97,32 @@
   .download-progress-line span:last-child {
     flex: 0 0 auto;
     text-align: right;
+  }
+
+  .download-progress-percent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: help;
+    text-decoration: underline dotted var(--text-muted, var(--text-secondary));
+    text-underline-offset: 0.16em;
+  }
+
+  .download-progress-percent:focus-visible {
+    border-radius: 0.15rem;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .download-progress-info {
+    color: var(--accent);
+    font-size: 0.72rem;
+    text-decoration: none;
   }
 
   .download-progress-estimate {

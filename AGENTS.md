@@ -30,6 +30,15 @@ platform-specific artifact-preserving cleanup.
 
 ## Resource workflow
 
+- A successfully parsed GRCh37-to-GRCh38 liftover chain is a hard prerequisite
+  before reading/importing a user's DNA or running any sample-based report,
+  query, discovery, or research job. Validate the chain contents; file presence
+  alone is not sufficient. Enforce the gate in the native command layer as well
+  as the UI. Startup may load profile metadata but must not generate a DNA
+  report before the validated chain is available.
+- Reference catalog downloads may run before liftover or DNA import. The local
+  genotype-derived variant index must be skipped until liftover validates, and
+  the UI must clearly offer the missing catalog downloads.
 - `src/lib/marker-packs/` is the curated source of marker packs and support
   resources. Never remove a marker pack for cleanup or synchronization work.
 - Keep every curated pack synchronized with its mirror under

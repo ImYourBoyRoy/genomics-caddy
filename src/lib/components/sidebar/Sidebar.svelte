@@ -1547,6 +1547,8 @@ import { onMount, onDestroy } from 'svelte';
       disabledReason={sweepRunning
         ? 'Profile actions pause while a research sweep is running.'
         : 'The desktop runtime is unavailable.'}
+      selectionDisabled={!isChainDownloaded}
+      selectionDisabledReason="Install the required coordinate map before viewing this profile."
       {onSelectSample}
       {onOpenChromosomeContext}
       {onDeleteSample}
@@ -1562,8 +1564,11 @@ import { onMount, onDestroy } from 'svelte';
       {importError}
       {importSuccess}
       disabled={sweepRunning || !runtimeAvailable}
+      {isChainDownloaded}
+      {isDownloadingChain}
       {onBrowseFile}
       {onImportGenome}
+      {onDownloadChain}
     />
   </div>
 

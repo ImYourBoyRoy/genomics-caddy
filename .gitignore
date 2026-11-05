@@ -8,6 +8,13 @@ node_modules
 .env.*
 !.env.example
 
+# Cursor machine-local MCP settings can contain access tokens; keep reusable
+# .cursor/skills and rules under version control without committing credentials.
+.cursor/mcp.json
+.cursor/mcp.jsonc
+.cursor/settings.local.json
+.cursor/**/*.local.json
+
 # Local data & temporary scratch script caches
 /data/*
 !/data/.gitkeep

@@ -1051,6 +1051,15 @@ pub async fn sync_offline_assets_subset(
                 }
             }
             AssetKind::Derived => {
+                if def.id == OfflineAssetId::Tier2VariantLocus
+                    && crate::load_required_liftover_engine(data_dir, db_path).is_err()
+                {
+                    let message =
+                        "Skipped the DNA-based variant index. Install the liftover chain before analyzing profile data.";
+                    emit_sync_phase(app, def.id.as_str(), "skip", 2, message);
+                    result.messages.push(message.to_string());
+                    continue;
+                }
                 let indexed_rows = with_conn(db_path, |conn| {
                     if def.id == OfflineAssetId::Tier2VariantLocus {
                         Ok(crate::offline::tier2::count_variant_locus_rows(data_dir, conn))

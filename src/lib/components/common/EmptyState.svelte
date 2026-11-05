@@ -2,14 +2,14 @@
 <script lang="ts">
   import type { AppPaths } from '../../types/genomics';
   import type { OfflineUpdateCheck } from '../../types/research';
-  import { PRIMARY_CATALOG_IDS } from '../../utils/primaryCatalogs';
+  import { REFERENCE_CATALOG_IDS } from '../../utils/primaryCatalogs';
   import { countFreshInstalledUpdates } from '../../utils/offlineUpdates';
   import '$lib/styles/components/empty-state.css';
 
   /*
   Purpose: Welcome / onboarding screen when no genome profile is selected.
   Responsibilities:
-  - Brand intro + primary CTAs (import genome, download reference DBs).
+  - Brand intro + ordered setup: install the coordinate map, download catalogs, then import DNA.
   - Optional path diagnostics for troubleshooting.
   */
 
@@ -29,7 +29,7 @@
     appPaths,
     offlineStatus = null,
     offlineStatusFresh = false,
-    isChainDownloaded = true,
+    isChainDownloaded = false,
     runtimeAvailable = true,
     onImportGenome,
     onDownloadDatabases,
@@ -37,9 +37,9 @@
     onOpenHelp,
   }: Props = $props();
 
-  function assetReady(asset: { local_present: boolean; row_count: number; local_bytes: number }): boolean {
+  function assetReady(asset: { local_present: boolean; row_count: number }): boolean {
     if (!asset.local_present) return false;
-    // Primary catalogs are ready only when SQLite has indexed rows.
+    // A catalog is ready only when its local index contains rows.
     return asset.row_count > 0;
   }
 
@@ -52,17 +52,17 @@
       }
     }
     let ready = 0;
-    for (const id of PRIMARY_CATALOG_IDS) {
+    for (const id of REFERENCE_CATALOG_IDS) {
       const asset = byId.get(id);
       if (asset && assetReady(asset)) ready += 1;
     }
     // A persisted update flag is actionable only after a complete fresh probe.
     // Missing files remain part of the download/attention path instead.
-    const updates = countFreshInstalledUpdates(offlineStatus, offlineStatusFresh, PRIMARY_CATALOG_IDS);
+    const updates = countFreshInstalledUpdates(offlineStatus, offlineStatusFresh, REFERENCE_CATALOG_IDS);
     return {
       ready,
-      total: PRIMARY_CATALOG_IDS.length,
-      missing: PRIMARY_CATALOG_IDS.length - ready,
+      total: REFERENCE_CATALOG_IDS.length,
+      missing: REFERENCE_CATALOG_IDS.length - ready,
       updates,
     };
   });
@@ -72,23 +72,30 @@
   <img src="/logo.png" alt="Genomics Caddy Logo" class="welcome-logo" />
   <h1>Genomics Caddy</h1>
   <p class="welcome-lead">
-    Import your AncestryDNA or 23andMe export, then enrich it with local ClinVar, GWAS, PharmGKB, and dbSNP
-    <em>rsID history</em> — all offline on your machine. Allele frequencies come from the local gnomAD cache when available (not from dbSNP).
+    Set up the coordinate map and reference catalogs, then import your AncestryDNA or 23andMe export. Standard reports run on this machine.
   </p>
 
   <div class="welcome-cta-grid">
-    <button type="button" class="welcome-cta primary" onclick={() => onImportGenome?.()} disabled={!runtimeAvailable}>
-      <span class="welcome-cta-kicker">Step 1</span>
-      <strong>Import genome file</strong>
-      <span class="welcome-cta-hint">Browse a raw DNA export in the sidebar</span>
-    </button>
+    {#if !isChainDownloaded}
+      <button type="button" class="welcome-cta primary" onclick={() => onDownloadChain?.()} disabled={!runtimeAvailable}>
+        <span class="welcome-cta-kicker">Step 1 · Required</span>
+        <strong>Install coordinate map</strong>
+        <span class="welcome-cta-hint">Required before DNA files can be checked or analyzed. This maps genome positions; it does not change DNA calls.</span>
+      </button>
+    {:else}
+      <div class="welcome-cta welcome-cta-static" role="status">
+        <span class="welcome-cta-kicker">Step 1 · Complete</span>
+        <strong>Coordinate map installed</strong>
+        <span class="welcome-cta-hint">The coordinate requirement is met. Reference catalogs add broader research results.</span>
+      </div>
+    {/if}
 
-    <button type="button" class="welcome-cta" onclick={() => onDownloadDatabases?.()} disabled={!runtimeAvailable}>
+    <button type="button" class="welcome-cta" class:primary={isChainDownloaded && (catalogSummary === null || catalogSummary.missing > 0)} onclick={() => onDownloadDatabases?.()} disabled={!runtimeAvailable}>
       <span class="welcome-cta-kicker">Step 2</span>
-      <strong>Download reference catalogs</strong>
+      <strong>Download all reference catalogs</strong>
       <span class="welcome-cta-hint">
         {#if catalogSummary === null}
-          GWAS, ClinVar, PharmGKB, and dbSNP (rsID merge/withdrawn history — not alleles/AF)
+          ClinVar, GWAS, ClinPGx, ClinGen, MANE, and dbSNP reference files
         {:else if catalogSummary.missing > 0}
           {catalogSummary.ready}/{catalogSummary.total} catalogs ready · {catalogSummary.missing} still missing
         {:else if catalogSummary.updates > 0}
@@ -99,23 +106,22 @@
       </span>
     </button>
 
-    <div class="welcome-cta welcome-cta-static" role="note">
+    <button type="button" class="welcome-cta" class:primary={isChainDownloaded && catalogSummary !== null && catalogSummary.missing === 0} onclick={() => onImportGenome?.()} disabled={!runtimeAvailable || !isChainDownloaded} title={!isChainDownloaded ? 'Install the coordinate map before importing DNA.' : undefined}>
       <span class="welcome-cta-kicker">Step 3</span>
-      <strong>Allele frequencies (gnomAD)</strong>
+      <strong>Import DNA file</strong>
       <span class="welcome-cta-hint">
-        Report AF chips use the local gnomAD variant cache / VCF indexes from Vector Research — not the dbSNP merge map.
-        Offline dbSNP is rsID history only; NCBI <code>refsnp-chr*</code> allele JSON is not ingested yet.
+        {#if !isChainDownloaded}
+          Available after the required coordinate map is installed
+        {:else}
+          Choose a local .txt, .csv, .tsv, or .zip export
+        {/if}
       </span>
-    </div>
-
-    {#if !isChainDownloaded}
-      <button type="button" class="welcome-cta" onclick={() => onDownloadChain?.()} disabled={!runtimeAvailable}>
-        <span class="welcome-cta-kicker">Optional</span>
-        <strong>Download liftover chain</strong>
-        <span class="welcome-cta-hint">Maps GRCh37 coordinates to GRCh38</span>
-      </button>
-    {/if}
+    </button>
   </div>
+
+  <p class="welcome-data-note" role="note">
+    Reference catalogs download separately and can take time to install. The app shows each download and indexing status. Allele-frequency data is a separate optional gnomAD resource.
+  </p>
 
   <div class="welcome-aside-row">
     <p class="welcome-aside">Use Data controls for downloads, profiles, and progress while you work.</p>

@@ -77,6 +77,7 @@ pub async fn build_offline_tier2(
 ) -> Result<OfflineSyncResult, String> {
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
+    drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
     build_tier2_for_sample(&data_dir, &db_path, sample_id, Some(&app)).await
 }
 
@@ -96,6 +97,7 @@ pub async fn export_discovery_findings(
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         super::discovery_export::export_discovery_jsons(&data_dir, &db_path, sample_id)
     })
     .await
@@ -119,6 +121,7 @@ pub async fn query_discovery_findings(
     let limit = limit.unwrap_or(100) as usize;
     let offset = offset.unwrap_or(0) as usize;
     tauri::async_runtime::spawn_blocking(move || {
+        drop(crate::load_required_liftover_engine(&data_dir, &db_path)?);
         super::discovery_export::query_discovery_findings(
             &data_dir,
             &db_path,

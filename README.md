@@ -100,26 +100,27 @@ app after it starts.
 
 ## First launch
 
-1. Start Genomics Caddy. Choose your `.txt`, `.csv`, `.tsv`, or ZIP in the left
-   sidebar. A clean local check starts the import automatically; skipped rows,
-   warnings, an unrecognized format/build, or an existing profile name pause
-   for review and confirmation.
-   Once local profile indexing is complete, use **Raw Browser** and local
-   genome views while reference catalogs download. The completed import screen
-   advances automatically; if it remains visible, choose **Continue to report**.
-   Report preparation shows its current step, completed marker or genome-scan
-   counts, and exact match counts. It also shows elapsed time and an estimate
-   for the active scan after enough progress has been measured.
-2. Left sidebar footer → **Settings** → **Data & updates** → **Sync All Missing** to install the
-   public catalogs used for database-backed annotations and full-genome
-   discovery. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions show as
-   downloaded **and indexed** before relying on those catalog-backed results.
-   The two current ClinVar summary downloads total about 846 MB compressed; the
-   local SQLite indexes need additional disk space. The downloader uses the
-   server-reported size and measured transfer rate, and only resumes when the
-   saved file and remote byte range still match.
-3. Typical AncestryDNA / 23andMe files are GRCh37. **Liftover assembly** →
-   **Download chain** so coordinates can map to GRCh38.
+1. Install the required GRCh37-to-GRCh38 coordinate map from the welcome
+   screen or **Settings → Data & updates → Liftover assembly**. The app checks
+   that the map can be parsed before it enables DNA import or analysis.
+2. Choose **Download all reference catalogs** on the welcome screen, or open
+   **Settings → Data & updates → Sync All Missing**. Downloads work before a DNA
+   profile is imported. Wait until ClinVar, dbSNP, GWAS, PharmGKB, and companions
+   show as downloaded **and indexed** before relying on those catalog-backed
+   results. The two current ClinVar summary downloads total about 865 MB
+   compressed; the local SQLite indexes need additional disk space. The
+   downloader uses server-reported size and measured transfer rate, and resumes
+   only when the saved file and remote byte range still match. A notice in the
+   workspace shows when one or more reference catalogs still need installation.
+3. After the coordinate map is installed, choose your `.txt`, `.csv`, `.tsv`, or
+   ZIP export in the left sidebar. A clean local check starts the import
+   automatically; skipped rows, warnings, an unrecognized format/build, or an
+   existing profile name pause for review and confirmation. The completed
+   import screen advances automatically; if it remains visible, choose
+   **Continue to report**. Report preparation shows its current step, completed
+   marker or genome-scan counts, and exact match counts. It also shows elapsed
+   time and an estimate for the active scan after enough progress has been
+   measured.
 4. Read **Simple** mode first. Use **Clinical** or **Compare** for sources and
    technical detail.
 5. Fill **Context** / **Diary** yourself if you want food, gut, cycle, menopause,
@@ -127,10 +128,12 @@ app after it starts.
    Report cards use compact, authored context badges when a finding is
    biologically or life-stage relevant; extra badges stay behind `+N more`.
 
+The coordinate map is required before any profile file is checked or analyzed.
 Catalog-backed annotations and full-genome discovery remain incomplete until
 their required indexes finish. A missing database result is not evidence that
-there is no association. The curated marker-pack report and local DNA browsing
-are separate from the status of those public catalogs.
+there is no association. Catalog downloads can run before DNA import; the
+curated marker-pack report and local DNA browsing still require the coordinate
+map to be installed and validated.
 
 The desktop shell adapts to the available WebView viewport, including high-DPI
 display scaling. Long startup, import, welcome, and data-control content scroll
@@ -158,10 +161,19 @@ Change it from **Settings → Library folder** (sidebar footer). To wipe a porta
 
 ## What it does
 
-- Imports AncestryDNA / 23andMe style files locally; clean checks start the
+- Imports AncestryDNA / 23andMe style files locally after validating the required
+  coordinate map; clean checks start the
   import automatically, while skipped rows, warnings, or profile replacement
   require review
 - Scores curated marker packs into Simple, Clinical, and Compare reports
+- The Digestive & Gut pack includes food-digestion markers and selected
+  PPI-metabolism context. Research-level IBS associations are labeled as
+  context; they do not diagnose digestive conditions, measure natural
+  stomach-acid production, or prescribe diet or medication.
+- Skin & Hair includes a small-effect acne research marker and explicit limits:
+  DNA cannot identify a makeup/skincare allergen, predict product-triggered
+  acne or rosacea, or tell whether topical alcohol will irritate your skin.
+  Symptoms and product history guide those questions.
 - Adds a compact, expandable index of broader ClinVar, GWAS, ClinGen, and
   pharmacogenomic references. It labels these separately from condition-specific
   ClinVar lab reports because some links describe a gene or marker broadly.
@@ -181,6 +193,9 @@ Change it from **Settings → Library folder** (sidebar footer). To wipe a porta
   share of possible risk-associated copies found among scorable curated markers;
   they are not disease probabilities, and sections with clinical-confirm-first
   risk markers do not show a percentage.
+- Download percentages show bytes received out of a known catalog file size.
+  They do not mean that indexing or analysis is finished; the download panel
+  explains the percentage and its time estimate.
 - Keeps POTS/dysautonomia as symptom and clinician-evaluation context in the
   AI/clinician exports; it does not score a consumer-DNA POTS risk model.
 - Adds symptom-led Brain, Mood & Attention support with research links and
@@ -222,6 +237,16 @@ Change it from **Settings → Library folder** (sidebar footer). To wipe a porta
 
 Screenshots above use a **synthetic** example genome, not a real person’s DNA.
 Simple mode is the public-safe view (no raw calls on the cards).
+
+## Privacy and security
+
+Standard profile import, reports, and reference-catalog indexing run locally.
+DNA is not automatically uploaded. If you connect an external AI or research
+service, review the [AI chat data-flow notes](docs/ai-chat/README.md) before
+sending selected findings or raw calls to that provider. Do not put DNA exports,
+local databases, `.env` values, or access tokens in GitHub commits. Development
+setup and repository-secret handling are documented in
+[Development](docs/development/README.md).
 
 ## Docs
 

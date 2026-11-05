@@ -14,6 +14,41 @@ on:
   workflow_dispatch:
 
 jobs:
+  downloader-platform:
+    name: Downloader contract (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          version: "12"
+          runtime: node@26
+          install: false
+          cache: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: node ./scripts/pnpm_unlocked.mjs install
+
+      - name: Sync SvelteKit generated tsconfig
+        run: pnpm exec svelte-kit sync
+
+      - name: Build frontend for the Tauri build script
+        run: pnpm run build
+
+      - name: Run downloader contract tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib offline::download::tests
+
   validate:
     name: Validate
     runs-on: ubuntu-latest
@@ -23,7 +58,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup pnpm and Node.js
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           version: "12"
           runtime: node@26
@@ -73,7 +108,7 @@ jobs:
         run: pnpm run audit:dna-fixtures
 
       - name: Sync SvelteKit generated tsconfig
-        run: npx svelte-kit sync
+        run: pnpm exec svelte-kit sync
 
       - name: Run frontend tests
         run: pnpm test

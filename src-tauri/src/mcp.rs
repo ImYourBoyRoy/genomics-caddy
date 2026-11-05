@@ -782,7 +782,16 @@ async fn mcp_offline_tool(name: &str, args: Value, db_path: &Path) -> Result<Val
 /// Generates a fresh report from the current sample database and marker-pack
 /// resources. This is shared by the normal report tool and the explicit
 /// reload tool so both paths use identical report construction.
+fn require_mcp_liftover(db_path: &Path) -> Result<(), String> {
+    let data_dir = db_path
+        .parent()
+        .ok_or_else(|| "Could not resolve the local data directory".to_string())?;
+    drop(crate::load_required_liftover_engine(data_dir, db_path)?);
+    Ok(())
+}
+
 async fn mcp_generate_report(args: &Value, db_path: &Path) -> Result<Value, String> {
+    require_mcp_liftover(db_path)?;
     let sample_id = args
         .get("sample_id")
         .and_then(|v| v.as_i64())
@@ -845,6 +854,14 @@ async fn execute_tool(
     db_path: &PathBuf,
     allow_write: bool,
 ) -> Result<Value, String> {
+    // MCP catalog downloads are allowed before liftover; sample-scoped reads
+    // and analysis are not. Tier 2's derived index also checks the chain in
+    // the shared sync path before touching profile data.
+    if args.get("sample_id").and_then(Value::as_i64).is_some()
+        && !matches!(name, "sync_offline_asset" | "sync_offline_data")
+    {
+        require_mcp_liftover(db_path)?;
+    }
     if mcp_tool_requires_write(name) && !allow_write {
         return Err(format!(
             "Tool '{}' requires --mcp-write (mutating MCP operation)",
@@ -880,6 +897,7 @@ async fn execute_tool(
             Ok(json!(samples))
         }
         "get_variants_by_rsid" => {
+            require_mcp_liftover(db_path)?;
             let sample_id = args
                 .get("sample_id")
                 .and_then(|v| v.as_i64())
@@ -903,6 +921,7 @@ async fn execute_tool(
             Ok(json!(results))
         }
         "get_variants_in_region" => {
+            require_mcp_liftover(db_path)?;
             let sample_id = args
                 .get("sample_id")
                 .and_then(|v| v.as_i64())
@@ -947,6 +966,7 @@ async fn execute_tool(
             Ok(manifest)
         }
         "get_report_for_packs" => {
+            require_mcp_liftover(db_path)?;
             let sample_id = args
                 .get("sample_id")
                 .and_then(|v| v.as_i64())
@@ -1160,9 +1180,9 @@ async fn execute_tool(
         }
         "check_chain_status" => {
             let app_data_dir = db_path.parent().ok_or("Could not resolve app data dir")?;
-            let chain_path = app_data_dir.join("GRCh37_to_GRCh38.chain.gz");
+            let chain_path = crate::offline::liftover_chain_path(app_data_dir, db_path);
             Ok(json!({
-                "chain_file_exists": chain_path.exists(),
+                "chain_file_exists": crate::load_required_liftover_engine(app_data_dir, db_path).is_ok(),
                 "chain_file_path": chain_path.to_string_lossy().to_string()
             }))
         }
@@ -1172,7 +1192,8 @@ async fn execute_tool(
         }
         "get_app_bootstrap" => {
             let data_dir = db_path.parent().ok_or("Could not resolve data directory")?;
-            let status = crate::db::get_bootstrap_status(&conn, data_dir)?;
+            let mut status = crate::db::get_bootstrap_status(&conn, data_dir)?;
+            status.chain_present = crate::load_required_liftover_engine(data_dir, db_path).is_ok();
             Ok(serde_json::to_value(status).map_err(|e| format!("Serialization error: {}", e))?)
         }
         "get_research_job_status" => {
@@ -1857,7 +1878,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread")]
-    async fn mcp_offline_sync_and_reload_return_terminal_status() {
+    async fn mcp_skips_dna_index_and_reload_until_liftover_is_installed() {
         static NEXT_ID: std::sync::atomic::AtomicUsize =
             std::sync::atomic::AtomicUsize::new(0);
         let data_dir = std::env::temp_dir().join(format!(
@@ -1951,7 +1972,14 @@ mod tests {
         )
         .await;
         let sync = tool_payload(sync_response);
-        assert_eq!(sync["assets_synced"][0], "tier2_variant_locus");
+        assert!(sync["assets_synced"].as_array().is_some_and(Vec::is_empty));
+        assert!(sync["messages"]
+            .as_array()
+            .is_some_and(|messages| messages.iter().any(|message| {
+                message
+                    .as_str()
+                    .is_some_and(|message| message.contains("Skipped the DNA-based variant index"))
+            })));
         assert!(sync["errors"].as_array().is_some_and(Vec::is_empty));
         assert_eq!(sync["final_status"]["total_updates_available"], 0);
         assert_eq!(sync["final_status"]["remote_check"]["assets_failed"], 0);
@@ -1963,9 +1991,8 @@ mod tests {
             &None,
         )
         .await;
-        let reload = tool_payload(reload_response);
-        assert_eq!(reload["status"], "ready");
-        assert_eq!(reload["sample_id"].as_i64(), Some(sample_id));
+        assert!(reload_response.result.is_none());
+        assert!(reload_response.error.is_some());
 
         std::fs::remove_dir_all(&data_dir).expect("remove MCP fixture directory");
     }

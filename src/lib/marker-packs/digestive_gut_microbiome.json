@@ -290,28 +290,39 @@
       "effect_allele": "A",
       "impact": "Mucosal secretor status / gut microbial and norovirus context",
       "evidence_tier": "B_replicated_common_marker",
-      "interpretation": "FUT2 non-secretor status affects mucosal glycans, some microbiome features, norovirus susceptibility, and B12 context. It does not diagnose gut disease.",
+      "interpretation": "FUT2 rs601338-A is one loss-of-function allele, common in several ancestry groups. Two A copies often correspond to non-secretor status in those groups, but other FUT2 variants are common in East and Southeast Asian populations. FUT2 is linked to some virus-specific infection and microbiome findings; this marker cannot show infection, individual protection, H. pylori status, microbiome composition, or a digestive diagnosis.",
       "do_not_claim": [
         "microbiome diagnosis",
-        "B12 deficiency diagnosis"
+        "B12 deficiency diagnosis",
+        "secretor status across ancestries from one SNP",
+        "protection from norovirus or other infections",
+        "H. pylori infection or ulcer diagnosis"
       ],
       "confirm_with": [
-        "B12/MMA/homocysteine",
-        "infection history",
-        "gut symptoms"
+        "clinical testing if an active infection is suspected",
+        "medical assessment for persistent gut symptoms",
+        "B12 testing when clinically indicated"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "raw_dna_limitation": "This is one FUT2 site. Overall secretor function depends on both gene copies and population-specific variants, including rs1047781 in many East and Southeast Asian populations. Consumer DNA cannot determine microbiome composition or predict an individual's infection outcome.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
         {
-          "name": "NHGRI-EBI GWAS Catalog",
-          "url": "https://www.ebi.ac.uk/gwas/",
-          "accessed": "2026-07-01",
-          "evidence_type": "Curated GWAS Catalog",
-          "conflict_of_interest": "Public academic/NIH-EBI resource",
-          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+          "name": "Natural Selection of a Virus-Protective FUT2 Variant Following the Transition to Agriculture",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12550361/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Population biobank and human intestinal organoid study",
+          "conflict_of_interest": "See publication disclosures",
+          "notes": "Biobank analyses linked FUT2 rs601338-A with lower viral intestinal infection risk, with protection concentrated in homozygous carriers; intestinal organoids supported resistance to selected norovirus and rotavirus strains. The study also reported gallstone and duodenal-ulcer associations and no association with H. pylori serology. These are population and pathogen-specific findings, not personal predictions."
+        },
+        {
+          "name": "Wacklin et al., Faecal microbiota composition in adults is associated with FUT2",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3986271/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Small human microbiome study",
+          "conflict_of_interest": "See publication disclosures",
+          "notes": "The study compared 14 non-secretors and 57 secretors of western European descent. Its small, ancestry-limited findings do not identify an individual's microbiome; later work has noted that observed microbiome differences may depend on context and exposure."
         }
       ]
     },
@@ -374,6 +385,60 @@
           "evidence_type": "Curated GWAS Catalog",
           "conflict_of_interest": "Public academic/NIH-EBI resource",
           "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        }
+      ]
+    },
+    {
+      "rsid": "rs9290264",
+      "gene": "SI",
+      "variant_name": "SI p.Val15Phe (sucrase-isomaltase; research context)",
+      "effect_allele": "T",
+      "impact": "Possible lower carbohydrate-digesting enzyme activity; IBS research context",
+      "evidence_tier": "C_candidate_OR_mechanistic",
+      "interpretation": "The SI p.Val15Phe variant showed lower enzyme activity in lab work and a modest IBS association in a multicohort study. A small sucrose-challenge study did not find significant baseline symptom differences between genotypes. This remains research context; it does not diagnose IBS or sucrose intolerance or predict diet response.",
+      "do_not_claim": [
+        "IBS diagnosis",
+        "congenital sucrase-isomaltase deficiency or sucrose-intolerance diagnosis",
+        "diet response or need for a low-sucrose/low-starch diet",
+        "enzyme activity from a consumer SNP alone"
+      ],
+      "confirm_with": [
+        "clinical assessment of persistent digestive symptoms",
+        "clinician-directed sucrose breath or disaccharidase testing when indicated",
+        "dietitian-guided symptom evaluation when appropriate"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "This common SNP is not a diagnostic test. Consumer arrays may omit it and do not comprehensively detect rare SI variants, phase, or enzyme activity; a negative call cannot rule out sucrase-isomaltase deficiency.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "A"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI dbSNP rs9290264 forward alleles on GRCh38; SI transcript c.43G>T complements to genomic C>A",
+      "sources": [
+        {
+          "name": "Henström et al., Functional variants in the sucrase-isomaltase gene associate with increased risk of IBS",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5563477/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Multicohort case-control and functional study",
+          "conflict_of_interest": "See publication disclosures",
+          "notes": "In 1,887 cases and controls, p.Val15Phe showed a modest association with IBS (strongest in diarrhea/mixed groups; OR 1.36) and about 35% lower enzyme activity in vitro. Not a diagnostic or treatment-validation study."
+        },
+        {
+          "name": "Zamfir-Taranu et al., SI Val15Phe and sucrose challenge in IBS",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13018826/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Primary pilot clinical study",
+          "conflict_of_interest": "An author disclosed an unrestricted grant and consulting fees from QOL Medical LLC",
+          "notes": "The 33-person pilot found no significant baseline bowel-symptom differences by genotype; symptom differences after challenge were not statistically significant. This limits clinical prediction."
+        },
+        {
+          "name": "NCBI dbSNP rs9290264 variant record",
+          "url": "https://www.ncbi.nlm.nih.gov/snp/rs9290264",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant nomenclature and allele reference",
+          "conflict_of_interest": "National Center for Biotechnology Information reference record",
+          "notes": "Confirms SI NM_001041.4:c.43G>T (p.Val15Phe); transcript effect allele T maps to GRCh37/38 forward C>A on the reverse-strand SI gene. Used for variant identity and allele orientation, not disease pathogenicity."
         }
       ]
     },
@@ -565,20 +630,21 @@
       "gene": "ALDH2",
       "variant_name": "ALDH2*2 alcohol-acetaldehyde variant",
       "effect_allele": "A",
-      "impact": "Acetaldehyde accumulation / GI cancer and reflux exposure context",
+      "impact": "Alcohol breakdown, acetaldehyde exposure, and flushing context",
       "evidence_tier": "A_clinically_relevant_but_not_diagnostic",
-      "interpretation": "ALDH2 loss of function raises acetaldehyde exposure after alcohol and can affect flushing, reflux-like symptoms, and alcohol-related tissue risk.",
+      "interpretation": "Reduced ALDH2 activity can allow acetaldehyde to build up after drinking alcohol and is associated with flushing. This marker does not diagnose a disease or set a safe amount to drink. It does not predict a reaction to alcohol in skincare or cosmetics, acne, or cosmetic allergy.",
       "do_not_claim": [
         "cancer diagnosis",
-        "safe alcohol amount"
+        "safe alcohol amount",
+        "topical alcohol sensitivity",
+        "acne or cosmetic allergy prediction"
       ],
       "confirm_with": [
         "alcohol reaction history",
-        "GI symptoms",
         "clinician counseling"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "raw_dna_limitation": "A consumer DNA result cannot show current alcohol use, symptoms, enzyme activity, or disease. The association concerns alcohol consumed by mouth, not alcohol applied to skin.",
       "clinical_confirmation_required": false,
       "variant_type": "snp",
       "sources": [
@@ -589,6 +655,14 @@
           "evidence_type": "Curated GWAS Catalog",
           "conflict_of_interest": "Public academic/NIH-EBI resource",
           "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+        },
+        {
+          "name": "Rwere et al. ALDH2 variants and acetaldehyde accumulation after alcohol challenge",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/39075523/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Human alcohol-challenge and biochemical study",
+          "conflict_of_interest": "Peer-reviewed study",
+          "notes": "The study describes rs671-associated acetaldehyde accumulation and flushing after alcohol consumption; it does not establish topical skincare sensitivity or acne risk."
         }
       ]
     },
@@ -1071,65 +1145,139 @@
     },
     {
       "rsid": "rs4244285",
-      "gene": "CYP2C19*2",
-      "variant_name": "PPI metabolism marker",
-      "effect_allele": "study_reported_allele",
-      "impact": "PPI response and reflux-treatment context",
-      "evidence_tier": "C_candidate_OR_mechanistic",
-      "interpretation": "CYP2C19*2 is included as a digestive/metabolic context marker. Use it only with symptoms, labs, diet history, and objective testing.",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*2 no-function allele component (PPI context)",
+      "effect_allele": "A",
+      "impact": "One CYP2C19 allele component relevant to exposure to selected proton-pump inhibitors",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The A allele marks the CYP2C19*2 no-function component. It contributes to drug-metabolizer phenotype only with the other inherited allele and relevant variants. This single marker does not measure natural stomach-acid production or determine PPI treatment.",
       "do_not_claim": [
-        "GI diagnosis",
-        "treatment plan from genotype"
+        "PPI response or dose from one SNP",
+        "low or high natural stomach-acid production",
+        "GERD or other digestive diagnosis",
+        "medication change from consumer DNA"
       ],
       "confirm_with": [
-        "symptom diary",
-        "labs/testing",
-        "clinician review"
+        "complete validated CYP2C19 diplotype or phenotype",
+        "exact PPI and treatment indication",
+        "prescriber or pharmacist review"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
-      "clinical_confirmation_required": false,
+      "raw_dna_limitation": "A consumer SNP call is one allele component. Arrays may omit other CYP2C19 star alleles or structural variation; a single call cannot assign phenotype or guide medication dosing.",
+      "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["G", "A"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI dbSNP rs4244285 GRCh38.p14 forward alleles; A is the CYP2C19*2 defining allele",
       "sources": [
         {
-          "name": "NHGRI-EBI GWAS Catalog",
-          "url": "https://www.ebi.ac.uk/gwas/",
-          "accessed": "2026-07-01",
-          "evidence_type": "Curated GWAS Catalog",
-          "conflict_of_interest": "Public academic/NIH-EBI resource",
-          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+          "name": "CPIC: CYP2C19 and Proton Pump Inhibitor Guideline",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/PPI/2020/32770672.pdf",
+          "accessed": "2026-11-04",
+          "evidence_type": "CPIC clinical pharmacogenomic guideline",
+          "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+          "notes": "The guideline uses a complete CYP2C19 phenotype for selected PPIs and indications. These single SNPs are allele components only; they do not assign a phenotype or dose."
+        },
+        {
+          "name": "NCBI dbSNP rs4244285 RefSNP report",
+          "url": "https://www.ncbi.nlm.nih.gov/snp/rs4244285",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant identity and genomic forward alleles",
+          "conflict_of_interest": "National Center for Biotechnology Information reference record",
+          "notes": "Reports GRCh38.p14 position and forward-orientation alleles. Used for marker identity/orientation; CPIC provides clinical interpretation."
+        }
+      ]
+    },
+    {
+      "rsid": "rs4986893",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*3 no-function allele component (PPI context)",
+      "effect_allele": "A",
+      "impact": "One CYP2C19 allele component relevant to exposure to selected proton-pump inhibitors",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The A allele marks the CYP2C19*3 no-function component, which is more frequent in some East Asian and Oceanian populations than in many European cohorts. It contributes to phenotype only with the other inherited allele and relevant variants. This single marker does not measure natural stomach-acid production or determine PPI treatment.",
+      "do_not_claim": [
+        "PPI response or dose from one SNP",
+        "low or high natural stomach-acid production",
+        "GERD or other digestive diagnosis",
+        "medication change from consumer DNA"
+      ],
+      "confirm_with": [
+        "complete validated CYP2C19 diplotype or phenotype",
+        "exact PPI and treatment indication",
+        "prescriber or pharmacist review"
+      ],
+      "effect_direction": "context_dependent",
+      "raw_dna_limitation": "A consumer SNP call is one allele component. Arrays may omit other CYP2C19 star alleles or structural variation; a single call cannot assign phenotype or guide medication dosing.",
+      "clinical_confirmation_required": true,
+      "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["G", "A"],
+      "allele_orientation_verified": true,
+      "orientation_source": "CYP2C19 c.636G>A allele nomenclature and GRCh38 forward orientation",
+      "sources": [
+        {
+          "name": "CPIC: CYP2C19 and Proton Pump Inhibitor Guideline",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/PPI/2020/32770672.pdf",
+          "accessed": "2026-11-04",
+          "evidence_type": "CPIC clinical pharmacogenomic guideline",
+          "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+          "notes": "The guideline uses a complete CYP2C19 phenotype for selected PPIs and indications. These single SNPs are allele components only; they do not assign a phenotype or dose."
+        },
+        {
+          "name": "NCBI dbSNP rs4986893 RefSNP report",
+          "url": "https://www.ncbi.nlm.nih.gov/snp/rs4986893",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant identity and genomic forward alleles",
+          "conflict_of_interest": "National Center for Biotechnology Information reference record",
+          "notes": "Used to identify the GRCh38 forward-strand variant; the CYP2C19*3 defining substitution is c.636G>A. Clinical interpretation comes from CPIC."
         }
       ]
     },
     {
       "rsid": "rs12248560",
-      "gene": "CYP2C19*17",
-      "variant_name": "PPI rapid metabolism marker",
-      "effect_allele": "study_reported_allele",
-      "impact": "PPI response and reflux-treatment context",
-      "evidence_tier": "C_candidate_OR_mechanistic",
-      "interpretation": "CYP2C19*17 is included as a digestive/metabolic context marker. Use it only with symptoms, labs, diet history, and objective testing.",
+      "gene": "CYP2C19",
+      "variant_name": "CYP2C19*17 increased-function allele component (PPI context)",
+      "effect_allele": "T",
+      "impact": "One CYP2C19 allele component relevant to exposure to selected proton-pump inhibitors",
+      "evidence_tier": "A_clinical_guideline",
+      "interpretation": "The T allele marks the increased-function CYP2C19*17 component. Its PPI relevance depends on the complete diplotype, drug, and indication. This single marker does not measure natural stomach-acid production or determine PPI treatment.",
       "do_not_claim": [
-        "GI diagnosis",
-        "treatment plan from genotype"
+        "PPI response or dose from one SNP",
+        "low or high natural stomach-acid production",
+        "GERD or other digestive diagnosis",
+        "medication change from consumer DNA"
       ],
       "confirm_with": [
-        "symptom diary",
-        "labs/testing",
-        "clinician review"
+        "complete validated CYP2C19 diplotype or phenotype",
+        "exact PPI and treatment indication",
+        "prescriber or pharmacist review"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
-      "clinical_confirmation_required": false,
+      "raw_dna_limitation": "A consumer SNP call is one allele component. Arrays may omit other CYP2C19 star alleles or structural variation; a single call cannot assign phenotype or guide medication dosing.",
+      "clinical_confirmation_required": true,
       "variant_type": "snp",
+      "source_build": "GRCh38",
+      "expected_plus_alleles": ["C", "T"],
+      "allele_orientation_verified": true,
+      "orientation_source": "NCBI dbSNP rs12248560 GRCh38.p14 forward alleles; T is the CYP2C19*17 defining allele",
       "sources": [
         {
-          "name": "NHGRI-EBI GWAS Catalog",
-          "url": "https://www.ebi.ac.uk/gwas/",
-          "accessed": "2026-07-01",
-          "evidence_type": "Curated GWAS Catalog",
-          "conflict_of_interest": "Public academic/NIH-EBI resource",
-          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+          "name": "CPIC: CYP2C19 and Proton Pump Inhibitor Guideline",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/PPI/2020/32770672.pdf",
+          "accessed": "2026-11-04",
+          "evidence_type": "CPIC clinical pharmacogenomic guideline",
+          "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
+          "notes": "The guideline uses a complete CYP2C19 phenotype for selected PPIs and indications. These single SNPs are allele components only; they do not assign a phenotype or dose."
+        },
+        {
+          "name": "NCBI dbSNP rs12248560 RefSNP report",
+          "url": "https://www.ncbi.nlm.nih.gov/snp/rs12248560",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant identity and genomic forward alleles",
+          "conflict_of_interest": "National Center for Biotechnology Information reference record",
+          "notes": "Reports GRCh38.p14 position and forward-orientation alleles. The CYP2C19*17 defining variant is c.-806C>T; used for identity/orientation, not a dose conclusion."
         }
       ]
     },
@@ -1434,27 +1582,38 @@
       "effect_allele": "N/A",
       "impact": "Mucosal glycan and microbiome-host context",
       "evidence_tier": "C_research_only",
-      "interpretation": "Host genetics can shape microbiome niches, but raw DNA cannot tell someone their microbiome composition. Use stool testing only when clinically useful.",
+      "interpretation": "Host genetics can shape mucosal glycans and may influence microbiome niches, but raw DNA cannot tell someone their microbiome composition. FUT2 has ancestry-specific reduced-function variants, including rs601338 and rs1047781. Associations with infection and digestive conditions vary by population and pathogen; they do not diagnose H. pylori, ulcers, gallstones, or an active infection. Use stool testing only when clinically indicated.",
       "do_not_claim": [
-        "microbiome diagnosis"
+        "microbiome diagnosis",
+        "secretor status from a single marker",
+        "infection resistance or infection status",
+        "ulcer, H. pylori, or gallstone diagnosis"
       ],
       "confirm_with": [
-        "diet history",
-        "stool testing if indicated",
-        "B12 status"
+        "clinically relevant symptoms and history",
+        "stool testing when a clinician indicates it",
+        "laboratory testing for a specific nutrient or infection when indicated"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Common DNA markers are context modifiers, not diagnoses. Confirm with phenotype, labs, and clinical context.",
+      "raw_dna_limitation": "FUT2 variants differ by ancestry, and rs1047781 is an A/T strand-ambiguous site in raw exports without verified orientation. This pack does not score that variant or infer secretor status from it. None of these genes reveals microbiome composition.",
       "clinical_confirmation_required": false,
       "variant_type": "polygenic_panel",
       "sources": [
         {
-          "name": "NHGRI-EBI GWAS Catalog",
-          "url": "https://www.ebi.ac.uk/gwas/",
-          "accessed": "2026-07-01",
-          "evidence_type": "Curated GWAS Catalog",
-          "conflict_of_interest": "Public academic/NIH-EBI resource",
-          "notes": "Use for curated genome-wide association signals and trait/locus validation. GWAS loci are usually small-effect and ancestry/model dependent."
+          "name": "Natural Selection of a Virus-Protective FUT2 Variant Following the Transition to Agriculture",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12550361/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Population biobank and human intestinal organoid study",
+          "conflict_of_interest": "See publication disclosures",
+          "notes": "Reports distinct FUT2 reduced-function alleles in European and East Asian populations. rs1047781 is A/T and strand-ambiguous in consumer data without documented orientation, so it is not included as a scored marker. Reported infection and digestive-disease associations remain population-specific."
+        },
+        {
+          "name": "Detection of the weak-secretor rs1047781 variant",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33835481/",
+          "accessed": "2026-11-04",
+          "evidence_type": "Variant and assay study",
+          "conflict_of_interest": "The authors declared no conflict of interest",
+          "notes": "Describes rs1047781 (385A>T) as a weak-secretor variant prevalent in East and Southeast Asian populations. The assay validation does not make a consumer-array call a complete secretor-status test."
         }
       ]
     }

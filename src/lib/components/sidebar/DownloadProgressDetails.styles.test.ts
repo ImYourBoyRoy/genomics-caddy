@@ -8,6 +8,17 @@ describe('download progress details presentation', () => {
     expect(source).toContain('Total size unavailable · ETA unavailable');
     expect(source).toContain('Resumed · {formatTransferSize(progress.resumedBytes)} retained');
     expect(source).toContain('progress.etaSeconds == null');
+    expect(source).toContain('Download percentage');
+    expect(source).toContain('share of the known file size received so far');
+    expect(source).toContain('finished download may still need verification and indexing');
+  });
+
+  it('makes the percentage explanation available to keyboard and screen-reader users', () => {
+    expect(source).toContain('<Tooltip');
+    expect(source).toContain('interactiveChildren');
+    expect(source).toContain('type="button"');
+    expect(source).toContain('aria-label={progress.percent >= 0 ? `Explain ${progress.percent}% downloaded`');
+    expect(source).toContain('.download-progress-percent:focus-visible');
   });
 
   it('uses a compact accessible progress surface that can wrap in the sidebar', () => {

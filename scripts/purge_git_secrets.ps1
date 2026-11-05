@@ -1,48 +1,110 @@
-# ./scripts/purge_git_secrets.ps1
-# Removes sensitive paths from entire git history (local repo rewrite).
-# Run from repo root: pwsh -File scripts/purge_git_secrets.ps1
+# Safely preview (or explicitly rewrite) local Git history to remove sensitive paths.
+# Default is read-only. No package installation, push, or remote mutation is performed.
 #
-# WARNING: Rewrites history. If you have a remote, you must force-push afterward
-# and all collaborators must re-clone. Rotate any secrets that were ever committed.
+# Preview: pwsh -File scripts/purge_git_secrets.ps1
+# Execute: pwsh -File scripts/purge_git_secrets.ps1 -Execute
+
+param(
+    [switch]$Execute
+)
 
 $ErrorActionPreference = "Stop"
-Set-Location (Split-Path $PSScriptRoot -Parent)
+$repoRoot = Split-Path $PSScriptRoot -Parent
+Set-Location $repoRoot
 
 $pathsToPurge = @(
     "AncestryDNA.txt"
 )
 
-Write-Host "Genomics Caddy — git history purge" -ForegroundColor Cyan
-Write-Host "Targets: $($pathsToPurge -join ', ')"
-Write-Host ""
-
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw "git not found on PATH"
 }
 
-$filterRepo = Get-Command git-filter-repo -ErrorAction SilentlyContinue
-if (-not $filterRepo) {
-    Write-Host "Installing git-filter-repo via pip..." -ForegroundColor Yellow
-    python -m pip install --user git-filter-repo
-    $env:Path += [System.IO.Path]::PathSeparator + "$env:APPDATA\Python\Python314\Scripts"
-    $env:Path += [System.IO.Path]::PathSeparator + "$env:LOCALAPPDATA\Programs\Python\Python314\Scripts"
+$actualRoot = (& git rev-parse --show-toplevel 2>$null)
+if ($LASTEXITCODE -ne 0 -or -not $actualRoot) {
+    throw "Run this script from inside the target Git repository."
+}
+$actualRoot = [System.IO.Path]::GetFullPath($actualRoot.Trim())
+if ($actualRoot -ne [System.IO.Path]::GetFullPath($repoRoot)) {
+    throw "Repository root mismatch; refusing to inspect or rewrite another repository."
+}
+
+Write-Host "Genomics Caddy — Git history purge" -ForegroundColor Cyan
+Write-Host "Target paths: $($pathsToPurge -join ', ')"
+Write-Host ""
+
+$objects = @(& git rev-list --objects --all)
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not inspect reachable Git objects."
+}
+$pathMatches = @(
+    foreach ($line in $objects) {
+        foreach ($target in $pathsToPurge) {
+            if ($line -match ("\s" + [regex]::Escape($target) + "$")) { $line }
+        }
+    }
+)
+
+if ($pathMatches.Count -gt 0) {
+    Write-Host "Reachable history contains matching path entries:" -ForegroundColor Yellow
+    $pathMatches | ForEach-Object { Write-Host "  $_" }
+} else {
+    Write-Host "No matching paths were found in reachable history." -ForegroundColor Green
+}
+
+if (-not $Execute) {
+    Write-Host ""
+    Write-Host "Dry run only. No files, refs, or Git history were changed."
+    Write-Host "If removal is needed, review the matches, back up the repository, then run with -Execute."
+    exit 0
+}
+
+if ($pathMatches.Count -eq 0) {
+    Write-Host "Nothing to rewrite."
+    exit 0
+}
+
+$status = @(& git status --porcelain)
+if ($LASTEXITCODE -ne 0) { throw "Could not inspect the worktree state." }
+if ($status.Count -gt 0) {
+    throw "The worktree must be completely clean before a history rewrite. Commit or back up unrelated changes, then retry."
 }
 
 if (-not (Get-Command git-filter-repo -ErrorAction SilentlyContinue)) {
-    throw "git-filter-repo not available. Install with: python -m pip install git-filter-repo"
+    throw "git-filter-repo is required but was not found. Install it using its official instructions, then retry; this script will not install software automatically."
 }
 
-$pathArgs = ($pathsToPurge | ForEach-Object { "--path"; $_ }) -join " "
-Write-Host "Running: git filter-repo --invert-paths $pathArgs --force" -ForegroundColor Yellow
-& git filter-repo --invert-paths @(
-    foreach ($p in $pathsToPurge) { "--path"; $p }
-) --force
+Write-Host ""
+Write-Host "This rewrites local Git history and can affect collaborators and remote refs." -ForegroundColor Red
+Write-Host "Back up the repository first. No push will be performed by this script."
+$confirmation = Read-Host "Type REWRITE HISTORY to continue"
+if ($confirmation -cne "REWRITE HISTORY") {
+    throw "Confirmation did not match; no history was changed."
+}
+
+$filterArgs = @("filter-repo", "--invert-paths")
+foreach ($target in $pathsToPurge) {
+    $filterArgs += @("--path", $target)
+}
+$filterArgs += "--force"
+& git @filterArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "git-filter-repo failed. Inspect the repository and its backup before retrying."
+}
+
+$remainingObjects = @(& git rev-list --objects --all)
+if ($LASTEXITCODE -ne 0) { throw "History rewrite ran, but post-rewrite verification failed." }
+$remainingPathMatches = @(
+    foreach ($line in $remainingObjects) {
+        foreach ($target in $pathsToPurge) {
+            if ($line -match ("\s" + [regex]::Escape($target) + "$")) { $line }
+        }
+    }
+)
+if ($remainingPathMatches.Count -gt 0) {
+    throw "The rewrite completed but matching paths remain reachable. Inspect the repository and backup before publishing."
+}
 
 Write-Host ""
-Write-Host "Done. Verify with:" -ForegroundColor Green
-Write-Host "  git log --all --oneline -- AncestryDNA.txt"
-Write-Host "  git rev-list --objects --all | Select-String AncestryDNA"
-Write-Host ""
-Write-Host "If this repo was pushed to GitHub, run:" -ForegroundColor Yellow
-Write-Host "  git push --force --all"
-Write-Host "Rotate Qdrant/NCBI keys if they ever appeared in commits."
+Write-Host "Local history rewrite verified; target paths are no longer reachable." -ForegroundColor Green
+Write-Host "No remote push was performed. Review remotes, refs, and collaborators before any publication."

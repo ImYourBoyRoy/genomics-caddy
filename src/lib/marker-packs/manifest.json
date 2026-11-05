@@ -101,7 +101,7 @@
     {
       "id": "skin_hair_dermatology",
       "label": "Skin, Hair & Dermatology Context",
-      "description": "Pigmentation, UV sensitivity, eczema/psoriasis/acne context, scarring, collagen skin matrix, androgenic hair loss, and melanoma guardrails.",
+      "description": "Pigmentation, UV sensitivity, eczema/psoriasis/acne context, one small-effect acne GWAS marker, scarring, collagen skin matrix, androgenic hair loss, and melanoma guardrails. DNA does not identify makeup allergens, skincare reactions, acne triggers, or rosacea triggers; use symptoms and product history.",
       "default_enabled": true,
       "requires_clinical_confirmation": false
     },

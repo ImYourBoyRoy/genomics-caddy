@@ -70,6 +70,7 @@
 
   import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "$lib/types/genomics";
   import type { ResourceSyncTelemetry } from "$lib/utils/resourceSyncTelemetry";
+  import { REFERENCE_CATALOG_IDS } from "$lib/utils/primaryCatalogs";
   import type { VariantNavTarget } from "$lib/constants/traitCategories";
   import {
     EMPTY_PROFILE_CONTEXT,
@@ -358,6 +359,15 @@ function selectTab(tab: string) {
   let activeSampleId = $state<number | null>(null);
   let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
   let offlineStatusFreshForWelcome = $state(false);
+  let missingReferenceCatalogCount = $derived.by(() => {
+    const status = offlineStatusForWelcome;
+    if (!status) return null;
+    const assets = new Map(status.tiers.flatMap((tier) => tier.assets).map((asset) => [asset.asset_id, asset]));
+    return REFERENCE_CATALOG_IDS.filter((id) => {
+      const asset = assets.get(id);
+      return !asset?.local_present || asset.row_count <= 0;
+    }).length;
+  });
   let sidebarApi = $state<{
     syncAllMissing: () => Promise<void>;
   } | null>(null);
@@ -662,7 +672,7 @@ function selectTab(tab: string) {
       selectedSample = pendingSample;
       // warmReport was already called inside bootstrap — only re-trigger if it
       // failed to produce a report (e.g. due to an error path that cleared the state).
-      if (!generatedReport && !isGeneratingReport) {
+      if (isChainDownloaded && !generatedReport && !isGeneratingReport) {
         void triggerReport();
       }
     }
@@ -673,6 +683,9 @@ function selectTab(tab: string) {
   async function refreshChainStatus() {
     try {
       isChainDownloaded = await checkChainStatus();
+      if (isChainDownloaded && selectedSample && !generatedReport && !isGeneratingReport) {
+        await warmReport(selectedSample.id);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -688,6 +701,10 @@ function selectTab(tab: string) {
       },
       (message) => dialogStore.alert(message),
     );
+    if (isChainDownloaded && selectedSample) {
+      await warmReport(selectedSample.id);
+      maybeOfferInconclusiveContext(selectedSample, generatedReport != null);
+    }
   }
 
   async function refreshSamples() {
@@ -699,6 +716,7 @@ function selectTab(tab: string) {
   async function selectSample(sample: GenomeSample): Promise<void> {
     selectedSample = sample;
     generatedReport = null;
+    if (!isChainDownloaded) return;
     await runTriggerReport({
       selectedSample: sample,
       generatedReport: null,
@@ -714,6 +732,7 @@ function selectTab(tab: string) {
   }
 
   async function openSampleChromosomeContext(sample: GenomeSample): Promise<void> {
+    if (!isChainDownloaded) return;
     if (selectedSample?.id !== sample.id) await selectSample(sample);
     openChromosomeContextDialog(sample);
   }
@@ -728,6 +747,10 @@ function selectTab(tab: string) {
   async function importGenome(e: Event) {
     pendingImportConfirmation = null;
     importReplacingExisting = false;
+    if (!isChainDownloaded) {
+      importError = "Install the liftover chain before checking or importing a DNA file.";
+      return;
+    }
     await runImportGenome(e, {
       filePath,
       sampleNameInput,
@@ -817,10 +840,12 @@ function selectTab(tab: string) {
   }
 
   async function triggerReport() {
+    if (!isChainDownloaded) return;
     await runTriggerReport({ selectedSample, generatedReport, warmReportFn: warmReport });
   }
 
   async function reloadReport() {
+    if (!isChainDownloaded) return;
     await runReloadReport({ selectedSample, warmReportFn: warmReport });
   }
 
@@ -983,6 +1008,37 @@ function selectTab(tab: string) {
           />
         {/if}
       {:else}
+        {#if !isChainDownloaded}
+          <section class="liftover-required-state card" role="status" aria-live="polite" aria-labelledby="liftover-required-title">
+            <span class="liftover-required-kicker">One setup step left</span>
+            <h2 id="liftover-required-title">Install the coordinate map to continue</h2>
+            <p>
+              This reference file lets the app line up DNA positions with its research databases. It does not change your DNA calls.
+            </p>
+            <p class="liftover-required-note">
+              A profile imported before this file was installed may need to be imported again afterward so its positions can be mapped.
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              disabled={isDownloadingChain || !runtimeAvailable}
+              onclick={downloadChain}
+            >
+              {isDownloadingChain ? 'Installing coordinate map…' : 'Install coordinate map'}
+            </button>
+          </section>
+        {:else}
+        {#if missingReferenceCatalogCount !== null && missingReferenceCatalogCount > 0}
+          <section class="catalog-reminder" role="status" aria-live="polite">
+            <div>
+              <strong>{missingReferenceCatalogCount} of {REFERENCE_CATALOG_IDS.length} reference catalogs still need to be installed</strong>
+              <p>These catalogs add ClinVar, GWAS, ClinPGx, ClinGen, MANE, and dbSNP results. DNA stays local while the catalogs download.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" disabled={!runtimeAvailable || isResourceSyncing} onclick={handleWelcomeDownloadDatabases}>
+              {isResourceSyncing ? 'Downloading…' : 'Download missing catalogs'}
+            </button>
+          </section>
+        {/if}
         <header class="content-header">
           <div class="content-header-top">
             <div class="profile-summary">
@@ -1247,6 +1303,7 @@ function selectTab(tab: string) {
             {/if}
           {/if}
         </div>
+        {/if}
       {/if}
       {#if selectedSample !== null}
         <footer class="app-reference-note" role="note">
@@ -1260,6 +1317,78 @@ function selectTab(tab: string) {
 <GlobalDialogs />
 
 <style>
+  .catalog-reminder,
+  .liftover-required-state {
+    width: min(100%, 52rem);
+    margin: 0 auto 1rem;
+    padding: clamp(1rem, 2vw, 1.4rem);
+    box-sizing: border-box;
+    border: 1px solid var(--status-warning-border);
+    border-radius: 0.9rem;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+  }
+
+  .catalog-reminder {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .catalog-reminder strong,
+  .liftover-required-state h2 {
+    color: var(--text-primary);
+  }
+
+  .catalog-reminder p,
+  .liftover-required-state p {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .liftover-required-state {
+    margin-top: clamp(1.5rem, 5vh, 4rem);
+    text-align: center;
+  }
+
+  .liftover-required-kicker {
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .liftover-required-state h2 {
+    margin: 0.45rem 0 0;
+    font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+  }
+
+  .liftover-required-state p {
+    max-width: 40rem;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .liftover-required-state .liftover-required-note {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  .liftover-required-state button {
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 700px) {
+    .catalog-reminder {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+
   .sex-summary {
     display: inline-flex;
     align-items: center;

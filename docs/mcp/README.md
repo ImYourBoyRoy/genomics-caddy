@@ -170,4 +170,6 @@ Write-path fixture (temporary synthetic sample only):
 pnpm run audit:mcp:write
 ```
 
-These audits do not print genotype values.
+The write-path audit checks that the DNA-derived variant index is refused before
+liftover is installed, then installs the chain before building the index and
+reloading the report. These audits do not print genotype values.

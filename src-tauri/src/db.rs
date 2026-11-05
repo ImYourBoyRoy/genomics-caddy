@@ -2894,6 +2894,7 @@ pub fn get_bootstrap_status(
     let samples = get_samples(conn).map_err(|e| e.to_string())?;
     let db_path = crate::paths::db_path(data_dir);
     let chain_path = crate::offline::liftover_chain_path(data_dir, &db_path);
+    let chain_valid = crate::load_required_liftover_engine(data_dir, &db_path).is_ok();
     let sample_table_count = |table: &str| {
         samples
             .iter()
@@ -2912,13 +2913,17 @@ pub fn get_bootstrap_status(
         data_dir: data_dir.to_string_lossy().to_string(),
         db_path: db_path.to_string_lossy().to_string(),
         chain_path: chain_path.to_string_lossy().to_string(),
-        chain_present: chain_path.exists(),
+        chain_present: chain_valid,
         env_path: crate::config::recommended_env_path()
             .to_string_lossy()
             .to_string(),
         sample_count: samples.len() as u64,
-        genotype_count: sample_table_count("genotypes"),
-        discovered_findings_count: sample_table_count("discovered_findings"),
+        genotype_count: if chain_valid { sample_table_count("genotypes") } else { 0 },
+        discovered_findings_count: if chain_valid {
+            sample_table_count("discovered_findings")
+        } else {
+            0
+        },
         gwas_reference_count: count_query("SELECT COUNT(*) FROM gwas_reference"),
         evidence_library_count: count_query("SELECT COUNT(*) FROM evidence_library"),
         samples,

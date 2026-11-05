@@ -14,3 +14,4 @@
 - Verify catalog checksums before replacing an existing file, preserving the last known-good copy when a new download fails validation.
 - Ignore Cursor machine-local MCP and settings files that may contain access tokens.
 - Stabilize the loading helix by synchronizing both strands on one animation timeline and removing forced per-dot compositor layers.
+- Add the Windows Common Controls manifest to Rust test binaries so native downloader tests start correctly.

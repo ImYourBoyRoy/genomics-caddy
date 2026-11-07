@@ -18,7 +18,7 @@
   import { reproductiveContextOptionIsSuggestedForGeneticSex } from '../../utils/reproductiveContext';
   import { formatDisplaySex } from '../../utils/uiLabels';
   import { formatGeneticSexLabel } from '../../utils/uiLabels';
-  import '$lib/styles/components/context-panel.css';
+  import '#lib/styles/components/context-panel.css';
 
   interface Props {
     selectedSample: GenomeSample;

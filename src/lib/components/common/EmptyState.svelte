@@ -4,7 +4,7 @@
   import type { OfflineUpdateCheck } from '../../types/research';
   import { REFERENCE_CATALOG_IDS } from '../../utils/primaryCatalogs';
   import { countFreshInstalledUpdates } from '../../utils/offlineUpdates';
-  import '$lib/styles/components/empty-state.css';
+  import '#lib/styles/components/empty-state.css';
 
   /*
   Purpose: Welcome / onboarding screen when no genome profile is selected.

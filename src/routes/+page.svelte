@@ -12,33 +12,33 @@
     getResearchJobStatus,
     getOllamaToken,
     logJsError,
-  } from "$lib/api/tauri";
-  import type { ChatMessage } from "$lib/types/agent";
-  import type { ResearchJob } from "$lib/types/research";
+  } from "#lib/api/tauri.js";
+  import type { ChatMessage } from "#lib/types/agent.js";
+  import type { ResearchJob } from "#lib/types/research.js";
   import {
     startResearchEventListeners,
     stopResearchEventListeners,
-  } from "$lib/research/researchEvents";
+  } from "#lib/research/researchEvents.js";
   import {
     jobRefs,
     researchEventContext,
     applyLiveFieldsFromJob,
-  } from "$lib/research/liveProgress.svelte";
+  } from "#lib/research/liveProgress.svelte.js";
 
   // Svelte 5 components
-  import AppShell from "$lib/components/layout/AppShell.svelte";
-  import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
-  import EmptyState from "$lib/components/common/EmptyState.svelte";
-  import ImportWorkspaceState from "$lib/components/common/ImportWorkspaceState.svelte";
-  import BootstrapOverlay from "$lib/components/common/bootstrap/BootstrapOverlay.svelte";
+  import AppShell from "#lib/components/layout/AppShell.svelte";
+  import Sidebar from "#lib/components/sidebar/Sidebar.svelte";
+  import EmptyState from "#lib/components/common/EmptyState.svelte";
+  import ImportWorkspaceState from "#lib/components/common/ImportWorkspaceState.svelte";
+  import BootstrapOverlay from "#lib/components/common/bootstrap/BootstrapOverlay.svelte";
   import {
     DB_TICKER_MESSAGES,
     PHASE_ORDER,
     type BootstrapPhase,
-  } from "$lib/components/common/bootstrap/bootstrapPhases";
-  import { dialogStore } from "$lib/utils/dialogState.svelte";
-  import GlobalDialogs from "$lib/components/common/GlobalDialogs.svelte";
-  import { runPageBootstrap } from "$lib/utils/pageBootstrap";
+  } from "#lib/components/common/bootstrap/bootstrapPhases.js";
+  import { dialogStore } from "#lib/utils/dialogState.svelte.js";
+  import GlobalDialogs from "#lib/components/common/GlobalDialogs.svelte";
+  import { runPageBootstrap } from "#lib/utils/pageBootstrap.js";
   import {
     runImportGenome,
     warmReport as runWarmReport,
@@ -50,41 +50,41 @@
     computeReportMarkerCounts,
     browseGenomeFile,
     downloadReferenceChain,
-  } from "$lib/utils/pageSampleHandlers";
-  import { navigateToVariant as goToVariant } from "$lib/utils/variantNavigation";
-  import { resolveInitialOllamaUrl } from "$lib/utils/ollamaSettings";
-  import { installAgentUiBridge } from "$lib/utils/agentUiBridge";
-  import { installDesktopContextMenu } from "$lib/utils/desktopContextMenu";
-  import { formatDisplaySex, formatGeneticSexLabel } from "$lib/utils/uiLabels";
+  } from "#lib/utils/pageSampleHandlers.js";
+  import { navigateToVariant as goToVariant } from "#lib/utils/variantNavigation.js";
+  import { resolveInitialOllamaUrl } from "#lib/utils/ollamaSettings.js";
+  import { installAgentUiBridge } from "#lib/utils/agentUiBridge.js";
+  import { installDesktopContextMenu } from "#lib/utils/desktopContextMenu.js";
+  import { formatDisplaySex, formatGeneticSexLabel } from "#lib/utils/uiLabels.js";
   import {
     hasSeenReproductiveContextPrompt,
     markReproductiveContextPromptSeen,
-  } from "$lib/utils/reproductiveContext";
+  } from "#lib/utils/reproductiveContext.js";
   import type { Component } from "svelte";
 
   // Stylesheet imports
-  import "$lib/styles/theme.css";
-  import "$lib/styles/motion.css";
-  import "$lib/styles/print.css";
-  import "$lib/styles/components/context-panel.css";
+  import "#lib/styles/theme.css";
+  import "#lib/styles/motion.css";
+  import "#lib/styles/print.css";
+  import "#lib/styles/components/context-panel.css";
 
-  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "$lib/types/genomics";
-  import type { ResourceSyncTelemetry } from "$lib/utils/resourceSyncTelemetry";
-  import { REFERENCE_CATALOG_IDS } from "$lib/utils/primaryCatalogs";
-  import type { VariantNavTarget } from "$lib/constants/traitCategories";
+  import type { GenomeSample, AppPaths, AppBootstrapStatus, GeneratedReport, NormalizedReport, DbSnpRecord, GenomeImportPreview, ReportGenerationProgress } from "#lib/types/genomics.js";
+  import type { ResourceSyncTelemetry } from "#lib/utils/resourceSyncTelemetry.js";
+  import { REFERENCE_CATALOG_IDS } from "#lib/utils/primaryCatalogs.js";
+  import type { VariantNavTarget } from "#lib/constants/traitCategories.js";
   import {
     EMPTY_PROFILE_CONTEXT,
     loadProfileContext,
     saveProfileContext,
     type ProfileContext,
     type ReproductiveAnatomy,
-  } from "$lib/utils/profileContext";
+  } from "#lib/utils/profileContext.js";
   import {
     importPhaseForProgress,
     importStepForPhase,
     type ImportPhase,
     type ImportStepId,
-  } from "$lib/utils/importProgress";
+  } from "#lib/utils/importProgress.js";
 
   // State Runes (Svelte 5)
   let samples = $state<GenomeSample[]>([]);
@@ -228,20 +228,20 @@ const NAV_LAST_TAB_PREFIX = "genomics_caddy_last_tab_";
     try {
       const module = await (async () => {
         switch (tab) {
-          case "report": return import("$lib/components/report/ReportView.svelte");
-          case "plan": return import("$lib/components/report/PlanView.svelte");
-          case "context": return import("$lib/components/context/ContextPanel.svelte");
-          case "diary": return import("$lib/components/context/DiaryPanel.svelte");
-          case "map": return import("$lib/components/genome/GenomeMap.svelte");
-          case "discovery": return import("$lib/components/discovery/DiscoveryPanel.svelte");
-          case "help": return import("$lib/components/common/HelpCenter.svelte");
-          case "connections": return import("$lib/components/settings/ConnectionsPanel.svelte");
-          case "browser": return import("$lib/components/search/VariantSearchPanel.svelte");
-          case "mcp": return import("$lib/components/mcp/McpPanel.svelte");
-          case "agent": return import("$lib/components/agent/AgentResearchPanel.svelte");
-          case "research": return import("$lib/components/research/ResearchPanel.svelte");
-          case "ai": return import("$lib/components/ai/AiAssistantPanel.svelte");
-          case "legal": return import("$lib/components/legal/LegalPrivacyPanel.svelte");
+          case "report": return import("#lib/components/report/ReportView.svelte");
+          case "plan": return import("#lib/components/report/PlanView.svelte");
+          case "context": return import("#lib/components/context/ContextPanel.svelte");
+          case "diary": return import("#lib/components/context/DiaryPanel.svelte");
+          case "map": return import("#lib/components/genome/GenomeMap.svelte");
+          case "discovery": return import("#lib/components/discovery/DiscoveryPanel.svelte");
+          case "help": return import("#lib/components/common/HelpCenter.svelte");
+          case "connections": return import("#lib/components/settings/ConnectionsPanel.svelte");
+          case "browser": return import("#lib/components/search/VariantSearchPanel.svelte");
+          case "mcp": return import("#lib/components/mcp/McpPanel.svelte");
+          case "agent": return import("#lib/components/agent/AgentResearchPanel.svelte");
+          case "research": return import("#lib/components/research/ResearchPanel.svelte");
+          case "ai": return import("#lib/components/ai/AiAssistantPanel.svelte");
+          case "legal": return import("#lib/components/legal/LegalPrivacyPanel.svelte");
           default: return null;
         }
       })();
@@ -349,7 +349,7 @@ function selectTab(tab: string) {
   let aiSelectedPacks = $state<Record<string, boolean>>({});
   let aiOnlyActiveFindings = $state(true);
   let aiTemperature = $state(0.0);
-  let researchJob = $state<import("$lib/types/research").ResearchJob | null>(null);
+  let researchJob = $state<import("#lib/types/research.js").ResearchJob | null>(null);
 
   let aiInitialSearchQuery = $state("");
   let aiActiveView = $state<"chat" | "evidence">("chat");
@@ -357,7 +357,7 @@ function selectTab(tab: string) {
   let highlightRsid = $state("");
   let mapFocusRsid = $state("");
   let activeSampleId = $state<number | null>(null);
-  let offlineStatusForWelcome = $state<import("$lib/types/research").OfflineUpdateCheck | null>(null);
+  let offlineStatusForWelcome = $state<import("#lib/types/research.js").OfflineUpdateCheck | null>(null);
   let offlineStatusFreshForWelcome = $state(false);
   let missingReferenceCatalogCount = $derived.by(() => {
     const status = offlineStatusForWelcome;
@@ -970,6 +970,10 @@ function selectTab(tab: string) {
   {/snippet}
   {#snippet children()}
     <main class="main-content">
+      <!-- The startup helix animates on the same main thread that renders the report, so
+           keep the workspace out of the DOM until the overlay is gone; otherwise the helix
+           freezes while the report paints behind it. -->
+      {#if !isBootstrapping}
       {#if isImportPreparing || isImporting || importPhase === "awaiting-confirmation"}
         <ImportWorkspaceState
           phase={importPhase}
@@ -1307,8 +1311,9 @@ function selectTab(tab: string) {
       {/if}
       {#if selectedSample !== null}
         <footer class="app-reference-note" role="note">
-          DNA associations are possibilities, not diagnoses. Use them to decide what to test, and review health decisions with a qualified healthcare professional.
+          DNA associations are possibilities, not diagnoses or prescriptions. Do not start, stop, or change a medicine based on DNA alone. Use them to guide questions and tests, and review decisions with a qualified healthcare professional.
         </footer>
+      {/if}
       {/if}
     </main>
   {/snippet}

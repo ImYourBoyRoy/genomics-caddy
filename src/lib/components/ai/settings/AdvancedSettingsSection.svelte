@@ -9,7 +9,7 @@
   import QdrantResearchSettingsDetails from "./QdrantResearchSettingsDetails.svelte";
   import Tooltip from "../../common/Tooltip.svelte";
   import { saveOllamaUrl } from "../../../utils/ollamaSettings";
-  import "$lib/styles/components/advanced-settings-section.css";
+  import "#lib/styles/components/advanced-settings-section.css";
 
   interface McpServerConfig {
     name: string;
@@ -21,9 +21,9 @@
     ollamaToken?: string;
   }
 
-  let { 
-    ollamaUrl = $bindable(""), 
-    ollamaToken = $bindable("") 
+  let {
+    ollamaUrl = $bindable(""),
+    ollamaToken = $bindable("")
   }: Props = $props();
 
   // ── State — declared BEFORE any $effect to guarantee correct init order ───
@@ -195,19 +195,19 @@
 <details class="settings-details-group">
   <summary class="settings-details-summary">⚙️ Advanced Settings</summary>
   <div class="settings-details-content">
-    
+
     <!-- Cache TTL -->
     <div class="setting-row">
       <div class="row-header">
         <label for="cache-ttl-slider">Cache Lifetime (TTL)</label>
         <span class="value-badge">{cacheTtlDays} {cacheTtlDays === 1 ? 'day' : 'days'}</span>
       </div>
-      <input 
+      <input
         id="cache-ttl-slider"
-        type="range" 
-        min="1" 
-        max="30" 
-        bind:value={cacheTtlDays} 
+        type="range"
+        min="1"
+        max="30"
+        bind:value={cacheTtlDays}
         class="slider-input"
       />
       <span class="help-text">Controls offline caching of API records and evidence lookups.</span>
@@ -215,7 +215,7 @@
 
     <!-- Purge Cache -->
     <div class="setting-row mt-2">
-      <button 
+      <button
         class="btn btn-secondary w-full"
         onclick={handleClearCache}
         disabled={purgeStatus === "clearing"}
@@ -287,7 +287,7 @@
     <!-- Search & Evidence Sources -->
     <div class="setting-row section-divider mt-2">
       <span class="section-label">🔍 Search &amp; Evidence Sources</span>
-      
+
       <div class="toggle-list">
         <label class="toggle-item">
           <input type="checkbox" bind:checked={searchPubMed} />
@@ -315,18 +315,18 @@
         <div class="mcp-add-form domain-form mt-1">
           <span class="domain-list-label">Approved Web Domains</span>
           <div class="domain-input-row">
-            <input 
-              type="text" 
-              placeholder="e.g. wikipedia.org" 
-              bind:value={newDomain} 
-              class="mcp-input domain-input" 
+            <input
+              type="text"
+              placeholder="e.g. wikipedia.org"
+              bind:value={newDomain}
+              class="mcp-input domain-input"
               onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(); } }}
             />
             <button class="btn btn-secondary btn-add-domain" onclick={addDomain} disabled={!newDomain.trim()}>
               ➕
             </button>
           </div>
-          
+
           {#if approvedDomains.length > 0}
             <div class="domain-chips">
               {#each approvedDomains as domain, index}
@@ -352,7 +352,7 @@
     <!-- External MCP Connections -->
     <div class="setting-row section-divider mt-2">
       <span class="section-label">🔌 External MCP Connections</span>
-      
+
       <div class="mcp-add-form">
         <input type="text" placeholder="Server Name" bind:value={newMcpName} class="mcp-input" />
         <input type="text" placeholder="SSE URL (e.g. http://localhost:3000/sse)" bind:value={newMcpUrl} class="mcp-input mt-1" />

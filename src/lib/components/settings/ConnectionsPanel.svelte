@@ -41,7 +41,7 @@
     connectionCheckTimeoutMs,
     withInvokeTimeout,
   } from "../../utils/researchConnection";
-  import "$lib/styles/components/connections-panel.css";
+  import "#lib/styles/components/connections-panel.css";
 
   interface Props {
     ollamaUrl?: string;

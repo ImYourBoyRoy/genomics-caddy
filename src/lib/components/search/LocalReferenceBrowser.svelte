@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import { queryLocalReferenceDb } from "../../api/tauri";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
-  import "$lib/styles/components/local-reference-browser.css";
+  import "#lib/styles/components/local-reference-browser.css";
 
   let selectedTable = $state<"clinvar" | "pharmgkb" | "clingen" | "gwas" | "mane">("clinvar");
   let searchQuery = $state("");
@@ -71,7 +71,7 @@
   <div class="browser-header-summary">
     <p class="summary-text">
       Query and inspect the non-vectorized reference databases downloaded within Genomics Caddy.
-      This lets you browse ClinVar annotations, PharmGKB drug interactions, ClinGen gene validity classifications, and GWAS findings directly in your local SQLite store.
+      This lets you browse ClinVar annotations, PharmGKB gene–medicine research (how some DNA markers may relate to medication processing or response), ClinGen gene validity classifications, and GWAS findings directly in your local SQLite store. PharmGKB annotations are not a general medicine–medicine interaction checker.
     </p>
   </div>
 

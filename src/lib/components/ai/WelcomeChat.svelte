@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/ai/WelcomeChat.svelte -->
 <script lang="ts">
-  import '$lib/styles/components/chat-welcome.css';
+  import '#lib/styles/components/chat-welcome.css';
   import type { OllamaEndpointScope } from '../../utils/ollamaSettings';
 
   interface Props {

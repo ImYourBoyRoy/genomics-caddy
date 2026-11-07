@@ -9,7 +9,7 @@
   import Tooltip from '../common/Tooltip.svelte';
   import { getEffectCount, getEffectAllele, isCallableGenotype } from '../../utils/genotype';
   import { getClaimFrame, getSeverityInfo } from '../../utils/evidence';
-  import { getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle } from '../../utils/layperson';
+  import { getCompactSimpleReviewAction, getLaypersonTranslation, getSimpleFindingCopy, getSimpleFindingTitle } from '../../utils/layperson';
   import {
     clinicalStateLabel,
     inheritanceModelLabel,
@@ -314,7 +314,7 @@
           </p>
           <div class="simple-next-step">
             <strong>Next step</strong>
-            <span>{simpleCopy.review_action}</span>
+            <span>{getCompactSimpleReviewAction(simpleCopy.review_action)}</span>
           </div>
           {#if benefitsFromContext && onOpenContext}
             <button type="button" class="btn btn-secondary btn-sm simple-add-context" onclick={() => onOpenContext?.()}>

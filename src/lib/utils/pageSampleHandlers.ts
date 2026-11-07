@@ -255,7 +255,7 @@ export async function deleteSampleWithConfirm({
   removeSampleFromList,
 }: DeleteSampleParams): Promise<void> {
   confirm(
-    "Are you sure you want to delete this profile, its genotype database, derived findings, chat history, and all profile-scoped Context/Diary data from this device?",
+    "Delete this profile, its genotype database, derived findings, chat history, and profile-scoped Context/Diary data from this device? If you connected an external research vector database, its copy is managed separately and must be cleared there.",
     async () => {
       let deleteError: unknown = null;
       try {

@@ -1,0 +1,14 @@
+diff --git a/src/utils/fork.js b/src/utils/fork.js
+index c903097001e3fe3ce61d85977f837f93be87d96f..6733f027644eec05e08ea0165ca4eddf7d2da6e7 100644
+--- a/src/utils/fork.js
++++ b/src/utils/fork.js
+@@ -56,8 +56,7 @@ export function forked(module, callback) {
+ 			const worker = new Worker(fileURLToPath(module), {
+ 				env: {
+ 					...process.env,
+-					SVELTEKIT_FORK: 'true',
+-					FORCE_COLOR: '1'
++					SVELTEKIT_FORK: 'true'
+ 				}
+ 			});
+ 

@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/common/GlobalDialogs.svelte -->
 <script lang="ts">
   import { dialogStore } from '../../utils/dialogState.svelte';
-  import '$lib/styles/components/global-dialogs.css';
+  import '#lib/styles/components/global-dialogs.css';
 
   /*
   Module Docstring:

@@ -7,7 +7,7 @@
   import ActivityPulse from "../../common/loading/ActivityPulse.svelte";
   import Tooltip from "../../common/Tooltip.svelte";
   import { atlasCategoryColor, atlasDotRadius } from "../../../utils/atlasColors";
-  import "$lib/styles/components/vector-workbench.css";
+  import "#lib/styles/components/vector-workbench.css";
 
   interface Props {
     sampleId: number;

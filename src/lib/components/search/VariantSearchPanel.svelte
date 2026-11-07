@@ -14,8 +14,8 @@
   import type { VariantNavTarget } from "../../constants/traitCategories";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
   import LocalReferenceBrowser from "./LocalReferenceBrowser.svelte";
-  import "$lib/styles/components/variant-browser.css";
-  import "$lib/styles/components/explore-help.css";
+  import "#lib/styles/components/variant-browser.css";
+  import "#lib/styles/components/explore-help.css";
 
   interface Props {
     selectedSample: GenomeSample | null;

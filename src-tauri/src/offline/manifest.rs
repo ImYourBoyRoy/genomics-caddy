@@ -271,13 +271,23 @@ pub struct OfflineAssetStatus {
     pub asset_id: String,
     pub tier: u8,
     pub label: String,
+    pub source_url: Option<String>,
     pub local_present: bool,
     pub local_bytes: u64,
     pub row_count: u64,
     pub synced_at: Option<i64>,
+    pub downloaded_at: Option<i64>,
+    pub indexed_at: Option<i64>,
     pub update_available: bool,
     pub remote_content_length: Option<u64>,
     pub version_label: Option<String>,
+    /// Last server-provided filename/date seen while checking for updates.
+    /// This is revision metadata, not necessarily the publisher's dataset version.
+    pub remote_version_label: Option<String>,
+    pub last_checked_at: Option<i64>,
+    pub previous_row_count: Option<u64>,
+    pub previous_version_label: Option<String>,
+    pub source_changed_at: Option<i64>,
     pub message: String,
     pub display_size: String,
 }

@@ -14,7 +14,7 @@
   import type { VariantNavTarget } from '../../constants/traitCategories';
   import { getSeverityInfo } from '../../utils/evidence';
   import { tick, untrack } from 'svelte';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import type { ProfileContext } from '../../utils/profileContext';
   import { EMPTY_PROFILE_CONTEXT } from '../../utils/profileContext';
   import {

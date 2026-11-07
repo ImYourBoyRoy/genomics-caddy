@@ -11,7 +11,7 @@
   import { OLLAMA_URL_PLACEHOLDER, ollamaRawDataDisclosure } from "../../../utils/ollamaSettings";
   import type { ChatProvider } from "../../../utils/chatProvider";
   import ChatGptConnectionCard from "./ChatGptConnectionCard.svelte";
-  import "$lib/styles/components/chatgpt-connection.css";
+  import "#lib/styles/components/chatgpt-connection.css";
 
   interface Props {
     chatProvider?: ChatProvider;

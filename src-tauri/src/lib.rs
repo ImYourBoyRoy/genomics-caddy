@@ -1056,8 +1056,19 @@ async fn generate_report(
 async fn delete_sample(app: AppHandle, sample_id: i64) -> Result<(), String> {
     let db_path = get_db_path(&app);
     let data_dir = get_data_dir(&app);
+    let remote_vector_store_configured = db_runtime::with_connection(db_path.clone(), |conn| {
+        config::load_qdrant_config(conn).map(|settings| !settings.url.trim().is_empty())
+    })
+    .await
+    .unwrap_or(true);
     db_runtime::with_connection_mut(db_path, move |conn| {
-        db::delete_sample(conn, &data_dir, sample_id).map_err(|e| e.to_string())
+        db::delete_sample_with_id_reuse(
+            conn,
+            &data_dir,
+            sample_id,
+            !remote_vector_store_configured,
+        )
+        .map_err(|e| e.to_string())
     })
     .await
 }
@@ -2269,6 +2280,9 @@ pub fn run() {
             research::commands::get_reference_status,
             research::commands::sync_gwas_reference,
             offline::commands::check_offline_data_updates,
+            offline::commands::remove_offline_download,
+            offline::commands::delete_offline_database,
+            offline::commands::purge_offline_downloads,
             offline::commands::sync_offline_data_tier,
             offline::commands::sync_single_offline_asset,
             offline::commands::sync_all_offline_missing,

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // ./scripts/run_svelte_check.mjs
 /*
-Purpose: Run svelte-kit sync + svelte-check against a TypeScript 7 project.
+Purpose: Run svelte-kit sync + svelte-check with the TypeScript 6 API required
+by SvelteKit 3.
 Responsibilities:
-  - Preload the TS6 API shim for Svelte embedders.
   - Forward all CLI args to svelte-check.
 How to run: pnpm run check  (wired in package.json)
 */
@@ -13,9 +13,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.join(scriptDir, "..");
-const preload = path.join(scriptDir, "preload-typescript6-for-svelte.cjs");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(path.join(repoRoot, "package.json"));
 
 const forwarded = process.argv.slice(2);
@@ -25,11 +23,7 @@ function run(cmd, args) {
   const result = spawnSync(cmd, args, {
     cwd: repoRoot,
     stdio: "inherit",
-    env: {
-      ...process.env,
-      GENOMICS_TS6_SHIM_QUIET: process.env.GENOMICS_TS6_SHIM_QUIET ?? "1",
-      NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require ${preload}`].filter(Boolean).join(" "),
-    },
+    env: process.env,
     shell: false,
   });
   if (result.error) {

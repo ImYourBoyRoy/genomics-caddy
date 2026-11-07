@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.12 — 2026-11-07
+
+### Fixed
+
+- Keep the startup helix smooth: each strand node now runs one sampled transform animation, the glow is a gradient instead of a blurred shadow, and the strand is layout/paint contained so loading updates no longer make it stutter or freeze near 100%.
+- Render the main workspace only after the startup overlay closes, so the report no longer paints behind the loading screen and stalls its animation.
+- Resolve a Rust clippy error in offline catalog maintenance so the CI lint gate passes.
+
+### Changed
+
+- Offline reference-catalog sync, registry, and maintenance updates; marker-pack and discovery-catalog updates (pgx, discovery catalog) mirrored into the runtime resources; AI chat and research panel refinements; dependency and tooling updates.
+- Added `CLAUDE.md` (defers to `AGENTS.md` and keeps it current) and an expanded `TASKS.md` backlog, including bring-your-own-AI, MCP hardening, and a proposed two-profile comparison with strict carrier/risk limits.
+
 ## 0.2.11 — 2026-11-04
 
 ### Added

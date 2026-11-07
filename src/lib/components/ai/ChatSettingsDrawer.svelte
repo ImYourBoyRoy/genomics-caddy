@@ -1,6 +1,6 @@
 <!-- ./src/lib/components/ai/ChatSettingsDrawer.svelte -->
 <script lang="ts">
-  import "$lib/styles/components/chat-settings-drawer.css";
+  import "#lib/styles/components/chat-settings-drawer.css";
   import type { ChatProvider } from "../../utils/chatProvider";
   import ConnectionModelSection from "./settings/ConnectionModelSection.svelte";
   import InferenceSettingsSection from "./settings/InferenceSettingsSection.svelte";

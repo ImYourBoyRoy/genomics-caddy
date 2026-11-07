@@ -4,7 +4,7 @@
   import type { Snippet } from 'svelte';
   import AppUpdateHost from '../common/AppUpdateHost.svelte';
   import Tooltip from '../common/Tooltip.svelte';
-  import '$lib/styles/components/update-banner.css';
+  import '#lib/styles/components/update-banner.css';
   let focusMode = $state(false);
   let mobileSidebarOpen = $state(false);
   let isNarrowViewport = $state(false);

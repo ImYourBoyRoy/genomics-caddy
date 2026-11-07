@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import adapter from "@sveltejs/adapter-static";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import {
   LOOPBACK_HOST,
   VITE_DEV_ENDPOINT_NAME,
@@ -10,6 +12,15 @@ import {
 
 const host = process.env.TAURI_DEV_HOST || LOOPBACK_HOST;
 const vitePort = Number.parseInt(process.env.GENOMICS_VITE_PORT || "1420", 10);
+const isProductionBuild = process.argv.includes("build");
+
+const sveltekitOptions = {
+  adapter: adapter({ fallback: "index.html" }),
+  preprocess: vitePreprocess(),
+  // Production emits component CSS as files so Tauri's CSP nonce can style
+  // components. In dev, keep injection to avoid Vite 8 virtual-CSS races.
+  emitCss: isProductionBuild,
+};
 
 function genomicsLoopbackEndpointPlugin() {
   return {
@@ -47,7 +58,7 @@ function genomicsLoopbackEndpointPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [sveltekit(), genomicsLoopbackEndpointPlugin()],
+  plugins: [sveltekit(sveltekitOptions), genomicsLoopbackEndpointPlugin()],
 
   build: {
     // Desktop webview loads local assets; slightly higher than Vite's 500 kB default
@@ -55,13 +66,10 @@ export default defineConfig(async () => ({
     chunkSizeWarningLimit: 900,
     rolldownOptions: {
       output: {
-        // Split heavy vendor / feature surfaces so the first paint chunk stays leaner.
+        // SvelteKit owns its client runtime split. Keep only the independent
+        // Tauri and research groups so its dynamic runtime entry stays intact.
         codeSplitting: {
           groups: [
-            {
-              name: "vendor-svelte",
-              test: /node_modules[\\/](svelte|@sveltejs)[\\/]/,
-            },
             {
               name: "vendor-tauri",
               test: /node_modules[\\/]@tauri-apps[\\/]/,

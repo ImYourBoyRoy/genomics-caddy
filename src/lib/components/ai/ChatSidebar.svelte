@@ -2,7 +2,7 @@
 <script lang="ts">
   import type { ChatSession } from "../../utils/chatSession";
   import type { ChatMessage } from "../../types/agent";
-  import "$lib/styles/components/chat-sidebar.css";
+  import "#lib/styles/components/chat-sidebar.css";
 
   interface SidebarSession extends ChatSession {
     messages: ChatMessage[];

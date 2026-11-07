@@ -157,6 +157,22 @@ describe('sidebar status theme tokens', () => {
     expect(sidebarComponent).not.toContain('exportDiscoveryFindings');
   });
 
+  it('shows one clear preview message instead of disabled profile and import controls', () => {
+    expect(sidebarComponent).not.toContain('class="runtime-note"');
+    expect(sidebarComponent).toContain('class="runtime-preview-note card"');
+    expect(sidebarComponent).toContain('Import DNA and manage saved profiles in the desktop app.');
+    expect(sidebarComponent).toContain('{#if runtimeAvailable}');
+    expect(sidebarComponent).toContain('{:else}');
+  });
+
+  it('keeps sidebar help readable and prevents import guidance from overlapping the liftover notice', () => {
+    expect(source).toContain('font-size: 0.75rem;');
+    expect(source).toContain('line-height: 1.5;');
+    expect(source).toContain('margin-top: 0.65rem;');
+    expect(source).not.toContain('margin-top: -0.65rem;');
+    expect(source).toContain('min-height: 2.4rem;');
+  });
+
   it('keeps a healthy Liftover status compact while preserving attention actions', () => {
     expect(source).toContain('.liftover-status-card.card');
     expect(source).toContain('.liftover-status-copy');

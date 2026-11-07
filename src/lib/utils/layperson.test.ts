@@ -4,6 +4,7 @@ import {
   DEFAULT_LAYPERSON_TRANSLATION,
   getCompactActionMeaning,
   getCompactGuidanceText,
+  getCompactSimpleReviewAction,
   getCompactSimpleMeaning,
   getCompactSupplementName,
   getCompactSupplementReason,
@@ -189,6 +190,21 @@ describe('plain-English claim framing', () => {
       simpleImpact: 'SLC30A8 beta-cell association marker',
       simpleMeaning: 'This SLC30A8 marker is studied in zinc transport and pancreatic beta-cell function. Any association is probabilistic; it does not measure insulin release or diagnose diabetes.',
     })).toBe('This finding is studied in zinc transport and pancreatic beta-cell function.');
+  });
+
+  it('removes repeated DNA-based medication cautions from per-finding next steps', () => {
+    expect(getCompactSimpleReviewAction(
+      'Discuss prior medicine effects with the prescriber; do not change a medicine based on this marker.',
+    )).toBe('Discuss prior medicine effects with the prescriber.');
+    expect(getCompactSimpleReviewAction(
+      'Share the medicine name and timing with the prescriber; do not change treatment from this marker.',
+    )).toBe('Share the medicine name and timing with the prescriber.');
+  });
+
+  it('keeps medication cautions that are not generic DNA-only warnings', () => {
+    expect(getCompactSimpleReviewAction(
+      'Do not change a prescribed medicine without discussing it with your prescriber.',
+    )).toBe('Do not change a prescribed medicine without discussing it with your prescriber.');
   });
 
   it('falls back to the plain title when a meaning contains only generic guardrails', () => {

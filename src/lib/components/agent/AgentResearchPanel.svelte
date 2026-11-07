@@ -17,7 +17,7 @@
   } from "../../utils/agentApis";
   import AgentRunner from "./AgentRunner.svelte";
   import AgentReportView from "./AgentReportView.svelte";
-  import "$lib/styles/components/agent-research-panel.css";
+  import "#lib/styles/components/agent-research-panel.css";
 
   interface Props {
     selectedSample: GenomeSample | null;

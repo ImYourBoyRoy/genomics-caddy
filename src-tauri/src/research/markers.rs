@@ -43,12 +43,93 @@ pub fn score_marker_significance(
     score.min(1.0)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{
+        load_agent_discovery_markers, load_curated_markers, load_gwas_discovery_markers,
+        load_non_reference_markers,
+    };
+    use rusqlite::Connection;
+
+    #[test]
+    fn scope_preview_loaders_work_before_clinvar_is_downloaded() {
+        let conn = Connection::open_in_memory().expect("open synthetic preview database");
+        conn.execute_batch(
+            "CREATE TABLE genotypes (
+                 sample_id INTEGER, rsid TEXT, chromosome TEXT, allele1 TEXT, allele2 TEXT
+             );
+             CREATE TABLE evidence_library (rsid TEXT, gene TEXT);
+             CREATE TABLE discovered_findings (sample_id INTEGER, rsid TEXT, gene TEXT);
+             CREATE TABLE gwas_reference (rsid TEXT, primary_gene TEXT, association_count INTEGER);
+             INSERT INTO genotypes VALUES (1, 'rs-test', '1', 'A', 'G');
+             INSERT INTO evidence_library VALUES ('rs-test', 'TEST1');
+             INSERT INTO discovered_findings VALUES (1, 'rs-test', 'TEST1');
+             INSERT INTO gwas_reference VALUES ('rs-test', 'TEST1', 1);",
+        )
+        .expect("seed synthetic preview tables");
+
+        assert_eq!(
+            load_curated_markers(&conn, 1)
+                .expect("curated scope without ClinVar")
+                .len(),
+            1
+        );
+        assert_eq!(
+            load_agent_discovery_markers(&conn, 1)
+                .expect("agent scope without ClinVar")
+                .len(),
+            1
+        );
+        assert_eq!(
+            load_gwas_discovery_markers(&conn, 1, 10)
+                .expect("GWAS scope without ClinVar")
+                .len(),
+            1
+        );
+        assert_eq!(
+            load_non_reference_markers(&conn, 1, 10)
+                .expect("non-reference scope without ClinVar")
+                .len(),
+            1
+        );
+    }
+}
+
 const EVIDENCE_GENE_SUBQUERY: &str = "
     SELECT rsid, MIN(gene) AS gene
     FROM evidence_library
     WHERE gene IS NOT NULL AND TRIM(gene) != ''
     GROUP BY rsid
 ";
+
+#[derive(Clone, Copy)]
+struct OptionalClinvarSql {
+    join: &'static str,
+    significance: &'static str,
+    gene: &'static str,
+}
+
+fn optional_clinvar_sql(conn: &Connection) -> OptionalClinvarSql {
+    // ClinVar is an optional download. A user can import a profile and run a
+    // scope preview before that catalog exists, so prepare the projection to
+    // confirm the unqualified compatibility view resolves before using it.
+    if conn
+        .prepare("SELECT rsid, clinical_significance, gene FROM clinvar_reference LIMIT 0")
+        .is_ok()
+    {
+        OptionalClinvarSql {
+            join: "LEFT JOIN clinvar_reference c ON g.rsid = c.rsid",
+            significance: "c.clinical_significance",
+            gene: "NULLIF(TRIM(c.gene), '')",
+        }
+    } else {
+        OptionalClinvarSql {
+            join: "",
+            significance: "NULL",
+            gene: "NULL",
+        }
+    }
+}
 
 fn row_to_scored_marker(
     rsid: String,
@@ -86,15 +167,24 @@ fn merge_scored_marker(map: &mut HashMap<String, ScoredMarker>, marker: ScoredMa
 }
 
 fn load_curated_markers(conn: &Connection, sample_id: i64) -> Result<Vec<ScoredMarker>, String> {
+    let clinvar = optional_clinvar_sql(conn);
+    let curated_filter = if clinvar.join.is_empty() {
+        "g.rsid IN (SELECT DISTINCT rsid FROM evidence_library)"
+    } else {
+        "(g.rsid IN (SELECT DISTINCT rsid FROM clinvar_reference)
+           OR g.rsid IN (SELECT DISTINCT rsid FROM evidence_library))"
+    };
     let sql = format!(
-        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, c.clinical_significance,
-                COALESCE(NULLIF(TRIM(c.gene), ''), NULLIF(TRIM(e.gene), '')) AS gene
+        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, {significance},
+                COALESCE({clinvar_gene}, NULLIF(TRIM(e.gene), '')) AS gene
          FROM genotypes g
-         LEFT JOIN clinvar_reference c ON g.rsid = c.rsid
+         {clinvar_join}
          LEFT JOIN ({EVIDENCE_GENE_SUBQUERY}) e ON g.rsid = e.rsid
          WHERE g.sample_id = ?
-           AND (g.rsid IN (SELECT DISTINCT rsid FROM clinvar_reference)
-                OR g.rsid IN (SELECT DISTINCT rsid FROM evidence_library))"
+           AND {curated_filter}",
+        significance = clinvar.significance,
+        clinvar_gene = clinvar.gene,
+        clinvar_join = clinvar.join,
     );
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt
@@ -117,14 +207,18 @@ fn load_agent_discovery_markers(
     conn: &Connection,
     sample_id: i64,
 ) -> Result<Vec<ScoredMarker>, String> {
+    let clinvar = optional_clinvar_sql(conn);
     let sql = format!(
-        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, c.clinical_significance,
-                COALESCE(NULLIF(TRIM(d.gene), ''), NULLIF(TRIM(c.gene), ''), NULLIF(TRIM(e.gene), '')) AS gene
+        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, {significance},
+                COALESCE(NULLIF(TRIM(d.gene), ''), {clinvar_gene}, NULLIF(TRIM(e.gene), '')) AS gene
          FROM discovered_findings d
          JOIN genotypes g ON g.sample_id = d.sample_id AND g.rsid = d.rsid
-         LEFT JOIN clinvar_reference c ON g.rsid = c.rsid
+         {clinvar_join}
          LEFT JOIN ({EVIDENCE_GENE_SUBQUERY}) e ON g.rsid = e.rsid
-         WHERE d.sample_id = ?"
+         WHERE d.sample_id = ?",
+        significance = clinvar.significance,
+        clinvar_gene = clinvar.gene,
+        clinvar_join = clinvar.join,
     );
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt
@@ -148,16 +242,20 @@ fn load_gwas_discovery_markers(
     sample_id: i64,
     limit: u32,
 ) -> Result<Vec<ScoredMarker>, String> {
+    let clinvar = optional_clinvar_sql(conn);
     let sql = format!(
-        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, c.clinical_significance,
-                COALESCE(NULLIF(TRIM(c.gene), ''), NULLIF(TRIM(e.gene), ''), NULLIF(TRIM(gw.primary_gene), '')) AS gene
+        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, {significance},
+                COALESCE({clinvar_gene}, NULLIF(TRIM(e.gene), ''), NULLIF(TRIM(gw.primary_gene), '')) AS gene
          FROM genotypes g
          INNER JOIN gwas_reference gw ON g.rsid = gw.rsid
-         LEFT JOIN clinvar_reference c ON g.rsid = c.rsid
+         {clinvar_join}
          LEFT JOIN ({EVIDENCE_GENE_SUBQUERY}) e ON g.rsid = e.rsid
          WHERE g.sample_id = ?
          ORDER BY gw.association_count DESC, g.rsid
-         LIMIT ?"
+         LIMIT ?",
+        significance = clinvar.significance,
+        clinvar_gene = clinvar.gene,
+        clinvar_join = clinvar.join,
     );
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt
@@ -181,19 +279,23 @@ fn load_non_reference_markers(
     sample_id: i64,
     limit: u32,
 ) -> Result<Vec<ScoredMarker>, String> {
+    let clinvar = optional_clinvar_sql(conn);
     let sql = format!(
-        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, c.clinical_significance,
-                COALESCE(NULLIF(TRIM(c.gene), ''), NULLIF(TRIM(e.gene), ''), NULLIF(TRIM(gw.primary_gene), '')) AS gene
+        "SELECT g.rsid, g.chromosome, g.allele1, g.allele2, {significance},
+                COALESCE({clinvar_gene}, NULLIF(TRIM(e.gene), ''), NULLIF(TRIM(gw.primary_gene), '')) AS gene
          FROM genotypes g
          INNER JOIN gwas_reference gw ON g.rsid = gw.rsid
-         LEFT JOIN clinvar_reference c ON g.rsid = c.rsid
+         {clinvar_join}
          LEFT JOIN ({EVIDENCE_GENE_SUBQUERY}) e ON g.rsid = e.rsid
          WHERE g.sample_id = ?
            AND g.allele1 IN ('A','T','C','G')
            AND g.allele2 IN ('A','T','C','G')
            AND g.allele1 != g.allele2
          ORDER BY gw.association_count DESC, g.rsid
-         LIMIT ?"
+         LIMIT ?",
+        significance = clinvar.significance,
+        clinvar_gene = clinvar.gene,
+        clinvar_join = clinvar.join,
     );
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt

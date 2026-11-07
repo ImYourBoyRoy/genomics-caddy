@@ -11,7 +11,7 @@
   } from "../../api/tauri";
   import type { QdrantHit } from "../../types/research";
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
-  import "$lib/styles/components/vector-workbench.css";
+  import "#lib/styles/components/vector-workbench.css";
 
   interface Props {
     sampleId: number;

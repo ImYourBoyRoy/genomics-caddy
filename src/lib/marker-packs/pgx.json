@@ -8,7 +8,7 @@
       "effect_allele": "A",
       "impact": "Reduced/Inactive CYP2D6 enzyme activity",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2D6*4 is a well-characterized no-function allele. A/A at this marker is compatible with *4/*4, but a complete CYP2D6 phenotype requires both star alleles and copy-number/hybrid assessment. In a validated clinical poor-metabolizer call, exposure or activation of some drugs may differ.",
+      "interpretation": "CYP2D6*4 is a well-characterized no-function allele. A/A at this marker is compatible with *4/*4, but a complete CYP2D6 phenotype requires both star alleles and copy-number/hybrid assessment. CYP2D6 affects fluoxetine metabolism, but CPIC finds insufficient evidence for gene-based fluoxetine dosing; this marker is not a validated predictor of emotional numbness.",
       "do_not_claim": [
         "serotonin syndrome diagnosis",
         "definitive ADHD medication tolerance prediction"
@@ -19,7 +19,7 @@
         "clinical PGx panel"
       ],
       "effect_direction": "risk",
-      "raw_dna_limitation": "Single-SNP CYP2D6 checks cannot infer full metabolizer phenotype. Copy number variations (CNV), hybrid alleles, and additional star alleles require validated PGx calling.",
+      "raw_dna_limitation": "Single-SNP CYP2D6 checks cannot infer full metabolizer phenotype. Copy-number variation, hybrid alleles, and additional star alleles require validated PGx calling. CYP2D6 may alter fluoxetine parent-to-metabolite ratios, but total active exposure and clinical outcomes are unclear; CPIC provides no gene-based fluoxetine dose recommendation.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
       "sources": [
@@ -29,7 +29,15 @@
           "accessed": "2026-06-07",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None declared",
-          "notes": "Highly validated consensus clinical guideline for dosing adjustments based on metabolizer status."
+          "notes": "CPIC's 2023 serotonin-reuptake guideline provides no gene-based dosing recommendation for fluoxetine because clinical impact is unclear. A CYP2D6 component is not a validated predictor of emotional numbness."
+        },
+        {
+          "name": "CPIC Guideline for Serotonin-Reuptake Inhibitor Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "CYP2D6 may alter the fluoxetine parent-to-metabolite ratio, but CPIC finds total active exposure and clinical impact unclear and provides no gene-based fluoxetine dosing recommendation."
         }
       ]
     },
@@ -56,8 +64,8 @@
       "sources": [
         {
           "name": "CPIC Guideline for CYP2C9 and NSAIDs",
-          "url": "https://cpicpgx.org/guidelines/",
-          "accessed": "2026-06-07",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/NSAID/2020/32189324.pdf",
+          "accessed": "2026-11-05",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None declared",
           "notes": "Recommends alternative therapies or lower starting doses for poor metabolizers."
@@ -87,8 +95,8 @@
       "sources": [
         {
           "name": "CPIC Guideline for CYP2C9",
-          "url": "https://cpicpgx.org/guidelines/",
-          "accessed": "2026-06-07",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/NSAID/2020/32189324.pdf",
+          "accessed": "2026-11-05",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None",
           "notes": "Clinical recommendations for warfarin and NSAID dosing."
@@ -100,9 +108,9 @@
       "gene": "CYP2C19",
       "variant_name": "CYP2C19*17",
       "effect_allele": "T",
-      "impact": "Ultra-rapid CYP2C19 enzyme metabolism",
+      "impact": "CYP2C19 increased-function component; phenotype unknown",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2C19*17 is associated with increased transcription in some studies. It can contribute to a rapid or ultrarapid clinical diplotype when paired with another increased-function allele, but this SNP alone cannot assign phenotype or predict SSRI, PPI, or other drug response.",
+      "interpretation": "CYP2C19*17 is associated with increased transcription in some studies and can contribute to a rapid or ultrarapid clinical phenotype. For sertraline, CPIC recommends the usual starting dose for rapid and ultrarapid phenotypes; this SNP alone cannot assign phenotype or provide a reliable prediction of response, side effects, or emotional numbness.",
       "do_not_claim": [
         "antidepressant resistance diagnosis",
         "PPI failure certainty"
@@ -121,12 +129,12 @@
       "orientation_source": "NCBI dbSNP rs12248560 GRCh38.p14 forward alleles; T is the CYP2C19*17 defining allele",
       "sources": [
         {
-          "name": "CPIC Guideline for CYP2C19 and SSRIs",
-          "url": "https://cpicpgx.org/guidelines/",
-          "accessed": "2026-06-07",
+          "name": "CPIC Guideline for CYP2D6, CYP2C19, CYP2B6, SLC6A4, HTR2A and Serotonin-Reuptake Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None declared",
-          "notes": "Outlines therapeutic alterations for CYP2C19 ultrarapid metabolizers."
+          "notes": "The 2023 CPIC guideline recommends the usual starting dose for sertraline with CYP2C19 rapid or ultrarapid phenotypes. A single *17 marker cannot establish phenotype and is not validated to predict emotional blunting."
         }
       ]
     },
@@ -137,10 +145,11 @@
       "effect_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2C19*2 is a no-function allele. Two copies may contribute to a poor-metabolizer diplotype, but phenotype requires both alleles and relevant additional variants; drug implications are medication-specific, such as clopidogrel activation or SSRI/PPI exposure.",
+      "interpretation": "CYP2C19*2 is a no-function allele. Along with the other allele and relevant variants, it can contribute to a clinical CYP2C19 phenotype. A validated poor-metabolizer phenotype can mean higher sertraline exposure and greater general side-effect risk, but this marker alone cannot establish that phenotype or provide a reliable prediction of emotional numbness.",
       "do_not_claim": [
         "antiplatelet resistance diagnosis",
-        "clinical SSRI selection guidance"
+        "sertraline dose or medication choice from this marker",
+        "emotional numbness prediction"
       ],
       "confirm_with": [
         "clinical PGx testing",
@@ -161,7 +170,15 @@
           "accessed": "2026-06-07",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None declared",
-          "notes": "Suggests alternative antiplatelet therapies for CYP2C19 poor metabolizers."
+          "notes": "Supports clopidogrel-specific clinical context; this SNP does not establish a complete CYP2C19 phenotype."
+        },
+        {
+          "name": "CPIC Guideline for Serotonin-Reuptake Inhibitor Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "A validated CYP2C19 poor-metabolizer phenotype can inform sertraline exposure and general side-effect discussion. It is not a validated predictor of emotional numbness; this single variant cannot establish phenotype."
         }
       ]
     },
@@ -172,10 +189,11 @@
       "effect_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "CYP2C19*3 is a no-function allele that introduces a premature stop codon and is observed more often in some East Asian-ancestry populations. A/A at this marker is one component; poor-metabolizer status requires the complete clinical CYP2C19 diplotype.",
+      "interpretation": "CYP2C19*3 is a no-function allele that introduces a premature stop codon and is observed more often in some East Asian-ancestry populations. A/A at this marker is one component; a complete clinical phenotype is required. A validated poor-metabolizer phenotype can mean higher sertraline exposure and greater general side-effect risk, but this marker is not a validated predictor of emotional numbness.",
       "do_not_claim": [
         "antiplatelet resistance diagnosis",
-        "clinical SSRI selection guidance"
+        "sertraline dose or medication choice from this marker",
+        "emotional numbness prediction"
       ],
       "confirm_with": [
         "clinical PGx testing",
@@ -196,7 +214,15 @@
           "accessed": "2026-06-07",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None declared",
-          "notes": "Suggests alternative antiplatelet therapies for CYP2C19 poor metabolizers."
+          "notes": "Supports clopidogrel-specific clinical context; this SNP does not establish a complete CYP2C19 phenotype."
+        },
+        {
+          "name": "CPIC Guideline for Serotonin-Reuptake Inhibitor Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "A validated CYP2C19 poor-metabolizer phenotype can inform sertraline exposure and general side-effect discussion. It is not a validated predictor of emotional numbness; this single variant cannot establish phenotype."
         }
       ]
     },
@@ -362,31 +388,32 @@
     {
       "rsid": "rs3745274",
       "gene": "CYP2B6",
-      "variant_name": "CYP2B6*6",
+      "variant_name": "CYP2B6 rs3745274 (*6-associated component)",
       "effect_allele": "T",
-      "impact": "Reduced CYP2B6 metabolism",
+      "impact": "CYP2B6 reduced-function allele component; incomplete alone",
       "evidence_tier": "A_clinical_guideline",
-      "interpretation": "The CYP2B6*6 variant is associated with reduced enzyme activity and expression. Carriers of the T allele may experience slow clearance of bupropion (Wellbutrin), methadone, and efavirenz, leading to elevated drug exposure.",
+      "interpretation": "rs3745274 is one of the two core variants used to define CYP2B6*6; rs2279343 is the other. This SNP alone does not establish the *6 haplotype or a CYP2B6 phenotype. CPIC's optional sertraline guidance uses a validated phenotype and concerns exposure; this SNP is not validated to predict a specific effect such as emotional numbness.",
       "do_not_claim": [
         "antidepressant selection plan",
-        "Wellbutrin efficacy guarantee"
+        "Wellbutrin efficacy guarantee",
+        "sertraline emotional-numbness prediction"
       ],
       "confirm_with": [
         "medication side effects history",
-        "clinical PGx panel"
+        "clinical PGx panel that assesses CYP2B6 allele coverage and phenotype"
       ],
       "effect_direction": "risk",
-      "raw_dna_limitation": "Substrate clearance is highly complex and depends on secondary Phase I/II pathways.",
+      "raw_dna_limitation": "rs3745274 is only one CYP2B6*6 core variant; rs2279343, other relevant alleles, and clinical diplotype/phenotype interpretation are not established by this marker alone. CPIC's CYP2B6 sertraline recommendations are optional and based mainly on pharmacokinetic evidence, not evidence that this marker predicts emotional blunting.",
       "clinical_confirmation_required": true,
       "variant_type": "snp",
       "sources": [
         {
-          "name": "CPIC Guideline for CYP2B6",
-          "url": "https://cpicpgx.org/guidelines/",
-          "accessed": "2026-06-07",
+          "name": "CPIC Guideline for CYP2D6, CYP2C19, CYP2B6 and Serotonin-Reuptake Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
           "evidence_type": "Clinical Guideline",
           "conflict_of_interest": "None",
-          "notes": "Consensus recommendations for efavirenz and other CYP2B6 substrates."
+          "notes": "Includes sertraline recommendations using a validated CYP2B6 phenotype. This single consumer-array marker does not establish that phenotype."
         }
       ]
     },
@@ -672,6 +699,14 @@
           "notes": "Explains CPIC provides freely available, peer-reviewed, updated pharmacogenetic clinical practice guidelines."
         },
         {
+          "name": "CPIC Guideline for Serotonin-Reuptake Inhibitor Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "For fluoxetine, CYP2D6 may change parent-to-metabolite ratios but CPIC provides no gene-based dosing recommendation because total active exposure and clinical effects are unclear."
+        },
+        {
           "name": "PharmGKB clinical annotations and gene-drug knowledgebase",
           "url": "https://www.pharmgkb.org/",
           "accessed": "2026-07-01",
@@ -696,7 +731,7 @@
       "effect_allele": "CLINICAL_DIPLOTYPE",
       "impact": "CYP2D6 metabolizer phenotype cannot be inferred from one SNP",
       "evidence_tier": "A_clinical_guardrail",
-      "interpretation": "CYP2D6 requires star-allele diplotype, copy-number, deletion/duplication, and hybrid allele interpretation. Single SNPs such as *4 or *10 are incomplete.",
+      "interpretation": "CYP2D6 requires star-allele diplotype, copy-number, deletion/duplication, and hybrid allele interpretation. Single SNPs such as *4 or *10 are incomplete. For fluoxetine, CPIC reports uncertain clinical impact and gives no gene-based dosing recommendation; no clinically validated CYP2D6-based prediction of emotional numbness is established.",
       "do_not_claim": [
         "CYP2D6 poor/ultrarapid metabolizer call from one SNP",
         "opioid/antidepressant/dextromethorphan dose recommendation"
@@ -707,7 +742,7 @@
         "PharmCAT/clinical diplotype caller"
       ],
       "effect_direction": "context_dependent",
-      "raw_dna_limitation": "Consumer raw DNA often cannot resolve CYP2D6 gene deletion, duplication, tandem alleles, or CYP2D6/CYP2D7 hybrids.",
+      "raw_dna_limitation": "Consumer raw DNA often cannot resolve CYP2D6 gene deletion, duplication, tandem alleles, or CYP2D6/CYP2D7 hybrids. CYP2D6 may change fluoxetine parent-to-metabolite ratios, but total active exposure and clinical outcomes are unclear; CPIC provides no gene-based fluoxetine dose recommendation.",
       "clinical_confirmation_required": true,
       "variant_type": "gene_panel",
       "sources": [
@@ -726,6 +761,14 @@
           "evidence_type": "Peer-reviewed Paper",
           "conflict_of_interest": "Authors include CPIC leadership",
           "notes": "Explains CPIC provides freely available, peer-reviewed, updated pharmacogenetic clinical practice guidelines."
+        },
+        {
+          "name": "CPIC Guideline for CYP2D6, CYP2C19, CYP2B6, SLC6A4, HTR2A and Serotonin-Reuptake Antidepressants (2023)",
+          "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
+          "accessed": "2026-11-05",
+          "evidence_type": "Clinical Guideline",
+          "conflict_of_interest": "None",
+          "notes": "For fluoxetine, CYP2D6 may change parent-to-metabolite ratios, but total active exposure and clinical impact are unclear and CPIC gives no gene-based dosing recommendation."
         },
         {
           "name": "PharmGKB clinical annotations and gene-drug knowledgebase",

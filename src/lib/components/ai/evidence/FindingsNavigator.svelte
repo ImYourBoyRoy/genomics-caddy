@@ -19,7 +19,7 @@
     type CatalogPreset,
     type CatalogSort,
   } from "../../../utils/findingsCatalog";
-  import "$lib/styles/components/findings-navigator.css";
+  import "#lib/styles/components/findings-navigator.css";
 
   interface Props {
     sampleId: number;

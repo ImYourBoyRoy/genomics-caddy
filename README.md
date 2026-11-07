@@ -129,11 +129,13 @@ app after it starts.
    biologically or life-stage relevant; extra badges stay behind `+N more`.
 
 The coordinate map is required before any profile file is checked or analyzed.
-Catalog-backed annotations and full-genome discovery remain incomplete until
+Catalog-backed annotations and all-call Discovery results are unavailable until
 their required indexes finish. A missing database result is not evidence that
 there is no association. Catalog downloads can run before DNA import; the
 curated marker-pack report and local DNA browsing still require the coordinate
 map to be installed and validated.
+Research scope previews also work before the optional ClinVar database is
+downloaded; ClinVar-specific annotations appear after that catalog is installed.
 
 The desktop shell adapts to the available WebView viewport, including high-DPI
 display scaling. Long startup, import, welcome, and data-control content scroll
@@ -145,6 +147,30 @@ app version, and a manual signed-update check. Confirm before installing; app
 updates and reference-catalog updates are separate. The updater does not upload
 DNA.
 
+To check reference data later, open **Research → Offline reference data**. The
+sidebar also reports when a complete check finds newer installed sources. Each
+catalog links to its source and shows the server's file marker, separate
+downloaded/indexed times, and last check time. Source changes are detected by
+file content hash when available, with server revision metadata as a fallback.
+When the downloaded file changes, row totals before and after an index refresh
+are shown as database size, not record-by-record differences. Some download servers do not
+provide a stable revision identifier, so update checks cannot always prove the
+contents are unchanged; **Force re-download** fetches a fresh copy. A filename
+or date from a server is not necessarily the publisher's dataset release
+number.
+
+ClinPGx provides a live API and downloadable files. The API schema version is
+not the data release version, and its file endpoints may not include a release
+number. CPIC publishes a separate [database/API release history](https://github.com/cpicpgx/cpic-data/releases).
+The structured data can omit guideline-specific caveats, so consult the
+relevant [full CPIC guideline](https://www.clinpgx.org/page/cpicResources) for
+medication guidance. You can remove an individual downloaded source while
+keeping its index, delete an
+individual catalog database while keeping its source files, or purge all
+app-managed reference downloads and indexes. Purging also removes the
+coordinate map and downloaded gnomAD indexes, but keeps DNA profiles, genotype
+databases, reports, exports, local VCF files, and app settings.
+
 ## Where genomes live
 
 | How you launched it | Default library |
@@ -155,6 +181,18 @@ DNA.
 | Linux AppImage | `Data/` next to the AppImage |
 | Linux `.deb` / `.rpm` | `~/.local/share/Genomics Caddy/Data` |
 | macOS DMG | `Data/` next to the `.app` |
+
+The library keeps the profile list and settings in `user_genome.db`, and each
+profile's genotypes and derived index in its own `samples/<id>/genome.db` file.
+Downloaded catalogs are separate rebuildable SQLite databases. This keeps a
+profile deletion scoped to that profile and lets catalog data be removed
+without deleting DNA. Profile IDs restart from the first slot after the last
+local profile is deleted when no external vector store is configured. With an
+external vector store configured, IDs remain monotonic so old remote vectors
+cannot be mistaken for a new profile. Profile databases use SQLite WAL with
+full commit sync; rebuildable catalog databases use the faster normal sync
+setting. The database files are plaintext, so use BitLocker, FileVault, or
+LUKS to protect them at rest.
 
 Change it from **Settings → Library folder** (sidebar footer). To wipe a portable copy, use
 **Erase** there, or delete the folder that contains the app and `Data/`.
@@ -177,6 +215,27 @@ Change it from **Settings → Library folder** (sidebar footer). To wipe a porta
 - Adds a compact, expandable index of broader ClinVar, GWAS, ClinGen, and
   pharmacogenomic references. It labels these separately from condition-specific
   ClinVar lab reports because some links describe a gene or marker broadly.
+- Provides a Discovery view that joins imported rsID calls with installed
+  ClinVar, GWAS Catalog, and PharmGKB/ClinPGx indexes. It defaults to matches
+  beyond curated packs, with an option to show pack-covered matches too. GWAS
+  entries currently show a summary by rsID (top trait, strongest catalog p-value,
+  association count, and gene). The local GWAS index retains at most 12 study
+  records per rsID; the view does not match study effect alleles to the person's
+  genotype or show full study-population details. Treat these as research
+  associations, not a personal risk estimate. This view covers imported rsID
+  calls, not every genomic position.
+- Pharmacogenomics shows selected DNA-marker components and gene–medicine
+  research context. It is not a drug–drug interaction checker: the app does not
+  compare a person's current medication list or recommend a medicine or dose.
+  A raw SNP also cannot establish the complete clinical metabolizer result that
+  some prescribing guidelines require.
+  CPIC guidance is medicine-specific: CYP2C19 for citalopram, escitalopram, and
+  sertraline; CYP2B6 also for sertraline; and CYP2D6 for paroxetine, fluvoxamine,
+  venlafaxine, and vortioxetine. Only a complete clinical result can be used for
+  that guidance; the app's individual consumer-array markers cannot establish
+  those results. CPIC gives no gene-based fluoxetine dosing recommendation, and
+  DNA testing is not validated to predict emotional numbness. A person's past
+  reaction to a medicine remains important history to discuss with a prescriber.
 - Scans imported calls locally against ClinVar variant and condition-specific
   submission indexes. Each result is one condition at one exact DNA marker, so
   copy counts and inheritance are not combined across different variants.
@@ -236,16 +295,23 @@ Change it from **Settings → Library folder** (sidebar footer). To wipe a porta
 - Optional [MCP server](docs/mcp/README.md) for agents: `DNA-Tools --mcp`
 
 Screenshots above use a **synthetic** example genome, not a real person’s DNA.
-Simple mode is the public-safe view (no raw calls on the cards).
+Simple mode is the public-safe view (no raw calls on the cards). It keeps each
+card's next step focused and places the shared reminder about medication
+decisions in one footer instead of repeating it on every finding.
 
 ## Privacy and security
 
 Standard profile import, reports, and reference-catalog indexing run locally.
-DNA is not automatically uploaded. If you connect an external AI or research
-service, review the [AI chat data-flow notes](docs/ai-chat/README.md) before
-sending selected findings or raw calls to that provider. Do not put DNA exports,
-local databases, `.env` values, or access tokens in GitHub commits. Development
-setup and repository-secret handling are documented in
+DNA is not automatically uploaded. Profile genotypes are stored in separate
+local SQLite databases; the app does not encrypt these files. Use your
+operating system's full-disk encryption to protect data at rest. If you connect
+an external AI or research service, selected findings or raw calls may be sent
+to that provider. Profile deletion removes the local profile, but copies in a
+connected external vector database must be cleared there separately. Review the
+[AI chat data-flow notes](docs/ai-chat/README.md) before sending selected
+findings or raw calls to an AI provider. Do not put DNA exports, local
+databases, `.env` values, or access tokens in GitHub commits. Development setup
+and repository-secret handling are documented in
 [Development](docs/development/README.md).
 
 ## Docs

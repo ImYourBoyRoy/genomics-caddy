@@ -2,7 +2,7 @@
 <script lang="ts">
   import type { EvidenceCorpusSummary } from "../../../types/research";
   import type { BrowsePreset } from "../../../utils/evidenceSearch";
-  import "$lib/styles/components/evidence-corpus-overview.css";
+  import "#lib/styles/components/evidence-corpus-overview.css";
 
   interface Props {
     summary: EvidenceCorpusSummary | null;

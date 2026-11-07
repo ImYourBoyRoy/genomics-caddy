@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 // ./scripts/run_tsc.mjs
 /*
-Purpose: Invoke the project TypeScript 7 `tsc` even when npm's `.bin/tsc` was
-stolen by `@typescript/old` (pulled in by `@typescript/typescript6`).
+Purpose: Invoke the TypeScript 6 compiler required by SvelteKit 3.
 How to run: pnpm run typecheck  or  pnpm run build (calls this before Vite).
-Side effect: runs `svelte-kit sync` first so tsconfig.json can extend
-`.svelte-kit/tsconfig.json` on a fresh checkout.
+Side effect: runs `svelte-kit sync` first so SvelteKit's generated types and
+package-import mappings are available on a fresh checkout.
 */
 
 import { spawnSync } from "node:child_process";
@@ -38,12 +37,6 @@ try {
 }
 runNodeScript(svelteKitJs, ["sync"], "svelte-kit sync");
 
-const generatedTsconfig = path.join(repoRoot, ".svelte-kit", "tsconfig.json");
-if (!fs.existsSync(generatedTsconfig)) {
-  console.error("svelte-kit sync did not write .svelte-kit/tsconfig.json.");
-  process.exit(1);
-}
-
 let tscJs;
 try {
   const pkgJson = require.resolve("typescript/package.json");
@@ -52,7 +45,7 @@ try {
     tscJs = path.join(path.dirname(pkgJson), "bin", "tsc");
   }
 } catch {
-  console.error("TypeScript is not installed (devDependency `typescript`).");
+  console.error("TypeScript 6 is not installed (devDependency `typescript`).");
   process.exit(1);
 }
 

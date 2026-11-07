@@ -3,11 +3,14 @@
  *
  * Each row is one base pair seen at a different phase of the twist: the two
  * nodes trade places along x, change size/opacity with depth, and the rung
- * length follows the twist. Each node uses one standard transform/opacity
- * animation. The second strand shares that timeline with a half-cycle offset,
- * avoiding independent reverse animations and unnecessary forced layers in
- * WebKit. Rows are phase-shifted with a negative delay so the strand reads as
- * one continuous spiral. Colors are tokens only.
+ * length follows the twist. Cost is kept deliberately low because the helix
+ * shares the webview's main thread with startup rendering: each node runs ONE
+ * transform+opacity animation (sampled sine/cosine keyframes, linear timing),
+ * the second strand is the same animation half a period later, the glow is a
+ * radial gradient (no blurred box-shadow), and the strand is layout/paint
+ * contained so its updates never invalidate the rest of the page. Rows are
+ * phase-shifted with a negative delay so the strand reads as one continuous
+ * spiral. Colors are tokens only.
  */
 
 .sequencing-helix {
@@ -24,6 +27,7 @@
   align-self: stretch;
   min-height: 11rem;
   padding: 0.2rem 0;
+  contain: layout paint style;
 }
 
 .helix-row {
@@ -46,7 +50,6 @@
 }
 
 .helix-node {
-  --helix-sine: cubic-bezier(0.37, 0, 0.63, 1);
   --helix-row-phase: calc(var(--i) * var(--helix-row-gap) * -1s);
   width: var(--helix-node, 0.56rem);
   height: var(--helix-node, 0.56rem);
@@ -54,19 +57,24 @@
   border-radius: 50%;
   background: var(--pair-color);
   transition: background var(--motion-base, 260ms) var(--motion-ease-out, ease-out);
-  animation: gc-helix-path var(--helix-period) linear infinite;
+  animation: gc-helix-orbit var(--helix-period) linear infinite;
   animation-delay: var(--helix-row-phase);
 }
 
-/* The glow lives on a pseudo-element so it can fade with opacity instead of
-   animating box-shadow (a main-thread paint on every frame). */
+/* Strand B is strand A half a period later (x and depth both mirror). */
+.helix-node-b {
+  background: color-mix(in srgb, var(--pair-color) 55%, var(--success));
+  animation-delay: calc(var(--helix-row-phase) - var(--helix-period) / 2);
+}
+
+/* The glow is a pre-rasterised radial gradient that fades with opacity; no
+   box-shadow blur is repainted per frame. */
 .helix-node::after {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -70%;
   border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0.55rem var(--accent);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 70%, transparent) 0%, transparent 68%);
   opacity: 0;
   transition: opacity var(--motion-slow, 420ms) var(--motion-ease-out, ease-out);
 }
@@ -75,18 +83,13 @@
   opacity: 1;
 }
 
-.helix-node-b {
-  background: color-mix(in srgb, var(--pair-color) 55%, var(--success));
-  animation-delay: calc(var(--helix-row-phase) - var(--helix-period) / 2);
-}
-
 .helix-rung {
   width: calc(var(--helix-amp) * 2);
   height: 1px;
   margin: 0 0 0 calc(var(--helix-amp) * -1);
   background: var(--pair-color);
   opacity: 0.55;
-  animation: gc-helix-rung calc(var(--helix-period) / 4) cubic-bezier(0.12, 0, 0.39, 0) infinite alternate;
+  animation: gc-helix-rung calc(var(--helix-period) / 2) linear infinite;
   animation-delay: calc(var(--i) * var(--helix-row-gap) * -1s);
 }
 
@@ -96,36 +99,38 @@
   animation-delay: calc(var(--i) * 0.09s);
 }
 
-@keyframes gc-helix-path {
-  0% {
-    transform: translateX(calc(var(--helix-amp) * -1)) scale(0.95);
-    opacity: 0.72;
-    animation-timing-function: var(--helix-sine);
-  }
-  25% {
-    transform: translateX(0) scale(1.35);
-    opacity: 1;
-    animation-timing-function: var(--helix-sine);
-  }
-  50% {
-    transform: translateX(var(--helix-amp)) scale(0.95);
-    opacity: 0.72;
-    animation-timing-function: var(--helix-sine);
-  }
-  75% {
-    transform: translateX(0) scale(0.65);
-    opacity: 0.35;
-    animation-timing-function: var(--helix-sine);
-  }
-  100% {
-    transform: translateX(calc(var(--helix-amp) * -1)) scale(0.95);
-    opacity: 0.72;
-  }
+/* x follows -cos, depth follows sin: one full turn per period. */
+@keyframes gc-helix-orbit {
+  0% { transform: translateX(calc(var(--helix-amp) * -1.0000)) scale(1.000); opacity: 0.675; }
+  6.25% { transform: translateX(calc(var(--helix-amp) * -0.9239)) scale(0.866); opacity: 0.551; }
+  12.5% { transform: translateX(calc(var(--helix-amp) * -0.7071)) scale(0.753); opacity: 0.445; }
+  18.75% { transform: translateX(calc(var(--helix-amp) * -0.3827)) scale(0.677); opacity: 0.375; }
+  25% { transform: translateX(calc(var(--helix-amp) * -0.0000)) scale(0.650); opacity: 0.350; }
+  31.25% { transform: translateX(calc(var(--helix-amp) * 0.3827)) scale(0.677); opacity: 0.375; }
+  37.5% { transform: translateX(calc(var(--helix-amp) * 0.7071)) scale(0.753); opacity: 0.445; }
+  43.75% { transform: translateX(calc(var(--helix-amp) * 0.9239)) scale(0.866); opacity: 0.551; }
+  50% { transform: translateX(calc(var(--helix-amp) * 1.0000)) scale(1.000); opacity: 0.675; }
+  56.25% { transform: translateX(calc(var(--helix-amp) * 0.9239)) scale(1.134); opacity: 0.799; }
+  62.5% { transform: translateX(calc(var(--helix-amp) * 0.7071)) scale(1.247); opacity: 0.905; }
+  68.75% { transform: translateX(calc(var(--helix-amp) * 0.3827)) scale(1.323); opacity: 0.975; }
+  75% { transform: translateX(calc(var(--helix-amp) * 0.0000)) scale(1.350); opacity: 1.000; }
+  81.25% { transform: translateX(calc(var(--helix-amp) * -0.3827)) scale(1.323); opacity: 0.975; }
+  87.5% { transform: translateX(calc(var(--helix-amp) * -0.7071)) scale(1.247); opacity: 0.905; }
+  93.75% { transform: translateX(calc(var(--helix-amp) * -0.9239)) scale(1.134); opacity: 0.799; }
+  100% { transform: translateX(calc(var(--helix-amp) * -1.0000)) scale(1.000); opacity: 0.675; }
 }
 
+/* Rung length is |cos| of the twist, two lobes per period. */
 @keyframes gc-helix-rung {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0.04); }
+  0% { transform: scaleX(1.000); }
+  12.5% { transform: scaleX(0.924); }
+  25% { transform: scaleX(0.707); }
+  37.5% { transform: scaleX(0.383); }
+  50% { transform: scaleX(0.040); }
+  62.5% { transform: scaleX(0.383); }
+  75% { transform: scaleX(0.707); }
+  87.5% { transform: scaleX(0.924); }
+  100% { transform: scaleX(1.000); }
 }
 
 @keyframes gc-helix-scan {

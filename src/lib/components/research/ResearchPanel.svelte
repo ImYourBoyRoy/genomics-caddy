@@ -1,11 +1,11 @@
 <!-- ./src/lib/components/research/ResearchPanel.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import "$lib/styles/components/research-panel.css";
-  import "$lib/styles/components/research-connection-card.css";
-  import "$lib/styles/components/research-scope-section.css";
-  import "$lib/styles/components/research-job-controls.css";
-  import "$lib/styles/components/research-live-log.css";
+  import "#lib/styles/components/research-panel.css";
+  import "#lib/styles/components/research-connection-card.css";
+  import "#lib/styles/components/research-scope-section.css";
+  import "#lib/styles/components/research-job-controls.css";
+  import "#lib/styles/components/research-live-log.css";
   import {
     startResearchEventListeners,
   } from "../../research/researchEvents";
@@ -55,7 +55,7 @@
   import ResearchFoundReviewPanel from "./ResearchFoundReviewPanel.svelte";
   import VectorAtlasPanel from "../ai/evidence/VectorAtlasPanel.svelte";
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
-  import "$lib/styles/components/vector-workbench.css";
+  import "#lib/styles/components/vector-workbench.css";
 
   function formatSweepStartError(raw: string): string {
     if (/database is locked|database table is locked/i.test(raw)) {

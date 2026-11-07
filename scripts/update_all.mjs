@@ -5,8 +5,8 @@ Purpose: One-shot “Update All” for Genomics Caddy toolchains and project dep
 Responsibilities:
   - Refresh Node (fnm/nvm/n) unless --skip-node, then npm/pnpm shims and rustup.
   - pnpm 12's native binary requires --allow-scripts=pnpm; stay on npm `latest` (not `next`).
-  - Bump package.json deps to latest stable and reinstall without a lockfile, including TypeScript majors.
-  - Svelte check remains usable on TS 7 via scripts/run_svelte_check.mjs (TS6 API shim until Svelte supports TS7 natively).
+  - Bump package.json deps to latest stable and reinstall without a retained lockfile.
+  - Keep SvelteKit 3 and project type checks on TypeScript 6 until the app adopts a newer compiler.
   - Refresh Cargo dependencies and incompatible crate bumps in src-tauri.
   - Run light verification (frontend check + cargo check) unless skipped.
 How to run:
@@ -189,23 +189,23 @@ function ensureCargoUpgrade() {
   return true;
 }
 
-function ensureTypescript6CompatDep() {
+function ensureTypescript6ForSvelteKit() {
   const pkgPath = path.join(repoRoot, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-  const tsRange = String(pkg.devDependencies?.typescript || pkg.dependencies?.typescript || "");
-  const needsTs6 =
-    /\^?7\b|>=\s*7\b/.test(tsRange) || tsRange.startsWith("7.");
-  if (!needsTs6) return;
   pkg.devDependencies = pkg.devDependencies || {};
-  if (!pkg.devDependencies["@typescript/typescript6"]) {
+  const desired = {
+    typescript: "^6.0.2",
+  };
+  const changes = Object.entries(desired).filter(([name, range]) => pkg.devDependencies[name] !== range);
+  if (changes.length) {
     if (dryRun) {
-      log('  [dry-run] add devDependency @typescript/typescript6@^6');
+      log("  [dry-run] keep SvelteKit 3 and project type checks on TypeScript 6");
       return;
     }
-    pkg.devDependencies["@typescript/typescript6"] = "^6.0.2";
+    for (const [name, range] of Object.entries(desired)) pkg.devDependencies[name] = range;
     fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
-    log("  Ensured @typescript/typescript6 for svelte-check shim");
-    report.steps.push({ name: "ensure @typescript/typescript6", ok: true });
+    log("  Kept SvelteKit and project type checks on TypeScript 6");
+    report.steps.push({ name: "ensure TypeScript 6", ok: true });
   }
 }
 
@@ -278,8 +278,8 @@ async function main() {
 
   if (!skipNpm) {
     step("2) frontend packages — bump package.json to latest + lock-free reinstall");
-    // Update everything to latest, including TypeScript majors. Fix breaks after.
-    // Uses --legacy-peer-deps (also in .npmrc): Kit's peerOptional still says TS≤6.
+    // Update dependencies to latest stable, then restore the TypeScript 6
+    // compatibility range required by the current SvelteKit 3 integration.
     // cookie stays on 1.x: Kit still consumes cookie 1, and latest is 2.0.1.
     // Tauri npm latest tags are 2.x; --target latest will not take the `next` 3.0 alpha.
     run(
@@ -297,7 +297,7 @@ async function main() {
         allowFail: false,
       },
     );
-    ensureTypescript6CompatDep();
+    ensureTypescript6ForSvelteKit();
     run(process.execPath, [path.join(scriptDir, "pnpm_unlocked.mjs"), "install"], { allowFail: false });
     // A fresh install runs dependency lifecycle scripts. pnpm 12's standalone
     // rebuild command requires a retained project lockfile, which this

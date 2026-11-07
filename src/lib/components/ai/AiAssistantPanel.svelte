@@ -38,7 +38,7 @@
   } from "../../utils/consultationContextPack";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
   import type { ProfileContext } from '../../utils/profileContext';
-  import "$lib/styles/components/ai-assistant-panel.css";
+  import "#lib/styles/components/ai-assistant-panel.css";
   import ChatSidebar from "./ChatSidebar.svelte";
   import ChatWindow from "./ChatWindow.svelte";
   import ChatSettingsDrawer from "./ChatSettingsDrawer.svelte";

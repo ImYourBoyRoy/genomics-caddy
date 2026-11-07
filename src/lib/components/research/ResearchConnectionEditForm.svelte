@@ -5,7 +5,7 @@
 -->
 <script lang="ts">
   import type { QdrantConfigPublic, QdrantConnectionStatus } from "../../types/research";
-  import "$lib/styles/components/research-connection-card.css";
+  import "#lib/styles/components/research-connection-card.css";
   import Tooltip from "../common/Tooltip.svelte";
 
   interface Props {

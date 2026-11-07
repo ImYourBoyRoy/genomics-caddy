@@ -322,7 +322,7 @@
       "name": "CYP2D6*4",
       "risk_allele": "A",
       "impact": "Reduced/Inactive CYP2D6 enzyme activity",
-      "description": "CYP2D6*4 is a well-established no-function allele. An A/A result at rs3892097 may be consistent with a poor-metabolizer diplotype when the rest of the CYP2D6 genotype supports it; full clinical PGx interpretation is required before applying drug guidance."
+      "description": "CYP2D6*4 is a no-function allele component, but a complete clinical result is needed. For fluoxetine, CPIC gives no gene-based dosing recommendation because the clinical impact is unclear; this marker is not validated to predict emotional numbness."
     },
     {
       "rsid": "rs1057910",
@@ -348,8 +348,8 @@
       "category": "pgx",
       "name": "CYP2C19*17",
       "risk_allele": "T",
-      "impact": "Ultra-rapid CYP2C19 enzyme metabolism",
-      "description": "The CYP2C19*17 variant is associated with increased transcription. T-carriers are ultra-rapid metabolizers of SSRI antidepressants (like escitalopram and sertraline) and proton pump inhibitors (PPIs), potentially leading to lower drug efficacy at standard doses."
+      "impact": "CYP2C19 increased-function allele component; incomplete alone",
+      "description": "The T allele contributes to CYP2C19*17, an increased-function allele. For sertraline, CPIC recommends the usual starting dose for rapid or ultrarapid CYP2C19 phenotypes. This one marker cannot show a full result and is not validated to predict emotional numbness."
     },
     {
       "rsid": "rs4244285",
@@ -358,7 +358,7 @@
       "name": "CYP2C19*2",
       "risk_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
-      "description": "CYP2C19*2 is a common loss-of-function allele. Homozygous carriers have poor metabolizer status, leading to reduced activation of clopidogrel and slow clearance of certain SSRIs and PPIs."
+      "description": "The A allele contributes to CYP2C19*2, a no-function allele. A complete clinical poor-metabolizer result can inform sertraline exposure and general side-effect discussion, but this one marker cannot establish that result or reliably predict emotional numbness."
     },
     {
       "rsid": "rs4986893",
@@ -367,7 +367,7 @@
       "name": "CYP2C19*3",
       "risk_allele": "A",
       "impact": "Reduced CYP2C19 enzyme activity (loss of function)",
-      "description": "CYP2C19*3 is a no-function allele that introduces a premature stop codon and is observed more often in East Asian populations. Homozygosity or compound heterozygosity may support a poor-metabolizer phenotype, but the complete clinical diplotype is required."
+      "description": "CYP2C19*3 is a no-function allele observed more often in some East Asian-ancestry populations. A complete clinical poor-metabolizer result can inform sertraline exposure and general side-effect discussion, but this one marker cannot establish that result or reliably predict emotional numbness."
     },
     {
       "rsid": "rs4149056",
@@ -409,10 +409,10 @@
       "rsid": "rs3745274",
       "gene": "CYP2B6",
       "category": "pgx",
-      "name": "CYP2B6*6",
+      "name": "CYP2B6 rs3745274 (*6-associated component)",
       "risk_allele": "T",
-      "impact": "Reduced CYP2B6 metabolism",
-      "description": "The CYP2B6*6 variant is associated with reduced enzyme activity and expression. Carriers of the T allele may experience slow clearance of bupropion (Wellbutrin), methadone, and efavirenz, leading to elevated drug exposure."
+      "impact": "CYP2B6 reduced-function allele component; incomplete alone",
+      "description": "The T allele at rs3745274 is one of two core variants used to define CYP2B6*6; rs2279343 is the other. A validated CYP2B6 phenotype can inform sertraline exposure, but this marker cannot establish the phenotype or reliably predict emotional numbness."
     },
     {
       "rsid": "rs2231142",
@@ -493,7 +493,7 @@
       "name": "CYP2D6 star-allele/CNV/hybrid interpreter required",
       "risk_allele": "CLINICAL_DIPLOTYPE",
       "impact": "CYP2D6 metabolizer phenotype cannot be inferred from one SNP",
-      "description": "CYP2D6 requires star-allele diplotype, copy-number, deletion/duplication, and hybrid allele interpretation. Single SNPs such as *4 or *10 are incomplete."
+      "description": "CYP2D6 requires full star-allele and copy-number interpretation. For fluoxetine, CPIC gives no gene-based dosing recommendation because clinical impact is unclear; CYP2D6 markers are not validated to predict emotional numbness."
     },
     {
       "rsid": "PANEL_HLA_PHARMACOGENOMICS_CONFIRMATION",

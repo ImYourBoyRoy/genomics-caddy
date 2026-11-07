@@ -124,13 +124,21 @@ export interface OfflineAssetStatus {
   asset_id: string;
   tier: number;
   label: string;
+  source_url: string | null;
   local_present: boolean;
   local_bytes: number;
   row_count: number;
   synced_at: number | null;
+  downloaded_at: number | null;
+  indexed_at: number | null;
   update_available: boolean;
   remote_content_length: number | null;
   version_label: string | null;
+  remote_version_label: string | null;
+  last_checked_at: number | null;
+  previous_row_count: number | null;
+  previous_version_label: string | null;
+  source_changed_at: number | null;
   message: string;
   display_size: string;
 }

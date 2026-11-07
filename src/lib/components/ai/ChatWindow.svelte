@@ -11,7 +11,7 @@
   import { classifyOllamaEndpoint } from '../../utils/ollamaSettings';
   import type { ChatProvider } from '../../utils/chatProvider';
   import { chatgptOpenUsage } from '../../api/chatgpt';
-  import '$lib/styles/components/chat-window.css';
+  import '#lib/styles/components/chat-window.css';
 
   interface Props {
     messages: { role: "user" | "assistant" | "system"; content: string; fullContent?: string; images?: string[] }[];

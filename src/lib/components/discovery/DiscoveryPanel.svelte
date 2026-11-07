@@ -16,10 +16,10 @@
     cancelDiscoveryQuery,
     type DiscoveryFindingItem,
     type DiscoveryQueryResult,
-  } from "$lib/api/tauri";
-  import type { GenomeSample } from "$lib/types/genomics";
-  import "$lib/styles/components/discovery-panel.css";
-  import "$lib/styles/components/explore-help.css";
+  } from "#lib/api/tauri.js";
+  import type { GenomeSample } from "#lib/types/genomics.js";
+  import "#lib/styles/components/discovery-panel.css";
+  import "#lib/styles/components/explore-help.css";
 
   interface Props {
     selectedSample: GenomeSample;

@@ -1,7 +1,7 @@
 {
   "name": "Global Safety Guardrails",
-  "version": "1.6.1",
-  "last_updated": "2026-08-26",
+  "version": "1.6.2",
+  "last_updated": "2026-11-05",
   "personal_context_notes": {
     "allergies": "Reported allergies or intolerances take priority over genotype-based food and supplement prompts; never use raw DNA to clear an exposure.",
     "medications": "Current medication names are safety context only. Confirm the exact product, active ingredients, dose, timing, indication, and prescriber instructions before acting.",
@@ -31,6 +31,7 @@
       "Exact medication name and active ingredient(s)",
       "Dose, timing, indication, start date, and prescriber instructions",
       "Current benefit, side effects, adherence, and any planned medication changes",
+      "Past reactions to the same medicine, including what happened, the dose and timing, and whether it changed later",
       "Pregnancy, lactation, menopause, hormone therapy, or contraceptive context when relevant",
       "Allergies, kidney/liver conditions, and the complete supplement/OTC list"
     ],

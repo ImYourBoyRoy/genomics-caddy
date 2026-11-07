@@ -12,8 +12,8 @@
   import type { Snippet } from 'svelte';
   import ThemeToggle from '../common/ThemeToggle.svelte';
   import LibraryPanel from '../sidebar/LibraryPanel.svelte';
-  import '$lib/styles/components/settings-dialog.css';
-  import '$lib/styles/components/library-panel.css';
+  import '#lib/styles/components/settings-dialog.css';
+  import '#lib/styles/components/library-panel.css';
 
   interface Props {
     open: boolean;

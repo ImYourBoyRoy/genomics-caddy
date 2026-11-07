@@ -1,12 +1,12 @@
 [package]
 name = "DNA-Tools"
-version = "0.2.11"
+version = "0.2.12"
 description = "Local-first desktop DNA explorer (Genomics Caddy) for AncestryDNA and 23andMe exports."
 authors = ["Roy Dawson IV"]
 license = "PolyForm-Noncommercial-1.0.0"
 keywords = ["genomics", "dna", "bioinformatics", "privacy", "tauri"]
 edition = "2024"
-rust-version = "1.98.1"
+rust-version = "1.99.1"
 default-run = "DNA-Tools"
 
 [workspace]
@@ -23,55 +23,55 @@ name = "tauri_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-# Pin the Tauri 2 line exactly. Cargo "latest" is 3.0 alpha; do not float there.
-tauri-build = { version = "2.7.0", features = [] }
+# Stay on the Tauri 2 line; do not float into a future breaking major.
+tauri-build = { version = "^2.7.4", features = [] }
 
 [dependencies]
-tauri = { version = "2.12.0", features = ["image-png"] }
-tauri-plugin-opener = "=2.5.5"
-tauri-plugin-updater = "=2.12.0"
-tauri-plugin-process = "=2.3.1"
-minisign-verify = "0.2.5"
-base64 = ">=0.23.1"
-serde = { version = ">=1.0.229", features = ["derive"] }
-serde_json = ">=1.0.151"
-rusqlite = { version = ">=0.40.2", features = ["bundled"] }
-csv = ">=1.4.0"
-rayon = ">=1.12.0"
-reqwest = { version = ">=0.13.5", features = ["json", "stream", "blocking", "form"] }
-tokio = { version = ">=1.53.1", features = ["full"] }
-futures-util = ">=0.3.34"
-flate2 = ">=1.1.10"
-rfd = ">=0.17.2"
-zip = { version = ">=9.0.0-pre3", default-features = false, features = ["deflate"] }
-dotenvy = ">=0.15.7"
-keyring = "4.2.0"
-jsonwebtoken = { version = "11.1.0", default-features = false, features = ["rust_crypto"] }
-url = ">=2.5.8"
-noodles-vcf = ">=0.93.0"
-noodles-bgzf = ">=0.51.0"
-noodles-tabix = ">=0.67.0"
-noodles-core = ">=0.20.0"
-noodles-csi = ">=0.61.0"
-sha2 = ">=0.11.0"
-hex = ">=0.4.3"
-getrandom = ">=0.4.3"
-bzip2 = ">=0.6.1"
-md5 = "0.8.1"
-generic-array = ">=1.4.5"
-toml = ">=1.1.6"
-toml_datetime = ">=1.1.1"
-toml_edit = ">=0.25.15"
+tauri = { version = "^2.12.5", features = ["image-png"] }
+tauri-plugin-opener = "^2.5.5"
+tauri-plugin-updater = "^2.12.0"
+tauri-plugin-process = "^2.3.1"
+minisign-verify = "^0.2.5"
+base64 = "^0.23.1"
+serde = { version = "^1.0.229", features = ["derive"] }
+serde_json = "^1.0.151"
+rusqlite = { version = "^0.40.2", features = ["bundled"] }
+csv = "^1.4.0"
+rayon = "^1.12.0"
+reqwest = { version = "^0.13.5", features = ["json", "stream", "blocking", "form"] }
+tokio = { version = "^1.53.1", features = ["full"] }
+futures-util = "^0.3.34"
+flate2 = "^1.1.10"
+rfd = "^0.17.2"
+zip = { version = "^9.0.0", default-features = false, features = ["deflate"] }
+dotenvy = "^0.15.7"
+keyring = "^4.2.0"
+jsonwebtoken = { version = "^11.1.0", default-features = false, features = ["rust_crypto"] }
+url = "^2.5.8"
+noodles-vcf = "^0.93.0"
+noodles-bgzf = "^0.51.0"
+noodles-tabix = "^0.67.0"
+noodles-core = "^0.20.0"
+noodles-csi = "^0.61.0"
+sha2 = "^0.11.0"
+hex = "^0.4.3"
+getrandom = "^0.4.3"
+bzip2 = "^0.6.1"
+md5 = "^0.8.1"
+generic-array = "^1.4.5"
+toml = "^1.1.6"
+toml_datetime = "^1.1.1"
+toml_edit = "^0.25.15"
 
 [target.'cfg(unix)'.dependencies]
 # libc 1.0 is still alpha. Stay on the 0.2 stable line.
-libc = ">=0.2.189, <1"
+libc = "^0.2.189"
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))'.dependencies]
 # Match wry 0.55 / Tauri 2 webkit bindings so agent-UI viewport capture can
 # snapshot the live WebKit view on Wayland without compositor screenshot APIs.
-webkit2gtk = { version = "=2.0.2", features = ["v2_38"] }
-cairo-rs = { version = "0.18", features = ["png"] }
+webkit2gtk = { version = "^2.0.2", features = ["v2_38"] }
+cairo-rs = { version = "^0.18.0", features = ["png"] }
 
 # `tauri build` enables this automatically. Keep it default so a plain
 # `cargo build --release` also embeds frontendDist. Without it the window

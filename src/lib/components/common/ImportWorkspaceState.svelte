@@ -1,14 +1,14 @@
 <!-- ./src/lib/components/common/ImportWorkspaceState.svelte -->
 <script lang="ts">
-  import type { GenomeImportPreview } from "$lib/types/genomics";
+  import type { GenomeImportPreview } from "#lib/types/genomics.js";
   import { untrack } from "svelte";
   import { buildImportSteps, stepStates } from "./bootstrap/bootstrapPipeline";
   import LoadingTelemetryStrip from "./loading/LoadingTelemetryStrip.svelte";
   import PipelineProgressBar from "./loading/PipelineProgressBar.svelte";
   import PipelineStepList from "./loading/PipelineStepList.svelte";
   import type { PipelineSegment } from "./loading/pipelineTypes";
-  import { PipelineClock } from "$lib/utils/pipelineClock.svelte";
-  import type { ImportPhase, ImportStepId } from "$lib/utils/importProgress";
+  import { PipelineClock } from "#lib/utils/pipelineClock.svelte.js";
+  import type { ImportPhase, ImportStepId } from "#lib/utils/importProgress.js";
 
   interface Props {
     phase: ImportPhase;

@@ -40,8 +40,8 @@ describe('profile context workspaces', () => {
   });
 
   it('keeps context field chrome in an external stylesheet that cannot overlap', () => {
-    expect(contextSource).toContain("import '$lib/styles/components/context-panel.css'");
-    expect(pageSource).toContain('import "$lib/styles/components/context-panel.css"');
+    expect(contextSource).toContain("import '#lib/styles/components/context-panel.css'");
+    expect(pageSource).toContain('import "#lib/styles/components/context-panel.css"');
     expect(contextSource).not.toContain('<style>');
     expect(contextStyles).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
     expect(contextStyles).toContain('min-width: 0;');

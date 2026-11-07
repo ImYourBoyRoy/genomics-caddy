@@ -62,7 +62,16 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
             row_count INTEGER NOT NULL DEFAULT 0,
             version_label TEXT,
             synced_at INTEGER NOT NULL DEFAULT 0,
-            update_available INTEGER NOT NULL DEFAULT 0
+            update_available INTEGER NOT NULL DEFAULT 0,
+            checked_etag TEXT,
+            checked_last_modified TEXT,
+            checked_content_filename TEXT,
+            checked_at INTEGER,
+            previous_row_count INTEGER,
+            previous_version_label TEXT,
+            source_changed_at INTEGER,
+            downloaded_at INTEGER,
+            indexed_at INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS reference.pharmgkb_clinical_variants (
@@ -116,6 +125,39 @@ pub fn migrate_offline_schema(conn: &Connection) -> Result<()> {
         CREATE INDEX IF NOT EXISTS idx_variant_locus_rsid ON variant_locus(rsid);
         CREATE INDEX IF NOT EXISTS idx_variant_locus_coords ON variant_locus(assembly, chrom, pos);
         ",
+    )?;
+
+    // Track both the installed revision and the latest remote probe. This lets
+    // the UI explain what changed without treating an HTTP validator as a
+    // dataset version. Existing databases receive these columns in place.
+    for (column, ddl) in [
+        ("checked_etag", "TEXT"),
+        ("checked_last_modified", "TEXT"),
+        ("checked_content_filename", "TEXT"),
+        ("checked_at", "INTEGER"),
+        ("previous_row_count", "INTEGER"),
+        ("previous_version_label", "TEXT"),
+        ("source_changed_at", "INTEGER"),
+        ("downloaded_at", "INTEGER"),
+        ("indexed_at", "INTEGER"),
+    ] {
+        ensure_column(conn, "reference", "offline_asset_registry", column, ddl)?;
+    }
+
+    // Backfill only catalog/locus rows whose old registry count proves that an
+    // index was built. File-only resources such as the liftover chain are not
+    // database indexes and must not receive an indexed timestamp.
+    conn.execute(
+        "UPDATE reference.offline_asset_registry
+         SET indexed_at = synced_at
+         WHERE indexed_at IS NULL AND synced_at > 0 AND row_count > 0
+           AND asset_id IN (
+             'gwas_catalog', 'clinvar_variant_summary', 'clinvar_submission_summary',
+             'pharmgkb_clinical_variants', 'pharmgkb_genes', 'clingen_gene_validity',
+             'mane_select_summary', 'dbsnp_merged_json', 'dbsnp_withdrawn_json',
+             'tier2_variant_locus'
+           )",
+        [],
     )?;
 
     // Catalog sidecars exist only after download/import — skip DDL until attached.

@@ -1,9 +1,9 @@
 <!-- ./src/lib/components/report/ReportLoadingState.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { ReportGenerationProgress } from '$lib/types/genomics';
-  import SequencingHelix from '$lib/components/common/loading/SequencingHelix.svelte';
-  import '$lib/styles/components/report-loading.css';
+  import type { ReportGenerationProgress } from '#lib/types/genomics.js';
+  import SequencingHelix from '#lib/components/common/loading/SequencingHelix.svelte';
+  import '#lib/styles/components/report-loading.css';
 
   interface Props {
     sampleName: string;

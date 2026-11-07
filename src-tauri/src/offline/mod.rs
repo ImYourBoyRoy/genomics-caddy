@@ -12,6 +12,7 @@ pub mod lookup;
 pub mod manifest;
 pub mod schema;
 
+mod maintenance;
 mod download;
 mod import_clingen;
 mod import_clinvar;
@@ -24,6 +25,7 @@ mod sync;
 pub mod tier2;
 
 pub use lookup::*;
+pub use maintenance::OfflineMaintenanceResult;
 pub use manifest::{OfflineAssetId, OfflineAssetStatus, OfflineTierStatus};
 pub use sync::{
     OfflineIndexedSummary, OfflineRemoteCheckStatus, OfflineRuntimeArtifactStatus,

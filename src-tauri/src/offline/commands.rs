@@ -3,6 +3,9 @@ use super::sync::{
     OfflineSyncResult, OfflineUpdateCheck, build_tier2_for_sample, check_offline_updates,
     sync_all_missing, sync_offline_tier, sync_single_asset,
 };
+use super::maintenance::{
+    OfflineMaintenanceResult, delete_database, purge_all_downloads, remove_download,
+};
 use crate::{get_data_dir, get_db_path};
 use tauri::AppHandle;
 
@@ -11,6 +14,48 @@ pub async fn check_offline_data_updates(app: AppHandle) -> Result<OfflineUpdateC
     let data_dir = get_data_dir(&app);
     let db_path = get_db_path(&app);
     check_offline_updates(&data_dir, &db_path).await
+}
+
+#[tauri::command]
+pub async fn remove_offline_download(
+    app: AppHandle,
+    asset_id: String,
+) -> Result<OfflineMaintenanceResult, String> {
+    let _guard = super::sync::resource_operation_mutex().lock().await;
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        remove_download(&data_dir, &db_path, &asset_id)
+    })
+    .await
+    .map_err(|error| format!("Reference download removal worker failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn delete_offline_database(
+    app: AppHandle,
+    database_id: String,
+) -> Result<OfflineMaintenanceResult, String> {
+    let _guard = super::sync::resource_operation_mutex().lock().await;
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        delete_database(&data_dir, &db_path, &database_id)
+    })
+    .await
+    .map_err(|error| format!("Reference database deletion worker failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn purge_offline_downloads(
+    app: AppHandle,
+) -> Result<OfflineMaintenanceResult, String> {
+    let _guard = super::sync::resource_operation_mutex().lock().await;
+    let data_dir = get_data_dir(&app);
+    let db_path = get_db_path(&app);
+    tauri::async_runtime::spawn_blocking(move || purge_all_downloads(&data_dir, &db_path))
+        .await
+        .map_err(|error| format!("Reference-data purge worker failed: {error}"))?
 }
 
 /// Sync all assets in a tier.

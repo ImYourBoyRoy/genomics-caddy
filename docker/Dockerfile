@@ -10,7 +10,7 @@ FROM node:22-bookworm-slim AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-COPY svelte.config.js vite.config.ts tsconfig.json ./
+COPY vite.config.js tsconfig.json ./
 COPY src ./src
 COPY static ./static
 RUN npm run build

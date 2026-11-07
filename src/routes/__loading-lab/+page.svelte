@@ -7,12 +7,12 @@
     Production / Tauri release builds show a closed gate instead of fixtures.
   */
   import { page } from "$app/state";
-  import BootstrapOverlay from "$lib/components/common/bootstrap/BootstrapOverlay.svelte";
+  import BootstrapOverlay from "#lib/components/common/bootstrap/BootstrapOverlay.svelte";
   import {
     LOADING_LAB_DEFAULT_SCENARIO,
     LOADING_LAB_SCENARIO_IDS,
     loadingLabScenario,
-  } from "$lib/dev/loadingLabScenarios";
+  } from "#lib/dev/loadingLabScenarios.js";
 
   const isDev = import.meta.env.DEV;
   const scenarioId = $derived(page.url.searchParams.get("s") ?? LOADING_LAB_DEFAULT_SCENARIO);

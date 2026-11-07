@@ -929,6 +929,25 @@ export async function checkOfflineDataUpdates(): Promise<OfflineUpdateCheck> {
   return invoke<OfflineUpdateCheck>("check_offline_data_updates");
 }
 
+export interface OfflineMaintenanceResult {
+  files_removed: number;
+  bytes_freed: number;
+  databases_removed: number;
+  records_removed: number;
+}
+
+export async function removeOfflineDownload(assetId: string): Promise<OfflineMaintenanceResult> {
+  return invoke<OfflineMaintenanceResult>("remove_offline_download", { assetId });
+}
+
+export async function deleteOfflineDatabase(databaseId: string): Promise<OfflineMaintenanceResult> {
+  return invoke<OfflineMaintenanceResult>("delete_offline_database", { databaseId });
+}
+
+export async function purgeOfflineDownloads(): Promise<OfflineMaintenanceResult> {
+  return invoke<OfflineMaintenanceResult>("purge_offline_downloads");
+}
+
 export interface ReferenceStatusDetails {
   clinvar_raw_found: boolean;
   clinvar_indexed_rows: number;

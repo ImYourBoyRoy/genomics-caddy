@@ -5,6 +5,14 @@ For product usage see the [root README](../../README.md) and
 changing the repo. Everyday installs come from GitHub Releases, not
 `pnpm run tauri:dev`.
 
+## Toolchain
+
+Development uses Node.js 26 or newer, pnpm 12, and Rust 1.99.1 or newer.
+SvelteKit 3 configuration lives in `vite.config.js`; do not restore a
+`svelte.config.js` file, which SvelteKit 3 rejects. The app uses TypeScript 6,
+as required by SvelteKit 3. `package.json` maps `#lib/*` imports to `src/lib/`;
+keep those imports explicit with a module extension.
+
 ## Rules of the road
 
 - Stay in this repository unless a task names an external dependency.
@@ -12,8 +20,9 @@ changing the repo. Everyday installs come from GitHub Releases, not
 - `src/lib/marker-packs/` is curated source. Keep
   `src-tauri/App/Data/marker-packs/` mirrored. Never delete a pack for
   cleanup.
-- Lockfiles are intentionally absent. Install with
-  `node ./scripts/pnpm_unlocked.mjs install`, not a committed `pnpm-lock.yaml`.
+- Lockfiles are not tracked or committed. The unlocked install helper keeps its
+  resolver lock outside the repository; pre-existing ignored local lockfiles
+  are left alone. Install with `node ./scripts/pnpm_unlocked.mjs install`.
 - Full agent workflow: [AGENTS.md](../../AGENTS.md).
 
 ## GitHub gates

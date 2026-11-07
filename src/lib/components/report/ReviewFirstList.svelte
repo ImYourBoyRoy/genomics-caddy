@@ -9,10 +9,10 @@
   Notes: Wording comes from the authored plan and layperson copy. The single
   app-wide safety line lives in the app footer, not in these rows.
   */
-  import '$lib/styles/components/finding-rows.css';
+  import '#lib/styles/components/finding-rows.css';
   import type { GeneratedReport } from '../../types/genomics';
   import type { ActionablePlan, TopFinding } from '../../utils/actionabilityEngine';
-  import { getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
+  import { getCompactSimpleReviewAction, getLaypersonTranslation, getSimpleFindingCopy } from '../../utils/layperson';
   import {
     ACTION_DOMAINS,
     ACTION_DOMAIN_LABELS,
@@ -74,7 +74,8 @@
   }
 
   function nextStepFor(finding: TopFinding): string {
-    return copyFor(finding)?.review_action ?? 'Review the detailed finding for personal relevance.';
+    const action = copyFor(finding)?.review_action ?? 'Review the detailed finding for personal relevance.';
+    return getCompactSimpleReviewAction(action);
   }
 
   function concernFor(finding: TopFinding): 'high' | 'moderate' | 'low' {

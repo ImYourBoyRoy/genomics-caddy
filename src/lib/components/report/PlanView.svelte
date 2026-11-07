@@ -10,8 +10,8 @@
   Notes: Items come from deriveActionablePlan via planActions; evidence labels
   and avoid/discuss framing are preserved. Safety copy lives in the app footer.
   */
-  import '$lib/styles/components/finding-rows.css';
-  import '$lib/styles/components/plan-view.css';
+  import '#lib/styles/components/finding-rows.css';
+  import '#lib/styles/components/plan-view.css';
   import type { GeneratedReport } from '../../types/genomics';
   import { buildLabRequestListText, deriveActionablePlan } from '../../utils/actionabilityEngine';
   import {

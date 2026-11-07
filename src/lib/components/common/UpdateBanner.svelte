@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/common/UpdateBanner.svelte -->
 <script lang="ts">
   import { formatUpdateBannerCopy, type UpdateInstallKind } from '../../utils/updater';
-  import '$lib/styles/components/update-banner.css';
+  import '#lib/styles/components/update-banner.css';
 
   /*
   Purpose: Presentational signed-update strip.

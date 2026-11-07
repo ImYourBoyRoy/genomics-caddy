@@ -29,7 +29,7 @@
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
   import { runEvidenceSearch, type BrowsePreset } from "../../utils/evidenceSearch";
   import { TRAIT_CATEGORIES } from "../../constants/traitCategories";
-  import "$lib/styles/components/evidence-library-panel.css";
+  import "#lib/styles/components/evidence-library-panel.css";
 
   interface Props {
     ollamaUrl: string;

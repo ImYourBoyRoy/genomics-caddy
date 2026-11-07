@@ -37,11 +37,11 @@ import { onMount, onDestroy } from 'svelte';
     type ResourceSyncEvent,
     type ResourceSyncTelemetry,
   } from '../../utils/resourceSyncTelemetry';
-  import '$lib/styles/components/sidebar.css';
-  import '$lib/styles/components/sidebar-progress.css';
-  import '$lib/styles/components/reference-data-panel.css';
-  import '$lib/styles/components/reference-data-updates.css';
-  import '$lib/styles/components/library-panel.css';
+  import '#lib/styles/components/sidebar.css';
+  import '#lib/styles/components/sidebar-progress.css';
+  import '#lib/styles/components/reference-data-panel.css';
+  import '#lib/styles/components/reference-data-updates.css';
+  import '#lib/styles/components/library-panel.css';
 
   /*
   Module Docstring:
@@ -1531,45 +1531,44 @@ import { onMount, onDestroy } from 'svelte';
     <h2>Genomics Caddy</h2>
   </div>
 
-  {#if !runtimeAvailable}
-    <div class="runtime-note" role="note">
-      Desktop runtime required for local DNA import, catalogs, and saved profiles. The browser preview is read-only.
-    </div>
-  {/if}
-
   <div class="sidebar-profile-workspace" aria-label="Genome profiles">
     <span class="sidebar-group-label">Profiles</span>
 
-    <SampleList
-      {samples}
-      {selectedSample}
-      disabled={sweepRunning || !runtimeAvailable}
-      disabledReason={sweepRunning
-        ? 'Profile actions pause while a research sweep is running.'
-        : 'The desktop runtime is unavailable.'}
-      selectionDisabled={!isChainDownloaded}
-      selectionDisabledReason="Install the required coordinate map before viewing this profile."
-      {onSelectSample}
-      {onOpenChromosomeContext}
-      {onDeleteSample}
-    />
+    {#if runtimeAvailable}
+      <SampleList
+        {samples}
+        {selectedSample}
+        disabled={sweepRunning}
+        disabledReason="Profile actions pause while a research sweep is running."
+        selectionDisabled={!isChainDownloaded}
+        selectionDisabledReason="Install the required coordinate map before viewing this profile."
+        {onSelectSample}
+        {onOpenChromosomeContext}
+        {onDeleteSample}
+      />
 
-    <GenomeImportPanel
-      bind:filePath
-      bind:sampleNameInput
-      {isImportPreparing}
-      {isImporting}
-      {progressPercent}
-      {progressStatus}
-      {importError}
-      {importSuccess}
-      disabled={sweepRunning || !runtimeAvailable}
-      {isChainDownloaded}
-      {isDownloadingChain}
-      {onBrowseFile}
-      {onImportGenome}
-      {onDownloadChain}
-    />
+      <GenomeImportPanel
+        bind:filePath
+        bind:sampleNameInput
+        {isImportPreparing}
+        {isImporting}
+        {progressPercent}
+        {progressStatus}
+        {importError}
+        {importSuccess}
+        disabled={sweepRunning}
+        {isChainDownloaded}
+        {isDownloadingChain}
+        {onBrowseFile}
+        {onImportGenome}
+        {onDownloadChain}
+      />
+    {:else}
+      <div class="runtime-preview-note card" role="note">
+        <h3>Desktop app needed</h3>
+        <p>Import DNA and manage saved profiles in the desktop app.</p>
+      </div>
+    {/if}
   </div>
 
   </div>

@@ -17,7 +17,7 @@ use super::manifest::{
     asset_def, local_path, tier_budget_bytes,
 };
 use super::registry::{
-    clear_update_flags, mark_update_available, read_registry, row_count_for_asset,
+    clear_update_flags, read_registry, record_remote_probe, row_count_for_asset,
     store_remote_content_length, upsert_registry,
 };
 use super::schema::migrate_offline_schema;
@@ -53,6 +53,12 @@ pub fn is_offline_import_cancelled() -> bool {
 
 /// Serializes SQLite import work so downloads can run in parallel safely.
 fn import_mutex() -> &'static AsyncMutex<()> {
+    static LOCK: OnceLock<AsyncMutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| AsyncMutex::new(()))
+}
+
+/// Serializes source downloads/imports with explicit deletion operations.
+pub(super) fn resource_operation_mutex() -> &'static AsyncMutex<()> {
     static LOCK: OnceLock<AsyncMutex<()>> = OnceLock::new();
     LOCK.get_or_init(|| AsyncMutex::new(()))
 }
@@ -143,6 +149,19 @@ pub fn liftover_chain_path(data_dir: &Path, db_path: &Path) -> PathBuf {
     let definition = asset_def(OfflineAssetId::LiftoverChain)
         .expect("canonical liftover asset must exist in the offline manifest");
     super::manifest::local_path(data_dir, custom_dir.as_deref(), definition)
+}
+
+fn managed_asset_path(
+    data_dir: &Path,
+    custom_dir: Option<&Path>,
+    definition: &OfflineAssetDef,
+) -> PathBuf {
+    let custom_dir = if definition.id == OfflineAssetId::GnomadIndexManifest {
+        None
+    } else {
+        custom_dir
+    };
+    local_path(data_dir, custom_dir, definition)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -417,7 +436,38 @@ struct RemoteProbeSummary {
     head_fallbacks: u32,
 }
 
-/// Compare local registry metadata to remote identity metadata for already-downloaded assets.
+fn should_probe_installed_revision(
+    local_present: bool,
+    registry: Option<&crate::offline::registry::RegistryRow>,
+) -> bool {
+    local_present
+        || registry.is_some_and(|row| {
+            row.local_sha256.is_some()
+                || row.local_bytes > 0
+                || row.remote_etag.is_some()
+                || row.remote_last_modified.is_some()
+                || row.version_label.is_some()
+        })
+}
+
+fn remote_file_marker(registry: &crate::offline::registry::RegistryRow) -> Option<String> {
+    registry
+        .checked_content_filename
+        .clone()
+        .or_else(|| registry.checked_last_modified.clone())
+        .or_else(|| {
+            registry
+                .checked_etag
+                .as_deref()
+                .zip(registry.remote_etag.as_deref())
+                .filter(|(checked, installed)| checked != installed)
+                // ETags are opaque server tokens and can contain implementation
+                // details. Report only that the server's identifier changed.
+                .map(|_| "File identifier changed".to_string())
+        })
+}
+
+/// Compare installed or indexed reference data to remote identity metadata.
 async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSummary {
     struct UpdateProbe {
         id: OfflineAssetId,
@@ -433,11 +483,12 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
     let _ = with_conn(db_path, |conn| {
         for def in all_assets() {
             let Some(url) = def.url else { continue };
-            let path = local_path(data_dir, custom_dir.as_deref(), def);
-            if !asset_local_present(data_dir, custom_dir.as_deref(), def, &path) {
+            let path = managed_asset_path(data_dir, custom_dir.as_deref(), def);
+            let local_present = asset_local_present(data_dir, custom_dir.as_deref(), def, &path);
+            let reg = read_registry(conn, def.id.as_str());
+            if !should_probe_installed_revision(local_present, reg.as_ref()) {
                 continue;
             }
-            let reg = read_registry(conn, def.id.as_str());
             probes.push(UpdateProbe {
                 id: def.id,
                 url: url.to_string(),
@@ -474,6 +525,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
                 remote.head.content_length,
                 remote.method,
                 probe.url,
+                remote.head,
             ))
         });
     }
@@ -483,7 +535,7 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
     let mut assets_succeeded = 0u32;
     let mut head_fallbacks = 0u32;
     while let Some(result) = handles.join_next().await {
-        if let Ok(Some((id, newer, content_length, method, url))) = result {
+        if let Ok(Some((id, newer, content_length, method, url, head))) = result {
             if method == RemoteProbeMethod::RangeGetFallback {
                 head_fallbacks += 1;
             }
@@ -493,8 +545,10 @@ async fn probe_remote_updates(data_dir: &Path, db_path: &Path) -> RemoteProbeSum
                 {
                     store_remote_content_length(conn, id, def.tier, &url, len)?;
                 }
-                // Always write the probe result so stale false-positives clear.
-                mark_update_available(conn, id.as_str(), newer)
+                // Persist the remote revision separately from the installed
+                // revision so the UI can explain what is new without replacing
+                // the identity of the currently indexed copy.
+                record_remote_probe(conn, id.as_str(), newer, &head)
             });
             if persisted.is_ok() {
                 assets_succeeded += 1;
@@ -607,7 +661,7 @@ pub async fn check_offline_updates(
         let defs: Vec<&OfflineAssetDef> = all_assets().iter().filter(|a| a.tier == tier).collect();
 
         for def in defs {
-            let path = local_path(&data_dir, custom_dir.as_deref(), def);
+            let path = managed_asset_path(&data_dir, custom_dir.as_deref(), def);
             let local_present = asset_local_present(&data_dir, custom_dir.as_deref(), def, &path);
             let local_bytes = resolve_local_asset_path(&path)
                 .and_then(|local_path| std::fs::metadata(local_path).ok())
@@ -663,13 +717,26 @@ pub async fn check_offline_updates(
                 asset_id: def.id.as_str().to_string(),
                 tier: def.tier,
                 label: def.label.to_string(),
+                source_url: def.url.map(str::to_string),
                 local_present,
                 local_bytes,
                 row_count,
                 synced_at: reg.as_ref().map(|r| r.synced_at),
+                downloaded_at: reg.as_ref().and_then(|r| r.downloaded_at),
+                indexed_at: reg.as_ref().and_then(|r| r.indexed_at),
                 update_available,
                 remote_content_length: remote_len,
-                version_label: reg.and_then(|r| r.version_label),
+                version_label: reg.as_ref().and_then(|r| r.version_label.clone()),
+                remote_version_label: reg.as_ref().and_then(remote_file_marker),
+                last_checked_at: reg.as_ref().and_then(|r| r.checked_at),
+                previous_row_count: reg
+                    .as_ref()
+                    .and_then(|r| r.previous_row_count)
+                    .map(|count| count.max(0) as u64),
+                previous_version_label: reg
+                    .as_ref()
+                    .and_then(|r| r.previous_version_label.clone()),
+                source_changed_at: reg.as_ref().and_then(|r| r.source_changed_at),
                 message,
                 display_size: display_size_for(def, remote_len),
             });
@@ -739,6 +806,7 @@ pub async fn sync_offline_assets_subset(
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
+    let _resource_guard = resource_operation_mutex().lock().await;
     reset_offline_import_cancel();
     let custom_dir = get_custom_download_dir_from_db(db_path);
     let effective_dir = custom_dir.as_deref().unwrap_or(data_dir);
@@ -782,7 +850,7 @@ pub async fn sync_offline_assets_subset(
         match def.kind {
             AssetKind::RemoteFile => {
                 let Some(url) = def.url else { continue };
-                let path = local_path(data_dir, custom_dir.as_deref(), def);
+                let path = managed_asset_path(data_dir, custom_dir.as_deref(), def);
                 if !force && let Some(existing) = resolve_local_asset_path(&path) {
                     // Quick sync-time update probe (not used during sidebar status).
                     let reg = with_conn(db_path, |conn| Ok(read_registry(conn, def.id.as_str()))).ok().flatten();
@@ -800,7 +868,7 @@ pub async fn sync_offline_assets_subset(
                                 reg.as_ref().and_then(|r| r.version_label.as_deref()),
                             );
                             let _ = with_conn(db_path, |conn| {
-                                mark_update_available(conn, def.id.as_str(), newer)
+                                record_remote_probe(conn, def.id.as_str(), newer, &head)
                             });
                             newer
                         }
@@ -926,7 +994,7 @@ pub async fn sync_offline_assets_subset(
             }
             AssetKind::GwasSync => {
                 if def.id == OfflineAssetId::GwasCatalog {
-                    let path = local_path(data_dir, custom_dir.as_deref(), def);
+                    let path = managed_asset_path(data_dir, custom_dir.as_deref(), def);
                     let present = asset_local_present(data_dir, custom_dir.as_deref(), def, &path);
                     // GWAS has a dedicated sync kind because its importer handles
                     // several source-file shapes. It still needs the same update
@@ -1248,25 +1316,15 @@ pub async fn sync_single_asset(
     sample_id: Option<i64>,
     app: Option<&AppHandle>,
 ) -> Result<OfflineSyncResult, String> {
-    let ids = match asset_id {
-        "pharmgkb_clinical_variants" => vec![
-            OfflineAssetId::PharmgkbClinicalVariants,
-            OfflineAssetId::PharmgkbGenes,
-            OfflineAssetId::ClingenGeneValidity,
-            OfflineAssetId::ManeSelectSummary,
-        ],
-        "dbsnp_merged_json" => vec![
-            OfflineAssetId::DbsnpMergedJson,
-            OfflineAssetId::DbsnpWithdrawnJson,
-        ],
-        other => {
-            let id = OfflineAssetId::from_str_id(other)
-                .ok_or_else(|| format!("Unknown asset id: {other}"))?;
-            vec![id]
-        }
-    };
+    let ids = single_asset_ids(asset_id)?;
     // Re-sync must re-import even when the remote file is unchanged.
     sync_offline_assets_subset(data_dir, db_path, ids, force, false, sample_id, app).await
+}
+
+fn single_asset_ids(asset_id: &str) -> Result<Vec<OfflineAssetId>, String> {
+    OfflineAssetId::from_str_id(asset_id)
+        .map(|id| vec![id])
+        .ok_or_else(|| format!("Unknown asset id: {asset_id}"))
 }
 
 /// Sync all tiers, downloading only missing or outdated assets. Does not force re-download.
@@ -1313,7 +1371,7 @@ fn import_asset_sync(
     let custom_dir = get_custom_download_dir_from_db(db_path);
     let effective_dir = custom_dir.as_deref().unwrap_or(data_dir);
     let def = asset_def(id).ok_or_else(|| format!("Unknown asset {:?}", id))?;
-    let path = local_path(data_dir, custom_dir.as_deref(), def);
+    let path = managed_asset_path(data_dir, custom_dir.as_deref(), def);
 
     // Hash-gate large catalog imports: refuse to index when a sibling .md5/.sha256
     // proves the local file is corrupt (remote .md5 already checked at download).
@@ -1437,7 +1495,7 @@ fn import_asset_sync(
         }
         OfflineAssetId::Tier2VariantLocus => {
             ensure_tier2_meta(effective_dir)?;
-            let meta_path = local_path(data_dir, custom_dir.as_deref(), def);
+            let meta_path = managed_asset_path(data_dir, custom_dir.as_deref(), def);
             // Genotypes live in per-sample DBs — never query them on the registry conn.
             let count = if let Some(sid) = sample_id {
                 build_variant_locus_for_sample_in_data_dir(data_dir, sid)?
@@ -1546,8 +1604,56 @@ mod tests {
     }
 
     #[test]
+    fn remote_updates_are_still_checked_after_the_source_file_is_removed() {
+        let mut registry = crate::offline::registry::RegistryRow::default();
+        assert!(!should_probe_installed_revision(false, None));
+        assert!(!should_probe_installed_revision(false, Some(&registry)));
+
+        registry.local_sha256 = Some("synthetic-hash".into());
+        assert!(should_probe_installed_revision(false, Some(&registry)));
+        assert!(should_probe_installed_revision(true, None));
+    }
+
+    #[test]
+    fn remote_file_marker_uses_plain_language_for_etag_only_changes() {
+        let mut registry = crate::offline::registry::RegistryRow::default();
+        registry.remote_etag = Some("private-installed-etag".into());
+        registry.checked_etag = Some("private-current-etag".into());
+        assert_eq!(
+            remote_file_marker(&registry).as_deref(),
+            Some("File identifier changed")
+        );
+
+        registry.checked_etag = registry.remote_etag.clone();
+        assert_eq!(remote_file_marker(&registry), None);
+
+        registry.checked_content_filename = Some("clinicalVariants.zip".into());
+        assert_eq!(
+            remote_file_marker(&registry).as_deref(),
+            Some("clinicalVariants.zip")
+        );
+    }
+
+    #[test]
     fn gwas_downloads_when_a_newer_remote_identity_is_proven() {
         assert!(gwas_download_required(false, true, true));
+    }
+
+    #[test]
+    fn a_single_asset_update_does_not_expand_to_unrelated_catalogs() {
+        assert_eq!(
+            single_asset_ids("pharmgkb_clinical_variants").expect("ClinPGx asset id"),
+            vec![OfflineAssetId::PharmgkbClinicalVariants]
+        );
+        assert_eq!(
+            single_asset_ids("pharmgkb_genes").expect("ClinPGx genes asset id"),
+            vec![OfflineAssetId::PharmgkbGenes]
+        );
+        assert_eq!(
+            single_asset_ids("dbsnp_merged_json").expect("dbSNP asset id"),
+            vec![OfflineAssetId::DbsnpMergedJson]
+        );
+        assert!(single_asset_ids("not-a-catalog").is_err());
     }
 
     #[test]

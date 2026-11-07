@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/ai/ChatMessages.svelte -->
 <script lang="ts">
   import { parseThinking, formatMarkdownSafe } from '../../utils/chatParser';
-  import '$lib/styles/components/chat-messages.css';
+  import '#lib/styles/components/chat-messages.css';
 
   interface Props {
     messages: { role: 'user' | 'assistant' | 'system'; content: string; fullContent?: string; images?: string[]; safetyReview?: string }[];

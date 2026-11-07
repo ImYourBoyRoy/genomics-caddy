@@ -4,14 +4,15 @@
  * reference-data-panel.css; shared progress bars in sidebar-progress.css.
  */
 
-.runtime-note {
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.55rem;
-  background: var(--surface-subtle);
+.runtime-preview-note h3 {
+  margin-bottom: 0.4rem;
+}
+
+.runtime-preview-note p {
+  margin: 0;
   color: var(--text-secondary);
-  font-size: 0.72rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .sidebar-profile-workspace {
@@ -22,7 +23,7 @@
 
 .sidebar-group-label {
   color: var(--text-muted);
-  font-size: 0.64rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -35,10 +36,10 @@
 
 .samples-card-hint,
 .import-card-hint {
-  margin: -0.4rem 0 0;
+  margin: 0 0 0.7rem;
   color: var(--text-secondary);
-  font-size: 0.66rem;
-  line-height: 1.35;
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .samples-card .samples-actions-note {
@@ -53,7 +54,8 @@
 }
 
 .import-card-hint {
-  margin-top: -0.65rem;
+  margin-top: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 
 .import-chain-required {
@@ -72,12 +74,26 @@
 
 .import-chain-required p {
   margin: 0;
-  font-size: 0.68rem;
-  line-height: 1.4;
+  font-size: 0.74rem;
+  line-height: 1.5;
 }
 
 .import-chain-required .btn {
   justify-self: start;
+  min-height: 2.4rem;
+  padding-inline: 0.9rem;
+  font-size: 0.78rem;
+}
+
+.import-card .btn-sm {
+  min-height: 2.35rem;
+  font-size: 0.78rem;
+}
+
+.samples-card .empty-hint {
+  margin: 0.65rem 0 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 /* Active profile list belongs to the sidebar and uses the shared theme palette. */

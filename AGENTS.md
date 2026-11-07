@@ -97,13 +97,16 @@ git diff --check
 ```
 
 The dependency workflow is intentionally lock-free for local build testing:
-direct package versions are recorded in `package.json`, but npm/pnpm and Cargo
-lockfiles are not retained, and Rust validation/release commands must not use
-`--locked`. Use `node ./scripts/pnpm_unlocked.mjs install` for frontend dependency resolution;
-pnpm 12's resolver lock is kept in a temporary directory outside the repository
-and removed on exit. Run `node ./scripts/audit_reproducibility.mjs` when changing
-manifests or release workflow; it verifies the lock-free state and unlocked
-Cargo metadata.
+direct dependencies use stable version ranges in `package.json`; npm/pnpm and
+Cargo lockfiles must not be tracked or committed. The audit preserves existing
+ignored local lockfiles. Rust validation/release commands must not use
+`--locked`. Use `node ./scripts/pnpm_unlocked.mjs install` for frontend
+dependency resolution; pnpm 12's resolver lock is kept in a temporary directory
+outside the repository and removed on exit. Run
+`node ./scripts/audit_reproducibility.mjs` when changing manifests or release
+workflow; it checks version-range policy, untracked/ignored lockfiles, and
+unlocked Cargo metadata. SvelteKit 3's current tooling requires TypeScript 6;
+keep the TypeScript range within 6.x until the project explicitly migrates.
 
 AI and clinician technical handoffs always include the exact raw calls used by
 their findings; the deprecated profile export toggles must not be reintroduced

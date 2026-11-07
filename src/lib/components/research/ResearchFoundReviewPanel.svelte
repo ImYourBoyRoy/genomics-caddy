@@ -14,7 +14,7 @@
   } from "../../api/tauri";
   import { markerPacksStore } from "../../utils/markerPacksState.svelte";
   import ActivityPulse from "../common/loading/ActivityPulse.svelte";
-  import "$lib/styles/components/vector-workbench.css";
+  import "#lib/styles/components/vector-workbench.css";
 
   interface Props {
     actionsEnabled?: boolean;

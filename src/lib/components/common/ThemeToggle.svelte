@@ -1,7 +1,7 @@
 <!-- ./src/lib/components/common/ThemeToggle.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import '$lib/styles/components/theme-toggle.css';
+  import '#lib/styles/components/theme-toggle.css';
 
   type ThemeMode = 'system' | 'light' | 'dark';
   const STORAGE_KEY = 'genomics_theme_mode';

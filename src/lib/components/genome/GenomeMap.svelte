@@ -7,8 +7,8 @@
   import { CHR_LENGTHS, CHR_ORDER } from "../../constants/chromosomeLayout";
   import PanelLoadingState from "../common/loading/PanelLoadingState.svelte";
   import Tooltip from "../common/Tooltip.svelte";
-  import "$lib/styles/components/genome-map.css";
-  import "$lib/styles/components/explore-help.css";
+  import "#lib/styles/components/genome-map.css";
+  import "#lib/styles/components/explore-help.css";
 
   /*
   Purpose: Live database-backed chromosome visualization with interactive zoom, overlays, and comparison views.

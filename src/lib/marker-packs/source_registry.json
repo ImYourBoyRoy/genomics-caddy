@@ -1,7 +1,7 @@
 {
   "name": "Source Registry",
-  "version": "2.9.0",
-  "last_updated": "2026-10-29",
+  "version": "2.9.1",
+  "last_updated": "2026-11-05",
   "sources": {
     "gwas_catalog": {
       "name": "NHGRI-EBI GWAS Catalog",
@@ -580,12 +580,20 @@
       "notes": "Use for validated CYP2D6 phenotype and medication-interaction review in tamoxifen care. Oncology decisions must account for cancer context and other therapies; raw DNA cannot direct endocrine-treatment changes."
     },
     "cpic_ssri_2023": {
-      "name": "CPIC: CYP2D6, CYP2C19, CYP2B6 and Serotonin-Reuptake Antidepressants (2023)",
+      "name": "CPIC: CYP2D6, CYP2C19, CYP2B6, SLC6A4, HTR2A and Serotonin-Reuptake Antidepressants (2023)",
       "url": "https://files.cpicpgx.org/data/guideline/publication/serotonin_reuptake_inhibitor_antidepressants/2023/37032427.pdf",
-      "accessed": "2026-08-26",
+      "accessed": "2026-11-05",
       "evidence_type": "CPIC clinical pharmacogenomic guideline",
       "conflict_of_interest": "Clinical Pharmacogenetics Implementation Consortium guideline; review current guideline disclosures",
-      "notes": "Use for validated clinical PGx context when an antidepressant question is active. A consumer-array finding cannot independently select, stop, or change a psychiatric medication."
+      "notes": "Validated CYP2C19/CYP2B6 phenotypes can inform sertraline exposure and general side-effect discussions. CPIC provides no gene-based fluoxetine dosing recommendation, and no clinical recommendations based on SLC6A4 or HTR2A because evidence is mixed or insufficient. The guideline does not establish DNA prediction of emotional numbness. A consumer-array finding cannot independently select, stop, or change a psychiatric medication."
+    },
+    "sertraline_emotional_blunting_2026": {
+      "name": "CYP2C19 and Emotional Blunting During Sertraline Treatment: 8-Week Observational Study (2026)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41898379/",
+      "accessed": "2026-11-05",
+      "evidence_type": "Peer-reviewed observational pharmacogenetic study",
+      "conflict_of_interest": "See publication disclosures",
+      "notes": "An 8-week observational study of 88 adolescents found no significant relationship between CYP2C19 variants or metabolizer group and emotional-blunting scores. Its small adolescent-only sample and short follow-up do not settle adult effects or rule out other contributors; it is not a clinical prediction rule."
     },
     "cpic_cyp2c9_nsaids_2020": {
       "name": "CPIC: CYP2C9 and Nonsteroidal Anti-Inflammatory Drugs Guideline",

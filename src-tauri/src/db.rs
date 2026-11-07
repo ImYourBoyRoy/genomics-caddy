@@ -94,6 +94,10 @@ pub fn connect_sample(data_dir: &Path, sample_id: i64) -> Result<Connection> {
     let conn =
         crate::db_crypto::open_encrypted(&crate::paths::sample_db_path(data_dir, sample_id))?;
     apply_runtime_pragmas(&conn)?;
+    // Genotypes are the user's primary local data; in WAL mode, FULL adds a
+    // sync at commit so a power loss is less likely to roll back recent imports.
+    // Rebuildable reference sidecars stay on NORMAL for better throughput.
+    conn.execute_batch("PRAGMA synchronous = FULL;")?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     attach_public_databases(&conn, data_dir)?;
     apply_wal_on_attached(
@@ -1954,6 +1958,18 @@ pub fn get_chromosome_counts(
 
 /// Deletes the registry row and the complete private database directory for a sample.
 pub fn delete_sample(conn: &mut Connection, data_dir: &Path, sample_id: i64) -> Result<()> {
+    delete_sample_with_id_reuse(conn, data_dir, sample_id, true)
+}
+
+/// Deletes a profile and optionally reuses its local integer slot after the final profile.
+/// Keep reuse disabled while a remote vector store is configured: its points are
+/// managed separately, and reusing the same sample_id could expose stale vectors.
+pub fn delete_sample_with_id_reuse(
+    conn: &mut Connection,
+    data_dir: &Path,
+    sample_id: i64,
+    allow_id_reuse: bool,
+) -> Result<()> {
     let exists: bool = conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM samples WHERE id = ?)",
         params![sample_id],
@@ -1995,6 +2011,30 @@ pub fn delete_sample(conn: &mut Connection, data_dir: &Path, sample_id: i64) -> 
     if let Some(pending_dir) = pending_dir {
         std::fs::remove_dir_all(&pending_dir)
             .map_err(|_| rusqlite::Error::InvalidPath(pending_dir))?;
+    }
+
+    // Profile IDs are local storage slots, not permanent public identifiers.
+    // Reuse the first slot only for local-only data. A configured external
+    // vector store may still hold points keyed by sample_id, so keep the
+    // sequence monotonic in that case to avoid linking stale points to a new profile.
+    // Keep IDs stable while any profile remains because sibling directories and
+    // derived rows are still keyed by those IDs.
+    let has_profiles: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM samples)",
+        [],
+        |row| row.get(0),
+    )?;
+    if !has_profiles && allow_id_reuse {
+        let sequence_table_exists: bool = conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'
+            )",
+            [],
+            |row| row.get(0),
+        )?;
+        if sequence_table_exists {
+            conn.execute("DELETE FROM sqlite_sequence WHERE name = 'samples'", [])?;
+        }
     }
     Ok(())
 }
@@ -3176,7 +3216,8 @@ mod sex_context_tests {
 #[cfg(test)]
 mod import_lifecycle_tests {
     use super::{
-        connect_sample, connect_sample_from_registry_path, delete_sample, import_raw_genome,
+        connect_sample, connect_sample_from_registry_path, delete_sample,
+        delete_sample_with_id_reuse, import_raw_genome,
         import_raw_genome_with_provenance, ensure_sample_schema, sample_is_registered,
     };
     use crate::parser::{ImportProvenance, ParseDiagnostics, SnpRecord};
@@ -3354,6 +3395,64 @@ mod import_lifecycle_tests {
         delete_sample(&mut conn, &data_dir, sample_id).expect("delete profile");
         assert!(!crate::paths::sample_dir(&data_dir, sample_id).exists());
         assert!(delete_sample(&mut conn, &data_dir, sample_id).is_err());
+        let next_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture Reimport",
+            &[record("rs-delete-again", 202)],
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("reimport after deleting final profile");
+        assert_eq!(next_id, 1, "the first local profile slot should be reused");
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn private_profile_database_uses_wal_with_full_commit_durability() {
+        let data_dir = test_data_dir();
+        let conn = connect_sample(&data_dir, 1).expect("open synthetic profile database");
+        let journal_mode: String = conn
+            .query_row("PRAGMA journal_mode", [], |row| row.get(0))
+            .expect("read profile journal mode");
+        let synchronous: i64 = conn
+            .query_row("PRAGMA synchronous", [], |row| row.get(0))
+            .expect("read profile sync setting");
+        assert_eq!(journal_mode.to_ascii_lowercase(), "wal");
+        assert_eq!(synchronous, 2, "profile DB should use SQLite FULL sync");
+        drop(conn);
+        let _ = fs::remove_dir_all(data_dir);
+    }
+
+    #[test]
+    fn configured_remote_vector_store_prevents_reusing_a_deleted_profile_id() {
+        let data_dir = test_data_dir();
+        let mut conn = registry();
+        let sample_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture",
+            &[record("rs-vector-id", 111)],
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("initial import");
+
+        delete_sample_with_id_reuse(&mut conn, &data_dir, sample_id, false)
+            .expect("delete profile without reusing its external identity");
+        let next_id = import_raw_genome(
+            &mut conn,
+            &data_dir,
+            "Fixture Reimport",
+            &[record("rs-vector-id-next", 222)],
+            None,
+            None,
+            |_, _| {},
+        )
+        .expect("reimport after deletion");
+        assert!(next_id > sample_id, "external IDs must not be reused");
         let _ = fs::remove_dir_all(data_dir);
     }
 

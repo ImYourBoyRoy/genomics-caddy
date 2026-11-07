@@ -10,7 +10,7 @@
     type ChatGptStatus,
   } from "../../../api/chatgpt";
   import { CHATGPT_RAW_DATA_DISCLOSURE } from "../../../utils/chatProvider";
-  import "$lib/styles/components/chatgpt-connection.css";
+  import "#lib/styles/components/chatgpt-connection.css";
 
   interface Props {
     /** Called after a successful sign-in so the parent can refresh the model list. */

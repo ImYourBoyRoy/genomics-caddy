@@ -4,7 +4,8 @@
 Purpose: Enforce the repository's lock-free dependency contract.
 Contract:
   - Direct package versions are recorded in package.json.
-  - JavaScript and Cargo lockfiles are absent.
+  - JavaScript and Cargo lockfiles are never tracked or committed. Ignored local
+    lockfiles may exist and are preserved by this audit.
   - Cargo metadata resolves without --locked.
   - Dependency refreshes remain explicit update operations, not an implicit
     part of release or validation builds.
@@ -20,7 +21,8 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(scriptDir, "..");
 const packagePath = path.join(repoRoot, "package.json");
 const cargoManifestPath = path.join(repoRoot, "src-tauri", "Cargo.toml");
-const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+const directVersionRange = /^(?:\^|~|>=)?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/;
+const typescript6Range = /^(?:\^|~)?6\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/;
 const failures = [];
 
 function readJson(filePath, label) {
@@ -44,18 +46,40 @@ const forbiddenLockfiles = [
 ];
 
 for (const relativePath of forbiddenLockfiles) {
+  const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "--", relativePath], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (tracked.status === 0) {
+    failures.push(`${relativePath} must not be tracked or committed`);
+  } else if (tracked.status !== 1) {
+    failures.push(`could not verify Git tracking state for ${relativePath}`);
+  }
+
   if (fs.existsSync(path.join(repoRoot, relativePath))) {
-    failures.push(`${relativePath} must be absent in lock-free mode`);
+    const ignored = spawnSync("git", ["check-ignore", "--quiet", "--no-index", "--", relativePath], {
+      cwd: repoRoot,
+      stdio: "ignore",
+    });
+    if (ignored.status !== 0) {
+      failures.push(`local ${relativePath} exists but is not ignored by Git`);
+    }
   }
 }
 
 if (packageJson) {
   for (const group of ["dependencies", "devDependencies"]) {
     for (const [name, spec] of Object.entries(packageJson[group] ?? {})) {
-      if (!exactVersion.test(String(spec))) {
-        failures.push(`${group}/${name} is not pinned to an exact manifest version`);
+      if (!directVersionRange.test(String(spec))) {
+        failures.push(`${group}/${name} must use a stable exact, caret, tilde, or >= version range`);
       }
     }
+  }
+
+  const typescript = String(packageJson.devDependencies?.typescript ?? "");
+  if (!typescript6Range.test(typescript)) {
+    failures.push("devDependencies/typescript must remain constrained to TypeScript 6");
   }
 }
 
@@ -75,4 +99,4 @@ if (failures.length > 0) {
 }
 
 console.log("PASS: lock-free dependency audit");
-console.log("direct_manifest_versions=pinned; package_lock=absent; cargo_lock=absent; cargo_resolution=unlocked");
+console.log("direct_manifest_versions=stable-ranges; lockfiles=untracked-and-ignored; typescript=6.x; cargo_resolution=unlocked");

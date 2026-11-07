@@ -8,7 +8,7 @@
   Outputs: Decorative, aria-hidden markup. The progressbar role lives with the
   caller. Motion rules are in styles/components/sequencing-helix.css.
   */
-  import '$lib/styles/components/sequencing-helix.css';
+  import '#lib/styles/components/sequencing-helix.css';
 
   interface Props {
     percentage?: number | null;

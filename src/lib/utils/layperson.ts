@@ -689,6 +689,24 @@ export function getCompactActionMeaning(translation: LaypersonTranslation): stri
 }
 
 /**
+ * Keep marker-specific next steps concise in the report. The shared app footer
+ * carries the medication decision guardrail once, instead of repeating it on
+ * every related marker card.
+ */
+export function getCompactSimpleReviewAction(action: string): string {
+  const clauses = action
+    .trim()
+    .split(/(?:;\s+|(?<=[.!?])\s+)/)
+    .map((clause) => clause.trim())
+    .filter(Boolean)
+    .filter((clause) => !/^(?:do not|don't|never)\s+(?:start|stop|change|adjust)\b[^.!?]{0,120}\b(?:from|based on|using)\s+(?:raw DNA|DNA alone|this (?:marker|result)|a single (?:marker|variant))\b[^.!?]*[.!?]*$/i.test(clause));
+  const compact = clauses.join(' ');
+  const terminal = action.trim().match(/[.!?]$/)?.[0];
+  const punctuated = compact && terminal && !/[.!?]$/.test(compact) ? `${compact}${terminal}` : compact;
+  return punctuated || 'Discuss this finding with a qualified healthcare professional.';
+}
+
+/**
  * Keep follow-up guidance at the section level in Simple mode. Individual
  * cards explain the signal; this one compact line gives the section a single
  * practical route without repeating the same review language on every card.

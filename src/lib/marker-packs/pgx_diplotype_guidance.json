@@ -1,12 +1,12 @@
 {
   "name": "Pharmacogenomics Clinical Interpretation Readiness",
-  "version": "1.0.0",
-  "last_updated": "2026-08-26",
+  "version": "1.0.1",
+  "last_updated": "2026-11-05",
   "type": "support_engine",
   "purpose": "Explain when the curated PGx marker components are incomplete and identify the clinical inputs required before a drug-specific phenotype or prescribing decision can be considered.",
   "policy": {
-    "summary": "The report may show individual PGx marker components, but a consumer array is not a complete star-allele, diplotype, copy-number, HLA, or enzyme-activity result. A clinical interpretation requires the drug and indication, complete relevant allele coverage, phase or diplotype when needed, structural-variant or HLA testing where needed, ancestry/platform limitations, and a clinician or pharmacist review.",
-    "display_rule": "Describe component coverage and missing clinical inputs; never assign a metabolizer phenotype, dose, medication choice, toxicity diagnosis, or medication change from a single raw-DNA marker.",
+    "summary": "The report may show individual PGx marker components, but a consumer DNA array is not a complete clinical result. CPIC's antidepressant guidance depends on the medicine: CYP2C19 for citalopram, escitalopram, and sertraline; CYP2B6 also for sertraline; and CYP2D6 for paroxetine, fluvoxamine, venlafaxine, and vortioxetine. Advice varies by medicine and complete clinical result. CPIC gives no gene-based fluoxetine dosing advice, and SLC6A4 or HTR2A results are not supported for antidepressant prescribing. A complete clinical result may help explain medicine levels and general side-effect risk; DNA is not validated to predict emotional numbness. This report does not check combinations of medicines.",
+    "display_rule": "Describe which DNA components are present and what is missing; never assign a metabolizer type, dose, medicine choice, toxicity diagnosis, or treatment change from a single raw-DNA marker. Do not present DNA as predicting emotional numbness. This report is not a medicine-interaction checker; for fluoxetine, CPIC gives no gene-based dosing advice, and SLC6A4 or HTR2A results are not supported for antidepressant prescribing.",
     "required_inputs": [
       "Exact drug name, indication, formulation, and current dose when relevant",
       "Complete clinical PGx result or validated laboratory assay method",
@@ -24,23 +24,33 @@
   "genes": [
     {
       "id": "CYP2D6",
-      "label": "CYP2D6 star-allele and copy-number interpretation",
+      "label": "CYP2D6 result and antidepressant context",
       "gene_symbols": ["CYP2D6"],
       "marker_ids": ["rs3892097", "PANEL_CYP2D6_DIPLOTYPE_CNV_HYBRID", "rs1065852", "rs28371725", "rs35742686", "rs5030655", "rs28371706", "CYP2D6_GENE_DELETION", "CYP2D6_GENE_DUPLICATION"],
-      "limitation": "CYP2D6 phenotype requires both star alleles plus copy-number, hybrid, and additional-variant assessment; consumer arrays may not capture the relevant structural variation or phase.",
-      "required_inputs": ["Complete CYP2D6 star-allele diplotype", "Copy-number and hybrid-allele assessment", "Drug and indication", "Clinical phenotype and interaction review"],
-      "clinical_next_step": "For a medication question, ask a clinician or pharmacist whether a validated clinical PGx result is appropriate; do not change treatment from these component markers.",
+      "limitation": "CYP2D6 phenotype requires both star alleles plus copy-number, hybrid, and additional-variant assessment; consumer arrays may not capture structural variation or phase. CPIC has drug-specific CYP2D6 guidance for some medicines, including paroxetine and fluvoxamine; for fluoxetine, it finds the overall active drug level and clinical impact unclear and gives no gene-based dosing recommendation. No clinically validated DNA prediction of emotional numbness is established here.",
+      "required_inputs": ["Complete CYP2D6 star-allele diplotype", "Copy-number and hybrid-allele assessment", "Exact drug and indication", "Prior medicine-specific response or side effects, dose, timing, and interaction review"],
+      "clinical_next_step": "If fluoxetine caused emotional numbness or another unwanted effect, share the medicine, dose, timing, and what happened with the prescriber. CYP2D6 consumer markers cannot confirm the cause or predict the same effect, and CPIC gives no gene-based fluoxetine dosing recommendation.",
       "sources": ["cpic_guidelines", "cpic_opioids_2020", "cpic_tamoxifen_2018", "cpic_ssri_2023", "clinical_confirmation_required"]
     },
     {
       "id": "CYP2C19",
-      "label": "CYP2C19 star-allele and drug-specific interpretation",
+      "label": "CYP2C19 result and SSRI context",
       "gene_symbols": ["CYP2C19"],
       "marker_ids": ["rs12248560", "rs4244285", "rs4986893", "rs28399504", "rs56337013", "rs72558186", "rs72552267", "rs41291556"],
-      "limitation": "The listed SNPs are allele components. Phenotype requires the complete relevant CYP2C19 diplotype and the drug, indication, interactions, and clinical context; array coverage does not guarantee full allele coverage.",
-      "required_inputs": ["Complete CYP2C19 diplotype or phenotype", "Drug and indication", "Ancestry and platform coverage limitations", "Current response, interactions, and prescriber context"],
-      "clinical_next_step": "Use the component finding to ask whether clinical PGx interpretation is relevant to the specific drug; do not label someone rapid, normal, or poor metabolizer from one marker.",
-      "sources": ["cpic_clopidogrel_2022", "cpic_ssri_2023", "cpic_cyp2c19_ppi_2020", "cpic_guidelines", "clinical_confirmation_required"]
+      "limitation": "The listed SNPs are pieces of a result, not a full CYP2C19 clinical type. For sertraline, some complete CYP2C19 results can mean higher medicine levels and may help a clinician consider general side-effect risk; they do not predict emotional numbness. One small 8-week study in adolescents found no link between CYP2C19 and emotional-blunting scores; it does not settle effects in adults.",
+      "required_inputs": ["Complete CYP2C19 diplotype or phenotype", "Exact drug and indication", "Prior medicine-specific response or side effects, dose, and timing", "Interactions and prescriber or pharmacist context"],
+      "clinical_next_step": "If sertraline caused emotional numbness, tell the prescriber what you took, the dose, when it began, and how it changed. Ask whether clinical PGx interpretation could help explain how your body processes sertraline; current evidence cannot reliably predict that specific effect from DNA.",
+      "sources": ["cpic_clopidogrel_2022", "cpic_ssri_2023", "sertraline_emotional_blunting_2026", "cpic_cyp2c19_ppi_2020", "cpic_guidelines", "clinical_confirmation_required"]
+    },
+    {
+      "id": "CYP2B6",
+      "label": "CYP2B6 result and sertraline context",
+      "gene_symbols": ["CYP2B6"],
+      "marker_ids": ["rs3745274"],
+      "limitation": "rs3745274 is one of the two core variants used to define CYP2B6*6; rs2279343 is the other. This marker alone cannot establish the haplotype or a clinical phenotype. CPIC's CYP2B6 sertraline recommendations for intermediate or poor phenotypes are optional and based mainly on pharmacokinetic evidence; they are not validated to predict emotional numbness. CYP2C19 results, interactions, and clinical context also matter.",
+      "required_inputs": ["Validated CYP2B6 genotype or phenotype with adequate allele coverage", "Exact drug and indication", "CYP2C19 result and interaction review when sertraline is relevant", "Prior medicine-specific response or side effects and clinician or pharmacist interpretation"],
+      "clinical_next_step": "If sertraline caused emotional numbness, share that history and its dose and timing with the prescriber. This single CYP2B6 marker cannot establish the clinical phenotype or predict the effect; do not change treatment from raw DNA.",
+      "sources": ["cpic_ssri_2023", "clinical_confirmation_required"]
     },
     {
       "id": "CYP2C9",
